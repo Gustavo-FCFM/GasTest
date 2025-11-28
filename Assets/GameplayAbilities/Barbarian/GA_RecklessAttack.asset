@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c79a6ef63759774f8125f583fee8f7e, type: 3}
+  m_Name: GA_RecklessAttack
+  m_EditorClassIdentifier: 
+  AbilityName: Reckless Attack
+  AbilityIcon: {fileID: 21300000, guid: 90218e36f476d7a44b14d3fc12135ddf, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: bd07a782525833e47889b22896900f13, type: 2}
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 0
+  ActivationBlockedTags: 
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 5
+  Sequence:
+  - AbilityToCast: {fileID: 11400000, guid: 830101eba8c1e234c9bc8d55c6d4b4d5, type: 2}
+    DelayAfter: 0.3
+  - AbilityToCast: {fileID: 11400000, guid: 28ccd4d41e3a4a546b2915b40eef9aa2, type: 2}
+    DelayAfter: 0.8
+  - AbilityToCast: {fileID: 11400000, guid: f5b8c13a15cbefd47aa60586da5a1693, type: 2}
+    DelayAfter: 0

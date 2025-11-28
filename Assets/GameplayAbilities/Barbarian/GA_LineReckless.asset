@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e14aad4ec29d2894eace4a88eebad1d4, type: 3}
+  m_Name: GA_LineReckless
+  m_EditorClassIdentifier: 
+  AbilityName: Reckless
+  AbilityIcon: {fileID: 21300000, guid: 90218e36f476d7a44b14d3fc12135ddf, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: 05cc155d13a28254980c2a8040c35e21, type: 2}
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 6
+  ActivationBlockedTags: []
+  Length: 4
+  Width: 3
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 8
+  DamageEffect: {fileID: 11400000, guid: c724c673f706d3d47b65f864d4719e97, type: 2}

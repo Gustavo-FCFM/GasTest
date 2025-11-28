@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0673ae4a173fec245880d1c58fa5345e, type: 3}
+  m_Name: GA_ConeReckless 1
+  m_EditorClassIdentifier: 
+  AbilityName: Reckless2
+  AbilityIcon: {fileID: 21300000, guid: 42f3bcccc10a0554babbba7c68cdf7e1, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: 05cc155d13a28254980c2a8040c35e21, type: 2}
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 2
+  ActivationBlockedTags: []
+  Range: 2.5
+  ConeAngle: 90
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 8
+  DamageEffect: {fileID: 11400000, guid: d3bdd9c76e21fa04cb93f9c1910c95ed, type: 2}

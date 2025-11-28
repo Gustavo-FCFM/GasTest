@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0673ae4a173fec245880d1c58fa5345e, type: 3}
+  m_Name: GA_ConeHeal
+  m_EditorClassIdentifier: 
+  AbilityName: New Ability
+  Icon: {fileID: 0}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: 45327044be4f41c4d8f5289bc6f9b3be, type: 2}
+  AutoCooldownTag: 
+  CooldownType: 0
+  FixedCooldownDuration: 0
+  CooldownScalingAttribute: 10
+  ScalingMultiplier: 1
+  ActivationBlockedTags: []
+  Range: 2.5
+  ConeAngle: 90
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 8
+  DamageEffect: {fileID: 11400000, guid: 056f3f16f5f007b458a53cefa970e49c, type: 2}
+  UseDynamicCooldown: 1
+  CooldownAttributeName: 10
+  CooldownMultiplier: 1

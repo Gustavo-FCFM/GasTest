@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 749805704a6088741af34d91f0891ced, type: 3}
+  m_Name: Class_Barbarian
+  m_EditorClassIdentifier: 
+  ClassName: Barbarian
+  ClassIcon: {fileID: 21300000, guid: 150ec0fe7eb33a744879df340d60234b, type: 3}
+  Description: Barbaro ataca!
+  BaseAttributes: {fileID: 11400000, guid: 018a6225b1f822143aa86c2bcaef873f, type: 2}
+  Abilities:
+  - InputSlot: 1
+    Ability: {fileID: 11400000, guid: b41663af55e0dcc429858dd8602c7730, type: 2}
+  - InputSlot: 2
+    Ability: {fileID: 11400000, guid: 02d07c3295dba8341a727a557148876d, type: 2}
+  - InputSlot: 3
+    Ability: {fileID: 11400000, guid: 7f53883b772b6f34f8b3d5f6701bc219, type: 2}
+  - InputSlot: 6
+    Ability: {fileID: 11400000, guid: 56dc5dcfc67b24b49aaea483f6856e81, type: 2}
+  StatGrowthPerLevel:
+  - Attribute: 2
+    AmountPerLevel: 70
+  - Attribute: 7
+    AmountPerLevel: 5
+  - Attribute: 8
+    AmountPerLevel: 5
+  - Attribute: 14
+    AmountPerLevel: 100
+  AvailableSubclasses:
+  - {fileID: 11400000, guid: dddebebeb12f05e4a978c173b6f504dd, type: 2}
+  ClassAnimatorOverride: {fileID: 22100000, guid: c1aea6e6b93746e4dbab09a9b224bfaa, type: 2}
+  MainHandWeaponPrefab: {fileID: 8072587243417393782, guid: c61cbb6b38d7de247a8e5b46c0726dec, type: 3}
+  OffHandWeaponPrefab: {fileID: 0}
