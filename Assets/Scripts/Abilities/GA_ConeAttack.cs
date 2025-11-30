@@ -9,12 +9,21 @@ public class GA_ConeAttack : GameplayAbility
     public float Range = 2.5f; 
     [Range(0, 360)]
     public float ConeAngle = 90f; 
-    public LayerMask TargetLayer;
+    //public LayerMask TargetLayer;
 
     [Header("Efectos")]
     public GameplayEffect DamageEffect;
-    
     public float DamageDelay = 0.3f; // Tiempo base hasta el impacto (a velocidad normal)
+    [Header("Visuales (Juice)")]
+    public GameObject SwingVFX; // Rastro del hacha (Slash)
+    [Tooltip("Ajusta esto si el efecto sale chueco. Prueba (90, 0, 0) para acostarlo.")]
+    public Vector3 SwingRotationOffset = new Vector3(0, 0, 0);
+    [Tooltip("Controla el tamaño del efecto. Pon (0.5, 0.5, 0.5) para reducirlo a la mitad.")]
+    public Vector3 SwingScale = Vector3.one;
+    [Tooltip("Tiempo de espera para que aparezca el efecto visual (Slash).")]
+    public float VisualDelay = 0.1f;
+    public GameObject HitVFX;
+
 
     public override void Activate()
     {
@@ -29,8 +38,10 @@ public class GA_ConeAttack : GameplayAbility
             PlayerController pc = OwnerASC.GetComponent<PlayerController>();
             if (pc != null)
             {
+                pc.RotateToAim();
                 pc.PlayAnimation(AnimationTriggerName, AnimationID);
             }
+            
             // Iniciamos la corutina usando el ASC como motor
             OwnerASC.StartAbilityCoroutine(AttackSequence());
         }
@@ -38,28 +49,43 @@ public class GA_ConeAttack : GameplayAbility
 
     private IEnumerator AttackSequence()
     {
-        // --- CÁLCULO DE VELOCIDAD ---
-        // Obtenemos el multiplicador de velocidad actual (1.0 = normal, 2.0 = doble)
         float speedMultiplier = 1f;
         float atkSpeedStat = OwnerASC.GetAttributeValue(EAttributeType.AtkSpeed);
-        
-        // Si AtkSpeed es el intervalo (ej: 0.5s), la velocidad es 1 / 0.5 = 2.0x
         if (atkSpeedStat > 0) speedMultiplier = 1f / atkSpeedStat;
 
-        // A. Esperar al golpe (Ajustado por velocidad)
-        // Si soy el doble de rápido, espero la mitad del tiempo.
-        yield return new WaitForSeconds(DamageDelay / speedMultiplier);
+        // --- 1. SPAWN SWING VFX CON DELAY ---
+        if (VisualDelay > 0)
+        {
+            yield return new WaitForSeconds(VisualDelay / speedMultiplier);
+        }
+        
+        if (SwingVFX != null && OwnerASC != null)
+        {
+            Vector3 spawnPos = OwnerASC.transform.position + (OwnerASC.transform.forward * 0.3f) + (Vector3.up * -0.3f);
+            
+            Quaternion baseRotation = OwnerASC.transform.rotation;
+            Quaternion offsetRotation = Quaternion.Euler(SwingRotationOffset);
+            Quaternion finalRotation = baseRotation * offsetRotation;
 
-        // B. Ejecutar la lógica de daño
+            GameObject vfx = Instantiate(SwingVFX, spawnPos, finalRotation, OwnerASC.transform);
+            vfx.transform.localScale = SwingScale;
+            Destroy(vfx, 1.0f); 
+        }
+        // ------------------------------------
+
+        // Esperamos el resto del tiempo hasta el impacto
+        // (Restamos el VisualDelay que ya esperamos para que el DamageDelay sea preciso desde el inicio)
+        float remainingDelay = DamageDelay - VisualDelay;
+        if (remainingDelay > 0)
+        {
+            yield return new WaitForSeconds(remainingDelay / speedMultiplier);
+        }
+
         PerformDetectionAndDamage();
 
-        // C. Esperar al Backswing (Recuperación de la animación)
-        // Un ataque promedio dura ~1.0s total. Si ya esperamos DamageDelay, esperamos el resto.
-        // Ajusta este valor "0.5f" si sientes que el personaje se queda quieto mucho o poco tiempo.
         float backswingTime = 0.5f; 
         yield return new WaitForSeconds(backswingTime / speedMultiplier);
 
-        // D. Terminar (Libera el semáforo para poder atacar de nuevo)
         EndAbility();
     }
 
@@ -98,7 +124,13 @@ public class GA_ConeAttack : GameplayAbility
                     // C. Registrar golpe
                     enemiesHit.Add(targetASC);
                     
-                    // Debug.Log($"¡Golpe Cono a {targetCollider.name}!");
+                    if (HitVFX != null)
+                    {
+                        // Instanciamos el efecto en el pecho del enemigo (target.position + up)
+                        Vector3 hitPos = targetASC.transform.position + Vector3.up;
+                        GameObject hitInstance = Instantiate(HitVFX, hitPos, Quaternion.identity);
+                        Destroy(hitInstance, 2.0f);
+                    }
                 }
             }
         }

@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 [CreateAssetMenu(fileName = "GA_ProjectileShoot", menuName = "GAS/Generics/Projectile Shoot")]
 public class GA_ProjectileShoot : GameplayAbility
@@ -6,65 +7,112 @@ public class GA_ProjectileShoot : GameplayAbility
     [Header("Configuración del Proyectil")]
     public GameObject ProjectilePrefab; 
     public float LaunchForce = 20f;     
-    
-    [Tooltip("Posición relativa al jugador (X=Lado, Y=Altura, Z=Adelante). Ajusta Z para que no nazca dentro de tu cuerpo.")]
     public Vector3 SpawnOffset = new Vector3(0.5f, 1.5f, 1.0f); 
-    
-    [Header("Física Extra")]
-    [Tooltip("Si true, añade un giro al objeto al lanzarlo (efecto de hacha girando).")]
     public bool AddSpin = true;
 
     [Header("Efectos al Impactar")]
-    [Tooltip("El efecto que se aplica al instante (Ej: GE_Damage_Instant)")]
     public GameplayEffect InstantDamageEffect; 
-
-    [Tooltip("El efecto que aplica un estado duradero (Ej: GE_Slow_Duration)")]
     public GameplayEffect DurationEffect; 
+
+    [Header("Sincronización")]
+    public float SpawnDelay = 0.4f; 
+
+    [Header("Visuales")]
+    public GameObject ImpactVFX;
 
     public override void Activate()
     {
         if (!CanActivate()) return;
+        
         CommitAbility();
 
-        // 1. Pagar Coste
-        if (CostEffect != null) OwnerASC.ApplyGameplayEffect(CostEffect, this);
+        // LÓGICA DE ANIMACIÓN (Híbrida)
+        if (OwnerASC != null)
+        {
+            // Intento 1: Es Jugador (Usa PlayerController)
+            PlayerController pc = OwnerASC.GetComponent<PlayerController>();
+            if (pc != null) 
+            {
+                pc.PlayAnimation(AnimationTriggerName, AnimationID);
+            }
+            else
+            {
+                // Intento 2: Es IA (Usa Animator directo si tiene)
+                Animator anim = OwnerASC.GetComponent<Animator>(); // O en hijos
+                if (anim == null) anim = OwnerASC.GetComponentInChildren<Animator>();
+                
+                if (anim != null)
+                {
+                    anim.SetInteger("ActionID", AnimationID);
+                    anim.SetTrigger(AnimationTriggerName);
+                }
+            }
+            
+            OwnerASC.StartAbilityCoroutine(ShootSequence());
+        }
+    }
 
-        // 2. OBTENER DIRECCIÓN DE LA CÁMARA (MIRADA)
-        Transform cameraTransform = Camera.main.transform;
-        
-        // Calculamos dónde nace (Usamos el cuerpo como base, pero sumamos el offset)
-        // Nota: Usamos el cuerpo para la posición base, pero la rotación del disparo viene de la cámara
+    private IEnumerator ShootSequence()
+    {
+        // Velocidad de ataque (funciona igual para AI y Player)
+        float speedMultiplier = 1f;
+        float atkSpeedStat = OwnerASC.GetAttributeValue(EAttributeType.AtkSpeed);
+        if (atkSpeedStat > 0) speedMultiplier = 1f / atkSpeedStat;
+
+        yield return new WaitForSeconds(SpawnDelay / speedMultiplier);
+
+        SpawnProjectile();
+
+        float backswingTime = 0.5f;
+        yield return new WaitForSeconds(backswingTime / speedMultiplier);
+
+        EndAbility();
+    }
+
+    private void SpawnProjectile()
+    {
         Vector3 spawnPos = OwnerASC.transform.TransformPoint(SpawnOffset);
-        
-        // La rotación inicial del proyectil será igual a la de la cámara (mirando al frente)
-        Quaternion spawnRot = cameraTransform.rotation;
+        Quaternion spawnRot = Quaternion.identity;
+        Vector3 launchDirection = Vector3.forward;
 
-        // 3. Crear el Proyectil
+        // --- DETECCION DE PUNTERÍA ---
+        PlayerController pc = OwnerASC.GetComponent<PlayerController>();
+        
+        if (pc != null)
+        {
+            // LÓGICA JUGADOR: Usar Cámara/Mira
+            Vector3 targetPoint = pc.GetAimPoint(100f);
+            launchDirection = (targetPoint - spawnPos).normalized;
+            spawnRot = Quaternion.LookRotation(launchDirection);
+        }
+        else
+        {
+            // LÓGICA IA: Usar el frente del modelo (La IA ya apunta al jugador)
+            launchDirection = OwnerASC.transform.forward;
+            spawnRot = OwnerASC.transform.rotation;
+        }
+        // -----------------------------
+
         GameObject newProjectile = Instantiate(ProjectilePrefab, spawnPos, spawnRot);
 
-        // 4. Inicializar lógica GAS
         GC_Projectile projectileScript = newProjectile.GetComponent<GC_Projectile>();
         if (projectileScript != null)
         {
-            // El proyectil necesita aplicar AMBOS efectos
-            projectileScript.Initialize(InstantDamageEffect, DurationEffect, OwnerASC, LaunchForce, UltimateChargeAmount);
-        }
+            projectileScript.Initialize(InstantDamageEffect, DurationEffect, OwnerASC, LaunchForce, UltimateChargeAmount,ImpactVFX);
 
-        // 5. APLICAR FUERZA FÍSICA
-        Rigidbody rb = newProjectile.GetComponent<Rigidbody>();
-        if (rb != null)
-        {
-            // IMPULSO: Usamos cameraTransform.forward para que vaya hacia donde miras
-            rb.linearVelocity = cameraTransform.forward * LaunchForce;
-            
-            // Opcional: Añadir giro (Torque) para que parezca un hacha lanzada
-            if (AddSpin)
+            // Copiar visuales (Solo si es Player, los enemigos suelen tener armas fijas)
+            if (pc != null)
             {
-                // Gira en el eje X local (hacia adelante)
-                rb.AddRelativeTorque(Vector3.right * 1000f); 
+                GameObject currentWeapon = pc.GetCurrentMainWeapon();
+                if (currentWeapon != null) projectileScript.OverrideVisuals(currentWeapon);
             }
         }
 
-        EndAbility();
+        Rigidbody rb = newProjectile.GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.linearVelocity = launchDirection * LaunchForce;
+            if (AddSpin) rb.AddRelativeTorque(Vector3.right * 1000f);
+        }
     }
 }

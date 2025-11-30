@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6bb5562b5ea8394f8a1925c1d716fda, type: 3}
+  m_Name: GA_BossAura
+  m_EditorClassIdentifier: 
+  AbilityName: Boss Aura
+  AbilityIcon: {fileID: 21300000, guid: f4e1082d5e4844446b03f3be01feec06, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 0}
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 0
+  ActivationBlockedTags: 
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  Radius: 2
+  TotalDuration: 5
+  TickInterval: 1
+  FollowOwner: 1
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 8
+  VisualPrefab: {fileID: 7986504087968017091, guid: 12a56ee4630040c4eb17ae9707ed4cef, type: 3}
+  VisualScaleMultiplier: 1
+  EffectsToApply:
+  - {fileID: 11400000, guid: 3f41619ffd1d16a499f2507e69289e10, type: 2}
+  - {fileID: 11400000, guid: d9b0a43f7cf7b624d806facccb898693, type: 2}
+  StartDelay: 0.5

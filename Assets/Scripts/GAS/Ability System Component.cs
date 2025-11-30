@@ -409,16 +409,16 @@ public class AbilitySystemComponent : MonoBehaviour
     {
         // 1. Si no tengo stat de experiencia o ya llegué al máximo, no hago nada.
         if (!Attributes.ContainsKey(EAttributeType.Exp)) return;
-        if (hasReachedMaxLevel) return; // <--- Freno total si ya somos nivel máximo
+        //if (hasReachedMaxLevel) return; // <--- Freno total si ya somos nivel máximo
 
-        float currentLevel = GetAttributeValue(EAttributeType.Level);
+        /*/float currentLevel = GetAttributeValue(EAttributeType.Level);//DESCOMENTAR ESTO LUEGO//////
         
         // Seguridad extra: Si ya somos nivel 3, nos aseguramos de marcar el flag y salir
         if (currentLevel >= MaxLevel)
         {
             hasReachedMaxLevel = true;
             return;
-        }
+        }*/
 
         float currentExp = GetAttributeValue(EAttributeType.Exp);
         float maxExp = GetAttributeValue(EAttributeType.MaxExp);
@@ -433,7 +433,7 @@ public class AbilitySystemComponent : MonoBehaviour
             // Subimos de nivel
             HandleLevelUp();
 
-            // Verificamos si ALCANZAMOS el tope en esta iteración
+            /*// Verificamos si ALCANZAMOS el tope en esta iteración //////////DES COMENTAR ESTO DESPUES//////////////////////////////////
             if (GetAttributeValue(EAttributeType.Level) >= MaxLevel)
             {
                 newExp = 0; // Opcional: Limpiar exp sobrante
@@ -441,7 +441,7 @@ public class AbilitySystemComponent : MonoBehaviour
                 Debug.Log("Nivel Máximo Alcanzado. Evolución disponible.");
                 OnMaxLevelReached?.Invoke(); // <--- Disparamos evento para activar el selector
                 break; // Rompemos el bucle inmediatamente
-            }
+            }*/
 
             // Si no es el tope, aumentamos la dificultad del siguiente nivel
             maxExp = Mathf.Round(maxExp * 1.5f); 
@@ -474,11 +474,12 @@ public class AbilitySystemComponent : MonoBehaviour
             SetCurrentAttributeValue(EAttributeType.Mana, GetAttributeValue(EAttributeType.MaxMana));
         }
         OnLevelUp?.Invoke();
+        /* DESCOMENTAR ESTO DESPUES//////////////////////////////////////
         if (newLevel >= MaxLevel)
         {
             Debug.Log("¡NIVEL MÁXIMO ALCANZADO! Desbloqueando Subclase...");
             OnMaxLevelReached?.Invoke();
-        }
+        }*/
     }
 
     // --- MATH HELPERS ---
@@ -531,5 +532,29 @@ public class AbilitySystemComponent : MonoBehaviour
     public void StartAbilityCoroutine(System.Collections.IEnumerator routine)
     {
         StartCoroutine(routine);
+    }
+    //GJ
+    public void UpgradeAttribute(EAttributeType type, float amountToAdd)
+    {
+        if (Attributes.ContainsKey(type))
+        {
+            // 1. Modificamos la BASE (La fuente de la verdad)
+            Attributes[type].BaseValue += amountToAdd;
+            
+            // 2. Recalculamos para que se note ya mismo (Base nueva + Buffs viejos)
+            RecalculateAllAttributes();
+            
+            // Caso especial: Si mejoramos Vida/Mana Máxima, también curamos esa cantidad
+            if (type == EAttributeType.MaxHealth)
+            {
+                float current = GetAttributeValue(EAttributeType.Health);
+                SetCurrentAttributeValue(EAttributeType.Health, current + amountToAdd);
+            }
+            if (type == EAttributeType.MaxMana)
+            {
+                float current = GetAttributeValue(EAttributeType.Mana);
+                SetCurrentAttributeValue(EAttributeType.Mana, current + amountToAdd);
+            }
+        }
     }
 }

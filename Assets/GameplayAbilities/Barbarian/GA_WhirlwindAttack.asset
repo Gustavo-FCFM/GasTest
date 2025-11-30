@@ -20,13 +20,17 @@ MonoBehaviour:
   UltimateChargeAmount: 0
   ActivationBlockedTags: 
   AnimationTriggerName: AttackTrigger
-  AnimationID: 6
-  Radius: 5
-  TotalDuration: 10
-  TickInterval: 0.5
-  FollowOwner: 1
+  AnimationID: 5
+  AbilityRadius: 1
   TargetLayer:
     serializedVersion: 2
     m_Bits: 8
-  VisualPrefab: {fileID: 0}
-  PeriodicEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
+  Radius: 1
+  TotalDuration: 10
+  TickInterval: 0.5
+  FollowOwner: 1
+  VisualPrefab: {fileID: 7986504087968017091, guid: b10bcfd32615d844291d18c9d2d35007, type: 3}
+  VisualScaleMultiplier: 1
+  EffectsToApply:
+  - {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
+  StartDelay: 0.5

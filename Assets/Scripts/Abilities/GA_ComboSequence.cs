@@ -13,6 +13,8 @@ public class GA_ComboSequence : GameplayAbility
         
         [Tooltip("Tiempo a esperar DESPUÉS de lanzar esta habilidad antes de la siguiente")]
         public float DelayAfter;
+        [Tooltip("Si es > 0, fuerza a la habilidad a usar este ID de animación en lugar del suyo propio.")]
+        public int AnimationIDOverride; 
     }
 
     [Header("Secuencia del Combo")]
@@ -22,8 +24,7 @@ public class GA_ComboSequence : GameplayAbility
     {
         if (!CanActivate()) return;
 
-        // 1. Pagar el coste inicial (maná/energía) de TODO el combo aquí
-        if (CostEffect != null) OwnerASC.ApplyGameplayEffect(CostEffect, this);
+        CommitAbility();
 
         // 2. Iniciar la secuencia usando el ASC como motor
         if (OwnerASC != null)
@@ -43,7 +44,11 @@ public class GA_ComboSequence : GameplayAbility
                 // Usamos Instantiate para no modificar el asset original y poder inicializarla
                 GameplayAbility stepInstance = Instantiate(step.AbilityToCast);
                 stepInstance.Initialize(OwnerASC);
-
+                
+                if (step.AnimationIDOverride > 0)
+                {
+                    stepInstance.AnimationID = step.AnimationIDOverride;
+                }
                 // B) La activamos
                 // Nota: Las sub-habilidades deberían tener coste 0 para que no cobren doble
                 stepInstance.Activate();

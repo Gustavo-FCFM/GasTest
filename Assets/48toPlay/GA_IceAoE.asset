@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6bb5562b5ea8394f8a1925c1d716fda, type: 3}
+  m_Name: GA_IceAoE
+  m_EditorClassIdentifier: 
+  AbilityName: New Ability
+  AbilityIcon: {fileID: 0}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 0}
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 0
+  ActivationBlockedTags: 
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  AbilityRadius: 3
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  Radius: 4.5
+  TotalDuration: 1
+  TickInterval: 0
+  FollowOwner: 1
+  VisualPrefab: {fileID: 584207449403360073, guid: b1ae5055f08b8284d9e996465d1d37e3, type: 3}
+  VisualScaleMultiplier: 0.3
+  EffectsToApply:
+  - {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
+  - {fileID: 11400000, guid: 70c9bebbbfba254448fb78d4cf1f9726, type: 2}
+  StartDelay: 0.5

@@ -24,9 +24,13 @@ public abstract class GameplayAbility : ScriptableObject
     [Header("Animación")]
     public string AnimationTriggerName = "AttackTrigger"; 
     
-    // --- NUEVO: El ID específico de esta habilidad ---
-    [Tooltip("1=Melee, 2=Proyectil, 3=Salto, 4=Area/Ulti")]
+    [Tooltip("1=Melee, 2=Proyectil, 3=Salto, 4=Extra")]
     public int AnimationID = 1;
+    [Header("Configuración de Área (Opcional)")]
+    [Tooltip("Radio de efecto, rango de ataque o tamaño de impacto.")]
+    public float AbilityRadius = 3f; 
+    [Tooltip("Capa de objetivos a afectar (Enemigos, Aliados, etc).")]
+    public LayerMask TargetLayer;
 
     protected AbilitySystemComponent OwnerASC;
 

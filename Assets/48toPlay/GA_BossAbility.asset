@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c79a6ef63759774f8125f583fee8f7e, type: 3}
+  m_Name: GA_BossAbility
+  m_EditorClassIdentifier: 
+  AbilityName: Boss Ability
+  AbilityIcon: {fileID: 21300000, guid: f4e1082d5e4844446b03f3be01feec06, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 0}
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 0
+  ActivationBlockedTags: 
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  Sequence:
+  - AbilityToCast: {fileID: 11400000, guid: 11a9cd014a96d6d4fb0f56ed9789d54b, type: 2}
+    DelayAfter: 3
+  - AbilityToCast: {fileID: 11400000, guid: af94aa4ebeffdc248bc2a80f60b01014, type: 2}
+    DelayAfter: 3

@@ -18,10 +18,14 @@ MonoBehaviour:
   CooldownEffect: {fileID: 11400000, guid: 05cc155d13a28254980c2a8040c35e21, type: 2}
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 6
-  ActivationBlockedTags: []
-  Length: 4
-  Width: 3
+  ActivationBlockedTags: 
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  AbilityRadius: 3
   TargetLayer:
     serializedVersion: 2
     m_Bits: 8
+  Length: 5
+  Width: 2
   DamageEffect: {fileID: 11400000, guid: c724c673f706d3d47b65f864d4719e97, type: 2}
+  DamageDelay: 0.5

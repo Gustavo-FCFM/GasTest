@@ -8,44 +8,56 @@ public class GA_LeapAttack : GameplayAbility
     public float JumpVelocity = 15f; 
     public float ForwardForce = 5f; // Fuerza horizontal
     
-    [Header("Configuración de Impacto")]
+    /*[Header("Configuración de Impacto")]
     [Tooltip("Radio de detección al aterrizar.")]
     public float ImpactRadius = 3f; 
-    public LayerMask TargetLayer;
+    public LayerMask TargetLayer;*/
 
     [Header("Efectos")]
     public GameplayEffect DamageEffect; 
     public GameplayEffect CrowdControlEffect; // Ralentización/Aturdimiento
+
+    [Header("Visuales")]
+    public GameObject ImpactVFX; //  Arrastra aquí el efecto de grieta o explosión de polvo
 
     public override void Activate()
     {
         if (!CanActivate()) return;
         CommitAbility();
 
-        // 1. Aplicar Coste
-        if (CostEffect != null) OwnerASC.ApplyGameplayEffect(CostEffect, this);
-
         // 2. Ejecutar Salto Físico (Pide al PlayerController que inicie el salto)
         PlayerController pc = OwnerASC.GetComponent<PlayerController>();
         if (pc != null)
         {
+            pc.PlayAnimation(AnimationTriggerName, AnimationID);
             pc.ExecuteLeap(this, JumpVelocity, ForwardForce);
             Debug.Log($"Salto Furioso Iniciado: Fuerza Vertical: {JumpVelocity}");
 
-            // NOTA: Para el chequeo de impacto, necesitarás un componente MonoBehaviour
-            // auxiliar en el jugador que inicie una Coroutine para chequear la colisión 
-            // SÓLO cuando toque el suelo después de este salto (para evitar el daño instantáneo).
+            // NOTA: El PlayerController llamará a ExecuteImpactCheck al aterrizar
         }
 
-        // 3. Finalizar (El cooldown comienza, el daño real se aplica al aterrizar)
         EndAbility(); 
     }
     
-    // (Este método se llamaría desde la Coroutine del MonoBehaviour auxiliar del jugador al aterrizar)
+    // Este método lo llama el PlayerController cuando isGrounded es true
     public void ExecuteImpactCheck()
     {
         Vector3 impactCenter = OwnerASC.transform.position;
-        Collider[] hitColliders = Physics.OverlapSphere(impactCenter, ImpactRadius, TargetLayer);
+
+        // --- NUEVO: SPAWN VFX AL ATERRIZAR ---
+        if (ImpactVFX != null)
+        {
+            // Lo instanciamos en los pies del jugador
+            GameObject vfx = Instantiate(ImpactVFX, impactCenter, Quaternion.identity);
+            
+            float vfxScale = AbilityRadius * 2f; 
+            vfx.transform.localScale = new Vector3(vfxScale, vfxScale, vfxScale);
+
+            Destroy(vfx, 2.0f); // Limpieza automática
+        }
+        // --------------------------------------
+
+        Collider[] hitColliders = Physics.OverlapSphere(impactCenter, AbilityRadius, TargetLayer);
         
         HashSet<AbilitySystemComponent> enemiesHit = new HashSet<AbilitySystemComponent>();
         
@@ -55,7 +67,7 @@ public class GA_LeapAttack : GameplayAbility
             if (targetASC != null && targetASC != OwnerASC && !enemiesHit.Contains(targetASC))
             {
                 if (DamageEffect != null) targetASC.ApplyGameplayEffect(DamageEffect, OwnerASC);
-                ChargeUltimate();
+                ChargeUltimate(); // Cargar ulti por cada enemigo aplastado
                 if (CrowdControlEffect != null) targetASC.ApplyGameplayEffect(CrowdControlEffect, OwnerASC);
                 enemiesHit.Add(targetASC);
             }

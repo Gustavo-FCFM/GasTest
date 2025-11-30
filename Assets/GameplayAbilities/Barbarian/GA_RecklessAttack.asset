@@ -21,10 +21,17 @@ MonoBehaviour:
   ActivationBlockedTags: 
   AnimationTriggerName: AttackTrigger
   AnimationID: 5
+  AbilityRadius: 3
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 0
   Sequence:
   - AbilityToCast: {fileID: 11400000, guid: 830101eba8c1e234c9bc8d55c6d4b4d5, type: 2}
     DelayAfter: 0.3
+    AnimationIDOverride: 1
   - AbilityToCast: {fileID: 11400000, guid: 28ccd4d41e3a4a546b2915b40eef9aa2, type: 2}
     DelayAfter: 0.8
+    AnimationIDOverride: 1
   - AbilityToCast: {fileID: 11400000, guid: f5b8c13a15cbefd47aa60586da5a1693, type: 2}
     DelayAfter: 0
+    AnimationIDOverride: 1

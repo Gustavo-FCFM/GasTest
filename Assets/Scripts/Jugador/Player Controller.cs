@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(AbilitySystemComponent))]
 public class PlayerController : MonoBehaviour
@@ -8,7 +9,6 @@ public class PlayerController : MonoBehaviour
     private CharacterController characterController;
 
     [Header("Configuración de Clase")]
-    [Tooltip("Arrastra aquí la clase inicial (ej: Class_Barbarian).")]
     public CharacterClassDefinition CurrentClassDef;
     
     [Header("UI & Visuals")] 
@@ -22,8 +22,7 @@ public class PlayerController : MonoBehaviour
     private GameObject currentMainWeapon;
     private GameObject currentOffWeapon;
 
-    // --- SEMÁFORO DE COMBATE (NUEVO) ---
-    // Si es true, no podemos iniciar otra habilidad
+    // --- SEMÁFORO DE COMBATE ---
     private bool isAttacking = false; 
 
     // --- Habilidades Activas ---
@@ -37,7 +36,8 @@ public class PlayerController : MonoBehaviour
     [Header("Físicas")]
     public float jumpForce = 8f;
     public float gravity = -9.8f;
-    
+    [Tooltip("Si el jugador baja de esta altura Y, muere instantáneamente.")]
+    public float VoidYLevel = -5.0f;
     private float verticalVelocity; 
     private Vector3 abilityMoveVector; 
     private bool isAbilityLeaping = false;
@@ -61,7 +61,12 @@ public class PlayerController : MonoBehaviour
     {
         if (ASC != null && ASC.HasTag(EGameplayTag.State_Dead)) return;
         if (ASC != null && ASC.HasTag(EGameplayTag.State_Stunned)) return;
-        
+        if (transform.position.y < VoidYLevel)
+        {   
+            TeleportToSpawn();
+            // ASC.ApplyGameplayEffect(algunEfectoDeDaño);
+            return;
+        }
         HandleMovementInput(); 
         HandleAbilityInput();  
         UpdateAnimations();
@@ -73,13 +78,95 @@ public class PlayerController : MonoBehaviour
     }
 
     // ---------------------------------------------------------
-    // 1. INPUT DE HABILIDADES CON SEMÁFORO
+    // INPUT Y MOVIMIENTO
     // ---------------------------------------------------------
+    private void HandleMovementInput()
+    {
+        if (ASC != null && ASC.HasTag(EGameplayTag.State_Rooted))
+        {
+            verticalVelocity += gravity * Time.deltaTime;
+            characterController.Move(Vector3.up * verticalVelocity * Time.deltaTime);
+            return; 
+        }
+
+        // 1. Calcular Velocidad
+        float baseSpeed = 5f; 
+        float speedMultiplier = 1.0f;
+
+        if (ASC != null)
+        {
+            baseSpeed = ASC.GetAttributeValue(EAttributeType.MovSpeed);
+            foreach (var activeEffect in ASC.GetActiveEffects())
+            {
+                foreach (var mod in activeEffect.Definition.Modifiers)
+                {
+                    if (mod.Attribute == EAttributeType.MovSpeed && mod.Type == Modifier.EModificationType.Multiply)
+                    {
+                        if (mod.Magnitude < speedMultiplier) speedMultiplier = mod.Magnitude;
+                    }
+                }
+            }
+        }
+        float finalSpeed = baseSpeed * speedMultiplier;
+
+        // 2. Leer Input
+        float horizontal = Input.GetAxis("Horizontal");
+        float vertical = Input.GetAxis("Vertical");
+        
+        // Esta función usa la cámara principal, así que si la cámara rota, esto rota.
+        Vector3 inputVector = GetWASDInputVector(horizontal, vertical);
+        
+        // 3. ROTACIÓN DEL PERSONAJE (Estilo Aventura/GTA sin apuntar)
+        // Si nos movemos y no estamos atacando (para no girar bruscamente en medio de un golpe)
+        if (inputVector != Vector3.zero && !isAttacking)
+        {
+            // Girar suavemente hacia la dirección de movimiento
+            Quaternion targetRotation = Quaternion.LookRotation(inputVector);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 10f * Time.deltaTime);
+        }
+
+        // 4. Movimiento Físico
+        Vector3 currentHorizontalMovement = Vector3.zero;
+
+        if (isAbilityLeaping)
+        {
+            abilityMoveVector = Vector3.Lerp(abilityMoveVector, Vector3.zero, Time.deltaTime * 1f); 
+            Vector3 airNudge = inputVector * finalSpeed * 1f; 
+            currentHorizontalMovement = abilityMoveVector + airNudge;
+        }
+        else 
+        {
+            currentHorizontalMovement = inputVector * finalSpeed;
+            if (characterController.isGrounded && Input.GetButtonDown("Jump")) 
+            {
+                verticalVelocity = jumpForce;
+            }
+        }
+
+        verticalVelocity += gravity * Time.deltaTime; 
+        Vector3 finalMovement = new Vector3(currentHorizontalMovement.x, 0, currentHorizontalMovement.z) + (Vector3.up * verticalVelocity);
+        characterController.Move(finalMovement * Time.deltaTime); 
+        CheckLanding();
+    }
+
+    // Helper clave: Convierte WASD a dirección relativa a la cámara
+    private Vector3 GetWASDInputVector(float h, float v)
+    {
+        Vector3 f = Camera.main.transform.forward; 
+        Vector3 r = Camera.main.transform.right;   
+        
+        // Aplanamos para no caminar hacia el cielo/suelo
+        f.y = 0; 
+        r.y = 0; 
+        f.Normalize();
+        r.Normalize();
+        
+        return (f * v + r * h).normalized;
+    }
+
     private void HandleAbilityInput()
     {
         if (ASC != null && ASC.HasTag(EGameplayTag.State_Silenced)) return; 
-        
-        // Si ya estamos atacando, ignoramos nuevos clicks (Anti-Spam)
         if (isAttacking) return; 
 
         if (Input.GetButtonDown("Fire3")) TryActivateAbility(MovementAbility); 
@@ -94,23 +181,18 @@ public class PlayerController : MonoBehaviour
     {
         if (ASC != null && ability != null && ability.CanActivate())
         {
-            isAttacking = true; // Ponemos el semáforo en ROJO
+            isAttacking = true; 
             ability.Activate();
         }
     }
 
-    // --- MÉTODO PÚBLICO PARA LIBERAR EL SEMÁFORO ---
-    // Las habilidades (GAs) llamarán a esto cuando terminen su animación
     public void FinishAttack()
     {
-        isAttacking = false; // Semáforo en VERDE
+        isAttacking = false; 
     }
 
-    // ---------------------------------------------------------
-    // ... (El resto de métodos: EquipCharacterClass, UpdateVisuals, etc. siguen IGUAL) ...
-    // Copia y pega el resto de tu script original aquí abajo
-    // ---------------------------------------------------------
-
+    // ... (Métodos de Equipar Clase, Visuales, Animaciones IGUAL QUE ANTES) ...
+    // Pégalos aquí para mantener el archivo completo.
     public void EquipCharacterClass(CharacterClassDefinition newClass)
     {
         if (newClass == null || ASC == null) return;
@@ -184,7 +266,6 @@ public class PlayerController : MonoBehaviour
         characterAnimator.SetFloat("Speed", speed, 0.1f, Time.deltaTime);
         characterAnimator.SetBool("IsJumping", !characterController.isGrounded);
         
-        // Actualizar velocidad de ataque según stats
         if (ASC != null)
         {
             float interval = ASC.GetAttributeValue(EAttributeType.AtkSpeed);
@@ -205,73 +286,9 @@ public class PlayerController : MonoBehaviour
     {
         if (characterAnimator != null)
         {
-            // 1. Le decimos QUÉ animación queremos
             characterAnimator.SetInteger("ActionID", actionID);
-            
-            // 2. Le decimos ¡HAZLA AHORA!
             characterAnimator.SetTrigger(triggerName);
         }
-    }
-
-    private void HandleMovementInput()
-    {
-        if (ASC != null && ASC.HasTag(EGameplayTag.State_Rooted))
-        {
-            verticalVelocity += gravity * Time.deltaTime;
-            characterController.Move(Vector3.up * verticalVelocity * Time.deltaTime);
-            return; 
-        }
-
-        float baseSpeed = 5f; 
-        float speedMultiplier = 1.0f;
-
-        if (ASC != null)
-        {
-            baseSpeed = ASC.GetAttributeValue(EAttributeType.MovSpeed);
-            foreach (var activeEffect in ASC.GetActiveEffects())
-            {
-                foreach (var mod in activeEffect.Definition.Modifiers)
-                {
-                    if (mod.Attribute == EAttributeType.MovSpeed && mod.Type == Modifier.EModificationType.Multiply)
-                    {
-                        if (mod.Magnitude < speedMultiplier) speedMultiplier = mod.Magnitude;
-                    }
-                }
-            }
-        }
-
-        float finalSpeed = baseSpeed * speedMultiplier;
-        float horizontal = Input.GetAxis("Horizontal");
-        float vertical = Input.GetAxis("Vertical");
-        Vector3 inputVector = GetWASDInputVector(horizontal, vertical);
-        Vector3 currentHorizontalMovement = Vector3.zero;
-
-        if (isAbilityLeaping)
-        {
-            abilityMoveVector = Vector3.Lerp(abilityMoveVector, Vector3.zero, Time.deltaTime * 1f); 
-            Vector3 airNudge = inputVector * finalSpeed * 1f; 
-            currentHorizontalMovement = abilityMoveVector + airNudge;
-        }
-        else 
-        {
-            currentHorizontalMovement = inputVector * finalSpeed;
-            if (characterController.isGrounded && Input.GetButtonDown("Jump")) 
-            {
-                verticalVelocity = jumpForce;
-            }
-        }
-
-        verticalVelocity += gravity * Time.deltaTime; 
-        Vector3 finalMovement = new Vector3(currentHorizontalMovement.x, 0, currentHorizontalMovement.z) + (Vector3.up * verticalVelocity);
-        characterController.Move(finalMovement * Time.deltaTime); 
-        CheckLanding();
-    }
-
-    private Vector3 GetWASDInputVector(float h, float v)
-    {
-        Vector3 f = Camera.main.transform.forward; f.y = 0; f.Normalize();
-        Vector3 r = Camera.main.transform.right;   r.y = 0; r.Normalize();
-        return (f * v + r * h).normalized;
     }
 
     public void ExecuteLeap(GA_LeapAttack ability, float upForce, float fwdForce)
@@ -294,16 +311,68 @@ public class PlayerController : MonoBehaviour
             isAbilityLeaping = false;
             activeLeapAbility = null;
             abilityMoveVector = Vector3.zero;
-            FinishAttack(); // Asegurar que liberamos si era un ataque de salto
+            FinishAttack(); 
         }
     }
 
-    private System.Collections.IEnumerator RespawnRoutine(float delay)
+    /*private System.Collections.IEnumerator RespawnRoutine(float delay)
     {
         yield return new WaitForSeconds(delay);
         characterController.enabled = false;
         transform.position = spawnPosition;
         characterController.enabled = true;
         ASC.Revive();
+    }*/
+    private System.Collections.IEnumerator RespawnRoutine(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        // --- LÓGICA DE REINICIO DE NIVEL ---
+        // Obtenemos el nombre de la escena actual y la volvemos a cargar.
+        // Esto resetea enemigos, rondas, vida, posición, TODO.
+        string currentSceneName = SceneManager.GetActiveScene().name;
+        SceneManager.LoadScene(currentSceneName);
+    }
+    public GameObject GetCurrentMainWeapon()
+    {
+        return currentMainWeapon; 
+    }
+    public Vector3 GetAimPoint(float maxRange = 100f)
+    {
+        // Rayo desde el centro de la cámara (0.5, 0.5)
+        Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+        
+        // Ignoramos la capa del Jugador (para no apuntarnos a nosotros mismos)
+        // Asumimos que el Player está en la capa "Default" o "Player". 
+        // Lo ideal es usar una LayerMask que incluya Suelo y Enemigos.
+        int layerMask = ~LayerMask.GetMask("Player"); // El símbolo ~ invierte (Todo MENOS Player)
+
+        if (Physics.Raycast(ray, out RaycastHit hit, maxRange, layerMask))
+        {
+            return hit.point; // Golpeamos algo (suelo, pared, enemigo)
+        }
+        else
+        {
+            return ray.GetPoint(maxRange); // No golpeamos nada, apuntamos al horizonte
+        }
+    }
+
+    // Fuerza al personaje a mirar hacia donde apunta la cámara (Usar antes de atacar)
+    public void RotateToAim()
+    {
+        Vector3 targetPoint = GetAimPoint();
+        Vector3 direction = (targetPoint - transform.position).normalized;
+        direction.y = 0; // Aplanamos para que no mire al cielo/suelo y se caiga
+        
+        if (direction != Vector3.zero)
+        {
+            transform.rotation = Quaternion.LookRotation(direction);
+        }
+    }
+    public void TeleportToSpawn()
+    {
+        characterController.enabled = false;
+        transform.position = spawnPosition;
+        characterController.enabled = true;
     }
 }

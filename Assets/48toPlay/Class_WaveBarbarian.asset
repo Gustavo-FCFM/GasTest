@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 749805704a6088741af34d91f0891ced, type: 3}
+  m_Name: Class_WaveBarbarian
+  m_EditorClassIdentifier: 
+  ClassName: Barbarian
+  ClassIcon: {fileID: 21300000, guid: 150ec0fe7eb33a744879df340d60234b, type: 3}
+  Description: Wave mode barbarian
+  BaseAttributes: {fileID: 11400000, guid: 83129729f0889ad438eca2355550df4d, type: 2}
+  Abilities:
+  - InputSlot: 1
+    Ability: {fileID: 11400000, guid: 56154d375aef97348818609f5d5698d5, type: 2}
+  - InputSlot: 2
+    Ability: {fileID: 11400000, guid: 67e0658b3d2b8164c9dcad3e5120f791, type: 2}
+  - InputSlot: 3
+    Ability: {fileID: 11400000, guid: 7f53883b772b6f34f8b3d5f6701bc219, type: 2}
+  - InputSlot: 6
+    Ability: {fileID: 11400000, guid: 56dc5dcfc67b24b49aaea483f6856e81, type: 2}
+  - InputSlot: 4
+    Ability: {fileID: 11400000, guid: acda43e15e9bc1c4da89c6727b5d73c2, type: 2}
+  - InputSlot: 5
+    Ability: {fileID: 11400000, guid: 95426c07a66a6ba4aab2f0b1325a5dcb, type: 2}
+  StatGrowthPerLevel:
+  - Attribute: 2
+    AmountPerLevel: 30
+  - Attribute: 14
+    AmountPerLevel: 100
+  - Attribute: 8
+    AmountPerLevel: 1
+  AvailableSubclasses: []
+  ClassAnimatorOverride: {fileID: 22100000, guid: c1aea6e6b93746e4dbab09a9b224bfaa, type: 2}
+  MainHandWeaponPrefab: {fileID: 8072587243417393782, guid: c61cbb6b38d7de247a8e5b46c0726dec, type: 3}
+  OffHandWeaponPrefab: {fileID: 0}

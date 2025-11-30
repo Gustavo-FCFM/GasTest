@@ -22,3 +22,5 @@ MonoBehaviour:
   AnimationTriggerName: AttackTrigger
   AnimationID: 3
   BuffEffect: {fileID: 11400000, guid: 14fddbd2425f29045b44a19b2f109b88, type: 2}
+  ParticlePrefab: {fileID: 7155335147208632822, guid: 268b1b15038d49b418cf03198b835136, type: 3}
+  ParticleOffset: {x: 0, y: 0, z: 0}

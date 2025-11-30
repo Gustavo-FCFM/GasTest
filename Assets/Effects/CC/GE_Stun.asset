@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 923ea9fbcde13614b8da2b7689d349ea, type: 3}
   m_Name: GE_Stun
   m_EditorClassIdentifier: 
-  Duration: 3
+  Duration: 1
   Period: 0
   StackingPolicy: 2
   Icon: {fileID: 21300000, guid: 08a3525f82bba734f8cba44ee4ce13fe, type: 3}

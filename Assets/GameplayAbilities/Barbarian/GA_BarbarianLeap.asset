@@ -21,11 +21,12 @@ MonoBehaviour:
   ActivationBlockedTags: 
   AnimationTriggerName: AttackTrigger
   AnimationID: 4
-  JumpVelocity: 15
-  ForwardForce: 10
-  ImpactRadius: 4
+  AbilityRadius: 1
   TargetLayer:
     serializedVersion: 2
     m_Bits: 8
+  JumpVelocity: 15
+  ForwardForce: 10
   DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   CrowdControlEffect: {fileID: 11400000, guid: 70c9bebbbfba254448fb78d4cf1f9726, type: 2}
+  ImpactVFX: {fileID: 4994997792314849709, guid: 3dd50886582244645be87adb42aa8528, type: 3}
