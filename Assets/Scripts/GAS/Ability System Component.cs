@@ -130,7 +130,7 @@ public class AbilitySystemComponent : MonoBehaviour
         }
     }
 
-    // --- ESTE MÉTODO FUE EL QUE SE BORRÓ Y CAUSABA EL ERROR DE IMAGEN 1 ---
+   
     private void ApplyEffectModifiers(GameplayEffect effect, bool apply)
     {
         float sign = apply ? 1f : -1f;
@@ -411,14 +411,14 @@ public class AbilitySystemComponent : MonoBehaviour
         if (!Attributes.ContainsKey(EAttributeType.Exp)) return;
         //if (hasReachedMaxLevel) return; // <--- Freno total si ya somos nivel máximo
 
-        /*/float currentLevel = GetAttributeValue(EAttributeType.Level);//DESCOMENTAR ESTO LUEGO//////
+        float currentLevel = GetAttributeValue(EAttributeType.Level);//DESCOMENTAR ESTO LUEGO//////
         
         // Seguridad extra: Si ya somos nivel 3, nos aseguramos de marcar el flag y salir
         if (currentLevel >= MaxLevel)
         {
             hasReachedMaxLevel = true;
             return;
-        }*/
+        }
 
         float currentExp = GetAttributeValue(EAttributeType.Exp);
         float maxExp = GetAttributeValue(EAttributeType.MaxExp);
@@ -433,7 +433,7 @@ public class AbilitySystemComponent : MonoBehaviour
             // Subimos de nivel
             HandleLevelUp();
 
-            /*// Verificamos si ALCANZAMOS el tope en esta iteración //////////DES COMENTAR ESTO DESPUES//////////////////////////////////
+            // Verificamos si ALCANZAMOS el tope en esta iteración
             if (GetAttributeValue(EAttributeType.Level) >= MaxLevel)
             {
                 newExp = 0; // Opcional: Limpiar exp sobrante
@@ -441,7 +441,7 @@ public class AbilitySystemComponent : MonoBehaviour
                 Debug.Log("Nivel Máximo Alcanzado. Evolución disponible.");
                 OnMaxLevelReached?.Invoke(); // <--- Disparamos evento para activar el selector
                 break; // Rompemos el bucle inmediatamente
-            }*/
+            }
 
             // Si no es el tope, aumentamos la dificultad del siguiente nivel
             maxExp = Mathf.Round(maxExp * 1.5f); 
@@ -474,12 +474,12 @@ public class AbilitySystemComponent : MonoBehaviour
             SetCurrentAttributeValue(EAttributeType.Mana, GetAttributeValue(EAttributeType.MaxMana));
         }
         OnLevelUp?.Invoke();
-        /* DESCOMENTAR ESTO DESPUES//////////////////////////////////////
+        
         if (newLevel >= MaxLevel)
         {
             Debug.Log("¡NIVEL MÁXIMO ALCANZADO! Desbloqueando Subclase...");
             OnMaxLevelReached?.Invoke();
-        }*/
+        }
     }
 
     // --- MATH HELPERS ---

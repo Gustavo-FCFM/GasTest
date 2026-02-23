@@ -73,24 +73,28 @@ public class GameMode_Survival : MonoBehaviour
     {
         Player.EquipCharacterClass(BarbarianClass);
         AbilitySystemComponent asc = Player.GetComponent<AbilitySystemComponent>();
+        
+        // Limpiamos por si acaso, pero EquipCharacterClass ya lo hace.
         asc.ClearGrantedAbilities(); 
 
+        // Otorgamos TODAS las habilidades configuradas en la clase base
         foreach (var assignment in BarbarianClass.Abilities)
         {
-            if (assignment.InputSlot == EAbilityInput.PrimaryAttack || 
-                assignment.InputSlot == EAbilityInput.SecondaryAttack)
+            GameplayAbility instance = asc.GrantAbility(assignment.Ability);
+            
+            // Asignamos cada instancia a su espacio correspondiente en el PlayerController
+            switch (assignment.InputSlot)
             {
-                GameplayAbility instance = asc.GrantAbility(assignment.Ability);
-                if (assignment.InputSlot == EAbilityInput.PrimaryAttack) Player.PrimaryAttackAbility = instance;
-                if (assignment.InputSlot == EAbilityInput.SecondaryAttack) Player.AimAbility = instance;
+                case EAbilityInput.PrimaryAttack:   Player.PrimaryAttackAbility = instance; break;
+                case EAbilityInput.SecondaryAttack: Player.AimAbility = instance; break;
+                case EAbilityInput.Action1:         Player.AbilityQ = instance; break;
+                case EAbilityInput.Action2:         Player.AbilityE = instance; break;
+                case EAbilityInput.Action3:         Player.AbilityR = instance; break;
+                case EAbilityInput.Movement:        Player.MovementAbility = instance; break;
             }
         }
 
-        Player.AbilityQ = null;
-        Player.AbilityE = null;
-        Player.MovementAbility = null;
-        Player.AbilityR = null; 
-        
+        // Ya no necesitamos poner en null las habilidades extra porque ya se otorgaron.
         FindFirstObjectByType<UI_PlayerHUD>().InitializeHUD();
     }
 

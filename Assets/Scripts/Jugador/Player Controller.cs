@@ -116,8 +116,8 @@ public class PlayerController : MonoBehaviour
         // Esta función usa la cámara principal, así que si la cámara rota, esto rota.
         Vector3 inputVector = GetWASDInputVector(horizontal, vertical);
         
-        // 3. ROTACIÓN DEL PERSONAJE (Estilo Aventura/GTA sin apuntar)
-        // Si nos movemos y no estamos atacando (para no girar bruscamente en medio de un golpe)
+        // 3. ROTACIÓN DEL PERSONAJE
+        // Si nos movemos y no estamos atacando
         if (inputVector != Vector3.zero && !isAttacking)
         {
             // Girar suavemente hacia la dirección de movimiento
