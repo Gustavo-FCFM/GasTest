@@ -121,8 +121,35 @@ public class AbilitySystemComponent : MonoBehaviour
                     calculatedMagnitude += sourceAttrValue * mod.AttributeCoefficient;
                 }
 
+                // Si estamos tocando la Vida (Health) y el valor es negativo (Daño)
+                if (mod.Attribute == EAttributeType.Health && calculatedMagnitude < 0)
+                {
+                    float damageAmount = Mathf.Abs(calculatedMagnitude);
+                    float currentShield = GetAttributeValue(EAttributeType.Shield);
+
+                    if (currentShield > 0)
+                    {
+                        // ¿Cuánto daño puede absorber el escudo?
+                        float absorbedDamage = Mathf.Min(currentShield, damageAmount);
+                        
+                        // Le restamos al escudo lo que absorbió
+                        SetCurrentAttributeValue(EAttributeType.Shield, currentShield - absorbedDamage);
+                        
+                        // Le restamos al daño original lo que se comió el escudo
+                        damageAmount -= absorbedDamage;
+                        
+                        // Volvemos a hacer la magnitud negativa para la vida que sobre
+                        calculatedMagnitude = -damageAmount; 
+                        
+                        Debug.Log($"Escudo absorbió {absorbedDamage} de daño. Escudo restante: {currentShield - absorbedDamage}");
+                    }
+                }
+                // ------------------------------
+
+                // Aplicar el daño restante (o la curación, si era positiva) a la vida
                 float currentValue = Attributes[mod.Attribute].CurrentValue;
                 float newValue = CalculateModifiedValue(currentValue, mod, calculatedMagnitude);
+                
                 SetCurrentAttributeValue(mod.Attribute, newValue);
                 
                 HandleLifeSteal(mod, calculatedMagnitude, sourceASC);
@@ -169,7 +196,8 @@ public class AbilitySystemComponent : MonoBehaviour
                 type == EAttributeType.Energy || 
                 type == EAttributeType.Exp || 
                 type == EAttributeType.MaxExp ||
-                type == EAttributeType.Level)    
+                type == EAttributeType.Level ||
+                type == EAttributeType.Shield)    
             {
                 // No hacemos nada, conservan el valor que tengan actualmente.
                 continue;

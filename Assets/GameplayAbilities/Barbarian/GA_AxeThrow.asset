@@ -21,9 +21,15 @@ MonoBehaviour:
   ActivationBlockedTags: 
   AnimationTriggerName: AttackTrigger
   AnimationID: 2
+  AbilityRadius: 3
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 0
   ProjectilePrefab: {fileID: 406129108226925510, guid: 8c21a3df091c8204ea5a34229c270862, type: 3}
   LaunchForce: 20
   SpawnOffset: {x: 0, y: 1, z: 0.5}
   AddSpin: 1
   InstantDamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   DurationEffect: {fileID: 11400000, guid: 70c9bebbbfba254448fb78d4cf1f9726, type: 2}
+  SpawnDelay: 0.4
+  ImpactVFX: {fileID: 1758473627833946668, guid: 9b21333b068a5084ba09535839bee3c8, type: 3}

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   InitialAttributes:
   - Attribute: 1
-    BaseValue: 5
+    BaseValue: 3
   - Attribute: 9
     BaseValue: 3
   - Attribute: 8

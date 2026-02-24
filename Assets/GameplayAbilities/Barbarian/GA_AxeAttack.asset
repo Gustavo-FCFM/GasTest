@@ -18,10 +18,19 @@ MonoBehaviour:
   CooldownEffect: {fileID: 11400000, guid: 45327044be4f41c4d8f5289bc6f9b3be, type: 2}
   UseAttackSpeedAsCooldown: 1
   UltimateChargeAmount: 1
-  ActivationBlockedTags: []
-  Range: 2.5
-  ConeAngle: 100
+  ActivationBlockedTags: 
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  AbilityRadius: 3
   TargetLayer:
     serializedVersion: 2
     m_Bits: 8
+  Range: 2.5
+  ConeAngle: 100
   DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
+  DamageDelay: 0.3
+  SwingVFX: {fileID: 6389406066330802589, guid: 5ef8d476ac4025a4e85cc5e7c5004889, type: 3}
+  SwingRotationOffset: {x: 90, y: 0, z: 0}
+  SwingScale: {x: 0.3, y: 0.3, z: 0.3}
+  VisualDelay: 0.4
+  HitVFX: {fileID: 0}

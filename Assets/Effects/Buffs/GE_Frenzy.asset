@@ -54,4 +54,10 @@ MonoBehaviour:
     UseAttributeScaling: 0
     SourceAttribute: 0
     AttributeCoefficient: 0
+  - Attribute: 16
+    Type: 0
+    Magnitude: 1.2
+    UseAttributeScaling: 0
+    SourceAttribute: 2
+    AttributeCoefficient: 0.5
   GrantedTags: 14000000

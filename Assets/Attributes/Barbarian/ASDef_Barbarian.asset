@@ -31,3 +31,5 @@ MonoBehaviour:
     BaseValue: 100
   - Attribute: 15
     BaseValue: 1
+  - Attribute: 16
+    BaseValue: 0

@@ -16,6 +16,7 @@ using UnityEngine;
     LifeSteal,    // Robo de vida
     Exp, // Puntos de experiencia
     MaxExp, // Puntos de experiencia máximos para el nivel actual
-    Level // Nivel del personaje
+    Level, // Nivel del personaje
+    Shield // Escudo temporal
 }
 

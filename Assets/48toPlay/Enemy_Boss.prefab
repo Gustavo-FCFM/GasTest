@@ -284,7 +284,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ExperienceOnDeath: 250
   HealthPerRound: 40
-  DamagePerRound: 5
+  DamagePerRound: 1
   SpeedPerRound: 0.15
 --- !u!195 &-278300751405882859
 NavMeshAgent:

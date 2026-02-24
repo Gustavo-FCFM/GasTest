@@ -1003,7 +1003,7 @@ MonoBehaviour:
   - {fileID: 2134516550}
   - {fileID: 612786739}
   Player: {fileID: 504192518}
-  BarbarianClass: {fileID: 11400000, guid: 0fc6ecdc87f53c941a69707bee7c6254, type: 2}
+  BarbarianClass: {fileID: 11400000, guid: 94ade0794681b0248a3b0176ad1651c6, type: 2}
   UpgradeMenu: {fileID: 1301614049}
   BaseEnemies: 4
   EnemiesPerRound: 4
@@ -2150,16 +2150,16 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1060738228242899054, guid: 1c8752697b02867498ab2082002b4005, type: 3}
       propertyPath: MaxLevel
-      value: 999
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 1060738228242899054, guid: 1c8752697b02867498ab2082002b4005, type: 3}
       propertyPath: CurrentClass
       value: 
-      objectReference: {fileID: 11400000, guid: 0fc6ecdc87f53c941a69707bee7c6254, type: 2}
+      objectReference: {fileID: 11400000, guid: 94ade0794681b0248a3b0176ad1651c6, type: 2}
     - target: {fileID: 1060738228242899054, guid: 1c8752697b02867498ab2082002b4005, type: 3}
       propertyPath: CharacterRoleDefinition
       value: 
-      objectReference: {fileID: 11400000, guid: 83129729f0889ad438eca2355550df4d, type: 2}
+      objectReference: {fileID: 11400000, guid: 018a6225b1f822143aa86c2bcaef873f, type: 2}
     - target: {fileID: 1060738228242899054, guid: 1c8752697b02867498ab2082002b4005, type: 3}
       propertyPath: GrantedAbilities.Array.size
       value: 0
