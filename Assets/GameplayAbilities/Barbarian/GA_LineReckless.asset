@@ -25,7 +25,29 @@ MonoBehaviour:
   TargetLayer:
     serializedVersion: 2
     m_Bits: 8
+  HitboxShape: 0
+  HitboxOffsetZ: 1.5
+  HitboxHalfExtents: {x: 1, y: 1, z: 1}
+  ConeAngle: 90
+  VisualsSequence:
+  - VFXPrefab: {fileID: 6389406066330802589, guid: 5ef8d476ac4025a4e85cc5e7c5004889, type: 3}
+    Delay: 0.2
+    Offset: {x: 0, y: 1, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 0.3, y: 0.3, z: 0.3}
+    AttachToOwner: 0
+    DestroyTime: 1
+    EndWithTag: 0
+  - VFXPrefab: {fileID: 4994997792314849709, guid: 3dd50886582244645be87adb42aa8528, type: 3}
+    Delay: 0
+    Offset: {x: 0, y: 0, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 2, y: 1, z: 2.5}
+    AttachToOwner: 0
+    DestroyTime: 0
+    EndWithTag: 0
   Length: 5
   Width: 2
   DamageEffect: {fileID: 11400000, guid: c724c673f706d3d47b65f864d4719e97, type: 2}
   DamageDelay: 0.5
+  HitVFX: {fileID: 0}

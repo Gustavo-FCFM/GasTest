@@ -16,17 +16,7 @@ public class GA_LineAttack : GameplayAbility
     [Header("Animación")]
     //public string AnimationTriggerName = "AttackTrigger";
     public float DamageDelay = 0.4f; // Tiempo para que baje el arma
-    [Header("Visuales (Juice)")]
-    public GameObject SwingVFX; // El rastro del golpe vertical
     
-    [Tooltip("Ajusta la rotación. Para golpes verticales suele ser (0, 0, 0) o (90, 0, 0).")]
-    public Vector3 SwingRotationOffset = new Vector3(0, 0, 0);
-    
-    [Tooltip("Ajusta el tamaño.")]
-    public Vector3 SwingScale = Vector3.one;
-    
-    [Tooltip("Retraso para que el efecto salga justo cuando el arma baja.")]
-    public float VisualDelay = 0.2f;
     
     public GameObject HitVFX;
 
@@ -55,31 +45,10 @@ public class GA_LineAttack : GameplayAbility
         if (atkSpeedStat > 0) speedMultiplier = 1f / atkSpeedStat;
 
         // --- 1. SPAWN SWING VFX (Con Delay) ---
-        if (VisualDelay > 0)
+        // Esperamos el tiempo necesario antes de aplicar el daño
+        if (DamageDelay > 0)
         {
-            yield return new WaitForSeconds(VisualDelay / speedMultiplier);
-        }
-
-        if (SwingVFX != null && OwnerASC != null)
-        {
-            // Para un ataque lineal, el efecto suele salir un poco más adelante
-            Vector3 spawnPos = OwnerASC.transform.position + (OwnerASC.transform.forward * 1.5f) + (Vector3.up * 1.0f);
-            
-            Quaternion baseRotation = OwnerASC.transform.rotation;
-            Quaternion offsetRotation = Quaternion.Euler(SwingRotationOffset);
-            Quaternion finalRotation = baseRotation * offsetRotation;
-
-            GameObject vfx = Instantiate(SwingVFX, spawnPos, finalRotation, OwnerASC.transform);
-            vfx.transform.localScale = SwingScale;
-            Destroy(vfx, 1.0f);
-        }
-        // --------------------------------------
-
-        // Esperar el resto del tiempo para el daño
-        float remainingDelay = DamageDelay - VisualDelay;
-        if (remainingDelay > 0)
-        {
-            yield return new WaitForSeconds(remainingDelay / speedMultiplier);
+            yield return new WaitForSeconds(DamageDelay / speedMultiplier);
         }
 
         PerformDamage();

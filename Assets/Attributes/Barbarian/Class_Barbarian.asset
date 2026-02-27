@@ -36,6 +36,7 @@ MonoBehaviour:
     AmountPerLevel: 100
   AvailableSubclasses:
   - {fileID: 11400000, guid: dddebebeb12f05e4a978c173b6f504dd, type: 2}
+  - {fileID: 11400000, guid: fc80e36e6c65c4c4c8c8c0da24e9a267, type: 2}
   ClassAnimatorOverride: {fileID: 22100000, guid: c1aea6e6b93746e4dbab09a9b224bfaa, type: 2}
   MainHandWeaponPrefab: {fileID: 8072587243417393782, guid: c61cbb6b38d7de247a8e5b46c0726dec, type: 3}
   OffHandWeaponPrefab: {fileID: 0}

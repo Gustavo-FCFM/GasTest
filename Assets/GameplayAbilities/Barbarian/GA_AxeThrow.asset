@@ -25,6 +25,11 @@ MonoBehaviour:
   TargetLayer:
     serializedVersion: 2
     m_Bits: 0
+  HitboxShape: 0
+  HitboxOffsetZ: 1.5
+  HitboxHalfExtents: {x: 1, y: 1, z: 1}
+  ConeAngle: 90
+  VisualsSequence: []
   ProjectilePrefab: {fileID: 406129108226925510, guid: 8c21a3df091c8204ea5a34229c270862, type: 3}
   LaunchForce: 20
   SpawnOffset: {x: 0, y: 1, z: 0.5}

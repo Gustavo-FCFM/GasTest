@@ -17,6 +17,7 @@ using UnityEngine;
     Exp, // Puntos de experiencia
     MaxExp, // Puntos de experiencia máximos para el nivel actual
     Level, // Nivel del personaje
-    Shield // Escudo temporal
+    Shield, // Escudo temporal
+    MagicDamage // Daño magico
 }
 

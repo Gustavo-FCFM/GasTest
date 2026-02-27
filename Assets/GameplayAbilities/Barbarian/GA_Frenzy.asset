@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9c883fe6eb270f64e8367b89db9052bc, type: 3}
+  m_Script: {fileID: 11500000, guid: 6f9e637fc876a8447904cc95600a0862, type: 3}
   m_Name: GA_Frenzy
   m_EditorClassIdentifier: 
   AbilityName: Frenzy
@@ -20,7 +20,23 @@ MonoBehaviour:
   UltimateChargeAmount: 0
   ActivationBlockedTags: 
   AnimationTriggerName: AttackTrigger
-  AnimationID: 3
+  AnimationID: 1
+  AbilityRadius: 3
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  HitboxShape: 0
+  HitboxOffsetZ: 1.5
+  HitboxHalfExtents: {x: 1, y: 1, z: 1}
+  ConeAngle: 90
+  VisualsSequence:
+  - VFXPrefab: {fileID: 7155335147208632822, guid: 268b1b15038d49b418cf03198b835136, type: 3}
+    Delay: 0
+    Offset: {x: 0, y: 0, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    AttachToOwner: 1
+    DestroyTime: 0
+    EndWithTag: 20
   BuffEffect: {fileID: 11400000, guid: 57531014ec461034a8d81bc8144045b6, type: 2}
-  ParticlePrefab: {fileID: 7155335147208632822, guid: 97c43495f80a3244fad1301dfafbe252, type: 3}
-  ParticleOffset: {x: 0, y: 0, z: 0}
+  ShieldPercentage: 0.5

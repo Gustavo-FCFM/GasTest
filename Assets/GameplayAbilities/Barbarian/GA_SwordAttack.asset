@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0673ae4a173fec245880d1c58fa5345e, type: 3}
+  m_Name: GA_SwordAttack
+  m_EditorClassIdentifier: 
+  AbilityName: Sword Attack
+  AbilityIcon: {fileID: 21300000, guid: fc1c5ea4e68459a4092232b46faae97d, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: 45327044be4f41c4d8f5289bc6f9b3be, type: 2}
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 1
+  ActivationBlockedTags: 
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  AbilityRadius: 3
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 8
+  HitboxShape: 2
+  HitboxOffsetZ: 1.5
+  HitboxHalfExtents: {x: 1, y: 1, z: 1}
+  ConeAngle: 180
+  VisualsSequence:
+  - VFXPrefab: {fileID: 0}
+    Delay: 1
+    Offset: {x: 0, y: -0.5, z: 0}
+    RotationOffset: {x: 90, y: 0, z: 0}
+    Scale: {x: 0.3, y: 0.3, z: 0.3}
+    AttachToOwner: 1
+    DestroyTime: 0
+    EndWithTag: 0
+  Range: 2.5
+  DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
+  DamageDelay: 0.13
+  HitVFX: {fileID: 1758473627833946668, guid: 9b21333b068a5084ba09535839bee3c8, type: 3}

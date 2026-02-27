@@ -21,6 +21,23 @@ MonoBehaviour:
   ActivationBlockedTags: 
   AnimationTriggerName: AttackTrigger
   AnimationID: 3
+  AbilityRadius: 3
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  HitboxShape: 0
+  HitboxOffsetZ: 1.5
+  HitboxHalfExtents: {x: 1, y: 1, z: 1}
+  ConeAngle: 90
+  VisualsSequence:
+  - VFXPrefab: {fileID: 7155335147208632822, guid: 268b1b15038d49b418cf03198b835136, type: 3}
+    Delay: 0
+    Offset: {x: 0, y: 0, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    AttachToOwner: 1
+    DestroyTime: 0
+    EndWithTag: 19
   BuffEffect: {fileID: 11400000, guid: 14fddbd2425f29045b44a19b2f109b88, type: 2}
   ParticlePrefab: {fileID: 7155335147208632822, guid: 268b1b15038d49b418cf03198b835136, type: 3}
   ParticleOffset: {x: 0, y: 0, z: 0}

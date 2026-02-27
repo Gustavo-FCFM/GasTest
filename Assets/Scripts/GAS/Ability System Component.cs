@@ -115,43 +115,90 @@ public class AbilitySystemComponent : MonoBehaviour
             if (Attributes.ContainsKey(mod.Attribute))
             {
                 float calculatedMagnitude = mod.Magnitude;
+                
+                // 1. Aplicar escalado si la habilidad usa los stats del atacante
                 if (mod.UseAttributeScaling && sourceASC != null)
                 {
                     float sourceAttrValue = sourceASC.GetAttributeValue(mod.SourceAttribute);
                     calculatedMagnitude += sourceAttrValue * mod.AttributeCoefficient;
                 }
 
-                // Si estamos tocando la Vida (Health) y el valor es negativo (Daño)
+                // --- INICIO LÓGICA DE ESCUDO CON DAÑO MÁGICO ---
+                // Si estamos modificando la Vida (Health) y el valor es negativo (Daño)
+                // --- INICIO LÓGICA DE ESCUDO CON DAÑO MIXTO ---
                 if (mod.Attribute == EAttributeType.Health && calculatedMagnitude < 0)
                 {
-                    float damageAmount = Mathf.Abs(calculatedMagnitude);
+                    float physicalDamage = Mathf.Abs(calculatedMagnitude); // El daño base del ataque
+                    float magicDamage = 0f;
+                    
+                    if (sourceASC != null)
+                    {
+                        // Obtenemos cuánto Daño Mágico tiene el atacante
+                        magicDamage = sourceASC.GetAttributeValue(EAttributeType.MagicDamage);
+                    }
+
                     float currentShield = GetAttributeValue(EAttributeType.Shield);
 
+                    // Si el enemigo tiene escudo, procesamos los impactos
                     if (currentShield > 0)
                     {
-                        // ¿Cuánto daño puede absorber el escudo?
-                        float absorbedDamage = Mathf.Min(currentShield, damageAmount);
-                        
-                        // Le restamos al escudo lo que absorbió
-                        SetCurrentAttributeValue(EAttributeType.Shield, currentShield - absorbedDamage);
-                        
-                        // Le restamos al daño original lo que se comió el escudo
-                        damageAmount -= absorbedDamage;
-                        
-                        // Volvemos a hacer la magnitud negativa para la vida que sobre
-                        calculatedMagnitude = -damageAmount; 
-                        
-                        Debug.Log($"Escudo absorbió {absorbedDamage} de daño. Escudo restante: {currentShield - absorbedDamage}");
-                    }
-                }
-                // ------------------------------
+                        // 1. La Magia choca primero (¡HACE EL DOBLE DE DAÑO AL ESCUDO!)
+                        if (magicDamage > 0)
+                        {
+                            float effectiveMagicDamage = magicDamage * 2f; 
 
-                // Aplicar el daño restante (o la curación, si era positiva) a la vida
+                            if (currentShield >= effectiveMagicDamage)
+                            {
+                                // El escudo aguantó toda la magia
+                                currentShield -= effectiveMagicDamage;
+                                magicDamage = 0f; // Se gastó toda la magia en el escudo
+                            }
+                            else
+                            {
+                                // El escudo se rompió por la magia
+                                // ¿Cuánta magia real se gastó para romperlo? La mitad del escudo restante.
+                                float magicUsedToBreakShield = currentShield / 2f; 
+                                magicDamage -= magicUsedToBreakShield; // Magia sobrante que irá a la vida
+                                currentShield = 0f;
+                            }
+                        }
+
+                        // 2. El Daño Físico choca contra lo que quede del escudo (Daño 1 a 1)
+                        if (currentShield > 0 && physicalDamage > 0)
+                        {
+                            if (currentShield >= physicalDamage)
+                            {
+                                currentShield -= physicalDamage;
+                                physicalDamage = 0f; // El escudo absorbió todo el daño físico
+                            }
+                            else
+                            {
+                                physicalDamage -= currentShield; // Daño físico sobrante que irá a la vida
+                                currentShield = 0f;
+                            }
+                        }
+
+                        // Guardamos el nuevo valor del escudo
+                        SetCurrentAttributeValue(EAttributeType.Shield, currentShield);
+                    }
+
+                    // 3. Todo el daño (Físico y Mágico) que haya sobrado, pasa directo a la vida
+                    float totalDamageToHealth = physicalDamage + magicDamage;
+                    
+                    // Restauramos la magnitud con signo negativo para continuar restando a la vida
+                    calculatedMagnitude = -totalDamageToHealth;
+
+                    Debug.Log($"Daño final a la Vida: {totalDamageToHealth} (Físico: {physicalDamage} | Mágico: {magicDamage}). Escudo restante: {currentShield}");
+                }
+                // --- FIN LÓGICA DE ESCUDO CON DAÑO MIXTO ---
+
+                // Aplicar el daño restante (o la curación) a la vida
                 float currentValue = Attributes[mod.Attribute].CurrentValue;
                 float newValue = CalculateModifiedValue(currentValue, mod, calculatedMagnitude);
                 
                 SetCurrentAttributeValue(mod.Attribute, newValue);
                 
+                // Procesar robo de vida (si hubo daño efectivo a la vida)
                 HandleLifeSteal(mod, calculatedMagnitude, sourceASC);
             }
         }
@@ -362,6 +409,16 @@ public class AbilitySystemComponent : MonoBehaviour
     public float GetAttributeValue(EAttributeType type) => Attributes.ContainsKey(type) ? Attributes[type].CurrentValue : 0f;
    public void SetCurrentAttributeValue(EAttributeType type, float val) 
     { 
+        // --- NUEVO: PROTECCIÓN DE INMORTALIDAD ---
+        if (type == EAttributeType.Health && val < 1f)
+        {
+            if (HasTag(EGameplayTag.Status_Inmortal))
+            {
+                val = 1f; // El daño no puede bajar tu vida de 1
+            }
+        }
+        // -----------------------------------------
+
         // 1. Guardar el valor
         if(Attributes.ContainsKey(type)) 
         {
@@ -373,7 +430,6 @@ public class AbilitySystemComponent : MonoBehaviour
         }
 
         // 2. CHEQUEO DE MUERTE INMEDIATO
-        // Si acabamos de modificar la Vida y llegó a 0...
         if (type == EAttributeType.Health)
         {
             if (val <= 0 && !HasTag(EGameplayTag.State_Dead))

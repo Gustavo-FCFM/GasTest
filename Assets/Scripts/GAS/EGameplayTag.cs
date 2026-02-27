@@ -28,5 +28,6 @@ public enum EGameplayTag
     Status_Buff_Speed,   // Ej: Sprint
     Status_Immunity,      // Ej: Invencible
     Status_Rage,
-    Status_Frenzy
+    Status_Frenzy,
+    Status_Inmortal
 }

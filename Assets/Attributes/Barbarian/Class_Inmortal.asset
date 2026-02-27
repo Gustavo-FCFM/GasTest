@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 749805704a6088741af34d91f0891ced, type: 3}
+  m_Name: Class_Inmortal
+  m_EditorClassIdentifier: 
+  ClassName: Barbarian_Inmortal
+  ClassIcon: {fileID: 21300000, guid: 01a083dd1c5fae649a40e683197eb815, type: 3}
+  Description: Berserker! auuuuuuuuuu!
+  BaseAttributes: {fileID: 11400000, guid: f48497a22d22faf43b99c324878da5ca, type: 2}
+  Abilities:
+  - InputSlot: 1
+    Ability: {fileID: 11400000, guid: 4ceb242268d0d9141af77c1cca344540, type: 2}
+  - InputSlot: 2
+    Ability: {fileID: 11400000, guid: 02d07c3295dba8341a727a557148876d, type: 2}
+  - InputSlot: 3
+    Ability: {fileID: 11400000, guid: 8414b99a63f36c949a2ea0e8fb5ec3b1, type: 2}
+  - InputSlot: 6
+    Ability: {fileID: 11400000, guid: 56dc5dcfc67b24b49aaea483f6856e81, type: 2}
+  - InputSlot: 4
+    Ability: {fileID: 11400000, guid: 841ec26c95a61014994aee639a5c6d47, type: 2}
+  - InputSlot: 5
+    Ability: {fileID: 11400000, guid: 95426c07a66a6ba4aab2f0b1325a5dcb, type: 2}
+  StatGrowthPerLevel: []
+  AvailableSubclasses: []
+  ClassAnimatorOverride: {fileID: 22100000, guid: c1aea6e6b93746e4dbab09a9b224bfaa, type: 2}
+  MainHandWeaponPrefab: {fileID: 1309212752354464438, guid: 92948b840284b93478272de155a25eda, type: 3}
+  OffHandWeaponPrefab: {fileID: 0}

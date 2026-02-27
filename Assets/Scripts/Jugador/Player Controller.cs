@@ -21,6 +21,7 @@ public class PlayerController : MonoBehaviour
 
     private GameObject currentMainWeapon;
     private GameObject currentOffWeapon;
+    private GameObject currentWeaponTrail;
 
     // --- SEMÁFORO DE COMBATE ---
     private bool isAttacking = false; 
@@ -59,7 +60,20 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        if (ASC != null && ASC.HasTag(EGameplayTag.State_Dead)) return;
+        // Si estoy muerto, bloquear movimiento y ataques normales...
+        if (ASC.HasTag(EGameplayTag.State_Dead))
+        {
+            // ...¡EXCEPTO LA ULTIMATE!
+            if (Input.GetKeyDown(KeyCode.R) || Input.GetButtonDown("Ultimate"))
+            {
+                if (AbilityR != null && AbilityR.CanActivate())
+                {
+                    AbilityR.Activate();
+                }
+            }
+            
+            return; // Bloquea todo lo demás (moverse, saltar, etc)
+        }
         if (ASC != null && ASC.HasTag(EGameplayTag.State_Stunned)) return;
         if (transform.position.y < VoidYLevel)
         {   
@@ -149,7 +163,7 @@ public class PlayerController : MonoBehaviour
         CheckLanding();
     }
 
-    // Helper clave: Convierte WASD a dirección relativa a la cámara
+    //Convierte WASD a dirección relativa a la cámara
     private Vector3 GetWASDInputVector(float h, float v)
     {
         Vector3 f = Camera.main.transform.forward; 
@@ -191,8 +205,7 @@ public class PlayerController : MonoBehaviour
         isAttacking = false; 
     }
 
-    // ... (Métodos de Equipar Clase, Visuales, Animaciones IGUAL QUE ANTES) ...
-    // Pégalos aquí para mantener el archivo completo.
+    //(Métodos de Equipar Clase, Visuales, Animaciones)
     public void EquipCharacterClass(CharacterClassDefinition newClass)
     {
         if (newClass == null || ASC == null) return;
@@ -249,12 +262,24 @@ public class PlayerController : MonoBehaviour
             currentMainWeapon = Instantiate(newClass.MainHandWeaponPrefab, MainHandSocket);
             currentMainWeapon.transform.localPosition = Vector3.zero;
             currentMainWeapon.transform.localRotation = Quaternion.identity;
+            Transform trailTransform = currentMainWeapon.transform.Find("WeaponTrail");
+            if (trailTransform != null)
+            {
+                currentWeaponTrail = trailTransform.gameObject;
+                currentWeaponTrail.SetActive(false); // Asegurarnos de que empiece apagada
+            }
         }
         if (newClass.OffHandWeaponPrefab != null && OffHandSocket != null)
         {
             currentOffWeapon = Instantiate(newClass.OffHandWeaponPrefab, OffHandSocket);
             currentOffWeapon.transform.localPosition = Vector3.zero;
             currentOffWeapon.transform.localRotation = Quaternion.identity;
+            Transform trailTransform = currentOffWeapon.transform.Find("WeaponTrail");
+            if (trailTransform != null)
+            {
+                currentWeaponTrail = trailTransform.gameObject;
+                currentWeaponTrail.SetActive(false); // Asegurarnos de que empiece apagada
+            }
         }
     }
 
@@ -281,7 +306,15 @@ public class PlayerController : MonoBehaviour
     {
         Debug.Log("¡HIT FRAME! Aplicando daño ahora.");
     }
+    public void AnimationEvent_EnableTrail()
+    {
+        if (currentWeaponTrail != null) currentWeaponTrail.SetActive(true);
+    }
 
+    public void AnimationEvent_DisableTrail()
+    {
+        if (currentWeaponTrail != null) currentWeaponTrail.SetActive(false);
+    }
     public void PlayAnimation(string triggerName, int actionID)
     {
         if (characterAnimator != null)
@@ -375,4 +408,5 @@ public class PlayerController : MonoBehaviour
         transform.position = spawnPosition;
         characterController.enabled = true;
     }
+
 }
