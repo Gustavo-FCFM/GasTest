@@ -292,6 +292,7 @@ public class PlayerController : MonoBehaviour
     public void EquipCharacterClass(CharacterClassDefinition newClass)
     {
         if (newClass == null || ASC == null) return;
+        ASC.RemoveAllActiveEffects();
         CurrentClassDef = newClass;
         ASC.CurrentClass = newClass;
         CharacterIcon = newClass.ClassIcon;

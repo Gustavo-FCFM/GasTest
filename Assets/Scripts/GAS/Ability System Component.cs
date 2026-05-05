@@ -644,4 +644,17 @@ public class AbilitySystemComponent : MonoBehaviour
             }
         }
     }
+    // =========================================================
+    // UTILIDADES DE LIMPIEZA
+    // =========================================================
+    /// Elimina todos los efectos activos inmediatamente. 
+    /// Útil al cambiar de clase, morir o reiniciar rondas.
+    public void RemoveAllActiveEffects()
+    {
+        // Iteramos en reversa porque estamos eliminando elementos de la lista
+        for (int i = ActiveEffects.Count - 1; i >= 0; i--)
+        {
+            RemoveActiveEffect(ActiveEffects[i]);
+        }
+    }
 }
