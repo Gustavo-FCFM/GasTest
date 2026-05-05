@@ -55,7 +55,7 @@ public class GA_InmortalWrath : GameplayAbility
             foreach (Collider hit in hits)
             {
                 AbilitySystemComponent targetASC = hit.GetComponentInParent<AbilitySystemComponent>();
-                if (targetASC != null && targetASC != OwnerASC)
+                if (targetASC != null && IsEnemy(targetASC))
                 {
                     if (ExplosionDamageEffect != null)
                     {

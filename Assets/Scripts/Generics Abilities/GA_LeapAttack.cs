@@ -64,7 +64,7 @@ public class GA_LeapAttack : GameplayAbility
         foreach (var hitCollider in hitColliders)
         {
             AbilitySystemComponent targetASC = hitCollider.GetComponentInParent<AbilitySystemComponent>();
-            if (targetASC != null && targetASC != OwnerASC && !enemiesHit.Contains(targetASC))
+            if (targetASC != null && IsEnemy(targetASC) && !enemiesHit.Contains(targetASC))
             {
                 if (DamageEffect != null) targetASC.ApplyGameplayEffect(DamageEffect, OwnerASC);
                 ChargeUltimate(); // Cargar ulti por cada enemigo aplastado

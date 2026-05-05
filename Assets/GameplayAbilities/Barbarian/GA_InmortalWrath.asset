@@ -24,7 +24,7 @@ MonoBehaviour:
   AbilityRadius: 3
   TargetLayer:
     serializedVersion: 2
-    m_Bits: 8
+    m_Bits: 128
   HitboxShape: 0
   HitboxOffsetZ: 1.5
   HitboxHalfExtents: {x: 1, y: 1, z: 1}

@@ -83,7 +83,7 @@ public class GA_ConeAttack : GameplayAbility
                 AbilitySystemComponent targetASC = targetCollider.GetComponentInParent<AbilitySystemComponent>();
 
                 // 3. Validar objetivo (Que tenga vida, que no sea yo, que no lo haya golpeado ya)
-                if (targetASC != null && targetASC != OwnerASC && !enemiesHit.Contains(targetASC))
+                if (targetASC != null && IsEnemy(targetASC) && !enemiesHit.Contains(targetASC))
                 {
                     // A. Aplicar Daño
                     if (DamageEffect != null)

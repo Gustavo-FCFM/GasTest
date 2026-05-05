@@ -21,13 +21,20 @@ MonoBehaviour:
   ActivationBlockedTags: 
   AnimationTriggerName: AttackTrigger
   AnimationID: 1
+  AbilityRadius: 3
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  HitboxShape: 0
+  HitboxOffsetZ: 1.5
+  HitboxHalfExtents: {x: 1, y: 1, z: 1}
+  ConeAngle: 90
+  VisualsSequence: []
+  Objetivos: 1
   Radius: 2
   TotalDuration: 5
   TickInterval: 1
   FollowOwner: 1
-  TargetLayer:
-    serializedVersion: 2
-    m_Bits: 8
   VisualPrefab: {fileID: 7986504087968017091, guid: 12a56ee4630040c4eb17ae9707ed4cef, type: 3}
   VisualScaleMultiplier: 1
   EffectsToApply:

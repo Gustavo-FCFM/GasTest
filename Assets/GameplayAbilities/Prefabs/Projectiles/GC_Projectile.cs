@@ -30,57 +30,56 @@ public class GC_Projectile : MonoBehaviour
     // Usamos OnTriggerEnter porque marcamos "Is Trigger" en el collider
     private void OnTriggerEnter(Collider other)
     {
-        // 1. Ignorar colisiones con quien lo disparó (Yo mismo)
         if (sourceASC != null && other.gameObject == sourceASC.gameObject) return;
-
-        // 2. Ignorar otros Triggers (ej: zonas de captura, checkpoints, la bolsa de oro)
-        // Si chocamos con algo que también es un Trigger, lo atravesamos sin hacer nada.
         if (other.isTrigger) return;
 
-        // 3. Intentar detectar si es un Personaje (Tiene ASC)
         AbilitySystemComponent targetASC = other.GetComponentInParent<AbilitySystemComponent>();
+        
+        // 1. Instanciar VFX si existe (Independiente de lo que golpeemos)
         if (impactVfxPrefab != null)
         {
             GameObject vfx = Instantiate(impactVfxPrefab, transform.position, Quaternion.identity);
             Destroy(vfx, 1.0f);
         }
 
+        // 2. ¿Es un personaje?
         if (targetASC != null)
         {
-            // --- ES UN ENEMIGO/JUGADOR ---
+            // SISTEMA DE EQUIPOS (AFILIACIÓN LÓGICA)
+            bool isEnemy = false;
             
-            // Verificamos si ya lo golpeamos antes (para no aplicar efecto 2 veces al mismo)
-            if (!enemiesHit.Contains(targetASC))
-            {
-                // Aplicar efecto
-                if (damageEffect != null)
-                {
-                    // A. Aplicar Daño (Instantáneo)
-                    targetASC.ApplyGameplayEffect(damageEffect, sourceASC);
-                }
-                if (durationEffect != null)
-                {
-                    // B. Aplicar Slow/Ralentización (Duración)
-                    targetASC.ApplyGameplayEffect(durationEffect, sourceASC);
-                }
-                if (sourceASC != null && ultChargeAmount > 0)
-                {
-                    // "Ability.Cooldown.Ultimate" es el Tag que definimos para tu Ulti
-                    sourceASC.ReduceCooldownByTag(EGameplayTag.Ability_Cooldown_Ultimate, ultChargeAmount);
-                }
-                // Registrar en la lista
-                enemiesHit.Add(targetASC);
-            }
+            if (sourceASC.TeamID == 0 || targetASC.TeamID == 0) isEnemy = true;
+            else if (sourceASC.TeamID != targetASC.TeamID) isEnemy = true;
 
-            // ¡IMPORTANTE! NO destruimos el objeto aquí.
-            // Dejamos que siga viajando para golpear al siguiente enemigo detrás.
+            // A) Es enemigo y no lo hemos golpeado antes
+            if (isEnemy)
+            {
+                if (!enemiesHit.Contains(targetASC))
+                {
+                    if (damageEffect != null) targetASC.ApplyGameplayEffect(damageEffect, sourceASC);
+                    if (durationEffect != null) targetASC.ApplyGameplayEffect(durationEffect, sourceASC);
+                    if (sourceASC != null && ultChargeAmount > 0)
+                    {
+                        sourceASC.ReduceCooldownByTag(EGameplayTag.Ability_Cooldown_Ultimate, ultChargeAmount);
+                    }
+                    enemiesHit.Add(targetASC);
+                }
+                
+                // NOTA: Si quieres que el proyectil se DESTRUYA al golpear a un enemigo 
+                // en lugar de atravesarlo, descomenta la siguiente línea:
+                // Destroy(gameObject);
+            }
+            // B) Es aliado
+            else
+            {
+                // Si es aliado, no hacemos daño.
+                // El proyectil lo atraviesa por defecto porque no lo destruimos aquí.
+            }
         }
         else
         {
-            // --- ES UNA PARED / SUELO / OBSTÁCULO ---
-            
-            // Si no tiene ASC y no es un trigger, asumimos que es entorno sólido.
-            Debug.Log("Choque con pared/suelo. Destruyendo proyectil.");
+            // 3. ¿Es una pared / entorno sólido?
+            // Si llegamos aquí, no tiene ASC y no es trigger.
             Destroy(gameObject);
         }
     }

@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 1549812687399660615}
   - component: {fileID: 4981402441989511576}
   - component: {fileID: 6618305006676395518}
-  m_Layer: 3
+  m_Layer: 7
   m_Name: Canvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -130,7 +130,7 @@ GameObject:
   - component: {fileID: 6248453818769994291}
   - component: {fileID: 4424697396710663176}
   - component: {fileID: 7689363178673226735}
-  m_Layer: 3
+  m_Layer: 7
   m_Name: Dummy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -217,7 +217,7 @@ GameObject:
   - component: {fileID: 8968655348691017839}
   - component: {fileID: 5976131807172888147}
   - component: {fileID: 9026281005832252639}
-  m_Layer: 3
+  m_Layer: 7
   m_Name: Fill
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -293,7 +293,7 @@ GameObject:
   - component: {fileID: 8778380114887771939}
   - component: {fileID: 559173266477780699}
   - component: {fileID: 8478051811048977157}
-  m_Layer: 3
+  m_Layer: 7
   m_Name: Dummy_Root
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -369,6 +369,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CharacterRoleDefinition: {fileID: 11400000, guid: 8c1b8ee30a9ef804d8d1123df08be597, type: 2}
   CurrentClass: {fileID: 0}
+  TeamID: 0
   MaxLevel: 3
   GrantedAbilities: []
 --- !u!1 &6103628625113264754
@@ -381,7 +382,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8396447470527650343}
   - component: {fileID: 1102088452028600226}
-  m_Layer: 3
+  m_Layer: 7
   m_Name: HealthBarNpc
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -469,7 +470,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 704416648262407673}
-  m_Layer: 3
+  m_Layer: 7
   m_Name: Fill Area
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -507,7 +508,7 @@ GameObject:
   - component: {fileID: 8587404575428989742}
   - component: {fileID: 3684882661708422084}
   - component: {fileID: 8730504202804808824}
-  m_Layer: 3
+  m_Layer: 7
   m_Name: Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -582,7 +583,7 @@ GameObject:
   - component: {fileID: 1615939620640223624}
   - component: {fileID: 1278612161027819463}
   - component: {fileID: 6584484588699876161}
-  m_Layer: 3
+  m_Layer: 7
   m_Name: Buffs_Container
   m_TagString: Untagged
   m_Icon: {fileID: 0}

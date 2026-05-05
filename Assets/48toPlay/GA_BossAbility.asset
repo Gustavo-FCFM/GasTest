@@ -21,8 +21,19 @@ MonoBehaviour:
   ActivationBlockedTags: 
   AnimationTriggerName: AttackTrigger
   AnimationID: 1
+  AbilityRadius: 3
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  HitboxShape: 0
+  HitboxOffsetZ: 1.5
+  HitboxHalfExtents: {x: 1, y: 1, z: 1}
+  ConeAngle: 90
+  VisualsSequence: []
   Sequence:
   - AbilityToCast: {fileID: 11400000, guid: 11a9cd014a96d6d4fb0f56ed9789d54b, type: 2}
     DelayAfter: 3
+    AnimationIDOverride: 0
   - AbilityToCast: {fileID: 11400000, guid: af94aa4ebeffdc248bc2a80f60b01014, type: 2}
     DelayAfter: 3
+    AnimationIDOverride: 0

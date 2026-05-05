@@ -24,7 +24,7 @@ MonoBehaviour:
   AbilityRadius: 3
   TargetLayer:
     serializedVersion: 2
-    m_Bits: 8
+    m_Bits: 128
   HitboxShape: 2
   HitboxOffsetZ: 1.5
   HitboxHalfExtents: {x: 1, y: 1, z: 1}
@@ -37,6 +37,7 @@ MonoBehaviour:
     Scale: {x: 0.3, y: 0.3, z: 0.3}
     AttachToOwner: 0
     DestroyTime: 0
+    EndWithTag: 0
   Range: 3
   DamageEffect: {fileID: 11400000, guid: d3bdd9c76e21fa04cb93f9c1910c95ed, type: 2}
   DamageDelay: 0.5

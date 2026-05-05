@@ -245,4 +245,40 @@ public abstract class GameplayAbility : ScriptableObject
             OwnerASC.ReduceCooldownByTag(EGameplayTag.Ability_Cooldown_Ultimate, UltimateChargeAmount);
         }
     }
+    // ==========================================
+    // SISTEMA DE AFILIACIÓN Y EQUIPOS
+    // ==========================================
+
+    /// <summary>
+    /// Determina si un objetivo es un enemigo basándose en el TeamID.
+    /// </summary>
+    protected bool IsEnemy(AbilitySystemComponent targetASC)
+    {
+        if (targetASC == null || OwnerASC == null) return false;
+        if (targetASC == OwnerASC) return false; // No soy mi propio enemigo
+
+        // Regla 1: Si alguno de los dos tiene TeamID = 0 (Neutral/NPC), SIEMPRE son enemigos.
+        // Esto permite que todos los jugadores puedan dañar a los monstruos, y los monstruos a los jugadores.
+        if (OwnerASC.TeamID == 0 || targetASC.TeamID == 0) return true;
+
+        // Regla 2: Si tienen TeamID diferentes, son enemigos (Jugador vs Jugador).
+        return OwnerASC.TeamID != targetASC.TeamID;
+    }
+
+    /// <summary>
+    /// Determina si un objetivo es un aliado basándose en el TeamID.
+    /// </summary>
+    protected bool IsAlly(AbilitySystemComponent targetASC, bool includeSelf = true)
+    {
+        if (targetASC == null || OwnerASC == null) return false;
+        
+        // ¿Me considero aliado a mí mismo para recibir mis propias curaciones en área?
+        if (targetASC == OwnerASC) return includeSelf; 
+
+        // Regla 1: Los neutrales (TeamID = 0) no tienen aliados, están solos.
+        if (OwnerASC.TeamID == 0 || targetASC.TeamID == 0) return false;
+
+        // Regla 2: Son aliados solo si comparten el mismo identificador.
+        return OwnerASC.TeamID == targetASC.TeamID;
+    }
 }

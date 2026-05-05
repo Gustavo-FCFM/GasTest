@@ -24,7 +24,12 @@ MonoBehaviour:
   AbilityRadius: 3
   TargetLayer:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 128
+  HitboxShape: 0
+  HitboxOffsetZ: 1.5
+  HitboxHalfExtents: {x: 1, y: 1, z: 1}
+  ConeAngle: 90
+  VisualsSequence: []
   Radius: 4.5
   TotalDuration: 1
   TickInterval: 0

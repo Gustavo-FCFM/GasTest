@@ -5,6 +5,14 @@ using System.Collections.Generic;
 [CreateAssetMenu(fileName = "GA_ContinuousAoE", menuName = "GAS/Generics/Continuous AoE")]
 public class GA_ContinuousAoE : GameplayAbility
 {
+    // --- NUEVO: SELECTOR DE OBJETIVOS ---
+    public enum EAoETarget { Enemigos, Aliados, Todos }
+    
+    [Header("Objetivos Afectados")]
+    [Tooltip("Define si esta área daña enemigos, cura aliados, o afecta a todos.")]
+    public EAoETarget Objetivos = EAoETarget.Enemigos;
+    // -----------------------------------
+
     [Header("Configuración de Área")]
     public float Radius = 4f;
     public float TotalDuration = 5f;
@@ -12,15 +20,10 @@ public class GA_ContinuousAoE : GameplayAbility
     
     [Header("Comportamiento")]
     public bool FollowOwner = true; 
-    //public LayerMask TargetLayer;
 
     [Header("Efectos Visuales")]
     public GameObject VisualPrefab; 
-
-    // --- NUEVO: AJUSTE DE TAMAÑO ---
-    [Tooltip("Multiplicador para ajustar el tamaño de la partícula al radio. Prueba con 1.0, 2.0 (diámetro) o 0.5 según el asset.")]
-    public float VisualScaleMultiplier = 2.0f; // 2.0 suele funcionar bien si el asset base mide 1 metro
-    // -------------------------------
+    public float VisualScaleMultiplier = 2.0f; 
 
     [Header("Lista de Efectos")]
     public List<GameplayEffect> EffectsToApply;
@@ -68,11 +71,8 @@ public class GA_ContinuousAoE : GameplayAbility
         {
             vfxInstance = Instantiate(VisualPrefab, spawnPoint, Quaternion.identity);
             
-            // --- APLICAR ESCALA DINÁMICA ---
-            // Calculamos el tamaño final basado en el Radio de la habilidad
             float finalScale = Radius * VisualScaleMultiplier;
             vfxInstance.transform.localScale = new Vector3(finalScale, finalScale, finalScale);
-            // -------------------------------
 
             if (FollowOwner) vfxInstance.transform.SetParent(OwnerASC.transform); 
         }
@@ -81,10 +81,6 @@ public class GA_ContinuousAoE : GameplayAbility
         {
             Vector3 center = FollowOwner ? OwnerASC.transform.position : spawnPoint;
             
-            // Debug visual para ver el tamaño real de la lógica vs la partícula
-            // (Solo se ve en la ventana Scene si tienes Gizmos activados)
-            // Debug.DrawRay(center, Vector3.up * 5, Color.yellow, 0.5f);
-
             Collider[] hits = Physics.OverlapSphere(center, Radius, TargetLayer);
             
             foreach (var hit in hits)
@@ -93,15 +89,25 @@ public class GA_ContinuousAoE : GameplayAbility
                 
                 if (targetASC != null)
                 {
-                    if (EffectsToApply != null)
+                    // --- NUEVA LÓGICA DE VALIDACIÓN ---
+                    bool isValidTarget = false;
+
+                    if (Objetivos == EAoETarget.Enemigos && IsEnemy(targetASC)) isValidTarget = true;
+                    else if (Objetivos == EAoETarget.Aliados && IsAlly(targetASC)) isValidTarget = true;
+                    else if (Objetivos == EAoETarget.Todos) isValidTarget = true;
+
+                    if (isValidTarget)
                     {
-                        foreach (var effect in EffectsToApply)
+                        if (EffectsToApply != null)
                         {
-                            if (effect != null) targetASC.ApplyGameplayEffect(effect, OwnerASC);
+                            foreach (var effect in EffectsToApply)
+                            {
+                                if (effect != null) targetASC.ApplyGameplayEffect(effect, OwnerASC);
+                            }
                         }
+                        
+                        if (OwnerASC.CompareTag("Player")) ChargeUltimate();
                     }
-                    
-                    if (OwnerASC.CompareTag("Player")) ChargeUltimate();
                 }
             }
 

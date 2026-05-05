@@ -39,11 +39,14 @@ public class GA_FinalBlow : GameplayAbility
     {
         PlayerController pc = OwnerASC.GetComponent<PlayerController>();
         
-        // 1. Dar escudo fijo durante la carga
+        // 1. Dar escudo fijo durante la carga y aplicar el estado ROOT
         float currentShield = OwnerASC.GetAttributeValue(EAttributeType.Shield);
         OwnerASC.SetCurrentAttributeValue(EAttributeType.Shield, currentShield + ShieldAmount);
+        
+        // Inmoviliza al jugador
+        OwnerASC.AddTag(EGameplayTag.State_Rooted); 
 
-        // Opcional: Reproducir una animación de "Cargando" aquí si la tienes.
+        //Reproducir una animación de "Cargando" aquí.
 
         float timer = 0f;
         bool wasInterrupted = false;
@@ -67,10 +70,13 @@ public class GA_FinalBlow : GameplayAbility
             yield return null; // Esperamos al siguiente frame
         }
 
-        // 3. Limpiar el escudo otorgado en la carga (quitamos lo que no se destruyó)
+        // 3. Limpiar el escudo otorgado y liberar el movimiento
         float shieldLeft = OwnerASC.GetAttributeValue(EAttributeType.Shield);
         float newShield = Mathf.Max(0, shieldLeft - ShieldAmount);
         OwnerASC.SetCurrentAttributeValue(EAttributeType.Shield, newShield);
+        
+        // Permite al jugador volver a moverse
+        OwnerASC.RemoveTag(EGameplayTag.State_Rooted); 
 
         // 4. Si fuimos interrumpidos, cancelamos el ataque
         if (wasInterrupted)
@@ -92,7 +98,7 @@ public class GA_FinalBlow : GameplayAbility
         foreach (Collider hit in hitColliders)
         {
             AbilitySystemComponent targetASC = hit.GetComponent<AbilitySystemComponent>();
-            if (targetASC != null && targetASC != OwnerASC) // Que no nos peguemos a nosotros mismos
+            if (targetASC != null && IsEnemy(targetASC)) // Que no nos peguemos a nosotros mismos
             {
                 float targetHealth = targetASC.GetAttributeValue(EAttributeType.Health);
                 float targetMaxHealth = targetASC.GetAttributeValue(EAttributeType.MaxHealth);
@@ -101,20 +107,17 @@ public class GA_FinalBlow : GameplayAbility
                 if (targetMaxHealth > 0 && (targetHealth / targetMaxHealth) <= 0.05f)
                 {
                     Debug.Log($"¡{hit.name} fue EJECUTADO por el Inmortal!");
-                    
-                    // Instakill: Llevamos su vida a 0. Tu método SetCurrentAttributeValue
-                    // ya tiene la lógica de llamar a Die() automáticamente si llega a 0 o menos.
                     targetASC.SetCurrentAttributeValue(EAttributeType.Health, 0); 
                 }
                 else
                 {
-                    // Golpe normal: Aplicamos el daño masivo y el aturdimiento configurados en el inspector
+                    // Golpe normal: Aplicamos el daño masivo y el aturdimiento
                     if (DamageEffect != null) targetASC.ApplyGameplayEffect(DamageEffect, OwnerASC);
                     if (StunEffect != null) targetASC.ApplyGameplayEffect(StunEffect, OwnerASC);
                 }
             }
         }
 
-        EndAbility(); // Libera el bloqueo de isAttacking en el PlayerController
+        EndAbility(); 
     }
 }

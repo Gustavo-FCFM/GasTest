@@ -88,6 +88,12 @@ public class PlayerController : MonoBehaviour
 
     private void HandlePlayerDeath()
     {
+        if (AbilityR != null && AbilityR is GA_InmortalWrath && AbilityR.CanActivate()) //Intentamos activar la ultimate de inmortalidad si la tenemos, para evitar el reinicio de nivel
+        {
+            Debug.Log("Inmortal Wrath activado automáticamente. Evitando reinicio de nivel."); 
+            AbilityR.Activate();
+            return;
+        }
         StartCoroutine(RespawnRoutine(3f));
     }
 
@@ -178,17 +184,94 @@ public class PlayerController : MonoBehaviour
         return (f * v + r * h).normalized;
     }
 
+    [HideInInspector] public bool isRadialMenuOpen = false;
+    private GameplayAbility currentRadialAbility = null;
     private void HandleAbilityInput()
     {
         if (ASC != null && ASC.HasTag(EGameplayTag.State_Silenced)) return; 
-        if (isAttacking) return; 
+        if (isAttacking && !isRadialMenuOpen) return; 
 
-        if (Input.GetButtonDown("Fire3")) TryActivateAbility(MovementAbility); 
-        if (Input.GetKeyDown(KeyCode.Q))  TryActivateAbility(AbilityQ);
-        if (Input.GetKeyDown(KeyCode.E))  TryActivateAbility(AbilityE);
-        if (Input.GetKeyDown(KeyCode.R))  TryActivateAbility(AbilityR);
-        if (Input.GetButtonDown("Fire1")) TryActivateAbility(PrimaryAttackAbility); 
-        if (Input.GetButtonDown("Fire2")) TryActivateAbility(AimAbility); 
+        CheckAbilityButton("Fire3", MovementAbility); 
+        CheckAbilityKey(KeyCode.Q, AbilityQ);
+        CheckAbilityKey(KeyCode.E, AbilityE);
+        CheckAbilityKey(KeyCode.R, AbilityR);
+        CheckAbilityButton("Fire1", PrimaryAttackAbility); 
+        CheckAbilityButton("Fire2", AimAbility);
+    }
+    private void CheckAbilityKey(KeyCode key, GameplayAbility ability)
+    {
+        if (ability == null) return;
+
+        if (Input.GetKeyDown(key))
+        {
+            ProcessAbilityPress(ability);
+        }
+        else if (Input.GetKeyUp(key) && currentRadialAbility == ability)
+        {
+            ProcessAbilityRelease();
+        }
+    }
+
+    // Método para inputs de Ratón/Control (Fire1, Fire2...)
+    private void CheckAbilityButton(string buttonName, GameplayAbility ability)
+    {
+        if (ability == null) return;
+
+        if (Input.GetButtonDown(buttonName))
+        {
+            ProcessAbilityPress(ability);
+        }
+        else if (Input.GetButtonUp(buttonName))
+        {
+            if (currentRadialAbility == ability) ProcessAbilityRelease();
+        }
+    }
+
+    // Lógica al PRESIONAR
+    private void ProcessAbilityPress(GameplayAbility ability)
+    {
+        // Preguntamos: ¿Esta habilidad implementa la interfaz IRadialMenuAbility?
+        if (ability is IRadialMenuAbility radialAbility)
+        {
+            if (!ability.CanActivate()) return; // Si no tiene maná o está en cooldown, no abrimos el menú
+            
+            isAttacking = true;
+            isRadialMenuOpen = true;
+            currentRadialAbility = ability;
+            
+            if (UI_RadialMenu.Instance != null)
+            {
+                UI_RadialMenu.Instance.Show(radialAbility);
+            }
+        }
+        else
+        {
+            // Es una habilidad normal (instacast)
+            TryActivateAbility(ability);
+        }
+    }
+
+    // Lógica al SOLTAR
+    private void ProcessAbilityRelease()
+    {
+        if (currentRadialAbility is IRadialMenuAbility radialAbility)
+        {
+            int seleccionReal = 0;
+            if (UI_RadialMenu.Instance != null)
+            {
+                seleccionReal = UI_RadialMenu.Instance.HideAndGetSelection();
+            }
+            
+            // Calculamos dónde está apuntando
+            Vector3 targetPos = GetAimPoint(radialAbility.MaxRadialRange);
+            
+            // Ejecutamos la habilidad con la decisión
+            radialAbility.ActivateWithSelection(seleccionReal, targetPos);
+        }
+
+        isRadialMenuOpen = false;
+        currentRadialAbility = null;
+        // isAttacking se pondrá en false cuando la habilidad llame a EndAbility() internamente
     }
 
     private void TryActivateAbility(GameplayAbility ability)
@@ -372,22 +455,31 @@ public class PlayerController : MonoBehaviour
     }
     public Vector3 GetAimPoint(float maxRange = 100f)
     {
-        // Rayo desde el centro de la cámara (0.5, 0.5)
+        // Rayo desde el centro de la cámara
         Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
         
-        // Ignoramos la capa del Jugador (para no apuntarnos a nosotros mismos)
-        // Asumimos que el Player está en la capa "Default" o "Player". 
-        // Lo ideal es usar una LayerMask que incluya Suelo y Enemigos.
-        int layerMask = ~LayerMask.GetMask("Player"); // El símbolo ~ invierte (Todo MENOS Player)
+        // Hacemos un RaycastAll para detectar TODO lo que cruza el rayo
+        RaycastHit[] hits = Physics.RaycastAll(ray, maxRange);
+        
+        float closestDistance = float.MaxValue;
+        Vector3 bestPoint = ray.GetPoint(maxRange); // Por defecto, el horizonte
 
-        if (Physics.Raycast(ray, out RaycastHit hit, maxRange, layerMask))
+        foreach (RaycastHit hit in hits)
         {
-            return hit.point; // Golpeamos algo (suelo, pared, enemigo)
+            // FILTRO CLAVE: 
+            // 1. Que no sea un Trigger (para no apuntar a auras o zonas de daño)
+            // 2. Que no sea el propio jugador (revisamos si el objeto golpeado pertenece a nosotros)
+            if (!hit.collider.isTrigger && hit.collider.transform.root != this.transform.root)
+            {
+                if (hit.distance < closestDistance)
+                {
+                    closestDistance = hit.distance;
+                    bestPoint = hit.point;
+                }
+            }
         }
-        else
-        {
-            return ray.GetPoint(maxRange); // No golpeamos nada, apuntamos al horizonte
-        }
+
+        return bestPoint;
     }
 
     // Fuerza al personaje a mirar hacia donde apunta la cámara (Usar antes de atacar)

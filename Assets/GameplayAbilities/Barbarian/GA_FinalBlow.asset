@@ -24,15 +24,12 @@ MonoBehaviour:
   AbilityRadius: 3
   TargetLayer:
     serializedVersion: 2
-    m_Bits: 8
+    m_Bits: 128
   HitboxShape: 1
   HitboxOffsetZ: 3
   HitboxHalfExtents: {x: 2, y: 1, z: 3}
   ConeAngle: 90
-  ActivationVFX: {fileID: 0}
-  ActivationVFXOffset: {x: 0, y: 0, z: 0}
-  AttachToOwner: 1
-  ActivationVFXDestroyTime: 3
+  VisualsSequence: []
   ChargeTime: 1.5
   ShieldAmount: 150
   DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}

@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 373e211b88464644998f9db7c6f12a31, type: 3}
+  m_Name: GA_SpawnTotem
+  m_EditorClassIdentifier: 
+  AbilityName: Spawn Totem
+  AbilityIcon: {fileID: 21300000, guid: 72087692fc8469047840263552e982ad, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 0}
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 1
+  ActivationBlockedTags: 0300000001000000
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 4
+  AbilityRadius: 3
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  HitboxShape: 0
+  HitboxOffsetZ: 1.5
+  HitboxHalfExtents: {x: 1, y: 1, z: 1}
+  ConeAngle: 90
+  VisualsSequence: []
+  TotemPrefabs:
+  - {fileID: 1564936832730364612, guid: d4cec081c92d2c04fbf4a2eae5e1aec7, type: 3}
+  - {fileID: 1564936832730364612, guid: b5fed081739057d40a1f79c0cec54762, type: 3}
+  - {fileID: 1564936832730364612, guid: b63783dd32f378f4d97bd222a4f04f52, type: 3}
+  - {fileID: 1564936832730364612, guid: 38112faa447d74946bf350636678be65, type: 3}
+  TotemIcons:
+  - {fileID: 21300000, guid: 95e74f627f2452745813d67eb9c0b63d, type: 3}
+  - {fileID: 21300000, guid: cb6add1f3e6dffb459ffa9215e188359, type: 3}
+  - {fileID: 21300000, guid: 5458d2aa114d929418de6c74c9806cf8, type: 3}
+  - {fileID: 21300000, guid: 11b1ee7ff303aa04382ca53cd7824af7, type: 3}
+  IndividualCooldownEffects:
+  - {fileID: 11400000, guid: c352164367780a54e9b2a7a1bd1d7ef8, type: 2}
+  - {fileID: 11400000, guid: 167def151585bb34c9cf21cc923b2010, type: 2}
+  - {fileID: 11400000, guid: edf7f61866b81824bb584b3a4002a48f, type: 2}
+  - {fileID: 11400000, guid: 4f826c6e2a70e3c4ebd81be8b061245a, type: 2}
+  MaxSpawnRange: 10
+  SpawnVFX: {fileID: 0}

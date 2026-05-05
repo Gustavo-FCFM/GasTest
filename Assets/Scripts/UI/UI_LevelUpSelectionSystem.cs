@@ -52,6 +52,10 @@ public class LevelUpSelectionSystem : MonoBehaviour
         {
             TrySelectSubclass(1);
         }
+        else if (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3))
+        {
+            TrySelectSubclass(2);
+        }
     }
 
     private void EnableSelectionMode()

@@ -9,6 +9,9 @@ public class AbilitySystemComponent : MonoBehaviour
 
     [Header("Clase y Progresión")]
     public CharacterClassDefinition CurrentClass; // Clase actual del personaje
+    [Header("Multijugador y Afiliación")]
+    [Tooltip("Identificador numérico del equipo. En 'Todos contra Todos', asigne un número único a cada jugador.")]
+    public int TeamID = 0; // Por defecto 0 puede significar "Neutral" o "Sin Equipo"
     // Eventos
     public event System.Action OnLevelUp; // Evento para avisar "Subí de nivel"
     public event System.Action OnDeath;      // Evento para avisar "Me morí"

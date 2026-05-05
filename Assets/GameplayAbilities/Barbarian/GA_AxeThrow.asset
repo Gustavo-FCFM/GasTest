@@ -24,7 +24,7 @@ MonoBehaviour:
   AbilityRadius: 3
   TargetLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128
   HitboxShape: 0
   HitboxOffsetZ: 1.5
   HitboxHalfExtents: {x: 1, y: 1, z: 1}
@@ -36,5 +36,5 @@ MonoBehaviour:
   AddSpin: 1
   InstantDamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   DurationEffect: {fileID: 11400000, guid: 70c9bebbbfba254448fb78d4cf1f9726, type: 2}
-  SpawnDelay: 0.4
+  SpawnDelay: 0.8
   ImpactVFX: {fileID: 1758473627833946668, guid: 9b21333b068a5084ba09535839bee3c8, type: 3}

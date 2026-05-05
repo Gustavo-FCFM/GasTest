@@ -29,5 +29,15 @@ public enum EGameplayTag
     Status_Immunity,      // Ej: Invencible
     Status_Rage,
     Status_Frenzy,
-    Status_Inmortal
+    Status_Inmortal,
+    Status_Buff_Bear,
+    Status_Buff_Wolf,
+    Status_Buff_Eagle,
+    Status_Buff_Tiger,
+
+    // --- Cooldowns Totems  ---
+    Totem_Cooldown_Bear,
+    Totem_Cooldown_Wolf,
+    Totem_Cooldown_Eagle,
+    Totem_Cooldown_Tiger,
 }
