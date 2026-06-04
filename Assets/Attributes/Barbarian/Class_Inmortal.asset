@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 749805704a6088741af34d91f0891ced, type: 3}
   m_Name: Class_Inmortal
   m_EditorClassIdentifier: 
-  ClassName: Barbarian_Inmortal
+  ClassName: Inmortal
   ClassIcon: {fileID: 21300000, guid: 01a083dd1c5fae649a40e683197eb815, type: 3}
-  Description: Berserker! auuuuuuuuuu!
+  Description: Inmortal!
   BaseAttributes: {fileID: 11400000, guid: f48497a22d22faf43b99c324878da5ca, type: 2}
   Abilities:
   - InputSlot: 1

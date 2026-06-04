@@ -28,24 +28,23 @@ public class UI_PlayerHUD : MonoBehaviour
 
     [Header("Panel Central (Ultimate)")]
     public UI_UltimateSlot UltimateSlot;
+    [Header("Notificaciones")]
+    public GameObject LevelUpNotification;
 
-    void Start()
-    {
-        InitializeHUD();
-    }
 
-    public void InitializeHUD()
+    public void InitializeHUD(PlayerController ownerPlayer) // <-- AHORA PIDE EL JUGADOR
     {
-        // 1. Buscar Player
-        if (player == null)
-        {
-            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-            if (playerObj != null) player = playerObj.GetComponent<PlayerController>();
-        }
+        player = ownerPlayer; // Asignación directa en lugar de buscar por Tag
 
         if (player != null)
         {
+            if (asc != null) asc.OnMaxLevelReached -= ShowLevelUpNotification;
             asc = player.GetComponent<AbilitySystemComponent>();
+
+            if (asc != null)
+            {
+                asc.OnMaxLevelReached += ShowLevelUpNotification;
+            }
 
             // 2. Configurar Icono
             if (player.CharacterIcon != null && ClassIconImage != null)
@@ -54,11 +53,12 @@ public class UI_PlayerHUD : MonoBehaviour
                 ClassIconImage.enabled = true;
             }
 
-            // 3. Configurar Slots (Aquí está la magia de ocultar)
+            // 3. Configurar Slots 
             InitializeAbilitySlots();
             
             // 4. Lógica de Maná
-            CheckIfManaExists(); 
+            CheckIfManaExists();
+            if (LevelUpNotification != null) LevelUpNotification.SetActive(false);
         }
     }
 
@@ -67,6 +67,33 @@ public class UI_PlayerHUD : MonoBehaviour
         if (asc == null) return;
         UpdateHealthUI();
         UpdateManaUI(); 
+    }
+    private void ShowLevelUpNotification()
+    {
+        // 1. Verificamos que tengamos un jugador y una clase equipada
+        if (player != null && player.CurrentClassDef != null)
+        {
+            // 2. Verificamos si esta clase específica tiene evoluciones configuradas
+            if (player.CurrentClassDef.AvailableSubclasses != null && player.CurrentClassDef.AvailableSubclasses.Count > 0)
+            {
+                if (LevelUpNotification != null) LevelUpNotification.SetActive(true);
+            }
+            else
+            {
+                Debug.Log("Nivel Máximo alcanzado, pero no hay más evoluciones para esta clase.");
+            }
+        }
+    }
+
+    public void HideLevelUpNotification()
+    {
+        if (LevelUpNotification != null) LevelUpNotification.SetActive(false);
+    }
+
+    void OnDestroy()
+    {
+        // Limpieza de memoria vital en Unity
+        if (asc != null) asc.OnMaxLevelReached -= ShowLevelUpNotification;
     }
 
     void CheckIfManaExists()

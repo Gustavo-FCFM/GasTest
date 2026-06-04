@@ -1,67 +1,5 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &1351979816219223392
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 4247233861512222360, guid: 46a76e3b55680584fb9da4d4b68f998e, type: 3}
-  m_PrefabInstance: {fileID: 2896384981050651640}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1839969857799389146}
-  m_Layer: 0
-  m_Name: 'Human_BigRock_L (Missing Prefab with guid: 46a76e3b55680584fb9da4d4b68f998e)'
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!4 &1839969857799389146
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 3583427267331755042, guid: 46a76e3b55680584fb9da4d4b68f998e, type: 3}
-  m_PrefabInstance: {fileID: 2896384981050651640}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1351979816219223392}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1620831621807232315}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &2420259146790606154
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 4247233861512222360, guid: 46a76e3b55680584fb9da4d4b68f998e, type: 3}
-  m_PrefabInstance: {fileID: 1974626604506825682}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 3088814526924607472}
-  m_Layer: 0
-  m_Name: 'Human_BigRock_R (Missing Prefab with guid: 46a76e3b55680584fb9da4d4b68f998e)'
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!4 &3088814526924607472
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 3583427267331755042, guid: 46a76e3b55680584fb9da4d4b68f998e, type: 3}
-  m_PrefabInstance: {fileID: 1974626604506825682}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2420259146790606154}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 6287086953294580117}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &498580837527087825
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -269,6 +207,16 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 46a76e3b55680584fb9da4d4b68f998e, type: 3}
+--- !u!1 &2420259146790606154 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4247233861512222360, guid: 46a76e3b55680584fb9da4d4b68f998e, type: 3}
+  m_PrefabInstance: {fileID: 1974626604506825682}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &3088814526924607472 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3583427267331755042, guid: 46a76e3b55680584fb9da4d4b68f998e, type: 3}
+  m_PrefabInstance: {fileID: 1974626604506825682}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2896384981050651640
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -330,6 +278,16 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 46a76e3b55680584fb9da4d4b68f998e, type: 3}
+--- !u!1 &1351979816219223392 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4247233861512222360, guid: 46a76e3b55680584fb9da4d4b68f998e, type: 3}
+  m_PrefabInstance: {fileID: 2896384981050651640}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1839969857799389146 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3583427267331755042, guid: 46a76e3b55680584fb9da4d4b68f998e, type: 3}
+  m_PrefabInstance: {fileID: 2896384981050651640}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &3398437350046783981
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -935,10 +893,10 @@ MonoBehaviour:
   - propName: Human_Baseball_R
     prop: {fileID: 9143645928778053723}
     active: 0
-  - propName: 'Human_BigRock_L (Missing Prefab with guid: 46a76e3b55680584fb9da4d4b68f998e)'
+  - propName: Human_BigRock_L
     prop: {fileID: 1351979816219223392}
     active: 0
-  - propName: 'Human_BigRock_R (Missing Prefab with guid: 46a76e3b55680584fb9da4d4b68f998e)'
+  - propName: Human_BigRock_R
     prop: {fileID: 2420259146790606154}
     active: 0
   - propName: Human_Javelin_L

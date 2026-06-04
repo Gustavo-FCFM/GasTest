@@ -95,7 +95,7 @@ public class GameMode_Survival : MonoBehaviour
         }
 
         // Ya no necesitamos poner en null las habilidades extra porque ya se otorgaron.
-        FindFirstObjectByType<UI_PlayerHUD>().InitializeHUD();
+        //FindFirstObjectByType<UI_PlayerHUD>().InitializeHUD();
     }
 
     public void OnEnemyKilled(NPC_WaveEnemy enemy)
@@ -253,6 +253,6 @@ public class GameMode_Survival : MonoBehaviour
             GameplayAbility newAbility = asc.GrantAbility(Skill_R_Ulti);
             Player.AbilityR = newAbility;
         }
-        FindFirstObjectByType<UI_PlayerHUD>().InitializeHUD();
+        //FindFirstObjectByType<UI_PlayerHUD>().InitializeHUD();
     }
 }

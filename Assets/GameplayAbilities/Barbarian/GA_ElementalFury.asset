@@ -12,29 +12,34 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ccd27fce879657042978007530eaeaec, type: 3}
   m_Name: GA_ElementalFury
   m_EditorClassIdentifier: 
-  AbilityName: New Ability
-  AbilityIcon: {fileID: 0}
+  AbilityName: Elemental Fury
+  AbilityIcon: {fileID: 21300000, guid: c5904e95133d68742b85788536aeb3f5, type: 3}
   CostEffect: {fileID: 0}
-  CooldownEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: 4165da9d9de274a4aa511261df047340, type: 2}
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 0
-  ActivationBlockedTags: 
+  ActivationBlockedTags: 03000000
   AnimationTriggerName: AttackTrigger
-  AnimationID: 1
+  AnimationID: 5
   AbilityRadius: 3
   TargetLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128
   HitboxShape: 0
   HitboxOffsetZ: 1.5
   HitboxHalfExtents: {x: 1, y: 1, z: 1}
   ConeAngle: 90
   VisualsSequence: []
-  TotemPrefabs: []
-  SquareRadius: 4
+  TotemPrefabs:
+  - {fileID: 1564936832730364612, guid: d4cec081c92d2c04fbf4a2eae5e1aec7, type: 3}
+  - {fileID: 1564936832730364612, guid: b5fed081739057d40a1f79c0cec54762, type: 3}
+  - {fileID: 1564936832730364612, guid: b63783dd32f378f4d97bd222a4f04f52, type: 3}
+  - {fileID: 1564936832730364612, guid: 38112faa447d74946bf350636678be65, type: 3}
+  SquareRadius: 2
   Duration: 10
-  DamageEffect: {fileID: 0}
-  DamageRadius: 5
+  DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
+  DamageRadius: 8
   TickRate: 0.5
-  TornadoVFXPrefab: {fileID: 0}
+  TornadoVFXPrefab: {fileID: 8915312667134092580, guid: 8a43d9f68490c374a93a9e8085555c02, type: 3}
+  TornadoVfxScaleMultiplier: 1
   FollowPlayer: 0

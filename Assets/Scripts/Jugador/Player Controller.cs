@@ -1,21 +1,37 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(AbilitySystemComponent))]
+[RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
 {
-    // --- Referencias ---
+    // =========================================================
+    // 1. REFERENCIAS PRINCIPALES
+    // =========================================================
+    [Header("Referencias Base")]
     private AbilitySystemComponent ASC;
     private CharacterController characterController;
+    private PlayerInput playerInput;
 
     [Header("Configuración de Clase")]
     public CharacterClassDefinition CurrentClassDef;
+    [Header("UI Local Multijugador")]
+    public UI_ClassSelectionMenu LocalClassMenu; // Arrastre su menú local aquí en el Prefab
+    [Header("HUD Local Multijugador")]
+    public UI_PlayerHUD LocalHUD;
     
+    public CharacterClassDefinition[] MainBaseClasses; // Bárbaro, Mago, Ranger...
+    [Header("Cámara Local")]
+    public Camera localCamera;
+    // =========================================================
+    // 2. VISUALES Y ANIMACIÓN
+    // =========================================================
     [Header("UI & Visuals")] 
     public Sprite CharacterIcon; 
-    [Header("Animación")]
     public Animator characterAnimator;
-    [Header("Referencias de Huesos")]
+    
+    [Header("Referencias de Huesos (Sockets)")]
     public Transform MainHandSocket; 
     public Transform OffHandSocket;
 
@@ -23,85 +39,96 @@ public class PlayerController : MonoBehaviour
     private GameObject currentOffWeapon;
     private GameObject currentWeaponTrail;
 
-    // --- SEMÁFORO DE COMBATE ---
+    // =========================================================
+    // 3. COMBATE Y HABILIDADES
+    // =========================================================
+    [Header("Estado de Combate")]
     private bool isAttacking = false; 
+    [HideInInspector] public bool isRadialMenuOpen = false;
+    private GameplayAbility currentRadialAbility = null;
 
-    // --- Habilidades Activas ---
-    [HideInInspector] public GameplayAbility MovementAbility; 
+    [Header("Habilidades Activas (Asignadas dinámicamente)")]
+    [HideInInspector] public GameplayAbility PrimaryAttackAbility; 
+    [HideInInspector] public GameplayAbility AimAbility;         
     [HideInInspector] public GameplayAbility AbilityQ;        
     [HideInInspector] public GameplayAbility AbilityE;   
     [HideInInspector] public GameplayAbility AbilityR;     
-    [HideInInspector] public GameplayAbility PrimaryAttackAbility; 
-    [HideInInspector] public GameplayAbility AimAbility;         
+    [HideInInspector] public GameplayAbility MovementAbility; 
 
+    // =========================================================
+    // 4. FÍSICAS Y MOVIMIENTO
+    // =========================================================
     [Header("Físicas")]
     public float jumpForce = 8f;
     public float gravity = -9.8f;
-    [Tooltip("Si el jugador baja de esta altura Y, muere instantáneamente.")]
+    
+    [Tooltip("Si el jugador baja de esta altura Y, muere o reaparece.")]
     public float VoidYLevel = -5.0f;
+    
     private float verticalVelocity; 
     private Vector3 abilityMoveVector; 
     private bool isAbilityLeaping = false;
     [HideInInspector] public GA_LeapAttack activeLeapAbility; 
     private Vector3 spawnPosition; 
 
+    // =========================================================
+    // MÉTODOS NATIVOS DE UNITY (CICLO DE VIDA)
+    // =========================================================
     void Awake()
     {
         ASC = GetComponent<AbilitySystemComponent>();
         characterController = GetComponent<CharacterController>();
         spawnPosition = transform.position;
+
+        // Inicializamos nuestro mapa de controles generado por Unity
+        playerInput = GetComponent<PlayerInput>();
     }
 
     void Start()
     {
         if (CurrentClassDef != null) EquipCharacterClass(CurrentClassDef);
         if (ASC != null) ASC.OnDeath += HandlePlayerDeath;
+        if (LocalClassMenu != null)
+        {
+            LocalClassMenu.InitializeMenu(this);
+        }
     }
 
     void Update()
     {
-        // Si estoy muerto, bloquear movimiento y ataques normales...
+        // 1. Validar si el jugador está muerto
         if (ASC.HasTag(EGameplayTag.State_Dead))
         {
-            // ...¡EXCEPTO LA ULTIMATE!
-            if (Input.GetKeyDown(KeyCode.R) || Input.GetButtonDown("Ultimate"))
+            // Solo permitimos usar la Ultimate (Ej. Inmortalidad) estando muertos
+            if (playerInput.actions["Ultimate"].WasPressedThisFrame())
             {
-                if (AbilityR != null && AbilityR.CanActivate())
-                {
-                    AbilityR.Activate();
-                }
+                if (AbilityR != null && AbilityR.CanActivate()) AbilityR.Activate();
             }
-            
-            return; // Bloquea todo lo demás (moverse, saltar, etc)
+            return; 
         }
+        
+        // 2. Validar pérdida de control (Stun)
         if (ASC != null && ASC.HasTag(EGameplayTag.State_Stunned)) return;
+        
+        // 3. Validar caída al vacío
         if (transform.position.y < VoidYLevel)
         {   
             TeleportToSpawn();
-            // ASC.ApplyGameplayEffect(algunEfectoDeDaño);
             return;
         }
+        
+        // 4. Ejecutar lógicas principales
         HandleMovementInput(); 
         HandleAbilityInput();  
         UpdateAnimations();
     }
 
-    private void HandlePlayerDeath()
-    {
-        if (AbilityR != null && AbilityR is GA_InmortalWrath && AbilityR.CanActivate()) //Intentamos activar la ultimate de inmortalidad si la tenemos, para evitar el reinicio de nivel
-        {
-            Debug.Log("Inmortal Wrath activado automáticamente. Evitando reinicio de nivel."); 
-            AbilityR.Activate();
-            return;
-        }
-        StartCoroutine(RespawnRoutine(3f));
-    }
-
-    // ---------------------------------------------------------
-    // INPUT Y MOVIMIENTO
-    // ---------------------------------------------------------
+    // =========================================================
+    // SISTEMA DE MOVIMIENTO Y ROTACIÓN
+    // =========================================================
     private void HandleMovementInput()
     {
+        // Si estamos inmovilizados, solo aplicamos gravedad
         if (ASC != null && ASC.HasTag(EGameplayTag.State_Rooted))
         {
             verticalVelocity += gravity * Time.deltaTime;
@@ -109,7 +136,7 @@ public class PlayerController : MonoBehaviour
             return; 
         }
 
-        // 1. Calcular Velocidad
+        // --- 1. Calcular Velocidad con Modificadores ---
         float baseSpeed = 5f; 
         float speedMultiplier = 1.0f;
 
@@ -129,149 +156,143 @@ public class PlayerController : MonoBehaviour
         }
         float finalSpeed = baseSpeed * speedMultiplier;
 
-        // 2. Leer Input
-        float horizontal = Input.GetAxis("Horizontal");
-        float vertical = Input.GetAxis("Vertical");
+        // --- 2. Leer Input del Joystick o Teclado (New Input System) ---
+        Vector2 moveInput = playerInput.actions["Move"].ReadValue<Vector2>();
+        float horizontal = moveInput.x;
+        float vertical = moveInput.y;
         
-        // Esta función usa la cámara principal, así que si la cámara rota, esto rota.
-        Vector3 inputVector = GetWASDInputVector(horizontal, vertical);
+        Vector3 inputVector = GetMovementInputVector(horizontal, vertical);
         
-        // 3. ROTACIÓN DEL PERSONAJE
-        // Si nos movemos y no estamos atacando
+        // --- 3. Rotación del Personaje ---
         if (inputVector != Vector3.zero && !isAttacking)
         {
-            // Girar suavemente hacia la dirección de movimiento
             Quaternion targetRotation = Quaternion.LookRotation(inputVector);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 10f * Time.deltaTime);
         }
 
-        // 4. Movimiento Físico
+        // --- 4. Movimiento Físico ---
         Vector3 currentHorizontalMovement = Vector3.zero;
 
         if (isAbilityLeaping)
         {
+            // Movimiento forzado por habilidades (Ej. Salto del Bárbaro)
             abilityMoveVector = Vector3.Lerp(abilityMoveVector, Vector3.zero, Time.deltaTime * 1f); 
             Vector3 airNudge = inputVector * finalSpeed * 1f; 
             currentHorizontalMovement = abilityMoveVector + airNudge;
         }
         else 
         {
+            // Movimiento estándar
             currentHorizontalMovement = inputVector * finalSpeed;
-            if (characterController.isGrounded && Input.GetButtonDown("Jump")) 
+            
+            // Salto (New Input System)
+            if (characterController.isGrounded && playerInput.actions["Jump"].WasPressedThisFrame()) 
             {
                 verticalVelocity = jumpForce;
             }
         }
 
+        // Aplicar Gravedad y mover el CharacterController
         verticalVelocity += gravity * Time.deltaTime; 
         Vector3 finalMovement = new Vector3(currentHorizontalMovement.x, 0, currentHorizontalMovement.z) + (Vector3.up * verticalVelocity);
         characterController.Move(finalMovement * Time.deltaTime); 
+        
         CheckLanding();
     }
 
-    //Convierte WASD a dirección relativa a la cámara
-    private Vector3 GetWASDInputVector(float h, float v)
+    // Convierte el Input 2D a una dirección 3D basada en la cámara
+    private Vector3 GetMovementInputVector(float h, float v)
     {
-        Vector3 f = Camera.main.transform.forward; 
-        Vector3 r = Camera.main.transform.right;   
-        
-        // Aplanamos para no caminar hacia el cielo/suelo
-        f.y = 0; 
-        r.y = 0; 
-        f.Normalize();
-        r.Normalize();
-        
+        if (localCamera == null) return Vector3.zero;
+
+        Vector3 f = localCamera.transform.forward; 
+        Vector3 r = localCamera.transform.right;   
+        f.y = 0; r.y = 0; // Aplanamos los vectores
+        f.Normalize(); r.Normalize();
         return (f * v + r * h).normalized;
     }
 
-    [HideInInspector] public bool isRadialMenuOpen = false;
-    private GameplayAbility currentRadialAbility = null;
+    // =========================================================
+    // SISTEMA DE ENTRADA DE HABILIDADES
+    // =========================================================
     private void HandleAbilityInput()
     {
+        // 1. MENÚ DE CLASES (Usamos "ToggleClassMenu" que configuraste en tu archivo de controles)
+        if (playerInput.actions["ToggleClassMenu"].WasPressedThisFrame()) 
+        {
+            if (LocalClassMenu != null)
+            {
+                if (LocalClassMenu.MenuContainer.activeSelf)
+                    LocalClassMenu.ConfirmCurrentSelectionFromGamepad();
+                else
+                    LocalClassMenu.ToggleMenu();
+            }
+        }
+
+        // 2. VALIDACIONES DE COMBATE
         if (ASC != null && ASC.HasTag(EGameplayTag.State_Silenced)) return; 
         if (isAttacking && !isRadialMenuOpen) return; 
 
-        CheckAbilityButton("Fire3", MovementAbility); 
-        CheckAbilityKey(KeyCode.Q, AbilityQ);
-        CheckAbilityKey(KeyCode.E, AbilityE);
-        CheckAbilityKey(KeyCode.R, AbilityR);
-        CheckAbilityButton("Fire1", PrimaryAttackAbility); 
-        CheckAbilityButton("Fire2", AimAbility);
+        // 3. LECTURA DE HABILIDADES
+        CheckAbilityAction(playerInput.actions["PrimaryAttack"], PrimaryAttackAbility); 
+        CheckAbilityAction(playerInput.actions["SecondaryAttack"], AimAbility);
+        CheckAbilityAction(playerInput.actions["Ability1"], AbilityQ);
+        CheckAbilityAction(playerInput.actions["Ability2"], AbilityE);
+        CheckAbilityAction(playerInput.actions["Ultimate"], AbilityR);
+        CheckAbilityAction(playerInput.actions["MovementAbility"], MovementAbility);
     }
-    private void CheckAbilityKey(KeyCode key, GameplayAbility ability)
+
+    // Interpreta si el botón fue presionado o soltado en este frame
+    private void CheckAbilityAction(InputAction action, GameplayAbility ability)
     {
         if (ability == null) return;
 
-        if (Input.GetKeyDown(key))
+        if (action.WasPressedThisFrame())
         {
             ProcessAbilityPress(ability);
         }
-        else if (Input.GetKeyUp(key) && currentRadialAbility == ability)
+        else if (action.WasReleasedThisFrame() && currentRadialAbility == ability)
         {
             ProcessAbilityRelease();
         }
     }
 
-    // Método para inputs de Ratón/Control (Fire1, Fire2...)
-    private void CheckAbilityButton(string buttonName, GameplayAbility ability)
-    {
-        if (ability == null) return;
-
-        if (Input.GetButtonDown(buttonName))
-        {
-            ProcessAbilityPress(ability);
-        }
-        else if (Input.GetButtonUp(buttonName))
-        {
-            if (currentRadialAbility == ability) ProcessAbilityRelease();
-        }
-    }
-
-    // Lógica al PRESIONAR
     private void ProcessAbilityPress(GameplayAbility ability)
     {
-        // Preguntamos: ¿Esta habilidad implementa la interfaz IRadialMenuAbility?
+        // Si es una habilidad de menú radial, pausamos para apuntar
         if (ability is IRadialMenuAbility radialAbility)
         {
-            if (!ability.CanActivate()) return; // Si no tiene maná o está en cooldown, no abrimos el menú
+            if (!ability.CanActivate()) return; 
             
             isAttacking = true;
             isRadialMenuOpen = true;
             currentRadialAbility = ability;
             
             if (UI_RadialMenu.Instance != null)
-            {
                 UI_RadialMenu.Instance.Show(radialAbility);
-            }
         }
         else
         {
-            // Es una habilidad normal (instacast)
+            // Si es instacast, la activamos de inmediato
             TryActivateAbility(ability);
         }
     }
 
-    // Lógica al SOLTAR
     private void ProcessAbilityRelease()
     {
+        // Cuando suelta el botón del menú radial, ejecutamos la habilidad con la decisión
         if (currentRadialAbility is IRadialMenuAbility radialAbility)
         {
             int seleccionReal = 0;
             if (UI_RadialMenu.Instance != null)
-            {
                 seleccionReal = UI_RadialMenu.Instance.HideAndGetSelection();
-            }
             
-            // Calculamos dónde está apuntando
             Vector3 targetPos = GetAimPoint(radialAbility.MaxRadialRange);
-            
-            // Ejecutamos la habilidad con la decisión
             radialAbility.ActivateWithSelection(seleccionReal, targetPos);
         }
 
         isRadialMenuOpen = false;
         currentRadialAbility = null;
-        // isAttacking se pondrá en false cuando la habilidad llame a EndAbility() internamente
     }
 
     private void TryActivateAbility(GameplayAbility ability)
@@ -283,22 +304,27 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    public void FinishAttack()
-    {
-        isAttacking = false; 
-    }
-
-    //(Métodos de Equipar Clase, Visuales, Animaciones)
+    // =========================================================
+    // GESTIÓN DE CLASE Y ESTADÍSTICAS
+    // =========================================================
     public void EquipCharacterClass(CharacterClassDefinition newClass)
     {
         if (newClass == null || ASC == null) return;
+        
+        // 1. Purga de Estado (Evita bugs de desincronización de stats)
         ASC.RemoveAllActiveEffects();
+        
         CurrentClassDef = newClass;
         ASC.CurrentClass = newClass;
         CharacterIcon = newClass.ClassIcon;
+        
+        // 2. Actualizar armas y animador
         UpdateVisuals(newClass);
+        
+        // 3. Reasignar Habilidades
         ASC.ClearGrantedAbilities();
         ResetAbilitySlots();
+        
         foreach (var assignment in newClass.Abilities)
         {
             GameplayAbility instance = ASC.GrantAbility(assignment.Ability);
@@ -312,25 +338,32 @@ public class PlayerController : MonoBehaviour
                 case EAbilityInput.Movement:        MovementAbility = instance; break;
             }
         }
+        
+        // 4. Inicializar Atributos Base
         if (newClass.BaseAttributes != null)
         {
             ASC.CharacterRoleDefinition = newClass.BaseAttributes;
             ASC.InitializeAttributes(); 
         }
+        
         UpdateHUD();
-        Debug.Log($"Clase equipada: {newClass.ClassName}");
+        if (LocalHUD != null) LocalHUD.HideLevelUpNotification();
+        Debug.Log($"[PlayerController] Clase equipada: {newClass.ClassName}");
     }
 
     private void ResetAbilitySlots()
     {
-        MovementAbility = null; AbilityQ = null; AbilityE = null;
-        PrimaryAttackAbility = null; AimAbility = null; AbilityR = null;
+        PrimaryAttackAbility = null; AimAbility = null; 
+        AbilityQ = null; AbilityE = null; AbilityR = null; MovementAbility = null; 
     }
 
+    // =========================================================
+    // UTILIDADES VISUALES Y HUD
+    // =========================================================
     private void UpdateHUD()
     {
-        UI_PlayerHUD hud = FindFirstObjectByType<UI_PlayerHUD>();
-        if (hud != null) hud.InitializeHUD();
+        // Le pasamos 'this' (este jugador) directamente a su propio HUD
+        if (LocalHUD != null) LocalHUD.InitializeHUD(this);
     }
 
     private void UpdateVisuals(CharacterClassDefinition newClass)
@@ -339,39 +372,39 @@ public class PlayerController : MonoBehaviour
         {
             characterAnimator.runtimeAnimatorController = newClass.ClassAnimatorOverride;
         }
+        
         if (currentMainWeapon != null) Destroy(currentMainWeapon);
         if (currentOffWeapon != null) Destroy(currentOffWeapon);
+        
         if (newClass.MainHandWeaponPrefab != null && MainHandSocket != null)
         {
             currentMainWeapon = Instantiate(newClass.MainHandWeaponPrefab, MainHandSocket);
             currentMainWeapon.transform.localPosition = Vector3.zero;
             currentMainWeapon.transform.localRotation = Quaternion.identity;
+            
             Transform trailTransform = currentMainWeapon.transform.Find("WeaponTrail");
             if (trailTransform != null)
             {
                 currentWeaponTrail = trailTransform.gameObject;
-                currentWeaponTrail.SetActive(false); // Asegurarnos de que empiece apagada
+                currentWeaponTrail.SetActive(false); 
             }
         }
+        
         if (newClass.OffHandWeaponPrefab != null && OffHandSocket != null)
         {
             currentOffWeapon = Instantiate(newClass.OffHandWeaponPrefab, OffHandSocket);
             currentOffWeapon.transform.localPosition = Vector3.zero;
             currentOffWeapon.transform.localRotation = Quaternion.identity;
-            Transform trailTransform = currentOffWeapon.transform.Find("WeaponTrail");
-            if (trailTransform != null)
-            {
-                currentWeaponTrail = trailTransform.gameObject;
-                currentWeaponTrail.SetActive(false); // Asegurarnos de que empiece apagada
-            }
         }
     }
 
     void UpdateAnimations()
     {
         if (characterAnimator == null) return;
+        
         Vector3 horizontalVelocity = new Vector3(characterController.velocity.x, 0, characterController.velocity.z);
         float speed = horizontalVelocity.magnitude;
+        
         characterAnimator.SetFloat("Speed", speed, 0.1f, Time.deltaTime);
         characterAnimator.SetBool("IsJumping", !characterController.isGrounded);
         
@@ -386,10 +419,16 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    // =========================================================
+    // EVENTOS DE ANIMACIÓN (ANIMATION EVENTS)
+    // =========================================================
+    public void FinishAttack() => isAttacking = false; 
+
     public void AnimationEvent_HitFrame()
     {
-        Debug.Log("¡HIT FRAME! Aplicando daño ahora.");
+        // Interceptado por las habilidades de Daño Físico (Melee)
     }
+    
     public void AnimationEvent_EnableTrail()
     {
         if (currentWeaponTrail != null) currentWeaponTrail.SetActive(true);
@@ -399,6 +438,7 @@ public class PlayerController : MonoBehaviour
     {
         if (currentWeaponTrail != null) currentWeaponTrail.SetActive(false);
     }
+    
     public void PlayAnimation(string triggerName, int actionID)
     {
         if (characterAnimator != null)
@@ -408,10 +448,14 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    // =========================================================
+    // UTILIDADES DE COMBATE (APUNTADO, SALTOS Y MUERTE)
+    // =========================================================
     public void ExecuteLeap(GA_LeapAttack ability, float upForce, float fwdForce)
     {
         if (!characterController.isGrounded) return;
-        Vector3 camFwd = Camera.main.transform.forward;
+        
+        Vector3 camFwd = localCamera != null ? localCamera.transform.forward : transform.forward;
         Vector3 impulse = new Vector3(camFwd.x, 0, camFwd.z).normalized;
         abilityMoveVector = impulse * fwdForce;
         verticalVelocity = upForce;
@@ -432,44 +476,18 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    /*private System.Collections.IEnumerator RespawnRoutine(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        characterController.enabled = false;
-        transform.position = spawnPosition;
-        characterController.enabled = true;
-        ASC.Revive();
-    }*/
-    private System.Collections.IEnumerator RespawnRoutine(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-
-        // --- LÓGICA DE REINICIO DE NIVEL ---
-        // Obtenemos el nombre de la escena actual y la volvemos a cargar.
-        // Esto resetea enemigos, rondas, vida, posición, TODO.
-        string currentSceneName = SceneManager.GetActiveScene().name;
-        SceneManager.LoadScene(currentSceneName);
-    }
-    public GameObject GetCurrentMainWeapon()
-    {
-        return currentMainWeapon; 
-    }
     public Vector3 GetAimPoint(float maxRange = 100f)
     {
-        // Rayo desde el centro de la cámara
-        Ray ray = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
-        
-        // Hacemos un RaycastAll para detectar TODO lo que cruza el rayo
+        if (localCamera == null) return transform.position + transform.forward * 10f;
+        Ray ray = localCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
         RaycastHit[] hits = Physics.RaycastAll(ray, maxRange);
         
         float closestDistance = float.MaxValue;
-        Vector3 bestPoint = ray.GetPoint(maxRange); // Por defecto, el horizonte
+        Vector3 bestPoint = ray.GetPoint(maxRange); 
 
         foreach (RaycastHit hit in hits)
         {
-            // FILTRO CLAVE: 
-            // 1. Que no sea un Trigger (para no apuntar a auras o zonas de daño)
-            // 2. Que no sea el propio jugador (revisamos si el objeto golpeado pertenece a nosotros)
+            // Ignorar Triggers y al propio jugador
             if (!hit.collider.isTrigger && hit.collider.transform.root != this.transform.root)
             {
                 if (hit.distance < closestDistance)
@@ -479,27 +497,66 @@ public class PlayerController : MonoBehaviour
                 }
             }
         }
-
         return bestPoint;
     }
 
-    // Fuerza al personaje a mirar hacia donde apunta la cámara (Usar antes de atacar)
     public void RotateToAim()
     {
         Vector3 targetPoint = GetAimPoint();
         Vector3 direction = (targetPoint - transform.position).normalized;
-        direction.y = 0; // Aplanamos para que no mire al cielo/suelo y se caiga
+        direction.y = 0; 
         
         if (direction != Vector3.zero)
         {
             transform.rotation = Quaternion.LookRotation(direction);
         }
     }
+
+    private void HandlePlayerDeath()
+    {
+        if (AbilityR != null && AbilityR is GA_InmortalWrath && AbilityR.CanActivate())
+        {
+            AbilityR.Activate();
+            return;
+        }
+        StartCoroutine(RespawnRoutine(3f));
+    }
+
+    private System.Collections.IEnumerator RespawnRoutine(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        string currentSceneName = SceneManager.GetActiveScene().name;
+        SceneManager.LoadScene(currentSceneName);
+    }
+    
     public void TeleportToSpawn()
     {
         characterController.enabled = false;
         transform.position = spawnPosition;
+        verticalVelocity = 0f;
         characterController.enabled = true;
     }
 
+    public GameObject GetCurrentMainWeapon()
+    {
+        return currentMainWeapon; 
+    }
+    public void OpenBaseClassMenuOnSpawn()
+    {
+        if (LocalClassMenu != null)
+        {
+            // Inyectamos las clases base al menú y lo abrimos
+            LocalClassMenu.AvailableClasses = new System.Collections.Generic.List<CharacterClassDefinition>(MainBaseClasses);
+            LocalClassMenu.InitializeMenu(this);
+            LocalClassMenu.ToggleMenu();
+        }
+    }
+
+    private void ToggleBaseClassMenu()
+    {
+        if (LocalClassMenu != null)
+        {
+            LocalClassMenu.ToggleMenu();
+        }
+    }
 }
