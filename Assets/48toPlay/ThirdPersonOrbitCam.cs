@@ -22,9 +22,9 @@ public class ThirdPersonOrbitCam : MonoBehaviour
 
     void Start()
     {
-        // Bloquear cursor para que girar sea cómodo
+        /*
         Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        Cursor.visible = false;*/
 
         // Inicializar rotación con la actual
         Vector3 angles = transform.eulerAngles;

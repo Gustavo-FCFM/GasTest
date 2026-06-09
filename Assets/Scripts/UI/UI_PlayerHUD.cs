@@ -28,85 +28,91 @@ public class UI_PlayerHUD : MonoBehaviour
 
     [Header("Panel Central (Ultimate)")]
     public UI_UltimateSlot UltimateSlot;
+    
+    [Header("Notificaciones")]
+    public GameObject LevelUpNotification;
 
-    void Start()
+    // --- SE LLAMA DESDE EL PLAYERCONTROLLER ---
+    public void InitializeHUD(PlayerController ownerPlayer)
     {
-        InitializeHUD();
-    }
-
-    public void InitializeHUD()
-    {
-        // 1. Buscar Player
-        if (player == null)
-        {
-            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-            if (playerObj != null) player = playerObj.GetComponent<PlayerController>();
-        }
+        player = ownerPlayer; 
 
         if (player != null)
         {
+            if (asc != null) asc.OnMaxLevelReached -= ShowLevelUpNotification;
             asc = player.GetComponent<AbilitySystemComponent>();
 
-            // 2. Configurar Icono
-            if (player.CharacterIcon != null && ClassIconImage != null)
+            if (asc != null)
             {
-                ClassIconImage.sprite = player.CharacterIcon;
-                ClassIconImage.enabled = true;
+                asc.OnMaxLevelReached += ShowLevelUpNotification;
             }
 
-            // 3. Configurar Slots (Aquí está la magia de ocultar)
+            if (ClassIconImage != null)
+            {
+                if (player.CharacterIcon != null)
+                {
+                    ClassIconImage.sprite = player.CharacterIcon;
+                    ClassIconImage.enabled = true;
+                }
+                else
+                {
+                    ClassIconImage.enabled = false;
+                }
+            }
+
             InitializeAbilitySlots();
-            
-            // 4. Lógica de Maná
-            CheckIfManaExists(); 
+            CheckIfManaExists();
+
+            if (LevelUpNotification != null) LevelUpNotification.SetActive(false);
         }
+    }
+
+    void OnDestroy()
+    {
+        if (asc != null) asc.OnMaxLevelReached -= ShowLevelUpNotification;
     }
 
     void Update()
     {
-        if (asc == null) return;
+        if (asc == null) return; // Si no hay jugador asignado, la interfaz se queda quieta
+
         UpdateHealthUI();
         UpdateManaUI(); 
     }
 
-    void CheckIfManaExists()
+    void ShowLevelUpNotification()
     {
-        if (ManaBarContainer == null) return;
-        float maxMana = asc.GetAttributeValue(EAttributeType.MaxMana);
-        ManaBarContainer.SetActive(maxMana > 0);
+        if (LevelUpNotification != null) LevelUpNotification.SetActive(true);
+    }
+    
+    public void HideLevelUpNotification()
+    {
+        if (LevelUpNotification != null) LevelUpNotification.SetActive(false);
     }
 
     void UpdateHealthUI()
     {
         float currentHealth = asc.GetAttributeValue(EAttributeType.Health);
         float maxHealth = asc.GetAttributeValue(EAttributeType.MaxHealth);
-        float currentShield = asc.GetAttributeValue(EAttributeType.Shield); // Obtenemos el escudo
+        float currentShield = asc.GetAttributeValue(EAttributeType.Shield);
         
         if (maxHealth <= 0) maxHealth = 1;
 
-        // 1. Actualizar barra de vida normal
-        if (HealthSlider) 
+        if (HealthSlider) HealthSlider.value = currentHealth / maxHealth;
+        
+        // --- EL ARREGLO DEL ESCUDO ---
+        if (ShieldSlider) 
         {
-            HealthSlider.value = currentHealth / maxHealth;
-        }
-
-        // 2. Actualizar la NUEVA barra de escudo
-        if (ShieldSlider)
-        {
-            // Ocultamos el slider de escudo si no hay escudo
-            ShieldSlider.gameObject.SetActive(currentShield > 0);
-            
-            // Llenamos el escudo en proporción a la vida máxima
             ShieldSlider.value = currentShield / maxHealth;
+            // Apaga la barra completamente si el escudo es 0 o menor
+            ShieldSlider.gameObject.SetActive(currentShield > 0); 
         }
 
-        // 3. Actualizar el texto
         if (HealthText) 
         {
-            // Si hay escudo, lo mostramos en el texto entre corchetes
             if (currentShield > 0)
             {
-                HealthText.text = $"{currentHealth:F0} [+{(int)currentShield}] / {maxHealth:F0}";
+                HealthText.text = $"{currentHealth:F0} (+{currentShield:F0}) / {maxHealth:F0}";
             }
             else
             {
@@ -114,7 +120,6 @@ public class UI_PlayerHUD : MonoBehaviour
             }
         }
     }
-
     void UpdateManaUI()
     {
         if (ManaBarContainer != null && !ManaBarContainer.activeSelf) return;
@@ -129,14 +134,16 @@ public class UI_PlayerHUD : MonoBehaviour
 
     void InitializeAbilitySlots()
     {
+        if (player == null) return;
+        
         SetupSlot(slotShift, player.MovementAbility);
         SetupSlot(slotQ, player.AbilityQ);
         SetupSlot(slotE, player.AbilityE);
         SetupSlot(slotLMB, player.PrimaryAttackAbility);
         SetupSlot(slotRMB, player.AimAbility);
+        
         if (UltimateSlot != null)
         {
-            // El script UI_UltimateSlot se encarga de activarse/desactivarse solo en su Setup
             UltimateSlot.Setup(player.AbilityR, asc);
         }
     }
@@ -146,14 +153,19 @@ public class UI_PlayerHUD : MonoBehaviour
         if (slot == null) return;
         if (ability != null)
         {
-            // Si hay habilidad: ENCENDEMOS
-            slot.gameObject.SetActive(true);
             slot.Setup(ability, asc);
+            slot.gameObject.SetActive(true);
         }
         else
         {
-            // Si NO hay habilidad: APAGAMOS
             slot.gameObject.SetActive(false);
         }
+    }
+
+    void CheckIfManaExists()
+    {
+        if (ManaBarContainer == null || asc == null) return;
+        bool hasMana = asc.GetAttributeValue(EAttributeType.MaxMana) > 0;
+        ManaBarContainer.SetActive(hasMana);
     }
 }

@@ -1,67 +1,5 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &680615058147157474
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 4247233861512222360, guid: 46a76e3b55680584fb9da4d4b68f998e, type: 3}
-  m_PrefabInstance: {fileID: 3711867124090073978}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 160396097168408408}
-  m_Layer: 0
-  m_Name: 'Human_BigRock_L (Missing Prefab with guid: 46a76e3b55680584fb9da4d4b68f998e)'
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!4 &160396097168408408
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 3583427267331755042, guid: 46a76e3b55680584fb9da4d4b68f998e, type: 3}
-  m_PrefabInstance: {fileID: 3711867124090073978}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 680615058147157474}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 5757281396524483513}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &2183869576039130755
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 4247233861512222360, guid: 46a76e3b55680584fb9da4d4b68f998e, type: 3}
-  m_PrefabInstance: {fileID: 2648008273410273307}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1514750318224096313}
-  m_Layer: 0
-  m_Name: 'Human_BigRock_R (Missing Prefab with guid: 46a76e3b55680584fb9da4d4b68f998e)'
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!4 &1514750318224096313
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 3583427267331755042, guid: 46a76e3b55680584fb9da4d4b68f998e, type: 3}
-  m_PrefabInstance: {fileID: 2648008273410273307}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2183869576039130755}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1070618038289112855}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &2195596775759949364
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -194,6 +132,16 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 46a76e3b55680584fb9da4d4b68f998e, type: 3}
+--- !u!4 &1514750318224096313 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3583427267331755042, guid: 46a76e3b55680584fb9da4d4b68f998e, type: 3}
+  m_PrefabInstance: {fileID: 2648008273410273307}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &2183869576039130755 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4247233861512222360, guid: 46a76e3b55680584fb9da4d4b68f998e, type: 3}
+  m_PrefabInstance: {fileID: 2648008273410273307}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &3033961135331983481
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -328,10 +276,10 @@ MonoBehaviour:
   - propName: Human_Baseball_R
     prop: {fileID: 3595767961458738611}
     active: 0
-  - propName: 'Human_BigRock_L (Missing Prefab with guid: 46a76e3b55680584fb9da4d4b68f998e)'
+  - propName: Human_BigRock_L
     prop: {fileID: 680615058147157474}
     active: 0
-  - propName: 'Human_BigRock_R (Missing Prefab with guid: 46a76e3b55680584fb9da4d4b68f998e)'
+  - propName: Human_BigRock_R
     prop: {fileID: 2183869576039130755}
     active: 0
   - propName: Human_Javelin_L
@@ -517,6 +465,16 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 46a76e3b55680584fb9da4d4b68f998e, type: 3}
+--- !u!4 &160396097168408408 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3583427267331755042, guid: 46a76e3b55680584fb9da4d4b68f998e, type: 3}
+  m_PrefabInstance: {fileID: 3711867124090073978}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &680615058147157474 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4247233861512222360, guid: 46a76e3b55680584fb9da4d4b68f998e, type: 3}
+  m_PrefabInstance: {fileID: 3711867124090073978}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &3858196318739841675
 PrefabInstance:
   m_ObjectHideFlags: 0

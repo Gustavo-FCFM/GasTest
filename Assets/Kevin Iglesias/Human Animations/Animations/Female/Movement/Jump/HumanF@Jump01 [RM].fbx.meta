@@ -18,8 +18,6 @@ ModelImporter:
     optimizeGameObjects: 0
     removeConstantScaleCurves: 0
     motionNodeName: Rig/B-root
-    rigImportErrors: 
-    rigImportWarnings: 
     animationImportErrors: 
     animationImportWarnings: 
     animationRetargetingWarnings: 
@@ -35,7 +33,7 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: HumanF@Jump01 [RM]
+      name: 'HumanF@Jump01 [RM]'
       takeName: Untitled
       internalID: 3094330708855449807
       firstFrame: 0
@@ -951,7 +949,7 @@ ModelImporter:
     legStretch: 0.05
     feetSpacing: 0
     globalScale: 1
-    rootMotionBoneName: Rig/B-root
+    rootMotionBoneName: 
     hasTranslationDoF: 0
     hasExtraRoot: 0
     skeletonHasParents: 1
@@ -972,7 +970,7 @@ AssetOrigin:
   serializedVersion: 1
   productId: 154271
   packageName: Human Basic Motions FREE
-  packageVersion: 2.4.1
+  packageVersion: 2.4.2
   assetPath: Assets/Kevin Iglesias/Human Animations/Animations/Female/Movement/Jump/HumanF@Jump01
     [RM].fbx
-  uploadId: 762152
+  uploadId: 908942
