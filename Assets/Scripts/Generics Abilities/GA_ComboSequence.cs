@@ -8,13 +8,14 @@ public class GA_ComboSequence : GameplayAbility
     [System.Serializable]
     public struct ComboStep
     {
-        [Tooltip("La habilidad a ejecutar (Cono, Linea, etc)")]
+        [Tooltip("La habilidad a ejecutar (Cono, Línea, etc)")]
         public GameplayAbility AbilityToCast;
-        
+
         [Tooltip("Tiempo a esperar DESPUÉS de lanzar esta habilidad antes de la siguiente")]
         public float DelayAfter;
-        [Tooltip("Si es > 0, fuerza a la habilidad a usar este ID de animación en lugar del suyo propio.")]
-        public int AnimationIDOverride; 
+
+        [Tooltip("Si > 0, fuerza a la habilidad a usar este AnimationID en lugar del suyo")]
+        public int AnimationIDOverride;
     }
 
     [Header("Secuencia del Combo")]
@@ -22,47 +23,34 @@ public class GA_ComboSequence : GameplayAbility
 
     public override void Activate()
     {
+        if (!IsServer) return;   // ← NUEVO
         if (!CanActivate()) return;
 
         CommitAbility();
 
-        // 2. Iniciar la secuencia usando el ASC como motor
         if (OwnerASC != null)
-        {
             OwnerASC.StartAbilityCoroutine(RunComboRoutine());
-        }
     }
 
     private IEnumerator RunComboRoutine()
     {
-        // Recorremos la lista paso a paso
         foreach (var step in Sequence)
         {
             if (step.AbilityToCast != null)
             {
-                // A) Creamos una instancia temporal de la sub-habilidad
-                // Usamos Instantiate para no modificar el asset original y poder inicializarla
                 GameplayAbility stepInstance = Instantiate(step.AbilityToCast);
                 stepInstance.Initialize(OwnerASC);
-                
+
                 if (step.AnimationIDOverride > 0)
-                {
                     stepInstance.AnimationID = step.AnimationIDOverride;
-                }
-                // B) La activamos
-                // Nota: Las sub-habilidades deberían tener coste 0 para que no cobren doble
+
                 stepInstance.Activate();
             }
 
-            // C) Esperamos el intervalo definido
             if (step.DelayAfter > 0)
-            {
                 yield return new WaitForSeconds(step.DelayAfter);
-            }
         }
 
-        // 3. Al terminar todos los pasos, termina la habilidad principal
-        // Aquí es donde aplicamos el Cooldown final del combo completo
         EndAbility();
     }
 }

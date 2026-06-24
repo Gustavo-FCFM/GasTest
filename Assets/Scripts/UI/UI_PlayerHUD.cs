@@ -2,6 +2,18 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
+// ============================================================
+// UI_PlayerHUD — MODIFICADO PARA MULTIJUGADOR
+//
+// CAMBIO:
+//   InitializeHUD ahora tiene un guard: solo acepta la llamada
+//   del jugador LOCAL (IsOwner). Esto evita que el HUD de un
+//   cliente se conecte al personaje de otro jugador cuando
+//   hay múltiples PlayerControllers en la escena.
+//
+//   El resto es idéntico al original.
+// ============================================================
+
 public class UI_PlayerHUD : MonoBehaviour
 {
     [Header("Target")]
@@ -15,7 +27,7 @@ public class UI_PlayerHUD : MonoBehaviour
     public TextMeshProUGUI HealthText;
 
     [Header("Barra de Maná (Opcional)")]
-    public GameObject ManaBarContainer; 
+    public GameObject ManaBarContainer;
     public Slider ManaSlider;
     public TextMeshProUGUI ManaText;
 
@@ -28,14 +40,18 @@ public class UI_PlayerHUD : MonoBehaviour
 
     [Header("Panel Central (Ultimate)")]
     public UI_UltimateSlot UltimateSlot;
-    
+
     [Header("Notificaciones")]
     public GameObject LevelUpNotification;
 
-    // --- SE LLAMA DESDE EL PLAYERCONTROLLER ---
     public void InitializeHUD(PlayerController ownerPlayer)
     {
-        player = ownerPlayer; 
+        // CAMBIO: Solo el jugador dueño puede inicializar este HUD.
+        // En multijugador hay un PlayerController por jugador en la escena;
+        // ignoramos las llamadas de jugadores remotos.
+        if (ownerPlayer != null && !ownerPlayer.IsOwner) return;
+
+        player = ownerPlayer;
 
         if (player != null)
         {
@@ -43,15 +59,13 @@ public class UI_PlayerHUD : MonoBehaviour
             asc = player.GetComponent<AbilitySystemComponent>();
 
             if (asc != null)
-            {
                 asc.OnMaxLevelReached += ShowLevelUpNotification;
-            }
 
             if (ClassIconImage != null)
             {
                 if (player.CharacterIcon != null)
                 {
-                    ClassIconImage.sprite = player.CharacterIcon;
+                    ClassIconImage.sprite  = player.CharacterIcon;
                     ClassIconImage.enabled = true;
                 }
                 else
@@ -74,17 +88,16 @@ public class UI_PlayerHUD : MonoBehaviour
 
     void Update()
     {
-        if (asc == null) return; // Si no hay jugador asignado, la interfaz se queda quieta
-
+        if (asc == null) return;
         UpdateHealthUI();
-        UpdateManaUI(); 
+        UpdateManaUI();
     }
 
     void ShowLevelUpNotification()
     {
         if (LevelUpNotification != null) LevelUpNotification.SetActive(true);
     }
-    
+
     public void HideLevelUpNotification()
     {
         if (LevelUpNotification != null) LevelUpNotification.SetActive(false);
@@ -93,59 +106,51 @@ public class UI_PlayerHUD : MonoBehaviour
     void UpdateHealthUI()
     {
         float currentHealth = asc.GetAttributeValue(EAttributeType.Health);
-        float maxHealth = asc.GetAttributeValue(EAttributeType.MaxHealth);
+        float maxHealth     = asc.GetAttributeValue(EAttributeType.MaxHealth);
         float currentShield = asc.GetAttributeValue(EAttributeType.Shield);
-        
+
         if (maxHealth <= 0) maxHealth = 1;
 
         if (HealthSlider) HealthSlider.value = currentHealth / maxHealth;
-        
-        // --- EL ARREGLO DEL ESCUDO ---
-        if (ShieldSlider) 
+
+        if (ShieldSlider)
         {
             ShieldSlider.value = currentShield / maxHealth;
-            // Apaga la barra completamente si el escudo es 0 o menor
-            ShieldSlider.gameObject.SetActive(currentShield > 0); 
+            ShieldSlider.gameObject.SetActive(currentShield > 0);
         }
 
-        if (HealthText) 
+        if (HealthText)
         {
-            if (currentShield > 0)
-            {
-                HealthText.text = $"{currentHealth:F0} (+{currentShield:F0}) / {maxHealth:F0}";
-            }
-            else
-            {
-                HealthText.text = $"{currentHealth:F0} / {maxHealth:F0}";
-            }
+            HealthText.text = currentShield > 0
+                ? $"{currentHealth:F0} (+{currentShield:F0}) / {maxHealth:F0}"
+                : $"{currentHealth:F0} / {maxHealth:F0}";
         }
     }
+
     void UpdateManaUI()
     {
         if (ManaBarContainer != null && !ManaBarContainer.activeSelf) return;
 
         float currentMana = asc.GetAttributeValue(EAttributeType.Mana);
-        float maxMana = asc.GetAttributeValue(EAttributeType.MaxMana);
+        float maxMana     = asc.GetAttributeValue(EAttributeType.MaxMana);
         if (maxMana <= 0) maxMana = 1;
 
         if (ManaSlider) ManaSlider.value = currentMana / maxMana;
-        if (ManaText) ManaText.text = $"{currentMana:F0} / {maxMana:F0}";
+        if (ManaText)   ManaText.text    = $"{currentMana:F0} / {maxMana:F0}";
     }
 
     void InitializeAbilitySlots()
     {
         if (player == null) return;
-        
+
         SetupSlot(slotShift, player.MovementAbility);
-        SetupSlot(slotQ, player.AbilityQ);
-        SetupSlot(slotE, player.AbilityE);
-        SetupSlot(slotLMB, player.PrimaryAttackAbility);
-        SetupSlot(slotRMB, player.AimAbility);
-        
+        SetupSlot(slotQ,     player.AbilityQ);
+        SetupSlot(slotE,     player.AbilityE);
+        SetupSlot(slotLMB,   player.PrimaryAttackAbility);
+        SetupSlot(slotRMB,   player.AimAbility);
+
         if (UltimateSlot != null)
-        {
             UltimateSlot.Setup(player.AbilityR, asc);
-        }
     }
 
     void SetupSlot(UI_AbilitySlot slot, GameplayAbility ability)

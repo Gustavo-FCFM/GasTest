@@ -166,7 +166,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CharacterRoleDefinition: {fileID: 11400000, guid: 018a6225b1f822143aa86c2bcaef873f, type: 2}
   CurrentClass: {fileID: 11400000, guid: 94ade0794681b0248a3b0176ad1651c6, type: 2}
-  TeamID: 0
+  TeamID: 1
   MaxLevel: 3
   GrantedAbilities: []
 --- !u!114 &1688608165834369433
@@ -199,7 +199,6 @@ MonoBehaviour:
   AimAbility: {fileID: 0}
   jumpForce: 4
   gravity: -9.81
-  VoidYLevel: -5
   activeLeapAbility: {fileID: 0}
   isRadialMenuOpen: 0
 --- !u!143 &7812325225803870869
@@ -259,7 +258,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584206202338825360
+  _initializedTimestamp: -8584203661213574368
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
@@ -278,9 +277,9 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 1
+  <PrefabId>k__BackingField: 8
   <SpawnableCollectionId>k__BackingField: 0
-  <AssetPathHash>k__BackingField: 3307892936766534154
+  <AssetPathHash>k__BackingField: 13623089071726480599
   SceneId: 0
   SerializedTransformProperties:
     Position: {x: 0, y: 0.5, z: 0}
@@ -309,11 +308,11 @@ MonoBehaviour:
     Rotation: 1
     Scale: 0
   _useScaledTime: 1
-  _interpolation: 2
-  _extrapolation: 2
+  _interpolation: 1
+  _extrapolation: 1
   _enableTeleport: 0
   _teleportThreshold: 1
-  _clientAuthoritative: 0
+  _clientAuthoritative: 1
   _sendToOwner: 1
   _interval: 1
   _synchronizePosition: 1

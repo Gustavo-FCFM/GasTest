@@ -5,119 +5,88 @@ using System.Collections;
 public class GA_FinalBlow : GameplayAbility
 {
     [Header("Configuración Golpe Final")]
-    [Tooltip("Tiempo en segundos que el jugador debe esperar antes del golpe")]
-    public float ChargeTime = 1.5f;
-    [Tooltip("Escudo que recibe MIENTRAS carga")]
+    public float ChargeTime   = 1.5f;
     public float ShieldAmount = 100f;
-    
-    [Header("Efectos a Aplicar (No ejecutados)")]
+
+    [Header("Efectos")]
     public GameplayEffect DamageEffect;
     public GameplayEffect StunEffect;
-    
-    /*[Header("Hitbox (Rectángulo)")]
-    [Tooltip("Mitad del tamaño de la caja (X=Ancho, Y=Alto, Z=Profundidad)")]
-    public Vector3 HitboxHalfExtents = new Vector3(2f, 1f, 3f); 
-    [Tooltip("Distancia hacia adelante desde el jugador donde se ubica el centro del rectángulo")]
-    public float HitboxOffsetZ = 3f; */
 
     public override void Activate()
     {
-        CommitAbility(); // Inicia el Cooldown y gasta el coste
+        if (!IsServer) return;
+
+        CommitAbility();
 
         if (OwnerASC != null)
-        {
-            // Arrancamos la corrutina que maneja la carga y el ataque
             OwnerASC.StartAbilityCoroutine(ChargeRoutine());
-        }
         else
-        {
             EndAbility();
-        }
     }
 
     private IEnumerator ChargeRoutine()
     {
         PlayerController pc = OwnerASC.GetComponent<PlayerController>();
-        
-        // 1. Dar escudo fijo durante la carga y aplicar el estado ROOT
+
         float currentShield = OwnerASC.GetAttributeValue(EAttributeType.Shield);
         OwnerASC.SetCurrentAttributeValue(EAttributeType.Shield, currentShield + ShieldAmount);
-        
-        // Inmoviliza al jugador
-        OwnerASC.AddTag(EGameplayTag.State_Rooted); 
-
-        //Reproducir una animación de "Cargando" aquí.
+        OwnerASC.AddTag(EGameplayTag.State_Rooted);
 
         float timer = 0f;
-        bool wasInterrupted = false;
+        bool  wasInterrupted = false;
 
-        // 2. Bucle de canalización (Carga)
         while (timer < ChargeTime)
         {
-            // A. Revisar interrupciones (Aturdimiento, Silencio o Muerte)
-            if (OwnerASC.HasTag(EGameplayTag.State_Stunned) || 
+            if (OwnerASC.HasTag(EGameplayTag.State_Stunned)  ||
                 OwnerASC.HasTag(EGameplayTag.State_Silenced) ||
                 OwnerASC.HasTag(EGameplayTag.State_Dead))
             {
                 wasInterrupted = true;
-                break; // Rompemos el bucle de carga
+                break;
             }
 
-            // B. Permitir girar al jugador hacia donde apunta la mira
             if (pc != null) pc.RotateToAim();
-
-            timer += Time.deltaTime;
-            yield return null; // Esperamos al siguiente frame
+            timer += UnityEngine.Time.deltaTime;
+            yield return null;
         }
 
-        // 3. Limpiar el escudo otorgado y liberar el movimiento
         float shieldLeft = OwnerASC.GetAttributeValue(EAttributeType.Shield);
-        float newShield = Mathf.Max(0, shieldLeft - ShieldAmount);
-        OwnerASC.SetCurrentAttributeValue(EAttributeType.Shield, newShield);
-        
-        // Permite al jugador volver a moverse
-        OwnerASC.RemoveTag(EGameplayTag.State_Rooted); 
+        OwnerASC.SetCurrentAttributeValue(EAttributeType.Shield, Mathf.Max(0, shieldLeft - ShieldAmount));
+        OwnerASC.RemoveTag(EGameplayTag.State_Rooted);
 
-        // 4. Si fuimos interrumpidos, cancelamos el ataque
         if (wasInterrupted)
         {
             Debug.Log("¡Golpe Final Interrumpido!");
             EndAbility();
-            yield break; // Salimos de la corrutina
+            yield break;
         }
 
-        // 5. Si llegamos hasta aquí, el ataque fue un ÉXITO
         if (pc != null) pc.PlayAnimation(AnimationTriggerName, AnimationID);
-        
-        // Calculamos el centro geométrico del rectángulo frente al jugador
-        Vector3 hitboxCenter = pc.transform.position + pc.transform.forward * HitboxOffsetZ;
 
-        // Detectar a todos los colliders dentro del rectángulo usando las físicas de Unity
+        Vector3    hitboxCenter = pc.transform.position + pc.transform.forward * HitboxOffsetZ;
         Collider[] hitColliders = Physics.OverlapBox(hitboxCenter, HitboxHalfExtents, pc.transform.rotation, TargetLayer);
 
         foreach (Collider hit in hitColliders)
         {
             AbilitySystemComponent targetASC = hit.GetComponent<AbilitySystemComponent>();
-            if (targetASC != null && IsEnemy(targetASC)) // Que no nos peguemos a nosotros mismos
+            if (targetASC != null && IsEnemy(targetASC))
             {
-                float targetHealth = targetASC.GetAttributeValue(EAttributeType.Health);
+                float targetHealth    = targetASC.GetAttributeValue(EAttributeType.Health);
                 float targetMaxHealth = targetASC.GetAttributeValue(EAttributeType.MaxHealth);
 
-                // --- MECÁNICA DE EJECUCIÓN (5% de vida) ---
                 if (targetMaxHealth > 0 && (targetHealth / targetMaxHealth) <= 0.05f)
                 {
-                    Debug.Log($"¡{hit.name} fue EJECUTADO por el Inmortal!");
-                    targetASC.SetCurrentAttributeValue(EAttributeType.Health, 0); 
+                    Debug.Log($"¡{hit.name} fue EJECUTADO!");
+                    targetASC.SetCurrentAttributeValue(EAttributeType.Health, 0);
                 }
                 else
                 {
-                    // Golpe normal: Aplicamos el daño masivo y el aturdimiento
                     if (DamageEffect != null) targetASC.ApplyGameplayEffect(DamageEffect, OwnerASC);
-                    if (StunEffect != null) targetASC.ApplyGameplayEffect(StunEffect, OwnerASC);
+                    if (StunEffect   != null) targetASC.ApplyGameplayEffect(StunEffect,   OwnerASC);
                 }
             }
         }
 
-        EndAbility(); 
+        EndAbility();
     }
 }

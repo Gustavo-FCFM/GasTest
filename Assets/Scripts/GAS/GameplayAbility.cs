@@ -12,7 +12,7 @@ public abstract class GameplayAbility : ScriptableObject
 
     [Header("Cooldown")]
     public GameplayEffect CooldownEffect;
-    
+
     [Header("Cooldown Dinámico")]
     public bool UseAttackSpeedAsCooldown = false;
 
@@ -21,264 +21,198 @@ public abstract class GameplayAbility : ScriptableObject
 
     [Header("Bloqueos")]
     public List<EGameplayTag> ActivationBlockedTags;
+
     [Header("Animación")]
-    public string AnimationTriggerName = "AttackTrigger"; 
-    
+    public string AnimationTriggerName = "AttackTrigger";
+
     [Tooltip("1=Melee, 2=Proyectil, 3=Salto, 4=Extra")]
     public int AnimationID = 1;
+
     [Header("Configuración de Área (Opcional)")]
-    [Tooltip("Radio de efecto, rango de ataque o tamaño de impacto.")]
-    public float AbilityRadius = 3f; 
-    [Tooltip("Capa de objetivos a afectar (Enemigos, Aliados, etc).")]
+    public float AbilityRadius = 3f;
     public LayerMask TargetLayer;
-    
+
     public enum EHitboxShape { Sphere, Box, Cone }
-    
+
     [Header("Forma de la Hitbox (Gizmos)")]
-    public EHitboxShape HitboxShape = EHitboxShape.Sphere;
-    
-    [Tooltip("Distancia hacia adelante desde el jugador donde se ubica el centro de la Hitbox")]
-    public float HitboxOffsetZ = 1.5f;
-    
-    [Tooltip("Solo para 'Box': Mitad del tamaño de la caja (X=Ancho, Y=Alto, Z=Profundidad)")]
-    public Vector3 HitboxHalfExtents = new Vector3(1f, 1f, 1f);
-    
-    [Tooltip("Solo para 'Cone': Ángulo de apertura en grados (ej. 45 o 90)")]
+    public EHitboxShape HitboxShape  = EHitboxShape.Sphere;
+    public float        HitboxOffsetZ      = 1.5f;
+    public Vector3      HitboxHalfExtents  = new Vector3(1f, 1f, 1f);
+
     [Range(0f, 360f)]
     public float ConeAngle = 90f;
-    
-    // --- LISTA DE VISUALES MULTIPLES ---
+
     [System.Serializable]
     public struct AbilityVisual
     {
-        [Tooltip("El Prefab de la partícula o efecto.")]
-        public GameObject VFXPrefab;
-        
-        [Tooltip("Tiempo a esperar desde que se activa la habilidad para mostrarlo.")]
-        public float Delay;
-        
-        [Tooltip("Offset relativo al jugador (X, Y, Z).")]
-        public Vector3 Offset;
-        
-        [Tooltip("Rotación extra para orientar el efecto (ej. 90 en X para acostarlo).")]
-        public Vector3 RotationOffset;
-
-        [Tooltip("Controla el tamaño del efecto (1,1,1 es el normal).")]
-        public Vector3 Scale;
-
-        [Tooltip("¿El efecto persigue al jugador (True) o se queda en el lugar donde apareció (False)?")]
-        public bool AttachToOwner;
-        
-        [Tooltip("Tiempo en segundos para destruirlo (0 = no destruir automáticamente).")]
-        public float DestroyTime;
-
-        [Tooltip("Si eliges un Tag, el efecto vivirá hasta que el jugador pierda este Tag (Ignora el DestroyTime).")]
+        public GameObject   VFXPrefab;
+        public float        Delay;
+        public Vector3      Offset;
+        public Vector3      RotationOffset;
+        public Vector3      Scale;
+        public bool         AttachToOwner;
+        public float        DestroyTime;
         public EGameplayTag EndWithTag;
     }
 
     [Header("Visuales de Habilidad (Automáticos)")]
     public List<AbilityVisual> VisualsSequence;
-    // --------------------------------------------------
+
     protected AbilitySystemComponent OwnerASC;
+
+    // =========================================================
+    // IsServer — ARQUITECTURA CORRECTA
+    //
+    // AbilitySystemComponent hereda de MonoBehaviour.
+    // NetworkAbilitySystemComponent hereda de NetworkBehaviour
+    // y vive en el MISMO GameObject como componente separado.
+    // Para saber si estamos en el servidor, buscamos ese componente
+    // en el mismo GameObject y preguntamos su IsServerInitialized.
+    // =========================================================
+    protected bool IsServer
+    {
+        get
+        {
+            if (OwnerASC == null) return true;
+            // Buscar el componente de red en el mismo GameObject
+            NetworkAbilitySystemComponent netASC =
+                OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
+            // Si no existe (singleplayer / NPC sin red), siempre somos "servidor"
+            if (netASC == null) return true;
+            return netASC.IsServerInitialized;
+        }
+    }
+
+    // =========================================================
+    // INICIALIZACIÓN
+    // =========================================================
 
     public void Initialize(AbilitySystemComponent asc)
     {
         OwnerASC = asc;
     }
 
+    // =========================================================
+    // CAN ACTIVATE
+    // =========================================================
+
     public virtual bool CanActivate()
     {
         if (OwnerASC == null) return false;
         if (OwnerASC.HasTag(EGameplayTag.State_Dead)) return false;
-        // 1. Bloqueos
+
         if (ActivationBlockedTags != null)
-        {
-            foreach (EGameplayTag blockedTag in ActivationBlockedTags)
-            {
-                if (OwnerASC.HasTag(blockedTag)) return false;
-            }
-        }
+            foreach (EGameplayTag tag in ActivationBlockedTags)
+                if (OwnerASC.HasTag(tag)) return false;
 
-        // 2. Cooldown
         if (CooldownEffect != null && CooldownEffect.GrantedTags.Count > 0)
-        {
-            EGameplayTag cooldownTag = CooldownEffect.GrantedTags[0];
-            if (OwnerASC.HasTag(cooldownTag)) return false;
-        }
+            if (OwnerASC.HasTag(CooldownEffect.GrantedTags[0])) return false;
 
-        // 3. Costes
-        if (CostEffect != null)
-        {
-            if (!OwnerASC.CanAffordGameplayEffect(CostEffect)) return false;
-        }
+        if (CostEffect != null && !OwnerASC.CanAffordGameplayEffect(CostEffect)) return false;
 
         return true;
     }
 
+    // =========================================================
+    // ACTIVATE — en cada habilidad concreta agrega:
+    //   if (!IsServer) return;
+    // =========================================================
+
     public abstract void Activate();
 
-    // Paga el coste y EMPIEZA el cooldown inmediatamente
+    // =========================================================
+    // COMMIT ABILITY
+    // =========================================================
+
     protected void CommitAbility()
     {
         if (OwnerASC == null) return;
 
-        // 1. Aplicar Coste
         if (CostEffect != null)
-        {
             OwnerASC.ApplyGameplayEffect(CostEffect, this);
-        }
 
-        // 2. Aplicar Cooldown AHORA (al inicio)
         if (CooldownEffect != null)
         {
             float finalCooldown = -1f;
             if (UseAttackSpeedAsCooldown)
             {
-                float currentAtkSpeed = OwnerASC.GetAttributeValue(EAttributeType.AtkSpeed);
-                if (currentAtkSpeed > 0) finalCooldown = currentAtkSpeed;
+                float spd = OwnerASC.GetAttributeValue(EAttributeType.AtkSpeed);
+                if (spd > 0) finalCooldown = spd;
             }
             OwnerASC.ApplyGameplayEffect(CooldownEffect, this, finalCooldown);
         }
 
-        // 3. --- NUEVO: LANZAR SECUENCIA DE VISUALES MULTIPLES ---
         if (VisualsSequence != null && VisualsSequence.Count > 0)
-        {
             OwnerASC.StartAbilityCoroutine(PlayVisualsSequence());
-        }
     }
 
-    // La corrutina que procesa la lista
+    // =========================================================
+    // VFX
+    // =========================================================
+
     private System.Collections.IEnumerator PlayVisualsSequence()
     {
-        // Obtenemos el multiplicador de velocidad de ataque (si aplica)
-        float speedMultiplier = 1f;
-        float atkSpeedStat = OwnerASC.GetAttributeValue(EAttributeType.AtkSpeed);
-        if (atkSpeedStat > 0) speedMultiplier = 1f / atkSpeedStat;
+        float mult = 1f;
+        float spd  = OwnerASC.GetAttributeValue(EAttributeType.AtkSpeed);
+        if (spd > 0) mult = 1f / spd;
 
-        // Recorremos la lista de visuales
-        foreach (var visualConfig in VisualsSequence)
+        foreach (var v in VisualsSequence)
         {
-            if (visualConfig.VFXPrefab == null) continue;
+            if (v.VFXPrefab == null) continue;
 
-            // Esperar el delay configurado (ajustado por la velocidad de ataque)
-            if (visualConfig.Delay > 0)
-            {
-                yield return new WaitForSeconds(visualConfig.Delay / speedMultiplier);
-            }
+            if (v.Delay > 0)
+                yield return new WaitForSeconds(v.Delay / mult);
 
-            // --- INSTANCIAR ---
-            Vector3 spawnPos = OwnerASC.transform.position + OwnerASC.transform.TransformDirection(visualConfig.Offset);
-            
-            Quaternion baseRotation = OwnerASC.transform.rotation;
-            Quaternion finalRotation = baseRotation * Quaternion.Euler(visualConfig.RotationOffset);
+            Vector3    pos = OwnerASC.transform.position + OwnerASC.transform.TransformDirection(v.Offset);
+            Quaternion rot = OwnerASC.transform.rotation * Quaternion.Euler(v.RotationOffset);
+            GameObject vfx = v.AttachToOwner
+                ? Instantiate(v.VFXPrefab, pos, rot, OwnerASC.transform)
+                : Instantiate(v.VFXPrefab, pos, rot);
 
-            GameObject vfxInstance;
+            vfx.transform.localScale = (v.Scale != Vector3.zero) ? v.Scale : Vector3.one;
 
-            if (visualConfig.AttachToOwner)
-            {
-                vfxInstance = Instantiate(visualConfig.VFXPrefab, spawnPos, finalRotation, OwnerASC.transform);
-            }
-            else
-            {
-                vfxInstance = Instantiate(visualConfig.VFXPrefab, spawnPos, finalRotation);
-            }
-
-            // Ajustar escala si se definió una diferente a 0,0,0
-            if (visualConfig.Scale != Vector3.zero)
-            {
-                vfxInstance.transform.localScale = visualConfig.Scale;
-            }
-            else
-            {
-                vfxInstance.transform.localScale = Vector3.one; // Por defecto
-            }
-
-            // Destrucción automática
-            // Si configuraste un Tag, el efecto espera a que ese Tag desaparezca
-            if (visualConfig.EndWithTag != EGameplayTag.None)
-            {
-                OwnerASC.StartAbilityCoroutine(DestroyVfxWhenTagRemoved(vfxInstance, visualConfig.EndWithTag));
-            }
-            // Si no hay Tag, usamos el tiempo normal (si es mayor a 0)
-            else if (visualConfig.DestroyTime > 0)
-            {
-                Destroy(vfxInstance, visualConfig.DestroyTime);
-            }
+            if (v.EndWithTag != EGameplayTag.None)
+                OwnerASC.StartAbilityCoroutine(DestroyVfxWhenTagRemoved(vfx, v.EndWithTag));
+            else if (v.DestroyTime > 0)
+                Destroy(vfx, v.DestroyTime);
         }
     }
-    // Corrutina que vigila el Tag del jugador
-    private System.Collections.IEnumerator DestroyVfxWhenTagRemoved(GameObject vfx, EGameplayTag tagToMonitor)
+
+    private System.Collections.IEnumerator DestroyVfxWhenTagRemoved(GameObject vfx, EGameplayTag tag)
     {
-        // Esperamos 1 frame para asegurarnos de que el efecto/buff ya aplicó el Tag al jugador
-        yield return null; 
-
-        // Mientras el jugador exista, tenga el Tag, y el efecto visual no haya sido destruido por otra cosa...
-        while (OwnerASC != null && OwnerASC.HasTag(tagToMonitor) && vfx != null)
-        {
-            yield return null; // Esperamos al siguiente frame
-        }
-
-        // Si el bucle se rompe, significa que perdió el Tag. ¡Destruimos el visual!
-        if (vfx != null)
-        {
-            Destroy(vfx);
-        }
+        yield return null;
+        while (OwnerASC != null && OwnerASC.HasTag(tag) && vfx != null)
+            yield return null;
+        if (vfx != null) Destroy(vfx);
     }
-    
+
+    // =========================================================
+    // END ABILITY
+    // =========================================================
+
     public virtual void EndAbility()
     {
-        if (OwnerASC != null)
-        {
-            // Buscamos al PlayerController para decirle "Ya terminé, suelta el bloqueo"
-            PlayerController pc = OwnerASC.GetComponent<PlayerController>();
-            if (pc != null)
-            {
-                pc.FinishAttack(); // <--- ESTO ARREGLA QUE SE TRABEN LAS OTRAS HABILIDADES
-            }
-        }
+        PlayerController pc = OwnerASC?.GetComponent<PlayerController>();
+        if (pc != null) pc.FinishAttack();
     }
+
+    // =========================================================
+    // ULTIMATE CHARGE
+    // =========================================================
 
     protected void ChargeUltimate()
     {
         if (UltimateChargeAmount > 0 && OwnerASC != null)
-        {
             OwnerASC.ReduceCooldownByTag(EGameplayTag.Ability_Cooldown_Ultimate, UltimateChargeAmount);
-        }
-    }
-    // ==========================================
-    // SISTEMA DE AFILIACIÓN Y EQUIPOS
-    // ==========================================
-
-    /// <summary>
-    /// Determina si un objetivo es un enemigo basándose en el TeamID.
-    /// </summary>
-    protected bool IsEnemy(AbilitySystemComponent targetASC)
-    {
-        if (targetASC == null || OwnerASC == null) return false;
-        if (targetASC == OwnerASC) return false; // No soy mi propio enemigo
-
-        // Regla 1: Si alguno de los dos tiene TeamID = 0 (Neutral/NPC), SIEMPRE son enemigos.
-        // Esto permite que todos los jugadores puedan dañar a los monstruos, y los monstruos a los jugadores.
-        if (OwnerASC.TeamID == 0 || targetASC.TeamID == 0) return true;
-
-        // Regla 2: Si tienen TeamID diferentes, son enemigos (Jugador vs Jugador).
-        return OwnerASC.TeamID != targetASC.TeamID;
     }
 
-    /// <summary>
-    /// Determina si un objetivo es un aliado basándose en el TeamID.
-    /// </summary>
-    protected bool IsAlly(AbilitySystemComponent targetASC, bool includeSelf = true)
-    {
-        if (targetASC == null || OwnerASC == null) return false;
-        
-        // ¿Me considero aliado a mí mismo para recibir mis propias curaciones en área?
-        if (targetASC == OwnerASC) return includeSelf; 
+    // =========================================================
+    // AFILIACIÓN
+    // =========================================================
 
-        // Regla 1: Los neutrales (TeamID = 0) no tienen aliados, están solos.
-        if (OwnerASC.TeamID == 0 || targetASC.TeamID == 0) return false;
+    protected bool IsEnemy(AbilitySystemComponent target)
+        => OwnerASC != null && OwnerASC.IsEnemyOf(target);
 
-        // Regla 2: Son aliados solo si comparten el mismo identificador.
-        return OwnerASC.TeamID == targetASC.TeamID;
-    }
+    protected bool IsAlly(AbilitySystemComponent target, bool includeSelf = true)
+        => OwnerASC != null && OwnerASC.IsAllyOf(target, includeSelf);
 }
