@@ -251,7 +251,7 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // =========================================================
 
     [ServerRpc]
-    public void ServerRequestActivateAbility(EAbilityInput inputSlot)
+    public void ServerRequestActivateAbility(EAbilityInput inputSlot, Vector3 aimPoint)
     {
         if (_asc == null) return;
 
@@ -268,6 +268,12 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
             Debug.Log($"[Server] Habilidad {ability.AbilityName} bloqueada.");
             return;
         }
+
+        // El dueño calculó este punto con SU cámara y nos lo mandó; lo dejamos
+        // disponible en el PlayerController para que RotateToAim()/GetAimPoint()
+        // lo usen en vez de intentar leer Camera.main en el servidor.
+        PlayerController pc = GetComponent<PlayerController>();
+        if (pc != null) pc.NetworkAimPoint = aimPoint;
 
         ability.Activate();
         ObserversPlayAbilityAnimation(inputSlot);

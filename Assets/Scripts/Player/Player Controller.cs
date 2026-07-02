@@ -81,6 +81,12 @@ public class PlayerController : NetworkBehaviour
 
     [HideInInspector] public GA_LeapAttack activeLeapAbility;
 
+    // Último punto de mira que el dueño calculó con SU cámara y envió al
+    // servidor junto con el input de habilidad. El servidor (y por lo tanto
+    // las Abilities, que corren ahí) NO tiene una cámara de juego válida
+    // propia, así que GetAimPoint() cae a este valor cuando IsOwner es falso.
+    [HideInInspector] public Vector3 NetworkAimPoint;
+
     private readonly SyncVar<int> _netClassIndex = new SyncVar<int>(-1);
 
     // =========================================================
@@ -340,7 +346,20 @@ public class PlayerController : NetworkBehaviour
     private void RequestAbility(EAbilityInput slot)
     {
         if (NetASC != null)
-            NetASC.ServerRequestActivateAbility(slot);
+        {
+            // Calculamos el punto de mira AQUÍ, en el dueño, donde Camera.main
+            // sí es la cámara correcta, y lo mandamos junto con el input.
+            Vector3 aimPoint = GetAimPoint();
+
+            // Rotamos también en el cliente dueño AHORA. El NetworkTransform es
+            // client-authoritative: si solo rotamos en el servidor (dentro de la
+            // Ability), el próximo paquete de transform que mande este mismo
+            // cliente (con su rotación vieja) lo pisa antes de que se calcule
+            // el daño. Rotando acá, la rotación correcta es la que se sincroniza.
+            RotateToAim(aimPoint);
+
+            NetASC.ServerRequestActivateAbility(slot, aimPoint);
+        }
         else
             ActivateAbilityBySlot(slot); // Fallback singleplayer
     }
@@ -605,6 +624,11 @@ public class PlayerController : NetworkBehaviour
 
     public Vector3 GetAimPoint(float maxRange = 100f)
     {
+        // No somos el dueño (ej: esta copia corre en el servidor, o es un
+        // observador remoto): no hay una Camera.main válida para ESTE jugador
+        // en este proceso. Usamos el punto que el dueño ya calculó y envió.
+        if (!IsOwner) return NetworkAimPoint;
+
         if (Camera.main == null)
             return transform.position + transform.forward * 10f;
 
@@ -626,9 +650,11 @@ public class PlayerController : NetworkBehaviour
         return bestPoint;
     }
 
-    public void RotateToAim()
+    public void RotateToAim() => RotateToAim(GetAimPoint());
+
+    public void RotateToAim(Vector3 aimPoint)
     {
-        Vector3 dir = (GetAimPoint() - transform.position).normalized;
+        Vector3 dir = (aimPoint - transform.position).normalized;
         dir.y = 0;
         if (dir != Vector3.zero) transform.rotation = Quaternion.LookRotation(dir);
     }
