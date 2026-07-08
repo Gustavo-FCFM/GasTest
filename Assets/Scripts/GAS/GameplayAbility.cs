@@ -192,8 +192,17 @@ public abstract class GameplayAbility : ScriptableObject
 
     public virtual void EndAbility()
     {
+        // Esto corre en el servidor (Activate() ya lo garantiza). Si el dueño
+        // es un cliente remoto (no el host), pc.FinishAttack() de acá solo
+        // resetea isAttacking en la copia del servidor — la copia real del
+        // dueño nunca se entera y queda trabada en isAttacking = true para
+        // siempre (no puede volver a atacar, ni girar al moverse).
+        // Por eso también avisamos por red al dueño.
         PlayerController pc = OwnerASC?.GetComponent<PlayerController>();
         if (pc != null) pc.FinishAttack();
+
+        NetworkAbilitySystemComponent netASC = OwnerASC?.GetComponent<NetworkAbilitySystemComponent>();
+        if (netASC != null) netASC.ServerNotifyAbilityEnded();
     }
 
     // =========================================================

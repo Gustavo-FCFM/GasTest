@@ -1,6 +1,8 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using FishNet;
+using FishNet.Object;
 
 [CreateAssetMenu(fileName = "GA_ElementalFury", menuName = "GAS/Abilities/Shaman/Elemental Fury")]
 public class GA_ElementalFury : GameplayAbility
@@ -77,6 +79,14 @@ public class GA_ElementalFury : GameplayAbility
             if (totemASC != null)
                 totemASC.AddTag(EGameplayTag.Status_Inmortal);
 
+            // Instantiate() normal solo crea el tótem en el servidor — sin
+            // esto, es invisible para cualquier cliente que no sea el host.
+            NetworkObject totemNob = totemObj.GetComponent<NetworkObject>();
+            if (totemNob != null)
+                InstanceFinder.ServerManager.Spawn(totemNob);
+            else
+                Debug.LogWarning("[GA_ElementalFury] El TotemPrefab no tiene NetworkObject — no se va a replicar a los clientes.");
+
             ultimateTotems.Add(totemObj);
         }
 
@@ -110,7 +120,12 @@ public class GA_ElementalFury : GameplayAbility
         // Limpieza
         if (tornadoInstance != null) Destroy(tornadoInstance);
         foreach (var t in ultimateTotems)
-            if (t != null) Destroy(t);
+        {
+            if (t == null) continue;
+            NetworkObject nob = t.GetComponent<NetworkObject>();
+            if (nob != null && nob.IsSpawned) InstanceFinder.ServerManager.Despawn(nob);
+            else Destroy(t);
+        }
 
         EndAbility();
     }

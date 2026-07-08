@@ -133,9 +133,15 @@ public class PlayerController : NetworkBehaviour
                 }
             }
         }
-        else 
+        else
         {
-            if (characterController != null) Destroy(characterController);
+            // Destroy() falla siempre acá: PlayerController tiene
+            // [RequireComponent(typeof(CharacterController))], así que Unity
+            // bloquea la destrucción ("Can't remove CharacterController
+            // because PlayerController depends on it") y el componente se
+            // queda vivo en todos los fantasmas remotos. Alcanza con
+            // desactivarlo — nada llama a .Move() en una copia que no es dueña.
+            if (characterController != null) characterController.enabled = false;
         }
     }
 
@@ -321,6 +327,11 @@ public class PlayerController : NetworkBehaviour
             if (ability.CanActivate())
             {
                 isAttacking = true;
+                // Predicción local: el ObserversRpc del servidor se salta al
+                // dueño (asume que ya la disparó acá), así que si no la
+                // disparamos nosotros mismos, el dueño remoto nunca ve/anima
+                // su propio ataque.
+                PlayAnimation(ability.AnimationTriggerName, ability.AnimationID);
                 RequestAbility(slot);
             }
         }
@@ -572,7 +583,7 @@ public class PlayerController : NetworkBehaviour
 
     public void PlayAnimation(string trigger, int actionID)
     {
-        if (characterAnimator == null) return;
+        if (characterAnimator == null || string.IsNullOrEmpty(trigger)) return;
         characterAnimator.SetInteger("ActionID", actionID);
         characterAnimator.SetTrigger(trigger);
     }

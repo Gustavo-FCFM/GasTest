@@ -1,5 +1,7 @@
 using UnityEngine;
 using System.Collections;
+using FishNet;
+using FishNet.Object;
 
 [CreateAssetMenu(fileName = "GA_ProjectileShoot", menuName = "GAS/Generics/Projectile Shoot")]
 public class GA_ProjectileShoot : GameplayAbility
@@ -86,6 +88,16 @@ public class GA_ProjectileShoot : GameplayAbility
         }
 
         GameObject newProjectile = Instantiate(ProjectilePrefab, spawnPos, spawnRot);
+
+        // Esto corre en el servidor. Un Instantiate() normal solo crea el
+        // objeto en ESTE proceso — nunca llega a los clientes (por eso el
+        // proyectil nunca se veía para el dueño remoto). Hay que spawnearlo
+        // en red igual que cualquier otro NetworkObject.
+        NetworkObject projectileNob = newProjectile.GetComponent<NetworkObject>();
+        if (projectileNob != null)
+            InstanceFinder.ServerManager.Spawn(projectileNob);
+        else
+            Debug.LogWarning("[GA_ProjectileShoot] El ProjectilePrefab no tiene NetworkObject — no se va a replicar a los clientes.");
 
         GC_Projectile projectileScript = newProjectile.GetComponent<GC_Projectile>();
         if (projectileScript != null)

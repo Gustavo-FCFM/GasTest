@@ -1,5 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
+using FishNet;
+using FishNet.Object;
 
 [CreateAssetMenu(fileName = "GA_SpawnTotem", menuName = "GAS/Abilities/Shaman/Spawn Totem")]
 public class GA_SpawnTotem : GameplayAbility, IRadialMenuAbility
@@ -76,12 +78,25 @@ public class GA_SpawnTotem : GameplayAbility, IRadialMenuAbility
             totemScript.CreatorASC = OwnerASC;
         }
 
+        // Instantiate() normal solo crea el tótem en el servidor — sin esto,
+        // es invisible para cualquier cliente que no sea el host.
+        NetworkObject totemNob = totemObj.GetComponent<NetworkObject>();
+        if (totemNob != null)
+            InstanceFinder.ServerManager.Spawn(totemNob);
+        else
+            Debug.LogWarning("[GA_SpawnTotem] El TotemPrefab no tiene NetworkObject — no se va a replicar a los clientes.");
+
         // Límite de tótems activos
         activeTotems.Enqueue(totemObj);
         if (activeTotems.Count > MAX_TOTEMS)
         {
             GameObject oldestTotem = activeTotems.Dequeue();
-            if (oldestTotem != null) Destroy(oldestTotem);
+            if (oldestTotem != null)
+            {
+                NetworkObject oldestNob = oldestTotem.GetComponent<NetworkObject>();
+                if (oldestNob != null && oldestNob.IsSpawned) InstanceFinder.ServerManager.Despawn(oldestNob);
+                else Destroy(oldestTotem);
+            }
         }
 
         // Cooldown individual

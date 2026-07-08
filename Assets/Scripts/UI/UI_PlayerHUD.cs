@@ -44,6 +44,12 @@ public class UI_PlayerHUD : MonoBehaviour
     [Header("Notificaciones")]
     public GameObject LevelUpNotification;
 
+    // Los cooldowns reales viven en NetworkAbilitySystemComponent (ver esa
+    // clase) — el ASC local del cliente nunca tiene ActiveEffects poblado
+    // salvo en el host, así que los slots de habilidad necesitan esto para
+    // mostrar el cooldown correcto en cualquier cliente.
+    private NetworkAbilitySystemComponent netAsc;
+
     public void InitializeHUD(PlayerController ownerPlayer)
     {
         // CAMBIO: Solo el jugador dueño puede inicializar este HUD.
@@ -56,7 +62,8 @@ public class UI_PlayerHUD : MonoBehaviour
         if (player != null)
         {
             if (asc != null) asc.OnMaxLevelReached -= ShowLevelUpNotification;
-            asc = player.GetComponent<AbilitySystemComponent>();
+            asc    = player.GetComponent<AbilitySystemComponent>();
+            netAsc = player.GetComponent<NetworkAbilitySystemComponent>();
 
             if (asc != null)
                 asc.OnMaxLevelReached += ShowLevelUpNotification;
@@ -143,22 +150,22 @@ public class UI_PlayerHUD : MonoBehaviour
     {
         if (player == null) return;
 
-        SetupSlot(slotShift, player.MovementAbility);
-        SetupSlot(slotQ,     player.AbilityQ);
-        SetupSlot(slotE,     player.AbilityE);
-        SetupSlot(slotLMB,   player.PrimaryAttackAbility);
-        SetupSlot(slotRMB,   player.AimAbility);
+        SetupSlot(slotShift, player.MovementAbility,      EAbilityInput.Movement);
+        SetupSlot(slotQ,     player.AbilityQ,             EAbilityInput.Action1);
+        SetupSlot(slotE,     player.AbilityE,             EAbilityInput.Action2);
+        SetupSlot(slotLMB,   player.PrimaryAttackAbility, EAbilityInput.PrimaryAttack);
+        SetupSlot(slotRMB,   player.AimAbility,           EAbilityInput.SecondaryAttack);
 
         if (UltimateSlot != null)
-            UltimateSlot.Setup(player.AbilityR, asc);
+            UltimateSlot.Setup(player.AbilityR, asc, netAsc, EAbilityInput.Action3);
     }
 
-    void SetupSlot(UI_AbilitySlot slot, GameplayAbility ability)
+    void SetupSlot(UI_AbilitySlot slot, GameplayAbility ability, EAbilityInput slotInput)
     {
         if (slot == null) return;
         if (ability != null)
         {
-            slot.Setup(ability, asc);
+            slot.Setup(ability, asc, netAsc, slotInput);
             slot.gameObject.SetActive(true);
         }
         else

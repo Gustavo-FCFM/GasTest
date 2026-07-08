@@ -56,9 +56,21 @@ public class NetworkGameManager : NetworkBehaviour
         base.OnStartServer();
         // Evita doble-suscripción si OnStartServer llega a correr más de una vez
         // (p. ej. al reiniciar Play sin Domain Reload) — sin esto, cada conexión
-        // dispara HandlePlayerConnected varias veces y se spawnean jugadores duplicados.
+        // dispara HandleClientLoadedStartScenes varias veces y se spawnean jugadores duplicados.
         ServerManager.OnRemoteConnectionState -= OnRemoteConnectionStateChanged;
         ServerManager.OnRemoteConnectionState += OnRemoteConnectionStateChanged;
+
+        // El spawn del jugador va atado a OnClientLoadedStartScenes, NO a
+        // OnRemoteConnectionState. FishNet avisa explícitamente: "not recommended
+        // to spawn objects for connections until they have loaded start scenes".
+        // Si spawneamos antes de que la conexión termine de cargar la escena,
+        // esa conexión nunca queda registrada como observadora de los objetos que
+        // ya existían (y viceversa) → los jugadores no se ven entre sí, y el que
+        // se conecta tarde recibe RPCs/estado a medias (animaciones y habilidades
+        // rotas).
+        SceneManager.OnClientLoadedStartScenes -= HandleClientLoadedStartScenes;
+        SceneManager.OnClientLoadedStartScenes += HandleClientLoadedStartScenes;
+
         Debug.Log("[GameManager] Servidor FFA iniciado. Sin límite de jugadores.");
     }
 
@@ -66,6 +78,7 @@ public class NetworkGameManager : NetworkBehaviour
     {
         base.OnStopServer();
         ServerManager.OnRemoteConnectionState -= OnRemoteConnectionStateChanged;
+        SceneManager.OnClientLoadedStartScenes -= HandleClientLoadedStartScenes;
     }
 
     public override void OnStartClient()
@@ -82,15 +95,19 @@ public class NetworkGameManager : NetworkBehaviour
         NetworkConnection conn,
         FishNet.Transporting.RemoteConnectionStateArgs args)
     {
-        if (args.ConnectionState == FishNet.Transporting.RemoteConnectionState.Started)
-            HandlePlayerConnected(conn);
-        else if (args.ConnectionState == FishNet.Transporting.RemoteConnectionState.Stopped)
+        // El spawn se maneja en HandleClientLoadedStartScenes. Acá solo nos
+        // importa la desconexión.
+        if (args.ConnectionState == FishNet.Transporting.RemoteConnectionState.Stopped)
             HandlePlayerDisconnected(conn);
     }
 
     [Server]
-    private void HandlePlayerConnected(NetworkConnection conn)
+    private void HandleClientLoadedStartScenes(NetworkConnection conn, bool asServer)
     {
+        if (!asServer) return;
+        // Ya lo spawneamos (p. ej. si vuelve a cargar escenas de inicio).
+        if (_playerObjects.ContainsKey(conn)) return;
+
         _totalPlayersEverConnected++;
         _currentPlayerCount++;
 
@@ -100,6 +117,13 @@ public class NetworkGameManager : NetworkBehaviour
         Transform  spawnPoint = GetSpawnPoint(_totalPlayersEverConnected);
         GameObject playerObj  = Instantiate(PlayerPrefab, spawnPoint.position, spawnPoint.rotation);
         ServerManager.Spawn(playerObj, conn);
+
+        // Registra al dueño en la escena por defecto para el sistema de
+        // observers de FishNet — sin esto, esta conexión y las que ya estaban
+        // en la escena nunca se "ven" entre sí (Scene Condition del Observer
+        // Manager nunca se cumple).
+        NetworkObject nob = playerObj.GetComponent<NetworkObject>();
+        if (nob != null) SceneManager.AddOwnerToDefaultScene(nob);
 
         NetworkAbilitySystemComponent netASC =
             playerObj.GetComponent<NetworkAbilitySystemComponent>();

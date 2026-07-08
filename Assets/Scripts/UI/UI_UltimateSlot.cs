@@ -12,11 +12,15 @@ public class UI_UltimateSlot : MonoBehaviour
 
     private GameplayAbility assignedAbility;
     private AbilitySystemComponent ownerASC;
+    private NetworkAbilitySystemComponent ownerNetASC;
+    private EAbilityInput slotInput;
 
-    public void Setup(GameplayAbility ability, AbilitySystemComponent asc)
+    public void Setup(GameplayAbility ability, AbilitySystemComponent asc, NetworkAbilitySystemComponent netAsc, EAbilityInput slot)
     {
         assignedAbility = ability;
         ownerASC = asc;
+        ownerNetASC = netAsc;
+        slotInput = slot;
 
         if (assignedAbility != null)
         {
@@ -47,8 +51,12 @@ public class UI_UltimateSlot : MonoBehaviour
 
         float timeRemaining;
         float totalDuration;
-        
-        bool isOnCooldown = ownerASC.GetCooldownStatus(assignedAbility, out timeRemaining, out totalDuration);
+
+        // Mismo motivo que en UI_AbilitySlot: ownerASC.ActiveEffects solo
+        // vive de verdad en el servidor/host.
+        bool isOnCooldown = ownerNetASC != null
+            ? ownerNetASC.TryGetNetCooldown(slotInput, out timeRemaining, out totalDuration)
+            : ownerASC.GetCooldownStatus(assignedAbility, out timeRemaining, out totalDuration);
 
         // NOTA: isOnCooldown devuelve TRUE si hay tiempo restante.
         // Pero tu Ultimate empieza en Cooldown (0 carga) y baja el tiempo.

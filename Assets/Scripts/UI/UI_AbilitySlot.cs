@@ -11,12 +11,16 @@ public class UI_AbilitySlot : MonoBehaviour
 
     private GameplayAbility assignedAbility;
     private AbilitySystemComponent ownerASC;
+    private NetworkAbilitySystemComponent ownerNetASC;
+    private EAbilityInput slotInput;
 
     // Inicializamos el slot con una habilidad específica
-    public void Setup(GameplayAbility ability, AbilitySystemComponent asc)
+    public void Setup(GameplayAbility ability, AbilitySystemComponent asc, NetworkAbilitySystemComponent netAsc, EAbilityInput slot)
     {
         assignedAbility = ability;
         ownerASC = asc;
+        ownerNetASC = netAsc;
+        slotInput = slot;
 
         if (assignedAbility != null)
         {
@@ -36,16 +40,18 @@ public class UI_AbilitySlot : MonoBehaviour
     {
         if (assignedAbility == null || ownerASC == null) return;
 
-        // PREGUNTA DE ARQUITECTURA:
-        // Necesitamos saber si la habilidad está en Cooldown.
-        // Usualmente el ASC maneja esto revisando si tienes el Tag de Cooldown.
-        
-        float timeRemaining = 0f;
-        float totalDuration = 1f;
-        
-        // Aquí asumimos que tu ASC o la Habilidad tienen un método para consultar esto.
-        // Si no lo tienes, lo crearemos abajo.
-        bool isOnCooldown = ownerASC.GetCooldownStatus(assignedAbility, out timeRemaining, out totalDuration);
+        float timeRemaining;
+        float totalDuration;
+        bool  isOnCooldown;
+
+        // ownerASC.ActiveEffects solo existe de verdad en la copia del
+        // servidor (host). Si hay NetworkAbilitySystemComponent, leemos el
+        // cooldown sincronizado en vez del ASC local — así funciona igual
+        // para el host y para un cliente remoto.
+        if (ownerNetASC != null)
+            isOnCooldown = ownerNetASC.TryGetNetCooldown(slotInput, out timeRemaining, out totalDuration);
+        else
+            isOnCooldown = ownerASC.GetCooldownStatus(assignedAbility, out timeRemaining, out totalDuration);
 
         if (isOnCooldown)
         {

@@ -1,9 +1,11 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic; // Necesario para HashSet
+using FishNet.Object;
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(Collider))]
-public class GC_Projectile : MonoBehaviour
+public class GC_Projectile : NetworkBehaviour
 {
     private GameplayEffect damageEffect; // El efecto de Duration=0
     private GameplayEffect durationEffect;
@@ -16,26 +18,65 @@ public class GC_Projectile : MonoBehaviour
     // Lista para recordar a quién ya golpeamos y no repetir daño en el mismo frame
     private HashSet<AbilitySystemComponent> enemiesHit = new HashSet<AbilitySystemComponent>();
 
-    public void Initialize(GameplayEffect damage, GameplayEffect durationEffect, AbilitySystemComponent source, float speed,float ultCharge,GameObject impactVFX)
+    public override void OnStartClient()
     {
-        damageEffect = damage;
-        this.durationEffect = durationEffect;
-        sourceASC = source;
-        ultChargeAmount = ultCharge;
-        impactVfxPrefab = impactVFX; // Guardamos la referencia
-        // Destruir por tiempo si no choca con nada (evita basura en el nivel)
-        Destroy(gameObject, lifeTime);
+        base.OnStartClient();
+
+        // Este proyectil no tiene dueño (se spawnea sin conexión asociada),
+        // así que el servidor es quien simula su física — la velocidad se le
+        // pone en Initialize()/SpawnProjectile() del lado servidor. Si el
+        // Rigidbody sigue no-kinemático en los clientes, cae por gravedad
+        // local y pelea contra el NetworkTransform (mismo problema que
+        // tuvimos con el jugador). En clientes lo apagamos y dejamos que
+        // NetworkTransform mueva el objeto.
+        if (!IsServerInitialized)
+        {
+            Rigidbody rb = GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.isKinematic = true;
+                rb.useGravity  = false;
+            }
+        }
+    }
+
+    public void Initialize(GameplayEffect damage, GameplayEffect durationEffect, AbilitySystemComponent source, float speed, float ultCharge, GameObject impactVFX)
+    {
+        damageEffect         = damage;
+        this.durationEffect  = durationEffect;
+        sourceASC            = source;
+        ultChargeAmount      = ultCharge;
+        impactVfxPrefab      = impactVFX; // Guardamos la referencia
+
+        // Solo el servidor decide cuándo se destruye/despawnea el proyectil.
+        if (IsServerInitialized)
+            StartCoroutine(DespawnAfterLifetime());
+    }
+
+    private IEnumerator DespawnAfterLifetime()
+    {
+        yield return new WaitForSeconds(lifeTime);
+        DespawnSelf();
     }
 
     // Usamos OnTriggerEnter porque marcamos "Is Trigger" en el collider
     private void OnTriggerEnter(Collider other)
     {
+        // TODA la lógica de daño/impacto es autoridad del servidor. Sin este
+        // guard, la copia del proyectil en un cliente remoto también corre
+        // esto — con sourceASC/damageEffect en null porque Initialize() solo
+        // se llamó del lado servidor — y explota con NullReferenceException.
+        if (!IsServerInitialized) return;
+
         if (sourceASC != null && other.gameObject == sourceASC.gameObject) return;
         if (other.isTrigger) return;
 
         AbilitySystemComponent targetASC = other.GetComponentInParent<AbilitySystemComponent>();
-        
+
         // 1. Instanciar VFX si existe (Independiente de lo que golpeemos)
+        // NOTA: esto solo se ve en el servidor/host por ahora — el proyectil
+        // se despawnea enseguida así que no vale la pena una NetworkObject
+        // aparte solo para el VFX de impacto. Pendiente si se quiere pulir.
         if (impactVfxPrefab != null)
         {
             GameObject vfx = Instantiate(impactVfxPrefab, transform.position, Quaternion.identity);
@@ -47,7 +88,7 @@ public class GC_Projectile : MonoBehaviour
         {
             // SISTEMA DE EQUIPOS (AFILIACIÓN LÓGICA)
             bool isEnemy = false;
-            
+
             if (sourceASC.TeamID == 0 || targetASC.TeamID == 0) isEnemy = true;
             else if (sourceASC.TeamID != targetASC.TeamID) isEnemy = true;
 
@@ -64,10 +105,10 @@ public class GC_Projectile : MonoBehaviour
                     }
                     enemiesHit.Add(targetASC);
                 }
-                
-                // NOTA: Si quieres que el proyectil se DESTRUYA al golpear a un enemigo 
+
+                // NOTA: Si quieres que el proyectil se DESTRUYA al golpear a un enemigo
                 // en lugar de atravesarlo, descomenta la siguiente línea:
-                // Destroy(gameObject);
+                // DespawnSelf();
             }
             // B) Es aliado
             else
@@ -80,9 +121,19 @@ public class GC_Projectile : MonoBehaviour
         {
             // 3. ¿Es una pared / entorno sólido?
             // Si llegamos aquí, no tiene ASC y no es trigger.
-            Destroy(gameObject);
+            DespawnSelf();
         }
     }
+
+    private void DespawnSelf()
+    {
+        // Despawn (no Destroy) para que FishNet avise a los clientes que
+        // también borren su copia. Un Destroy() normal solo lo saca de la
+        // copia del servidor.
+        if (IsServerInitialized && IsSpawned)
+            ServerManager.Despawn(gameObject);
+    }
+
     public void OverrideVisuals(GameObject weaponModel)
     {
         if (weaponModel == null) return;
@@ -91,7 +142,7 @@ public class GC_Projectile : MonoBehaviour
         // Si el proyectil tenía una malla por defecto (ej: esfera), la apagamos o destruimos sus gráficos
         MeshRenderer defaultMR = GetComponent<MeshRenderer>();
         if (defaultMR) defaultMR.enabled = false;
-        
+
         // También apagamos cualquier hijo visual que tuviera por defecto
         foreach (Transform child in transform)
         {
@@ -103,11 +154,11 @@ public class GC_Projectile : MonoBehaviour
         // 2. CLONAR EL ARMA REAL
         // Instanciamos una copia del modelo que tiene el jugador en la mano
         GameObject weaponClone = Instantiate(weaponModel, transform);
-        
+
         // 3. AJUSTAR POSICIÓN
         weaponClone.transform.localPosition = Vector3.zero;
         weaponClone.transform.localRotation = Quaternion.Euler(0f,90f,0f); // O la rotación que necesites para que apunte bien
-        
+
         // Opcional: Ajustar escala si es necesario
         // weaponClone.transform.localScale = weaponModel.transform.localScale;
 

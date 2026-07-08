@@ -1,8 +1,9 @@
 using UnityEngine;
 using System.Collections;
+using FishNet.Object;
 
 [RequireComponent(typeof(AbilitySystemComponent))]
-public class Entity_Totem : MonoBehaviour
+public class Entity_Totem : NetworkBehaviour
 {
     private AbilitySystemComponent ASC;
 
@@ -41,9 +42,13 @@ public class Entity_Totem : MonoBehaviour
         if (ASC != null)
         {
             ASC.OnDeath += HandleTotemDestruction;
-            ASC.TeamID = MyTeamID; 
+            ASC.TeamID = MyTeamID;
         }
 
+        // Puramente visual: cada copia (servidor Y cada cliente, una vez que
+        // el tótem es un NetworkObject spawneado de verdad) corre su propio
+        // Start() localmente, así que esto ya se ve igual en todos lados sin
+        // necesidad de RPC.
         if (AuraVFXPrefab != null)
         {
             currentAuraVFX = Instantiate(AuraVFXPrefab, transform.position, Quaternion.identity, transform);
@@ -51,12 +56,16 @@ public class Entity_Totem : MonoBehaviour
             currentAuraVFX.transform.localScale = new Vector3(finalScale, finalScale, finalScale);
         }
 
-        StartCoroutine(AuraRoutine());
+        // La aplicación del aura (ApplyGameplayEffect) sí es autoridad del
+        // servidor — si cada cliente también la corriera sobre su propia
+        // copia local del tótem, aplicaría el efecto por duplicado.
+        if (IsServerInitialized)
+            StartCoroutine(AuraRoutine());
     }
 
     private IEnumerator AuraRoutine()
     {
-        while (true) 
+        while (true)
         {
             ApplyAuraToAllies();
             yield return new WaitForSeconds(TickRate);
@@ -98,8 +107,14 @@ public class Entity_Totem : MonoBehaviour
 
     private void HandleTotemDestruction()
     {
+        // La salud del tótem solo es autoritativa en el servidor (nada la
+        // sincroniza a los clientes todavía), así que este evento solo
+        // dispara de verdad ahí. Despawn (no Destroy) para que se borre
+        // también en todos los clientes.
+        if (!IsServerInitialized) return;
+
         Debug.Log("El tótem ha sido destruido.");
-        Destroy(gameObject);
+        if (IsSpawned) ServerManager.Despawn(gameObject);
     }
 
     private void OnDrawGizmosSelected()

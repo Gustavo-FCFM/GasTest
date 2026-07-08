@@ -56,6 +56,37 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     public readonly SyncHashSet<EGameplayTag> NetTags = new SyncHashSet<EGameplayTag>();
 
     // =========================================================
+    // COOLDOWNS EN RED
+    //
+    // ASC.ActiveEffects (de donde sale GetCooldownStatus) SOLO existe en la
+    // copia del servidor — cada GameplayEffect es un ScriptableObject clonado
+    // por proceso, así que ni siquiera tiene sentido "sincronizar la lista".
+    //
+    // En vez de eso mandamos, por slot de habilidad: el TICK en que empezó
+    // el cooldown "vigente" y cuánto dura desde ese tick. El cliente calcula
+    // el tiempo restante localmente con TimeManager.Tick (que aproxima el
+    // tick del servidor), sin necesitar un paquete de red por frame.
+    //
+    // Se re-sincroniza cada CooldownSyncInterval segundos, no solo al activar
+    // la habilidad — así, si algo reduce el cooldown a mitad de camino (carga
+    // de ultimate por ChargeUltimate/ReduceCooldownByTag), el próximo barrido
+    // lo corrige sin tener que enganchar cada lugar que podría modificarlo.
+    // =========================================================
+
+    public readonly SyncDictionary<EAbilityInput, uint>  NetCooldownStartTick = new SyncDictionary<EAbilityInput, uint>();
+    public readonly SyncDictionary<EAbilityInput, float> NetCooldownDuration  = new SyncDictionary<EAbilityInput, float>();
+
+    private static readonly EAbilityInput[] _cooldownSlots =
+    {
+        EAbilityInput.PrimaryAttack, EAbilityInput.SecondaryAttack,
+        EAbilityInput.Action1, EAbilityInput.Action2, EAbilityInput.Action3,
+        EAbilityInput.Movement
+    };
+
+    private const float CooldownSyncInterval = 0.25f;
+    private float _cooldownSyncTimer;
+
+    // =========================================================
     // PROPIEDADES PÚBLICAS DE LECTURA (para la UI y otros scripts)
     // =========================================================
 
@@ -93,6 +124,55 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         _asc.OnRevive += HandleRevive;
     }
 
+    private void Update()
+    {
+        // Solo el servidor calcula y publica los cooldowns; los clientes los
+        // leen vía TryGetNetCooldown().
+        if (!IsServerInitialized || _asc == null) return;
+
+        _cooldownSyncTimer += Time.deltaTime;
+        if (_cooldownSyncTimer < CooldownSyncInterval) return;
+        _cooldownSyncTimer = 0f;
+
+        foreach (EAbilityInput slot in _cooldownSlots)
+            SyncCooldownForSlot(slot);
+    }
+
+    [Server]
+    private void SyncCooldownForSlot(EAbilityInput slot)
+    {
+        GameplayAbility ability = FindAbilityBySlot(slot);
+        if (ability == null) return;
+
+        if (_asc.GetCooldownStatus(ability, out float remaining, out _))
+        {
+            NetCooldownStartTick[slot] = TimeManager.Tick;
+            NetCooldownDuration[slot]  = remaining;
+        }
+        else if (NetCooldownDuration.ContainsKey(slot))
+        {
+            NetCooldownStartTick.Remove(slot);
+            NetCooldownDuration.Remove(slot);
+        }
+    }
+
+    // Usado por la UI (UI_AbilitySlot / UI_UltimateSlot) para leer el
+    // cooldown real sin depender del ASC local (que en el cliente remoto
+    // nunca tiene ActiveEffects poblado).
+    public bool TryGetNetCooldown(EAbilityInput slot, out float remaining, out float total)
+    {
+        remaining = 0f;
+
+        if (!NetCooldownDuration.TryGetValue(slot, out total)) { total = 0f; return false; }
+        if (!NetCooldownStartTick.TryGetValue(slot, out uint startTick)) return false;
+
+        uint   elapsedTicks   = TimeManager.Tick > startTick ? (TimeManager.Tick - startTick) : 0;
+        double elapsedSeconds = TimeManager.TicksToTime(elapsedTicks);
+
+        remaining = Mathf.Max(0f, total - (float)elapsedSeconds);
+        return remaining > 0f;
+    }
+
     private void OnDestroy()
     {
         if (_asc == null) return;
@@ -113,6 +193,7 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         _netTeamID.OnChange    -= OnNetTeamIDChanged;
         _netLevel.OnChange     -= OnNetLevelChanged;
         _netExp.OnChange       -= OnNetExpChanged;
+        NetTags.OnChange       -= OnNetTagsChanged;
     }
 
     // =========================================================
@@ -155,6 +236,7 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         _netTeamID.OnChange    += OnNetTeamIDChanged;
         _netLevel.OnChange     += OnNetLevelChanged;
         _netExp.OnChange       += OnNetExpChanged;
+        NetTags.OnChange       += OnNetTagsChanged;
     }
 
     // =========================================================
@@ -232,6 +314,26 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         if (!asServer && _asc != null) _asc.SetCurrentAttributeValue(EAttributeType.Exp, next);
     }
 
+    // NetTags se llenaba del lado servidor (HandleTagAdded/HandleTagRemoved)
+    // pero nada aplicaba esos cambios de vuelta al ASC local del cliente.
+    // Sin esto, HasTag() en la copia del dueño remoto nunca se entera de
+    // Stunned/Rooted/Silenced/Dead/cooldowns — por eso el UI de cooldown
+    // nunca se llenaba para el jugador 2.
+    private void OnNetTagsChanged(SyncHashSetOperation op, EGameplayTag item, bool asServer)
+    {
+        if (asServer || _asc == null) return;
+
+        switch (op)
+        {
+            case SyncHashSetOperation.Add:
+                _asc.AddTag(item);
+                break;
+            case SyncHashSetOperation.Remove:
+                _asc.RemoveTag(item);
+                break;
+        }
+    }
+
     // =========================================================
     // ASIGNACIÓN DE EQUIPO (el GameManager llama esto en el servidor)
     // =========================================================
@@ -277,6 +379,29 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
 
         ability.Activate();
         ObserversPlayAbilityAnimation(inputSlot);
+    }
+
+    // =========================================================
+    // FIN DE HABILIDAD — avisar al dueño real (isAttacking es local,
+    // no un SyncVar, así que si no le avisamos por red al dueño remoto,
+    // se queda trabado en "atacando" para siempre).
+    // =========================================================
+
+    [Server]
+    public void ServerNotifyAbilityEnded()
+    {
+        ObserversFinishAttack();
+    }
+
+    [ObserversRpc]
+    private void ObserversFinishAttack()
+    {
+        // El host ya se resetea directo en GameplayAbility.EndAbility()
+        // (server == dueño ahí); esto es sobre todo para el dueño remoto.
+        if (IsServerInitialized) return;
+
+        PlayerController pc = GetComponent<PlayerController>();
+        if (pc != null) pc.FinishAttack();
     }
 
     [ObserversRpc]
