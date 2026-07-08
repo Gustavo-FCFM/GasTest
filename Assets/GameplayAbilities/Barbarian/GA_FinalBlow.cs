@@ -1,6 +1,15 @@
 using UnityEngine;
 using System.Collections;
 
+// ============================================================
+// GA_FinalBlow
+//
+// Golpe cargado: se enraíza y gana un escudo temporal mientras
+// carga (ChargeTime), se puede interrumpir con CC o al morir, y al
+// completarse golpea en una caja frente al dueño — si el objetivo
+// está por debajo del 5% de vida lo EJECUTA directo, si no le aplica
+// daño y aturdimiento normales.
+// ============================================================
 [CreateAssetMenu(fileName = "GA_FinalBlow", menuName = "GAS/Abilities/Inmortal/Final Blow")]
 public class GA_FinalBlow : GameplayAbility
 {
@@ -12,6 +21,13 @@ public class GA_FinalBlow : GameplayAbility
     public GameplayEffect DamageEffect;
     public GameplayEffect StunEffect;
 
+    [Header("Hitbox del Golpe")]
+    // Qué tan lejos del dueño está el centro de la caja de golpe.
+    public float   HitboxOffsetZ     = 1.5f;
+    // Mitad del tamaño de la caja de golpe en cada eje.
+    public Vector3 HitboxHalfExtents = new Vector3(1f, 1f, 1f);
+
+    // Valida, cobra costo/cooldown y arranca la carga.
     public override void Activate()
     {
         if (!IsServer) return;
@@ -24,6 +40,10 @@ public class GA_FinalBlow : GameplayAbility
             EndAbility();
     }
 
+    // Enraíza al dueño y le da el escudo mientras rota hacia el punto de
+    // mira durante ChargeTime segundos (se interrumpe si lo aturden,
+    // silencian o muere). Al completarse sin interrupción, resuelve el
+    // golpe: ejecuta a objetivos con <=5% de vida, o aplica daño/stun normal.
     private IEnumerator ChargeRoutine()
     {
         PlayerController pc = OwnerASC.GetComponent<PlayerController>();
@@ -88,5 +108,24 @@ public class GA_FinalBlow : GameplayAbility
         }
 
         EndAbility();
+    }
+
+    // Dibuja el mismo box que usa ChargeRoutine() (OverlapBox), con el
+    // mismo offset/tamaño reales.
+    public override void DrawGizmos(Transform origin)
+    {
+        if (origin == null) return;
+
+        Vector3 center = origin.position + origin.forward * HitboxOffsetZ;
+
+        Matrix4x4 prevMatrix = Gizmos.matrix;
+        Gizmos.matrix = Matrix4x4.TRS(center, origin.rotation, Vector3.one);
+
+        Gizmos.color = new Color(0.7f, 0f, 1f, 0.25f);
+        Gizmos.DrawCube(Vector3.zero, HitboxHalfExtents * 2f);
+        Gizmos.color = new Color(0.7f, 0f, 1f, 1f);
+        Gizmos.DrawWireCube(Vector3.zero, HitboxHalfExtents * 2f);
+
+        Gizmos.matrix = prevMatrix;
     }
 }

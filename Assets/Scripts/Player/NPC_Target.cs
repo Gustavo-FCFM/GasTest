@@ -1,18 +1,32 @@
 using UnityEngine;
 using System.Collections;
 
+// ============================================================
+// NPC_Target
+//
+// Objetivo de práctica (dummy) que, al morir, le da experiencia a
+// "el jugador" y renace tras un tiempo (sin destruirse, solo
+// apagando visuales/colisión y volviéndolos a prender). Busca al
+// jugador con FindFirstObjectByType, así que en una escena con más
+// de un PlayerController siempre premia al mismo, sin importar quién
+// dio el golpe final.
+// ============================================================
 public class NPC_Target : MonoBehaviour
 {
     private AbilitySystemComponent ASC;
-    
+
     [Header("Configuración de Respawn")]
     public float RespawnTime = 3f;
-    public GameObject VisualModel; // Arrastra aquí la cápsula/malla (hijo)
-    public Collider MainCollider;  // El collider principal
+    // Modelo/malla visual (hijo) que se apaga mientras está "muerto".
+    public GameObject VisualModel;
+    // Collider principal; si no se asigna, se toma el del propio GameObject.
+    public Collider MainCollider;
 
     [Header("Recompensa")]
-    public float ExperienceReward = 150f; // Cuánta XP da al morir
+    // Experiencia que le da al jugador al morir este NPC.
+    public float ExperienceReward = 150f;
 
+    // Cachea el ASC y el collider principal si no fue asignado a mano.
     void Awake()
     {
         ASC = GetComponent<AbilitySystemComponent>();
@@ -21,7 +35,6 @@ public class NPC_Target : MonoBehaviour
 
     void Start()
     {
-        // Nos suscribimos al evento de muerte del ASC
         if (ASC != null)
         {
             ASC.OnDeath += HandleDeath;
@@ -30,25 +43,22 @@ public class NPC_Target : MonoBehaviour
 
     void OnDestroy()
     {
-        // Buena práctica: desuscribirse para evitar errores de memoria
         if (ASC != null) ASC.OnDeath -= HandleDeath;
     }
 
+    // Al morir: reparte experiencia y arranca la rutina de respawn.
     private void HandleDeath()
     {
-        // 1. DAR EXPERIENCIA AL JUGADOR
         GiveExperienceToPlayer();
-
-        // 2. INICIAR RESPAWN
         StartCoroutine(RespawnRoutine());
     }
 
+    // Le da ExperienceReward de experiencia al primer PlayerController que
+    // encuentre en la escena.
     private void GiveExperienceToPlayer()
     {
-        // Buscamos al jugador en la escena
-        // Nota: En Unity 2023 se usa FindFirstObjectByType, en anteriores FindObjectOfType
         PlayerController player = FindFirstObjectByType<PlayerController>();
-        
+
         if (player != null)
         {
             AbilitySystemComponent playerASC = player.GetComponent<AbilitySystemComponent>();
@@ -60,23 +70,20 @@ public class NPC_Target : MonoBehaviour
         }
     }
 
+    // Apaga visuales/colisión/UI de vida, espera RespawnTime, revive el
+    // ASC, y vuelve a prender todo.
     private IEnumerator RespawnRoutine()
     {
-        // A. "Morir" (Apagar gráficos y colisiones, pero NO destruir el objeto)
         if (VisualModel) VisualModel.SetActive(false);
         if (MainCollider) MainCollider.enabled = false;
-        
-        // Apagamos también el Canvas de vida si lo tiene como hijo
+
         var canvas = GetComponentInChildren<Canvas>();
         if (canvas) canvas.enabled = false;
 
-        // B. Esperar
         yield return new WaitForSeconds(RespawnTime);
 
-        // C. Revivir (Lógica interna del ASC)
         if (ASC != null) ASC.Revive();
 
-        // D. "Aparecer" (Encender todo de nuevo)
         if (VisualModel) VisualModel.SetActive(true);
         if (MainCollider) MainCollider.enabled = true;
         if (canvas) canvas.enabled = true;

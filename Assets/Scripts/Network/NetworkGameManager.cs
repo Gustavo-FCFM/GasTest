@@ -5,26 +5,18 @@ using FishNet.Object.Synchronizing;
 using FishNet.Connection;
 
 // ============================================================
-// NetworkGameManager — MODO TODOS CONTRA TODOS
+// NetworkGameManager
 //
-// CAMBIOS respecto a la versión anterior:
+// Administra la partida en el servidor: spawnea al jugador de cada
+// conexión que entra (con un punto de spawn y TeamID únicos, modo
+// "todos contra todos"), lo despawnea al desconectarse, y maneja el
+// respawn tras morir. Vive en la escena de la arena, no en un prefab.
 //
-//   1. TODOS CONTRA TODOS: Cada jugador recibe un TeamID único
-//      (1, 2, 3, 4...). Como todos tienen TeamID diferente,
-//      IsEnemyOf() en el ASC los trata a todos como enemigos.
-//
-//   2. SIN LÍMITE DE JUGADORES: Se eliminó MaxPlayersPerTeam
-//      y la lógica de Kick. Entra quien quiera.
-//
-//   3. SPAWN POINTS: Un solo array para todos, repartido en
-//      round-robin. Configura varios en el Inspector.
-//
-// CUANDO QUIERAS HACER EQUIPOS:
-//   Cambia: int uniqueTeamID = _totalPlayersEverConnected;
-//   Por:    int uniqueTeamID = (_totalPlayersEverConnected % 2) + 1;
-//   Eso da equipos 1 y 2 alternados.
+// PARA HACER EQUIPOS EN VEZ DE FFA: cambiar
+// "int uniqueTeamID = _totalPlayersEverConnected;" por
+// "int uniqueTeamID = (_totalPlayersEverConnected % 2) + 1;" en
+// HandleClientLoadedStartScenes — da equipos 1 y 2 alternados.
 // ============================================================
-
 public class NetworkGameManager : NetworkBehaviour
 {
     [Header("Prefab del Jugador")]
@@ -35,10 +27,13 @@ public class NetworkGameManager : NetworkBehaviour
     [Tooltip("Pon varios puntos separados para que los jugadores no aparezcan encimados")]
     public Transform[] SpawnPoints;
 
-    // Contadores del servidor
+    // Cuenta total histórica de conexiones (nunca baja) — se usa para
+    // repartir spawn points y TeamID únicos de forma determinística.
     private int _totalPlayersEverConnected = 0;
+    // Cuántos jugadores hay conectados AHORA (baja al desconectarse).
     private int _currentPlayerCount       = 0;
 
+    // Qué GameObject de jugador le pertenece a cada conexión.
     private Dictionary<NetworkConnection, GameObject> _playerObjects
         = new Dictionary<NetworkConnection, GameObject>();
 
@@ -48,9 +43,10 @@ public class NetworkGameManager : NetworkBehaviour
     public System.Action OnPlayerCountChanged;
 
     // =========================================================
-    // FISHNET CALLBACKS
+    // CICLO DE VIDA DE FISHNET
     // =========================================================
 
+    // Se suscribe a los eventos de conexión/carga de escena del servidor.
     public override void OnStartServer()
     {
         base.OnStartServer();
@@ -81,6 +77,8 @@ public class NetworkGameManager : NetworkBehaviour
         SceneManager.OnClientLoadedStartScenes -= HandleClientLoadedStartScenes;
     }
 
+    // Se suscribe a los cambios del contador de jugadores para reenviar
+    // el evento local OnPlayerCountChanged (ej: lo usa un menú de lobby).
     public override void OnStartClient()
     {
         base.OnStartClient();
@@ -91,16 +89,19 @@ public class NetworkGameManager : NetworkBehaviour
     // CONEXIONES
     // =========================================================
 
+    // Solo nos importa la desconexión acá — el spawn se maneja en
+    // HandleClientLoadedStartScenes.
     private void OnRemoteConnectionStateChanged(
         NetworkConnection conn,
         FishNet.Transporting.RemoteConnectionStateArgs args)
     {
-        // El spawn se maneja en HandleClientLoadedStartScenes. Acá solo nos
-        // importa la desconexión.
         if (args.ConnectionState == FishNet.Transporting.RemoteConnectionState.Stopped)
             HandlePlayerDisconnected(conn);
     }
 
+    // Spawnea el jugador de una conexión ni bien termina de cargar la
+    // escena inicial: le asigna spawn point y TeamID únicos, lo registra
+    // como observador de la escena por defecto, y lo suma al conteo.
     [Server]
     private void HandleClientLoadedStartScenes(NetworkConnection conn, bool asServer)
     {
@@ -140,6 +141,7 @@ public class NetworkGameManager : NetworkBehaviour
                   $"TeamID={uniqueTeamID}. En partida: {_currentPlayerCount}");
     }
 
+    // Despawnea el jugador de una conexión que se cayó y actualiza el conteo.
     [Server]
     private void HandlePlayerDisconnected(NetworkConnection conn)
     {
@@ -158,12 +160,17 @@ public class NetworkGameManager : NetworkBehaviour
     // RESPAWN
     // =========================================================
 
+    // Programa el respawn de un jugador tras "delay" segundos (lo llama
+    // PlayerController al morir).
     [Server]
     public void RespawnPlayer(NetworkConnection conn, float delay = 3f)
     {
         StartCoroutine(RespawnCoroutine(conn, delay));
     }
 
+    // Espera el delay, reposiciona al jugador en un spawn point al azar
+    // (desactivando el CharacterController mientras lo mueve, para que
+    // no pelee con la física), y lo revive.
     private System.Collections.IEnumerator RespawnCoroutine(
         NetworkConnection conn, float delay)
     {
@@ -192,6 +199,7 @@ public class NetworkGameManager : NetworkBehaviour
     // HELPERS
     // =========================================================
 
+    // Punto de spawn determinístico por número de jugador (round-robin).
     private Transform GetSpawnPoint(int playerNumber)
     {
         if (SpawnPoints == null || SpawnPoints.Length == 0)
@@ -202,6 +210,7 @@ public class NetworkGameManager : NetworkBehaviour
         return SpawnPoints[(playerNumber - 1) % SpawnPoints.Length];
     }
 
+    // Punto de spawn al azar (usado para respawns).
     private Transform GetRandomSpawnPoint()
     {
         if (SpawnPoints == null || SpawnPoints.Length == 0) return transform;

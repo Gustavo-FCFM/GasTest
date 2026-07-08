@@ -3,22 +3,25 @@ using UnityEngine.UI;
 using TMPro;
 
 // ============================================================
-// UI_PlayerHUD — MODIFICADO PARA MULTIJUGADOR
+// UI_PlayerHUD
 //
-// CAMBIO:
-//   InitializeHUD ahora tiene un guard: solo acepta la llamada
-//   del jugador LOCAL (IsOwner). Esto evita que el HUD de un
-//   cliente se conecte al personaje de otro jugador cuando
-//   hay múltiples PlayerControllers en la escena.
-//
-//   El resto es idéntico al original.
+// HUD principal del jugador: barra de vida/escudo/maná, los slots
+// de habilidades, y la notificación de nivel máximo. En multijugador
+// hay un PlayerController por jugador en la escena, así que
+// InitializeHUD() ignora cualquier llamada que no venga del dueño
+// local (IsOwner) para no engancharse al personaje de otro jugador.
 // ============================================================
-
 public class UI_PlayerHUD : MonoBehaviour
 {
     [Header("Target")]
     public PlayerController player;
     private AbilitySystemComponent asc;
+
+    // Los cooldowns reales viven en NetworkAbilitySystemComponent — el ASC
+    // local del cliente nunca tiene ActiveEffects poblado salvo en el
+    // host, así que los slots de habilidad necesitan esto para mostrar el
+    // cooldown correcto en cualquier cliente.
+    private NetworkAbilitySystemComponent netAsc;
 
     [Header("Panel Izquierdo (Estado)")]
     public Image ClassIconImage;
@@ -27,7 +30,7 @@ public class UI_PlayerHUD : MonoBehaviour
     public TextMeshProUGUI HealthText;
 
     [Header("Barra de Maná (Opcional)")]
-    public GameObject ManaBarContainer;
+    public GameObject ManaBarContainer; // Se oculta entero si la clase no usa maná
     public Slider ManaSlider;
     public TextMeshProUGUI ManaText;
 
@@ -44,17 +47,16 @@ public class UI_PlayerHUD : MonoBehaviour
     [Header("Notificaciones")]
     public GameObject LevelUpNotification;
 
-    // Los cooldowns reales viven en NetworkAbilitySystemComponent (ver esa
-    // clase) — el ASC local del cliente nunca tiene ActiveEffects poblado
-    // salvo en el host, así que los slots de habilidad necesitan esto para
-    // mostrar el cooldown correcto en cualquier cliente.
-    private NetworkAbilitySystemComponent netAsc;
+    // =========================================================
+    // INICIALIZACIÓN
+    // =========================================================
 
+    // Conecta el HUD a un jugador: solo acepta la llamada si ese jugador
+    // es el dueño local (evita que el HUD de un cliente se enganche al
+    // personaje de otro jugador). La llama PlayerController al spawnear
+    // o al cambiar de clase.
     public void InitializeHUD(PlayerController ownerPlayer)
     {
-        // CAMBIO: Solo el jugador dueño puede inicializar este HUD.
-        // En multijugador hay un PlayerController por jugador en la escena;
-        // ignoramos las llamadas de jugadores remotos.
         if (ownerPlayer != null && !ownerPlayer.IsOwner) return;
 
         player = ownerPlayer;
@@ -93,6 +95,11 @@ public class UI_PlayerHUD : MonoBehaviour
         if (asc != null) asc.OnMaxLevelReached -= ShowLevelUpNotification;
     }
 
+    // =========================================================
+    // UNITY
+    // =========================================================
+
+    // Refresca vida y maná cada frame mientras haya un ASC asignado.
     void Update()
     {
         if (asc == null) return;
@@ -100,16 +107,11 @@ public class UI_PlayerHUD : MonoBehaviour
         UpdateManaUI();
     }
 
-    void ShowLevelUpNotification()
-    {
-        if (LevelUpNotification != null) LevelUpNotification.SetActive(true);
-    }
+    // =========================================================
+    // VIDA Y MANÁ
+    // =========================================================
 
-    public void HideLevelUpNotification()
-    {
-        if (LevelUpNotification != null) LevelUpNotification.SetActive(false);
-    }
-
+    // Actualiza la barra de vida, el escudo (si tiene) y el texto numérico.
     void UpdateHealthUI()
     {
         float currentHealth = asc.GetAttributeValue(EAttributeType.Health);
@@ -134,6 +136,7 @@ public class UI_PlayerHUD : MonoBehaviour
         }
     }
 
+    // Actualiza la barra de maná, si el panel está activo.
     void UpdateManaUI()
     {
         if (ManaBarContainer != null && !ManaBarContainer.activeSelf) return;
@@ -146,6 +149,21 @@ public class UI_PlayerHUD : MonoBehaviour
         if (ManaText)   ManaText.text    = $"{currentMana:F0} / {maxMana:F0}";
     }
 
+    // Oculta el panel de maná entero si la clase actual no tiene MaxMana
+    // (ej: clases que no gastan maná).
+    void CheckIfManaExists()
+    {
+        if (ManaBarContainer == null || asc == null) return;
+        bool hasMana = asc.GetAttributeValue(EAttributeType.MaxMana) > 0;
+        ManaBarContainer.SetActive(hasMana);
+    }
+
+    // =========================================================
+    // SLOTS DE HABILIDADES
+    // =========================================================
+
+    // Conecta cada slot visual a la habilidad correspondiente del
+    // jugador actual (o lo oculta si ese slot no tiene habilidad asignada).
     void InitializeAbilitySlots()
     {
         if (player == null) return;
@@ -160,6 +178,7 @@ public class UI_PlayerHUD : MonoBehaviour
             UltimateSlot.Setup(player.AbilityR, asc, netAsc, EAbilityInput.Action3);
     }
 
+    // Configura o esconde un único slot de habilidad.
     void SetupSlot(UI_AbilitySlot slot, GameplayAbility ability, EAbilityInput slotInput)
     {
         if (slot == null) return;
@@ -174,10 +193,19 @@ public class UI_PlayerHUD : MonoBehaviour
         }
     }
 
-    void CheckIfManaExists()
+    // =========================================================
+    // NOTIFICACIONES
+    // =========================================================
+
+    // Se dispara al llegar a nivel máximo (OnMaxLevelReached).
+    void ShowLevelUpNotification()
     {
-        if (ManaBarContainer == null || asc == null) return;
-        bool hasMana = asc.GetAttributeValue(EAttributeType.MaxMana) > 0;
-        ManaBarContainer.SetActive(hasMana);
+        if (LevelUpNotification != null) LevelUpNotification.SetActive(true);
+    }
+
+    // La llama el sistema de selección de subclase al elegir una opción.
+    public void HideLevelUpNotification()
+    {
+        if (LevelUpNotification != null) LevelUpNotification.SetActive(false);
     }
 }

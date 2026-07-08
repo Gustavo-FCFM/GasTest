@@ -3,25 +3,44 @@ using System.Collections.Generic;
 using FishNet;
 using FishNet.Object;
 
+// ============================================================
+// GA_SpawnTotem
+//
+// Habilidad de menú radial (IRadialMenuAbility): el jugador elige
+// qué tótem invocar en un círculo de opciones, y esta clase lo
+// spawnea en el suelo bajo el cursor (con ground-snapping), respeta
+// un máximo de tótems activos (despawneando el más viejo si se
+// pasa), y cobra un cooldown individual por tipo de tótem.
+// ============================================================
 [CreateAssetMenu(fileName = "GA_SpawnTotem", menuName = "GAS/Abilities/Shaman/Spawn Totem")]
 public class GA_SpawnTotem : GameplayAbility, IRadialMenuAbility
 {
     [Header("Configuración de Invocación")]
     public GameObject[]   TotemPrefabs;
     public Sprite[]       TotemIcons;
+    // Un cooldown independiente por cada tipo de tótem (mismo índice que
+    // TotemPrefabs/TotemIcons).
     public GameplayEffect[] IndividualCooldownEffects;
     public float          MaxSpawnRange = 10f;
     public GameObject     SpawnVFX;
 
+    // Implementación de IRadialMenuAbility.
     public float   MaxRadialRange => MaxSpawnRange;
     public Sprite[] RadialIcons   => TotemIcons;
 
+    // Tótems actualmente invocados por este jugador, en orden de
+    // aparición (para despawnear el más viejo al pasar el límite).
     private Queue<GameObject> activeTotems = new Queue<GameObject>();
     private const int MAX_TOTEMS = 2;
 
-    // Activate vacío — manejado por el menú radial
+    // Vacío a propósito: esta habilidad se activa vía el menú radial
+    // (ActivateWithSelection), no con un click normal.
     public override void Activate() { }
 
+    // Valida el tótem elegido (incluyendo su cooldown individual),
+    // lo spawnea en red en el suelo bajo el punto elegido, respeta el
+    // límite de tótems activos, cobra su cooldown, y reproduce el VFX
+    // de invocación.
     public void ActivateWithSelection(int totemIndex, Vector3 spawnPosition)
     {
         if (!IsServer) return;
@@ -107,12 +126,23 @@ public class GA_SpawnTotem : GameplayAbility, IRadialMenuAbility
             OwnerASC.ApplyGameplayEffect(IndividualCooldownEffects[totemIndex], OwnerASC);
         }
 
-        if (SpawnVFX != null)
-            Destroy(Instantiate(SpawnVFX, groundPosition, Quaternion.identity), 2f);
+        // Instantiate() acá solo se vería en el proceso servidor —
+        // ServerPlayAbilityVFX lo reproduce en todos los peers.
+        NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
+        if (netAsc != null) netAsc.ServerPlayAbilityVFX(this, groundPosition);
+        else PlayImpactVFX(groundPosition);
 
         PlayerController pc = OwnerASC.GetComponent<PlayerController>();
         if (pc != null) pc.PlayAnimation(AnimationTriggerName, AnimationID);
 
         EndAbility();
+    }
+
+    // Instancia SpawnVFX en el punto de invocación. La llama cada peer con
+    // su propia copia (ver ServerPlayAbilityVFX).
+    public override void PlayImpactVFX(Vector3 position)
+    {
+        if (SpawnVFX == null) return;
+        Destroy(Instantiate(SpawnVFX, position, Quaternion.identity), 2f);
     }
 }

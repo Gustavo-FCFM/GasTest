@@ -1,23 +1,70 @@
 using UnityEngine;
 using System.Collections;
-using System.Collections.Generic; // Necesario para HashSet
+using System.Collections.Generic;
 using FishNet.Object;
+using FishNet.Object.Synchronizing;
 
+// ============================================================
+// GC_Projectile
+//
+// Proyectil físico en red: vuela con un Rigidbody (simulado en el
+// servidor, cinemático en los clientes) y, al chocar, resuelve daño
+// con autoridad de servidor. El modelo visual real (arma del que
+// disparó) y el VFX de impacto se resuelven por separado en cada
+// peer a partir de quién disparó — ver comentarios en cada sección.
+// ============================================================
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(Collider))]
 public class GC_Projectile : NetworkBehaviour
 {
-    private GameplayEffect damageEffect; // El efecto de Duration=0
-    private GameplayEffect durationEffect;
-    private AbilitySystemComponent sourceASC;
+    private GameplayEffect damageEffect;    // Daño instantáneo al impactar
+    private GameplayEffect durationEffect;  // Efecto con duración adicional al impactar
+    private AbilitySystemComponent sourceASC; // Quién disparó (solo poblado en el servidor)
     private float lifeTime = 5f;
     private float ultChargeAmount = 0f;
-    // Variable privada para guardar el prefab de explosión
+    // Prefab de VFX a reproducir en el impacto.
     private GameObject impactVfxPrefab;
+    // Instancia de GA_ProjectileShoot que disparó — la necesitamos para
+    // replicar el VFX de impacto a todos los peers (ver OnTriggerEnter).
+    private GameplayAbility sourceAbility;
 
-    // Lista para recordar a quién ya golpeamos y no repetir daño en el mismo frame
+    // Enemigos ya golpeados, para no repetir daño en el mismo frame si el
+    // proyectil atraviesa varios colliders del mismo objetivo.
     private HashSet<AbilitySystemComponent> enemiesHit = new HashSet<AbilitySystemComponent>();
 
+    // Quién disparó, sincronizado a TODOS los peers. sourceASC (arriba) solo
+    // se llena en el servidor porque Initialize() solo corre ahí — pero el
+    // swap de visuales (cubo -> arma real) es puramente cosmético y tiene
+    // que verse igual en cualquier cliente, no solo en el servidor. Un
+    // NetworkObject sí lo sabe serializar FishNet de forma nativa (a
+    // diferencia de un ScriptableObject o un GameObject local), así que cada
+    // peer resuelve SU PROPIA copia local del arma del dueño a partir de esto.
+    private readonly SyncVar<NetworkObject> _shooterNob = new SyncVar<NetworkObject>();
+    private bool _weaponVisualsApplied = false;
+
+    // =========================================================
+    // CICLO DE VIDA
+    // =========================================================
+
+    // Apaga el placeholder visual (el cubo del prefab) apenas el objeto
+    // existe.
+    private void Awake()
+    {
+        // Apagamos el placeholder (el cubo del prefab) ACÁ y no en
+        // OnStartClient(). Awake() corre síncrono como parte del propio
+        // Instantiate(), antes de que el objeto se dibuje por primera vez.
+        // OnStartClient() en cambio es un callback de FishNet que puede
+        // disparar uno o más frames después — en el servidor/host el objeto
+        // ya existe (y se renderiza) desde el Instantiate(), así que si
+        // esperábamos a OnStartClient() para ocultar el cubo, el host
+        // llegaba a ver el cubo real durante esos frames antes del swap
+        // (el cliente remoto no, porque recibe el spawn ya resuelto).
+        HideDefaultVisuals();
+    }
+
+    // En los clientes, apaga la física local (el servidor es quien
+    // simula el vuelo real) y se suscribe/aplica el swap de arma según
+    // quién disparó.
     public override void OnStartClient()
     {
         base.OnStartClient();
@@ -38,28 +85,49 @@ public class GC_Projectile : NetworkBehaviour
                 rb.useGravity  = false;
             }
         }
+
+        _shooterNob.OnChange += OnShooterChanged;
+        if (_shooterNob.Value != null) TryApplyShooterWeaponVisuals(_shooterNob.Value);
     }
 
-    public void Initialize(GameplayEffect damage, GameplayEffect durationEffect, AbilitySystemComponent source, float speed, float ultCharge, GameObject impactVFX)
+    // La llama GA_ProjectileShoot (siempre en el servidor) justo después
+    // de spawnear el proyectil, con todos los datos que necesita para
+    // resolver el impacto y publicar quién disparó.
+    public void Initialize(GameplayEffect damage, GameplayEffect durationEffect, AbilitySystemComponent source, float speed, float ultCharge, GameObject impactVFX, GameplayAbility ability = null)
     {
         damageEffect         = damage;
         this.durationEffect  = durationEffect;
         sourceASC            = source;
         ultChargeAmount      = ultCharge;
-        impactVfxPrefab      = impactVFX; // Guardamos la referencia
+        impactVfxPrefab      = impactVFX;
+        sourceAbility        = ability;
+
+        // Publicamos quién disparó para que cada cliente pueda resolver su
+        // propia arma local (ver comentario en _shooterNob más arriba).
+        if (source != null)
+            _shooterNob.Value = source.GetComponent<NetworkObject>();
 
         // Solo el servidor decide cuándo se destruye/despawnea el proyectil.
         if (IsServerInitialized)
             StartCoroutine(DespawnAfterLifetime());
     }
 
+    // Despawnea el proyectil solo tras lifeTime segundos, si nadie lo
+    // destruyó antes por un impacto.
     private IEnumerator DespawnAfterLifetime()
     {
         yield return new WaitForSeconds(lifeTime);
         DespawnSelf();
     }
 
-    // Usamos OnTriggerEnter porque marcamos "Is Trigger" en el collider
+    // =========================================================
+    // IMPACTO — autoridad de servidor
+    // =========================================================
+
+    // Al chocar: reproduce el VFX de impacto en todos los peers y, si es
+    // un personaje enemigo, le aplica daño (o lo atraviesa si es aliado);
+    // si es un obstáculo sólido, despawnea el proyectil. Usa OnTriggerEnter
+    // porque el collider está marcado "Is Trigger".
     private void OnTriggerEnter(Collider other)
     {
         // TODA la lógica de daño/impacto es autoridad del servidor. Sin este
@@ -74,13 +142,18 @@ public class GC_Projectile : NetworkBehaviour
         AbilitySystemComponent targetASC = other.GetComponentInParent<AbilitySystemComponent>();
 
         // 1. Instanciar VFX si existe (Independiente de lo que golpeemos)
-        // NOTA: esto solo se ve en el servidor/host por ahora — el proyectil
-        // se despawnea enseguida así que no vale la pena una NetworkObject
-        // aparte solo para el VFX de impacto. Pendiente si se quiere pulir.
-        if (impactVfxPrefab != null)
+        // OnTriggerEnter ya está garantizado server-only (guard de arriba),
+        // así que reusamos el mismo mecanismo que las demás habilidades:
+        // el servidor lo reproduce localmente y le avisa a cada cliente que
+        // haga lo mismo con SU PROPIA copia de esta misma habilidad (sin
+        // necesidad de sincronizar el GameObject del VFX en sí).
+        if (impactVfxPrefab != null && sourceAbility != null && sourceASC != null)
         {
-            GameObject vfx = Instantiate(impactVfxPrefab, transform.position, Quaternion.identity);
-            Destroy(vfx, 1.0f);
+            NetworkAbilitySystemComponent shooterNetAsc = sourceASC.GetComponent<NetworkAbilitySystemComponent>();
+            if (shooterNetAsc != null)
+                shooterNetAsc.ServerPlayAbilityVFX(sourceAbility, transform.position);
+            else
+                sourceAbility.PlayImpactVFX(transform.position); // fallback sin red
         }
 
         // 2. ¿Es un personaje?
@@ -125,46 +198,66 @@ public class GC_Projectile : NetworkBehaviour
         }
     }
 
+    // Despawnea el proyectil en red (avisa a todos los clientes que
+    // borren su copia) — un Destroy() normal solo lo sacaría del servidor.
     private void DespawnSelf()
     {
-        // Despawn (no Destroy) para que FishNet avise a los clientes que
-        // también borren su copia. Un Destroy() normal solo lo saca de la
-        // copia del servidor.
         if (IsServerInitialized && IsSpawned)
             ServerManager.Despawn(gameObject);
     }
 
+    // =========================================================
+    // VISUALES — el modelo del arma y el placeholder por defecto
+    // =========================================================
+
+    // Cuando llega (o cambia) el dueño sincronizado, intenta aplicar la
+    // visual de su arma.
+    private void OnShooterChanged(NetworkObject prev, NetworkObject next, bool asServer)
+    {
+        if (next != null) TryApplyShooterWeaponVisuals(next);
+    }
+
+    // Resuelve el PlayerController del dueño EN ESTE PROCESO y le pide su
+    // arma actual (currentMainWeapon) — cada peer instancia esa arma
+    // localmente como parte de EquipCharacterClass, así que no hace falta
+    // sincronizar la malla en sí, solo QUIÉN es el dueño.
+    private void TryApplyShooterWeaponVisuals(NetworkObject shooterNob)
+    {
+        if (_weaponVisualsApplied) return; // idempotente: OnChange + el chequeo en OnStartClient pueden pisarse
+
+        PlayerController pc = shooterNob.GetComponent<PlayerController>();
+        if (pc == null) return;
+
+        GameObject weapon = pc.GetCurrentMainWeapon();
+        if (weapon == null) return;
+
+        OverrideVisuals(weapon);
+        _weaponVisualsApplied = true;
+    }
+
+    // Apaga todos los Renderer del prefab (el cubo placeholder), sin
+    // importar si están en la raíz o en un hijo.
+    private void HideDefaultVisuals()
+    {
+        foreach (Renderer r in GetComponentsInChildren<Renderer>())
+            r.enabled = false;
+    }
+
+    // Clona el modelo del arma real como hijo visual del proyectil,
+    // ajusta su posición/rotación, y le quita los colliders (para que no
+    // interfieran con el collider principal del proyectil).
     public void OverrideVisuals(GameObject weaponModel)
     {
         if (weaponModel == null) return;
 
-        // 1. LIMPIAR VISUALES VIEJOS
-        // Si el proyectil tenía una malla por defecto (ej: esfera), la apagamos o destruimos sus gráficos
-        MeshRenderer defaultMR = GetComponent<MeshRenderer>();
-        if (defaultMR) defaultMR.enabled = false;
+        // El placeholder ya se apaga en HideDefaultVisuals() (OnStartClient,
+        // corre en todos los peers) — acá solo clonamos el arma real.
 
-        // También apagamos cualquier hijo visual que tuviera por defecto
-        foreach (Transform child in transform)
-        {
-            // Ojo: No borres el propio script o componentes de física si están en hijos
-            // Lo mejor es tener un hijo llamado "Visuals" en tu prefab de proyectil y borrar ese.
-            // Para simplificar, asumiremos que instanciamos el arma como un nuevo hijo visual.
-        }
-
-        // 2. CLONAR EL ARMA REAL
-        // Instanciamos una copia del modelo que tiene el jugador en la mano
         GameObject weaponClone = Instantiate(weaponModel, transform);
 
-        // 3. AJUSTAR POSICIÓN
         weaponClone.transform.localPosition = Vector3.zero;
         weaponClone.transform.localRotation = Quaternion.Euler(0f,90f,0f); // O la rotación que necesites para que apunte bien
 
-        // Opcional: Ajustar escala si es necesario
-        // weaponClone.transform.localScale = weaponModel.transform.localScale;
-
-        // 4. LIMPIEZA DE COMPONENTES DEL CLON
-        // El arma original podría tener scripts de colisión o lógica que no queremos en el proyectil.
-        // Quitamos colliders extra para que no interfieran con el del proyectil principal.
         var colliders = weaponClone.GetComponentsInChildren<Collider>();
         foreach (var col in colliders) Destroy(col);
     }

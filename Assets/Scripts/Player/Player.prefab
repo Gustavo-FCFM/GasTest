@@ -176,7 +176,7 @@ MonoBehaviour:
   AimAbility: {fileID: 0}
   jumpForce: 4
   gravity: -9.81
-  activeLeapAbility: {fileID: 0}
+  NetworkAimPoint: {x: 0, y: 0, z: 0}
   isRadialMenuOpen: 0
 --- !u!143 &7812325225803870869
 CharacterController:
@@ -342,8 +342,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b09233446f8fe4140b9273915b218fd9, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   _componentIndexCache: 3
   _addedNetworkObject: {fileID: 57168585733728244}
   _networkObjectCache: {fileID: 57168585733728244}

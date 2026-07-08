@@ -3,48 +3,42 @@ using FishNet.Object;
 using FishNet.Object.Synchronizing;
 
 // ============================================================
-// PLAYER CONTROLLER — CORRECCIÓN DE MOVIMIENTO ERRÁTICO
+// PlayerController
 //
-// El movimiento errático se debía a que UpdateAnimations()
-// corría en todos los clientes (incluidos observadores remotos)
-// modificando el Animator con valores locales incorrectos.
+// Controla al personaje jugador: movimiento (CharacterController
+// client-authoritative), input de habilidades, cambio de clase,
+// animación, cámara y HUD propios. Solo el DUEÑO (IsOwner) procesa
+// input y mueve el CharacterController — las copias remotas/servidor
+// se mantienen sincronizadas por NetworkTransform y por las RPCs de
+// NetworkAbilitySystemComponent.
 //
-// CORRECCIONES:
-//   1. UpdateAnimations() solo corre en IsOwner.
-//      Los observadores remotos reciben las animaciones via
-//      ObserversPlayAbilityAnimation en el NetworkASC.
-//
-//   2. Se agrega [HideInInspector] public bool IsMoving para
-//      que el NetworkTransform de FishNet sepa que hay movimiento
-//      local y lo sincronice correctamente.
-//
-//   3. HandleMovementInput() ya tenía el guard de IsOwner
-//      a través del Update(), pero se hace explícito también
-//      en el método para claridad.
-//
-// IMPORTANTE EN EL PREFAB:
-//   Asegúrate de que el componente NetworkTransform (FishNet)
-//   esté en el Prefab del jugador. Sin él la posición del
-//   jugador remoto no se sincroniza y aparece como estático
-//   o errático. Configúralo así:
-//     · Component Type: Transform
-//     · Smoothing: Interpolation
-//     · Send Rate: 10 o más
+// IMPORTANTE EN EL PREFAB: necesita el componente NetworkTransform
+// (FishNet) configurado como Component Type: Transform, Smoothing:
+// Interpolation, Send Rate: 10 o más — sin él la posición del
+// jugador remoto no se sincroniza y aparece estático o errático.
 // ============================================================
-
 [RequireComponent(typeof(AbilitySystemComponent))]
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : NetworkBehaviour
 {
+    // =========================================================
+    // COMPONENTES Y CONFIGURACIÓN
+    // =========================================================
+
     private AbilitySystemComponent        ASC;
     private NetworkAbilitySystemComponent NetASC;
     private CharacterController           characterController;
 
     [Header("Cámara de Red")]
+    // Prefab de cámara que se instancia solo para el dueño local (ver
+    // OnStartClient).
     public GameObject CameraPrefab;
 
     [Header("Clase")]
     public CharacterClassDefinition   CurrentClassDef;
+    // Todas las clases jugables posibles, usadas para sincronizar el
+    // ÍNDICE de clase por red (ver ServerSetClass) en vez de la
+    // referencia al asset.
     public CharacterClassDefinition[] MainBaseClasses;
 
     [Header("UI")]
@@ -61,8 +55,13 @@ public class PlayerController : NetworkBehaviour
     private GameObject currentOffWeapon;
     private GameObject currentWeaponTrail;
 
+    // True mientras se está ejecutando una habilidad — bloquea input de
+    // otras habilidades y el giro por movimiento normal.
     private bool isAttacking = false;
 
+    // Instancias de habilidad otorgadas, una por slot (ver
+    // EquipCharacterClass). [HideInInspector] porque se llenan en
+    // runtime, no se configuran a mano.
     [HideInInspector] public GameplayAbility MovementAbility;
     [HideInInspector] public GameplayAbility AbilityQ;
     [HideInInspector] public GameplayAbility AbilityE;
@@ -75,11 +74,16 @@ public class PlayerController : NetworkBehaviour
     public float gravity    = -9.8f;
 
     private float   verticalVelocity;
-    private Vector3 abilityMoveVector;
-    private bool    isAbilityLeaping = false;
     private Vector3 spawnPosition;
 
-    [HideInInspector] public GA_LeapAttack activeLeapAbility;
+    // Impulso temporal de movimiento genérico: cualquier habilidad
+    // (salto, dash, empujón...) puede tomar control del desplazamiento
+    // horizontal + un impulso vertical sin que este script tenga que
+    // conocerla por nombre — ver ApplyAbilityVelocity()/ClearAbilityVelocity()
+    // más abajo. El único que sabe qué habilidad la usó y qué hacer al
+    // aterrizar es quien la disparó (NetworkAbilitySystemComponent).
+    private Vector3 _abilityVelocity;
+    private bool    _abilityVelocityActive;
 
     // Último punto de mira que el dueño calculó con SU cámara y envió al
     // servidor junto con el input de habilidad. El servidor (y por lo tanto
@@ -87,12 +91,19 @@ public class PlayerController : NetworkBehaviour
     // propia, así que GetAimPoint() cae a este valor cuando IsOwner es falso.
     [HideInInspector] public Vector3 NetworkAimPoint;
 
+    // Índice de clase sincronizado a los observadores remotos (ver
+    // EquipCharacterClass/ServerSetClass) — mandamos el índice y no el
+    // asset porque FishNet no serializa referencias a ScriptableObjects.
     private readonly SyncVar<int> _netClassIndex = new SyncVar<int>(-1);
 
+    [HideInInspector] public bool isRadialMenuOpen = false;
+    private GameplayAbility currentRadialAbility;
+
     // =========================================================
-    // AWAKE / INICIALIZACIÓN
+    // CICLO DE VIDA DE RED
     // =========================================================
 
+    // Cachea las referencias a los demás componentes del mismo GameObject.
     void Awake()
     {
         ASC                = GetComponent<AbilitySystemComponent>();
@@ -100,23 +111,27 @@ public class PlayerController : NetworkBehaviour
         characterController = GetComponent<CharacterController>();
     }
 
+    // Equipa la clase inicial (a todos los peers, para que la visual esté
+    // bien en todos lados), y configura las cosas exclusivas del dueño
+    // local: cámara propia y bloqueo de cursor.
     public override void OnStartClient()
     {
         base.OnStartClient();
         spawnPosition = transform.position;
 
-        // --- SEGURO ANTI-ERRORES ---
-        // Si el clon nace sin clase (None), le forzamos la primera clase disponible (Bárbaro)
+        // Seguro anti-errores: si el clon nace sin clase, forzamos la
+        // primera clase disponible.
         if (CurrentClassDef == null && MainBaseClasses != null && MainBaseClasses.Length > 0)
         {
             CurrentClassDef = MainBaseClasses[0];
         }
 
-        // 1. Equipamos la clase a TODOS (Dueños y Clones) para revivir la UI
+        // Equipamos la clase a TODOS (dueños y clones) para que la visual
+        // esté bien en todos lados.
         if (CurrentClassDef != null) EquipCharacterClass(CurrentClassDef);
         if (ASC != null) ASC.OnDeath += HandlePlayerDeath;
 
-        // 2. Cosas exclusivas del dueño local
+        // Cosas exclusivas del dueño local
         if (base.IsOwner)
         {
             if (Camera.main != null) Camera.main.gameObject.SetActive(false);
@@ -139,12 +154,23 @@ public class PlayerController : NetworkBehaviour
             // [RequireComponent(typeof(CharacterController))], así que Unity
             // bloquea la destrucción ("Can't remove CharacterController
             // because PlayerController depends on it") y el componente se
-            // queda vivo en todos los fantasmas remotos. Alcanza con
-            // desactivarlo — nada llama a .Move() en una copia que no es dueña.
-            if (characterController != null) characterController.enabled = false;
+            // queda vivo en todos los fantasmas remotos. Nada llama a
+            // .Move() en una copia que no es dueña (guard de IsOwner en
+            // Update()), así que NO hace falta desactivarlo.
+            //
+            // IMPORTANTE: no desactivar el CharacterController acá.
+            // Es el único collider del jugador, y las habilidades de daño
+            // lo usan como hitbox vía Physics.OverlapSphere/OverlapBox en
+            // el servidor. En Host, el cliente del host trata a los jugadores
+            // remotos como "no dueños" — si acá lo desactivábamos, esa misma
+            // instancia (la que usa el servidor, porque host = server+client
+            // en un solo proceso) quedaba sin collider, y el host nunca
+            // detectaba ni dañaba a los demás jugadores.
         }
     }
 
+    // Se desuscribe de eventos al despawnear (evita callbacks sobre un
+    // objeto ya destruido).
     public override void OnStopClient()
     {
         base.OnStopClient();
@@ -153,12 +179,11 @@ public class PlayerController : NetworkBehaviour
     }
 
     // =========================================================
-    // UPDATE — SOLO EL DUEÑO PROCESA INPUT
+    // UNITY UPDATE — solo el dueño procesa input y movimiento
     // =========================================================
 
     void Update()
     {
-        // GUARD PRINCIPAL: solo el dueño procesa input y movimiento
         if (!IsOwner) return;
 
         if (ASC.HasTag(EGameplayTag.State_Dead))
@@ -173,50 +198,18 @@ public class PlayerController : NetworkBehaviour
         HandleMovementInput();
         HandleAbilityInput();
 
-        // CORRECCIÓN: UpdateAnimations solo en el dueño.
-        // Los observadores remotos ven las animaciones sincronizadas
-        // por el Animator que FishNet sincroniza via NetworkAnimator
-        // (si lo tienes) o por las ObserversRpc del NetworkASC.
+        // UpdateAnimations solo en el dueño — los observadores remotos ven
+        // las animaciones sincronizadas por las ObserversRpc del NetworkASC.
         UpdateAnimations();
-    }
-
-    // =========================================================
-    // MUERTE Y RESPAWN
-    // =========================================================
-
-    private void HandlePlayerDeath()
-    {
-        if (AbilityR is GA_InmortalWrath && AbilityR.CanActivate())
-        {
-            RequestAbility(EAbilityInput.Action3);
-            return;
-        }
-        ServerRequestRespawn();
-    }
-
-    [ServerRpc]
-    private void ServerRequestRespawn()
-    {
-        NetworkGameManager gm = FindFirstObjectByType<NetworkGameManager>();
-        if (gm != null)
-            gm.RespawnPlayer(Owner, 3f);
-        else
-            StartCoroutine(SimpleServerRespawn(3f));
-    }
-
-    private System.Collections.IEnumerator SimpleServerRespawn(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        characterController.enabled = false;
-        transform.position = new Vector3(spawnPosition.x, 3f, spawnPosition.z);
-        characterController.enabled = true;
-        ASC.Revive();
     }
 
     // =========================================================
     // MOVIMIENTO
     // =========================================================
 
+    // Mueve el CharacterController según el input WASD (o el impulso de
+    // una habilidad, si hay uno activo) más gravedad. Es el único lugar
+    // que llama Move() — solo corre para el dueño (ver Update).
     private void HandleMovementInput()
     {
         if (ASC.HasTag(EGameplayTag.State_Rooted))
@@ -245,10 +238,10 @@ public class PlayerController : NetworkBehaviour
 
         Vector3 horizontal;
 
-        if (isAbilityLeaping)
+        if (_abilityVelocityActive)
         {
-            abilityMoveVector = Vector3.Lerp(abilityMoveVector, Vector3.zero, Time.deltaTime);
-            horizontal        = abilityMoveVector + inputVec * baseSpeed;
+            _abilityVelocity = Vector3.Lerp(_abilityVelocity, Vector3.zero, Time.deltaTime);
+            horizontal        = _abilityVelocity + inputVec * baseSpeed;
         }
         else
         {
@@ -262,10 +255,10 @@ public class PlayerController : NetworkBehaviour
         Vector3 finalMove = new Vector3(horizontal.x, 0, horizontal.z)
                             + Vector3.up * verticalVelocity;
         characterController.Move(finalMove * Time.deltaTime);
-
-        CheckLanding();
     }
 
+    // Convierte el input horizontal/vertical crudo en un vector de mundo
+    // relativo a hacia dónde mira la cámara del dueño.
     private Vector3 GetWASDInputVector(float h, float v)
     {
         if (Camera.main == null) return Vector3.zero;
@@ -275,12 +268,50 @@ public class PlayerController : NetworkBehaviour
     }
 
     // =========================================================
-    // INPUT DE HABILIDADES
+    // IMPULSO DE HABILIDAD (genérico — salto, dash, empujón, etc.)
+    //
+    // Este script NO sabe qué habilidad lo usa. GA_LeapAttack (vía
+    // NetworkAbilitySystemComponent.TargetExecuteLeap, que corre en la
+    // conexión DUEÑA) le calcula la dirección con SU cámara y llama acá.
+    // Quien llama es también responsable de detectar el aterrizaje
+    // (IsGrounded) y de avisarle al servidor cuándo resolver cualquier
+    // efecto asociado — este script solo mueve el CharacterController.
     // =========================================================
 
-    [HideInInspector] public bool isRadialMenuOpen = false;
-    private GameplayAbility currentRadialAbility;
+    // True si el CharacterController está tocando el piso ahora mismo.
+    public bool IsGrounded => characterController.isGrounded;
 
+    // Toma control temporal del movimiento: aplica un impulso horizontal
+    // (que se va atenuando solo) y uno vertical instantáneo. Solo
+    // funciona si el personaje está en el piso al momento de llamarlo
+    // (devuelve false si no, y no hace nada).
+    public bool ApplyAbilityVelocity(Vector3 horizontalVelocity, float verticalImpulse)
+    {
+        if (!characterController.isGrounded) return false;
+
+        _abilityVelocity       = horizontalVelocity;
+        verticalVelocity       = verticalImpulse;
+        _abilityVelocityActive = true;
+
+        Vector3 flatDir = new Vector3(horizontalVelocity.x, 0, horizontalVelocity.z);
+        if (flatDir != Vector3.zero) transform.forward = flatDir.normalized;
+
+        return true;
+    }
+
+    // Devuelve el movimiento al control normal del input del jugador.
+    public void ClearAbilityVelocity()
+    {
+        _abilityVelocityActive = false;
+        _abilityVelocity       = Vector3.zero;
+    }
+
+    // =========================================================
+    // INPUT Y ACTIVACIÓN DE HABILIDADES
+    // =========================================================
+
+    // Revisa cada botón/tecla de habilidad y dispara su activación o
+    // liberación (para las de tipo menú radial).
     private void HandleAbilityInput()
     {
         if (ASC.HasTag(EGameplayTag.State_Silenced)) return;
@@ -294,6 +325,7 @@ public class PlayerController : NetworkBehaviour
         CheckAbilityButton("Fire2",  AimAbility,           EAbilityInput.SecondaryAttack);
     }
 
+    // Detecta presionar/soltar una tecla asignada a una habilidad.
     private void CheckAbilityKey(KeyCode key, GameplayAbility ability, EAbilityInput slot)
     {
         if (ability == null) return;
@@ -303,6 +335,8 @@ public class PlayerController : NetworkBehaviour
             ProcessAbilityRelease();
     }
 
+    // Igual que CheckAbilityKey pero para botones configurados en el
+    // Input Manager (ej: "Fire1" = click izquierdo).
     private void CheckAbilityButton(string btn, GameplayAbility ability, EAbilityInput slot)
     {
         if (ability == null) return;
@@ -312,6 +346,9 @@ public class PlayerController : NetworkBehaviour
             ProcessAbilityRelease();
     }
 
+    // Al presionar el input de una habilidad: si es de menú radial, abre
+    // el menú; si no, predice la animación localmente y pide su
+    // activación al servidor.
     private void ProcessAbilityPress(GameplayAbility ability, EAbilityInput slot)
     {
         if (ability is IRadialMenuAbility radial)
@@ -337,6 +374,8 @@ public class PlayerController : NetworkBehaviour
         }
     }
 
+    // Al soltar el input de una habilidad de menú radial: confirma la
+    // selección hecha con el mouse y la manda al servidor.
     private void ProcessAbilityRelease()
     {
         if (currentRadialAbility is IRadialMenuAbility radial)
@@ -350,10 +389,9 @@ public class PlayerController : NetworkBehaviour
         currentRadialAbility = null;
     }
 
-    // =========================================================
-    // SERVER RPCs
-    // =========================================================
-
+    // Calcula el punto de mira y rota al dueño hacia él ANTES de pedirle
+    // al servidor que active la habilidad (para que la rotación correcta
+    // llegue a tiempo — ver comentario abajo), y manda la petición.
     private void RequestAbility(EAbilityInput slot)
     {
         if (NetASC != null)
@@ -375,6 +413,7 @@ public class PlayerController : NetworkBehaviour
             ActivateAbilityBySlot(slot); // Fallback singleplayer
     }
 
+    // Ejecuta en el servidor la habilidad de menú radial elegida.
     [ServerRpc]
     private void ServerRequestRadialAbility(int selectedIndex, Vector3 targetPosition)
     {
@@ -389,6 +428,8 @@ public class PlayerController : NetworkBehaviour
         }
     }
 
+    // Activa directamente la habilidad de un slot, sin pasar por red
+    // (fallback cuando no hay NetworkAbilitySystemComponent).
     private void ActivateAbilityBySlot(EAbilityInput slot)
     {
         GameplayAbility ability = slot switch
@@ -404,12 +445,77 @@ public class PlayerController : NetworkBehaviour
         if (ability != null && ability.CanActivate()) ability.Activate();
     }
 
+    // Libera el estado "atacando" — lo llama GameplayAbility.EndAbility()
+    // (directo o vía RPC) al terminar una habilidad.
     public void FinishAttack() => isAttacking = false;
 
     // =========================================================
-    // EQUIPAR CLASE
+    // MUERTE Y RESPAWN
     // =========================================================
 
+    // Reacciona a la muerte del personaje: si tiene la resurrección de
+    // Inmortal disponible la usa, si no pide el respawn normal.
+    private void HandlePlayerDeath()
+    {
+        // ASC.OnDeath se suscribe en OnStartClient() para TODOS los peers
+        // (dueño, servidor y observadores remotos), porque cada uno tiene
+        // su propia copia local del ASC que dispara Die() cuando su salud
+        // llega a 0 (el servidor lo dispara directo al aplicar el daño; el
+        // dueño remoto lo vuelve a disparar un instante después, al recibir
+        // el SyncVar de vida en 0). Sin este guard, ServerRequestRespawn()
+        // se llama dos veces por muerte: una directa en el servidor y otra
+        // vía RPC desde el cliente dueño, duplicando el respawn.
+        if (!IsServerInitialized) return;
+
+        if (AbilityR is GA_InmortalWrath && AbilityR.CanActivate())
+        {
+            RequestAbility(EAbilityInput.Action3);
+            return;
+        }
+        ServerRequestRespawn();
+    }
+
+    // Pide el respawn al NetworkGameManager de la escena (o hace un
+    // respawn simple si no hay uno).
+    [ServerRpc]
+    private void ServerRequestRespawn()
+    {
+        NetworkGameManager gm = FindFirstObjectByType<NetworkGameManager>();
+        if (gm != null)
+            gm.RespawnPlayer(Owner, 3f);
+        else
+            StartCoroutine(SimpleServerRespawn(3f));
+    }
+
+    // Respawn de emergencia (sin NetworkGameManager en la escena): espera,
+    // reposiciona en el punto de spawn original, y revive.
+    private System.Collections.IEnumerator SimpleServerRespawn(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        characterController.enabled = false;
+        transform.position = new Vector3(spawnPosition.x, 3f, spawnPosition.z);
+        characterController.enabled = true;
+        ASC.Revive();
+    }
+
+    // Teletransporta al personaje de vuelta a su punto de spawn (ej: al
+    // caer a un DeathZone), sin pasar por el flujo de muerte/revivir.
+    public void TeleportToSpawn()
+    {
+        characterController.enabled = false;
+        transform.position = new Vector3(spawnPosition.x, 3f, spawnPosition.z);
+        verticalVelocity   = 0f;
+        characterController.enabled = true;
+    }
+
+    // =========================================================
+    // CLASE Y EQUIPAMIENTO
+    // =========================================================
+
+    // Cambia la clase del personaje: limpia estado anterior, actualiza
+    // visuales/armas, otorga las nuevas habilidades por slot, recarga
+    // atributos base, y (si sos el dueño) sincroniza el cambio por red y
+    // refresca el HUD.
     public void EquipCharacterClass(CharacterClassDefinition newClass)
     {
         if (newClass == null || ASC == null) return;
@@ -454,9 +560,13 @@ public class PlayerController : NetworkBehaviour
         }
     }
 
+    // Sincroniza el índice de clase elegido al SyncVar (el servidor lo
+    // recibe y lo replica a los observadores).
     [ServerRpc]
     private void ServerSetClass(int classIndex) => _netClassIndex.Value = classIndex;
 
+    // En los observadores remotos, aplica los visuales de la clase que
+    // el dueño acaba de equipar.
     private void OnNetClassIndexChanged(int prev, int next, bool asServer)
     {
         if (IsOwner) return;
@@ -464,6 +574,8 @@ public class PlayerController : NetworkBehaviour
         if (def != null) UpdateVisuals(def);
     }
 
+    // Busca la posición de una clase dentro de MainBaseClasses (para
+    // mandar su índice por red).
     private int GetClassIndex(CharacterClassDefinition def)
     {
         if (MainBaseClasses == null) return -1;
@@ -472,70 +584,17 @@ public class PlayerController : NetworkBehaviour
         return -1;
     }
 
+    // Inverso de GetClassIndex: resuelve un índice recibido por red de
+    // vuelta a la CharacterClassDefinition real.
     private CharacterClassDefinition GetClassByIndex(int idx)
     {
         if (MainBaseClasses == null || idx < 0 || idx >= MainBaseClasses.Length) return null;
         return MainBaseClasses[idx];
     }
 
-    // =========================================================
-    // HUD
-    // =========================================================
-
-    private void UpdateHUD()
-    {
-        // Si este personaje no es mío, no actualizo mi pantalla
-        if (!base.IsOwner) return;
-
-        UI_PlayerHUD hud = FindFirstObjectByType<UI_PlayerHUD>();
-        if (hud != null)
-        {
-            hud.InitializeHUD(this);
-            return;
-        }
-
-        // ============================================================
-        // CORRECCIÓN: "no recibe su propio UI"
-        //
-        // Cuando el jugador se spawnea, OnStartClient/EquipCharacterClass
-        // corren en el MISMO frame en que FishNet instancia el objeto.
-        // Si el UI_PlayerHUD de la escena todavía no terminó su Awake/Start
-        // (o está en otra escena que aún está cargando), FindFirstObjectByType
-        // devuelve null y el HUD se queda vacío para siempre porque
-        // EquipCharacterClass no se vuelve a llamar.
-        //
-        // Solución: si no lo encontramos aún, reintentamos unos frames
-        // hasta encontrarlo.
-        // ============================================================
-        StartCoroutine(RetryUpdateHUD());
-    }
-
-    private System.Collections.IEnumerator RetryUpdateHUD()
-    {
-        const int   maxAttempts = 30;   // ~0.5s a 60fps
-        int         attempts    = 0;
-
-        while (attempts < maxAttempts)
-        {
-            yield return null; // esperar un frame
-
-            UI_PlayerHUD hud = FindFirstObjectByType<UI_PlayerHUD>();
-            if (hud != null)
-            {
-                hud.InitializeHUD(this);
-                yield break;
-            }
-
-            attempts++;
-        }
-
-        Debug.LogWarning("[PlayerController] No se encontró UI_PlayerHUD tras varios intentos.");
-    }
-
-    // =========================================================
-    // VISUALES / ANIMACIONES / ARMAS
-    // =========================================================
-
+    // Reemplaza el animator override y las armas equipadas según la
+    // clase dada. La llaman tanto el dueño (al equipar) como los
+    // observadores remotos (al recibir el cambio de clase por red).
     private void UpdateVisuals(CharacterClassDefinition newClass)
     {
         if (newClass.ClassAnimatorOverride != null && characterAnimator != null)
@@ -565,6 +624,13 @@ public class PlayerController : NetworkBehaviour
         }
     }
 
+    // =========================================================
+    // ANIMACIÓN
+    // =========================================================
+
+    // Actualiza los parámetros del Animator (velocidad, salto,
+    // multiplicador de velocidad de ataque) según el movimiento actual.
+    // Solo corre en el dueño (ver Update).
     void UpdateAnimations()
     {
         if (characterAnimator == null) return;
@@ -581,6 +647,8 @@ public class PlayerController : NetworkBehaviour
             characterAnimator.SetFloat("AttackSpeedMult", 1f / spd);
     }
 
+    // Dispara un trigger de animación con el ID de acción dado (usado por
+    // las habilidades para animar el ataque correspondiente).
     public void PlayAnimation(string trigger, int actionID)
     {
         if (characterAnimator == null || string.IsNullOrEmpty(trigger)) return;
@@ -588,7 +656,12 @@ public class PlayerController : NetworkBehaviour
         characterAnimator.SetTrigger(trigger);
     }
 
+    // Gancho de Animation Event, sin uso actualmente (reservado para
+    // lógica en el frame exacto de impacto de la animación).
     public void AnimationEvent_HitFrame()    { }
+
+    // Gancho de Animation Event: prende/apaga el trail del arma principal
+    // en el frame exacto que marque el clip de animación.
     public void AnimationEvent_EnableTrail()
     {
         if (currentWeaponTrail != null) currentWeaponTrail.SetActive(true);
@@ -599,45 +672,67 @@ public class PlayerController : NetworkBehaviour
     }
 
     // =========================================================
-    // LEAP
+    // HUD
     // =========================================================
 
-    public void ExecuteLeap(GA_LeapAttack ability, float up, float fwd)
+    // Conecta el UI_PlayerHUD de la escena a este personaje (solo si sos
+    // el dueño). Si el HUD todavía no existe (carga de escena en curso),
+    // reintenta unos frames en vez de fallar directamente.
+    private void UpdateHUD()
     {
-        if (!characterController.isGrounded || Camera.main == null) return;
-        Vector3 camFwd    = Camera.main.transform.forward;
-        camFwd.y          = 0;
-        camFwd.Normalize();
-        abilityMoveVector = camFwd * fwd;
-        verticalVelocity  = up;
-        isAbilityLeaping  = true;
-        activeLeapAbility = ability;
-        transform.forward = camFwd;
-    }
+        if (!base.IsOwner) return;
 
-    private void CheckLanding()
-    {
-        if (isAbilityLeaping && characterController.isGrounded)
+        UI_PlayerHUD hud = FindFirstObjectByType<UI_PlayerHUD>();
+        if (hud != null)
         {
-            activeLeapAbility?.ExecuteImpactCheck();
-            isAbilityLeaping  = false;
-            activeLeapAbility = null;
-            abilityMoveVector = Vector3.zero;
-            FinishAttack();
+            hud.InitializeHUD(this);
+            return;
         }
+
+        // Cuando el jugador se spawnea, OnStartClient/EquipCharacterClass
+        // corren en el MISMO frame en que FishNet instancia el objeto. Si
+        // el UI_PlayerHUD de la escena todavía no terminó su Awake/Start
+        // (o está en otra escena que aún está cargando), FindFirstObjectByType
+        // devuelve null y el HUD se quedaría vacío para siempre porque
+        // EquipCharacterClass no se vuelve a llamar — por eso reintentamos.
+        StartCoroutine(RetryUpdateHUD());
+    }
+
+    // Reintenta encontrar el UI_PlayerHUD durante unos frames (ver
+    // UpdateHUD) antes de rendirse.
+    private System.Collections.IEnumerator RetryUpdateHUD()
+    {
+        const int   maxAttempts = 30;   // ~0.5s a 60fps
+        int         attempts    = 0;
+
+        while (attempts < maxAttempts)
+        {
+            yield return null;
+
+            UI_PlayerHUD hud = FindFirstObjectByType<UI_PlayerHUD>();
+            if (hud != null)
+            {
+                hud.InitializeHUD(this);
+                yield break;
+            }
+
+            attempts++;
+        }
+
+        Debug.LogWarning("[PlayerController] No se encontró UI_PlayerHUD tras varios intentos.");
     }
 
     // =========================================================
-    // UTILIDADES PÚBLICAS
+    // APUNTADO
     // =========================================================
 
-    public GameObject GetCurrentMainWeapon() => currentMainWeapon;
-
+    // Calcula hacia dónde apunta el dueño (centro de su cámara) hasta
+    // maxRange, ignorando triggers y su propio cuerpo. Si no sos el
+    // dueño (ej: esta copia corre en el servidor o es un observador
+    // remoto), no hay Camera.main válida para este proceso — se usa el
+    // último punto que el dueño calculó y envió (NetworkAimPoint).
     public Vector3 GetAimPoint(float maxRange = 100f)
     {
-        // No somos el dueño (ej: esta copia corre en el servidor, o es un
-        // observador remoto): no hay una Camera.main válida para ESTE jugador
-        // en este proceso. Usamos el punto que el dueño ya calculó y envió.
         if (!IsOwner) return NetworkAimPoint;
 
         if (Camera.main == null)
@@ -661,8 +756,11 @@ public class PlayerController : NetworkBehaviour
         return bestPoint;
     }
 
+    // Rota al personaje para mirar hacia GetAimPoint().
     public void RotateToAim() => RotateToAim(GetAimPoint());
 
+    // Rota al personaje para mirar hacia un punto específico (sin
+    // inclinar en el eje vertical).
     public void RotateToAim(Vector3 aimPoint)
     {
         Vector3 dir = (aimPoint - transform.position).normalized;
@@ -670,11 +768,27 @@ public class PlayerController : NetworkBehaviour
         if (dir != Vector3.zero) transform.rotation = Quaternion.LookRotation(dir);
     }
 
-    public void TeleportToSpawn()
+    // =========================================================
+    // UTILIDADES PÚBLICAS
+    // =========================================================
+
+    // Devuelve el GameObject del arma principal actualmente equipada
+    // (lo usan los proyectiles para clonar su visual).
+    public GameObject GetCurrentMainWeapon() => currentMainWeapon;
+
+    // =========================================================
+    // GIZMOS — vista previa de las áreas de habilidad en el Editor
+    //
+    // Lee CurrentClassDef directo (no las instancias otorgadas en runtime),
+    // así funciona con el jugador seleccionado en la Scene view SIN
+    // necesidad de darle Play — ajustás Range/AbilityRadius/ConeAngle/etc.
+    // en el asset de la habilidad y ves el área real actualizarse ahí mismo.
+    // =========================================================
+    private void OnDrawGizmosSelected()
     {
-        characterController.enabled = false;
-        transform.position = new Vector3(spawnPosition.x, 3f, spawnPosition.z);
-        verticalVelocity   = 0f;
-        characterController.enabled = true;
+        if (CurrentClassDef == null || CurrentClassDef.Abilities == null) return;
+
+        foreach (var assignment in CurrentClassDef.Abilities)
+            assignment.Ability?.DrawGizmos(transform);
     }
 }

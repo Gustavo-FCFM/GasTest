@@ -2,6 +2,16 @@ using UnityEngine;
 using System.Collections;
 using FishNet.Object;
 
+// ============================================================
+// Entity_Totem
+//
+// Tótem invocado que le aplica un aura periódica a los aliados
+// dentro de su radio (potenciada si el chamán que lo creó está
+// enfurecido). A diferencia de las habilidades, este SÍ es un
+// NetworkObject de verdad, así que su VFX de aura es puramente
+// local (cada peer lo instancia en su propio Start()) y solo la
+// aplicación del efecto en sí corre con autoridad de servidor.
+// ============================================================
 [RequireComponent(typeof(AbilitySystemComponent))]
 public class Entity_Totem : NetworkBehaviour
 {
@@ -10,17 +20,16 @@ public class Entity_Totem : NetworkBehaviour
     [Header("Configuración del Tótem")]
     [Tooltip("El efecto (GameplayEffect) normal que este tótem aplicará a los aliados.")]
     public GameplayEffect AuraEffect;
-    
-    // --- NUEVAS VARIABLES PARA LA SINERGIA (IRA DEL TÓTEM) ---
+
     [Header("Sinergia: Ira del Tótem")]
     [Tooltip("El efecto potenciado que se aplica si el Chamán está Enfurecido.")]
     public GameplayEffect EmpoweredAuraEffect;
-    
+
     [Tooltip("La etiqueta que el tótem buscará en el creador para saber si está Enfurecido (Ej. Status_Frenzy).")]
-    public EGameplayTag RageTag; // Seleccione la etiqueta de su habilidad Enfurecer en el Inspector
-    // ---------------------------------------------------------
+    public EGameplayTag RageTag;
 
     public float AuraRadius = 7f;
+    // Cada cuánto se reaplica el aura a los aliados dentro del radio.
     public float TickRate = 0.5f;
     public LayerMask CharacterLayer;
 
@@ -29,14 +38,21 @@ public class Entity_Totem : NetworkBehaviour
     public float VfxScaleMultiplier = 2.0f;
     private GameObject currentAuraVFX;
 
+    // Equipo del tótem (heredado de quien lo invocó) y referencia a su
+    // creador, para chequear la sinergia de Ira. Los asigna quien lo
+    // spawnea (GA_SpawnTotem/GA_ElementalFury) antes de Spawn().
     [HideInInspector] public int MyTeamID;
-    [HideInInspector] public AbilitySystemComponent CreatorASC; // <--- Referencia al Chamán
+    [HideInInspector] public AbilitySystemComponent CreatorASC;
 
+    // Cachea el ASC local.
     private void Awake()
     {
         ASC = GetComponent<AbilitySystemComponent>();
     }
 
+    // Configura el equipo del ASC, reproduce el VFX de aura (local en
+    // cada peer), y arranca el bucle de aplicación de efecto solo en el
+    // servidor.
     private void Start()
     {
         if (ASC != null)
@@ -63,6 +79,8 @@ public class Entity_Totem : NetworkBehaviour
             StartCoroutine(AuraRoutine());
     }
 
+    // Reaplica el aura a los aliados cada TickInterval segundos, mientras
+    // el tótem exista.
     private IEnumerator AuraRoutine()
     {
         while (true)
@@ -72,12 +90,13 @@ public class Entity_Totem : NetworkBehaviour
         }
     }
 
+    // Busca aliados (mismo TeamID, no neutral, no muertos) dentro de
+    // AuraRadius y les aplica AuraEffect — o EmpoweredAuraEffect si el
+    // creador del tótem tiene el tag RageTag.
     private void ApplyAuraToAllies()
     {
-        // 1. Determinar qué efecto usar en este "Tick"
         GameplayEffect effectToApply = AuraEffect;
 
-        // Si tenemos un creador, y ese creador está enfurecido, cambiamos al efecto potenciado
         if (CreatorASC != null && CreatorASC.HasTag(RageTag))
         {
             if (EmpoweredAuraEffect != null)
@@ -88,16 +107,15 @@ public class Entity_Totem : NetworkBehaviour
 
         if (effectToApply == null) return;
 
-        // 2. Aplicar el efecto seleccionado
         Collider[] hits = Physics.OverlapSphere(transform.position, AuraRadius, CharacterLayer);
-        
+
         foreach (Collider hit in hits)
         {
             AbilitySystemComponent targetASC = hit.GetComponentInParent<AbilitySystemComponent>();
-            
+
             if (targetASC != null && !targetASC.HasTag(EGameplayTag.State_Dead))
             {
-                if (targetASC.TeamID == MyTeamID && MyTeamID != 0) 
+                if (targetASC.TeamID == MyTeamID && MyTeamID != 0)
                 {
                     targetASC.ApplyGameplayEffect(effectToApply, ASC);
                 }
@@ -105,6 +123,7 @@ public class Entity_Totem : NetworkBehaviour
         }
     }
 
+    // Al "morir" (vida en 0), despawnea el tótem para todos los peers.
     private void HandleTotemDestruction()
     {
         // La salud del tótem solo es autoritativa en el servidor (nada la
@@ -117,6 +136,7 @@ public class Entity_Totem : NetworkBehaviour
         if (IsSpawned) ServerManager.Despawn(gameObject);
     }
 
+    // Vista previa del radio de aura en el Editor.
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = new Color(0f, 1f, 0.5f, 0.3f);

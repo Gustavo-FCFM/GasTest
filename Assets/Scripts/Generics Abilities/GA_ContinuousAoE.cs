@@ -2,9 +2,19 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+// ============================================================
+// GA_ContinuousAoE
+//
+// Zona de efecto que dura un tiempo (TotalDuration) y le aplica una
+// lista de GameplayEffect a todo lo que esté dentro de su radio,
+// a intervalos regulares (TickInterval). Puede quedarse fija en el
+// punto de activación o seguir al dueño (FollowOwner). Pensada para
+// auras, charcos de veneno, tornados, etc.
+// ============================================================
 [CreateAssetMenu(fileName = "GA_ContinuousAoE", menuName = "GAS/Generics/Continuous AoE")]
 public class GA_ContinuousAoE : GameplayAbility
 {
+    // A quién afecta el área.
     public enum EAoETarget { Enemigos, Aliados, Todos }
 
     [Header("Objetivos Afectados")]
@@ -13,21 +23,29 @@ public class GA_ContinuousAoE : GameplayAbility
     [Header("Configuración de Área")]
     public float Radius        = 4f;
     public float TotalDuration = 5f;
+    // Cada cuánto se vuelve a revisar quién está dentro del área y se le
+    // reaplican los efectos.
     public float TickInterval  = 0.5f;
 
     [Header("Comportamiento")]
+    // Si el área se mueve con el dueño o queda fija donde se activó.
     public bool FollowOwner = true;
 
     [Header("Efectos Visuales")]
     public GameObject VisualPrefab;
+    // Multiplica Radius para el tamaño del VFX (no afecta el área real).
     public float VisualScaleMultiplier = 2.0f;
 
     [Header("Lista de Efectos")]
+    // Todos los GameplayEffect que se le aplican a cada objetivo válido
+    // en cada tick.
     public List<GameplayEffect> EffectsToApply;
 
     [Header("Sincronización")]
+    // Espera antes de que el área empiece a existir, tras activar la habilidad.
     public float StartDelay = 0.5f;
 
+    // Valida, cobra costo/cooldown y arranca la secuencia del área.
     public override void Activate()
     {
         if (!IsServer) return;   // ← NUEVO
@@ -43,6 +61,8 @@ public class GA_ContinuousAoE : GameplayAbility
         }
     }
 
+    // Espera StartDelay (ajustado por velocidad de ataque), corre el área
+    // hasta que termina, y finaliza la habilidad.
     private IEnumerator AoESequence()
     {
         float speedMultiplier = 1f;
@@ -57,19 +77,21 @@ public class GA_ContinuousAoE : GameplayAbility
         EndAbility();
     }
 
+    // Reproduce el VFX del área, y cada TickInterval revisa quién está
+    // dentro del radio (según Objetivos) para aplicarle EffectsToApply,
+    // durante TotalDuration segundos.
     private IEnumerator AreaRoutine()
     {
         float     timeElapsed = 0f;
         Vector3   spawnPoint  = OwnerASC.transform.position;
-        GameObject vfxInstance = null;
 
-        if (VisualPrefab != null)
-        {
-            vfxInstance = Instantiate(VisualPrefab, spawnPoint, Quaternion.identity);
-            float finalScale = Radius * VisualScaleMultiplier;
-            vfxInstance.transform.localScale = new Vector3(finalScale, finalScale, finalScale);
-            if (FollowOwner) vfxInstance.transform.SetParent(OwnerASC.transform);
-        }
+        // Instantiate() acá solo se vería en el proceso servidor —
+        // ServerPlayAbilityVFX lo reproduce en todos los peers (cada uno
+        // con su propia copia, que se autodestruye sola tras TotalDuration
+        // en vez de que la sigamos con una referencia acá).
+        NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
+        if (netAsc != null) netAsc.ServerPlayAbilityVFX(this, spawnPoint);
+        else PlayImpactVFX(spawnPoint);
 
         while (timeElapsed < TotalDuration)
         {
@@ -99,7 +121,19 @@ public class GA_ContinuousAoE : GameplayAbility
             yield return new WaitForSeconds(TickInterval);
             timeElapsed += TickInterval;
         }
+    }
 
-        if (vfxInstance != null) Destroy(vfxInstance);
+    // Instancia VisualPrefab en el punto de origen (parentado al dueño si
+    // FollowOwner) y lo destruye solo tras TotalDuration segundos.
+    public override void PlayImpactVFX(Vector3 position)
+    {
+        if (VisualPrefab == null || OwnerASC == null) return;
+
+        GameObject vfxInstance = Instantiate(VisualPrefab, position, Quaternion.identity);
+        float finalScale = Radius * VisualScaleMultiplier;
+        vfxInstance.transform.localScale = new Vector3(finalScale, finalScale, finalScale);
+        if (FollowOwner) vfxInstance.transform.SetParent(OwnerASC.transform);
+
+        Destroy(vfxInstance, TotalDuration);
     }
 }

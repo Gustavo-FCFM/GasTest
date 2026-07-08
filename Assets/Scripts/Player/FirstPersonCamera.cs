@@ -1,46 +1,49 @@
 using UnityEngine;
 
+// ============================================================
+// FirstPersonCamera
+//
+// Control de cámara en primera persona clásico: el mouse horizontal
+// rota el cuerpo del personaje (playerBody) y el vertical rota solo
+// esta cámara, con límites de inclinación. No usado por el
+// PlayerController actual (que usa ThirdPersonOrbitCam) — queda
+// disponible como alternativa en primera persona.
+// ============================================================
 public class FirstPersonCamera : MonoBehaviour
 {
     [Header("Sensibilidad")]
-    public float sensitivityX = 2f; // Sensibilidad horizontal
-    public float sensitivityY = 2f; // Sensibilidad vertical
+    public float sensitivityX = 2f; // Sensibilidad horizontal del mouse
+    public float sensitivityY = 2f; // Sensibilidad vertical del mouse
 
     [Header("Límites de Mirada")]
-    public float minimumY = -60f; // Límite inferior (mirar hacia abajo)
-    public float maximumY = 60f;  // Límite superior (mirar hacia arriba)
+    public float minimumY = -60f; // Cuánto se puede inclinar hacia abajo
+    public float maximumY = 60f;  // Cuánto se puede inclinar hacia arriba
 
-    // El transform del personaje (PlayerController) que rota horizontalmente
-    public Transform playerBody; 
+    // Transform del cuerpo del personaje, que rota en el eje horizontal.
+    public Transform playerBody;
 
-    private float rotationX = 0f; // Almacena la rotación vertical actual
-    private float rotationY = 0f; // Almacena la rotación horizontal actual (del cuerpo)
+    private float rotationX = 0f; // Rotación vertical acumulada (cámara)
+    private float rotationY = 0f; // Rotación horizontal acumulada (cuerpo)
 
-
+    // Bloquea y oculta el cursor al arrancar.
     void Start()
     {
-        // Oculta el cursor y lo bloquea en el centro de la pantalla
-        Cursor.lockState = CursorLockMode.Locked; 
+        Cursor.lockState = CursorLockMode.Locked;
     }
 
+    // Cada frame, traduce el movimiento del mouse en rotación: horizontal
+    // al cuerpo del personaje, vertical (con límites) a esta cámara.
     void Update()
     {
-        // 1. Obtener la entrada del mouse
         float mouseX = Input.GetAxis("Mouse X") * sensitivityX;
         float mouseY = Input.GetAxis("Mouse Y") * sensitivityY;
 
-        // 2. Rotación Horizontal (Controla el cuerpo del personaje)
-        // Se aplica al cuerpo del personaje (playerBody)
         rotationY += mouseX;
-        playerBody.Rotate(Vector3.up * mouseX); // Rota el cuerpo del personaje en el eje Y global
+        playerBody.Rotate(Vector3.up * mouseX);
 
-        // 3. Rotación Vertical (Controla la cámara)
-        // La rotación vertical se acumula y se sujeta a los límites (clamp)
         rotationX -= mouseY;
         rotationX = Mathf.Clamp(rotationX, minimumY, maximumY);
 
-        // Aplicar rotación vertical a la cámara (transform.localRotation)
-        // Usamos Quaternion.Euler para convertir el float de ángulo a una rotación de Unity
         transform.localRotation = Quaternion.Euler(rotationX, 0f, 0f);
     }
 }

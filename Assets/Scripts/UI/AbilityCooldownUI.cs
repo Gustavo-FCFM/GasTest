@@ -1,26 +1,39 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+// ============================================================
+// AbilityCooldownUI
+//
+// Overlay simple que oscurece una imagen según cuánto cooldown le
+// queda a UN tag puntual (no a un slot completo de habilidad).
+// Pensado para indicadores sueltos fuera del HUD principal — para
+// los slots reales de habilidades usar UI_AbilitySlot/UI_UltimateSlot,
+// que sí funcionan en red.
+// ============================================================
 public class AbilityCooldownUI : MonoBehaviour
 {
-    public AbilitySystemComponent targetASC; // El ASC del jugador
-    public EGameplayTag CooldownTag = EGameplayTag.Ability_Cooldown_Melee; // El tag que bloquea la habilidad
-    
-    private Image overlayImage; // La imagen del relleno oscuro
+    // ASC del personaje a observar.
+    public AbilitySystemComponent targetASC;
 
+    // Qué cooldown mostrar — debe coincidir con el GrantedTag del
+    // CooldownEffect de la habilidad que se quiere representar.
+    public EGameplayTag CooldownTag = EGameplayTag.Ability_Cooldown_Melee;
+
+    // Imagen cuyo fillAmount se usa como relleno del cooldown.
+    private Image overlayImage;
+
+    // Cachea la Image de este mismo GameObject.
     void Awake()
     {
         overlayImage = GetComponent<Image>();
     }
 
+    // Cada frame, refleja en el fillAmount cuánto cooldown falta (0 a 1).
     void Update()
     {
         if (targetASC == null || overlayImage == null) return;
 
-        // Obtenemos el valor normalizado (0 a 1) directamente del ASC
         float cooldownFraction = targetASC.GetCooldownRemainingNormalized(CooldownTag);
-
-        // Actualizamos el relleno de la imagen
         overlayImage.fillAmount = cooldownFraction;
     }
 }

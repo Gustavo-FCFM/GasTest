@@ -21,13 +21,10 @@ MonoBehaviour:
   ActivationBlockedTags: 02000000
   AnimationTriggerName: AttackTrigger
   AnimationID: 4
-  AbilityRadius: 1
+  AbilityRadius: 3
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  HitboxShape: 0
-  HitboxOffsetZ: 1.5
-  HitboxHalfExtents: {x: 1, y: 1, z: 1}
   ConeAngle: 90
   VisualsSequence: []
   JumpVelocity: 15
@@ -35,3 +32,4 @@ MonoBehaviour:
   DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   CrowdControlEffect: {fileID: 11400000, guid: 70c9bebbbfba254448fb78d4cf1f9726, type: 2}
   ImpactVFX: {fileID: 4994997792314849709, guid: 3dd50886582244645be87adb42aa8528, type: 3}
+  ImpactVFXScaleMultiplier: 0.8

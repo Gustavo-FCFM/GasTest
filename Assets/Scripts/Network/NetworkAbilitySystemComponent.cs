@@ -1,4 +1,6 @@
 using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using FishNet.Connection;
@@ -6,42 +8,35 @@ using FishNet.Connection;
 // ============================================================
 // NetworkAbilitySystemComponent
 //
-// ARQUITECTURA CORREGIDA:
-//   Este componente hereda de NetworkBehaviour (FishNet) y
-//   vive en el mismo GameObject que AbilitySystemComponent.
-//   YA NO hereda de AbilitySystemComponent — eso causaba el
-//   conflicto porque MonoBehaviour no tiene OnStartServer,
-//   OnStartClient ni IsServerInitialized.
+// Capa de red de un personaje: vive en el mismo GameObject que
+// AbilitySystemComponent (que no sabe nada de FishNet) y traduce sus
+// cambios (atributos, tags, efectos activos) a SyncVars/RPCs para que
+// todos los clientes los vean. También recibe las peticiones de
+// activar habilidades desde PlayerController y actúa de puente para
+// todo lo que necesita autoridad de servidor + ejecución en el
+// cliente dueño (salto, VFX, secuencias visuales).
 //
-// CÓMO USARLO EN EL PREFAB DEL JUGADOR:
-//   El prefab debe tener AMBOS componentes:
-//     · AbilitySystemComponent   (lógica de juego, sin cambios)
-//     · NetworkAbilitySystemComponent  (este script, sincronización)
-//     · NetworkObject            (FishNet, obligatorio)
-//     · NetworkTransform         (FishNet, para posición)
-//
-// QUÉ HACE:
-//   - Al iniciar en servidor, lee los valores del ASC local y
-//     los publica en SyncVars para que todos los clientes los vean.
-//   - Cada vez que el ASC cambia un atributo (via los hooks
-//     OnAttributeChanged / OnTagAdded / OnTagRemoved que
-//     agregamos al ASC), este componente actualiza los SyncVars.
-//   - Recibe ServerRpc del PlayerController para activar
-//     habilidades en el servidor.
-//   - Notifica a todos los clientes con ObserversRpc cuando
-//     ocurren eventos visuales (animaciones, muerte, revivir).
+// PREFAB DEL JUGADOR: necesita AMBOS componentes en el mismo
+// GameObject — AbilitySystemComponent (lógica de juego) y este script
+// (sincronización) — más NetworkObject y NetworkTransform de FishNet.
 // ============================================================
-
 [RequireComponent(typeof(AbilitySystemComponent))]
 public class NetworkAbilitySystemComponent : NetworkBehaviour
 {
-    // Referencia al ASC local (mismo GameObject)
+    // =========================================================
+    // CAMPOS Y SYNCVARS
+    // =========================================================
+
+    // Referencia al ASC local (mismo GameObject).
     private AbilitySystemComponent _asc;
 
-    // =========================================================
-    // SYNCVARS — Servidor escribe, todos los clientes leen
-    // =========================================================
+    // Instancia de GA_LeapAttack cuyo impacto falta resolver — la guarda el
+    // servidor entre ServerStartLeap() y ServerResolveLeapImpact() (que
+    // llama el dueño al aterrizar). Ver esos métodos en la sección SALTO.
+    private GA_LeapAttack _pendingLeapImpact;
 
+    // Atributos numéricos sincronizados. El servidor escribe, todos los
+    // clientes leen (ver HandleAttributeChanged / OnNet*Changed).
     private readonly SyncVar<float> _netHealth    = new SyncVar<float>();
     private readonly SyncVar<float> _netMaxHealth = new SyncVar<float>();
     private readonly SyncVar<float> _netMana      = new SyncVar<float>();
@@ -52,7 +47,7 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     private readonly SyncVar<float> _netLevel     = new SyncVar<float>();
     private readonly SyncVar<float> _netExp       = new SyncVar<float>();
 
-    // Tags activos para UI remota y efectos visuales
+    // Tags de estado activos, sincronizados para UI remota y efectos visuales.
     public readonly SyncHashSet<EGameplayTag> NetTags = new SyncHashSet<EGameplayTag>();
 
     // =========================================================
@@ -76,6 +71,7 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     public readonly SyncDictionary<EAbilityInput, uint>  NetCooldownStartTick = new SyncDictionary<EAbilityInput, uint>();
     public readonly SyncDictionary<EAbilityInput, float> NetCooldownDuration  = new SyncDictionary<EAbilityInput, float>();
 
+    // Slots que se revisan en cada barrido de cooldowns.
     private static readonly EAbilityInput[] _cooldownSlots =
     {
         EAbilityInput.PrimaryAttack, EAbilityInput.SecondaryAttack,
@@ -83,8 +79,46 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         EAbilityInput.Movement
     };
 
+    // Cada cuánto se re-sincronizan los cooldowns (ver Update).
     private const float CooldownSyncInterval = 0.25f;
     private float _cooldownSyncTimer;
+
+    // =========================================================
+    // EFECTOS ACTIVOS EN RED (buffs/debuffs con duración, para la UI)
+    //
+    // Mismo problema que con los cooldowns: ActiveEffects del ASC solo
+    // existe de verdad en la copia del servidor. Acá no podemos mandar la
+    // referencia al ScriptableObject GameplayEffect por SyncVar (FishNet no
+    // sabe serializar assets arbitrarios), así que sincronizamos el ÍNDICE
+    // del efecto dentro de GameplayEffectRegistry — el cliente lo resuelve
+    // de vuelta al mismo asset, que ya tiene cargado localmente porque es
+    // el mismo build. Junto al índice mandamos el TICK en que empezó y
+    // cuánto dura, igual que con los cooldowns, para no necesitar un
+    // paquete de red por frame.
+    //
+    // A diferencia de los cooldowns (que se barren cada CooldownSyncInterval
+    // segundos), acá actualizamos on-demand desde los hooks del ASC
+    // (OnActiveEffectAddedCallback/Removed) porque los buffs/debuffs pueden
+    // ser mucho más cortos y un barrido periódico se los podría perder.
+    // =========================================================
+
+    public readonly SyncDictionary<int, uint>  NetActiveEffectStartTick = new SyncDictionary<int, uint>();
+    public readonly SyncDictionary<int, float> NetActiveEffectDuration  = new SyncDictionary<int, float>();
+
+    // =========================================================
+    // STATS DERIVADOS EN RED (AtkSpeed, MovSpeed, Atq, Def, etc.)
+    //
+    // Los atributos "pool" (Health, Mana...) y los Max tienen su SyncVar
+    // dedicado arriba. Pero los demás stats (los que RecalculateAllAttributes
+    // del ASC computa como Base*Modificadores) los cambian los buffs vía el
+    // sistema de modificadores, y no tenían dónde sincronizarse. Este
+    // diccionario genérico replica CUALQUIER stat que no tenga SyncVar
+    // propio, así un buff nuevo sobre cualquier atributo llega a los clientes
+    // sin tener que agregar un SyncVar por cada uno. Sin esto, el jugador 2
+    // nunca recibía el buff de velocidad de ataque/movimiento de su Rage.
+    // =========================================================
+
+    public readonly SyncDictionary<EAttributeType, float> NetStats = new SyncDictionary<EAttributeType, float>();
 
     // =========================================================
     // PROPIEDADES PÚBLICAS DE LECTURA (para la UI y otros scripts)
@@ -101,9 +135,11 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     public float NetExp       => _netExp.Value;
 
     // =========================================================
-    // AWAKE — Obtener referencia al ASC y suscribir hooks
+    // CICLO DE VIDA
     // =========================================================
 
+    // Obtiene la referencia al ASC local y se suscribe a todos sus hooks
+    // (atributos, tags, muerte/revivir, efectos activos).
     private void Awake()
     {
         _asc = GetComponent<AbilitySystemComponent>();
@@ -114,65 +150,19 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
             return;
         }
 
-        // Suscribir los hooks que agregamos al ASC base
         _asc.OnAttributeChangedCallback += HandleAttributeChanged;
         _asc.OnTagAddedCallback         += HandleTagAdded;
         _asc.OnTagRemovedCallback       += HandleTagRemoved;
 
-        // Suscribir eventos de muerte y revivir
         _asc.OnDeath  += HandleDeath;
         _asc.OnRevive += HandleRevive;
+
+        _asc.OnActiveEffectAddedCallback   += HandleActiveEffectAdded;
+        _asc.OnActiveEffectRemovedCallback += HandleActiveEffectRemoved;
     }
 
-    private void Update()
-    {
-        // Solo el servidor calcula y publica los cooldowns; los clientes los
-        // leen vía TryGetNetCooldown().
-        if (!IsServerInitialized || _asc == null) return;
-
-        _cooldownSyncTimer += Time.deltaTime;
-        if (_cooldownSyncTimer < CooldownSyncInterval) return;
-        _cooldownSyncTimer = 0f;
-
-        foreach (EAbilityInput slot in _cooldownSlots)
-            SyncCooldownForSlot(slot);
-    }
-
-    [Server]
-    private void SyncCooldownForSlot(EAbilityInput slot)
-    {
-        GameplayAbility ability = FindAbilityBySlot(slot);
-        if (ability == null) return;
-
-        if (_asc.GetCooldownStatus(ability, out float remaining, out _))
-        {
-            NetCooldownStartTick[slot] = TimeManager.Tick;
-            NetCooldownDuration[slot]  = remaining;
-        }
-        else if (NetCooldownDuration.ContainsKey(slot))
-        {
-            NetCooldownStartTick.Remove(slot);
-            NetCooldownDuration.Remove(slot);
-        }
-    }
-
-    // Usado por la UI (UI_AbilitySlot / UI_UltimateSlot) para leer el
-    // cooldown real sin depender del ASC local (que en el cliente remoto
-    // nunca tiene ActiveEffects poblado).
-    public bool TryGetNetCooldown(EAbilityInput slot, out float remaining, out float total)
-    {
-        remaining = 0f;
-
-        if (!NetCooldownDuration.TryGetValue(slot, out total)) { total = 0f; return false; }
-        if (!NetCooldownStartTick.TryGetValue(slot, out uint startTick)) return false;
-
-        uint   elapsedTicks   = TimeManager.Tick > startTick ? (TimeManager.Tick - startTick) : 0;
-        double elapsedSeconds = TimeManager.TicksToTime(elapsedTicks);
-
-        remaining = Mathf.Max(0f, total - (float)elapsedSeconds);
-        return remaining > 0f;
-    }
-
+    // Desuscribe todos los hooks/callbacks para no dejar referencias
+    // colgando cuando este componente se destruye.
     private void OnDestroy()
     {
         if (_asc == null) return;
@@ -182,8 +172,9 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         _asc.OnTagRemovedCallback       -= HandleTagRemoved;
         _asc.OnDeath                    -= HandleDeath;
         _asc.OnRevive                   -= HandleRevive;
+        _asc.OnActiveEffectAddedCallback   -= HandleActiveEffectAdded;
+        _asc.OnActiveEffectRemovedCallback -= HandleActiveEffectRemoved;
 
-        // Desuscribir SyncVar callbacks
         _netHealth.OnChange    -= OnNetHealthChanged;
         _netMaxHealth.OnChange -= OnNetMaxHealthChanged;
         _netMana.OnChange      -= OnNetManaChanged;
@@ -194,11 +185,8 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         _netLevel.OnChange     -= OnNetLevelChanged;
         _netExp.OnChange       -= OnNetExpChanged;
         NetTags.OnChange       -= OnNetTagsChanged;
+        NetStats.OnChange      -= OnNetStatChanged;
     }
-
-    // =========================================================
-    // CALLBACKS DE FISHNET
-    // =========================================================
 
     public override void OnStartServer()
     {
@@ -222,11 +210,12 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         // ============================================================
     }
 
+    // Suscribe los callbacks de SyncVar para recibir los cambios que
+    // manda el servidor.
     public override void OnStartClient()
     {
         base.OnStartClient();
 
-        // Suscribir callbacks para recibir cambios del servidor
         _netHealth.OnChange    += OnNetHealthChanged;
         _netMaxHealth.OnChange += OnNetMaxHealthChanged;
         _netMana.OnChange      += OnNetManaChanged;
@@ -237,15 +226,38 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         _netLevel.OnChange     += OnNetLevelChanged;
         _netExp.OnChange       += OnNetExpChanged;
         NetTags.OnChange       += OnNetTagsChanged;
+        NetStats.OnChange      += OnNetStatChanged;
+
+        // OnChange solo dispara para cambios FUTUROS — aplicamos de una los
+        // stats que ya venían sincronizados al momento de conectarnos (ej: un
+        // jugador que ya tenía un buff activo cuando entramos a la partida).
+        if (!IsServerInitialized && _asc != null)
+            foreach (var kvp in NetStats)
+                _asc.SetCurrentAttributeValue(kvp.Key, kvp.Value);
+    }
+
+    // Solo en el servidor: re-sincroniza los cooldowns cada
+    // CooldownSyncInterval segundos (ver sección COOLDOWNS).
+    private void Update()
+    {
+        if (!IsServerInitialized || _asc == null) return;
+
+        _cooldownSyncTimer += Time.deltaTime;
+        if (_cooldownSyncTimer < CooldownSyncInterval) return;
+        _cooldownSyncTimer = 0f;
+
+        foreach (EAbilityInput slot in _cooldownSlots)
+            SyncCooldownForSlot(slot);
     }
 
     // =========================================================
-    // HOOKS DEL ASC — Cuando el ASC cambia algo, actualizamos SyncVars
+    // ATRIBUTOS EN RED
     // =========================================================
 
+    // El servidor refleja cada cambio de atributo del ASC en el SyncVar
+    // correspondiente.
     private void HandleAttributeChanged(EAttributeType type, float value)
     {
-        // Solo el servidor actualiza los SyncVars
         if (!IsServerInitialized) return;
 
         switch (type)
@@ -258,25 +270,17 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
             case EAttributeType.Shield:    _netShield.Value    = value; break;
             case EAttributeType.Level:     _netLevel.Value     = value; break;
             case EAttributeType.Exp:       _netExp.Value       = value; break;
+
+            // Cualquier otro stat (AtkSpeed, MovSpeed, Atq, Def, CritChance...)
+            // va por el diccionario genérico — así los buffs sobre stats
+            // derivados también llegan a los clientes sin un SyncVar por cada uno.
+            default:                       NetStats[type]      = value; break;
         }
     }
 
-    private void HandleTagAdded(EGameplayTag tag)
-    {
-        if (!IsServerInitialized) return;
-        NetTags.Add(tag);
-    }
-
-    private void HandleTagRemoved(EGameplayTag tag)
-    {
-        if (!IsServerInitialized) return;
-        NetTags.Remove(tag);
-    }
-
-    // =========================================================
-    // CALLBACKS DE SYNCVAR — Cliente recibe cambio, actualiza ASC local
-    // =========================================================
-
+    // En los clientes, cada callback de SyncVar aplica el nuevo valor al
+    // ASC local (asServer=true significa que lo escribimos nosotros como
+    // servidor, así que lo ignoramos para no reescribirnos a nosotros mismos).
     private void OnNetHealthChanged(float prev, float next, bool asServer)
     {
         if (!asServer && _asc != null) _asc.SetCurrentAttributeValue(EAttributeType.Health, next);
@@ -314,6 +318,40 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         if (!asServer && _asc != null) _asc.SetCurrentAttributeValue(EAttributeType.Exp, next);
     }
 
+    // Vuelca todos los atributos actuales del ASC a sus SyncVars de una
+    // sola vez (ej: para forzar una resincronización completa).
+    [Server]
+    public void SyncAllAttributesToNet()
+    {
+        if (_asc == null) return;
+
+        _netHealth.Value    = _asc.GetAttributeValue(EAttributeType.Health);
+        _netMaxHealth.Value = _asc.GetAttributeValue(EAttributeType.MaxHealth);
+        _netMana.Value      = _asc.GetAttributeValue(EAttributeType.Mana);
+        _netMaxMana.Value   = _asc.GetAttributeValue(EAttributeType.MaxMana);
+        _netEnergy.Value    = _asc.GetAttributeValue(EAttributeType.Energy);
+        _netShield.Value    = _asc.GetAttributeValue(EAttributeType.Shield);
+        _netLevel.Value     = _asc.GetAttributeValue(EAttributeType.Level);
+        _netExp.Value       = _asc.GetAttributeValue(EAttributeType.Exp);
+        _netTeamID.Value    = _asc.TeamID;
+    }
+
+    // =========================================================
+    // TAGS EN RED
+    // =========================================================
+
+    private void HandleTagAdded(EGameplayTag tag)
+    {
+        if (!IsServerInitialized) return;
+        NetTags.Add(tag);
+    }
+
+    private void HandleTagRemoved(EGameplayTag tag)
+    {
+        if (!IsServerInitialized) return;
+        NetTags.Remove(tag);
+    }
+
     // NetTags se llenaba del lado servidor (HandleTagAdded/HandleTagRemoved)
     // pero nada aplicaba esos cambios de vuelta al ASC local del cliente.
     // Sin esto, HasTag() en la copia del dueño remoto nunca se entera de
@@ -334,10 +372,151 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         }
     }
 
+    // En los clientes, aplica al ASC local cada stat derivado que cambió en
+    // el servidor (ver NetStats). Así la UI (MaxHealth), el movimiento
+    // (MovSpeed) y las animaciones (AtkSpeed) del jugador reflejan sus buffs.
+    private void OnNetStatChanged(SyncDictionaryOperation op, EAttributeType key, float value, bool asServer)
+    {
+        if (asServer || _asc == null) return;
+
+        if (op == SyncDictionaryOperation.Add || op == SyncDictionaryOperation.Set)
+            _asc.SetCurrentAttributeValue(key, value);
+    }
+
     // =========================================================
-    // ASIGNACIÓN DE EQUIPO (el GameManager llama esto en el servidor)
+    // COOLDOWNS EN RED
     // =========================================================
 
+    // Publica el tick de inicio y la duración total del cooldown vigente
+    // de una habilidad (o limpia la entrada si ya no está en cooldown).
+    [Server]
+    private void SyncCooldownForSlot(EAbilityInput slot)
+    {
+        GameplayAbility ability = FindAbilityBySlot(slot);
+        if (ability == null) return;
+
+        if (_asc.GetCooldownStatus(ability, out float remaining, out float total))
+        {
+            // BUG QUE ARREGLAMOS: acá antes se mandaba "remaining" como si
+            // fuera la duración TOTAL y "ahora" como tick de inicio. Como
+            // esto se re-sincroniza cada CooldownSyncInterval, el "total"
+            // (denominador de la barra en la UI) se achicaba a lo que
+            // quedaba en cada barrido, y el tick de inicio se reiniciaba a
+            // "ahora" — la barra saltaba a casi llena y se vaciaba de nuevo
+            // cada 0.25s en vez de vaciarse una sola vez a lo largo de todo
+            // el cooldown real (se veía como si "recargara" varias veces).
+            //
+            // Mandamos la duración TOTAL real (constante durante todo el
+            // cooldown) y reconstruimos el tick de inicio a partir de cuánto
+            // ya transcurrió (total - remaining), no "ahora". Así, si algo
+            // reduce el cooldown a mitad de camino (ChargeUltimate /
+            // ReduceCooldownByTag, que solo tocan el remaining, no el total),
+            // el próximo barrido corrige el tiempo restante sin resetear la
+            // barra visualmente.
+            uint elapsedTicks = TimeManager.TimeToTicks(Mathf.Max(0f, total - remaining));
+            NetCooldownStartTick[slot] = TimeManager.Tick > elapsedTicks ? TimeManager.Tick - elapsedTicks : 0;
+            NetCooldownDuration[slot]  = total;
+        }
+        else if (NetCooldownDuration.ContainsKey(slot))
+        {
+            NetCooldownStartTick.Remove(slot);
+            NetCooldownDuration.Remove(slot);
+        }
+    }
+
+    // Usado por la UI (UI_AbilitySlot / UI_UltimateSlot) para leer el
+    // cooldown real sin depender del ASC local (que en el cliente remoto
+    // nunca tiene ActiveEffects poblado).
+    public bool TryGetNetCooldown(EAbilityInput slot, out float remaining, out float total)
+    {
+        remaining = 0f;
+
+        if (!NetCooldownDuration.TryGetValue(slot, out total)) { total = 0f; return false; }
+        if (!NetCooldownStartTick.TryGetValue(slot, out uint startTick)) return false;
+
+        uint   elapsedTicks   = TimeManager.Tick > startTick ? (TimeManager.Tick - startTick) : 0;
+        double elapsedSeconds = TimeManager.TicksToTime(elapsedTicks);
+
+        remaining = Mathf.Max(0f, total - (float)elapsedSeconds);
+        return remaining > 0f;
+    }
+
+    // =========================================================
+    // EFECTOS ACTIVOS EN RED (buffs/debuffs)
+    // =========================================================
+
+    private void HandleActiveEffectAdded(GameplayEffect effect, float totalDuration)
+    {
+        if (!IsServerInitialized) return;
+        // Los efectos "Hidden" son mecánicas internas (ej: el propio
+        // CooldownEffect, que ya se sincroniza aparte) — no deben mostrar
+        // icono en la barra de buffs/debuffs.
+        if (effect.EffectType == GameplayEffect.EEffectType.Hidden) return;
+
+        int index = ResolveEffectIndex(effect);
+        if (index < 0) return;
+
+        NetActiveEffectStartTick[index] = TimeManager.Tick;
+        NetActiveEffectDuration[index]  = totalDuration;
+    }
+
+    private void HandleActiveEffectRemoved(GameplayEffect effect)
+    {
+        if (!IsServerInitialized) return;
+
+        int index = ResolveEffectIndex(effect);
+        if (index < 0) return;
+
+        NetActiveEffectStartTick.Remove(index);
+        NetActiveEffectDuration.Remove(index);
+    }
+
+    // Busca el índice de un GameplayEffect en GameplayEffectRegistry (ver
+    // esa clase). Logea un warning si el registro no existe o el efecto
+    // no está registrado — en ambos casos, el efecto sigue funcionando en
+    // gameplay, solo no sincroniza su icono.
+    private int ResolveEffectIndex(GameplayEffect effect)
+    {
+        GameplayEffectRegistry registry = GameplayEffectRegistry.Instance;
+        if (registry == null)
+        {
+            Debug.LogWarning("[NetworkASC] No se encontró GameplayEffectRegistry en Resources — la barra de buffs/debuffs no se va a sincronizar a los clientes remotos.");
+            return -1;
+        }
+
+        int index = registry.GetIndex(effect);
+        if (index < 0)
+            Debug.LogWarning($"[NetworkASC] '{effect.name}' no está en GameplayEffectRegistry — su icono no se sincronizará a los clientes remotos.");
+
+        return index;
+    }
+
+    // Usado por UI_EffectContainer para saber qué efectos (índices de
+    // GameplayEffectRegistry) están activos ahora mismo en este ASC.
+    public IEnumerable<int> GetActiveEffectIndices() => NetActiveEffectDuration.Keys;
+
+    // Igual que TryGetNetCooldown pero para un efecto activo (buff/debuff)
+    // identificado por su índice en GameplayEffectRegistry.
+    public bool TryGetNetActiveEffect(int effectIndex, out float remaining, out float total)
+    {
+        remaining = 0f;
+
+        if (!NetActiveEffectDuration.TryGetValue(effectIndex, out total)) { total = 0f; return false; }
+        if (!NetActiveEffectStartTick.TryGetValue(effectIndex, out uint startTick)) return false;
+
+        uint   elapsedTicks   = TimeManager.Tick > startTick ? (TimeManager.Tick - startTick) : 0;
+        double elapsedSeconds = TimeManager.TicksToTime(elapsedTicks);
+
+        remaining = Mathf.Max(0f, total - (float)elapsedSeconds);
+        return remaining > 0f;
+    }
+
+    // =========================================================
+    // EQUIPOS
+    // =========================================================
+
+    // Asigna el equipo de este personaje (lo llama NetworkGameManager al
+    // spawnearlo) y lo sincroniza a los clientes.
     [Server]
     public void AssignTeam(int teamID)
     {
@@ -352,6 +531,8 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // como ServerRpc. El servidor valida y ejecuta.
     // =========================================================
 
+    // Valida y ejecuta la habilidad de un slot, y avisa a los
+    // observadores remotos que reproduzcan la animación.
     [ServerRpc]
     public void ServerRequestActivateAbility(EAbilityInput inputSlot, Vector3 aimPoint)
     {
@@ -381,6 +562,24 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         ObserversPlayAbilityAnimation(inputSlot);
     }
 
+    // Reproduce la animación de la habilidad en los observadores remotos
+    // (el dueño ya la disparó localmente al presionar el botón).
+    [ObserversRpc]
+    private void ObserversPlayAbilityAnimation(EAbilityInput inputSlot)
+    {
+        if (IsOwner) return;
+
+        GameplayAbility ability = FindAbilityBySlot(inputSlot);
+        if (ability == null) return;
+
+        Animator anim = GetComponentInChildren<Animator>();
+        if (anim != null && !string.IsNullOrEmpty(ability.AnimationTriggerName))
+        {
+            anim.SetInteger("ActionID", ability.AnimationID);
+            anim.SetTrigger(ability.AnimationTriggerName);
+        }
+    }
+
     // =========================================================
     // FIN DE HABILIDAD — avisar al dueño real (isAttacking es local,
     // no un SyncVar, así que si no le avisamos por red al dueño remoto,
@@ -404,21 +603,167 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         if (pc != null) pc.FinishAttack();
     }
 
-    [ObserversRpc]
-    private void ObserversPlayAbilityAnimation(EAbilityInput inputSlot)
-    {
-        // El dueño ya disparó la animación localmente al presionar el botón
-        if (IsOwner) return;
+    // =========================================================
+    // SALTO (GA_LeapAttack) — TODA la orquestación de esta habilidad vive
+    // acá, no en PlayerController. Ese script solo expone primitivas
+    // genéricas de movimiento (ApplyAbilityVelocity/ClearAbilityVelocity/
+    // IsGrounded) — no sabe qué es "GA_LeapAttack" ni cuándo termina.
+    //
+    // PlayerController tampoco puede saberlo: su Update() está bloqueado
+    // con IsOwner, así que la física del salto (y por lo tanto detectar
+    // cuándo aterriza) solo puede correr en el proceso DUEÑO. Y
+    // GA_LeapAttack.Activate() tampoco puede correr ahí — como toda
+    // GameplayAbility en este proyecto, Activate() es server-only. Este
+    // componente es el único lugar que existe en ambos lados (llega el
+    // TargetRpc del servidor Y corre en el proceso dueño), así que acá es
+    // donde tiene que vivir el puente entre las dos partes.
+    //
+    // Flujo: GA_LeapAttack.Activate() (servidor) -> ServerStartLeap() ->
+    // TargetExecuteLeap() (solo a la conexión dueña, calcula la dirección
+    // con SU cámara) -> WaitForLandingThenResolve() (corutina local del
+    // dueño, espera a que IsGrounded vuelva a true) -> ServerResolveLeapImpact()
+    // -> el servidor resuelve el daño con la MISMA instancia de
+    // GA_LeapAttack que se guardó en ServerStartLeap().
+    // =========================================================
 
-        GameplayAbility ability = FindAbilityBySlot(inputSlot);
+    // Guarda la habilidad pendiente y manda el TargetRpc a la conexión dueña.
+    [Server]
+    public void ServerStartLeap(GA_LeapAttack ability, float upVelocity, float forwardForce)
+    {
+        _pendingLeapImpact = ability;
+        TargetExecuteLeap(Owner, upVelocity, forwardForce);
+    }
+
+    // Solo corre en el cliente dueño: calcula la dirección del salto con
+    // SU cámara y le pide a PlayerController que aplique el impulso.
+    [TargetRpc]
+    private void TargetExecuteLeap(NetworkConnection conn, float upVelocity, float forwardForce)
+    {
+        PlayerController pc = GetComponent<PlayerController>();
+        if (pc == null) { Debug.LogWarning("[NetASC] No hay PlayerController — no se puede ejecutar el salto."); return; }
+        if (Camera.main == null) { Debug.LogWarning("[NetASC] Camera.main es null — no se puede calcular la dirección del salto."); return; }
+
+        Vector3 camFwd = Camera.main.transform.forward;
+        camFwd.y = 0;
+        camFwd.Normalize();
+
+        if (pc.ApplyAbilityVelocity(camFwd * forwardForce, upVelocity))
+            StartCoroutine(WaitForLandingThenResolve(pc));
+    }
+
+    // Espera a que el dueño despegue del piso y después a que vuelva a
+    // aterrizar, y recién ahí le pide al servidor que resuelva el impacto.
+    private IEnumerator WaitForLandingThenResolve(PlayerController pc)
+    {
+        // BUG QUE ARREGLAMOS: acá había un solo "frame de gracia" antes de
+        // chequear IsGrounded una vez. El orden entre el Update() de
+        // PlayerController (que recién ahí aplica el impulso hacia arriba
+        // vía Move()) y la reanudación de esta corutina no está garantizado
+        // — si esa primera lectura llegaba a pasar ANTES de que el
+        // CharacterController realmente despegara, el while de abajo nunca
+        // entraba y resolvíamos el impacto instantáneamente en el punto de
+        // DESPEGUE en vez del de ATERRIZAJE, así que casi nunca había un
+        // enemigo cerca.
+        //
+        // Solución: esperar explícitamente la transición "despegó" antes de
+        // esperar la transición "aterrizó" — así no importa el orden de
+        // ejecución entre scripts, solo importa el estado real de
+        // IsGrounded. El timeout es un salvavidas por si algo (ej. un
+        // obstáculo encima) impide despegar del todo.
+        float elapsed = 0f;
+        const float liftoffTimeout = 1f;
+        while (pc.IsGrounded && elapsed < liftoffTimeout)
+        {
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        if (elapsed >= liftoffTimeout)
+            Debug.LogWarning("[NetASC] Salto: nunca detecté el despegue (timeout) — probablemente algo bloqueó el impulso hacia arriba.");
+
+        while (!pc.IsGrounded)
+            yield return null;
+
+        pc.ClearAbilityVelocity();
+        pc.FinishAttack();
+        ServerResolveLeapImpact();
+    }
+
+    // Resuelve el daño en área del aterrizaje, con la instancia de
+    // GA_LeapAttack guardada en ServerStartLeap.
+    [ServerRpc]
+    private void ServerResolveLeapImpact()
+    {
+        _pendingLeapImpact?.ExecuteImpactCheck();
+        _pendingLeapImpact = null;
+    }
+
+    // =========================================================
+    // VFX DE HABILIDAD — replicar impactos/efectos a todos los clientes
+    //
+    // GameplayAbility.PlayImpactVFX() solo hace un Instantiate() local —
+    // si algo lo llama desde el servidor (donde corre toda la lógica de
+    // daño), ese VFX solo existe en el proceso servidor y ningún cliente
+    // remoto lo ve (mismo problema que tuvimos con el arma del proyectil).
+    //
+    // No podemos mandar la referencia al GameObject del VFX por RPC
+    // (FishNet no serializa assets arbitrarios), así que en vez de eso
+    // identificamos la habilidad por su SLOT (igual que FindAbilityBySlot
+    // para cooldowns) y cada peer reproduce el VFX con SU PROPIA copia
+    // local de esa misma habilidad.
+    // =========================================================
+
+    // Reproduce el VFX de impacto puntual de una habilidad en el servidor
+    // y le avisa a los demás peers que hagan lo mismo con su propia copia.
+    [Server]
+    public void ServerPlayAbilityVFX(GameplayAbility ability, Vector3 position)
+    {
         if (ability == null) return;
 
-        Animator anim = GetComponentInChildren<Animator>();
-        if (anim != null && !string.IsNullOrEmpty(ability.AnimationTriggerName))
-        {
-            anim.SetInteger("ActionID", ability.AnimationID);
-            anim.SetTrigger(ability.AnimationTriggerName);
-        }
+        // El servidor reproduce el suyo ya mismo (importa para el host).
+        ability.PlayImpactVFX(position);
+
+        EAbilityInput slot = FindSlotForAbility(ability);
+        if (slot != EAbilityInput.None)
+            ObserversPlayAbilityVFX(slot, position);
+    }
+
+    [ObserversRpc]
+    private void ObserversPlayAbilityVFX(EAbilityInput slot, Vector3 position)
+    {
+        // El servidor ya lo reprodujo en ServerPlayAbilityVFX() de arriba.
+        if (IsServerInitialized) return;
+
+        GameplayAbility ability = FindAbilityBySlot(slot);
+        ability?.PlayImpactVFX(position);
+    }
+
+    // Igual que ServerPlayAbilityVFX, pero para la secuencia automática de
+    // GameplayAbility.VisualsSequence (CommitAbility) en vez de un único
+    // impacto puntual. Como PlayVisualsSequence() ya calcula todo (delays,
+    // offsets, destrucción) a partir de OwnerASC.transform/tags — que están
+    // igual en todos los peers — alcanza con arrancar la MISMA corutina en
+    // cada uno; no hace falta sincronizar nada más.
+    [Server]
+    public void ServerPlayAbilityVisualsSequence(GameplayAbility ability)
+    {
+        if (ability == null || _asc == null) return;
+
+        _asc.StartAbilityCoroutine(ability.PlayVisualsSequence());
+
+        EAbilityInput slot = FindSlotForAbility(ability);
+        if (slot != EAbilityInput.None)
+            ObserversPlayAbilityVisualsSequence(slot);
+    }
+
+    [ObserversRpc]
+    private void ObserversPlayAbilityVisualsSequence(EAbilityInput slot)
+    {
+        // El servidor ya la arrancó en ServerPlayAbilityVisualsSequence() de arriba.
+        if (IsServerInitialized || _asc == null) return;
+
+        GameplayAbility ability = FindAbilityBySlot(slot);
+        if (ability != null) _asc.StartAbilityCoroutine(ability.PlayVisualsSequence());
     }
 
     // =========================================================
@@ -451,6 +796,13 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         if (anim != null) anim.SetTrigger("Revive");
     }
 
+    // Revive al personaje (lo llama NetworkGameManager al respawnearlo).
+    [Server]
+    public void Revive()
+    {
+        if (_asc != null) _asc.Revive();
+    }
+
     // =========================================================
     // EXPERIENCIA (el servidor la otorga, ej. al matar enemigo)
     // =========================================================
@@ -462,39 +814,13 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     }
 
     // =========================================================
-    // REVIVIR DESDE RED (llamado por NetworkGameManager)
-    // =========================================================
-
-    [Server]
-    public void Revive()
-    {
-        if (_asc != null) _asc.Revive();
-    }
-
-    // =========================================================
-    // SINCRONIZAR TODOS LOS ATRIBUTOS AL SERVIDOR
-    // =========================================================
-
-    [Server]
-    public void SyncAllAttributesToNet()
-    {
-        if (_asc == null) return;
-
-        _netHealth.Value    = _asc.GetAttributeValue(EAttributeType.Health);
-        _netMaxHealth.Value = _asc.GetAttributeValue(EAttributeType.MaxHealth);
-        _netMana.Value      = _asc.GetAttributeValue(EAttributeType.Mana);
-        _netMaxMana.Value   = _asc.GetAttributeValue(EAttributeType.MaxMana);
-        _netEnergy.Value    = _asc.GetAttributeValue(EAttributeType.Energy);
-        _netShield.Value    = _asc.GetAttributeValue(EAttributeType.Shield);
-        _netLevel.Value     = _asc.GetAttributeValue(EAttributeType.Level);
-        _netExp.Value       = _asc.GetAttributeValue(EAttributeType.Exp);
-        _netTeamID.Value    = _asc.TeamID;
-    }
-
-    // =========================================================
     // UTILIDADES INTERNAS
     // =========================================================
 
+    // Resuelve, a partir de un slot, la instancia de habilidad otorgada a
+    // este personaje (buscando en CurrentClass.Abilities qué template
+    // corresponde a ese slot, y matcheándolo por nombre contra
+    // GrantedAbilities).
     private GameplayAbility FindAbilityBySlot(EAbilityInput slot)
     {
         if (_asc == null || _asc.CurrentClass == null) return null;
@@ -513,5 +839,18 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         return null;
     }
 
-    
+    // Inverso de FindAbilityBySlot: dada una instancia otorgada, en qué slot
+    // vive — para poder mandarla por RPC como EAbilityInput (serializable)
+    // en vez de la instancia en sí (no lo es). Usado por ServerPlayAbilityVFX
+    // y ServerPlayAbilityVisualsSequence.
+    private EAbilityInput FindSlotForAbility(GameplayAbility ability)
+    {
+        if (_asc == null || _asc.CurrentClass == null || ability == null) return EAbilityInput.None;
+
+        foreach (var assignment in _asc.CurrentClass.Abilities)
+            if (assignment.Ability != null && assignment.Ability.AbilityName == ability.AbilityName)
+                return assignment.InputSlot;
+
+        return EAbilityInput.None;
+    }
 }
