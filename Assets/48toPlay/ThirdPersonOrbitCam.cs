@@ -17,6 +17,13 @@ public class ThirdPersonOrbitCam : MonoBehaviour
     public float MinY = -30f; // Límite mirar abajo
     public float MaxY = 60f;  // Límite mirar arriba
 
+    [Header("Input - Control (stick derecho)")]
+    // El stick manda un valor constante (-1 a 1) mientras se mantiene
+    // inclinado, a diferencia del mouse que manda un delta puntual — por
+    // eso necesita su propia sensibilidad y se multiplica por
+    // Time.deltaTime (grados por segundo), no se suma directo como el mouse.
+    public float GamepadSensitivity = 120f;
+
     private float rotX = 0f;
     private float rotY = 0f;
 
@@ -42,6 +49,14 @@ public class ThirdPersonOrbitCam : MonoBehaviour
         {
             rotY += Input.GetAxis("Mouse X") * SensitivityX;
             rotX -= Input.GetAxis("Mouse Y") * SensitivityY;
+
+            // Stick derecho del control (LookX/LookY, ver ProjectSettings/Input
+            // Manager). Es un valor sostenido, no un delta, así que se escala
+            // por Time.deltaTime para que gire a una velocidad constante en
+            // grados/segundo sin importar el framerate.
+            rotY += Input.GetAxis("LookX") * GamepadSensitivity * Time.deltaTime;
+            rotX -= Input.GetAxis("LookY") * GamepadSensitivity * Time.deltaTime;
+
             rotX = Mathf.Clamp(rotX, MinY, MaxY);
         }
 

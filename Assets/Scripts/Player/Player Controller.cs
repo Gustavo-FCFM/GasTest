@@ -188,7 +188,7 @@ public class PlayerController : NetworkBehaviour
 
         if (ASC.HasTag(EGameplayTag.State_Dead))
         {
-            if (Input.GetKeyDown(KeyCode.R) && AbilityR != null && AbilityR.CanActivate())
+            if (Input.GetButtonDown("Action3") && AbilityR != null && AbilityR.CanActivate())
                 RequestAbility(EAbilityInput.Action3);
             return;
         }
@@ -317,12 +317,12 @@ public class PlayerController : NetworkBehaviour
         if (ASC.HasTag(EGameplayTag.State_Silenced)) return;
         if (isAttacking && !isRadialMenuOpen) return;
 
-        CheckAbilityButton("Fire3",  MovementAbility,      EAbilityInput.Movement);
-        CheckAbilityKey(KeyCode.Q,   AbilityQ,             EAbilityInput.Action1);
-        CheckAbilityKey(KeyCode.E,   AbilityE,             EAbilityInput.Action2);
-        CheckAbilityKey(KeyCode.R,   AbilityR,             EAbilityInput.Action3);
-        CheckAbilityButton("Fire1",  PrimaryAttackAbility, EAbilityInput.PrimaryAttack);
-        CheckAbilityButton("Fire2",  AimAbility,           EAbilityInput.SecondaryAttack);
+        CheckAbilityButton("Fire3",   MovementAbility,      EAbilityInput.Movement);
+        CheckAbilityButton("Action1", AbilityQ,             EAbilityInput.Action1);
+        CheckAbilityButton("Action2", AbilityE,             EAbilityInput.Action2);
+        CheckAbilityButton("Action3", AbilityR,             EAbilityInput.Action3);
+        CheckAbilityButton("Fire1",   PrimaryAttackAbility, EAbilityInput.PrimaryAttack);
+        CheckAbilityButton("Fire2",   AimAbility,           EAbilityInput.SecondaryAttack);
     }
 
     // Detecta presionar/soltar una tecla asignada a una habilidad.
