@@ -4,17 +4,18 @@ using TMPro;
 // ============================================================
 // LevelUpSelectionSystem
 //
-// Muestra un panel de selección de subclase cuando el jugador llega
-// al nivel máximo (OnMaxLevelReached), y aplica la subclase elegida
-// con las teclas 1/2/3. Es un sistema de un solo jugador local: no
-// filtra por dueño de red, así que en multijugador puede engancharse
-// al primer objeto con tag "Player" que encuentre.
+// Muestra un panel de selección de subclase cuando el jugador dueño
+// llega al nivel máximo (OnMaxLevelReached), y aplica la subclase
+// elegida con las teclas 1/2/3. En multijugador se ata al jugador
+// LOCAL vía Initialize(), que llama PlayerController al spawnear
+// (mismo patrón que UI_PlayerHUD.InitializeHUD) — no por tag, porque
+// en Start() los jugadores todavía no existen y habría varios.
 // ============================================================
 public class LevelUpSelectionSystem : MonoBehaviour
 {
     [Header("Referencias")]
-    // Jugador a observar. Si se deja vacío, se busca automáticamente por
-    // tag "Player" en Start().
+    // Jugador dueño local. Lo asigna Initialize() en runtime; solo dejalo
+    // puesto a mano en escenas de un solo jugador sin red.
     public PlayerController player;
     // Panel/texto que se muestra mientras está activo el modo selección.
     public GameObject selectionVisuals;
@@ -25,31 +26,33 @@ public class LevelUpSelectionSystem : MonoBehaviour
     // True mientras se están esperando las teclas 1/2/3 para elegir subclase.
     private bool isSelectionActive = false;
 
-    // Busca al jugador si no está asignado y se suscribe a su evento de
-    // nivel máximo.
+    // Arranca oculto. Si hay un player pre-asignado (escena sin red), se
+    // engancha directo; si no, espera a que PlayerController llame Initialize().
     void Start()
     {
         if (selectionVisuals) selectionVisuals.SetActive(false);
-
-        if (player == null)
-        {
-            var p = GameObject.FindGameObjectWithTag("Player");
-            if (p) player = p.GetComponent<PlayerController>();
-        }
-
-        if (player != null)
-        {
-            playerASC = player.GetComponent<AbilitySystemComponent>();
-            if (playerASC != null)
-            {
-                playerASC.OnMaxLevelReached += EnableSelectionMode;
-            }
-        }
+        if (player != null) Initialize(player);
     }
 
     void OnDestroy()
     {
         if (playerASC != null) playerASC.OnMaxLevelReached -= EnableSelectionMode;
+    }
+
+    // Ata este sistema al jugador dado y se suscribe a su nivel máximo. La
+    // llama PlayerController (para el dueño local) al spawnear. Solo acepta
+    // al dueño: en multijugador hay un PlayerController por jugador y cada
+    // pantalla maneja la selección de SU propio jugador.
+    public void Initialize(PlayerController ownerPlayer)
+    {
+        if (ownerPlayer == null) return;
+        if (ownerPlayer.IsSpawned && !ownerPlayer.IsOwner) return; // en red, solo el dueño local
+
+        if (playerASC != null) playerASC.OnMaxLevelReached -= EnableSelectionMode;
+
+        player = ownerPlayer;
+        playerASC = player.GetComponent<AbilitySystemComponent>();
+        if (playerASC != null) playerASC.OnMaxLevelReached += EnableSelectionMode;
     }
 
     // Mientras el modo selección está activo, revisa las teclas 1/2/3

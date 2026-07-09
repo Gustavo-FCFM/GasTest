@@ -61,8 +61,8 @@ public class GA_ContinuousAoE : GameplayAbility
         }
     }
 
-    // Espera StartDelay (ajustado por velocidad de ataque), corre el área
-    // hasta que termina, y finaliza la habilidad.
+    // Espera StartDelay (ajustado por velocidad de ataque), libera al jugador,
+    // y deja el área corriendo en segundo plano hasta que termina.
     private IEnumerator AoESequence()
     {
         float speedMultiplier = 1f;
@@ -72,9 +72,15 @@ public class GA_ContinuousAoE : GameplayAbility
         if (StartDelay > 0)
             yield return new WaitForSeconds(StartDelay / speedMultiplier);
 
-        yield return OwnerASC.StartCoroutine(AreaRoutine());
-
+        // Liberamos al jugador (EndAbility → isAttacking=false) APENAS arranca
+        // el área, no al final. Este AoE es una zona persistente que dura
+        // TotalDuration y puede seguir al dueño — no un canalizado. Antes se
+        // llamaba EndAbility recién al terminar el área, así que el jugador
+        // quedaba sin poder actuar toda la duración (ej. los 10s del Whirlwind),
+        // o trabado para siempre si la corutina se interrumpía antes.
         EndAbility();
+
+        yield return OwnerASC.StartCoroutine(AreaRoutine());
     }
 
     // Reproduce el VFX del área, y cada TickInterval revisa quién está

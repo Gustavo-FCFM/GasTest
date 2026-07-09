@@ -531,8 +531,9 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // como ServerRpc. El servidor valida y ejecuta.
     // =========================================================
 
-    // Valida y ejecuta la habilidad de un slot, y avisa a los
-    // observadores remotos que reproduzcan la animación.
+    // Valida y ejecuta la habilidad de un slot, y replica su animación a los
+    // observadores. El dueño ya la disparó por predicción (o, en el host, vía
+    // Activate()); ObserversPlayAbilityAnimation la reproduce en los demás.
     [ServerRpc]
     public void ServerRequestActivateAbility(EAbilityInput inputSlot, Vector3 aimPoint)
     {
@@ -559,25 +560,36 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         if (pc != null) pc.NetworkAimPoint = aimPoint;
 
         ability.Activate();
-        ObserversPlayAbilityAnimation(inputSlot);
+        ObserversPlayAbilityAnimation(ability.AnimationTriggerName, ability.AnimationID);
     }
 
-    // Reproduce la animación de la habilidad en los observadores remotos
-    // (el dueño ya la disparó localmente al presionar el botón).
+    // El NetworkAnimator del prefab NO sincroniza los SetTrigger de forma
+    // confiable (los triggers se consumen antes de que pueda muestrearlos —
+    // solo replica floats/bools como Speed/IsJumping, o sea la locomoción).
+    // Por eso la animación de ataque se propaga a los observadores con este
+    // ObserversRpc explícito. Al dueño se la salteamos: él ya la disparó por
+    // predicción (cliente remoto) o vía Activate() (host). Setea el Animator
+    // directo, sin pasar por PlayerController.PlayAnimation, porque ese método
+    // tiene un guard de IsOwner que justamente bloquea las copias ajenas.
     [ObserversRpc]
-    private void ObserversPlayAbilityAnimation(EAbilityInput inputSlot)
+    private void ObserversPlayAbilityAnimation(string trigger, int actionID)
     {
         if (IsOwner) return;
 
-        GameplayAbility ability = FindAbilityBySlot(inputSlot);
-        if (ability == null) return;
-
         Animator anim = GetComponentInChildren<Animator>();
-        if (anim != null && !string.IsNullOrEmpty(ability.AnimationTriggerName))
-        {
-            anim.SetInteger("ActionID", ability.AnimationID);
-            anim.SetTrigger(ability.AnimationTriggerName);
-        }
+        if (anim == null || string.IsNullOrEmpty(trigger)) return;
+
+        anim.SetInteger("ActionID", actionID);
+        anim.SetTrigger(trigger);
+    }
+
+    // Permite que otras rutas server-side (ej. habilidades de menú radial en
+    // PlayerController.ServerRequestRadialAbility) también repliquen su
+    // animación a los observadores.
+    [Server]
+    public void ServerBroadcastAbilityAnimation(string trigger, int actionID)
+    {
+        ObserversPlayAbilityAnimation(trigger, actionID);
     }
 
     // =========================================================
@@ -811,6 +823,39 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     public void ServerGainExperience(float amount)
     {
         if (_asc != null) _asc.GainExperience(amount);
+    }
+
+    // =========================================================
+    // CHEAT (debug) — subir al nivel máximo para probar subclases
+    //
+    // El dueño lo pide con una tecla/botón (ver PlayerController). El subir
+    // de nivel corre en el servidor (autoridad de atributos); después
+    // avisamos por TargetRpc al dueño para que la selección de subclase
+    // aparezca en SU pantalla (la UI escucha OnMaxLevelReached del ASC local,
+    // que de otro modo nunca se enteraría porque el level-up pasó en el server).
+    // =========================================================
+
+    [ServerRpc]
+    public void ServerCheatMaxLevel()
+    {
+        if (_asc == null) return;
+
+        // Si ya está al máximo, no hacemos nada — así apretar Alt de nuevo por
+        // accidente no vuelve a mostrar el anuncio/menú de nivel máximo.
+        if (_asc.GetAttributeValue(EAttributeType.Level) >= _asc.MaxLevel) return;
+
+        _asc.GainExperience(999999f); // sube al máximo (aplica el crecimiento de stats)
+        TargetCheatShowSubclass(Owner);
+    }
+
+    [TargetRpc]
+    private void TargetCheatShowSubclass(NetworkConnection conn)
+    {
+        // Corre en el proceso DUEÑO (host o cliente remoto). Dispara el evento
+        // en su ASC local para que aparezca la selección de subclase. Si es el
+        // host, GainExperience de arriba pudo haberlo disparado también, pero
+        // los suscriptores (UI) son idempotentes, así que no molesta.
+        if (_asc != null) _asc.TriggerMaxLevelReached();
     }
 
     // =========================================================

@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 
@@ -59,6 +60,14 @@ public class PlayerController : NetworkBehaviour
     // otras habilidades y el giro por movimiento normal.
     private bool isAttacking = false;
 
+    // Cuándo se puso isAttacking=true, para el watchdog de abajo. Si una
+    // habilidad no llama a FinishAttack (su corutina se interrumpió, etc.),
+    // el jugador quedaría sin poder actuar; el watchdog lo resetea tras un
+    // máximo razonable. No aplica al menú radial (que mantiene isAttacking a
+    // propósito hasta soltar el botón).
+    private float _attackStartTime;
+    private const float MaxAttackSeconds = 5f;
+
     // Instancias de habilidad otorgadas, una por slot (ver
     // EquipCharacterClass). [HideInInspector] porque se llenan en
     // runtime, no se configuran a mano.
@@ -109,6 +118,21 @@ public class PlayerController : NetworkBehaviour
         ASC                = GetComponent<AbilitySystemComponent>();
         NetASC             = GetComponent<NetworkAbilitySystemComponent>();
         characterController = GetComponent<CharacterController>();
+
+        // Los clips de ataque disparan Animation Events (AnimationEvent_EnableTrail,
+        // AnimationEvent_DisableTrail, AnimationEvent_HitFrame) sobre el GameObject
+        // que tiene el Animator — el modelo del personaje, NO esta raíz. Unity
+        // busca el método receptor solo en los componentes de ESE GameObject, así
+        // que necesita un PlayerAnimationEvents ahí (que reenvía a este script).
+        // Lo agregamos por código para que funcione aunque no esté puesto a mano
+        // en el prefab del modelo: si faltaba, la consola tiraba
+        // "AnimationEvent 'AnimationEvent_EnableTrail' has no receiver!" y el
+        // trail del arma nunca se activaba.
+        if (characterAnimator != null &&
+            characterAnimator.GetComponent<PlayerAnimationEvents>() == null)
+        {
+            characterAnimator.gameObject.AddComponent<PlayerAnimationEvents>();
+        }
     }
 
     // Equipa la clase inicial (a todos los peers, para que la visual esté
@@ -118,6 +142,12 @@ public class PlayerController : NetworkBehaviour
     {
         base.OnStartClient();
         spawnPosition = transform.position;
+
+        // Recibir los cambios de clase en runtime (evolución a subclase) para
+        // actualizar los visuales/arma en los observadores. Faltaba este
+        // suscribir (solo estaba el -= en OnStopClient), por eso los demás
+        // jugadores nunca veían el cambio de arma del otro al evolucionar.
+        _netClassIndex.OnChange += OnNetClassIndexChanged;
 
         // Seguro anti-errores: si el clon nace sin clase, forzamos la
         // primera clase disponible.
@@ -146,6 +176,16 @@ public class PlayerController : NetworkBehaviour
                     Cursor.lockState = CursorLockMode.Locked;
                     Cursor.visible = false;
                 }
+
+                // El LevelUpSelectionSystem vive en ESTE prefab de cámara, que
+                // se instancia acá — DESPUÉS de EquipCharacterClass/UpdateHUD.
+                // Por eso hay que engancharlo a este jugador dueño acá y no en
+                // UpdateHUD: allá la cámara todavía no existía y
+                // FindFirstObjectByType no lo encontraba (por eso el menú de
+                // subclase nunca aparecía). GetComponentInChildren(true) lo
+                // encuentra aunque su panel arranque inactivo.
+                LevelUpSelectionSystem levelUp = camObj.GetComponentInChildren<LevelUpSelectionSystem>(true);
+                if (levelUp != null) levelUp.Initialize(this);
             }
         }
         else
@@ -185,6 +225,26 @@ public class PlayerController : NetworkBehaviour
     void Update()
     {
         if (!IsOwner) return;
+
+        // CHEAT (debug): subir al nivel máximo para disparar la selección de
+        // subclase. Alt en teclado; JoystickButton6 (View/Back en un mando
+        // Xbox) en control — cambiá/ampliá esos KeyCode si querés otro botón.
+        if (Input.GetKeyDown(KeyCode.LeftAlt) || Input.GetKeyDown(KeyCode.RightAlt) ||
+            Input.GetKeyDown(KeyCode.JoystickButton6))
+        {
+            if (NetASC != null) NetASC.ServerCheatMaxLevel();
+        }
+
+        // Watchdog: si isAttacking quedó trabado (una habilidad no reseteó el
+        // estado — su corutina se interrumpió, no llegó el aviso de fin, etc.),
+        // lo liberamos tras un máximo razonable para no dejar al jugador sin
+        // poder actuar. El menú radial queda excluido (mantiene isAttacking a
+        // propósito hasta que soltás el botón).
+        if (isAttacking && !isRadialMenuOpen && Time.time - _attackStartTime > MaxAttackSeconds)
+        {
+            Debug.LogWarning("[PlayerController] isAttacking quedó trabado — reseteando (watchdog).");
+            FinishAttack();
+        }
 
         if (ASC.HasTag(EGameplayTag.State_Dead))
         {
@@ -325,18 +385,9 @@ public class PlayerController : NetworkBehaviour
         CheckAbilityButton("Fire2",   AimAbility,           EAbilityInput.SecondaryAttack);
     }
 
-    // Detecta presionar/soltar una tecla asignada a una habilidad.
-    private void CheckAbilityKey(KeyCode key, GameplayAbility ability, EAbilityInput slot)
-    {
-        if (ability == null) return;
-        if (Input.GetKeyDown(key))
-            ProcessAbilityPress(ability, slot);
-        else if (Input.GetKeyUp(key) && currentRadialAbility == ability)
-            ProcessAbilityRelease();
-    }
-
-    // Igual que CheckAbilityKey pero para botones configurados en el
-    // Input Manager (ej: "Fire1" = click izquierdo).
+    // Detecta presionar/soltar un botón (definido en el Input Manager)
+    // asignado a una habilidad. Al presionar la activa; al soltar cierra
+    // el menú radial si esta habilidad lo tenía abierto.
     private void CheckAbilityButton(string btn, GameplayAbility ability, EAbilityInput slot)
     {
         if (ability == null) return;
@@ -355,6 +406,7 @@ public class PlayerController : NetworkBehaviour
         {
             if (!ability.CanActivate()) return;
             isAttacking          = true;
+            _attackStartTime     = Time.time;
             isRadialMenuOpen     = true;
             currentRadialAbility = ability;
             if (UI_RadialMenu.Instance != null) UI_RadialMenu.Instance.Show(radial);
@@ -364,11 +416,21 @@ public class PlayerController : NetworkBehaviour
             if (ability.CanActivate())
             {
                 isAttacking = true;
-                // Predicción local: el ObserversRpc del servidor se salta al
-                // dueño (asume que ya la disparó acá), así que si no la
-                // disparamos nosotros mismos, el dueño remoto nunca ve/anima
-                // su propio ataque.
-                PlayAnimation(ability.AnimationTriggerName, ability.AnimationID);
+                _attackStartTime = Time.time;
+                // Predicción local SOLO en un cliente remoto (no host). El
+                // ObserversRpc del servidor se salta al dueño (asume que ya la
+                // disparó acá), así que sin esta predicción el dueño remoto
+                // nunca vería/animaría su propio ataque — de ahí que la
+                // necesitemos.
+                //
+                // PERO en el host, servidor y dueño son el MISMO objeto:
+                // ability.Activate() (que corre server-side este mismo frame)
+                // ya llama PlayAnimation. Si además predijéramos acá, el
+                // SetTrigger se dispararía DOS veces sobre el mismo Animator; el
+                // segundo trigger queda buffeado y reproduce el ataque una
+                // SEGUNDA vez solo, sin haber presionado nada.
+                if (!IsServerInitialized)
+                    PlayAnimation(ability.AnimationTriggerName, ability.AnimationID);
                 RequestAbility(slot);
             }
         }
@@ -383,10 +445,24 @@ public class PlayerController : NetworkBehaviour
             int     sel = UI_RadialMenu.Instance != null
                 ? UI_RadialMenu.Instance.HideAndGetSelection() : -1;
             Vector3 pos = GetAimPoint(radial.MaxRadialRange);
+
+            // Predicción local de la animación (mismo criterio que en
+            // ProcessAbilityPress): solo en cliente remoto, porque en el host
+            // la ActivateWithSelection del servidor ya la dispara. Sin esto,
+            // las habilidades de menú radial no dispararían su animación en
+            // ningún lado para el dueño remoto (no hay RPC de animación y el
+            // Activate del servidor se saltea por el guard de PlayAnimation).
+            if (sel != -1 && !IsServerInitialized)
+                PlayAnimation(currentRadialAbility.AnimationTriggerName,
+                              currentRadialAbility.AnimationID);
+
             ServerRequestRadialAbility(sel, pos);
         }
         isRadialMenuOpen     = false;
         currentRadialAbility = null;
+        // Reiniciar el reloj del watchdog: recién ahora isAttacking pasa a
+        // contar para el timeout (mientras el menú estuvo abierto no contaba).
+        _attackStartTime     = Time.time;
     }
 
     // Calcula el punto de mira y rota al dueño hacia él ANTES de pedirle
@@ -413,7 +489,8 @@ public class PlayerController : NetworkBehaviour
             ActivateAbilityBySlot(slot); // Fallback singleplayer
     }
 
-    // Ejecuta en el servidor la habilidad de menú radial elegida.
+    // Ejecuta en el servidor la habilidad de menú radial elegida y replica su
+    // animación a los observadores (el dueño ya la predijo en ProcessAbilityRelease).
     [ServerRpc]
     private void ServerRequestRadialAbility(int selectedIndex, Vector3 targetPosition)
     {
@@ -423,6 +500,9 @@ public class PlayerController : NetworkBehaviour
             {
                 if (!ability.CanActivate()) return;
                 radial.ActivateWithSelection(selectedIndex, targetPosition);
+
+                if (selectedIndex != -1 && NetASC != null)
+                    NetASC.ServerBroadcastAbilityAnimation(ability.AnimationTriggerName, ability.AnimationID);
                 return;
             }
         }
@@ -560,36 +640,79 @@ public class PlayerController : NetworkBehaviour
         }
     }
 
-    // Sincroniza el índice de clase elegido al SyncVar (el servidor lo
-    // recibe y lo replica a los observadores).
+    // Sincroniza el índice de clase elegido al SyncVar y, en la copia del
+    // SERVIDOR de un jugador remoto, equipa la clase completa (habilidades
+    // incluidas). Sin ese re-equip en el servidor, este seguía con las
+    // habilidades de la clase vieja y tiraba "No se encontró habilidad en
+    // slot ..." al intentar activar una habilidad de la subclase nueva.
     [ServerRpc]
-    private void ServerSetClass(int classIndex) => _netClassIndex.Value = classIndex;
+    private void ServerSetClass(int classIndex)
+    {
+        _netClassIndex.Value = classIndex;
 
-    // En los observadores remotos, aplica los visuales de la clase que
-    // el dueño acaba de equipar.
+        // Si somos el dueño (host), ya lo equipamos localmente en
+        // EquipCharacterClass. Para un jugador remoto, esta copia server-side
+        // necesita el equip completo (otorga las habilidades que después
+        // FindAbilityBySlot busca).
+        if (!IsOwner)
+        {
+            CharacterClassDefinition def = GetClassByIndex(classIndex);
+            if (def != null) EquipCharacterClass(def);
+        }
+    }
+
+    // En los CLIENTES-observadores puros, aplica los visuales de la clase que
+    // el dueño equipó. El dueño ya equipó localmente (se saltea con IsOwner) y
+    // el servidor lo hizo en ServerSetClass (se saltea con IsServerInitialized,
+    // así no duplicamos el UpdateVisuals ahí).
     private void OnNetClassIndexChanged(int prev, int next, bool asServer)
     {
-        if (IsOwner) return;
+        if (IsOwner || IsServerInitialized) return;
         CharacterClassDefinition def = GetClassByIndex(next);
         if (def != null) UpdateVisuals(def);
     }
 
-    // Busca la posición de una clase dentro de MainBaseClasses (para
-    // mandar su índice por red).
-    private int GetClassIndex(CharacterClassDefinition def)
+    // Lista plana de TODAS las clases (base + subclases, recursivo) usada para
+    // sincronizar el cambio de clase por índice. Se construye igual en todos
+    // los peers (mismos assets, mismo MainBaseClasses), así que el índice
+    // significa lo mismo para todos. Antes se usaba MainBaseClasses directo,
+    // que NO incluye las subclases → al evolucionar, GetClassIndex daba -1 y el
+    // cambio (arma incluida) nunca se sincronizaba.
+    private List<CharacterClassDefinition> _allClasses;
+    private List<CharacterClassDefinition> AllClasses
     {
-        if (MainBaseClasses == null) return -1;
-        for (int i = 0; i < MainBaseClasses.Length; i++)
-            if (MainBaseClasses[i] == def) return i;
-        return -1;
+        get
+        {
+            if (_allClasses == null)
+            {
+                _allClasses = new List<CharacterClassDefinition>();
+                if (MainBaseClasses != null)
+                    foreach (var c in MainBaseClasses) AddClassRecursive(c);
+            }
+            return _allClasses;
+        }
     }
 
-    // Inverso de GetClassIndex: resuelve un índice recibido por red de
-    // vuelta a la CharacterClassDefinition real.
+    // Agrega una clase y sus subclases (en profundidad) a _allClasses, sin
+    // duplicar. El orden es determinístico, así que el índice es estable
+    // entre peers.
+    private void AddClassRecursive(CharacterClassDefinition c)
+    {
+        if (c == null || _allClasses.Contains(c)) return;
+        _allClasses.Add(c);
+        if (c.AvailableSubclasses != null)
+            foreach (var sub in c.AvailableSubclasses) AddClassRecursive(sub);
+    }
+
+    // Índice de una clase en la lista plana (para mandarlo por red). -1 si no
+    // está (no debería pasar si la clase deriva de alguna base).
+    private int GetClassIndex(CharacterClassDefinition def) => AllClasses.IndexOf(def);
+
+    // Inverso: resuelve un índice recibido por red de vuelta a la clase real.
     private CharacterClassDefinition GetClassByIndex(int idx)
     {
-        if (MainBaseClasses == null || idx < 0 || idx >= MainBaseClasses.Length) return null;
-        return MainBaseClasses[idx];
+        if (idx < 0 || idx >= AllClasses.Count) return null;
+        return AllClasses[idx];
     }
 
     // Reemplaza el animator override y las armas equipadas según la
@@ -652,6 +775,19 @@ public class PlayerController : NetworkBehaviour
     public void PlayAnimation(string trigger, int actionID)
     {
         if (characterAnimator == null || string.IsNullOrEmpty(trigger)) return;
+
+        // Este método solo dispara la animación en la copia DUEÑA. Para los
+        // observadores, NetworkAbilitySystemComponent.ObserversPlayAbilityAnimation
+        // la replica aparte (el NetworkAnimator no sincroniza triggers).
+        //
+        // El guard es clave: ability.Activate() corre en el SERVIDOR y llama a
+        // PlayAnimation sobre la copia server-side del jugador. En el host, que
+        // renderiza esa copia, eso se sumaba al ObserversRpc y mostraba la
+        // animación del otro jugador dos veces. Con el guard, el Activate()
+        // server-side no toca copias ajenas. IsSpawned lo deja pasar en escenas
+        // sin red (pruebas locales sin NetworkObject spawneado).
+        if (IsSpawned && !IsOwner) return;
+
         characterAnimator.SetInteger("ActionID", actionID);
         characterAnimator.SetTrigger(trigger);
     }
@@ -664,7 +800,14 @@ public class PlayerController : NetworkBehaviour
     // en el frame exacto que marque el clip de animación.
     public void AnimationEvent_EnableTrail()
     {
-        if (currentWeaponTrail != null) currentWeaponTrail.SetActive(true);
+        if (currentWeaponTrail == null) return;
+        currentWeaponTrail.SetActive(true);
+
+        // Limpiar cada TrailRenderer al activarlo, para que no dibuje una
+        // "raya" recta desde la última posición que tenía (antes de
+        // reactivarse) hasta la posición actual del arma.
+        foreach (var tr in currentWeaponTrail.GetComponentsInChildren<TrailRenderer>(true))
+            tr.Clear();
     }
     public void AnimationEvent_DisableTrail()
     {
