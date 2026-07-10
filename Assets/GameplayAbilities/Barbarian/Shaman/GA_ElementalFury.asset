@@ -18,7 +18,7 @@ MonoBehaviour:
   CooldownEffect: {fileID: 11400000, guid: 4165da9d9de274a4aa511261df047340, type: 2}
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 0
-  ActivationBlockedTags: 03000000
+  ActivationBlockedTags: 0300000002000000
   AnimationTriggerName: AttackTrigger
   AnimationID: 4
   AbilityRadius: 3

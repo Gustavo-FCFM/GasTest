@@ -120,6 +120,21 @@ public class AbilitySystemComponent : MonoBehaviour
             OnTagRemovedCallback?.Invoke(tag);
     }
 
+    // DEBUG (temporal): lista los tags activos ahora mismo, para diagnosticar
+    // tags pegados (ej. un cooldown que no se removió).
+    public string DebugTags() => GameplayTags.Count == 0 ? "(ninguno)" : string.Join(", ", GameplayTags);
+
+    // DEBUG (temporal): lista los ActiveGameplayEffect con su tiempo restante.
+    // Sirve para distinguir un tag HUÉRFANO (tag presente pero sin efecto que
+    // lo respalde) de un cooldown INFLADO (efecto presente con duración enorme).
+    public string DebugEffects()
+    {
+        if (ActiveEffects.Count == 0) return "(ninguno)";
+        List<string> partes = new List<string>();
+        foreach (var e in ActiveEffects) partes.Add($"{e.Definition.name}[{e.DurationRemaining:F1}s]");
+        return string.Join(", ", partes);
+    }
+
     // =========================================================
     // ATRIBUTOS
     // =========================================================

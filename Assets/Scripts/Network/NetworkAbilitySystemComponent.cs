@@ -357,9 +357,18 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // Sin esto, HasTag() en la copia del dueño remoto nunca se entera de
     // Stunned/Rooted/Silenced/Dead/cooldowns — por eso el UI de cooldown
     // nunca se llenaba para el jugador 2.
+    //
+    // IMPORTANTE: solo los clientes PUROS deben espejar NetTags. En el host,
+    // el servidor ya maneja GameplayTags directo (AddTag/RemoveTag desde el
+    // sistema de efectos), así que re-aplicarlos acá es redundante Y peligroso:
+    // el SyncHashSet entrega su OnChange de forma asíncrona, y para un tag de
+    // vida corta (ej. el cooldown melee = ~0.16s) el 'Add' puede llegar DESPUÉS
+    // de que el servidor ya removió el tag → lo vuelve a agregar sin ningún
+    // efecto detrás → queda huérfano/pegado para siempre. Por eso salteamos
+    // también cuando este peer ES servidor (IsServerInitialized).
     private void OnNetTagsChanged(SyncHashSetOperation op, EGameplayTag item, bool asServer)
     {
-        if (asServer || _asc == null) return;
+        if (asServer || IsServerInitialized || _asc == null) return;
 
         switch (op)
         {

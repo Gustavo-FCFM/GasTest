@@ -826,6 +826,8 @@ MonoBehaviour:
   slotLMB: {fileID: 1054409930494043391}
   slotRMB: {fileID: 176660953622139406}
   UltimateSlot: {fileID: 7320084360300960326}
+  EffectContainer: {fileID: 6174696554993488100}
+  LevelUpNotification: {fileID: 0}
 --- !u!114 &4823162735274743115
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1082,6 +1084,7 @@ MonoBehaviour:
   SensitivityY: 2
   MinY: -30
   MaxY: 60
+  GamepadSensitivity: 120
 --- !u!1 &3770108331893173848
 GameObject:
   m_ObjectHideFlags: 0
