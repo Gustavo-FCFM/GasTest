@@ -636,6 +636,16 @@ public class PlayerController : NetworkBehaviour
         {
             int idx = GetClassIndex(newClass);
             if (idx >= 0) ServerSetClass(idx);
+            else
+                // La clase no está en la lista plana (no es alcanzable desde
+                // MainBaseClasses vía AvailableSubclasses). Sin sincronizar,
+                // el servidor se queda con la clase vieja y después tira
+                // "No se encontró habilidad en slot ..." al activar una
+                // habilidad nueva de esta clase. Revisar que newClass sea
+                // subclase (directa o indirecta) de alguna de MainBaseClasses.
+                Debug.LogError($"[PlayerController] '{newClass.ClassName}' no está en " +
+                               $"MainBaseClasses ni en sus subclases — no se puede sincronizar " +
+                               $"la clase al servidor. Las habilidades de esta clase fallarán en red.");
             UpdateHUD();
         }
     }

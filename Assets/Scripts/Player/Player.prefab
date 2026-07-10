@@ -163,7 +163,8 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 57168585733728244}
   CameraPrefab: {fileID: 3272724023617225492, guid: 20e7917227af95846aafe93ff12f86ae, type: 3}
   CurrentClassDef: {fileID: 11400000, guid: 94ade0794681b0248a3b0176ad1651c6, type: 2}
-  MainBaseClasses: []
+  MainBaseClasses:
+  - {fileID: 11400000, guid: 94ade0794681b0248a3b0176ad1651c6, type: 2}
   CharacterIcon: {fileID: 0}
   characterAnimator: {fileID: 3955734438643649906}
   MainHandSocket: {fileID: 7146974001845245483}

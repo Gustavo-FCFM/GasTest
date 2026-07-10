@@ -486,6 +486,7 @@ public class AbilitySystemComponent : MonoBehaviour
         if (template == null) return null;
         GameplayAbility instance = Instantiate(template);
         instance.Initialize(this);
+        instance.SourceTemplate = template; // para resolver su índice en GameplayAbilityRegistry
         GrantedAbilities.Add(instance);
         return instance;
     }

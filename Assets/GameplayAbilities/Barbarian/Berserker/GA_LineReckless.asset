@@ -44,7 +44,7 @@ MonoBehaviour:
     RotationOffset: {x: 0, y: 0, z: 0}
     Scale: {x: 2, y: 1, z: 2.5}
     AttachToOwner: 0
-    DestroyTime: 0
+    DestroyTime: 2
     EndWithTag: 0
   Length: 5
   Width: 2

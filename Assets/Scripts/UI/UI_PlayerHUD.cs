@@ -44,6 +44,13 @@ public class UI_PlayerHUD : MonoBehaviour
     [Header("Panel Central (Ultimate)")]
     public UI_UltimateSlot UltimateSlot;
 
+    [Header("Barra de Efectos (Buffs/Debuffs)")]
+    // Contenedor de iconos de buffs/debuffs del jugador local. Su TargetASC
+    // NO se puede setear en el prefab (el jugador se spawnea en runtime), así
+    // que lo enganchamos acá en InitializeHUD. Arrastrá acá el UI_EffectContainer
+    // del HUD (el que muestra los efectos propios, no el de los enemigos).
+    public UI_EffectContainer EffectContainer;
+
     [Header("Notificaciones")]
     public GameObject LevelUpNotification;
 
@@ -69,6 +76,12 @@ public class UI_PlayerHUD : MonoBehaviour
 
             if (asc != null)
                 asc.OnMaxLevelReached += ShowLevelUpNotification;
+
+            // Enganchar la barra de buffs/debuffs al jugador local. Sin esto su
+            // TargetASC queda null y UI_EffectContainer.Update() corta al toque,
+            // por eso los efectos se aplicaban en el ASC pero no se veían.
+            if (EffectContainer != null && asc != null)
+                EffectContainer.SetTargetASC(asc);
 
             if (ClassIconImage != null)
             {

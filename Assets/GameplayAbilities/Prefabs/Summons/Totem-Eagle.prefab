@@ -74,7 +74,7 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 9001100220033004401}
   AuraEffect: {fileID: 11400000, guid: e3268c48721b107428a21dc23892b407, type: 2}
   EmpoweredAuraEffect: {fileID: 11400000, guid: 5b3afafb6a82c0e419eae9f642ac5cb9, type: 2}
-  RageTag: 0
+  RageTag: 19
   AuraRadius: 7
   TickRate: 0.1
   CharacterLayer:

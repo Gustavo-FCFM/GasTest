@@ -88,6 +88,13 @@ public abstract class GameplayAbility : ScriptableObject
     // null salvo mientras la habilidad todavía no fue otorgada.
     protected AbilitySystemComponent OwnerASC;
 
+    // Cuando esta instancia es un CLON (GrantAbility y los pasos de combo la
+    // crean con Instantiate), apunta al asset-template original. Lo usa
+    // GameplayAbilityRegistry para resolver el índice de red de un clon.
+    // NonSerialized a propósito: es estado de runtime, no se guarda en el asset
+    // ni se copia al clonar (se setea a mano justo después del Instantiate).
+    [System.NonSerialized] public GameplayAbility SourceTemplate;
+
     // True si este código está corriendo en el servidor (o si no hay red,
     // ej. un NPC). Cada Activate() concreto debe empezar con
     // "if (!IsServer) return;" para que la lógica de juego (daño,
@@ -226,10 +233,20 @@ public abstract class GameplayAbility : ScriptableObject
     // igual (ver ServerPlayAbilityVisualsSequence) — el resultado sale
     // idéntico en todos porque solo depende de OwnerASC.transform/tags,
     // que ya están sincronizados.
-    public System.Collections.IEnumerator PlayVisualsSequence()
+    public System.Collections.IEnumerator PlayVisualsSequence() => PlayVisualsSequence(OwnerASC);
+
+    // Overload con dueño explícito. El peer OBSERVADOR resuelve esta habilidad
+    // como el asset-template compartido (vía GameplayAbilityRegistry), que no
+    // tiene OwnerASC propio, así que le pasa su ASC acá. Se lo toma por
+    // parámetro (en vez de mutar el campo OwnerASC del template compartido)
+    // porque la corutina se extiende varios frames y dos jugadores podrían
+    // correr la misma secuencia a la vez.
+    public System.Collections.IEnumerator PlayVisualsSequence(AbilitySystemComponent owner)
     {
+        if (owner == null) yield break;
+
         float mult = 1f;
-        float spd  = OwnerASC.GetAttributeValue(EAttributeType.AtkSpeed);
+        float spd  = owner.GetAttributeValue(EAttributeType.AtkSpeed);
         if (spd > 0) mult = 1f / spd;
 
         foreach (var v in VisualsSequence)
@@ -239,16 +256,16 @@ public abstract class GameplayAbility : ScriptableObject
             if (v.Delay > 0)
                 yield return new WaitForSeconds(v.Delay / mult);
 
-            Vector3    pos = OwnerASC.transform.position + OwnerASC.transform.TransformDirection(v.Offset);
-            Quaternion rot = OwnerASC.transform.rotation * Quaternion.Euler(v.RotationOffset);
+            Vector3    pos = owner.transform.position + owner.transform.TransformDirection(v.Offset);
+            Quaternion rot = owner.transform.rotation * Quaternion.Euler(v.RotationOffset);
             GameObject vfx = v.AttachToOwner
-                ? Instantiate(v.VFXPrefab, pos, rot, OwnerASC.transform)
+                ? Instantiate(v.VFXPrefab, pos, rot, owner.transform)
                 : Instantiate(v.VFXPrefab, pos, rot);
 
             vfx.transform.localScale = (v.Scale != Vector3.zero) ? v.Scale : Vector3.one;
 
             if (v.EndWithTag != EGameplayTag.None)
-                OwnerASC.StartAbilityCoroutine(DestroyVfxWhenTagRemoved(vfx, v.EndWithTag));
+                owner.StartAbilityCoroutine(DestroyVfxWhenTagRemoved(owner, vfx, v.EndWithTag));
             else if (v.DestroyTime > 0)
                 Destroy(vfx, v.DestroyTime);
         }
@@ -256,10 +273,10 @@ public abstract class GameplayAbility : ScriptableObject
 
     // Destruye un VFX de la secuencia cuando el dueño pierde el tag
     // EndWithTag configurado (en vez de por un tiempo fijo).
-    private System.Collections.IEnumerator DestroyVfxWhenTagRemoved(GameObject vfx, EGameplayTag tag)
+    private System.Collections.IEnumerator DestroyVfxWhenTagRemoved(AbilitySystemComponent owner, GameObject vfx, EGameplayTag tag)
     {
         yield return null;
-        while (OwnerASC != null && OwnerASC.HasTag(tag) && vfx != null)
+        while (owner != null && owner.HasTag(tag) && vfx != null)
             yield return null;
         if (vfx != null) Destroy(vfx);
     }
@@ -272,6 +289,21 @@ public abstract class GameplayAbility : ScriptableObject
     // esta MISMA habilidad en la copia local de cada cliente — así no
     // hace falta sincronizar el GameObject del VFX por red.
     public virtual void PlayImpactVFX(Vector3 position) { }
+
+    // Reproduce el VFX de impacto usando un dueño puntual. El peer OBSERVADOR
+    // resuelve esta habilidad como el asset-template compartido (vía
+    // GameplayAbilityRegistry), que no tiene OwnerASC propio; algunos overrides
+    // (GA_SelfBuff, GA_ContinuousAoE) lo necesitan para parentar/posicionar el
+    // VFX en el jugador. El swap es sincrónico —PlayImpactVFX instancia y
+    // retorna en el mismo frame, y Unity es single-thread—, así que restaurar
+    // OwnerASC al final deja el template intacto para cualquier otro jugador.
+    public void PlayImpactVFXFor(AbilitySystemComponent owner, Vector3 position)
+    {
+        AbilitySystemComponent prev = OwnerASC;
+        OwnerASC = owner;
+        PlayImpactVFX(position);
+        OwnerASC = prev;
+    }
 
     // =========================================================
     // GIZMOS — vista previa del área real de la habilidad en el Editor

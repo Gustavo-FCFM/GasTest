@@ -55,6 +55,7 @@ public class GA_ComboSequence : GameplayAbility
             {
                 GameplayAbility stepInstance = Instantiate(step.AbilityToCast);
                 stepInstance.Initialize(OwnerASC);
+                stepInstance.SourceTemplate = step.AbilityToCast; // para resolver su índice en GameplayAbilityRegistry
 
                 if (step.AnimationIDOverride > 0)
                     stepInstance.AnimationID = step.AnimationIDOverride;

@@ -543,13 +543,24 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
 
         if (ability == null)
         {
-            Debug.LogWarning($"[Server] No se encontró habilidad en slot {inputSlot}");
+            // Incluimos la clase server-side: si no coincide con la que el
+            // dueño cree tener, es un desync de clase/subclase (el servidor se
+            // quedó en la clase vieja porque ServerSetClass no sincronizó — ej.
+            // GetClassIndex devolvió -1). Ese dato hace obvio el diagnóstico.
+            string serverClass = _asc.CurrentClass != null ? _asc.CurrentClass.ClassName : "null";
+            Debug.LogWarning($"[Server] No se encontró habilidad en slot {inputSlot} " +
+                             $"(clase server-side: {serverClass}). Posible desync de clase con el dueño.");
+            // El dueño ya puso isAttacking=true por predicción; si no le
+            // avisamos, queda trabado hasta que salte el watchdog y no puede
+            // usar NINGUNA habilidad mientras tanto. Lo destrabamos ya.
+            NotifyOwnerAbilityRejected();
             return;
         }
 
         if (!ability.CanActivate())
         {
             Debug.Log($"[Server] Habilidad {ability.AbilityName} bloqueada.");
+            NotifyOwnerAbilityRejected();
             return;
         }
 
@@ -602,6 +613,34 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     public void ServerNotifyAbilityEnded()
     {
         ObserversFinishAttack();
+    }
+
+    // El servidor rechazó una activación (no encontró la habilidad, o estaba
+    // en cooldown). El dueño ya había puesto isAttacking=true por predicción,
+    // así que hay que destrabarlo YA — si no, queda bloqueado sin poder usar
+    // ninguna habilidad hasta que salte el watchdog de PlayerController.
+    [Server]
+    private void NotifyOwnerAbilityRejected()
+    {
+        // Host: el dueño es este mismo proceso; reseteamos directo (el
+        // TargetRpc de abajo se saltea solo con el guard de IsServerInitialized).
+        if (IsOwner)
+        {
+            PlayerController pc = GetComponent<PlayerController>();
+            if (pc != null) pc.FinishAttack();
+        }
+        // Dueño remoto: se lo avisamos solo a su conexión.
+        TargetFinishAttack(Owner);
+    }
+
+    [TargetRpc]
+    private void TargetFinishAttack(NetworkConnection conn)
+    {
+        // En el host, el dueño ya se reseteó en NotifyOwnerAbilityRejected.
+        if (IsServerInitialized) return;
+
+        PlayerController pc = GetComponent<PlayerController>();
+        if (pc != null) pc.FinishAttack();
     }
 
     [ObserversRpc]
@@ -735,19 +774,29 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         // El servidor reproduce el suyo ya mismo (importa para el host).
         ability.PlayImpactVFX(position);
 
-        EAbilityInput slot = FindSlotForAbility(ability);
-        if (slot != EAbilityInput.None)
-            ObserversPlayAbilityVFX(slot, position);
+        // Identificamos la habilidad por su índice en GameplayAbilityRegistry
+        // (no por slot). Así los observadores la resuelven aunque no tengan la
+        // clase equipada, y funciona para pasos de combo que no viven en ningún
+        // slot — que era justo lo que fallaba con el esquema por slot.
+        int abilityIndex = GameplayAbilityRegistry.Instance != null
+            ? GameplayAbilityRegistry.Instance.GetIndex(ability) : -1;
+
+        if (abilityIndex >= 0)
+            ObserversPlayAbilityVFX(abilityIndex, position);
+        else
+            Debug.LogWarning($"[NetworkASC] '{ability.AbilityName}' no está en GameplayAbilityRegistry — su VFX de impacto no se replicará a los clientes remotos.");
     }
 
     [ObserversRpc]
-    private void ObserversPlayAbilityVFX(EAbilityInput slot, Vector3 position)
+    private void ObserversPlayAbilityVFX(int abilityIndex, Vector3 position)
     {
         // El servidor ya lo reprodujo en ServerPlayAbilityVFX() de arriba.
-        if (IsServerInitialized) return;
+        if (IsServerInitialized || _asc == null) return;
 
-        GameplayAbility ability = FindAbilityBySlot(slot);
-        ability?.PlayImpactVFX(position);
+        GameplayAbility ability = GameplayAbilityRegistry.Instance?.GetAbility(abilityIndex);
+        // PlayImpactVFXFor le presta este ASC como dueño puntual (el template
+        // del registro no tiene uno propio; algunos VFX lo necesitan).
+        if (ability != null) ability.PlayImpactVFXFor(_asc, position);
     }
 
     // Igual que ServerPlayAbilityVFX, pero para la secuencia automática de
@@ -763,19 +812,25 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
 
         _asc.StartAbilityCoroutine(ability.PlayVisualsSequence());
 
-        EAbilityInput slot = FindSlotForAbility(ability);
-        if (slot != EAbilityInput.None)
-            ObserversPlayAbilityVisualsSequence(slot);
+        int abilityIndex = GameplayAbilityRegistry.Instance != null
+            ? GameplayAbilityRegistry.Instance.GetIndex(ability) : -1;
+
+        if (abilityIndex >= 0)
+            ObserversPlayAbilityVisualsSequence(abilityIndex);
+        else
+            Debug.LogWarning($"[NetworkASC] '{ability.AbilityName}' no está en GameplayAbilityRegistry — su secuencia de visuales no se replicará a los clientes remotos.");
     }
 
     [ObserversRpc]
-    private void ObserversPlayAbilityVisualsSequence(EAbilityInput slot)
+    private void ObserversPlayAbilityVisualsSequence(int abilityIndex)
     {
         // El servidor ya la arrancó en ServerPlayAbilityVisualsSequence() de arriba.
         if (IsServerInitialized || _asc == null) return;
 
-        GameplayAbility ability = FindAbilityBySlot(slot);
-        if (ability != null) _asc.StartAbilityCoroutine(ability.PlayVisualsSequence());
+        GameplayAbility ability = GameplayAbilityRegistry.Instance?.GetAbility(abilityIndex);
+        // Le pasamos este ASC como dueño puntual: la corutina usa su transform
+        // y tags (el template del registro no tiene OwnerASC propio).
+        if (ability != null) _asc.StartAbilityCoroutine(ability.PlayVisualsSequence(_asc));
     }
 
     // =========================================================
@@ -882,20 +937,5 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
             }
         }
         return null;
-    }
-
-    // Inverso de FindAbilityBySlot: dada una instancia otorgada, en qué slot
-    // vive — para poder mandarla por RPC como EAbilityInput (serializable)
-    // en vez de la instancia en sí (no lo es). Usado por ServerPlayAbilityVFX
-    // y ServerPlayAbilityVisualsSequence.
-    private EAbilityInput FindSlotForAbility(GameplayAbility ability)
-    {
-        if (_asc == null || _asc.CurrentClass == null || ability == null) return EAbilityInput.None;
-
-        foreach (var assignment in _asc.CurrentClass.Abilities)
-            if (assignment.Ability != null && assignment.Ability.AbilityName == ability.AbilityName)
-                return assignment.InputSlot;
-
-        return EAbilityInput.None;
     }
 }

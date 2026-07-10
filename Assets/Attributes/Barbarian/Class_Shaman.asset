@@ -27,6 +27,8 @@ MonoBehaviour:
     Ability: {fileID: 11400000, guid: 56dc5dcfc67b24b49aaea483f6856e81, type: 2}
   - InputSlot: 4
     Ability: {fileID: 11400000, guid: 8902185c93152ec4a8a659346dbea617, type: 2}
+  - InputSlot: 5
+    Ability: {fileID: 11400000, guid: c0119bad393d6f74f9f62aa452dea6ad, type: 2}
   StatGrowthPerLevel: []
   AvailableSubclasses: []
   ClassAnimatorOverride: {fileID: 22100000, guid: c1aea6e6b93746e4dbab09a9b224bfaa, type: 2}
