@@ -177,15 +177,15 @@ public class PlayerController : NetworkBehaviour
                     Cursor.visible = false;
                 }
 
-                // El LevelUpSelectionSystem vive en ESTE prefab de cámara, que
-                // se instancia acá — DESPUÉS de EquipCharacterClass/UpdateHUD.
-                // Por eso hay que engancharlo a este jugador dueño acá y no en
-                // UpdateHUD: allá la cámara todavía no existía y
-                // FindFirstObjectByType no lo encontraba (por eso el menú de
-                // subclase nunca aparecía). GetComponentInChildren(true) lo
-                // encuentra aunque su panel arranque inactivo.
-                LevelUpSelectionSystem levelUp = camObj.GetComponentInChildren<LevelUpSelectionSystem>(true);
-                if (levelUp != null) levelUp.Initialize(this);
+                // El UI_ClassSelectionMenu (menú de subclase con tarjetas) vive
+                // en ESTE prefab de cámara, que se instancia acá — DESPUÉS de
+                // EquipCharacterClass/UpdateHUD. Por eso hay que engancharlo a
+                // este jugador dueño acá y no en UpdateHUD: allá la cámara
+                // todavía no existía y FindFirstObjectByType no lo encontraba
+                // (por eso el menú nunca aparecía). GetComponentInChildren(true)
+                // lo encuentra aunque su panel arranque inactivo.
+                UI_ClassSelectionMenu classMenu = camObj.GetComponentInChildren<UI_ClassSelectionMenu>(true);
+                if (classMenu != null) classMenu.InitializeMenu(this);
             }
         }
         else
