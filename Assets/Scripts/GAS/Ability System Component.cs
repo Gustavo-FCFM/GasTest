@@ -120,21 +120,6 @@ public class AbilitySystemComponent : MonoBehaviour
             OnTagRemovedCallback?.Invoke(tag);
     }
 
-    // DEBUG (temporal): lista los tags activos ahora mismo, para diagnosticar
-    // tags pegados (ej. un cooldown que no se removió).
-    public string DebugTags() => GameplayTags.Count == 0 ? "(ninguno)" : string.Join(", ", GameplayTags);
-
-    // DEBUG (temporal): lista los ActiveGameplayEffect con su tiempo restante.
-    // Sirve para distinguir un tag HUÉRFANO (tag presente pero sin efecto que
-    // lo respalde) de un cooldown INFLADO (efecto presente con duración enorme).
-    public string DebugEffects()
-    {
-        if (ActiveEffects.Count == 0) return "(ninguno)";
-        List<string> partes = new List<string>();
-        foreach (var e in ActiveEffects) partes.Add($"{e.Definition.name}[{e.DurationRemaining:F1}s]");
-        return string.Join(", ", partes);
-    }
-
     // =========================================================
     // ATRIBUTOS
     // =========================================================
@@ -224,6 +209,13 @@ public class AbilitySystemComponent : MonoBehaviour
                 type == EAttributeType.Shield) continue;
 
             float newValue = (attr.BaseValue + attr.AdditiveModifier) * attr.MultiplicativeModifier;
+
+            // Piso de velocidad de ataque: AtkSpeed son "segundos entre ataques"
+            // (menor = más rápido), así que un mínimo limita la velocidad MÁXIMA
+            // por más buffs que se apilen (ej. rage + tótem del tigre). Evita
+            // que el personaje quede atacando absurdamente rápido.
+            if (type == EAttributeType.AtkSpeed) newValue = Mathf.Max(newValue, 0.2f);
+
             if (newValue == attr.CurrentValue) continue;
 
             attr.CurrentValue = newValue;
@@ -274,6 +266,24 @@ public class AbilitySystemComponent : MonoBehaviour
         }
         else
         {
+            // Exclusión mutua por grupo (jerarquía): dentro de un mismo
+            // EffectGroup solo vive el de mayor Priority. Si ya hay uno igual o
+            // superior activo, este (inferior) no se aplica; si este es
+            // superior, remueve a los inferiores del grupo. El MISMO efecto
+            // (misma Definition) se saltea — su re-aplicación la maneja la
+            // StackingPolicy de abajo.
+            if (effect.EffectGroup != EGameplayTag.None)
+            {
+                for (int i = ActiveEffects.Count - 1; i >= 0; i--)
+                {
+                    GameplayEffect otro = ActiveEffects[i].Definition;
+                    if (otro == effect || otro.EffectGroup != effect.EffectGroup) continue;
+
+                    if (otro.Priority >= effect.Priority) return;   // ya hay uno igual/superior
+                    RemoveActiveEffect(ActiveEffects[i]);           // este es superior → quitar el inferior
+                }
+            }
+
             if (effect.StackingPolicy == GameplayEffect.EStackingType.Refresh)
             {
                 foreach (var existing in ActiveEffects)

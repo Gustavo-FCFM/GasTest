@@ -545,6 +545,16 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // Activate()); ObserversPlayAbilityAnimation la reproduce en los demás.
     [ServerRpc]
     public void ServerRequestActivateAbility(EAbilityInput inputSlot, Vector3 aimPoint)
+        => ServerActivateAbility(inputSlot, aimPoint);
+
+    // Valida y ejecuta la habilidad de un slot con autoridad de servidor, y
+    // replica su animación a los observadores. Separado del ServerRpc de arriba
+    // para que código que YA corre en el servidor (ej. la auto-revivida de la
+    // clase Inmortal en HandlePlayerDeath) pueda activar directo, sin pasar por
+    // el [ServerRpc] de dueño —que el servidor NO puede invocar sobre un cliente
+    // remoto (fallaría por RequireOwnership) y dejaba al Inmortal remoto tirado—.
+    [Server]
+    public void ServerActivateAbility(EAbilityInput inputSlot, Vector3 aimPoint)
     {
         if (_asc == null) return;
 

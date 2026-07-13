@@ -226,24 +226,6 @@ public class PlayerController : NetworkBehaviour
     {
         if (!IsOwner) return;
 
-        // DEBUG (temporal): por qué el ataque básico (Fire1) no dispara. Corre
-        // ANTES de todos los gates para poder identificar cuál lo bloquea y
-        // volcar los tags activos (ej. un cooldown melee pegado). Borrar cuando
-        // esté diagnosticado.
-        if (Input.GetButtonDown("Fire1"))
-        {
-            string motivo;
-            if (isAttacking)                                       motivo = $"isAttacking=true (radialOpen={isRadialMenuOpen})";
-            else if (ASC.HasTag(EGameplayTag.State_Dead))          motivo = "State_Dead";
-            else if (ASC.HasTag(EGameplayTag.State_Stunned))       motivo = "State_Stunned";
-            else if (ASC.HasTag(EGameplayTag.State_Silenced))      motivo = "State_Silenced";
-            else if (PrimaryAttackAbility == null)                 motivo = "PrimaryAttackAbility == null";
-            else if (!PrimaryAttackAbility.CanActivate())          motivo = "CanActivate()=false (cooldown/costo/tag bloqueante)";
-            else                                                   motivo = "OK — debería disparar";
-            float dbgAtkSpeed = ASC.GetAttributeValue(EAttributeType.AtkSpeed);
-            Debug.LogWarning($"[DEBUG Fire1] motivo={motivo} | AtkSpeed={dbgAtkSpeed:F2} | tags: {ASC.DebugTags()} | efectos: {ASC.DebugEffects()}");
-        }
-
         // CHEAT (debug): subir al nivel máximo para disparar la selección de
         // subclase. Alt en teclado; JoystickButton6 (View/Back en un mando
         // Xbox) en control — cambiá/ampliá esos KeyCode si querés otro botón.
@@ -567,15 +549,25 @@ public class PlayerController : NetworkBehaviour
 
         if (AbilityR is GA_InmortalWrath && AbilityR.CanActivate())
         {
-            RequestAbility(EAbilityInput.Action3);
+            // Activación DIRECTA server-side: HandlePlayerDeath ya corre en el
+            // servidor. NO usamos RequestAbility porque ese va por el [ServerRpc]
+            // de dueño, que el servidor no puede invocar sobre un cliente remoto
+            // → el Inmortal remoto no revivía ni respawneaba. El aimPoint no
+            // importa para un auto-revive.
+            if (NetASC != null) NetASC.ServerActivateAbility(EAbilityInput.Action3, transform.position);
+            else                ActivateAbilityBySlot(EAbilityInput.Action3); // fallback singleplayer
             return;
         }
         ServerRequestRespawn();
     }
 
     // Pide el respawn al NetworkGameManager de la escena (o hace un
-    // respawn simple si no hay uno).
-    [ServerRpc]
+    // respawn simple si no hay uno). Es [Server], NO [ServerRpc]: lo llama
+    // HandlePlayerDeath, que ya corre solo en el servidor. Con [ServerRpc]
+    // fallaba para los jugadores NO-host: un ServerRpc requiere que lo invoque
+    // el DUEÑO, y el servidor no es dueño de un cliente remoto → FishNet lo
+    // bloqueaba y ese jugador nunca respawneaba (parecía "no poder morir").
+    [Server]
     private void ServerRequestRespawn()
     {
         NetworkGameManager gm = FindFirstObjectByType<NetworkGameManager>();

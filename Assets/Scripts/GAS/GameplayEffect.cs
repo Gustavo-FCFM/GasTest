@@ -47,6 +47,13 @@ public class GameplayEffect : ScriptableObject
     [Tooltip("Refresh: Si ya tienes este efecto, solo reinicia su duración.")]
     public EStackingType StackingPolicy = EStackingType.Stack;
 
+    [Header("Exclusión Mutua (Jerarquía)")]
+    [Tooltip("Efectos con el MISMO grupo (≠ None) se excluyen: solo vive el de mayor Priority a la vez. Ej: el buff normal del tótem y su versión potenciada comparten grupo, así no se acumulan.")]
+    public EGameplayTag EffectGroup = EGameplayTag.None;
+
+    [Tooltip("Dentro de un EffectGroup, mayor Priority gana. Aplicar uno de Priority MENOR a uno ya activo del grupo no hace nada; uno de Priority MAYOR reemplaza a los inferiores.")]
+    public int Priority = 0;
+
     // Icono que se muestra en la barra de buffs/debuffs.
     public Sprite Icon;
 

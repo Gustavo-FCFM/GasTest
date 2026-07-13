@@ -166,14 +166,6 @@ public abstract class GameplayAbility : ScriptableObject
             {
                 float spd = OwnerASC.GetAttributeValue(EAttributeType.AtkSpeed);
                 if (spd > 0) finalCooldown = spd;
-
-                // DIAGNÓSTICO (temporal): el cooldown del básico ES el valor de
-                // AtkSpeed en segundos. Si AtkSpeed se infla (desync de
-                // modificadores), este cooldown se dispara y el ataque parece
-                // trabado. Este warning caza ese caso — si lo ves, anotá el
-                // valor: confirma que AtkSpeed quedó inflado.
-                if (finalCooldown > 2f)
-                    Debug.LogWarning($"[{AbilityName}] Cooldown dinámico anormal: AtkSpeed={spd:F2} → {finalCooldown:F2}s de cooldown. AtkSpeed probablemente quedó inflado (desync de modificadores).");
             }
             OwnerASC.ApplyGameplayEffect(CooldownEffect, this, finalCooldown);
         }
