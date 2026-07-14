@@ -1,6 +1,4 @@
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
 using System.Collections.Generic;
 
 // ============================================================
@@ -11,8 +9,9 @@ using System.Collections.Generic;
 // PlayerController al spawnear la cámara) — cada pantalla maneja la
 // selección de SU propio jugador, así funciona igual en el host y en los
 // clientes que se unen. Se abre solo al llegar a nivel máximo
-// (OnMaxLevelReached) y la subclase se elige con 1/2/3, mouse o gamepad.
-// EquipCharacterClass ya sincroniza el cambio por red (ServerSetClass).
+// (OnMaxLevelReached) y la subclase se elige SOLO con las teclas 1/2/3
+// (cada tarjeta muestra su número). EquipCharacterClass ya sincroniza el
+// cambio por red (ServerSetClass).
 // ============================================================
 public class UI_ClassSelectionMenu : MonoBehaviour
 {
@@ -25,7 +24,6 @@ public class UI_ClassSelectionMenu : MonoBehaviour
     // actual del jugador; el índice acá es el que mapean las teclas 1/2/3.
     [HideInInspector] public List<CharacterClassDefinition> AvailableClasses = new List<CharacterClassDefinition>();
 
-    private List<Button> instantiatedButtons = new List<Button>();
     private PlayerController targetPlayer;
     private AbilitySystemComponent playerASC;
 
@@ -39,9 +37,9 @@ public class UI_ClassSelectionMenu : MonoBehaviour
         if (playerASC != null) playerASC.OnMaxLevelReached -= OpenMenu;
     }
 
-    // Ata el menú al jugador dado y se suscribe a su nivel máximo. La llama
-    // PlayerController para el dueño local. Solo acepta al dueño: en red hay un
-    // PlayerController por jugador y cada pantalla maneja el suyo.
+    // Ata el menú al jugador dueño local y se suscribe a su nivel máximo.
+    // Solo acepta al dueño: en red hay un PlayerController por jugador y cada
+    // pantalla maneja el suyo.
     public void InitializeMenu(PlayerController player)
     {
         if (player == null) return;
@@ -54,8 +52,7 @@ public class UI_ClassSelectionMenu : MonoBehaviour
         if (playerASC != null) playerASC.OnMaxLevelReached += OpenMenu;
     }
 
-    // Con el menú abierto, permite elegir con 1/2/3 (el mouse/gamepad ya
-    // funciona por el Button de cada tarjeta y la navegación del EventSystem).
+    // Con el menú abierto, se elige la subclase SOLO con 1/2/3.
     void Update()
     {
         if (MenuContainer == null || !MenuContainer.activeSelf) return;
@@ -69,21 +66,12 @@ public class UI_ClassSelectionMenu : MonoBehaviour
     private void OpenMenu()
     {
         if (MenuContainer == null) return;
-
         BuildMenu();
         MenuContainer.SetActive(true);
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
-
-        // Preseleccionar la primera tarjeta para que el gamepad tenga foco.
-        if (instantiatedButtons.Count > 0 && EventSystem.current != null)
-        {
-            EventSystem.current.SetSelectedGameObject(null);
-            EventSystem.current.SetSelectedGameObject(instantiatedButtons[0].gameObject);
-        }
     }
 
-    // Genera una tarjeta por subclase disponible de la clase actual.
+    // Genera una tarjeta por subclase disponible, pasándole su número de
+    // tecla (1, 2, 3...) para que lo muestre.
     private void BuildMenu()
     {
         if (targetPlayer == null || CardsParent == null || ClassCardPrefab == null) return;
@@ -96,24 +84,15 @@ public class UI_ClassSelectionMenu : MonoBehaviour
         }
 
         foreach (Transform child in CardsParent) Destroy(child.gameObject);
-        instantiatedButtons.Clear();
 
-        foreach (var classDef in AvailableClasses)
+        for (int i = 0; i < AvailableClasses.Count; i++)
         {
+            CharacterClassDefinition classDef = AvailableClasses[i];
             if (classDef == null) continue;
 
             GameObject cardObj = Instantiate(ClassCardPrefab, CardsParent);
-
             UI_ClassCard cardUI = cardObj.GetComponent<UI_ClassCard>();
-            if (cardUI != null) cardUI.SetupCard(classDef);
-
-            Button btn = cardObj.GetComponent<Button>();
-            if (btn != null)
-            {
-                CharacterClassDefinition classToEquip = classDef;
-                btn.onClick.AddListener(() => ConfirmSelection(classToEquip));
-                instantiatedButtons.Add(btn);
-            }
+            if (cardUI != null) cardUI.SetupCard(classDef, i + 1); // i+1 = la tecla que la selecciona
         }
     }
 
@@ -124,25 +103,12 @@ public class UI_ClassSelectionMenu : MonoBehaviour
             ConfirmSelection(AvailableClasses[index]);
     }
 
-    // Confirma la elección enfocada actualmente (botón "confirmar" del gamepad).
-    public void ConfirmCurrentSelectionFromGamepad()
-    {
-        GameObject selectedObj = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
-        if (selectedObj == null) return;
-
-        UI_ClassCard selectedCard = selectedObj.GetComponent<UI_ClassCard>();
-        if (selectedCard != null) ConfirmSelection(selectedCard.AssignedClass);
-    }
-
-    // Equipa la subclase elegida (EquipCharacterClass sincroniza por red) y
-    // cierra el menú, devolviendo el cursor al modo juego.
+    // Equipa la subclase elegida (sincroniza por red) y cierra el menú.
     private void ConfirmSelection(CharacterClassDefinition selectedClass)
     {
         if (targetPlayer == null || selectedClass == null) return;
 
         targetPlayer.EquipCharacterClass(selectedClass);
         if (MenuContainer != null) MenuContainer.SetActive(false);
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
     }
 }

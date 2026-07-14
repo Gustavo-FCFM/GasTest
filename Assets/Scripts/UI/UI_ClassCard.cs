@@ -10,6 +10,9 @@ public class UI_ClassCard : MonoBehaviour, ISelectHandler, IDeselectHandler, IPo
     public Image ClassIconImage;
     public TextMeshProUGUI ClassNameText;
     public TextMeshProUGUI DescriptionText;
+    // Opcional: un texto dedicado para el número de tecla (1/2/3). Si lo
+    // dejás en None, el número se antepone al nombre para que igual se vea.
+    public TextMeshProUGUI NumberText;
 
     [HideInInspector] public CharacterClassDefinition AssignedClass;
     
@@ -20,13 +23,25 @@ public class UI_ClassCard : MonoBehaviour, ISelectHandler, IDeselectHandler, IPo
         originalScale = transform.localScale;
     }
 
-    public void SetupCard(CharacterClassDefinition classDef)
+    // number = la tecla que selecciona esta tarjeta (1, 2, 3...).
+    public void SetupCard(CharacterClassDefinition classDef, int number)
     {
         AssignedClass = classDef;
 
         if (ClassIconImage != null) ClassIconImage.sprite = classDef.ClassIcon;
-        if (ClassNameText != null) ClassNameText.text = classDef.ClassName;
         if (DescriptionText != null) DescriptionText.text = classDef.Description;
+
+        // El número: si hay un NumberText dedicado va ahí (nombre queda limpio);
+        // si no, se antepone al nombre para que igual se vea.
+        if (NumberText != null)
+        {
+            NumberText.text = number.ToString();
+            if (ClassNameText != null) ClassNameText.text = classDef.ClassName;
+        }
+        else if (ClassNameText != null)
+        {
+            ClassNameText.text = $"[{number}]  {classDef.ClassName}";
+        }
     }
 
     // --- LÓGICA DE FEEDBACK VISUAL ---
