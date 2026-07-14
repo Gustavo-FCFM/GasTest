@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ClassName: Inmortal
   ClassIcon: {fileID: 21300000, guid: 01a083dd1c5fae649a40e683197eb815, type: 3}
-  Description: Berserker! auuuuuuuuuu!
+  Description: Inmortal! auuuuuuuuuu!
   BaseAttributes: {fileID: 11400000, guid: f48497a22d22faf43b99c324878da5ca, type: 2}
   Abilities:
   - InputSlot: 1
