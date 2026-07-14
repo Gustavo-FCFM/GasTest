@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6822b94d28f0ca340949b710ede82ba4, type: 3}
+  m_Name: GA_Blink
+  m_EditorClassIdentifier: 
+  AbilityName: Blink
+  AbilityIcon: {fileID: 0}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: edc8f7b5f2c7d684d8f67cdabbccd4df, type: 2}
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 1
+  ActivationBlockedTags: 010000000200000003000000
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 3
+  AbilityRadius: 3
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  ConeAngle: 90
+  VisualsSequence: []
+  MaxRange: 12
+  SelectionAngle: 25
+  BehindDistance: 1.5
+  DamageEffect: {fileID: 11400000, guid: ee10fcfb885afb54a81bc1874c75cfe5, type: 2}
+  ImpactVFX: {fileID: 0}

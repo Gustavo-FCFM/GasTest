@@ -21,6 +21,9 @@ public class GA_LineAttack : GameplayAbility
 
     [Header("Efectos")]
     public GameplayEffect DamageEffect;
+    // Efectos EXTRA que se aplican a cada enemigo golpeado, además del daño
+    // (ralentizar, heridas, marcar, etc.). Opcional.
+    public List<GameplayEffect> AdditionalEffects;
     public float DamageDelay = 0.4f;
 
     public GameObject HitVFX;
@@ -84,6 +87,7 @@ public class GA_LineAttack : GameplayAbility
             if (targetASC != null && IsEnemy(targetASC) && !enemiesHit.Contains(targetASC))
             {
                 if (DamageEffect != null) targetASC.ApplyGameplayEffect(DamageEffect, OwnerASC);
+                ApplyEffectsTo(AdditionalEffects, targetASC);
                 ChargeUltimate();
                 enemiesHit.Add(targetASC);
 

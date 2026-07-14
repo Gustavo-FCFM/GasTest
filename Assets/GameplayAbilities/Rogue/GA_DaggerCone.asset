@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0673ae4a173fec245880d1c58fa5345e, type: 3}
+  m_Name: GA_DaggerCone
+  m_EditorClassIdentifier: 
+  AbilityName: RoguePrimaryAttack1
+  AbilityIcon: {fileID: 0}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 0}
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 1
+  ActivationBlockedTags: 
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  AbilityRadius: 3
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  ConeAngle: 90
+  VisualsSequence: []
+  Range: 2.5
+  DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
+  DamageDelay: 0.3
+  HitVFX: {fileID: 0}

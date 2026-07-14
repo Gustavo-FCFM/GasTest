@@ -19,6 +19,7 @@ public class GC_Projectile : NetworkBehaviour
 {
     private GameplayEffect damageEffect;    // Daño instantáneo al impactar
     private GameplayEffect durationEffect;  // Efecto con duración adicional al impactar
+    private List<GameplayEffect> additionalEffects; // Efectos EXTRA al impactar (opcional)
     private AbilitySystemComponent sourceASC; // Quién disparó (solo poblado en el servidor)
     private float lifeTime = 5f;
     private float ultChargeAmount = 0f;
@@ -93,7 +94,7 @@ public class GC_Projectile : NetworkBehaviour
     // La llama GA_ProjectileShoot (siempre en el servidor) justo después
     // de spawnear el proyectil, con todos los datos que necesita para
     // resolver el impacto y publicar quién disparó.
-    public void Initialize(GameplayEffect damage, GameplayEffect durationEffect, AbilitySystemComponent source, float speed, float ultCharge, GameObject impactVFX, GameplayAbility ability = null)
+    public void Initialize(GameplayEffect damage, GameplayEffect durationEffect, AbilitySystemComponent source, float speed, float ultCharge, GameObject impactVFX, GameplayAbility ability = null, List<GameplayEffect> extraEffects = null)
     {
         damageEffect         = damage;
         this.durationEffect  = durationEffect;
@@ -101,6 +102,7 @@ public class GC_Projectile : NetworkBehaviour
         ultChargeAmount      = ultCharge;
         impactVfxPrefab      = impactVFX;
         sourceAbility        = ability;
+        additionalEffects    = extraEffects;
 
         // Publicamos quién disparó para que cada cliente pueda resolver su
         // propia arma local (ver comentario en _shooterNob más arriba).
@@ -172,6 +174,9 @@ public class GC_Projectile : NetworkBehaviour
                 {
                     if (damageEffect != null) targetASC.ApplyGameplayEffect(damageEffect, sourceASC);
                     if (durationEffect != null) targetASC.ApplyGameplayEffect(durationEffect, sourceASC);
+                    if (additionalEffects != null)
+                        foreach (var extra in additionalEffects)
+                            if (extra != null) targetASC.ApplyGameplayEffect(extra, sourceASC);
                     if (sourceASC != null && ultChargeAmount > 0)
                     {
                         sourceASC.ReduceCooldownByTag(EGameplayTag.Ability_Cooldown_Ultimate, ultChargeAmount);

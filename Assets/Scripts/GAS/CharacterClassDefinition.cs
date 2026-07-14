@@ -34,6 +34,13 @@ public class CharacterClassDefinition : ScriptableObject
     // Qué GameplayAbility se otorga en cada slot al equipar esta clase.
     public List<AbilityAssignment> Abilities;
 
+    [Header("Pasivas (GEs siempre activos)")]
+    [Tooltip("GameplayEffects que se aplican al equipar la clase y permanecen activos toda la partida. " +
+             "Pensados para pasivas (ej: el tag de Ataque Furtivo del Pícaro). Deben tener una Duration " +
+             "muy grande (casi infinita) y normalmente EffectType = Hidden para no ensuciar la barra de buffs. " +
+             "Se aplican con autoridad de servidor y se resincronizan a los clientes por los canales normales.")]
+    public List<GameplayEffect> PassiveEffects;
+
     [Header("Progresión (Level Up)")]
     // Cuánto sube cada stat automáticamente por cada nivel ganado.
     public List<AttributeGrowth> StatGrowthPerLevel;

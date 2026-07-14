@@ -25,13 +25,14 @@ MonoBehaviour:
     Ability: {fileID: 11400000, guid: 7f53883b772b6f34f8b3d5f6701bc219, type: 2}
   - InputSlot: 6
     Ability: {fileID: 11400000, guid: 56dc5dcfc67b24b49aaea483f6856e81, type: 2}
+  PassiveEffects: []
   StatGrowthPerLevel:
   - Attribute: 2
     AmountPerLevel: 70
   - Attribute: 7
     AmountPerLevel: 5
   - Attribute: 8
-    AmountPerLevel: 5
+    AmountPerLevel: 1
   - Attribute: 14
     AmountPerLevel: 100
   AvailableSubclasses:

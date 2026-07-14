@@ -331,6 +331,35 @@ public class AbilitySystemComponent : MonoBehaviour
             if (mod.UseAttributeScaling && sourceASC != null)
                 calculatedMagnitude += sourceASC.GetAttributeValue(mod.SourceAttribute) * mod.AttributeCoefficient;
 
+            // Escalado por la vida del OBJETIVO (this = el que recibe el efecto):
+            // daño en base a un porcentaje de su vida faltante/actual/máxima
+            // (ej: Golpe mortal del Pícaro pega según la vida faltante del enemigo).
+            // Se RESTA (daño); para una curación que escale con vida, usar un
+            // coeficiente negativo.
+            if (mod.UseTargetHealthScaling)
+            {
+                float portion;
+                switch (mod.TargetHealthMode)
+                {
+                    case Modifier.ETargetHealthMode.CurrentHealth: portion = GetAttributeValue(EAttributeType.Health); break;
+                    case Modifier.ETargetHealthMode.MaxHealth:     portion = GetAttributeValue(EAttributeType.MaxHealth); break;
+                    default:                                        portion = GetAttributeValue(EAttributeType.MaxHealth) - GetAttributeValue(EAttributeType.Health); break;
+                }
+                calculatedMagnitude -= portion * mod.TargetHealthCoefficient;
+            }
+
+            // Ataque Furtivo (Pícaro): si el atacante tiene la pasiva de backstab
+            // (tag otorgado por su GE pasivo siempre activo) y golpea por la
+            // ESPALDA del objetivo, el daño se multiplica por su CritDamage.
+            if (mod.Attribute == EAttributeType.Health && calculatedMagnitude < 0 &&
+                sourceASC != null && sourceASC.HasTag(EGameplayTag.Passive_Backstab) &&
+                IsBackstab(sourceASC))
+            {
+                float critMult = sourceASC.GetAttributeValue(EAttributeType.CritDamage);
+                if (critMult < 1f) critMult = 2f; // por defecto x2 si la clase no configuró CritDamage
+                calculatedMagnitude *= critMult;
+            }
+
             if (mod.Attribute == EAttributeType.Health && calculatedMagnitude < 0)
             {
                 float physicalDamage = Mathf.Abs(calculatedMagnitude);
@@ -622,5 +651,22 @@ public class AbilitySystemComponent : MonoBehaviour
         if (target == this) return includeSelf;
         if (TeamID == 0 || target.TeamID == 0) return false;
         return TeamID == target.TeamID;
+    }
+
+    // Ángulo trasero a partir del cual un atacante cuenta como "por la espalda".
+    // Dot(forward, dirHaciaAtacante) < este umbral ⇒ el atacante está detrás.
+    // -0.25 ≈ arco trasero de ~150° (más permisivo que exactamente 180°).
+    private const float BackstabDotThreshold = -0.25f;
+
+    // True si 'attacker' está por detrás de ESTE personaje (usando hacia dónde
+    // mira este objetivo, no el atacante). Lo usa el Ataque Furtivo del Pícaro
+    // en ExecuteInstantEffect para decidir el crítico por la espalda.
+    public bool IsBackstab(AbilitySystemComponent attacker)
+    {
+        if (attacker == null) return false;
+        Vector3 toAttacker = attacker.transform.position - transform.position;
+        toAttacker.y = 0;
+        if (toAttacker.sqrMagnitude < 0.0001f) return false;
+        return Vector3.Dot(transform.forward, toAttacker.normalized) < BackstabDotThreshold;
     }
 }

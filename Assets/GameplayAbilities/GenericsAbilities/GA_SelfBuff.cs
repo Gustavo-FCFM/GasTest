@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 // ============================================================
 // GA_SelfBuff
@@ -14,6 +15,9 @@ public class GA_SelfBuff : GameplayAbility
     [Header("Buff Settings")]
     // Efecto que se aplica al propio dueño al activar.
     public GameplayEffect BuffEffect;
+    // Efectos EXTRA que se aplican al propio dueño además del BuffEffect
+    // (varios buffs a la vez, un escudo, un tag de estado, etc.). Opcional.
+    public List<GameplayEffect> AdditionalEffects;
 
     [Header("Visuales")]
     // Partícula que acompaña al buff mientras está activo.
@@ -34,6 +38,8 @@ public class GA_SelfBuff : GameplayAbility
             OwnerASC.ApplyGameplayEffect(BuffEffect, OwnerASC);
         else
             Debug.LogWarning("GA_SelfBuff activado sin un BuffEffect asignado.");
+
+        ApplyEffectsTo(AdditionalEffects, OwnerASC);
 
         if (OwnerASC != null)
         {

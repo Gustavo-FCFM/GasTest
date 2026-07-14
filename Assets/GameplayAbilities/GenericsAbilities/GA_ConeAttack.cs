@@ -17,9 +17,16 @@ public class GA_ConeAttack : GameplayAbility
     // Radio del cono de detección, desde la posición del dueño.
     public float Range = 2.5f;
 
+    [Range(0f, 360f)]
+    // Ángulo de apertura del cono de detección.
+    public float ConeAngle = 90f;
+
     [Header("Efectos")]
     // Efecto que se le aplica a cada enemigo golpeado.
     public GameplayEffect DamageEffect;
+    // Efectos EXTRA que se aplican a cada enemigo golpeado, además del daño
+    // (ralentizar, heridas, marcar, etc.). Opcional.
+    public List<GameplayEffect> AdditionalEffects;
     // Tiempo entre activar la habilidad y que el golpe realmente
     // conecte (para sincronizar con la animación).
     public float DamageDelay = 0.3f;
@@ -87,6 +94,7 @@ public class GA_ConeAttack : GameplayAbility
                 if (targetASC != null && IsEnemy(targetASC) && !enemiesHit.Contains(targetASC))
                 {
                     if (DamageEffect != null) targetASC.ApplyGameplayEffect(DamageEffect, OwnerASC);
+                    ApplyEffectsTo(AdditionalEffects, targetASC);
                     ChargeUltimate();
                     enemiesHit.Add(targetASC);
 

@@ -186,6 +186,11 @@ public class PlayerController : NetworkBehaviour
                 // lo encuentra aunque su panel arranque inactivo.
                 UI_ClassSelectionMenu classMenu = camObj.GetComponentInChildren<UI_ClassSelectionMenu>(true);
                 if (classMenu != null) classMenu.InitializeMenu(this);
+
+                // La retícula (crosshair) vive en el Canvas del prefab "Player
+                // Camera" (componente Reticle sobre un objeto de UI). Como esta
+                // cámara solo se instancia para el dueño local, la retícula solo
+                // la ve su dueño — no hace falta crearla por código acá.
             }
         }
         else
@@ -364,6 +369,33 @@ public class PlayerController : NetworkBehaviour
     {
         _abilityVelocityActive = false;
         _abilityVelocity       = Vector3.zero;
+    }
+
+    // Teletransporta instantáneamente a una posición (blink de Golpe mortal).
+    // Desactiva el CharacterController un instante para mover el transform sin
+    // que el propio CC lo bloquee, y orienta al personaje hacia faceDir. Debe
+    // correr en el proceso DUEÑO (el CC es client-authoritative) — lo dispara
+    // NetworkAbilitySystemComponent.TargetExecuteBlink.
+    public void TeleportTo(Vector3 position, Vector3 faceDir)
+    {
+        characterController.enabled = false;
+        transform.position          = position;
+        characterController.enabled = true;
+        verticalVelocity            = 0f;
+
+        faceDir.y = 0;
+        if (faceDir.sqrMagnitude > 0.0001f)
+            transform.rotation = Quaternion.LookRotation(faceDir.normalized);
+    }
+
+    // Excluye (o restaura) capas de colisión del CharacterController. Lo usa el
+    // dash para atravesar a otros jugadores sin dejar de chocar con las paredes:
+    // se excluye la capa de jugadores durante el impulso y se restaura al terminar
+    // (ver GA_Dash / NetworkAbilitySystemComponent.TargetExecuteDash).
+    public void SetCollisionExclusion(LayerMask mask, bool exclude)
+    {
+        if (exclude) characterController.excludeLayers |=  mask;
+        else         characterController.excludeLayers &= ~mask;
     }
 
     // =========================================================
@@ -642,6 +674,14 @@ public class PlayerController : NetworkBehaviour
             ASC.InitializeAttributes();
         }
 
+        // Pasivas de la clase (GEs siempre activos, ej: Ataque Furtivo del Pícaro).
+        // Se aplican DESPUÉS de InitializeAttributes (que resetea los modificadores)
+        // y solo en el lado autoritativo: el servidor los aplica y sus tags/stats
+        // se sincronizan a los clientes por los canales normales del NetworkASC. En
+        // una escena sin red (IsSpawned=false) se aplican localmente.
+        if (!IsSpawned || IsServerInitialized)
+            ApplyClassPassives(newClass);
+
         if (IsOwner)
         {
             int idx = GetClassIndex(newClass);
@@ -658,6 +698,16 @@ public class PlayerController : NetworkBehaviour
                                $"la clase al servidor. Las habilidades de esta clase fallarán en red.");
             UpdateHUD();
         }
+    }
+
+    // Aplica los GEs pasivos de la clase (CharacterClassDefinition.PassiveEffects).
+    // RemoveAllActiveEffects() al inicio de EquipCharacterClass ya limpió las
+    // pasivas de la clase anterior, así que no se acumulan al evolucionar.
+    private void ApplyClassPassives(CharacterClassDefinition cls)
+    {
+        if (cls.PassiveEffects == null) return;
+        foreach (var passive in cls.PassiveEffects)
+            if (passive != null) ASC.ApplyGameplayEffect(passive, ASC);
     }
 
     // Sincroniza el índice de clase elegido al SyncVar y, en la copia del

@@ -15,6 +15,8 @@ public class GA_InmortalWrath : GameplayAbility
     [Header("Configuración Inmortal Wrath")]
     public GameplayEffect InmortalBuffEffect;
     public GameplayEffect ExplosionDamageEffect;
+    // Radio de la explosión de daño alrededor del punto de reaparición.
+    public float AbilityRadius = 3f;
 
     // Solo se puede activar si el personaje está muerto (y no en
     // cooldown) — al revés de cualquier otra habilidad.

@@ -27,14 +27,23 @@ public abstract class GameplayAbility : ScriptableObject
     public GameplayEffect CostEffect;
 
     [Header("Cooldown")]
-    // Efecto CON duración que bloquea reactivar la habilidad mientras
-    // esté activo (ver CanActivate). Su primer GrantedTag es la
-    // "identidad" del cooldown para la UI y la carga de ultimate.
+    // Efecto CON duración que bloquea reactivar la habilidad mientras esté
+    // activo (ver CanActivate). Lo IMPORTANTE del GE acá es su primer GrantedTag:
+    // es la "identidad" del cooldown para la UI, la carga de ultimate y el
+    // bloqueo por slot. La DURACIÓN normalmente la define CooldownDuration (abajo),
+    // así podés REUSAR un mismo GE de cooldown para muchas habilidades (uno por
+    // slot/tag) en vez de crear uno por cada una.
     public GameplayEffect CooldownEffect;
+
+    [Tooltip("Duración del cooldown en segundos, configurada acá en el GA. Si es > 0, " +
+             "pisa el Duration del CooldownEffect (reusá un mismo GE de cooldown y ajustá " +
+             "el tiempo por habilidad). 0 = usar el Duration del GE. Lo ignora " +
+             "UseAttackSpeedAsCooldown (ese tiene prioridad).")]
+    public float CooldownDuration = 0f;
 
     [Header("Cooldown Dinámico")]
     // Si está activo, la duración del cooldown sale del stat AtkSpeed del
-    // dueño en vez del Duration fijo del CooldownEffect.
+    // dueño, ignorando tanto CooldownDuration como el Duration del CooldownEffect.
     public bool UseAttackSpeedAsCooldown = false;
 
     [Header("Ultimate Charge")]
@@ -53,16 +62,15 @@ public abstract class GameplayAbility : ScriptableObject
     [Tooltip("1=Melee, 2=Proyectil, 3=Salto, 4=Extra")]
     public int AnimationID = 1;
 
-    [Header("Configuración de Área (Opcional)")]
-    // Radio de detección para habilidades de área (leap, AoE...). Cada
-    // subclase decide si lo usa; no todas lo hacen.
-    public float AbilityRadius = 3f;
-    // Capas de física que puede golpear esta habilidad.
+    [Header("Detección")]
+    // Capas de física que puede golpear esta habilidad. Es un FILTRO DE FÍSICA:
+    // la detección (Physics.OverlapSphere/Box/Capsule) solo considera colliders
+    // en estas capas. La afiliación amigo/enemigo se resuelve aparte en código
+    // (IsEnemyOf), no acá — por eso normalmente esto apunta a la capa de
+    // personajes (jugadores + NPCs) y el filtro de equipo lo hace la habilidad.
+    // La geometría de cada ataque (radio/largo/ángulo) la define cada habilidad
+    // concreta con sus propios campos.
     public LayerMask TargetLayer;
-
-    [Range(0f, 360f)]
-    // Ángulo del cono de detección (solo lo usa GA_ConeAttack).
-    public float ConeAngle = 90f;
 
     // Un paso de la secuencia visual automática (ver VisualsSequence).
     [System.Serializable]
@@ -161,11 +169,18 @@ public abstract class GameplayAbility : ScriptableObject
 
         if (CooldownEffect != null)
         {
+            // Prioridad de la duración: AtkSpeed dinámico > CooldownDuration del
+            // GA > Duration del propio CooldownEffect (finalCooldown = -1 le dice
+            // a ApplyGameplayEffect que use el del GE).
             float finalCooldown = -1f;
             if (UseAttackSpeedAsCooldown)
             {
                 float spd = OwnerASC.GetAttributeValue(EAttributeType.AtkSpeed);
                 if (spd > 0) finalCooldown = spd;
+            }
+            else if (CooldownDuration > 0)
+            {
+                finalCooldown = CooldownDuration;
             }
             OwnerASC.ApplyGameplayEffect(CooldownEffect, this, finalCooldown);
         }
@@ -210,6 +225,17 @@ public abstract class GameplayAbility : ScriptableObject
     {
         if (UltimateChargeAmount > 0 && OwnerASC != null)
             OwnerASC.ReduceCooldownByTag(EGameplayTag.Ability_Cooldown_Ultimate, UltimateChargeAmount);
+    }
+
+    // Aplica una lista de GameplayEffect a un objetivo (usando al dueño como
+    // fuente), ignorando entradas nulas. Atajo para las habilidades que aplican
+    // efectos "extra" además de su daño principal (ralentizar, marcar, heridas,
+    // etc.) — ver el campo AdditionalEffects de cada una.
+    protected void ApplyEffectsTo(List<GameplayEffect> effects, AbilitySystemComponent target)
+    {
+        if (effects == null || target == null) return;
+        foreach (GameplayEffect effect in effects)
+            if (effect != null) target.ApplyGameplayEffect(effect, OwnerASC);
     }
 
     // =========================================================

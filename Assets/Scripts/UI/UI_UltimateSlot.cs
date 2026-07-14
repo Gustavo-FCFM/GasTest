@@ -18,6 +18,9 @@ public class UI_UltimateSlot : MonoBehaviour
     public TextMeshProUGUI percentageText; // Texto "0%" → "99%" → "READY"
     public GameObject readyEffects;        // Partículas/marco que se prende al llegar al 100%
 
+    [Tooltip("Texto con la tecla/botón de la ultimate (R). Se rellena solo según el slot. Opcional.")]
+    public TextMeshProUGUI keyText;        // Etiqueta de la tecla asignada
+
     private GameplayAbility assignedAbility;
     private AbilitySystemComponent ownerASC;
     private NetworkAbilitySystemComponent ownerNetASC;
@@ -31,6 +34,9 @@ public class UI_UltimateSlot : MonoBehaviour
         ownerASC = asc;
         ownerNetASC = netAsc;
         slotInput = slot;
+
+        // Etiqueta de la tecla (mismo mapeo que UI_AbilitySlot; para la ultimate = "R").
+        if (keyText != null) keyText.text = UI_AbilitySlot.GetKeyLabel(slot);
 
         if (assignedAbility != null)
         {

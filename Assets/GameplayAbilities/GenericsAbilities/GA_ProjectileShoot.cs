@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using FishNet;
 using FishNet.Object;
 
@@ -28,6 +29,8 @@ public class GA_ProjectileShoot : GameplayAbility
     public GameplayEffect InstantDamageEffect;
     // Efecto con duración que además se le aplica al golpear (ej: veneno).
     public GameplayEffect DurationEffect;
+    // Efectos EXTRA que se aplican al golpear, además de los dos anteriores. Opcional.
+    public List<GameplayEffect> AdditionalEffects;
 
     [Header("Sincronización")]
     // Espera entre activar la habilidad y que el proyectil realmente
@@ -132,7 +135,7 @@ public class GA_ProjectileShoot : GameplayAbility
             // Le pasamos 'this' para que, al impactar (siempre en el
             // servidor), el proyectil pueda pedirle a NetworkASC que
             // reproduzca ImpactVFX en todos los peers vía PlayImpactVFX().
-            projectileScript.Initialize(InstantDamageEffect, DurationEffect, OwnerASC, LaunchForce, UltimateChargeAmount, ImpactVFX, this);
+            projectileScript.Initialize(InstantDamageEffect, DurationEffect, OwnerASC, LaunchForce, UltimateChargeAmount, ImpactVFX, this, AdditionalEffects);
         }
 
         Rigidbody rb = newProjectile.GetComponent<Rigidbody>();

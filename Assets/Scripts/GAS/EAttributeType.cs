@@ -27,5 +27,9 @@ public enum EAttributeType
     MaxExp,      // Experiencia necesaria para subir de nivel
     Level,       // Nivel del personaje
     Shield,      // Escudo temporal — absorbe daño antes que la vida
-    MagicDamage  // Daño mágico base
+    MagicDamage, // Daño mágico base
+    // IMPORTANTE: agregar valores nuevos SIEMPRE al final. Los .asset serializan
+    // los atributos por su número de enum; insertarlos en el medio correría los
+    // índices y rompería las referencias ya guardadas en los assets existentes.
+    CritDamage   // Multiplicador de daño crítico (ej: 2 = x2). Lo usa el ataque furtivo por la espalda del Pícaro
 }

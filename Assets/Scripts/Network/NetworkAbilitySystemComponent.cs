@@ -71,6 +71,12 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     public readonly SyncDictionary<EAbilityInput, uint>  NetCooldownStartTick = new SyncDictionary<EAbilityInput, uint>();
     public readonly SyncDictionary<EAbilityInput, float> NetCooldownDuration  = new SyncDictionary<EAbilityInput, float>();
 
+    // Cargas disponibles por slot, para las habilidades que usan sistema de
+    // cargas (ej: el dash). El estado real vive en la habilidad (server-side);
+    // esta la reporta con ServerReportCharges cada vez que cambia, y la UI la
+    // lee con TryGetNetCharges. Un slot sin entrada = habilidad sin cargas.
+    public readonly SyncDictionary<EAbilityInput, int> NetCharges = new SyncDictionary<EAbilityInput, int>();
+
     // Slots que se revisan en cada barrido de cooldowns.
     private static readonly EAbilityInput[] _cooldownSlots =
     {
@@ -451,6 +457,40 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     }
 
     // =========================================================
+    // CARGAS EN RED (habilidades con sistema de cargas, ej: el dash)
+    // =========================================================
+
+    // El servidor publica cuántas cargas le quedan a una habilidad. Resuelve el
+    // slot de la habilidad (por nombre, igual que FindAbilityBySlot) y lo guarda
+    // en NetCharges para que la UI del dueño lo muestre. Lo llama GA_Dash cada
+    // vez que sus cargas cambian (usar, recargar, reembolsar).
+    [Server]
+    public void ServerReportCharges(GameplayAbility ability, int charges)
+    {
+        if (_asc == null || _asc.CurrentClass == null || ability == null) return;
+
+        EAbilityInput slot = EAbilityInput.None;
+        foreach (var assignment in _asc.CurrentClass.Abilities)
+        {
+            if (assignment.Ability != null && assignment.Ability.AbilityName == ability.AbilityName)
+            {
+                slot = assignment.InputSlot;
+                break;
+            }
+        }
+        if (slot == EAbilityInput.None) return;
+
+        NetCharges[slot] = Mathf.Max(0, charges);
+    }
+
+    // Lee las cargas sincronizadas de un slot. Devuelve false si ese slot no es
+    // una habilidad con cargas (o todavía no reportó ninguna).
+    public bool TryGetNetCharges(EAbilityInput slot, out int charges)
+    {
+        return NetCharges.TryGetValue(slot, out charges);
+    }
+
+    // =========================================================
     // EFECTOS ACTIVOS EN RED (buffs/debuffs)
     // =========================================================
 
@@ -766,6 +806,76 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     {
         _pendingLeapImpact?.ExecuteImpactCheck();
         _pendingLeapImpact = null;
+    }
+
+    // =========================================================
+    // BLINK (GA_Blink / Golpe mortal) — teletransporte instantáneo.
+    //
+    // El daño lo resuelve el servidor en GA_Blink.Activate() (autoridad de
+    // atributos). Pero mover al personaje tiene que pasar en el proceso DUEÑO
+    // (el CharacterController es client-authoritative, igual que en el salto),
+    // así que el servidor le manda la posición destino por TargetRpc.
+    // =========================================================
+
+    // El servidor le pide al dueño que se teletransporte a 'position' mirando
+    // hacia 'faceDir'. Lo llama GA_Blink tras calcular el punto detrás del enemigo.
+    [Server]
+    public void ServerBlinkOwnerTo(Vector3 position, Vector3 faceDir)
+    {
+        TargetExecuteBlink(Owner, position, faceDir);
+    }
+
+    [TargetRpc]
+    private void TargetExecuteBlink(NetworkConnection conn, Vector3 position, Vector3 faceDir)
+    {
+        PlayerController pc = GetComponent<PlayerController>();
+        if (pc != null) pc.TeleportTo(position, faceDir);
+    }
+
+    // =========================================================
+    // DASH (GA_Dash / Dash siniestro) — impulso rápido con inercia.
+    //
+    // El daño a lo largo del trayecto lo resuelve el servidor al activar (ver
+    // GA_Dash, que hace un barrido geométrico del recorrido). Acá solo movemos
+    // al dueño: le aplicamos el impulso (que se atenúa solo en PlayerController,
+    // dando el "frenado con inercia") y excluimos la capa de jugadores de su
+    // colisión durante el dash para atravesarlos, restaurándola al terminar.
+    // La colisión con paredes se mantiene (no se excluye esa capa).
+    //
+    // El LayerMask viaja como int: FishNet serializa int de forma nativa, no así
+    // el struct LayerMask.
+    // =========================================================
+
+    [Server]
+    public void ServerStartDash(Vector3 velocity, float duration, int excludeMask)
+    {
+        TargetExecuteDash(Owner, velocity, duration, excludeMask);
+    }
+
+    [TargetRpc]
+    private void TargetExecuteDash(NetworkConnection conn, Vector3 velocity, float duration, int excludeMask)
+    {
+        PlayerController pc = GetComponent<PlayerController>();
+        if (pc == null) return;
+
+        // ApplyAbilityVelocity solo prende si el dueño está en el piso; si estaba
+        // en el aire no hay dash, y hay que destrabar isAttacking igual.
+        if (pc.ApplyAbilityVelocity(velocity, 0f))
+            StartCoroutine(DashRoutine(pc, duration, excludeMask));
+        else
+            pc.FinishAttack();
+    }
+
+    // Corre en el proceso dueño: mantiene la exclusión de colisión durante el
+    // dash y, al terminar, la restaura, devuelve el control del movimiento y
+    // libera el estado "atacando".
+    private IEnumerator DashRoutine(PlayerController pc, float duration, int excludeMask)
+    {
+        pc.SetCollisionExclusion(excludeMask, true);
+        yield return new WaitForSeconds(duration);
+        pc.SetCollisionExclusion(excludeMask, false);
+        pc.ClearAbilityVelocity();
+        pc.FinishAttack();
     }
 
     // =========================================================

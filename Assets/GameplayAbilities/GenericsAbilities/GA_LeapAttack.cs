@@ -21,12 +21,18 @@ public class GA_LeapAttack : GameplayAbility
     // Impulso hacia adelante (dirección de la cámara del dueño) del salto.
     public float ForwardForce = 5f;
 
+    [Header("Área de Impacto")]
+    // Radio del área de daño al aterrizar (slam).
+    public float AbilityRadius = 3f;
+
     [Header("Efectos")]
     // Daño que recibe cada enemigo dentro de AbilityRadius al aterrizar.
     public GameplayEffect DamageEffect;
     // Control de masas (aturdir, enraizar, etc.) que además se le aplica
     // a cada enemigo golpeado.
     public GameplayEffect CrowdControlEffect;
+    // Efectos EXTRA que se aplican a cada enemigo golpeado al aterrizar. Opcional.
+    public List<GameplayEffect> AdditionalEffects;
 
     [Header("Visuales")]
     public GameObject ImpactVFX;
@@ -96,6 +102,7 @@ public class GA_LeapAttack : GameplayAbility
                 if (DamageEffect != null)        targetASC.ApplyGameplayEffect(DamageEffect, OwnerASC);
                 ChargeUltimate();
                 if (CrowdControlEffect != null)  targetASC.ApplyGameplayEffect(CrowdControlEffect, OwnerASC);
+                ApplyEffectsTo(AdditionalEffects, targetASC);
                 enemiesHit.Add(targetASC);
             }
         }
