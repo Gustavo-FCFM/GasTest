@@ -33,7 +33,6 @@ public enum EGameplayTag
     Status_Poison,
     Status_Burning,
     Status_Slow,
-    Status_Wound,        // Heridas del Pícaro — daño con el tiempo, apilable (ver GE_Heridas)
     Status_Buff_Damage,  // Ej: Grito de guerra
     Status_Buff_Speed,   // Ej: Sprint
     Status_Immunity,     // Ej: Invencible
@@ -45,12 +44,15 @@ public enum EGameplayTag
     Status_Buff_Eagle,
     Status_Buff_Tiger,
 
-    // --- PASIVAS (otorgadas por GEs pasivos siempre activos de la clase) ---
-    Passive_Backstab,    // Pícaro: golpear por la espalda hace daño crítico (ver ExecuteInstantEffect)
-
     // --- COOLDOWNS DE TÓTEMS ---
     Totem_Cooldown_Bear,
     Totem_Cooldown_Wolf,
     Totem_Cooldown_Eagle,
     Totem_Cooldown_Tiger,
+
+    // IMPORTANTE: agregar tags nuevos SIEMPRE al final. Los .asset serializan los
+    // tags por su NÚMERO de enum; insertarlos en el medio corre los índices y
+    // rompe las referencias ya guardadas (ej. Status_Inmortal, Rage, tótems).
+    Status_Wound,      // Heridas del Pícaro — daño con el tiempo, apilable (ver GE_Heridas)
+    Passive_Backstab,  // Pícaro: golpear por la espalda hace daño crítico (ver ExecuteInstantEffect)
 }

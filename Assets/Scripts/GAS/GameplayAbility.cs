@@ -168,22 +168,7 @@ public abstract class GameplayAbility : ScriptableObject
             OwnerASC.ApplyGameplayEffect(CostEffect, this);
 
         if (CooldownEffect != null)
-        {
-            // Prioridad de la duración: AtkSpeed dinámico > CooldownDuration del
-            // GA > Duration del propio CooldownEffect (finalCooldown = -1 le dice
-            // a ApplyGameplayEffect que use el del GE).
-            float finalCooldown = -1f;
-            if (UseAttackSpeedAsCooldown)
-            {
-                float spd = OwnerASC.GetAttributeValue(EAttributeType.AtkSpeed);
-                if (spd > 0) finalCooldown = spd;
-            }
-            else if (CooldownDuration > 0)
-            {
-                finalCooldown = CooldownDuration;
-            }
-            OwnerASC.ApplyGameplayEffect(CooldownEffect, this, finalCooldown);
-        }
+            OwnerASC.ApplyGameplayEffect(CooldownEffect, this, ResolveCooldownDuration());
 
         if (VisualsSequence != null && VisualsSequence.Count > 0)
         {
@@ -217,6 +202,22 @@ public abstract class GameplayAbility : ScriptableObject
 
         NetworkAbilitySystemComponent netASC = OwnerASC?.GetComponent<NetworkAbilitySystemComponent>();
         if (netASC != null) netASC.ServerNotifyAbilityEnded();
+    }
+
+    // Resuelve la duración del cooldown en segundos, con prioridad:
+    // AtkSpeed dinámico > CooldownDuration (del GA) > Duration del CooldownEffect.
+    // La usan tanto el cooldown normal (CommitAbility) como el tiempo de recarga
+    // por carga de las habilidades con cargas (ver GA_Dash) — así un mismo valor
+    // define el cooldown Y cuánto tarda en volver cada carga.
+    protected float ResolveCooldownDuration()
+    {
+        if (UseAttackSpeedAsCooldown && OwnerASC != null)
+        {
+            float spd = OwnerASC.GetAttributeValue(EAttributeType.AtkSpeed);
+            if (spd > 0) return spd;
+        }
+        if (CooldownDuration > 0) return CooldownDuration;
+        return CooldownEffect != null ? CooldownEffect.Duration : 0f;
     }
 
     // Adelanta el cooldown de la ultimate del dueño en UltimateChargeAmount.

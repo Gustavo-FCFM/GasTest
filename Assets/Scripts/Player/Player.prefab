@@ -141,8 +141,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2bb1f10c2b3876743b62ff74066a386b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CharacterRoleDefinition: {fileID: 11400000, guid: 018a6225b1f822143aa86c2bcaef873f, type: 2}
-  CurrentClass: {fileID: 11400000, guid: 94ade0794681b0248a3b0176ad1651c6, type: 2}
+  CharacterRoleDefinition: {fileID: 0}
+  CurrentClass: {fileID: 0}
   TeamID: 1
   MaxLevel: 3
   GrantedAbilities: []
@@ -162,9 +162,10 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 57168585733728244}
   _networkObjectCache: {fileID: 57168585733728244}
   CameraPrefab: {fileID: 3272724023617225492, guid: 20e7917227af95846aafe93ff12f86ae, type: 3}
-  CurrentClassDef: {fileID: 11400000, guid: 94ade0794681b0248a3b0176ad1651c6, type: 2}
+  CurrentClassDef: {fileID: 0}
   MainBaseClasses:
   - {fileID: 11400000, guid: 94ade0794681b0248a3b0176ad1651c6, type: 2}
+  - {fileID: 11400000, guid: 390e03f3a9d111e46ba5dc758818e4cb, type: 2}
   CharacterIcon: {fileID: 0}
   characterAnimator: {fileID: 3955734438643649906}
   MainHandSocket: {fileID: 7146974001845245483}
@@ -237,7 +238,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584203661213574368
+  _initializedTimestamp: -8584174709408698250
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
@@ -256,7 +257,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 8
+  <PrefabId>k__BackingField: 12
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 13623089071726480599
   SceneId: 0

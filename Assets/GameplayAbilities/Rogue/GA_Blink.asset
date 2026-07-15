@@ -13,22 +13,23 @@ MonoBehaviour:
   m_Name: GA_Blink
   m_EditorClassIdentifier: 
   AbilityName: Blink
-  AbilityIcon: {fileID: 0}
+  AbilityIcon: {fileID: 21300000, guid: 83c757b6e1ff941448d5b798247c0d90, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: edc8f7b5f2c7d684d8f67cdabbccd4df, type: 2}
+  CooldownDuration: 0
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 1
   ActivationBlockedTags: 010000000200000003000000
   AnimationTriggerName: AttackTrigger
   AnimationID: 3
-  AbilityRadius: 3
   TargetLayer:
     serializedVersion: 2
-    m_Bits: 0
-  ConeAngle: 90
+    m_Bits: 128
   VisualsSequence: []
   MaxRange: 12
   SelectionAngle: 25
   BehindDistance: 1.5
   DamageEffect: {fileID: 11400000, guid: ee10fcfb885afb54a81bc1874c75cfe5, type: 2}
+  AdditionalEffects:
+  - {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   ImpactVFX: {fileID: 0}

@@ -16,19 +16,19 @@ MonoBehaviour:
   AbilityIcon: {fileID: 0}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 0}
+  CooldownDuration: 0
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 1
   ActivationBlockedTags: 
   AnimationTriggerName: AttackTrigger
   AnimationID: 1
-  AbilityRadius: 3
   TargetLayer:
     serializedVersion: 2
-    m_Bits: 0
-  ConeAngle: 90
+    m_Bits: 128
   VisualsSequence: []
   Length: 3
   Width: 2
   DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
-  DamageDelay: 0.3
+  AdditionalEffects: []
+  DamageDelay: 0.1
   HitVFX: {fileID: 0}

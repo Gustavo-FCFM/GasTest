@@ -3,8 +3,8 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems; // Necesario para detectar selecciones
 using TMPro;
 
-// Agregamos las interfaces de selección y puntero
-public class UI_ClassCard : MonoBehaviour, ISelectHandler, IDeselectHandler, IPointerEnterHandler, IPointerExitHandler
+// Agregamos las interfaces de selección, puntero y CLICK
+public class UI_ClassCard : MonoBehaviour, ISelectHandler, IDeselectHandler, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
     [Header("Referencias Visuales")]
     public Image ClassIconImage;
@@ -15,7 +15,12 @@ public class UI_ClassCard : MonoBehaviour, ISelectHandler, IDeselectHandler, IPo
     public TextMeshProUGUI NumberText;
 
     [HideInInspector] public CharacterClassDefinition AssignedClass;
-    
+
+    // Callback que dispara la tarjeta al hacerle CLICK. Lo setea el menú que la
+    // construye (ej: UI_InitialClassMenu). Si queda null (ej: el menú de subclase
+    // que se maneja por teclas), el click simplemente no hace nada.
+    [HideInInspector] public System.Action<CharacterClassDefinition> OnCardClicked;
+
     private Vector3 originalScale;
 
     void Awake()
@@ -49,6 +54,9 @@ public class UI_ClassCard : MonoBehaviour, ISelectHandler, IDeselectHandler, IPo
     public void OnDeselect(BaseEventData eventData) => UnhighlightCard();
     public void OnPointerEnter(PointerEventData eventData) => HighlightCard();
     public void OnPointerExit(PointerEventData eventData) => UnhighlightCard();
+
+    // Click sobre la tarjeta: avisa al menú qué clase se eligió.
+    public void OnPointerClick(PointerEventData eventData) => OnCardClicked?.Invoke(AssignedClass);
 
     private void HighlightCard()
     {

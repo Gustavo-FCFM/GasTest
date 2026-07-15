@@ -829,6 +829,7 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     private void TargetExecuteBlink(NetworkConnection conn, Vector3 position, Vector3 faceDir)
     {
         PlayerController pc = GetComponent<PlayerController>();
+        Debug.Log($"[NetworkASC] TargetExecuteBlink recibido en el dueño: teletransportando a {position} (pc={(pc != null)}).");
         if (pc != null) pc.TeleportTo(position, faceDir);
     }
 
@@ -858,12 +859,9 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         PlayerController pc = GetComponent<PlayerController>();
         if (pc == null) return;
 
-        // ApplyAbilityVelocity solo prende si el dueño está en el piso; si estaba
-        // en el aire no hay dash, y hay que destrabar isAttacking igual.
-        if (pc.ApplyAbilityVelocity(velocity, 0f))
-            StartCoroutine(DashRoutine(pc, duration, excludeMask));
-        else
-            pc.FinishAttack();
+        // Dash 3D: se puede en el aire y en cualquier dirección (incluye vertical).
+        pc.ApplyDashVelocity(velocity);
+        StartCoroutine(DashRoutine(pc, duration, excludeMask));
     }
 
     // Corre en el proceso dueño: mantiene la exclusión de colisión durante el
@@ -874,7 +872,7 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         pc.SetCollisionExclusion(excludeMask, true);
         yield return new WaitForSeconds(duration);
         pc.SetCollisionExclusion(excludeMask, false);
-        pc.ClearAbilityVelocity();
+        pc.ClearDashVelocity();
         pc.FinishAttack();
     }
 

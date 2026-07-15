@@ -55,4 +55,28 @@ public class GameplayEffectRegistry : ScriptableObject
         if (index < 0 || index >= Effects.Count) return null;
         return Effects[index];
     }
+
+#if UNITY_EDITOR
+    // Rellena la lista con TODOS los GameplayEffect del proyecto, ordenados por
+    // nombre (orden determinístico). Click derecho sobre el asset → esta opción.
+    // Incluir efectos instantáneos/Hidden es inofensivo (nunca se los busca);
+    // lo importante es que estén los buffs/debuffs con icono.
+    [ContextMenu("Auto-Fill From Project")]
+    private void AutoFillFromProject()
+    {
+        var found = new List<GameplayEffect>();
+        foreach (string guid in UnityEditor.AssetDatabase.FindAssets("t:GameplayEffect"))
+        {
+            string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+            var ge = UnityEditor.AssetDatabase.LoadAssetAtPath<GameplayEffect>(path);
+            if (ge != null) found.Add(ge);
+        }
+        found.Sort((a, b) => string.CompareOrdinal(a.name, b.name));
+
+        Effects.Clear();
+        Effects.AddRange(found);
+        UnityEditor.EditorUtility.SetDirty(this);
+        Debug.Log($"[GameplayEffectRegistry] Auto-Fill: {Effects.Count} efectos registrados.");
+    }
+#endif
 }

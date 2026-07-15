@@ -94,6 +94,14 @@ public class PlayerController : NetworkBehaviour
     private Vector3 _abilityVelocity;
     private bool    _abilityVelocityActive;
 
+    // Impulso de DASH en 3D: a diferencia de _abilityVelocity (horizontal +
+    // gravedad, para el salto), este es un vector completo en cualquier
+    // dirección —incluye arriba/abajo— y durante su vigencia NO se aplica
+    // gravedad, para que el dash sea una línea recta hacia donde apunta el
+    // jugador. Se atenúa solo (inercia). Ver ApplyDashVelocity/HandleMovementInput.
+    private Vector3 _dashVelocity;
+    private bool    _dashActive;
+
     // Último punto de mira que el dueño calculó con SU cámara y envió al
     // servidor junto con el input de habilidad. El servidor (y por lo tanto
     // las Abilities, que corren ahí) NO tiene una cámara de juego válida
@@ -107,6 +115,12 @@ public class PlayerController : NetworkBehaviour
 
     [HideInInspector] public bool isRadialMenuOpen = false;
     private GameplayAbility currentRadialAbility;
+
+    // Bloquea el input del dueño (movimiento y habilidades) mientras un menú
+    // modal está abierto — ej. la selección de clase inicial (UI_InitialClassMenu).
+    private bool _inputLocked;
+    // La usan los menús modales para tomar/soltar el control del jugador.
+    public void SetInputLocked(bool locked) => _inputLocked = locked;
 
     // =========================================================
     // CICLO DE VIDA DE RED
@@ -187,6 +201,14 @@ public class PlayerController : NetworkBehaviour
                 UI_ClassSelectionMenu classMenu = camObj.GetComponentInChildren<UI_ClassSelectionMenu>(true);
                 if (classMenu != null) classMenu.InitializeMenu(this);
 
+                // Menú de selección de clase INICIAL: aparece al conectarse y se
+                // elige clickeando una tarjeta de las clases base (MainBaseClasses).
+                // Bloquea el input hasta que el jugador elige. Vive en el mismo
+                // prefab de cámara; GetComponentInChildren(true) lo encuentra aunque
+                // su panel arranque inactivo.
+                UI_InitialClassMenu initialMenu = camObj.GetComponentInChildren<UI_InitialClassMenu>(true);
+                if (initialMenu != null) initialMenu.InitializeMenu(this);
+
                 // La retícula (crosshair) vive en el Canvas del prefab "Player
                 // Camera" (componente Reticle sobre un objeto de UI). Como esta
                 // cámara solo se instancia para el dueño local, la retícula solo
@@ -230,6 +252,10 @@ public class PlayerController : NetworkBehaviour
     void Update()
     {
         if (!IsOwner) return;
+
+        // Menú modal abierto (ej. selección de clase inicial): el jugador no se
+        // mueve ni activa habilidades hasta cerrarlo (elegir una tarjeta).
+        if (_inputLocked) return;
 
         // CHEAT (debug): subir al nivel máximo para disparar la selección de
         // subclase. Alt en teclado; JoystickButton6 (View/Back en un mando
@@ -301,6 +327,20 @@ public class PlayerController : NetworkBehaviour
                 transform.rotation, targetRot, 10f * Time.deltaTime);
         }
 
+        // Dash 3D (Dash siniestro): movimiento recto en la dirección apuntada,
+        // incluyendo arriba/abajo, SIN gravedad durante el impulso. Se atenúa
+        // solo (inercia) hasta que NetworkASC.DashRoutine llama ClearDashVelocity.
+        // Sigue chocando con paredes/entorno (el CharacterController colisiona;
+        // solo se excluye la capa de jugadores en GA_Dash).
+        if (_dashActive)
+        {
+            _dashVelocity   = Vector3.Lerp(_dashVelocity, Vector3.zero, Time.deltaTime);
+            Vector3 steer   = inputVec * baseSpeed;
+            Vector3 dashMove = _dashVelocity + new Vector3(steer.x, 0, steer.z);
+            characterController.Move(dashMove * Time.deltaTime);
+            return;
+        }
+
         Vector3 horizontal;
 
         if (_abilityVelocityActive)
@@ -347,13 +387,10 @@ public class PlayerController : NetworkBehaviour
     public bool IsGrounded => characterController.isGrounded;
 
     // Toma control temporal del movimiento: aplica un impulso horizontal
-    // (que se va atenuando solo) y uno vertical instantáneo. Solo
-    // funciona si el personaje está en el piso al momento de llamarlo
-    // (devuelve false si no, y no hace nada).
+    // (que se va atenuando solo) y uno vertical instantáneo. Funciona esté o no
+    // en el piso (se puede usar en el aire — ej. el Salto Furioso o el dash).
     public bool ApplyAbilityVelocity(Vector3 horizontalVelocity, float verticalImpulse)
     {
-        if (!characterController.isGrounded) return false;
-
         _abilityVelocity       = horizontalVelocity;
         verticalVelocity       = verticalImpulse;
         _abilityVelocityActive = true;
@@ -369,6 +406,28 @@ public class PlayerController : NetworkBehaviour
     {
         _abilityVelocityActive = false;
         _abilityVelocity       = Vector3.zero;
+    }
+
+    // Toma control del movimiento para un DASH en 3D: impulso recto en cualquier
+    // dirección (incluida la vertical) que se atenúa solo, SIN gravedad mientras
+    // dura. Funciona en el aire. El fin lo maneja quien lo disparó llamando
+    // ClearDashVelocity (ver NetworkAbilitySystemComponent.DashRoutine).
+    public void ApplyDashVelocity(Vector3 velocity)
+    {
+        _dashVelocity    = velocity;
+        _dashActive      = true;
+        // Durante el dash no hay gravedad; al terminar, la caída arranca de 0.
+        verticalVelocity = 0f;
+
+        Vector3 flatDir = new Vector3(velocity.x, 0, velocity.z);
+        if (flatDir.sqrMagnitude > 0.0001f) transform.forward = flatDir.normalized;
+    }
+
+    // Termina el dash 3D y devuelve el movimiento al control normal (con gravedad).
+    public void ClearDashVelocity()
+    {
+        _dashActive   = false;
+        _dashVelocity = Vector3.zero;
     }
 
     // Teletransporta instantáneamente a una posición (blink de Golpe mortal).

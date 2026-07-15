@@ -13,19 +13,18 @@ MonoBehaviour:
   m_Name: GA_DaggerShoot
   m_EditorClassIdentifier: 
   AbilityName: Dagger Shoot
-  AbilityIcon: {fileID: 0}
+  AbilityIcon: {fileID: 21300000, guid: 9a1d6add7df9fa340a1499659a9045ff, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: ecfe07a06c63704479a331a9bae55086, type: 2}
+  CooldownDuration: 0
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 1
   ActivationBlockedTags: 
   AnimationTriggerName: AttackTrigger
   AnimationID: 2
-  AbilityRadius: 3
   TargetLayer:
     serializedVersion: 2
     m_Bits: 0
-  ConeAngle: 90
   VisualsSequence: []
   ProjectilePrefab: {fileID: 406129108226925510, guid: 8c21a3df091c8204ea5a34229c270862, type: 3}
   LaunchForce: 20
@@ -33,5 +32,6 @@ MonoBehaviour:
   AddSpin: 1
   InstantDamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   DurationEffect: {fileID: 11400000, guid: 16573965ce339a749892bca518120f2b, type: 2}
-  SpawnDelay: 0.4
+  AdditionalEffects: []
+  SpawnDelay: 0.8
   ImpactVFX: {fileID: 0}

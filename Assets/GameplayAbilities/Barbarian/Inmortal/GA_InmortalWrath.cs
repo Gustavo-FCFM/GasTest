@@ -53,13 +53,20 @@ public class GA_InmortalWrath : GameplayAbility
                 OwnerASC.ApplyGameplayEffect(InmortalBuffEffect, OwnerASC);
 
             Collider[] hits = Physics.OverlapSphere(OwnerASC.transform.position, AbilityRadius, TargetLayer);
+            int enemiesDamaged = 0;
             foreach (Collider hit in hits)
             {
                 AbilitySystemComponent targetASC = hit.GetComponentInParent<AbilitySystemComponent>();
                 if (targetASC != null && IsEnemy(targetASC))
                     if (ExplosionDamageEffect != null)
+                    {
                         targetASC.ApplyGameplayEffect(ExplosionDamageEffect, OwnerASC);
+                        enemiesDamaged++;
+                    }
             }
+            Debug.Log($"[GA_InmortalWrath] Explosión en {OwnerASC.transform.position} (radio {AbilityRadius}): " +
+                      $"{hits.Length} colliders, {enemiesDamaged} enemigos dañados. " +
+                      $"¿Tengo Status_Inmortal tras el buff?: {OwnerASC.HasTag(EGameplayTag.Status_Inmortal)}.");
 
             PlayerController pc = OwnerASC.GetComponent<PlayerController>();
             if (pc != null) pc.PlayAnimation(AnimationTriggerName, AnimationID);

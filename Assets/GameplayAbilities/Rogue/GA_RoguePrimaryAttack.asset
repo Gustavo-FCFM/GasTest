@@ -13,23 +13,22 @@ MonoBehaviour:
   m_Name: GA_RoguePrimaryAttack
   m_EditorClassIdentifier: 
   AbilityName: Rogue Primary Attack
-  AbilityIcon: {fileID: 0}
+  AbilityIcon: {fileID: 21300000, guid: c024da923d4feae4b8a14883e3f4b4de, type: 3}
   CostEffect: {fileID: 0}
-  CooldownEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: 45327044be4f41c4d8f5289bc6f9b3be, type: 2}
+  CooldownDuration: 0
   UseAttackSpeedAsCooldown: 1
   UltimateChargeAmount: 1
   ActivationBlockedTags: 
   AnimationTriggerName: AttackTrigger
   AnimationID: 1
-  AbilityRadius: 3
   TargetLayer:
     serializedVersion: 2
     m_Bits: 0
-  ConeAngle: 90
   VisualsSequence: []
   Sequence:
   - AbilityToCast: {fileID: 11400000, guid: 2258c23867170244e937630928348433, type: 2}
-    DelayAfter: 0
+    DelayAfter: 0.12
     AnimationIDOverride: 1
   - AbilityToCast: {fileID: 11400000, guid: 17fd5d900f9eb5140bfbd70dd7e6e170, type: 2}
     DelayAfter: 0
