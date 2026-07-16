@@ -14,6 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Abilities:
   - {fileID: 11400000, guid: 06280d7ea4148f142912712dcda4ec7d, type: 2}
+  - {fileID: 11400000, guid: 2c40eaebc42e5cd48b76a0b3dd759af6, type: 2}
+  - {fileID: 11400000, guid: 8b4c8a4d4b8922a49943317306b6ba16, type: 2}
+  - {fileID: 11400000, guid: bc7c0e912e9f29d43b4d2cab4506a378, type: 2}
+  - {fileID: 11400000, guid: ee5a2504c9cdd17489cf62874d7be7aa, type: 2}
   - {fileID: 11400000, guid: b41663af55e0dcc429858dd8602c7730, type: 2}
   - {fileID: 11400000, guid: 02d07c3295dba8341a727a557148876d, type: 2}
   - {fileID: 11400000, guid: 56dc5dcfc67b24b49aaea483f6856e81, type: 2}
@@ -31,16 +35,18 @@ MonoBehaviour:
   - {fileID: 11400000, guid: c0119bad393d6f74f9f62aa452dea6ad, type: 2}
   - {fileID: 11400000, guid: 841ec26c95a61014994aee639a5c6d47, type: 2}
   - {fileID: 11400000, guid: af94aa4ebeffdc248bc2a80f60b01014, type: 2}
-  - {fileID: 11400000, guid: 52db2b0fb27afb944a575d277162778e, type: 2}
+  - {fileID: 11400000, guid: a31f982b4c5e2af46a38df6e9830982f, type: 2}
   - {fileID: 11400000, guid: 6f6fbb0bc9be7d64089047b09e96c26e, type: 2}
   - {fileID: 11400000, guid: 3d695ff6c309dcc45b9f6908d928df5a, type: 2}
   - {fileID: 11400000, guid: 35250ec3ba95b494bba4a6e9e79b250e, type: 2}
   - {fileID: 11400000, guid: 8414b99a63f36c949a2ea0e8fb5ec3b1, type: 2}
   - {fileID: 11400000, guid: f5b8c13a15cbefd47aa60586da5a1693, type: 2}
+  - {fileID: 11400000, guid: 66be1fd7369d74e40834def8e6f6ad57, type: 2}
   - {fileID: 11400000, guid: 7f53883b772b6f34f8b3d5f6701bc219, type: 2}
   - {fileID: 11400000, guid: acda43e15e9bc1c4da89c6727b5d73c2, type: 2}
   - {fileID: 11400000, guid: 5a74aa86edab3724888ca994d80725c6, type: 2}
   - {fileID: 11400000, guid: 99fd8d5071408fa46a61f0fb309a57fe, type: 2}
+  - {fileID: 11400000, guid: 7fb7d8935fcfbb946921778d62635f8b, type: 2}
   - {fileID: 11400000, guid: 8902185c93152ec4a8a659346dbea617, type: 2}
   - {fileID: 11400000, guid: 4ceb242268d0d9141af77c1cca344540, type: 2}
   - {fileID: 11400000, guid: 56154d375aef97348818609f5d5698d5, type: 2}

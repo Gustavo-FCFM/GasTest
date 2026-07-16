@@ -166,13 +166,30 @@ public class GA_Dash : GameplayAbility, IChargedAbility
 
         Collider[] cols = Physics.OverlapCapsule(p0, p1, HitRadius, TargetLayer);
         var seen = new HashSet<AbilitySystemComponent>();
+        var candidates = new List<AbilitySystemComponent>();
 
         foreach (var c in cols)
         {
             AbilitySystemComponent asc = c.GetComponentInParent<AbilitySystemComponent>();
-            if (asc == null || ReferenceEquals(asc, OwnerASC) || !IsEnemy(asc) || seen.Contains(asc)) continue;
-            seen.Add(asc);
+            if (asc == null || ReferenceEquals(asc, OwnerASC) || !IsEnemy(asc) || !seen.Add(asc)) continue;
+            candidates.Add(asc);
+        }
 
+        // Golpeamos en el ORDEN REAL en que el dash los atraviesa (proyectando su
+        // posición sobre la dirección del dash). El daño le llega a todos igual,
+        // pero el orden importa para los efectos de un solo uso que se consumen en
+        // el primer golpe: así el crítico asegurado de Emboscada sombría le cae al
+        // PRIMER enemigo atravesado, y no a uno al azar (Physics.OverlapCapsule
+        // devuelve los colliders sin ningún orden garantizado).
+        if (candidates.Count > 1)
+        {
+            candidates.Sort((a, b) =>
+                Vector3.Dot(a.transform.position - origin, dir)
+                .CompareTo(Vector3.Dot(b.transform.position - origin, dir)));
+        }
+
+        foreach (var asc in candidates)
+        {
             if (DamageEffect != null) asc.ApplyGameplayEffect(DamageEffect, OwnerASC);
             ApplyEffectsTo(AdditionalEffects, asc);
             ChargeUltimate();

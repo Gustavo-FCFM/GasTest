@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c79a6ef63759774f8125f583fee8f7e, type: 3}
+  m_Name: GA_Assassin_Primary_Attack
+  m_EditorClassIdentifier: 
+  AbilityName: Assasin Primary Attack
+  AbilityIcon: {fileID: 21300000, guid: c024da923d4feae4b8a14883e3f4b4de, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 0}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 1
+  UltimateChargeAmount: 0
+  ActivationBlockedTags: 01000000
+  ActivationRequiredTags: 
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  VisualsSequence: []
+  Sequence:
+  - AbilityToCast: {fileID: 11400000, guid: bc7c0e912e9f29d43b4d2cab4506a378, type: 2}
+    DelayAfter: 0.12
+    AnimationIDOverride: 1
+  - AbilityToCast: {fileID: 11400000, guid: bc7c0e912e9f29d43b4d2cab4506a378, type: 2}
+    DelayAfter: 0
+    AnimationIDOverride: 1

@@ -11,7 +11,7 @@ using System.Collections.Generic;
 // paso y le delega Activate(); el daño/VFX de cada paso corre con
 // la lógica propia de esa habilidad.
 // ============================================================
-[CreateAssetMenu(fileName = "GA_BerserkerCombo", menuName = "GAS/Generics/Combo Sequence")]
+[CreateAssetMenu(fileName = "GA_ComboSequence", menuName = "GAS/Generics/Combo Sequence")]
 public class GA_ComboSequence : GameplayAbility
 {
     // Un paso del combo: qué habilidad lanzar y cuánto esperar después.

@@ -75,8 +75,15 @@ public class AbilitySystemComponent : MonoBehaviour
     // ver notas en NetworkAbilitySystemComponent.
     protected List<ActiveGameplayEffect> ActiveEffects = new List<ActiveGameplayEffect>();
 
-    // Tags de estado actualmente activos (ej: Stunned, State_Dead).
-    protected HashSet<EGameplayTag> GameplayTags = new HashSet<EGameplayTag>();
+    // Tags de estado activos, con el CONTEO de cuántas fuentes los otorgan.
+    // El tag existe mientras su conteo sea > 0.
+    //
+    // Es un conteo y no un simple set porque varios efectos pueden otorgar el
+    // MISMO tag a la vez (ej: 3 Heridas apiladas otorgan Status_Wound 3 veces, o
+    // un buff y un tótem que comparten Status_Buff_Damage). Con un set, al expirar
+    // el PRIMERO se borraba el tag y los demás quedaban sin él aunque siguieran
+    // activos. Ver AddTag/RemoveTag.
+    protected Dictionary<EGameplayTag, int> GameplayTags = new Dictionary<EGameplayTag, int>();
 
     // Instancias de habilidades otorgadas a este personaje (una por cada
     // GameplayAbility de su clase). Modificar esta lista a mano rompe la
@@ -103,21 +110,41 @@ public class AbilitySystemComponent : MonoBehaviour
     // TAGS DE ESTADO
     // =========================================================
 
-    // Consulta si el personaje tiene un tag activo ahora mismo.
-    public bool HasTag(EGameplayTag tag) => GameplayTags.Contains(tag);
+    // Consulta si el personaje tiene un tag activo ahora mismo (conteo > 0).
+    public bool HasTag(EGameplayTag tag) => GameplayTags.ContainsKey(tag);
 
-    // Agrega un tag. Si no lo tenía ya, notifica OnTagAddedCallback.
+    // Cuántas fuentes están otorgando este tag (0 si no lo tiene). Sirve, por
+    // ejemplo, para saber cuántas Heridas apiladas hay.
+    public int GetTagCount(EGameplayTag tag) => GameplayTags.TryGetValue(tag, out int count) ? count : 0;
+
+    // Suma una fuente del tag. Solo notifica OnTagAddedCallback cuando pasa de
+    // 0 a 1 (recién ahí el personaje "gana" el tag de verdad).
     public void AddTag(EGameplayTag tag)
     {
-        if (GameplayTags.Add(tag))
-            OnTagAddedCallback?.Invoke(tag);
+        if (GameplayTags.TryGetValue(tag, out int count))
+        {
+            GameplayTags[tag] = count + 1;
+            return;
+        }
+
+        GameplayTags[tag] = 1;
+        OnTagAddedCallback?.Invoke(tag);
     }
 
-    // Quita un tag. Si lo tenía, notifica OnTagRemovedCallback.
+    // Resta una fuente del tag. Solo lo quita (y notifica) cuando el conteo llega
+    // a 0: mientras otro efecto lo siga otorgando, el tag se mantiene.
     public void RemoveTag(EGameplayTag tag)
     {
-        if (GameplayTags.Remove(tag))
-            OnTagRemovedCallback?.Invoke(tag);
+        if (!GameplayTags.TryGetValue(tag, out int count)) return;
+
+        if (count > 1)
+        {
+            GameplayTags[tag] = count - 1;
+            return;
+        }
+
+        GameplayTags.Remove(tag);
+        OnTagRemovedCallback?.Invoke(tag);
     }
 
     // =========================================================
@@ -168,7 +195,7 @@ public class AbilitySystemComponent : MonoBehaviour
     // Dispara OnAttributeChangedCallback y, si deja la Vida en 0, Die().
     public void SetCurrentAttributeValue(EAttributeType type, float val)
     {
-        if (type == EAttributeType.Health && val < 1f && HasTag(EGameplayTag.Status_Inmortal))
+        if (type == EAttributeType.Health && val < 1f && HasTag(EGameplayTag.Status_Immortal))
             val = 1f;
 
         if (Attributes.ContainsKey(type)) Attributes[type].CurrentValue = val;
@@ -303,9 +330,43 @@ public class AbilitySystemComponent : MonoBehaviour
                     if (ActiveEffects[i].Definition == effect)
                         RemoveActiveEffect(ActiveEffects[i]);
             }
+            else if (effect.StackingPolicy == GameplayEffect.EStackingType.Stack && effect.MaxStacks > 0)
+            {
+                // Tope de acumulaciones: al llegar al máximo no agregamos otra, sino
+                // que refrescamos la que está por expirar — así seguir golpeando
+                // mantiene la acumulación viva sin pasarse del límite.
+                int stacks = 0;
+                ActiveGameplayEffect soonest = null;
+                foreach (var existing in ActiveEffects)
+                {
+                    if (existing.Definition != effect) continue;
+                    stacks++;
+                    if (soonest == null || existing.DurationRemaining < soonest.DurationRemaining)
+                        soonest = existing;
+                }
 
-            ActiveGameplayEffect newEffect = new ActiveGameplayEffect(effect, finalDuration);
+                if (stacks >= effect.MaxStacks)
+                {
+                    if (soonest != null)
+                    {
+                        soonest.DurationRemaining = finalDuration;
+                        soonest.TotalDuration     = finalDuration;
+                        OnActiveEffectAddedCallback?.Invoke(effect, finalDuration);
+                    }
+                    return;
+                }
+            }
+
+            WarnInertPoolModifiers(effect);
+
+            ActiveGameplayEffect newEffect = new ActiveGameplayEffect(effect, finalDuration, source);
             ActiveEffects.Add(newEffect);
+
+            // El escudo se otorga ANTES que los demás modificadores: si el mismo
+            // efecto también sube MaxHealth (ej. Enfurecer), no queremos que eso
+            // infle la "vida faltante" con la que escala el escudo.
+            newEffect.GrantedShield = GrantTemporaryShield(effect, source);
+
             ApplyEffectModifiers(effect, true);
 
             if (effect.GrantedTags != null)
@@ -315,10 +376,109 @@ public class AbilitySystemComponent : MonoBehaviour
         }
     }
 
+    // Calcula la magnitud final de un modificador: su valor fijo + el escalado
+    // con un atributo del ATACANTE + el escalado con la vida del OBJETIVO (this).
+    // No incluye el crítico por la espalda (eso es exclusivo del daño a la vida).
+    //
+    // El escalado por vida del objetivo sirve tanto para daño (Golpe mortal del
+    // Pícaro: % de la vida faltante del enemigo) como para otorgar (escudo del
+    // Berserker: % de su PROPIA vida faltante, porque el efecto se lo aplica a sí
+    // mismo). El SIGNO del coeficiente marca la dirección, igual que Magnitude:
+    // negativo = quita (daño), positivo = otorga (curación/escudo).
+    private float CalculateBaseMagnitude(Modifier mod, AbilitySystemComponent sourceASC)
+    {
+        float magnitude = mod.Magnitude;
+
+        if (mod.UseAttributeScaling && sourceASC != null)
+            magnitude += sourceASC.GetAttributeValue(mod.SourceAttribute) * mod.AttributeCoefficient;
+
+        if (mod.UseTargetHealthScaling)
+        {
+            float portion;
+            switch (mod.TargetHealthMode)
+            {
+                case Modifier.ETargetHealthMode.CurrentHealth: portion = GetAttributeValue(EAttributeType.Health); break;
+                case Modifier.ETargetHealthMode.MaxHealth:     portion = GetAttributeValue(EAttributeType.MaxHealth); break;
+                default:                                        portion = GetAttributeValue(EAttributeType.MaxHealth) - GetAttributeValue(EAttributeType.Health); break;
+            }
+            magnitude += portion * mod.TargetHealthCoefficient;
+        }
+
+        return magnitude;
+    }
+
+    // Efectos ya avisados, para no repetir el mismo warning de config cada vez
+    // que se aplican.
+    private static readonly HashSet<GameplayEffect> _warnedInertEffects = new HashSet<GameplayEffect>();
+
+    // Avisa si un efecto CON duración tiene modificadores sobre "pools" que el
+    // sistema de modificadores no puede aplicar y quedarían INERTES en silencio.
+    // Los pools (Health/Mana/Energy) tienen su propio valor actual, así que
+    // RecalculateAllAttributes los saltea: para tocarlos con un efecto de duración
+    // hay que usar Period > 0 (por tick). Shield es la excepción soportada, vía
+    // GrantTemporaryShield.
+    private void WarnInertPoolModifiers(GameplayEffect effect)
+    {
+        if (effect.Period > 0 || _warnedInertEffects.Contains(effect)) return;
+
+        foreach (var mod in effect.Modifiers)
+        {
+            if (mod.Attribute != EAttributeType.Health &&
+                mod.Attribute != EAttributeType.Mana &&
+                mod.Attribute != EAttributeType.Energy) continue;
+
+            Debug.LogWarning($"[GAS] '{effect.name}' tiene duración y un modificador sobre {mod.Attribute}, " +
+                             $"que es un 'pool': NO se aplica por el sistema de modificadores y queda inerte. " +
+                             $"Usá Period > 0 para que actúe por ticks (DoT/regeneración), o Shield si querés " +
+                             $"un escudo temporal.");
+            _warnedInertEffects.Add(effect);
+            return;
+        }
+    }
+
+    // Quita todas las instancias activas de un efecto concreto, revirtiendo sus
+    // modificadores, tags y escudo. Sirve para cancelar un buff antes de tiempo
+    // (ej: el escudo de carga de Golpe Final si lo interrumpen).
+    public void RemoveEffectsByDefinition(GameplayEffect definition)
+    {
+        if (definition == null) return;
+
+        for (int i = ActiveEffects.Count - 1; i >= 0; i--)
+            if (ActiveEffects[i].Definition == definition)
+                RemoveActiveEffect(ActiveEffects[i]);
+    }
+
+    // Otorga el ESCUDO de un efecto CON duración y devuelve cuánto otorgó.
+    // Shield es un "pool" (tiene su propio valor actual que el daño consume), así
+    // que no puede pasar por el sistema de modificadores/RecalculateAllAttributes
+    // —que lo saltea a propósito— sino que se suma acá al aplicar el efecto y se
+    // resta al expirar (ver RemoveActiveEffect). Así el escudo se puede ir de las
+    // dos formas: consumido por el daño, o retirado al terminar la duración.
+    private float GrantTemporaryShield(GameplayEffect effect, object source)
+    {
+        AbilitySystemComponent sourceASC = source as AbilitySystemComponent;
+        float total = 0f;
+
+        foreach (var mod in effect.Modifiers)
+        {
+            if (mod.Attribute != EAttributeType.Shield) continue;
+            // Para un pool solo tiene sentido sumar una cantidad.
+            if (mod.Type != Modifier.EModificationType.Add) continue;
+
+            float amount = CalculateBaseMagnitude(mod, sourceASC);
+            if (amount > 0f) total += amount;
+        }
+
+        if (total > 0f)
+            SetCurrentAttributeValue(EAttributeType.Shield, GetAttributeValue(EAttributeType.Shield) + total);
+
+        return total;
+    }
+
     // Aplica de una vez los Modifiers de un efecto SIN duración (daño,
     // curación, etc.). Calcula escalado con stats del atacante, resuelve
     // el escudo antes que la vida, y dispara robo de vida si corresponde.
-    private void ExecuteInstantEffect(GameplayEffect effect, object source = null)
+    private void ExecuteInstantEffect(GameplayEffect effect, object source = null, bool isPeriodicTick = false)
     {
         AbilitySystemComponent sourceASC = source as AbilitySystemComponent;
 
@@ -326,39 +486,10 @@ public class AbilitySystemComponent : MonoBehaviour
         {
             if (!Attributes.ContainsKey(mod.Attribute)) continue;
 
-            float calculatedMagnitude = mod.Magnitude;
+            float calculatedMagnitude = CalculateBaseMagnitude(mod, sourceASC);
 
-            if (mod.UseAttributeScaling && sourceASC != null)
-                calculatedMagnitude += sourceASC.GetAttributeValue(mod.SourceAttribute) * mod.AttributeCoefficient;
-
-            // Escalado por la vida del OBJETIVO (this = el que recibe el efecto):
-            // daño en base a un porcentaje de su vida faltante/actual/máxima
-            // (ej: Golpe mortal del Pícaro pega según la vida faltante del enemigo).
-            // Se RESTA (daño); para una curación que escale con vida, usar un
-            // coeficiente negativo.
-            if (mod.UseTargetHealthScaling)
-            {
-                float portion;
-                switch (mod.TargetHealthMode)
-                {
-                    case Modifier.ETargetHealthMode.CurrentHealth: portion = GetAttributeValue(EAttributeType.Health); break;
-                    case Modifier.ETargetHealthMode.MaxHealth:     portion = GetAttributeValue(EAttributeType.MaxHealth); break;
-                    default:                                        portion = GetAttributeValue(EAttributeType.MaxHealth) - GetAttributeValue(EAttributeType.Health); break;
-                }
-                calculatedMagnitude -= portion * mod.TargetHealthCoefficient;
-            }
-
-            // Ataque Furtivo (Pícaro): si el atacante tiene la pasiva de backstab
-            // (tag otorgado por su GE pasivo siempre activo) y golpea por la
-            // ESPALDA del objetivo, el daño se multiplica por su CritDamage.
-            if (mod.Attribute == EAttributeType.Health && calculatedMagnitude < 0 &&
-                sourceASC != null && sourceASC.HasTag(EGameplayTag.Passive_Backstab) &&
-                IsBackstab(sourceASC))
-            {
-                float critMult = sourceASC.GetAttributeValue(EAttributeType.CritDamage);
-                if (critMult < 1f) critMult = 2f; // por defecto x2 si la clase no configuró CritDamage
-                calculatedMagnitude *= critMult;
-            }
+            // Críticos (backstab, asegurado, primer golpe). Ver ResolveCritMultiplier.
+            calculatedMagnitude *= ResolveCritMultiplier(mod, calculatedMagnitude, sourceASC, isPeriodicTick);
 
             if (mod.Attribute == EAttributeType.Health && calculatedMagnitude < 0)
             {
@@ -399,6 +530,11 @@ public class AbilitySystemComponent : MonoBehaviour
         float sign = apply ? 1f : -1f;
         foreach (var mod in effect.Modifiers)
         {
+            // Shield es un "pool": no pasa por el sistema de modificadores (que
+            // RecalculateAllAttributes saltea igual). Su alta/baja la manejan
+            // GrantTemporaryShield y RemoveActiveEffect.
+            if (mod.Attribute == EAttributeType.Shield) continue;
+
             if (!Attributes.TryGetValue(mod.Attribute, out AttributeValue attr)) continue;
             if (mod.Type == Modifier.EModificationType.Add)
                 attr.AdditiveModifier += mod.Magnitude * sign;
@@ -414,6 +550,15 @@ public class AbilitySystemComponent : MonoBehaviour
     private void RemoveActiveEffect(ActiveGameplayEffect effect)
     {
         ApplyEffectModifiers(effect.Definition, false);
+
+        // Escudo temporal: retiramos exactamente lo que este efecto otorgó, sin
+        // bajar de 0 (si el daño ya se lo comió, no le sacamos escudo de otros).
+        if (effect.GrantedShield > 0f)
+        {
+            float current = GetAttributeValue(EAttributeType.Shield);
+            SetCurrentAttributeValue(EAttributeType.Shield, Mathf.Max(0f, current - effect.GrantedShield));
+        }
+
         foreach (EGameplayTag tag in effect.Definition.GrantedTags) RemoveTag(tag);
         ActiveEffects.Remove(effect);
         OnActiveEffectRemovedCallback?.Invoke(effect.Definition);
@@ -436,7 +581,11 @@ public class AbilitySystemComponent : MonoBehaviour
                 active.PeriodRemaining -= deltaTime;
                 if (active.PeriodRemaining <= 0)
                 {
-                    ExecuteInstantEffect(active.Definition, null);
+                    // Le pasamos la fuente original para que el tick tenga robo de
+                    // vida / escalado por el atacante. isPeriodicTick evita que un
+                    // tick de DoT dispare el crítico por la espalda (no queremos que
+                    // una herida pegue más fuerte por dónde está parado el atacante).
+                    ExecuteInstantEffect(active.Definition, active.Source, true);
                     active.PeriodRemaining = active.Definition.Period;
                 }
             }
@@ -651,6 +800,89 @@ public class AbilitySystemComponent : MonoBehaviour
         if (target == this) return includeSelf;
         if (TeamID == 0 || target.TeamID == 0) return false;
         return TeamID == target.TeamID;
+    }
+
+    // =========================================================
+    // CRÍTICOS
+    // =========================================================
+
+    // "Crítico mejorado" (Asesino): si no golpeaste a ese enemigo en este tiempo,
+    // el próximo golpe le pega crítico.
+    private const float FirstStrikeWindow = 6f;
+    // Reutilización del "Crítico mejorado": mínimo entre dos críticos de esta pasiva.
+    private const float FirstStrikeCooldown = 2f;
+
+    // Última vez que ESTE personaje golpeó a cada enemigo (para el Crítico mejorado).
+    private readonly Dictionary<AbilitySystemComponent, float> _lastStrikeTime
+        = new Dictionary<AbilitySystemComponent, float>();
+    // Última vez que disparó un crítico de "Crítico mejorado" (su cooldown).
+    private float _lastFirstStrikeCrit = -999f;
+
+    // Multiplicador de daño crítico de un golpe. Hay DOS capas independientes que
+    // sí se acumulan ENTRE SÍ (con CritDamage = 2 y un golpe base de 6):
+    //
+    //   1) "Es crítico" (x2 → 12). El Ataque Furtivo (por la espalda) y el crítico
+    //      asegurado (ej. Emboscada sombría) son dos formas de lo MISMO: hacer que
+    //      el golpe sea crítico. NO se duplican entre sí — pegar por la espalda
+    //      estando en Emboscada sigue siendo 12, no 24.
+    //
+    //   2) "Crítico mejorado" (otro x2). Es una capa APARTE que se suma a lo
+    //      anterior: por enfrente y sin nada más son 12; combinado con un crítico
+    //      (espalda o asegurado) son 24.
+    //
+    // Devuelve 1 (sin crítico) para curaciones, ticks de DoT o sin atacante.
+    private float ResolveCritMultiplier(Modifier mod, float magnitude, AbilitySystemComponent sourceASC, bool isPeriodicTick)
+    {
+        // Los ticks de una DoT no critean (sería raro que una herida pegue más
+        // fuerte según dónde está parado el atacante).
+        if (isPeriodicTick || sourceASC == null) return 1f;
+        if (mod.Attribute != EAttributeType.Health || magnitude >= 0) return 1f;
+
+        float critDamage = sourceASC.GetAttributeValue(EAttributeType.CritDamage);
+        if (critDamage < 1f) critDamage = 2f; // por defecto x2 si la clase no configuró CritDamage
+
+        // Capa 1: ¿es crítico? (espalda o asegurado — da igual cuál, no se suman)
+        bool isCrit = sourceASC.HasTag(EGameplayTag.Passive_Backstab) && IsBackstab(sourceASC);
+
+        // El crítico asegurado se consume igual, haya sido crítico o no: era "su
+        // PRIMER ataque". Por eso, en un dash que atraviesa a varios, solo el
+        // primero lo recibe (ver el orden del trayecto en GA_Dash). Quitar el tag
+        // a mano es seguro aunque lo haya otorgado un GE: al expirar, su RemoveTag
+        // es un no-op.
+        if (sourceASC.HasTag(EGameplayTag.Status_GuaranteedCrit))
+        {
+            isCrit = true;
+            sourceASC.RemoveTag(EGameplayTag.Status_GuaranteedCrit);
+        }
+
+        // Capa 2: Crítico mejorado (Asesino), independiente de la anterior.
+        bool improvedCrit = sourceASC.ConsumeFirstStrikeCrit(this);
+
+        float multiplier = 1f;
+        if (isCrit)       multiplier *= critDamage;
+        if (improvedCrit) multiplier *= critDamage;
+
+        return multiplier;
+    }
+
+    // ¿Este personaje puede pegarle un "Crítico mejorado" a 'target' ahora? Marca
+    // el golpe (para la ventana por objetivo) y consume el cooldown si aplica.
+    // La llama ResolveCritMultiplier sobre el ATACANTE.
+    private bool ConsumeFirstStrikeCrit(AbilitySystemComponent target)
+    {
+        if (target == null || !HasTag(EGameplayTag.Passive_FirstStrikeCrit)) return false;
+
+        float now = Time.time;
+        bool  isFirstStrike = !_lastStrikeTime.TryGetValue(target, out float last) ||
+                              (now - last) >= FirstStrikeWindow;
+
+        _lastStrikeTime[target] = now;
+
+        if (!isFirstStrike) return false;
+        if (now - _lastFirstStrikeCrit < FirstStrikeCooldown) return false;
+
+        _lastFirstStrikeCrit = now;
+        return true;
     }
 
     // Ángulo trasero a partir del cual un atacante cuenta como "por la espalda".

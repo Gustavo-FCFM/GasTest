@@ -16,21 +16,19 @@ MonoBehaviour:
   AbilityIcon: {fileID: 21300000, guid: 5b219e4b7c295504591214df193689ce, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: bd07a782525833e47889b22896900f13, type: 2}
+  CooldownDuration: 0
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 0
-  ActivationBlockedTags: 
+  ActivationBlockedTags: 01000000
   AnimationTriggerName: AttackTrigger
   AnimationID: 1
-  AbilityRadius: 3
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  HitboxShape: 1
-  HitboxOffsetZ: 3
-  HitboxHalfExtents: {x: 2, y: 1, z: 3}
-  ConeAngle: 90
   VisualsSequence: []
   ChargeTime: 1.5
-  ShieldAmount: 150
+  ChargeShieldEffect: {fileID: 11400000, guid: 6d6df215326fd3c41a4f214bd424b8ac, type: 2}
   DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
-  StunEffect: {fileID: 0}
+  StunEffect: {fileID: 11400000, guid: 599bef532c08eae4a8e05af2dc063cf9, type: 2}
+  HitboxOffsetZ: 3
+  HitboxHalfExtents: {x: 2, y: 1, z: 3}

@@ -22,13 +22,14 @@ MonoBehaviour:
   - InputSlot: 2
     Ability: {fileID: 11400000, guid: 02d07c3295dba8341a727a557148876d, type: 2}
   - InputSlot: 3
-    Ability: {fileID: 11400000, guid: 52db2b0fb27afb944a575d277162778e, type: 2}
+    Ability: {fileID: 11400000, guid: a31f982b4c5e2af46a38df6e9830982f, type: 2}
   - InputSlot: 6
     Ability: {fileID: 11400000, guid: 56dc5dcfc67b24b49aaea483f6856e81, type: 2}
   - InputSlot: 4
     Ability: {fileID: 11400000, guid: acda43e15e9bc1c4da89c6727b5d73c2, type: 2}
   - InputSlot: 5
     Ability: {fileID: 11400000, guid: 95426c07a66a6ba4aab2f0b1325a5dcb, type: 2}
+  PassiveEffects: []
   StatGrowthPerLevel: []
   AvailableSubclasses: []
   ClassAnimatorOverride: {fileID: 22100000, guid: a6e013513f2d1ab40b229d993cd946c9, type: 2}

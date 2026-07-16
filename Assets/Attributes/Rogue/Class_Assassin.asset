@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 749805704a6088741af34d91f0891ced, type: 3}
+  m_Name: Class_Assassin
+  m_EditorClassIdentifier: 
+  ClassName: Assassin
+  ClassIcon: {fileID: 21300000, guid: ae73fb56930f65d44858247c10d1c277, type: 3}
+  Description: Shhh Super Sneaky
+  BaseAttributes: {fileID: 11400000, guid: d4bdb499162328d498ae70ec392a2dc7, type: 2}
+  Abilities:
+  - InputSlot: 1
+    Ability: {fileID: 11400000, guid: ee5a2504c9cdd17489cf62874d7be7aa, type: 2}
+  - InputSlot: 2
+    Ability: {fileID: 11400000, guid: 2c40eaebc42e5cd48b76a0b3dd759af6, type: 2}
+  - InputSlot: 3
+    Ability: {fileID: 11400000, guid: 5b2baabbde4a86e48bed0823da7a55b6, type: 2}
+  - InputSlot: 6
+    Ability: {fileID: 11400000, guid: 8b4c8a4d4b8922a49943317306b6ba16, type: 2}
+  - InputSlot: 4
+    Ability: {fileID: 11400000, guid: 7fb7d8935fcfbb946921778d62635f8b, type: 2}
+  - InputSlot: 5
+    Ability: {fileID: 11400000, guid: 66be1fd7369d74e40834def8e6f6ad57, type: 2}
+  PassiveEffects:
+  - {fileID: 11400000, guid: 9244c1bdb47f1994ab8a02584e8c71a9, type: 2}
+  - {fileID: 11400000, guid: 58f051b63388f2947b676dff581f9760, type: 2}
+  StatGrowthPerLevel: []
+  AvailableSubclasses: []
+  ClassAnimatorOverride: {fileID: 22100000, guid: f175085a22aa728459655748dd969669, type: 2}
+  MainHandWeaponPrefab: {fileID: 5857225396379586743, guid: 2bd1d7cd9d0928f458195d58dfb564b6, type: 3}
+  OffHandWeaponPrefab: {fileID: 5857225396379586743, guid: 2bd1d7cd9d0928f458195d58dfb564b6, type: 3}

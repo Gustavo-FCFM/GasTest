@@ -111,6 +111,12 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     public readonly SyncDictionary<int, uint>  NetActiveEffectStartTick = new SyncDictionary<int, uint>();
     public readonly SyncDictionary<int, float> NetActiveEffectDuration  = new SyncDictionary<int, float>();
 
+    // Cuántas instancias (stacks) de ese efecto están activas. Un efecto con
+    // StackingPolicy = Stack puede tener varias a la vez (ej: las Heridas del
+    // Pícaro), y todas comparten esta única entrada porque el diccionario está
+    // indexado por EFECTO, no por instancia — ver SyncActiveEffect.
+    public readonly SyncDictionary<int, int> NetActiveEffectStacks = new SyncDictionary<int, int>();
+
     // =========================================================
     // STATS DERIVADOS EN RED (AtkSpeed, MovSpeed, Atq, Def, etc.)
     //
@@ -494,30 +500,59 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // EFECTOS ACTIVOS EN RED (buffs/debuffs)
     // =========================================================
 
-    private void HandleActiveEffectAdded(GameplayEffect effect, float totalDuration)
+    private void HandleActiveEffectAdded(GameplayEffect effect, float totalDuration) => SyncActiveEffect(effect);
+    private void HandleActiveEffectRemoved(GameplayEffect effect)                    => SyncActiveEffect(effect);
+
+    // Recalcula y publica el estado de UN efecto agregando TODAS sus instancias
+    // (stacks): sincroniza el stack que expira ÚLTIMO (para la barra de progreso)
+    // y cuántos hay en total.
+    //
+    // BUG QUE ARREGLAMOS: antes esto se escribía directo desde el add/remove. Como
+    // el diccionario está indexado por EFECTO y no por instancia, los stacks se
+    // pisaban entre sí: cada nueva aplicación reiniciaba el reloj de la UI, y al
+    // expirar el PRIMER stack se borraba la entrada entera → el icono desaparecía
+    // aunque quedaran stacks vivos (se veía como si el tiempo fuera solo el de la
+    // primera aplicación). Recontar la lista real en cada cambio lo resuelve.
+    private void SyncActiveEffect(GameplayEffect effect)
     {
-        if (!IsServerInitialized) return;
-        // Los efectos "Hidden" son mecánicas internas (ej: el propio
-        // CooldownEffect, que ya se sincroniza aparte) — no deben mostrar
-        // icono en la barra de buffs/debuffs.
+        if (!IsServerInitialized || _asc == null || effect == null) return;
+
+        // Los efectos "Hidden" son mecánicas internas (ej: el propio CooldownEffect,
+        // que ya se sincroniza aparte) — no muestran icono en la barra.
         if (effect.EffectType == GameplayEffect.EEffectType.Hidden) return;
 
         int index = ResolveEffectIndex(effect);
         if (index < 0) return;
 
-        NetActiveEffectStartTick[index] = TimeManager.Tick;
-        NetActiveEffectDuration[index]  = totalDuration;
-    }
+        int   stacks           = 0;
+        float longestRemaining = 0f;
+        float longestTotal     = 0f;
 
-    private void HandleActiveEffectRemoved(GameplayEffect effect)
-    {
-        if (!IsServerInitialized) return;
+        foreach (var active in _asc.GetActiveEffects())
+        {
+            if (active.Definition != effect) continue;
+            stacks++;
+            if (active.DurationRemaining > longestRemaining)
+            {
+                longestRemaining = active.DurationRemaining;
+                longestTotal     = active.TotalDuration;
+            }
+        }
 
-        int index = ResolveEffectIndex(effect);
-        if (index < 0) return;
+        if (stacks == 0)
+        {
+            NetActiveEffectStartTick.Remove(index);
+            NetActiveEffectDuration.Remove(index);
+            NetActiveEffectStacks.Remove(index);
+            return;
+        }
 
-        NetActiveEffectStartTick.Remove(index);
-        NetActiveEffectDuration.Remove(index);
+        // Reconstruimos el tick de inicio desde lo ya transcurrido (igual que con
+        // los cooldowns), para no reiniciar la barra en cada resincronización.
+        uint elapsedTicks = TimeManager.TimeToTicks(Mathf.Max(0f, longestTotal - longestRemaining));
+        NetActiveEffectStartTick[index] = TimeManager.Tick > elapsedTicks ? TimeManager.Tick - elapsedTicks : 0;
+        NetActiveEffectDuration[index]  = longestTotal;
+        NetActiveEffectStacks[index]    = stacks;
     }
 
     // Busca el índice de un GameplayEffect en GameplayEffectRegistry (ver
@@ -543,6 +578,13 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // Usado por UI_EffectContainer para saber qué efectos (índices de
     // GameplayEffectRegistry) están activos ahora mismo en este ASC.
     public IEnumerable<int> GetActiveEffectIndices() => NetActiveEffectDuration.Keys;
+
+    // Cuántos stacks de un efecto están activos ahora mismo. Devuelve false si ese
+    // efecto no está activo (la UI lo trata como 1). Ver SyncActiveEffect.
+    public bool TryGetNetActiveEffectStacks(int effectIndex, out int stacks)
+    {
+        return NetActiveEffectStacks.TryGetValue(effectIndex, out stacks);
+    }
 
     // Igual que TryGetNetCooldown pero para un efecto activo (buff/debuff)
     // identificado por su índice en GameplayEffectRegistry.
@@ -809,27 +851,32 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     }
 
     // =========================================================
-    // BLINK (GA_Blink / Golpe mortal) — teletransporte instantáneo.
+    // TELETRANSPORTE — mover al jugador desde el servidor.
     //
-    // El daño lo resuelve el servidor en GA_Blink.Activate() (autoridad de
-    // atributos). Pero mover al personaje tiene que pasar en el proceso DUEÑO
-    // (el CharacterController es client-authoritative, igual que en el salto),
-    // así que el servidor le manda la posición destino por TargetRpc.
+    // IMPORTANTE: el transform del jugador es CLIENT-AUTHORITATIVE (su
+    // NetworkTransform lo manda el dueño). Si el servidor le escribe la posición
+    // directo, el próximo paquete del dueño —que sigue donde estaba— la PISA: se
+    // ve como que el personaje aparece en el destino y "vuelve" al instante.
+    // Por eso cualquier reposicionamiento tiene que ejecutarlo el proceso DUEÑO,
+    // y el servidor solo le manda a dónde ir por TargetRpc.
+    //
+    // Lo usan el blink del Pícaro (GA_Blink) y el respawn (NetworkGameManager /
+    // PlayerController). DeathZone hace lo mismo por su cuenta, filtrando por
+    // IsOwner.
     // =========================================================
 
     // El servidor le pide al dueño que se teletransporte a 'position' mirando
-    // hacia 'faceDir'. Lo llama GA_Blink tras calcular el punto detrás del enemigo.
+    // hacia 'faceDir'.
     [Server]
-    public void ServerBlinkOwnerTo(Vector3 position, Vector3 faceDir)
+    public void ServerTeleportOwnerTo(Vector3 position, Vector3 faceDir)
     {
-        TargetExecuteBlink(Owner, position, faceDir);
+        TargetExecuteTeleport(Owner, position, faceDir);
     }
 
     [TargetRpc]
-    private void TargetExecuteBlink(NetworkConnection conn, Vector3 position, Vector3 faceDir)
+    private void TargetExecuteTeleport(NetworkConnection conn, Vector3 position, Vector3 faceDir)
     {
         PlayerController pc = GetComponent<PlayerController>();
-        Debug.Log($"[NetworkASC] TargetExecuteBlink recibido en el dueño: teletransportando a {position} (pc={(pc != null)}).");
         if (pc != null) pc.TeleportTo(position, faceDir);
     }
 
@@ -979,15 +1026,32 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     [ObserversRpc]
     private void ObserversHandleDeath()
     {
-        Animator anim = GetComponentInChildren<Animator>();
-        if (anim != null) anim.SetTrigger("Death");
+        SafeSetTrigger(GetComponentInChildren<Animator>(), "Death");
     }
 
     [ObserversRpc]
     private void ObserversHandleRevive()
     {
-        Animator anim = GetComponentInChildren<Animator>();
-        if (anim != null) anim.SetTrigger("Revive");
+        SafeSetTrigger(GetComponentInChildren<Animator>(), "Revive");
+    }
+
+    // Dispara un trigger del Animator solo si ese parámetro existe. Muerte y
+    // revivir son animaciones OPCIONALES: si el AnimatorOverrideController de una
+    // clase no define el parámetro, Unity llenaba la consola con "Parameter
+    // 'Revive' does not exist". Si querés la animación, agregá el trigger al
+    // Animator Controller; si no, esto lo ignora en silencio.
+    private static void SafeSetTrigger(Animator anim, string trigger)
+    {
+        if (anim == null || string.IsNullOrEmpty(trigger)) return;
+
+        foreach (var p in anim.parameters)
+        {
+            if (p.name == trigger)
+            {
+                anim.SetTrigger(trigger);
+                return;
+            }
+        }
     }
 
     // Revive al personaje (lo llama NetworkGameManager al respawnearlo).

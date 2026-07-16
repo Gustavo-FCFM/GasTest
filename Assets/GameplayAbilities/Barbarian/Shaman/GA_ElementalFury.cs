@@ -12,7 +12,7 @@ using FishNet.Object;
 // tornado de daño continuo (con VFX) que dura Duration segundos.
 // Al terminar, despawnea los tótems invocados.
 // ============================================================
-[CreateAssetMenu(fileName = "GA_ElementalFury", menuName = "GAS/Abilities/Shaman/Elemental Fury")]
+[CreateAssetMenu(fileName = "GA_ElementalFury", menuName = "GAS/Specific Abilities/Shaman/Elemental Fury")]
 public class GA_ElementalFury : GameplayAbility
 {
     [Header("Configuración de Invocación")]
@@ -97,7 +97,7 @@ public class GA_ElementalFury : GameplayAbility
 
             AbilitySystemComponent totemASC = totemObj.GetComponent<AbilitySystemComponent>();
             if (totemASC != null)
-                totemASC.AddTag(EGameplayTag.Status_Inmortal);
+                totemASC.AddTag(EGameplayTag.Status_Immortal);
 
             // Instantiate() normal solo crea el tótem en el servidor — sin
             // esto, es invisible para cualquier cliente que no sea el host.

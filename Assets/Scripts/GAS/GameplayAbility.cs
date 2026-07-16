@@ -56,6 +56,11 @@ public abstract class GameplayAbility : ScriptableObject
     // (ej: no se puede atacar si está Silenciado).
     public List<EGameplayTag> ActivationBlockedTags;
 
+    [Tooltip("Al revés que ActivationBlockedTags: el dueño DEBE tener TODOS estos tags para " +
+             "poder activarla (ej: 'Marcado para morir' del Asesino solo se lanza estando invisible). " +
+             "Vacío = sin requisitos.")]
+    public List<EGameplayTag> ActivationRequiredTags;
+
     [Header("Animación")]
     public string AnimationTriggerName = "AttackTrigger";
 
@@ -103,6 +108,9 @@ public abstract class GameplayAbility : ScriptableObject
     // ni se copia al clonar (se setea a mano justo después del Instantiate).
     [System.NonSerialized] public GameplayAbility SourceTemplate;
 
+    // Para no repetir el aviso de "CooldownEffect sin tag" en cada activación.
+    [System.NonSerialized] private bool _warnedNoCooldownTag;
+
     // True si este código está corriendo en el servidor (o si no hay red,
     // ej. un NPC). Cada Activate() concreto debe empezar con
     // "if (!IsServer) return;" para que la lógica de juego (daño,
@@ -133,7 +141,7 @@ public abstract class GameplayAbility : ScriptableObject
     // Valida si la habilidad se puede activar ahora mismo: dueño vivo,
     // sin tags bloqueantes, sin cooldown activo, y con costo pagable.
     // Cada subclase puede sobreescribirla para agregar condiciones extra
-    // (ver GA_InmortalWrath, que solo se activa estando muerto).
+    // (ver GA_ImmortalWrath, que solo se activa estando muerto).
     public virtual bool CanActivate()
     {
         if (OwnerASC == null) return false;
@@ -142,6 +150,10 @@ public abstract class GameplayAbility : ScriptableObject
         if (ActivationBlockedTags != null)
             foreach (EGameplayTag tag in ActivationBlockedTags)
                 if (OwnerASC.HasTag(tag)) return false;
+
+        if (ActivationRequiredTags != null)
+            foreach (EGameplayTag tag in ActivationRequiredTags)
+                if (!OwnerASC.HasTag(tag)) return false;
 
         if (CooldownEffect != null && CooldownEffect.GrantedTags.Count > 0)
             if (OwnerASC.HasTag(CooldownEffect.GrantedTags[0])) return false;
@@ -168,7 +180,20 @@ public abstract class GameplayAbility : ScriptableObject
             OwnerASC.ApplyGameplayEffect(CostEffect, this);
 
         if (CooldownEffect != null)
+        {
+            // Sin GrantedTags, CanActivate() no tiene con qué bloquear la
+            // reactivación (ver el guard de GrantedTags.Count ahí): la habilidad
+            // quedaría SIN cooldown real, en silencio. Avisamos una sola vez.
+            if (!_warnedNoCooldownTag && (CooldownEffect.GrantedTags == null || CooldownEffect.GrantedTags.Count == 0))
+            {
+                _warnedNoCooldownTag = true;
+                Debug.LogWarning($"[{AbilityName}] Su CooldownEffect '{CooldownEffect.name}' no tiene GrantedTags: " +
+                                 $"CanActivate no puede bloquear la reactivación, así que la habilidad no va a tener " +
+                                 $"cooldown real. Agregale un tag de cooldown al GE.");
+            }
+
             OwnerASC.ApplyGameplayEffect(CooldownEffect, this, ResolveCooldownDuration());
+        }
 
         if (VisualsSequence != null && VisualsSequence.Count > 0)
         {
@@ -302,9 +327,23 @@ public abstract class GameplayAbility : ScriptableObject
     // EndWithTag configurado (en vez de por un tiempo fijo).
     private System.Collections.IEnumerator DestroyVfxWhenTagRemoved(AbilitySystemComponent owner, GameObject vfx, EGameplayTag tag)
     {
-        yield return null;
+        // Primero esperamos a que el tag APAREZCA. En el servidor/host el efecto
+        // que lo otorga se aplica en el mismo frame, pero en un cliente remoto el
+        // tag llega por NetTags (asíncrono, puede tardar varios frames). Sin esta
+        // espera, el while de abajo veía "no tiene el tag" y destruía el VFX al
+        // instante en los observadores (el aura del buff parpadeaba y desaparecía).
+        const float tagWaitTimeout = 1f;
+        float elapsed = 0f;
+        while (elapsed < tagWaitTimeout && owner != null && vfx != null && !owner.HasTag(tag))
+        {
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        // Ahora sí: vive mientras el dueño conserve el tag.
         while (owner != null && owner.HasTag(tag) && vfx != null)
             yield return null;
+
         if (vfx != null) Destroy(vfx);
     }
 

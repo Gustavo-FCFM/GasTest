@@ -66,8 +66,6 @@ public class GA_LeapAttack : GameplayAbility
         else
             Debug.LogWarning("[GA_LeapAttack] No hay NetworkAbilitySystemComponent — el salto no se va a ejecutar en ningún lado.");
 
-        Debug.Log($"Salto Furioso Iniciado: Fuerza Vertical: {JumpVelocity}");
-
         EndAbility();
     }
 

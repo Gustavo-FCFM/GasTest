@@ -52,7 +52,7 @@ public class NPC_WaveEnemy : MonoBehaviour
             ASC.UpgradeAttribute(EAttributeType.MaxHealth, addedHealth);
             
             // Daño
-            ASC.UpgradeAttribute(EAttributeType.Atq, addedDamage);
+            ASC.UpgradeAttribute(EAttributeType.Attack, addedDamage);
 
             // Velocidad (Con límite de seguridad para que no rompa la física)
             float currentSpeed = ASC.GetAttributeValue(EAttributeType.MovSpeed);

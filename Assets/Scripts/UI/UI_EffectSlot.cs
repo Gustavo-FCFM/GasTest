@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 // ============================================================
 // UI_EffectSlot
@@ -16,6 +17,10 @@ public class UI_EffectSlot : MonoBehaviour
     public Image IconImage;       // Ícono del efecto, en el centro
     public Image BorderImage;     // Marco de color (verde = buff, rojo = debuff)
     public Image CooldownOverlay; // Sombra que gira mostrando cuánto falta (Type: Filled)
+
+    [Tooltip("Texto con la cantidad de acumulaciones. Solo se muestra si el efecto tiene más de 1 " +
+             "stack (ej: las Heridas del Pícaro). Opcional.")]
+    public TextMeshProUGUI StacksText;
 
     [Header("Configuración Colores")]
     public Color BuffColor = Color.green;
@@ -52,6 +57,19 @@ public class UI_EffectSlot : MonoBehaviour
         }
 
         if (CooldownOverlay != null) CooldownOverlay.fillAmount = 0;
+        SetStacks(1); // arranca oculto hasta que haya más de una acumulación
+    }
+
+    // Muestra la cantidad de acumulaciones. Se oculta con 1 o menos (un efecto
+    // que no apila no necesita número). Lo llama UI_EffectContainer con el conteo
+    // sincronizado (ver NetworkAbilitySystemComponent.TryGetNetActiveEffectStacks).
+    public void SetStacks(int stacks)
+    {
+        if (StacksText == null) return;
+
+        bool show = stacks > 1;
+        if (StacksText.gameObject.activeSelf != show) StacksText.gameObject.SetActive(show);
+        if (show) StacksText.text = stacks.ToString();
     }
 
     // Modo local: guarda la referencia viva y se actualiza solo en

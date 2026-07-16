@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 923ea9fbcde13614b8da2b7689d349ea, type: 3}
+  m_Name: GE_FinalBlowShield
+  m_EditorClassIdentifier: 
+  Duration: 3
+  Period: 0
+  StackingPolicy: 0
+  MaxStacks: 1
+  EffectGroup: 0
+  Priority: 0
+  Icon: {fileID: 21300000, guid: 89cc97401eb588a408315f5fa0148929, type: 3}
+  EffectType: 0
+  Modifiers:
+  - Attribute: 16
+    Type: 0
+    Magnitude: 0
+    UseAttributeScaling: 0
+    SourceAttribute: 0
+    AttributeCoefficient: 0
+    UseTargetHealthScaling: 1
+    TargetHealthMode: 2
+    TargetHealthCoefficient: 0.5
+  GrantedTags: 

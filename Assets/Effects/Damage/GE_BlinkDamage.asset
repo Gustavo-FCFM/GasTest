@@ -28,5 +28,5 @@ MonoBehaviour:
     AttributeCoefficient: 0
     UseTargetHealthScaling: 1
     TargetHealthMode: 0
-    TargetHealthCoefficient: 0.3
+    TargetHealthCoefficient: -0.3
   GrantedTags: 

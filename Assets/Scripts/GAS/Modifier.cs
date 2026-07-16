@@ -42,11 +42,13 @@ public class Modifier
     public float AttributeCoefficient = 1.0f;
 
     [Header("Escalado por Vida del Objetivo (Ejecución)")]
-    // Si está activo, el modificador escala también con la VIDA del objetivo
-    // (el que recibe el efecto), no la del atacante. Pensado para habilidades
-    // tipo "hace daño según la vida faltante del enemigo" (ej: Golpe mortal del
-    // Pícaro). El valor calculado se suma en la MISMA dirección que Magnitude
-    // (para un modificador de daño —Health negativo— agrega más daño).
+    // Si está activo, el modificador escala también con la VIDA del OBJETIVO
+    // (el que recibe el efecto), no la del atacante. Sirve para:
+    //  - Daño según la vida faltante del enemigo (ej: Golpe mortal del Pícaro).
+    //  - Otorgar según la PROPIA vida faltante, si el efecto se aplica a uno
+    //    mismo (ej: escudo del Berserker en un GA_SelfBuff).
+    // Solo funciona en efectos INSTANTÁNEOS (Duration = 0), que son los que
+    // pasan por ExecuteInstantEffect.
     public bool UseTargetHealthScaling;
 
     // Sobre qué porción de la vida del objetivo escalar.
@@ -58,7 +60,10 @@ public class Modifier
     }
     public ETargetHealthMode TargetHealthMode = ETargetHealthMode.MissingHealth;
 
-    // Fracción de esa vida que se aplica (ej: 0.3 = 30% de la vida faltante del
-    // objetivo). Solo se usa si UseTargetHealthScaling está activo.
-    public float TargetHealthCoefficient = 0.3f;
+    // Fracción de esa vida que se aplica. El SIGNO marca la dirección, igual que
+    // Magnitude:
+    //   NEGATIVO = quita   (ej: -0.3 → daño por el 30% de la vida faltante)
+    //   POSITIVO = otorga  (ej:  0.5 → escudo/curación por el 50% de la vida faltante)
+    // Solo se usa si UseTargetHealthScaling está activo.
+    public float TargetHealthCoefficient = 0f;
 }

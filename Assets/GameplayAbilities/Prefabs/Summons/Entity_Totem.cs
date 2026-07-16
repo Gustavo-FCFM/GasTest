@@ -132,7 +132,6 @@ public class Entity_Totem : NetworkBehaviour
         // también en todos los clientes.
         if (!IsServerInitialized) return;
 
-        Debug.Log("El tótem ha sido destruido.");
         if (IsSpawned) ServerManager.Despawn(gameObject);
     }
 

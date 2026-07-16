@@ -117,6 +117,11 @@ public class UI_EffectContainer : MonoBehaviour
 
             if (netAsc.TryGetNetActiveEffect(index, out float remaining, out float total))
                 slot.SetProgress(remaining, total);
+
+            // Acumulaciones: un mismo efecto puede tener varios stacks activos y
+            // todos comparten este slot (está indexado por efecto). Si no hay dato
+            // sincronizado lo tratamos como 1 (el slot esconde el número).
+            slot.SetStacks(netAsc.TryGetNetActiveEffectStacks(index, out int stacks) ? stacks : 1);
         }
     }
 

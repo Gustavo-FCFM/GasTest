@@ -168,9 +168,7 @@ public class NetworkGameManager : NetworkBehaviour
         StartCoroutine(RespawnCoroutine(conn, delay));
     }
 
-    // Espera el delay, reposiciona al jugador en un spawn point al azar
-    // (desactivando el CharacterController mientras lo mueve, para que
-    // no pelee con la física), y lo revive.
+    // Espera el delay, manda al jugador a un spawn point al azar, y lo revive.
     private System.Collections.IEnumerator RespawnCoroutine(
         NetworkConnection conn, float delay)
     {
@@ -185,14 +183,15 @@ public class NetworkGameManager : NetworkBehaviour
 
         Transform spawnPoint = GetRandomSpawnPoint();
 
-        CharacterController cc = playerObj.GetComponent<CharacterController>();
-        if (cc != null) cc.enabled = false;
-        playerObj.transform.SetPositionAndRotation(spawnPoint.position, spawnPoint.rotation);
-        if (cc != null) cc.enabled = true;
+        // BUG QUE ARREGLAMOS: acá se movía el transform DESDE EL SERVIDOR. Pero el
+        // NetworkTransform del jugador es client-authoritative, así que el próximo
+        // paquete del dueño (que seguía en su posición de muerte) pisaba el cambio:
+        // el host veía al jugador aparecer en el spawn y "reacomodarse" de vuelta,
+        // y en la pantalla del propio jugador nunca se movía. El teletransporte lo
+        // tiene que ejecutar el DUEÑO — ver ServerTeleportOwnerTo.
+        netASC.ServerTeleportOwnerTo(spawnPoint.position, spawnPoint.forward);
 
         netASC.Revive();
-
-        Debug.Log($"[GameManager] Jugador TeamID={netASC.NetTeamID} revivido.");
     }
 
     // =========================================================

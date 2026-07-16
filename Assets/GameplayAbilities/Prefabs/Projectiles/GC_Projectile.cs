@@ -94,7 +94,9 @@ public class GC_Projectile : NetworkBehaviour
     // La llama GA_ProjectileShoot (siempre en el servidor) justo después
     // de spawnear el proyectil, con todos los datos que necesita para
     // resolver el impacto y publicar quién disparó.
-    public void Initialize(GameplayEffect damage, GameplayEffect durationEffect, AbilitySystemComponent source, float speed, float ultCharge, GameObject impactVFX, GameplayAbility ability = null, List<GameplayEffect> extraEffects = null)
+    // Nota: la velocidad NO se pasa acá — la setea GA_ProjectileShoot.SpawnProjectile
+    // directo sobre el Rigidbody. Antes había un parámetro 'speed' que no se usaba.
+    public void Initialize(GameplayEffect damage, GameplayEffect durationEffect, AbilitySystemComponent source, float ultCharge, GameObject impactVFX, GameplayAbility ability = null, List<GameplayEffect> extraEffects = null)
     {
         damageEffect         = damage;
         this.durationEffect  = durationEffect;

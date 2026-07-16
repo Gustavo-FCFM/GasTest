@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 899f35e7618d9d2419389eb92e386f0d, type: 3}
+  m_Name: GA_MarkedForDeath
+  m_EditorClassIdentifier: 
+  AbilityName: Marked For Death
+  AbilityIcon: {fileID: 21300000, guid: 82c97f816b78a8a40b90859d446188ad, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: 4165da9d9de274a4aa511261df047340, type: 2}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 0
+  ActivationBlockedTags: 010000000200000003000000
+  ActivationRequiredTags: 20000000
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 5
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  VisualsSequence: []
+  MaxRange: 15
+  ZoneRadius: 5
+  DamageEffect: {fileID: 11400000, guid: 6c513cb2261d125408d83a0ddbb859bf, type: 2}
+  AdditionalEffects:
+  - {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
+  InvisibilityOnKillEffect: {fileID: 11400000, guid: 69e60dd731b6a8d47b7b7ba31d0b709e, type: 2}
+  ImpactVFX: {fileID: 0}

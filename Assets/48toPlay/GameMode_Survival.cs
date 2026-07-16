@@ -40,7 +40,7 @@ public class GameMode_Survival : MonoBehaviour
     public List<EAttributeType> AllowedAttributes = new List<EAttributeType>() 
     { 
         EAttributeType.MaxHealth, 
-        EAttributeType.Atq, 
+        EAttributeType.Attack, 
         EAttributeType.AtkSpeed, 
         EAttributeType.MovSpeed,
         EAttributeType.Def,
@@ -133,7 +133,7 @@ public class GameMode_Survival : MonoBehaviour
     private float GetRandomValueForAttribute(EAttributeType type) {
         switch (type) {
             case EAttributeType.MaxHealth:  return Random.Range(30, 151);
-            case EAttributeType.Atq:        return Random.Range(2, 12);
+            case EAttributeType.Attack:        return Random.Range(2, 12);
             case EAttributeType.Def:        return Random.Range(1, 4);
             case EAttributeType.MovSpeed:   return Random.Range(0.2f, 0.8f);
             case EAttributeType.LifeSteal:  return Random.Range(0.08f, 0.1f);
@@ -149,7 +149,7 @@ public class GameMode_Survival : MonoBehaviour
         switch (type)
         {
             case EAttributeType.MaxHealth: return $"Vitalidad\n{sign}{value:F0} Vida Máx";
-            case EAttributeType.Atq:       return $"Fuerza Bruta\n{sign}{value:F0} Daño";
+            case EAttributeType.Attack:       return $"Fuerza Bruta\n{sign}{value:F0} Daño";
             case EAttributeType.Def:       return $"Piel de Hierro\n{sign}{value:F0} Defensa";
             case EAttributeType.AtkSpeed:  return $"Frenesí\n{value:F2}s Intervalo de Ataque"; 
             case EAttributeType.MovSpeed:  return $"Pies Ligeros\n{sign}{value:F1} Velocidad";

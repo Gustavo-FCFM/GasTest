@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51ad0136467954f4f8ebeb3f3b8b11ac, type: 3}
+  m_Name: GA_Assassin_Dash
+  m_EditorClassIdentifier: 
+  AbilityName: Assassin Dash
+  AbilityIcon: {fileID: 21300000, guid: 4aafd235e8c08024288eae113ffcfde2, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: 10f0981bf286ed844b33e0f4b4b974e3, type: 2}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 1
+  UltimateChargeAmount: 1
+  ActivationBlockedTags: 0200000001000000
+  ActivationRequiredTags: 
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 3
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  VisualsSequence: []
+  DashDistance: 10
+  DashSpeed: 100
+  WallLayer:
+    serializedVersion: 2
+    m_Bits: 1
+  ExcludePlayerLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
+  AdditionalEffects:
+  - {fileID: 11400000, guid: 16573965ce339a749892bca518120f2b, type: 2}
+  HitRadius: 1.2
+  HitVFX: {fileID: 0}
+  MaxCharges: 2
+  KillResetWindow: 3

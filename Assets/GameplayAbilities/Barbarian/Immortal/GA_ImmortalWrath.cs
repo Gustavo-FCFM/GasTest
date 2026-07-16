@@ -1,7 +1,7 @@
 using UnityEngine;
 
 // ============================================================
-// GA_InmortalWrath
+// GA_ImmortalWrath
 //
 // Ultimate de resurrección: solo se puede activar estando MUERTO
 // (sobreescribe CanActivate). Revive con 1 de vida, se aplica un
@@ -9,11 +9,15 @@ using UnityEngine;
 // alrededor del punto de reaparición. La dispara PlayerController
 // automáticamente al morir, si está disponible.
 // ============================================================
-[CreateAssetMenu(fileName = "GA_InmortalWrath", menuName = "GAS/Abilities/Inmortal/Inmortal Wrath")]
-public class GA_InmortalWrath : GameplayAbility
+[CreateAssetMenu(fileName = "GA_ImmortalWrath", menuName = "GAS/Specific Abilities/Immortal/Immortal Wrath")]
+public class GA_ImmortalWrath : GameplayAbility
 {
-    [Header("Configuración Inmortal Wrath")]
-    public GameplayEffect InmortalBuffEffect;
+    [Header("Configuración Immortal Wrath")]
+    // FormerlySerializedAs: este campo se llamaba "InmortalBuffEffect". Unity
+    // serializa los campos por NOMBRE, así que sin esto el asset ya configurado
+    // perdería la referencia en silencio al renombrarlo.
+    [UnityEngine.Serialization.FormerlySerializedAs("InmortalBuffEffect")]
+    public GameplayEffect ImmortalBuffEffect;
     public GameplayEffect ExplosionDamageEffect;
     // Radio de la explosión de daño alrededor del punto de reaparición.
     public float AbilityRadius = 3f;
@@ -49,24 +53,17 @@ public class GA_InmortalWrath : GameplayAbility
             OwnerASC.Revive();
             OwnerASC.SetCurrentAttributeValue(EAttributeType.Health, 1f);
 
-            if (InmortalBuffEffect != null)
-                OwnerASC.ApplyGameplayEffect(InmortalBuffEffect, OwnerASC);
+            if (ImmortalBuffEffect != null)
+                OwnerASC.ApplyGameplayEffect(ImmortalBuffEffect, OwnerASC);
 
             Collider[] hits = Physics.OverlapSphere(OwnerASC.transform.position, AbilityRadius, TargetLayer);
-            int enemiesDamaged = 0;
             foreach (Collider hit in hits)
             {
                 AbilitySystemComponent targetASC = hit.GetComponentInParent<AbilitySystemComponent>();
                 if (targetASC != null && IsEnemy(targetASC))
                     if (ExplosionDamageEffect != null)
-                    {
                         targetASC.ApplyGameplayEffect(ExplosionDamageEffect, OwnerASC);
-                        enemiesDamaged++;
-                    }
             }
-            Debug.Log($"[GA_InmortalWrath] Explosión en {OwnerASC.transform.position} (radio {AbilityRadius}): " +
-                      $"{hits.Length} colliders, {enemiesDamaged} enemigos dañados. " +
-                      $"¿Tengo Status_Inmortal tras el buff?: {OwnerASC.HasTag(EGameplayTag.Status_Inmortal)}.");
 
             PlayerController pc = OwnerASC.GetComponent<PlayerController>();
             if (pc != null) pc.PlayAnimation(AnimationTriggerName, AnimationID);

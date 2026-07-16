@@ -38,7 +38,7 @@ public enum EGameplayTag
     Status_Immunity,     // Ej: Invencible
     Status_Rage,
     Status_Frenzy,
-    Status_Inmortal,
+    Status_Immortal,
     Status_Buff_Bear,
     Status_Buff_Wolf,
     Status_Buff_Eagle,
@@ -52,7 +52,12 @@ public enum EGameplayTag
 
     // IMPORTANTE: agregar tags nuevos SIEMPRE al final. Los .asset serializan los
     // tags por su NÚMERO de enum; insertarlos en el medio corre los índices y
-    // rompe las referencias ya guardadas (ej. Status_Inmortal, Rage, tótems).
+    // rompe las referencias ya guardadas (ej. Status_Immortal, Rage, tótems).
     Status_Wound,      // Heridas del Pícaro — daño con el tiempo, apilable (ver GE_Heridas)
     Passive_Backstab,  // Pícaro: golpear por la espalda hace daño crítico (ver ExecuteInstantEffect)
+
+    // --- ASESINO ---
+    Status_Invisible,        // Invisible para los ENEMIGOS (ver PlayerVisibility)
+    Status_GuaranteedCrit,   // El próximo golpe es crítico sí o sí; se CONSUME al usarlo
+    Passive_FirstStrikeCrit, // Crítico mejorado: el primer golpe a un enemigo tras un lapso critea
 }

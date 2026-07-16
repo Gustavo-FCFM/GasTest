@@ -18,7 +18,7 @@ public enum EAttributeType
     Energy,      // Energía actual (sistema de bloqueo/stamina)
     MaxEnergy,   // Energía máxima
     Def,         // Defensa — reduce el daño físico recibido
-    Atq,         // Ataque — daño físico base
+    Attack,      // Ataque — daño físico base
     MovSpeed,    // Velocidad de movimiento
     AtkSpeed,    // Tiempo entre ataques (a menor valor, ataca más rápido)
     CritChance,  // Probabilidad de golpe crítico

@@ -15,10 +15,14 @@ using System.Collections.Generic;
 public class GA_ContinuousAoE : GameplayAbility
 {
     // A quién afecta el área.
-    public enum EAoETarget { Enemigos, Aliados, Todos }
+    public enum EAoETarget { Enemies, Allies, All }
 
-    [Header("Objetivos Afectados")]
-    public EAoETarget Objetivos = EAoETarget.Enemigos;
+    [Header("Targets")]
+    // FormerlySerializedAs: este campo se llamaba "Objetivos". Unity serializa los
+    // campos por NOMBRE, así que sin esto los assets ya configurados perderían su
+    // valor en silencio al renombrarlo.
+    [UnityEngine.Serialization.FormerlySerializedAs("Objetivos")]
+    public EAoETarget Targets = EAoETarget.Enemies;
 
     [Header("Configuración de Área")]
     public float Radius        = 4f;
@@ -110,9 +114,9 @@ public class GA_ContinuousAoE : GameplayAbility
                 if (targetASC == null) continue;
 
                 bool isValidTarget = false;
-                if      (Objetivos == EAoETarget.Enemigos && IsEnemy(targetASC)) isValidTarget = true;
-                else if (Objetivos == EAoETarget.Aliados  && IsAlly(targetASC))  isValidTarget = true;
-                else if (Objetivos == EAoETarget.Todos)                          isValidTarget = true;
+                if      (Targets == EAoETarget.Enemies && IsEnemy(targetASC)) isValidTarget = true;
+                else if (Targets == EAoETarget.Allies  && IsAlly(targetASC))  isValidTarget = true;
+                else if (Targets == EAoETarget.All)                           isValidTarget = true;
 
                 if (isValidTarget)
                 {

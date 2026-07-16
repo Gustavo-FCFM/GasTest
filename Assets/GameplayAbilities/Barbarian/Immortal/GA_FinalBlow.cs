@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 // ============================================================
 // GA_FinalBlow
@@ -10,14 +11,17 @@ using System.Collections;
 // está por debajo del 5% de vida lo EJECUTA directo, si no le aplica
 // daño y aturdimiento normales.
 // ============================================================
-[CreateAssetMenu(fileName = "GA_FinalBlow", menuName = "GAS/Abilities/Inmortal/Final Blow")]
+[CreateAssetMenu(fileName = "GA_FinalBlow", menuName = "GAS/Specific Abilities/Inmortal/Final Blow")]
 public class GA_FinalBlow : GameplayAbility
 {
     [Header("Configuración Golpe Final")]
-    public float ChargeTime   = 1.5f;
-    public float ShieldAmount = 100f;
+    public float ChargeTime = 1.5f;
 
     [Header("Efectos")]
+    [Tooltip("Escudo que recibe MIENTRAS carga. Debe ser un GE con duración y un modificador " +
+             "de Shield (Add); se lo aplica a sí mismo. La duración la fuerza ChargeTime, así " +
+             "que no hace falta igualarla en el GE. Si lo interrumpen, se retira antes de tiempo.")]
+    public GameplayEffect ChargeShieldEffect;
     public GameplayEffect DamageEffect;
     public GameplayEffect StunEffect;
 
@@ -48,8 +52,13 @@ public class GA_FinalBlow : GameplayAbility
     {
         PlayerController pc = OwnerASC.GetComponent<PlayerController>();
 
-        float currentShield = OwnerASC.GetAttributeValue(EAttributeType.Shield);
-        OwnerASC.SetCurrentAttributeValue(EAttributeType.Shield, currentShield + ShieldAmount);
+        // Escudo mientras carga: se lo aplica A SÍ MISMO como cualquier otro GE.
+        // El sistema de escudos temporales lo otorga ahora y lo retira solo al
+        // expirar; le pasamos ChargeTime como duración para tener una sola fuente
+        // de verdad (no hay que igualar el Duration del GE).
+        if (ChargeShieldEffect != null)
+            OwnerASC.ApplyGameplayEffect(ChargeShieldEffect, OwnerASC, ChargeTime);
+
         OwnerASC.AddTag(EGameplayTag.State_Rooted);
 
         float timer = 0f;
@@ -70,13 +79,12 @@ public class GA_FinalBlow : GameplayAbility
             yield return null;
         }
 
-        float shieldLeft = OwnerASC.GetAttributeValue(EAttributeType.Shield);
-        OwnerASC.SetCurrentAttributeValue(EAttributeType.Shield, Mathf.Max(0, shieldLeft - ShieldAmount));
         OwnerASC.RemoveTag(EGameplayTag.State_Rooted);
 
         if (wasInterrupted)
         {
-            Debug.Log("¡Golpe Final Interrumpido!");
+            // Se cortó la carga: el escudo no debe sobrevivir al golpe fallido.
+            if (ChargeShieldEffect != null) OwnerASC.RemoveEffectsByDefinition(ChargeShieldEffect);
             EndAbility();
             yield break;
         }
@@ -86,17 +94,20 @@ public class GA_FinalBlow : GameplayAbility
         Vector3    hitboxCenter = pc.transform.position + pc.transform.forward * HitboxOffsetZ;
         Collider[] hitColliders = Physics.OverlapBox(hitboxCenter, HitboxHalfExtents, pc.transform.rotation, TargetLayer);
 
+        HashSet<AbilitySystemComponent> enemiesHit = new HashSet<AbilitySystemComponent>();
+
         foreach (Collider hit in hitColliders)
         {
-            AbilitySystemComponent targetASC = hit.GetComponent<AbilitySystemComponent>();
-            if (targetASC != null && IsEnemy(targetASC))
+            // GetComponentInParent (no GetComponent): el collider puede estar en un
+            // hijo del personaje (ej. NPCs), igual que en el resto de las habilidades.
+            AbilitySystemComponent targetASC = hit.GetComponentInParent<AbilitySystemComponent>();
+            if (targetASC != null && IsEnemy(targetASC) && enemiesHit.Add(targetASC))
             {
                 float targetHealth    = targetASC.GetAttributeValue(EAttributeType.Health);
                 float targetMaxHealth = targetASC.GetAttributeValue(EAttributeType.MaxHealth);
 
                 if (targetMaxHealth > 0 && (targetHealth / targetMaxHealth) <= 0.05f)
                 {
-                    Debug.Log($"¡{hit.name} fue EJECUTADO!");
                     targetASC.SetCurrentAttributeValue(EAttributeType.Health, 0);
                 }
                 else

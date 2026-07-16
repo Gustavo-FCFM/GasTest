@@ -47,6 +47,11 @@ public class GameplayEffect : ScriptableObject
     [Tooltip("Refresh: Si ya tienes este efecto, solo reinicia su duración.")]
     public EStackingType StackingPolicy = EStackingType.Stack;
 
+    [Tooltip("Máximo de acumulaciones (solo con StackingPolicy = Stack). 0 = sin límite. " +
+             "Al llegar al tope, aplicarlo de nuevo refresca la acumulación que esté por " +
+             "expirar en vez de agregar otra.")]
+    public int MaxStacks = 0;
+
     [Header("Exclusión Mutua (Jerarquía)")]
     [Tooltip("Efectos con el MISMO grupo (≠ None) se excluyen: solo vive el de mayor Priority a la vez. Ej: el buff normal del tótem y su versión potenciada comparten grupo, así no se acumulan.")]
     public EGameplayTag EffectGroup = EGameplayTag.None;

@@ -135,7 +135,7 @@ public class GA_ProjectileShoot : GameplayAbility
             // Le pasamos 'this' para que, al impactar (siempre en el
             // servidor), el proyectil pueda pedirle a NetworkASC que
             // reproduzca ImpactVFX en todos los peers vía PlayImpactVFX().
-            projectileScript.Initialize(InstantDamageEffect, DurationEffect, OwnerASC, LaunchForce, UltimateChargeAmount, ImpactVFX, this, AdditionalEffects);
+            projectileScript.Initialize(InstantDamageEffect, DurationEffect, OwnerASC, UltimateChargeAmount, ImpactVFX, this, AdditionalEffects);
         }
 
         Rigidbody rb = newProjectile.GetComponent<Rigidbody>();

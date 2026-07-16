@@ -30,6 +30,12 @@ public class PlayerController : NetworkBehaviour
     private NetworkAbilitySystemComponent NetASC;
     private CharacterController           characterController;
 
+    // El jugador DUEÑO en este proceso (null en un servidor sin cliente). Lo usan
+    // los sistemas que necesitan saber "de qué lado está quien mira esta pantalla",
+    // como la invisibilidad (que oculta al invisible solo para sus enemigos).
+    // Ver PlayerVisibility.
+    public static PlayerController LocalPlayer { get; private set; }
+
     [Header("Cámara de Red")]
     // Prefab de cámara que se instancia solo para el dueño local (ver
     // OnStartClient).
@@ -116,6 +122,17 @@ public class PlayerController : NetworkBehaviour
     [HideInInspector] public bool isRadialMenuOpen = false;
     private GameplayAbility currentRadialAbility;
 
+    // Habilidad de zona (IGroundTargetAbility) que se está apuntando ahora mismo,
+    // mientras se mantiene su botón. Ver UI_GroundTargetIndicator.
+    private GameplayAbility _groundTargetAbility;
+    private EAbilityInput   _groundTargetSlot;
+
+    // True mientras se mantiene apretada una habilidad que se apunta antes de
+    // lanzarse (menú radial o zona en el suelo). En ese estado isAttacking está en
+    // true a propósito, pero HAY que seguir leyendo el input para detectar cuándo
+    // se suelta el botón — y el watchdog no debe contar.
+    private bool IsAimingAbility => isRadialMenuOpen || _groundTargetAbility != null;
+
     // Bloquea el input del dueño (movimiento y habilidades) mientras un menú
     // modal está abierto — ej. la selección de clase inicial (UI_InitialClassMenu).
     private bool _inputLocked;
@@ -178,6 +195,8 @@ public class PlayerController : NetworkBehaviour
         // Cosas exclusivas del dueño local
         if (base.IsOwner)
         {
+            LocalPlayer = this;
+
             if (Camera.main != null) Camera.main.gameObject.SetActive(false);
 
             if (CameraPrefab != null)
@@ -243,6 +262,7 @@ public class PlayerController : NetworkBehaviour
         base.OnStopClient();
         _netClassIndex.OnChange -= OnNetClassIndexChanged;
         if (ASC != null) ASC.OnDeath -= HandlePlayerDeath;
+        if (LocalPlayer == this) LocalPlayer = null;
     }
 
     // =========================================================
@@ -271,7 +291,7 @@ public class PlayerController : NetworkBehaviour
         // lo liberamos tras un máximo razonable para no dejar al jugador sin
         // poder actuar. El menú radial queda excluido (mantiene isAttacking a
         // propósito hasta que soltás el botón).
-        if (isAttacking && !isRadialMenuOpen && Time.time - _attackStartTime > MaxAttackSeconds)
+        if (isAttacking && !IsAimingAbility && Time.time - _attackStartTime > MaxAttackSeconds)
         {
             Debug.LogWarning("[PlayerController] isAttacking quedó trabado — reseteando (watchdog).");
             FinishAttack();
@@ -288,6 +308,7 @@ public class PlayerController : NetworkBehaviour
 
         HandleMovementInput();
         HandleAbilityInput();
+        UpdateGroundTargetIndicator();
 
         // UpdateAnimations solo en el dueño — los observadores remotos ven
         // las animaciones sincronizadas por las ObserversRpc del NetworkASC.
@@ -434,7 +455,7 @@ public class PlayerController : NetworkBehaviour
     // Desactiva el CharacterController un instante para mover el transform sin
     // que el propio CC lo bloquee, y orienta al personaje hacia faceDir. Debe
     // correr en el proceso DUEÑO (el CC es client-authoritative) — lo dispara
-    // NetworkAbilitySystemComponent.TargetExecuteBlink.
+    // NetworkAbilitySystemComponent.TargetExecuteTeleport.
     public void TeleportTo(Vector3 position, Vector3 faceDir)
     {
         characterController.enabled = false;
@@ -466,7 +487,7 @@ public class PlayerController : NetworkBehaviour
     private void HandleAbilityInput()
     {
         if (ASC.HasTag(EGameplayTag.State_Silenced)) return;
-        if (isAttacking && !isRadialMenuOpen) return;
+        if (isAttacking && !IsAimingAbility) return;
 
         CheckAbilityButton("Fire3",   MovementAbility,      EAbilityInput.Movement);
         CheckAbilityButton("Action1", AbilityQ,             EAbilityInput.Action1);
@@ -484,7 +505,7 @@ public class PlayerController : NetworkBehaviour
         if (ability == null) return;
         if (Input.GetButtonDown(btn))
             ProcessAbilityPress(ability, slot);
-        else if (Input.GetButtonUp(btn) && currentRadialAbility == ability)
+        else if (Input.GetButtonUp(btn) && (currentRadialAbility == ability || _groundTargetAbility == ability))
             ProcessAbilityRelease();
     }
 
@@ -501,6 +522,19 @@ public class PlayerController : NetworkBehaviour
             isRadialMenuOpen     = true;
             currentRadialAbility = ability;
             if (UI_RadialMenu.Instance != null) UI_RadialMenu.Instance.Show(radial);
+        }
+        else if (ability is IGroundTargetAbility ground)
+        {
+            // Habilidad de zona: al presionar solo entramos en modo apuntado y
+            // mostramos el marcador. Se lanza al SOLTAR (ver ProcessAbilityRelease).
+            if (!ability.CanActivate()) return;
+            isAttacking          = true;
+            _attackStartTime     = Time.time;
+            _groundTargetAbility = ability;
+            _groundTargetSlot    = slot;
+
+            if (UI_GroundTargetIndicator.Instance != null)
+                UI_GroundTargetIndicator.Instance.Show(ground.TargetRadius);
         }
         else
         {
@@ -549,11 +583,48 @@ public class PlayerController : NetworkBehaviour
 
             ServerRequestRadialAbility(sel, pos);
         }
+        else if (_groundTargetAbility != null)
+        {
+            // Zona confirmada: escondemos el marcador y la lanzamos por el camino
+            // NORMAL — RequestAbility ya le manda el punto de mira al servidor
+            // (NetworkAimPoint), que es justo la zona que el jugador venía viendo.
+            if (UI_GroundTargetIndicator.Instance != null)
+                UI_GroundTargetIndicator.Instance.Hide();
+
+            // Predicción local de la animación, mismo criterio que arriba: solo en
+            // cliente remoto (en el host la dispara el propio Activate del servidor).
+            if (!IsServerInitialized)
+                PlayAnimation(_groundTargetAbility.AnimationTriggerName, _groundTargetAbility.AnimationID);
+
+            RequestAbility(_groundTargetSlot);
+            _groundTargetAbility = null;
+        }
+
         isRadialMenuOpen     = false;
         currentRadialAbility = null;
         // Reiniciar el reloj del watchdog: recién ahora isAttacking pasa a
-        // contar para el timeout (mientras el menú estuvo abierto no contaba).
+        // contar para el timeout (mientras se apuntaba no contaba).
         _attackStartTime     = Time.time;
+    }
+
+    // Mientras se mantiene una habilidad de zona, el marcador sigue la mira
+    // (recortado a su alcance, para que la vista previa coincida con lo que el
+    // servidor va a hacer de verdad). Solo corre en el dueño (ver Update).
+    private void UpdateGroundTargetIndicator()
+    {
+        if (_groundTargetAbility is not IGroundTargetAbility ground) return;
+        if (UI_GroundTargetIndicator.Instance == null) return;
+
+        UI_GroundTargetIndicator.Instance.UpdatePosition(GetClampedAimPoint(ground.MaxTargetRange));
+    }
+
+    // Punto de mira recortado a maxRange desde el jugador.
+    private Vector3 GetClampedAimPoint(float maxRange)
+    {
+        Vector3 point  = GetAimPoint(maxRange);
+        Vector3 offset = point - transform.position;
+        if (offset.magnitude > maxRange) point = transform.position + offset.normalized * maxRange;
+        return point;
     }
 
     // Calcula el punto de mira y rota al dueño hacia él ANTES de pedirle
@@ -638,7 +709,7 @@ public class PlayerController : NetworkBehaviour
         // vía RPC desde el cliente dueño, duplicando el respawn.
         if (!IsServerInitialized) return;
 
-        if (AbilityR is GA_InmortalWrath && AbilityR.CanActivate())
+        if (AbilityR is GA_ImmortalWrath && AbilityR.CanActivate())
         {
             // Activación DIRECTA server-side: HandlePlayerDeath ya corre en el
             // servidor. NO usamos RequestAbility porque ese va por el [ServerRpc]
@@ -673,9 +744,14 @@ public class PlayerController : NetworkBehaviour
     private System.Collections.IEnumerator SimpleServerRespawn(float delay)
     {
         yield return new WaitForSeconds(delay);
-        characterController.enabled = false;
-        transform.position = new Vector3(spawnPosition.x, 3f, spawnPosition.z);
-        characterController.enabled = true;
+
+        // Igual que en NetworkGameManager: el transform es client-authoritative, así
+        // que el teletransporte lo ejecuta el DUEÑO (si lo escribiéramos acá, en el
+        // servidor, el próximo paquete del dueño lo pisaría).
+        Vector3 respawnPos = new Vector3(spawnPosition.x, 3f, spawnPosition.z);
+        if (NetASC != null) NetASC.ServerTeleportOwnerTo(respawnPos, transform.forward);
+        else                TeleportTo(respawnPos, transform.forward); // sin red
+
         ASC.Revive();
     }
 

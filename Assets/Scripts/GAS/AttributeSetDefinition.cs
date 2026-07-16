@@ -9,7 +9,7 @@ using System.Collections.Generic;
 // AbilitySystemComponent.InitializeAttributes() al equipar una
 // clase, para poblar el diccionario de atributos desde cero.
 // ============================================================
-[CreateAssetMenu(fileName = "ASDef_Guardia", menuName = "GAS/Attribute Set Definition")]
+[CreateAssetMenu(fileName = "ASDef_New", menuName = "GAS/Attribute Set Definition")]
 public class AttributeSetDefinition : ScriptableObject
 {
     // Un par (atributo, valor base) dentro de la lista de abajo.

@@ -12,7 +12,7 @@ using FishNet.Object;
 // un máximo de tótems activos (despawneando el más viejo si se
 // pasa), y cobra un cooldown individual por tipo de tótem.
 // ============================================================
-[CreateAssetMenu(fileName = "GA_SpawnTotem", menuName = "GAS/Abilities/Shaman/Spawn Totem")]
+[CreateAssetMenu(fileName = "GA_SpawnTotem", menuName = "GAS/Specific Abilities/Shaman/Spawn Totem")]
 public class GA_SpawnTotem : GameplayAbility, IRadialMenuAbility
 {
     [Header("Configuración de Invocación")]
@@ -56,15 +56,18 @@ public class GA_SpawnTotem : GameplayAbility, IRadialMenuAbility
             return;
         }
 
-        // Verificar cooldown individual del tótem
+        // Verificar cooldown individual del tótem. El tag es opcional: si el GE no
+        // tiene GrantedTags no podemos saber si está en cooldown (y antes esto
+        // reventaba con IndexOutOfRange al leer GrantedTags[0] a ciegas).
         if (IndividualCooldownEffects != null &&
             IndividualCooldownEffects.Length > totemIndex &&
-            IndividualCooldownEffects[totemIndex] != null)
+            IndividualCooldownEffects[totemIndex] != null &&
+            IndividualCooldownEffects[totemIndex].GrantedTags != null &&
+            IndividualCooldownEffects[totemIndex].GrantedTags.Count > 0)
         {
             EGameplayTag cdTag = IndividualCooldownEffects[totemIndex].GrantedTags[0];
             if (OwnerASC.HasTag(cdTag))
             {
-                Debug.LogWarning($"El tótem {totemIndex} está en cooldown.");
                 EndAbility();
                 return;
             }
