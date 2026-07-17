@@ -990,6 +990,7 @@ MonoBehaviour:
   UltimateSlot: {fileID: 7320084360300960326}
   EffectContainer: {fileID: 6174696554993488100}
   LevelUpNotification: {fileID: 0}
+  FirstStrikeReadyIndicator: {fileID: 0}
 --- !u!114 &4823162735274743115
 MonoBehaviour:
   m_ObjectHideFlags: 0

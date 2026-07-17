@@ -54,6 +54,10 @@ public class UI_PlayerHUD : MonoBehaviour
     [Header("Notificaciones")]
     public GameObject LevelUpNotification;
 
+    [Tooltip("Se prende cuando el Crítico mejorado (Asesino) está disponible. Solo aparece si el " +
+             "jugador tiene esa pasiva, así que en las demás clases queda siempre oculto. Opcional.")]
+    public GameObject FirstStrikeReadyIndicator;
+
     // =========================================================
     // INICIALIZACIÓN
     // =========================================================
@@ -118,6 +122,20 @@ public class UI_PlayerHUD : MonoBehaviour
         if (asc == null) return;
         UpdateHealthUI();
         UpdateManaUI();
+        UpdateFirstStrikeIndicator();
+    }
+
+    // Prende/apaga el indicador de "Crítico mejorado listo". El estado real vive
+    // en el servidor, así que lo leemos del NetworkASC (sincronizado) cuando hay
+    // red, y del ASC local cuando no. En clases sin la pasiva siempre es false, así
+    // que el indicador queda oculto solo.
+    void UpdateFirstStrikeIndicator()
+    {
+        if (FirstStrikeReadyIndicator == null) return;
+
+        bool ready = netAsc != null ? netAsc.NetFirstStrikeReady : asc.IsFirstStrikeReady;
+        if (FirstStrikeReadyIndicator.activeSelf != ready)
+            FirstStrikeReadyIndicator.SetActive(ready);
     }
 
     // =========================================================

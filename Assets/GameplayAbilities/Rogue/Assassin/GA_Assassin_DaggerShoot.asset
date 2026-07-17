@@ -15,7 +15,7 @@ MonoBehaviour:
   AbilityName: Assassin Dagger Shoot
   AbilityIcon: {fileID: 21300000, guid: 9a1d6add7df9fa340a1499659a9045ff, type: 3}
   CostEffect: {fileID: 0}
-  CooldownEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: ecfe07a06c63704479a331a9bae55086, type: 2}
   CooldownDuration: 0
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 1

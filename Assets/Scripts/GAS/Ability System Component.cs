@@ -448,6 +448,25 @@ public class AbilitySystemComponent : MonoBehaviour
                 RemoveActiveEffect(ActiveEffects[i]);
     }
 
+    // Quita todos los efectos activos que otorguen un tag dado (revirtiendo sus
+    // modificadores/tags/escudo). Genérico: lo usa BreakInvisibility, y sirve para
+    // cualquier "romper el estado X" (ej: una purga que quita todos los debuffs).
+    public void RemoveEffectsWithTag(EGameplayTag tag)
+    {
+        for (int i = ActiveEffects.Count - 1; i >= 0; i--)
+            if (ActiveEffects[i].Definition.GrantedTags.Contains(tag))
+                RemoveActiveEffect(ActiveEffects[i]);
+    }
+
+    // Termina la invisibilidad de este personaje quitando los efectos que la
+    // otorgan. Lo dispara ExecuteInstantEffect al atacar o al recibir daño, y
+    // también lo puede llamar una habilidad a mano.
+    public void BreakInvisibility()
+    {
+        if (HasTag(EGameplayTag.Status_Invisible))
+            RemoveEffectsWithTag(EGameplayTag.Status_Invisible);
+    }
+
     // Otorga el ESCUDO de un efecto CON duración y devuelve cuánto otorgó.
     // Shield es un "pool" (tiene su propio valor actual que el daño consume), así
     // que no puede pasar por el sistema de modificadores/RecalculateAllAttributes
@@ -482,6 +501,8 @@ public class AbilitySystemComponent : MonoBehaviour
     {
         AbilitySystemComponent sourceASC = source as AbilitySystemComponent;
 
+        bool wasDamagingHit = false;
+
         foreach (var mod in effect.Modifiers)
         {
             if (!Attributes.ContainsKey(mod.Attribute)) continue;
@@ -493,6 +514,7 @@ public class AbilitySystemComponent : MonoBehaviour
 
             if (mod.Attribute == EAttributeType.Health && calculatedMagnitude < 0)
             {
+                wasDamagingHit = true;
                 float physicalDamage = Mathf.Abs(calculatedMagnitude);
                 float magicDamage    = sourceASC != null ? sourceASC.GetAttributeValue(EAttributeType.MagicDamage) : 0f;
                 float currentShield  = GetAttributeValue(EAttributeType.Shield);
@@ -519,6 +541,21 @@ public class AbilitySystemComponent : MonoBehaviour
             float newValue = CalculateModifiedValue(Attributes[mod.Attribute].CurrentValue, mod, calculatedMagnitude);
             SetCurrentAttributeValue(mod.Attribute, newValue);
             HandleLifeSteal(mod, calculatedMagnitude, sourceASC);
+        }
+
+        // Rotura de invisibilidad: un golpe de daño delata tanto a quien lo RECIBE
+        // (this) como a quien lo REPARTE (sourceASC).
+        //
+        // Solo en golpes DIRECTOS (no ticks de DoT): un tick periódico corre desde
+        // ProcessActiveEffects, que está iterando ActiveEffects — y BreakInvisibility
+        // remueve efectos de esa misma lista, lo que reventaría la iteración. Además,
+        // el caso "estoy invisible y me tickea un veneno viejo" es marginal.
+        if (wasDamagingHit && !isPeriodicTick)
+        {
+            BreakInvisibility(); // el objetivo se vuelve visible al ser golpeado
+
+            if (sourceASC != null && !ReferenceEquals(sourceASC, this))
+                sourceASC.BreakInvisibility(); // el atacante se delata al golpear
         }
     }
 
@@ -806,11 +843,12 @@ public class AbilitySystemComponent : MonoBehaviour
     // CRÍTICOS
     // =========================================================
 
-    // "Crítico mejorado" (Asesino): si no golpeaste a ese enemigo en este tiempo,
-    // el próximo golpe le pega crítico.
-    private const float FirstStrikeWindow = 6f;
-    // Reutilización del "Crítico mejorado": mínimo entre dos críticos de esta pasiva.
-    private const float FirstStrikeCooldown = 2f;
+    [Header("Crítico Mejorado (Asesino)")]
+    [Tooltip("Ventana por objetivo: un enemigo vuelve a estar 'fresco' para un crítico mejorado " +
+             "si no lo golpeás en estos segundos.")]
+    public float FirstStrikeWindow = 6f;
+    [Tooltip("Reutilización global: mínimo de segundos entre dos críticos mejorados (contra cualquiera).")]
+    public float FirstStrikeCooldown = 2f;
 
     // Última vez que ESTE personaje golpeó a cada enemigo (para el Crítico mejorado).
     private readonly Dictionary<AbilitySystemComponent, float> _lastStrikeTime
@@ -883,6 +921,30 @@ public class AbilitySystemComponent : MonoBehaviour
 
         _lastFirstStrikeCrit = now;
         return true;
+    }
+
+    // ¿El Crítico mejorado está disponible (pasó su reutilización global)? Lo usa
+    // el feedback visual del HUD. Refleja la reutilización, no la "frescura" de un
+    // enemigo puntual (eso depende de a quién le pegues). Solo tiene sentido en un
+    // personaje con la pasiva; para el resto siempre es false.
+    public bool IsFirstStrikeReady =>
+        HasTag(EGameplayTag.Passive_FirstStrikeCrit) &&
+        (Time.time - _lastFirstStrikeCrit >= FirstStrikeCooldown);
+
+    // ¿Le puedo clavar un Crítico mejorado a ESTE enemigo ahora? Suma la
+    // reutilización global (arriba) más la "frescura" del objetivo puntual: que no
+    // lo hayas golpeado en FirstStrikeWindow. Lo usa el nameplate del enemigo para
+    // avisarte que ya podés atacarlo con el golpe potenciado.
+    //
+    // NOTA DE RED: _lastStrikeTime solo se llena en el SERVIDOR (donde se aplica el
+    // daño). En el host es exacto; en un cliente remoto la "frescura" no la conoce,
+    // así que ahí este chequeo cae en la disponibilidad global (mismo que
+    // IsFirstStrikeReady). Suficiente para el aviso visual.
+    public bool IsFirstStrikeReadyAgainst(AbilitySystemComponent target)
+    {
+        if (target == null || !IsFirstStrikeReady) return false;
+        return !_lastStrikeTime.TryGetValue(target, out float last) ||
+               (Time.time - last >= FirstStrikeWindow);
     }
 
     // Ángulo trasero a partir del cual un atacante cuenta como "por la espalda".

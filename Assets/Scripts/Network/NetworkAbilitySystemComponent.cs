@@ -50,6 +50,12 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // Tags de estado activos, sincronizados para UI remota y efectos visuales.
     public readonly SyncHashSet<EGameplayTag> NetTags = new SyncHashSet<EGameplayTag>();
 
+    // Feedback del Crítico mejorado del Asesino: el estado "listo" (pasó la
+    // reutilización) vive en el servidor, así que lo sincronizamos para que el HUD
+    // del dueño (host o cliente remoto) lo muestre. SyncVar solo manda al cambiar.
+    private readonly SyncVar<bool> _netFirstStrikeReady = new SyncVar<bool>();
+    public bool NetFirstStrikeReady => _netFirstStrikeReady.Value;
+
     // =========================================================
     // COOLDOWNS EN RED
     //
@@ -253,6 +259,10 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     private void Update()
     {
         if (!IsServerInitialized || _asc == null) return;
+
+        // Feedback del Crítico mejorado: barato de chequear cada frame, y el SyncVar
+        // solo manda cuando el bool cambia (no hay tráfico si no se mueve).
+        _netFirstStrikeReady.Value = _asc.IsFirstStrikeReady;
 
         _cooldownSyncTimer += Time.deltaTime;
         if (_cooldownSyncTimer < CooldownSyncInterval) return;

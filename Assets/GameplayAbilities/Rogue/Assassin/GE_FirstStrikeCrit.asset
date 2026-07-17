@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 923ea9fbcde13614b8da2b7689d349ea, type: 3}
   m_Name: GE_FirstStrikeCrit
   m_EditorClassIdentifier: 
-  Duration: 0
+  Duration: 9999
   Period: 0
-  StackingPolicy: 1
+  StackingPolicy: 0
   MaxStacks: 0
   EffectGroup: 34
   Priority: 0

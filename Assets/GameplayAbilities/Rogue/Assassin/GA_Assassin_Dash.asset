@@ -17,7 +17,7 @@ MonoBehaviour:
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 10f0981bf286ed844b33e0f4b4b974e3, type: 2}
   CooldownDuration: 0
-  UseAttackSpeedAsCooldown: 1
+  UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 1
   ActivationBlockedTags: 0200000001000000
   ActivationRequiredTags: 
