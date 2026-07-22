@@ -55,6 +55,15 @@ public class UI_ClassCard : MonoBehaviour, ISelectHandler, IDeselectHandler, IPo
     public void OnPointerEnter(PointerEventData eventData) => HighlightCard();
     public void OnPointerExit(PointerEventData eventData) => UnhighlightCard();
 
+    // Resaltado manual por código, para la navegación con control (los menús
+    // llevan su propio índice de selección y resaltan la tarjeta elegida sin
+    // pasar por el EventSystem).
+    public void SetHighlighted(bool on)
+    {
+        if (on) HighlightCard();
+        else    UnhighlightCard();
+    }
+
     // Click sobre la tarjeta: avisa al menú qué clase se eligió.
     public void OnPointerClick(PointerEventData eventData) => OnCardClicked?.Invoke(AssignedClass);
 

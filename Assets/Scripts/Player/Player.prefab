@@ -612,6 +612,7 @@ GameObject:
   - component: {fileID: 4048573921564837201}
   - component: {fileID: 8346847358401417616}
   - component: {fileID: 1298740202973777526}
+  - component: {fileID: 252880015692499658}
   m_Layer: 7
   m_Name: Player
   m_TagString: Untagged
@@ -680,6 +681,7 @@ MonoBehaviour:
   TeamID: 1
   MaxLevel: 3
   GrantedAbilities: []
+  LastAttacker: {fileID: 0}
   FirstStrikeWindow: 6
   FirstStrikeCooldown: 12
 --- !u!114 &1688608165834369433
@@ -885,6 +887,7 @@ MonoBehaviour:
   _componentIndexCache: 3
   _addedNetworkObject: {fileID: 57168585733728244}
   _networkObjectCache: {fileID: 57168585733728244}
+  ExperiencePerKill: 50
 --- !u!114 &8346847358401417616
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -919,6 +922,19 @@ MonoBehaviour:
   ObstacleLayer:
     serializedVersion: 2
     m_Bits: 1
+--- !u!114 &252880015692499658
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9207976713266068147}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1afb64b2694e63440b7b6757361fa1d2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  InputActions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
 --- !u!1001 &5443824468532360004
 PrefabInstance:
   m_ObjectHideFlags: 0

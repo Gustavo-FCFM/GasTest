@@ -26,6 +26,11 @@ public class LevelUpSelectionSystem : MonoBehaviour
     // True mientras se están esperando las teclas 1/2/3 para elegir subclase.
     private bool isSelectionActive = false;
 
+    // Subclases disponibles al abrir, y el índice resaltado para navegar con
+    // control (se marca con ">" en el texto).
+    private System.Collections.Generic.List<CharacterClassDefinition> _subs;
+    private int _selectedIndex;
+
     // Arranca oculto. Si hay un player pre-asignado (escena sin red), se
     // engancha directo; si no, espera a que PlayerController llame Initialize().
     void Start()
@@ -61,18 +66,47 @@ public class LevelUpSelectionSystem : MonoBehaviour
     {
         if (!isSelectionActive || player == null) return;
 
-        if (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1))
+        PlayerInputProvider input = PlayerInputProvider.Local;
+
+        // Teclas 1/2/3 solo en instancias de teclado (no cruzar el teclado
+        // compartido con la instancia de mando).
+        if (input == null || input.UsesKeyboardMouse)
         {
-            TrySelectSubclass(0);
+            if      (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1)) { TrySelectSubclass(0); return; }
+            else if (Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2)) { TrySelectSubclass(1); return; }
+            else if (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3)) { TrySelectSubclass(2); return; }
         }
-        else if (Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2))
+
+        // Navegación con control: stick/d-pad mueve el marcador, Submit confirma.
+        if (input == null) return;
+
+        int step = input.ReadNavigateStep();
+        if (step != 0) MoveSelection(step);
+
+        if (input.Submit != null && input.Submit.WasPressedThisFrame())
+            TrySelectSubclass(_selectedIndex);
+    }
+
+    // Mueve el marcador de selección al navegar con control y refresca el texto.
+    private void MoveSelection(int step)
+    {
+        if (_subs == null || _subs.Count == 0) return;
+        _selectedIndex = ((_selectedIndex + step) % _subs.Count + _subs.Count) % _subs.Count;
+        RefreshOptionsText();
+    }
+
+    // Redibuja la lista de subclases marcando con ">" la resaltada.
+    private void RefreshOptionsText()
+    {
+        if (optionsText == null || _subs == null) return;
+
+        string text = "¡NIVEL MÁXIMO!\n";
+        for (int i = 0; i < _subs.Count; i++)
         {
-            TrySelectSubclass(1);
+            string marker = (i == _selectedIndex) ? "> " : "   ";
+            text += $"{marker}[{i + 1}] {_subs[i].ClassName}\n";
         }
-        else if (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3))
-        {
-            TrySelectSubclass(2);
-        }
+        optionsText.text = text;
     }
 
     // Se llama al llegar a nivel máximo (OnMaxLevelReached): muestra el
@@ -82,16 +116,12 @@ public class LevelUpSelectionSystem : MonoBehaviour
         isSelectionActive = true;
         if (selectionVisuals) selectionVisuals.SetActive(true);
 
-        if (optionsText != null && player.CurrentClassDef != null)
-        {
-            string text = "¡NIVEL MÁXIMO!\n";
-            var subs = player.CurrentClassDef.AvailableSubclasses;
-            for(int i=0; i<subs.Count; i++)
-            {
-                text += $"[{i+1}] {subs[i].ClassName}\n";
-            }
-            optionsText.text = text;
-        }
+        _subs = player.CurrentClassDef != null ? player.CurrentClassDef.AvailableSubclasses : null;
+        _selectedIndex = 0;
+        RefreshOptionsText();
+
+        // Modo UI para navegar/confirmar con control sin disparar acciones de juego.
+        if (PlayerInputProvider.Local != null) PlayerInputProvider.Local.SetUIMode(true);
     }
 
     // Valida el índice elegido y, si existe esa subclase, la equipa y
@@ -100,7 +130,7 @@ public class LevelUpSelectionSystem : MonoBehaviour
     {
         var currentClass = player.CurrentClassDef;
 
-        if (currentClass != null && index < currentClass.AvailableSubclasses.Count)
+        if (currentClass != null && index >= 0 && index < currentClass.AvailableSubclasses.Count)
         {
             CharacterClassDefinition chosenClass = currentClass.AvailableSubclasses[index];
 
@@ -108,6 +138,9 @@ public class LevelUpSelectionSystem : MonoBehaviour
 
             isSelectionActive = false;
             if (selectionVisuals) selectionVisuals.SetActive(false);
+
+            // Devolver el input a modo juego.
+            if (PlayerInputProvider.Local != null) PlayerInputProvider.Local.SetUIMode(false);
 
             Debug.Log($"Evolución completada: {chosenClass.ClassName}");
         }

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class ThirdPersonOrbitCam : MonoBehaviour
 {
@@ -11,7 +12,10 @@ public class ThirdPersonOrbitCam : MonoBehaviour
     // (0.8, 0, -2.5) lo mueve a la derecha y atrás (Shoulder View)
     public Vector3 CamOffset = new Vector3(0.8f, 0f, -2.5f); 
 
-    [Header("Input")]
+    [Header("Input - Mouse")]
+    // Sensibilidad del mouse. Se aplica al delta puntual del mouse (acción Look,
+    // Input System). El *0.1 interno compensa la escala del viejo eje "Mouse X"
+    // (que tenía sensibilidad 0.1) para que estos valores se sientan igual que antes.
     public float SensitivityX = 2.0f;
     public float SensitivityY = 2.0f;
     public float MinY = -30f; // Límite mirar abajo
@@ -43,19 +47,32 @@ public class ThirdPersonOrbitCam : MonoBehaviour
     {
         if (Target == null) return;
 
-        // 1. Leer Mouse
+        // 1. Leer la mira (acción "Look" del Input System: mouse o stick derecho).
         // (Si estás en el menú de pausa, deberías bloquear esto)
-        if (Time.timeScale > 0)
+        PlayerInputProvider input = PlayerInputProvider.Local;
+        if (Time.timeScale > 0 && input != null && input.IsReady)
         {
-            rotY += Input.GetAxis("Mouse X") * SensitivityX;
-            rotX -= Input.GetAxis("Mouse Y") * SensitivityY;
+            Vector2 look = input.LookValue;
 
-            // Stick derecho del control (LookX/LookY, ver ProjectSettings/Input
-            // Manager). Es un valor sostenido, no un delta, así que se escala
-            // por Time.deltaTime para que gire a una velocidad constante en
-            // grados/segundo sin importar el framerate.
-            rotY += Input.GetAxis("LookX") * GamepadSensitivity * Time.deltaTime;
-            rotX -= Input.GetAxis("LookY") * GamepadSensitivity * Time.deltaTime;
+            // El mouse y el stick tienen semánticas distintas: el mouse manda un
+            // DELTA por frame (se suma directo), el stick manda una inclinación
+            // SOSTENIDA (-1 a 1) que se escala por Time.deltaTime para girar a
+            // grados/segundo constantes. Detectamos cuál está moviendo la acción
+            // por el dispositivo de su control activo.
+            bool fromGamepad = input.Look.activeControl != null &&
+                               input.Look.activeControl.device is Gamepad;
+
+            if (fromGamepad)
+            {
+                rotY += look.x * GamepadSensitivity * Time.deltaTime;
+                rotX -= look.y * GamepadSensitivity * Time.deltaTime;
+            }
+            else
+            {
+                // *0.1 para replicar la escala del viejo eje "Mouse X" (sensibilidad 0.1).
+                rotY += look.x * SensitivityX * 0.1f;
+                rotX -= look.y * SensitivityY * 0.1f;
+            }
 
             rotX = Mathf.Clamp(rotX, MinY, MaxY);
         }

@@ -30,6 +30,11 @@ public class UI_InitialClassMenu : MonoBehaviour
     // Clases en el mismo orden en que se muestran las tarjetas — el índice acá
     // es el que mapean las teclas 1/2/3...
     private readonly List<CharacterClassDefinition> _built = new List<CharacterClassDefinition>();
+    // Tarjetas instanciadas, en paralelo a _built (misma posición = misma clase).
+    // Sirven para resaltar la selección al navegar con el control.
+    private readonly List<UI_ClassCard> _cards = new List<UI_ClassCard>();
+    // Índice resaltado al navegar con control (-1 = nada resaltado todavía).
+    private int _selectedIndex = -1;
 
     void Awake()
     {
@@ -53,20 +58,53 @@ public class UI_InitialClassMenu : MonoBehaviour
         OpenMenu();
     }
 
-    // Con el menú abierto, permite elegir con las teclas 1/2/3... como
-    // alternativa al click (útil si el mouse/EventSystem falla).
+    // Con el menú abierto, permite elegir de tres formas: click (EventSystem),
+    // teclas 1/2/3 (solo en instancias de teclado), y control (mapa UI del
+    // jugador local: stick/d-pad para moverse + Submit para confirmar).
     void Update()
     {
         if (!_open) return;
 
-        for (int i = 0; i < _built.Count && i < 9; i++)
+        PlayerInputProvider input = PlayerInputProvider.Local;
+
+        // Teclas 1..9 (alternativa directa) — solo si esta instancia usa teclado,
+        // para no cruzar el teclado compartido con la instancia de mando.
+        if (input == null || input.UsesKeyboardMouse)
         {
-            if (Input.GetKeyDown(KeyCode.Alpha1 + i) || Input.GetKeyDown(KeyCode.Keypad1 + i))
+            for (int i = 0; i < _built.Count && i < 9; i++)
             {
-                ConfirmSelection(_built[i]);
-                return;
+                if (Input.GetKeyDown(KeyCode.Alpha1 + i) || Input.GetKeyDown(KeyCode.Keypad1 + i))
+                {
+                    ConfirmSelection(_built[i]);
+                    return;
+                }
             }
         }
+
+        // Navegación con control.
+        if (input == null) return;
+
+        int step = input.ReadNavigateStep();
+        if (step != 0) MoveSelection(step);
+
+        if (input.Submit != null && input.Submit.WasPressedThisFrame() &&
+            _selectedIndex >= 0 && _selectedIndex < _built.Count)
+        {
+            ConfirmSelection(_built[_selectedIndex]);
+        }
+    }
+
+    // Mueve el resaltado de tarjeta al navegar con control (envuelve los extremos).
+    private void MoveSelection(int step)
+    {
+        if (_cards.Count == 0) return;
+
+        if (_selectedIndex >= 0 && _selectedIndex < _cards.Count && _cards[_selectedIndex] != null)
+            _cards[_selectedIndex].SetHighlighted(false);
+
+        _selectedIndex = ((_selectedIndex + step) % _cards.Count + _cards.Count) % _cards.Count;
+
+        if (_cards[_selectedIndex] != null) _cards[_selectedIndex].SetHighlighted(true);
     }
 
     // Genera una tarjeta por clase base y le conecta el callback de click.
@@ -74,6 +112,8 @@ public class UI_InitialClassMenu : MonoBehaviour
     {
         foreach (Transform child in CardsParent) Destroy(child.gameObject);
         _built.Clear();
+        _cards.Clear();
+        _selectedIndex = -1;
 
         CharacterClassDefinition[] classes = targetPlayer.MainBaseClasses;
         for (int i = 0; i < classes.Length; i++)
@@ -89,6 +129,7 @@ public class UI_InitialClassMenu : MonoBehaviour
                 cardUI.OnCardClicked = ConfirmSelection;      // clic → elegir esta clase
             }
             _built.Add(classDef);
+            _cards.Add(cardUI); // en paralelo a _built (misma posición = misma clase)
         }
     }
 
@@ -102,6 +143,15 @@ public class UI_InitialClassMenu : MonoBehaviour
         _open = true;
 
         if (targetPlayer != null) targetPlayer.SetInputLocked(true);
+
+        // Pasar el input del jugador a modo UI (apaga el mapa Player, enciende el
+        // UI) para navegar con control sin disparar acciones de juego.
+        if (PlayerInputProvider.Local != null) PlayerInputProvider.Local.SetUIMode(true);
+
+        // Arrancar con la primera tarjeta resaltada, para que el control tenga
+        // un punto de partida visible.
+        if (_cards.Count > 0) MoveSelection(1);
+
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible   = true;
     }
@@ -123,6 +173,10 @@ public class UI_InitialClassMenu : MonoBehaviour
         _open = false;
 
         if (targetPlayer != null) targetPlayer.SetInputLocked(false);
+
+        // Devolver el input a modo juego.
+        if (PlayerInputProvider.Local != null) PlayerInputProvider.Local.SetUIMode(false);
+
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible   = false;
     }

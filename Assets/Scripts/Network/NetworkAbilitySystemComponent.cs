@@ -27,6 +27,11 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // CAMPOS Y SYNCVARS
     // =========================================================
 
+    [Header("Recompensas")]
+    [Tooltip("EXP que gana el jugador que consigue una baja. Provisional para pruebas; " +
+             "es lo que reemplaza al cheat de subir de nivel a mano una vez que haya varios jugadores.")]
+    public float ExperiencePerKill = 50f;
+
     // Referencia al ASC local (mismo GameObject).
     private AbilitySystemComponent _asc;
 
@@ -174,6 +179,7 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
 
         _asc.OnDeath  += HandleDeath;
         _asc.OnRevive += HandleRevive;
+        _asc.OnMaxLevelReached += HandleMaxLevelReached;
 
         _asc.OnActiveEffectAddedCallback   += HandleActiveEffectAdded;
         _asc.OnActiveEffectRemovedCallback += HandleActiveEffectRemoved;
@@ -190,6 +196,7 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         _asc.OnTagRemovedCallback       -= HandleTagRemoved;
         _asc.OnDeath                    -= HandleDeath;
         _asc.OnRevive                   -= HandleRevive;
+        _asc.OnMaxLevelReached          -= HandleMaxLevelReached;
         _asc.OnActiveEffectAddedCallback   -= HandleActiveEffectAdded;
         _asc.OnActiveEffectRemovedCallback -= HandleActiveEffectRemoved;
 
@@ -1024,7 +1031,43 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     private void HandleDeath()
     {
         if (!IsServerInitialized) return;
+        AwardKillExperience();
         ObserversHandleDeath();
+    }
+
+    // Le da EXP al jugador que consiguió esta baja. El ASC dejó anotado quién pegó
+    // el daño en LastAttacker (poblado solo en la copia del servidor, que es donde
+    // corre HandleDeath). El _netExp del matador sincroniza el cambio a su cliente,
+    // igual que hace el cheat de nivel — no hace falta nada extra acá.
+    [Server]
+    private void AwardKillExperience()
+    {
+        if (_asc == null || ExperiencePerKill <= 0f) return;
+
+        AbilitySystemComponent killer = _asc.LastAttacker;
+        if (killer == null || ReferenceEquals(killer, _asc)) return;
+
+        NetworkAbilitySystemComponent killerNet = killer.GetComponent<NetworkAbilitySystemComponent>();
+        if (killerNet != null) killerNet.ServerGainExperience(ExperiencePerKill);
+    }
+
+    // El ASC llegó a nivel máximo (por bajas o por el cheat). OnMaxLevelReached se
+    // disparó en la copia del SERVIDOR, pero la UI de selección de subclase escucha
+    // ese evento en el ASC LOCAL del dueño — así que a un dueño remoto hay que
+    // avisarle por su conexión. En el host el dueño ES este proceso y su UI ya
+    // escuchó el evento local, por eso solo reenviamos cuando !IsOwner.
+    private void HandleMaxLevelReached()
+    {
+        if (!IsServerInitialized) return;
+        if (!IsOwner) TargetShowSubclassSelection(Owner);
+    }
+
+    [TargetRpc]
+    private void TargetShowSubclassSelection(NetworkConnection conn)
+    {
+        // En el host el evento ya se disparó localmente; evitamos re-disparar.
+        if (IsServerInitialized) return;
+        if (_asc != null) _asc.TriggerMaxLevelReached();
     }
 
     private void HandleRevive()

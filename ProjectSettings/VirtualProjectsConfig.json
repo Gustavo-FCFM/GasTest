@@ -1,4 +1,7 @@
 {
-  "PlayerTags": [],
+  "PlayerTags": [
+    "pad0",
+    "kbm"
+  ],
   "version": "1.6.3"
 }

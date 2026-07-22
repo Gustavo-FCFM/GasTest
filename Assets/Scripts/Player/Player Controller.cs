@@ -20,6 +20,7 @@ using FishNet.Object.Synchronizing;
 // ============================================================
 [RequireComponent(typeof(AbilitySystemComponent))]
 [RequireComponent(typeof(CharacterController))]
+[RequireComponent(typeof(PlayerInputProvider))]
 public class PlayerController : NetworkBehaviour
 {
     // =========================================================
@@ -29,6 +30,10 @@ public class PlayerController : NetworkBehaviour
     private AbilitySystemComponent        ASC;
     private NetworkAbilitySystemComponent NetASC;
     private CharacterController           characterController;
+
+    // Lee el input del jugador vía el Input System nuevo (acciones Move, Look,
+    // PrimaryAttack, ...). Solo el dueño local lo inicializa (ver OnStartClient).
+    private PlayerInputProvider           _input;
 
     // El jugador DUEÑO en este proceso (null en un servidor sin cliente). Lo usan
     // los sistemas que necesitan saber "de qué lado está quien mira esta pantalla",
@@ -149,6 +154,7 @@ public class PlayerController : NetworkBehaviour
         ASC                = GetComponent<AbilitySystemComponent>();
         NetASC             = GetComponent<NetworkAbilitySystemComponent>();
         characterController = GetComponent<CharacterController>();
+        _input             = GetComponent<PlayerInputProvider>();
 
         // Los clips de ataque disparan Animation Events (AnimationEvent_EnableTrail,
         // AnimationEvent_DisableTrail, AnimationEvent_HitFrame) sobre el GameObject
@@ -196,6 +202,9 @@ public class PlayerController : NetworkBehaviour
         if (base.IsOwner)
         {
             LocalPlayer = this;
+
+            // Habilitar el input del Input System nuevo solo para el dueño local.
+            if (_input != null) _input.InitializeForOwner();
 
             if (Camera.main != null) Camera.main.gameObject.SetActive(false);
 
@@ -263,6 +272,7 @@ public class PlayerController : NetworkBehaviour
         _netClassIndex.OnChange -= OnNetClassIndexChanged;
         if (ASC != null) ASC.OnDeath -= HandlePlayerDeath;
         if (LocalPlayer == this) LocalPlayer = null;
+        if (base.IsOwner && _input != null) _input.ShutdownOwner();
     }
 
     // =========================================================
@@ -273,15 +283,18 @@ public class PlayerController : NetworkBehaviour
     {
         if (!IsOwner) return;
 
+        // El input del dueño todavía no está listo (se habilita en OnStartClient).
+        if (_input == null || !_input.IsReady) return;
+
         // Menú modal abierto (ej. selección de clase inicial): el jugador no se
         // mueve ni activa habilidades hasta cerrarlo (elegir una tarjeta).
         if (_inputLocked) return;
 
         // CHEAT (debug): subir al nivel máximo para disparar la selección de
-        // subclase. Alt en teclado; JoystickButton6 (View/Back en un mando
-        // Xbox) en control — cambiá/ampliá esos KeyCode si querés otro botón.
-        if (Input.GetKeyDown(KeyCode.LeftAlt) || Input.GetKeyDown(KeyCode.RightAlt) ||
-            Input.GetKeyDown(KeyCode.JoystickButton6))
+        // subclase. Acción "Cheat" (Alt en teclado; Start/Menu en el mando).
+        // Ver el mapa Player en InputSystem_Actions. OJO: el mando usa Start
+        // (button 7), NO Back (button 6), porque button 6 es la Ultimate.
+        if (_input.Cheat.WasPressedThisFrame())
         {
             if (NetASC != null) NetASC.ServerCheatMaxLevel();
         }
@@ -299,7 +312,7 @@ public class PlayerController : NetworkBehaviour
 
         if (ASC.HasTag(EGameplayTag.State_Dead))
         {
-            if (Input.GetButtonDown("Action3") && AbilityR != null && AbilityR.CanActivate())
+            if (_input.Ability3.WasPressedThisFrame() && AbilityR != null && AbilityR.CanActivate())
                 RequestAbility(EAbilityInput.Action3);
             return;
         }
@@ -337,9 +350,13 @@ public class PlayerController : NetworkBehaviour
         float baseSpeed = ASC.GetAttributeValue(EAttributeType.MovSpeed);
         if (baseSpeed <= 0) baseSpeed = 5f;
 
-        float   h        = Input.GetAxis("Horizontal");
-        float   v        = Input.GetAxis("Vertical");
-        Vector3 inputVec = GetWASDInputVector(h, v);
+        Vector2 moveInput = _input.MoveValue;
+
+        // Con el menú radial abierto y apuntando con el stick, el stick sirve para
+        // ELEGIR en la rueda (ver UI_RadialMenu), no para mover al personaje.
+        if (isRadialMenuOpen && _input.MoveIsGamepad) moveInput = Vector2.zero;
+
+        Vector3 inputVec  = GetWASDInputVector(moveInput.x, moveInput.y);
 
         if (inputVec != Vector3.zero && !isAttacking)
         {
@@ -372,7 +389,7 @@ public class PlayerController : NetworkBehaviour
         else
         {
             horizontal = inputVec * baseSpeed;
-            if (characterController.isGrounded && Input.GetButtonDown("Jump"))
+            if (characterController.isGrounded && _input.Jump.WasPressedThisFrame())
                 verticalVelocity = jumpForce;
         }
 
@@ -489,23 +506,24 @@ public class PlayerController : NetworkBehaviour
         if (ASC.HasTag(EGameplayTag.State_Silenced)) return;
         if (isAttacking && !IsAimingAbility) return;
 
-        CheckAbilityButton("Fire3",   MovementAbility,      EAbilityInput.Movement);
-        CheckAbilityButton("Action1", AbilityQ,             EAbilityInput.Action1);
-        CheckAbilityButton("Action2", AbilityE,             EAbilityInput.Action2);
-        CheckAbilityButton("Action3", AbilityR,             EAbilityInput.Action3);
-        CheckAbilityButton("Fire1",   PrimaryAttackAbility, EAbilityInput.PrimaryAttack);
-        CheckAbilityButton("Fire2",   AimAbility,           EAbilityInput.SecondaryAttack);
+        CheckAbilityButton(_input.MovementAbility, MovementAbility,      EAbilityInput.Movement);
+        CheckAbilityButton(_input.Ability1,        AbilityQ,             EAbilityInput.Action1);
+        CheckAbilityButton(_input.Ability2,        AbilityE,             EAbilityInput.Action2);
+        CheckAbilityButton(_input.Ability3,        AbilityR,             EAbilityInput.Action3);
+        CheckAbilityButton(_input.PrimaryAttack,   PrimaryAttackAbility, EAbilityInput.PrimaryAttack);
+        CheckAbilityButton(_input.Secondary,       AimAbility,           EAbilityInput.SecondaryAttack);
     }
 
-    // Detecta presionar/soltar un botón (definido en el Input Manager)
-    // asignado a una habilidad. Al presionar la activa; al soltar cierra
-    // el menú radial si esta habilidad lo tenía abierto.
-    private void CheckAbilityButton(string btn, GameplayAbility ability, EAbilityInput slot)
+    // Detecta presionar/soltar la ACCIÓN (Input System) asignada a una
+    // habilidad. Al presionar la activa; al soltar cierra el menú radial (o la
+    // habilidad de zona) si esta la tenía abierta. WasPressedThisFrame /
+    // WasReleasedThisFrame son el equivalente del viejo GetButtonDown/GetButtonUp.
+    private void CheckAbilityButton(UnityEngine.InputSystem.InputAction action, GameplayAbility ability, EAbilityInput slot)
     {
-        if (ability == null) return;
-        if (Input.GetButtonDown(btn))
+        if (ability == null || action == null) return;
+        if (action.WasPressedThisFrame())
             ProcessAbilityPress(ability, slot);
-        else if (Input.GetButtonUp(btn) && (currentRadialAbility == ability || _groundTargetAbility == ability))
+        else if (action.WasReleasedThisFrame() && (currentRadialAbility == ability || _groundTargetAbility == ability))
             ProcessAbilityRelease();
     }
 

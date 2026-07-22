@@ -90,6 +90,13 @@ public class AbilitySystemComponent : MonoBehaviour
     // relación con los slots de PlayerController — usar GrantAbility().
     public List<GameplayAbility> GrantedAbilities = new List<GameplayAbility>();
 
+    // Último ASC que le hizo daño a este personaje. Lo setea ExecuteInstantEffect
+    // en cada golpe que baja la vida, y se limpia al revivir. Sirve para atribuir
+    // la baja: al morir, NetworkAbilitySystemComponent.HandleDeath (server) le da
+    // EXP a este atacante. Se guarda en la copia del SERVIDOR (ahí se aplica el
+    // daño); en los clientes queda en null, que es lo correcto.
+    [HideInInspector] public AbilitySystemComponent LastAttacker;
+
     // =========================================================
     // UNITY
     // =========================================================
@@ -515,6 +522,13 @@ public class AbilitySystemComponent : MonoBehaviour
             if (mod.Attribute == EAttributeType.Health && calculatedMagnitude < 0)
             {
                 wasDamagingHit = true;
+
+                // Registrar al atacante para atribuir la baja (EXP al matador). Se
+                // guarda antes de resolver escudo/vida: aunque este golpe no sea el
+                // letal, deja anotado quién fue el último en pegar.
+                if (sourceASC != null && !ReferenceEquals(sourceASC, this))
+                    LastAttacker = sourceASC;
+
                 float physicalDamage = Mathf.Abs(calculatedMagnitude);
                 float magicDamage    = sourceASC != null ? sourceASC.GetAttributeValue(EAttributeType.MagicDamage) : 0f;
                 float currentShield  = GetAttributeValue(EAttributeType.Shield);
@@ -757,6 +771,11 @@ public class AbilitySystemComponent : MonoBehaviour
     // NetworkGameManager al respawnear a un jugador.
     public void Revive()
     {
+        // Olvidar quién nos mató la vida anterior: si después caemos a una
+        // DeathZone o morimos por otra vía, no queremos darle la baja a alguien
+        // que nos pegó hace rato.
+        LastAttacker = null;
+
         RemoveTag(EGameplayTag.State_Dead);
         if (Attributes.ContainsKey(EAttributeType.MaxHealth))
             SetCurrentAttributeValue(EAttributeType.Health, Attributes[EAttributeType.MaxHealth].CurrentValue);

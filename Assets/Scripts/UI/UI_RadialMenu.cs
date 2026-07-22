@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 
 // ============================================================
 // UI_RadialMenu
@@ -60,9 +61,27 @@ public class UI_RadialMenu : MonoBehaviour
     {
         if (MenuContainer.activeSelf && optionCount > 0)
         {
-            Vector2 mousePos = Input.mousePosition;
             Vector2 screenCenter = new Vector2(Screen.width / 2f, Screen.height / 2f);
-            Vector2 direction = mousePos - screenCenter;
+
+            // Con mando se apunta con el stick izquierdo; con teclado/mouse, con
+            // el mouse. La separación por dispositivo de cada instancia (ver
+            // PlayerInputProvider) hace que solo una de las dos vías esté activa.
+            PlayerInputProvider input = PlayerInputProvider.Local;
+            Vector2 direction;
+            if (input != null && input.MoveIsGamepad)
+            {
+                // El stick ya ES la dirección (magnitud 0..1); la escalamos a
+                // píxeles para reusar la lógica de cancelar/ángulo de abajo. Al
+                // centro (stick suelto) queda dentro de CancelRadius = cancelar.
+                direction = input.MoveValue * (CancelRadius + 100f);
+            }
+            else
+            {
+                Vector2 mousePos = Mouse.current != null
+                    ? Mouse.current.position.ReadValue()
+                    : (Vector2)Input.mousePosition;
+                direction = mousePos - screenCenter;
+            }
 
             // Zona central: cancelar
             if (direction.magnitude <= CancelRadius)
