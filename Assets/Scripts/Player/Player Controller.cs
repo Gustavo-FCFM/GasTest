@@ -93,6 +93,13 @@ public class PlayerController : NetworkBehaviour
     public float jumpForce  = 8f;
     public float gravity    = -9.8f;
 
+    [Header("Apuntado (Third Person Shooter)")]
+    // Qué tan rápido el cuerpo gira para alinearse con el frente de la cámara.
+    // Más alto = casi instantáneo; más bajo = giro más suave/perezoso.
+    // Si algún día querés que el cuerpo SOLO gire mientras te movés o apuntás
+    // (y no mientras estás quieto girando la cámara), ver FaceCameraForward.
+    public float aimTurnSpeed = 15f;
+
     private float   verticalVelocity;
     private Vector3 spawnPosition;
 
@@ -358,12 +365,14 @@ public class PlayerController : NetworkBehaviour
 
         Vector3 inputVec  = GetWASDInputVector(moveInput.x, moveInput.y);
 
-        if (inputVec != Vector3.zero && !isAttacking)
-        {
-            Quaternion targetRot = Quaternion.LookRotation(inputVec);
-            transform.rotation = Quaternion.Slerp(
-                transform.rotation, targetRot, 10f * Time.deltaTime);
-        }
+        // Third-person shooter: el cuerpo SIEMPRE mira hacia donde apunta la
+        // cámara, sin importar en qué dirección apunten las WASD. El
+        // desplazamiento en 8 direcciones lo resuelve el blend tree 2D de la
+        // animación (parámetros MoveX/MoveY, ver UpdateAnimations), NO la
+        // rotación del personaje. Mientras se ejecuta una habilidad no tocamos
+        // la rotación: varias (salto, dash, ataques) orientan al personaje a
+        // propósito hacia el punto de mira.
+        if (!isAttacking) FaceCameraForward();
 
         // Dash 3D (Dash siniestro): movimiento recto en la dirección apuntada,
         // incluyendo arriba/abajo, SIN gravedad durante el impulso. Se atenúa
@@ -408,6 +417,27 @@ public class PlayerController : NetworkBehaviour
         Vector3 f = Camera.main.transform.forward; f.y = 0; f.Normalize();
         Vector3 r = Camera.main.transform.right;   r.y = 0; r.Normalize();
         return (f * v + r * h).normalized;
+    }
+
+    // Orienta el cuerpo hacia el frente horizontal (yaw) de la cámara. Es el
+    // núcleo del giro estilo third-person shooter: el personaje siempre "ve"
+    // hacia donde apunta la cámara y las WASD solo deciden en qué dirección se
+    // desliza (lo anima el blend tree 2D de strafe). Solo yaw — nunca inclina
+    // el cuerpo hacia arriba/abajo.
+    //
+    // Si en el futuro querés que el cuerpo gire SOLO cuando te movés o apuntás
+    // (y no mientras estás quieto orbitando la cámara), envolvé la llamada en
+    // HandleMovementInput con algo como: if (inputVec != Vector3.zero) ...
+    private void FaceCameraForward()
+    {
+        if (Camera.main == null) return;
+        Vector3 fwd = Camera.main.transform.forward;
+        fwd.y = 0f;
+        if (fwd.sqrMagnitude < 0.0001f) return;
+
+        Quaternion target = Quaternion.LookRotation(fwd.normalized);
+        transform.rotation = Quaternion.Slerp(
+            transform.rotation, target, aimTurnSpeed * Time.deltaTime);
     }
 
     // =========================================================
@@ -981,11 +1011,27 @@ public class PlayerController : NetworkBehaviour
     {
         if (characterAnimator == null) return;
 
-        float speed = new Vector3(
+        Vector3 flatVel = new Vector3(
             characterController.velocity.x, 0,
-            characterController.velocity.z).magnitude;
+            characterController.velocity.z);
+        float speed = flatVel.magnitude;
 
         characterAnimator.SetFloat("Speed", speed, 0.1f, Time.deltaTime);
+
+        // Strafe en 8 direcciones: tomamos la velocidad REAL del personaje y la
+        // pasamos a su espacio LOCAL (relativo a hacia dónde mira: la cámara).
+        // - MoveX  > 0 = se desliza a la derecha,  < 0 = a la izquierda
+        // - MoveY  > 0 = hacia adelante,           < 0 = hacia atrás
+        // La normalizamos por la velocidad máxima para que quede en ~[-1, 1] y
+        // así encaje con las posiciones del blend tree 2D (Freeform Directional).
+        // El body no rota con las WASD (siempre mira a la cámara), por eso el
+        // blend tree es lo que muestra caminar de lado / de espaldas / diagonal.
+        float maxSpeed = ASC.GetAttributeValue(EAttributeType.MovSpeed);
+        if (maxSpeed <= 0) maxSpeed = 5f;
+        Vector3 localVel = transform.InverseTransformDirection(flatVel) / maxSpeed;
+        characterAnimator.SetFloat("MoveX", localVel.x, 0.1f, Time.deltaTime);
+        characterAnimator.SetFloat("MoveY", localVel.z, 0.1f, Time.deltaTime);
+
         characterAnimator.SetBool("IsJumping", !characterController.isGrounded);
 
         float spd = ASC.GetAttributeValue(EAttributeType.AtkSpeed);

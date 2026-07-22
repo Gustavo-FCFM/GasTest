@@ -716,6 +716,7 @@ MonoBehaviour:
   AimAbility: {fileID: 0}
   jumpForce: 4
   gravity: -9.81
+  aimTurnSpeed: 15
   NetworkAimPoint: {x: 0, y: 0, z: 0}
   isRadialMenuOpen: 0
 --- !u!143 &7812325225803870869
@@ -1254,6 +1255,10 @@ PrefabInstance:
     - target: {fileID: 9119583033058523570, guid: 2dfbb63c9cdf7504faf4ff26b0581598, type: 3}
       propertyPath: m_Layer
       value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 9119583033058523570, guid: 2dfbb63c9cdf7504faf4ff26b0581598, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 9175385655781485315, guid: 2dfbb63c9cdf7504faf4ff26b0581598, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
