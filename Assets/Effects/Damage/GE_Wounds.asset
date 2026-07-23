@@ -16,7 +16,8 @@ MonoBehaviour:
   Period: 1
   StackingPolicy: 1
   MaxStacks: 10
-  EffectGroup: 16
+  OnMaxStacksEffect: {fileID: 0}
+  EffectGroup: 30
   Priority: 0
   Icon: {fileID: 21300000, guid: 7a173a97e3ad6e843b89d63d32d9920a, type: 3}
   EffectType: 1
@@ -30,4 +31,4 @@ MonoBehaviour:
     UseTargetHealthScaling: 0
     TargetHealthMode: 0
     TargetHealthCoefficient: 0
-  GrantedTags: 10000000
+  GrantedTags: 1e000000

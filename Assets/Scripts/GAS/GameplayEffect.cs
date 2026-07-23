@@ -49,8 +49,13 @@ public class GameplayEffect : ScriptableObject
 
     [Tooltip("Máximo de acumulaciones (solo con StackingPolicy = Stack). 0 = sin límite. " +
              "Al llegar al tope, aplicarlo de nuevo refresca la acumulación que esté por " +
-             "expirar en vez de agregar otra.")]
+             "expirar en vez de agregar otra (salvo que uses OnMaxStacksEffect).")]
     public int MaxStacks = 0;
+
+    [Tooltip("Solo con Stack + MaxStacks > 0. Al llegar al tope de acumulaciones, en vez de " +
+             "refrescarlas se CONSUMEN todas y se aplica este efecto al objetivo (la 'explosión' " +
+             "de las Heridas del Ilusionista). Dejar en None para el comportamiento normal de tope.")]
+    public GameplayEffect OnMaxStacksEffect;
 
     [Header("Exclusión Mutua (Jerarquía)")]
     [Tooltip("Efectos con el MISMO grupo (≠ None) se excluyen: solo vive el de mayor Priority a la vez. Ej: el buff normal del tótem y su versión potenciada comparten grupo, así no se acumulan.")]

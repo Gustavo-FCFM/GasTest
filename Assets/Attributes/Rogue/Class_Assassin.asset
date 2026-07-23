@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Class_Assassin
   m_EditorClassIdentifier: 
   ClassName: Assassin
-  ClassIcon: {fileID: 21300000, guid: ae73fb56930f65d44858247c10d1c277, type: 3}
+  ClassIcon: {fileID: 21300000, guid: 445b3487b3a229844be688e53b283941, type: 3}
   Description: Shhh Super Sneaky
   BaseAttributes: {fileID: 11400000, guid: d4bdb499162328d498ae70ec392a2dc7, type: 2}
   Abilities:
@@ -29,9 +29,8 @@ MonoBehaviour:
     Ability: {fileID: 11400000, guid: 7fb7d8935fcfbb946921778d62635f8b, type: 2}
   - InputSlot: 5
     Ability: {fileID: 11400000, guid: 66be1fd7369d74e40834def8e6f6ad57, type: 2}
-  PassiveEffects:
-  - {fileID: 11400000, guid: 9244c1bdb47f1994ab8a02584e8c71a9, type: 2}
-  - {fileID: 11400000, guid: 58f051b63388f2947b676dff581f9760, type: 2}
+  PassiveBehaviorsPrefab: {fileID: 3909173908971479584, guid: e34019ac3ea5f4541bf6696486c919fd, type: 3}
+  PassiveEffects: []
   StatGrowthPerLevel: []
   AvailableSubclasses: []
   ClassAnimatorOverride: {fileID: 22100000, guid: f175085a22aa728459655748dd969669, type: 2}

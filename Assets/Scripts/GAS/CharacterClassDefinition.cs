@@ -34,6 +34,14 @@ public class CharacterClassDefinition : ScriptableObject
     // Qué GameplayAbility se otorga en cada slot al equipar esta clase.
     public List<AbilityAssignment> Abilities;
 
+    [Header("Comportamientos de Pasiva (código)")]
+    [Tooltip("Prefab con los componentes de código propios de esta clase (ej. IllusoryBladesPassive " +
+             "del Ilusionista, PlayerVisibility del Asesino). Se instancia como HIJO del jugador al " +
+             "equipar la clase y se destruye al cambiarla, así el prefab del Player queda limpio y " +
+             "cada clase trae solo lo suyo. Sus componentes llegan al ASC con GetComponentInParent. " +
+             "Dejar None si la clase no necesita lógica en C#.")]
+    public GameObject PassiveBehaviorsPrefab;
+
     [Header("Pasivas (GEs siempre activos)")]
     [Tooltip("GameplayEffects que se aplican al equipar la clase y permanecen activos toda la partida. " +
              "Pensados para pasivas (ej: el tag de Ataque Furtivo del Pícaro). Deben tener una Duration " +

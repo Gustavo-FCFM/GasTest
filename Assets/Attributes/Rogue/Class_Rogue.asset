@@ -25,8 +25,8 @@ MonoBehaviour:
     Ability: {fileID: 11400000, guid: 5b2baabbde4a86e48bed0823da7a55b6, type: 2}
   - InputSlot: 6
     Ability: {fileID: 11400000, guid: 9db99063e5c4e01409e0c85f976aff92, type: 2}
-  PassiveEffects:
-  - {fileID: 11400000, guid: 9244c1bdb47f1994ab8a02584e8c71a9, type: 2}
+  PassiveBehaviorsPrefab: {fileID: 3909173908971479584, guid: dfb26fbd4ef04504896795445aa43dd4, type: 3}
+  PassiveEffects: []
   StatGrowthPerLevel:
   - Attribute: 2
     AmountPerLevel: 50
@@ -36,6 +36,7 @@ MonoBehaviour:
     AmountPerLevel: 100
   AvailableSubclasses:
   - {fileID: 11400000, guid: f8d0c911739d00645818a9921d68a37a, type: 2}
+  - {fileID: 11400000, guid: b3eee0f77e21da14e827261d359b3b73, type: 2}
   ClassAnimatorOverride: {fileID: 22100000, guid: f175085a22aa728459655748dd969669, type: 2}
   MainHandWeaponPrefab: {fileID: 5857225396379586743, guid: 2bd1d7cd9d0928f458195d58dfb564b6, type: 3}
   OffHandWeaponPrefab: {fileID: 5857225396379586743, guid: 2bd1d7cd9d0928f458195d58dfb564b6, type: 3}

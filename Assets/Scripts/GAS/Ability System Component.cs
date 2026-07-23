@@ -63,6 +63,23 @@ public class AbilitySystemComponent : MonoBehaviour
     public event Action OnRevive;
     public event Action OnMaxLevelReached;
 
+    // Se dispara cuando ESTE personaje le REPARTE un golpe de daño a alguien (el
+    // parámetro es la víctima). Solo en golpes directos (no ticks de DoT), y con
+    // autoridad de servidor (ver ExecuteInstantEffect). Lo usan las pasivas "al
+    // golpear", ej. Cuchillas ilusorias del Ilusionista.
+    public event Action<AbilitySystemComponent> OnDealtDamage;
+
+    // Permite que ExecuteInstantEffect (que corre sobre la VÍCTIMA) dispare el
+    // evento en el ATACANTE. Los eventos solo se pueden invocar desde su clase.
+    public void NotifyDealtDamage(AbilitySystemComponent victim) => OnDealtDamage?.Invoke(victim);
+
+    // Se dispara cuando ESTE personaje RECIBE un golpe de daño directo (el
+    // parámetro es el atacante). Mismo criterio que OnDealtDamage: solo golpes
+    // directos (no ticks de DoT), server-side. Lo usa la Copia exacta del
+    // Ilusionista para reaccionar a quien la golpea (cegar + herir + explotar).
+    public event Action<AbilitySystemComponent> OnTookDamage;
+    public void NotifyTookDamage(AbilitySystemComponent attacker) => OnTookDamage?.Invoke(attacker);
+
     // =========================================================
     // ALMACENAMIENTO INTERNO
     // =========================================================
@@ -365,27 +382,40 @@ public class AbilitySystemComponent : MonoBehaviour
             }
             else if (effect.StackingPolicy == GameplayEffect.EStackingType.Stack && effect.MaxStacks > 0)
             {
-                // Tope de acumulaciones: al llegar al máximo no agregamos otra, sino
-                // que refrescamos la que está por expirar — así seguir golpeando
-                // mantiene la acumulación viva sin pasarse del límite.
                 int stacks = 0;
-                ActiveGameplayEffect soonest = null;
+                foreach (var existing in ActiveEffects)
+                    if (existing.Definition == effect) stacks++;
+
+                // Explosión al tope (Heridas del Ilusionista): si al sumar ESTA
+                // acumulación se llega al máximo y hay un OnMaxStacksEffect, se
+                // consumen TODAS las acumulaciones y se aplica ese efecto (el daño
+                // masivo). La fuente se conserva para el crédito de la muerte / robo
+                // de vida.
+                if (effect.OnMaxStacksEffect != null && stacks + 1 >= effect.MaxStacks)
+                {
+                    RemoveEffectsByDefinition(effect);
+                    ApplyGameplayEffect(effect.OnMaxStacksEffect, source);
+                    return;
+                }
+
+                // Reloj COMPARTIDO: cada nueva acumulación refresca la duración de
+                // TODAS las existentes. Antes cada instancia tenía su propio reloj, así
+                // que la acumulación más vieja expiraba primero (5→4 "de la nada")
+                // aunque el icono mostrara el reloj de la última. Con esto, seguir
+                // golpeando mantiene vivo el stack entero y todas expiran juntas
+                // 'finalDuration' después del último golpe.
                 foreach (var existing in ActiveEffects)
                 {
                     if (existing.Definition != effect) continue;
-                    stacks++;
-                    if (soonest == null || existing.DurationRemaining < soonest.DurationRemaining)
-                        soonest = existing;
+                    existing.DurationRemaining = finalDuration;
+                    existing.TotalDuration     = finalDuration;
                 }
 
+                // Tope normal (sin explosión): al llegar al máximo ya refrescamos
+                // arriba, no agregamos otra instancia.
                 if (stacks >= effect.MaxStacks)
                 {
-                    if (soonest != null)
-                    {
-                        soonest.DurationRemaining = finalDuration;
-                        soonest.TotalDuration     = finalDuration;
-                        OnActiveEffectAddedCallback?.Invoke(effect, finalDuration);
-                    }
+                    OnActiveEffectAddedCallback?.Invoke(effect, finalDuration);
                     return;
                 }
             }
@@ -542,8 +572,12 @@ public class AbilitySystemComponent : MonoBehaviour
 
             float calculatedMagnitude = CalculateBaseMagnitude(mod, sourceASC);
 
-            // Críticos (backstab, asegurado, primer golpe). Ver ResolveCritMultiplier.
-            calculatedMagnitude *= ResolveCritMultiplier(mod, calculatedMagnitude, sourceASC, isPeriodicTick);
+            // Pipeline de modificadores de daño SALIENTE del atacante (backstab del
+            // Pícaro, crítico mejorado del Asesino, futuros bonos...). Cada pasiva
+            // registra su IDamageModifier en el ASC de su dueño; acá recorremos esa
+            // lista y resolvemos el crítico. Solo aplica a daño directo a la vida.
+            if (sourceASC != null && mod.Attribute == EAttributeType.Health && calculatedMagnitude < 0)
+                calculatedMagnitude = sourceASC.ResolveOutgoingDamage(this, calculatedMagnitude, isPeriodicTick);
 
             if (mod.Attribute == EAttributeType.Health && calculatedMagnitude < 0)
             {
@@ -595,7 +629,11 @@ public class AbilitySystemComponent : MonoBehaviour
             BreakInvisibility(); // el objetivo se vuelve visible al ser golpeado
 
             if (sourceASC != null && !ReferenceEquals(sourceASC, this))
-                sourceASC.BreakInvisibility(); // el atacante se delata al golpear
+            {
+                sourceASC.BreakInvisibility();       // el atacante se delata al golpear
+                sourceASC.NotifyDealtDamage(this);   // pasivas "al golpear" (ej. Cuchillas ilusorias)
+                NotifyTookDamage(sourceASC);         // reacciones "al ser golpeado" (ej. Copia exacta)
+            }
         }
     }
 
@@ -885,112 +923,104 @@ public class AbilitySystemComponent : MonoBehaviour
     }
 
     // =========================================================
-    // CRÍTICOS
+    // DAÑO SALIENTE (modificadores + críticos)
     // =========================================================
 
-    [Header("Crítico Mejorado (Asesino)")]
-    [Tooltip("Ventana por objetivo: un enemigo vuelve a estar 'fresco' para un crítico mejorado " +
-             "si no lo golpeás en estos segundos.")]
-    public float FirstStrikeWindow = 6f;
-    [Tooltip("Reutilización global: mínimo de segundos entre dos críticos mejorados (contra cualquiera).")]
-    public float FirstStrikeCooldown = 2f;
+    // Modificadores de daño saliente que las pasivas de la clase registran acá
+    // (ver IDamageModifier). Solo existen mientras la clase que los trae está
+    // equipada: se registran/desregistran desde los PassiveBehaviorsPrefab. El core
+    // no sabe qué es un backstab; solo recorre la lista y resuelve las banderas.
+    private readonly List<IDamageModifier> _damageModifiers = new List<IDamageModifier>();
 
-    // Última vez que ESTE personaje golpeó a cada enemigo (para el Crítico mejorado).
-    private readonly Dictionary<AbilitySystemComponent, float> _lastStrikeTime
-        = new Dictionary<AbilitySystemComponent, float>();
-    // Última vez que disparó un crítico de "Crítico mejorado" (su cooldown).
-    private float _lastFirstStrikeCrit = -999f;
-
-    // Multiplicador de daño crítico de un golpe. Hay DOS capas independientes que
-    // sí se acumulan ENTRE SÍ (con CritDamage = 2 y un golpe base de 6):
-    //
-    //   1) "Es crítico" (x2 → 12). El Ataque Furtivo (por la espalda) y el crítico
-    //      asegurado (ej. Emboscada sombría) son dos formas de lo MISMO: hacer que
-    //      el golpe sea crítico. NO se duplican entre sí — pegar por la espalda
-    //      estando en Emboscada sigue siendo 12, no 24.
-    //
-    //   2) "Crítico mejorado" (otro x2). Es una capa APARTE que se suma a lo
-    //      anterior: por enfrente y sin nada más son 12; combinado con un crítico
-    //      (espalda o asegurado) son 24.
-    //
-    // Devuelve 1 (sin crítico) para curaciones, ticks de DoT o sin atacante.
-    private float ResolveCritMultiplier(Modifier mod, float magnitude, AbilitySystemComponent sourceASC, bool isPeriodicTick)
+    public void RegisterDamageModifier(IDamageModifier modifier)
     {
-        // Los ticks de una DoT no critean (sería raro que una herida pegue más
-        // fuerte según dónde está parado el atacante).
-        if (isPeriodicTick || sourceASC == null) return 1f;
-        if (mod.Attribute != EAttributeType.Health || magnitude >= 0) return 1f;
+        if (modifier != null && !_damageModifiers.Contains(modifier))
+            _damageModifiers.Add(modifier);
+    }
 
-        float critDamage = sourceASC.GetAttributeValue(EAttributeType.CritDamage);
-        if (critDamage < 1f) critDamage = 2f; // por defecto x2 si la clase no configuró CritDamage
+    public void UnregisterDamageModifier(IDamageModifier modifier)
+    {
+        _damageModifiers.Remove(modifier);
+    }
 
-        // Capa 1: ¿es crítico? (espalda o asegurado — da igual cuál, no se suman)
-        bool isCrit = sourceASC.HasTag(EGameplayTag.Passive_Backstab) && IsBackstab(sourceASC);
+    // Corre el pipeline de daño SALIENTE de ESTE personaje (el atacante) contra
+    // 'target' y devuelve la magnitud final. Recorre los modificadores registrados
+    // (que pueden mutar la magnitud y marcar críticos) y después resuelve las
+    // banderas de crítico. La llama ExecuteInstantEffect sobre el ASC del atacante:
+    // sourceASC.ResolveOutgoingDamage(this, magnitud, isPeriodicTick).
+    //
+    // Sobre las capas de crítico (con CritDamage = 2 y un golpe base de 6):
+    //   1) "Es crítico" (x2 → 12): el backstab (por la espalda) y el crítico
+    //      asegurado son dos formas de lo MISMO. NO se apilan entre sí.
+    //   2) "Crítico mejorado" (otro x2): capa aparte que SÍ se acumula con la
+    //      anterior (espalda + mejorado = x4 → 24).
+    public float ResolveOutgoingDamage(AbilitySystemComponent target, float magnitude, bool isPeriodicTick)
+    {
+        DamageContext ctx = new DamageContext
+        {
+            Source         = this,
+            Target         = target,
+            IsPeriodicTick = isPeriodicTick,
+            Magnitude      = magnitude,
+        };
 
-        // El crítico asegurado se consume igual, haya sido crítico o no: era "su
-        // PRIMER ataque". Por eso, en un dash que atraviesa a varios, solo el
-        // primero lo recibe (ver el orden del trayecto en GA_Dash). Quitar el tag
-        // a mano es seguro aunque lo haya otorgado un GE: al expirar, su RemoveTag
-        // es un no-op.
-        if (sourceASC.HasTag(EGameplayTag.Status_GuaranteedCrit))
+        for (int i = 0; i < _damageModifiers.Count; i++)
+            _damageModifiers[i]?.ModifyOutgoingDamage(ref ctx);
+
+        magnitude = ctx.Magnitude;
+
+        // Crítico asegurado: mecánica GENERAL (cualquier habilidad puede otorgar el
+        // tag, ej. Emboscada sombría), no de una clase puntual, así que se resuelve
+        // acá y no en un modificador. Es otra forma de "es crítico" —no se apila con
+        // el backstab— y se consume al usarlo, haya criteado o no. Los ticks de DoT
+        // no lo consumen (no critean).
+        bool isCrit = ctx.IsCrit;
+        if (!isPeriodicTick && HasTag(EGameplayTag.Status_GuaranteedCrit))
         {
             isCrit = true;
-            sourceASC.RemoveTag(EGameplayTag.Status_GuaranteedCrit);
+            RemoveTag(EGameplayTag.Status_GuaranteedCrit);
         }
 
-        // Capa 2: Crítico mejorado (Asesino), independiente de la anterior.
-        bool improvedCrit = sourceASC.ConsumeFirstStrikeCrit(this);
+        // Resolución del crítico (regla core): cada capa marcada multiplica por
+        // CritDamage. Por defecto x2 si la clase no configuró el atributo.
+        if (isCrit || ctx.IsImprovedCrit)
+        {
+            float critDamage = GetAttributeValue(EAttributeType.CritDamage);
+            if (critDamage < 1f) critDamage = 2f;
+            if (isCrit)             magnitude *= critDamage;
+            if (ctx.IsImprovedCrit) magnitude *= critDamage;
+        }
 
-        float multiplier = 1f;
-        if (isCrit)       multiplier *= critDamage;
-        if (improvedCrit) multiplier *= critDamage;
-
-        return multiplier;
+        return magnitude;
     }
 
-    // ¿Este personaje puede pegarle un "Crítico mejorado" a 'target' ahora? Marca
-    // el golpe (para la ventana por objetivo) y consume el cooldown si aplica.
-    // La llama ResolveCritMultiplier sobre el ATACANTE.
-    private bool ConsumeFirstStrikeCrit(AbilitySystemComponent target)
+    // Readout del Crítico mejorado para el HUD/nameplate. El estado y la lógica
+    // viven en el modificador FirstStrikeCritModifier (en el prefab del Asesino);
+    // acá solo lo buscamos y delegamos, para que el core no dependa de la clase más
+    // que por este acceso opcional. Se cachea y se re-busca si el modificador
+    // desaparece (cambio de clase → GetComponentInChildren vuelve a dar null).
+    private FirstStrikeCritModifier _firstStrikeCache;
+    private FirstStrikeCritModifier FirstStrike
     {
-        if (target == null || !HasTag(EGameplayTag.Passive_FirstStrikeCrit)) return false;
-
-        float now = Time.time;
-        bool  isFirstStrike = !_lastStrikeTime.TryGetValue(target, out float last) ||
-                              (now - last) >= FirstStrikeWindow;
-
-        _lastStrikeTime[target] = now;
-
-        if (!isFirstStrike) return false;
-        if (now - _lastFirstStrikeCrit < FirstStrikeCooldown) return false;
-
-        _lastFirstStrikeCrit = now;
-        return true;
+        get
+        {
+            if (_firstStrikeCache == null) _firstStrikeCache = GetComponentInChildren<FirstStrikeCritModifier>();
+            return _firstStrikeCache;
+        }
     }
 
-    // ¿El Crítico mejorado está disponible (pasó su reutilización global)? Lo usa
-    // el feedback visual del HUD. Refleja la reutilización, no la "frescura" de un
-    // enemigo puntual (eso depende de a quién le pegues). Solo tiene sentido en un
-    // personaje con la pasiva; para el resto siempre es false.
-    public bool IsFirstStrikeReady =>
-        HasTag(EGameplayTag.Passive_FirstStrikeCrit) &&
-        (Time.time - _lastFirstStrikeCrit >= FirstStrikeCooldown);
+    // ¿El Crítico mejorado está disponible (pasó su reutilización global)? En clases
+    // sin la pasiva no hay modificador, así que es false.
+    public bool IsFirstStrikeReady => FirstStrike != null && FirstStrike.IsReady;
 
-    // ¿Le puedo clavar un Crítico mejorado a ESTE enemigo ahora? Suma la
-    // reutilización global (arriba) más la "frescura" del objetivo puntual: que no
-    // lo hayas golpeado en FirstStrikeWindow. Lo usa el nameplate del enemigo para
-    // avisarte que ya podés atacarlo con el golpe potenciado.
-    //
-    // NOTA DE RED: _lastStrikeTime solo se llena en el SERVIDOR (donde se aplica el
-    // daño). En el host es exacto; en un cliente remoto la "frescura" no la conoce,
-    // así que ahí este chequeo cae en la disponibilidad global (mismo que
-    // IsFirstStrikeReady). Suficiente para el aviso visual.
+    // ¿Le puedo clavar un Crítico mejorado a ESTE enemigo ahora? (reutilización
+    // global + "frescura" del objetivo). Ver la nota de red en FirstStrikeCritModifier.
     public bool IsFirstStrikeReadyAgainst(AbilitySystemComponent target)
-    {
-        if (target == null || !IsFirstStrikeReady) return false;
-        return !_lastStrikeTime.TryGetValue(target, out float last) ||
-               (Time.time - last >= FirstStrikeWindow);
-    }
+        => FirstStrike != null && FirstStrike.IsReadyAgainst(target);
+
+    // =========================================================
+    // BACKSTAB (helper posicional, lo usa BackstabDamageModifier)
+    // =========================================================
 
     // Ángulo trasero a partir del cual un atacante cuenta como "por la espalda".
     // Dot(forward, dirHaciaAtacante) < este umbral ⇒ el atacante está detrás.
@@ -998,8 +1028,8 @@ public class AbilitySystemComponent : MonoBehaviour
     private const float BackstabDotThreshold = -0.25f;
 
     // True si 'attacker' está por detrás de ESTE personaje (usando hacia dónde
-    // mira este objetivo, no el atacante). Lo usa el Ataque Furtivo del Pícaro
-    // en ExecuteInstantEffect para decidir el crítico por la espalda.
+    // mira este objetivo, no el atacante). Lo usa BackstabDamageModifier (el Ataque
+    // Furtivo del Pícaro) para decidir el crítico por la espalda.
     public bool IsBackstab(AbilitySystemComponent attacker)
     {
         if (attacker == null) return false;

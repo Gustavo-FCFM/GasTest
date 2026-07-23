@@ -54,10 +54,14 @@ public enum EGameplayTag
     // tags por su NÚMERO de enum; insertarlos en el medio corre los índices y
     // rompe las referencias ya guardadas (ej. Status_Immortal, Rage, tótems).
     Status_Wound,      // Heridas del Pícaro — daño con el tiempo, apilable (ver GE_Heridas)
-    Passive_Backstab,  // Pícaro: golpear por la espalda hace daño crítico (ver ExecuteInstantEffect)
+    Passive_Backstab,  // OBSOLETO: el backstab ahora es BackstabDamageModifier (pasiva por prefab). No borrar (corre índices).
 
     // --- ASESINO ---
     Status_Invisible,        // Invisible para los ENEMIGOS (ver PlayerVisibility)
-    Status_GuaranteedCrit,   // El próximo golpe es crítico sí o sí; se CONSUME al usarlo
-    Passive_FirstStrikeCrit, // Crítico mejorado: el primer golpe a un enemigo tras un lapso critea
+    Status_GuaranteedCrit,   // El próximo golpe es crítico sí o sí; se CONSUME al usarlo (ver ResolveOutgoingDamage)
+    Passive_FirstStrikeCrit, // OBSOLETO: el crítico mejorado ahora es FirstStrikeCritModifier (pasiva por prefab). No borrar (corre índices).
+
+    // --- ILUSIONISTA ---
+    Passive_IllusoryBlades,  // OBSOLETO: las cuchillas ahora son IllusoryBladesPassive (pasiva por prefab). No borrar (corre índices).
+    Status_Blinded,          // Cegado ("flashbang"): lo aplica la Copia exacta al enemigo que la golpea (ver Entity_PlayerCopy)
 }

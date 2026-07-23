@@ -20,8 +20,9 @@ MonoBehaviour:
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 1
   ActivationBlockedTags: 010000000200000003000000
+  ActivationRequiredTags: 
   AnimationTriggerName: AttackTrigger
-  AnimationID: 3
+  AnimationID: 4
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128

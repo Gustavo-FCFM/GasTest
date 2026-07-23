@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c79a6ef63759774f8125f583fee8f7e, type: 3}
+  m_Name: GA_IllusionistPrimaryAttack
+  m_EditorClassIdentifier: 
+  AbilityName: Illusionist Primary Attack
+  AbilityIcon: {fileID: 21300000, guid: c024da923d4feae4b8a14883e3f4b4de, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: 45327044be4f41c4d8f5289bc6f9b3be, type: 2}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 1
+  UltimateChargeAmount: 1
+  ActivationBlockedTags: 01000000
+  ActivationRequiredTags: 
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  VisualsSequence: []
+  Sequence:
+  - AbilityToCast: {fileID: 11400000, guid: 2e01f13b2794f9749bc8a2bec872d819, type: 2}
+    DelayAfter: 0.12
+    AnimationIDOverride: 1
+  - AbilityToCast: {fileID: 11400000, guid: 2e01f13b2794f9749bc8a2bec872d819, type: 2}
+    DelayAfter: 0
+    AnimationIDOverride: 1

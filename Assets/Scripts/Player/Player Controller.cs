@@ -67,6 +67,10 @@ public class PlayerController : NetworkBehaviour
     private GameObject currentOffWeapon;
     private GameObject currentWeaponTrail;
 
+    // Instancia del prefab de comportamientos de pasiva de la clase actual (ver
+    // CharacterClassDefinition.PassiveBehaviorsPrefab). Se destruye al cambiar de clase.
+    private GameObject currentPassiveBehaviors;
+
     // True mientras se está ejecutando una habilidad — bloquea input de
     // otras habilidades y el giro por movimiento normal.
     private bool isAttacking = false;
@@ -867,6 +871,15 @@ public class PlayerController : NetworkBehaviour
         ASC.CurrentClass = newClass;
         CharacterIcon    = newClass.ClassIcon;
 
+        // Comportamientos de código propios de la clase (PassiveBehaviorsPrefab):
+        // se instancian como hijo del jugador y se destruyen al cambiar de clase.
+        SetupPassiveBehaviors(newClass);
+
+        // Armas equipadas + animator override de la clase. Esta llamada se había
+        // perdido: por eso el dueño/host no veía las armas ni le cambiaban las
+        // animaciones (ej. el bárbaro). Corre para el dueño y para la copia del
+        // servidor de un remoto; los observadores puros lo reciben por
+        // OnNetClassIndexChanged.
         UpdateVisuals(newClass);
 
         ASC.ClearGrantedAbilities();
@@ -928,6 +941,29 @@ public class PlayerController : NetworkBehaviour
         if (cls.PassiveEffects == null) return;
         foreach (var passive in cls.PassiveEffects)
             if (passive != null) ASC.ApplyGameplayEffect(passive, ASC);
+    }
+
+    // Destruye los comportamientos de código de la clase anterior e instancia los
+    // de la nueva (ver CharacterClassDefinition.PassiveBehaviorsPrefab). Corre en
+    // TODOS los peers (igual que otorgar habilidades): así el servidor tiene la
+    // lógica que reacciona a sus eventos (ej. IllusoryBladesPassive escuchando
+    // OnDealtDamage) y cada cliente la suya si la necesita. Los componentes del
+    // prefab llegan al ASC del jugador con GetComponentInParent, ya que quedan como
+    // hijos de este GameObject.
+    private void SetupPassiveBehaviors(CharacterClassDefinition cls)
+    {
+        if (currentPassiveBehaviors != null)
+        {
+            Destroy(currentPassiveBehaviors);
+            currentPassiveBehaviors = null;
+        }
+
+        if (cls.PassiveBehaviorsPrefab != null)
+        {
+            currentPassiveBehaviors = Instantiate(cls.PassiveBehaviorsPrefab, transform);
+            currentPassiveBehaviors.transform.localPosition = Vector3.zero;
+            currentPassiveBehaviors.transform.localRotation = Quaternion.identity;
+        }
     }
 
     // Sincroniza el índice de clase elegido al SyncVar y, en la copia del

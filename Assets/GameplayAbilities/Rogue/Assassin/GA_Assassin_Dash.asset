@@ -22,13 +22,15 @@ MonoBehaviour:
   ActivationBlockedTags: 0200000001000000
   ActivationRequiredTags: 
   AnimationTriggerName: AttackTrigger
-  AnimationID: 3
+  AnimationID: 4
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
   VisualsSequence: []
   DashDistance: 10
   DashSpeed: 100
+  DirectionalDodge: 1
+  ForwardDashElevationDot: 0.5
   WallLayer:
     serializedVersion: 2
     m_Bits: 1

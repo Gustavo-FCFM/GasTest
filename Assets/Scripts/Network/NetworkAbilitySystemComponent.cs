@@ -1180,13 +1180,16 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
 
         foreach (var assignment in _asc.CurrentClass.Abilities)
         {
-            if (assignment.InputSlot == slot)
+            // Ability puede ser null: un slot sin habilidad asignada (ej. el ult del
+            // Ilusionista aún sin implementar). Sin este guard, acceder a
+            // assignment.Ability.AbilityName tira NullReference desde el sync de
+            // cooldowns, que recorre TODOS los slots cada 0.25s.
+            if (assignment.InputSlot != slot || assignment.Ability == null) continue;
+
+            foreach (var granted in _asc.GrantedAbilities)
             {
-                foreach (var granted in _asc.GrantedAbilities)
-                {
-                    if (granted.AbilityName == assignment.Ability.AbilityName)
-                        return granted;
-                }
+                if (granted != null && granted.AbilityName == assignment.Ability.AbilityName)
+                    return granted;
             }
         }
         return null;

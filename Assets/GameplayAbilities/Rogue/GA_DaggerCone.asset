@@ -20,6 +20,7 @@ MonoBehaviour:
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 1
   ActivationBlockedTags: 
+  ActivationRequiredTags: 
   AnimationTriggerName: AttackTrigger
   AnimationID: 1
   TargetLayer:

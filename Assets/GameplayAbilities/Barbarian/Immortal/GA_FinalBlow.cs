@@ -11,7 +11,7 @@ using System.Collections.Generic;
 // está por debajo del 5% de vida lo EJECUTA directo, si no le aplica
 // daño y aturdimiento normales.
 // ============================================================
-[CreateAssetMenu(fileName = "GA_FinalBlow", menuName = "GAS/Specific Abilities/Inmortal/Final Blow")]
+[CreateAssetMenu(fileName = "GA_FinalBlow", menuName = "GAS/Specific Abilities/Immortal/Final Blow")]
 public class GA_FinalBlow : GameplayAbility
 {
     [Header("Configuración Golpe Final")]

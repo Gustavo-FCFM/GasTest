@@ -22,7 +22,7 @@ MonoBehaviour:
   ActivationBlockedTags: 0300000001000000
   ActivationRequiredTags: 
   AnimationTriggerName: AttackTrigger
-  AnimationID: 4
+  AnimationID: 5
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
