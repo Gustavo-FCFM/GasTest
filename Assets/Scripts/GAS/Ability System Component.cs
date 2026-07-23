@@ -162,13 +162,17 @@ public class AbilitySystemComponent : MonoBehaviour
     // personaje ya tenía nivel/experiencia, los conserva (se llama de
     // nuevo al cambiar de clase). Llamarla resetea buffs/modificadores
     // temporales sobre los atributos recalculados.
-    public void InitializeAttributes()
+    // keepProgress=true (por defecto) conserva nivel/exp si ya los tenía —lo que
+    // se quiere al evolucionar a subclase—. En false reinicia a nivel 1 / 0 exp:
+    // lo usa el cambio manual de clase desde el menú, que arranca la clase nueva
+    // desde cero.
+    public void InitializeAttributes(bool keepProgress = true)
     {
         if (CharacterRoleDefinition == null) return;
 
         float savedLevel = 1, savedExp = 0;
-        bool keepProgress = Attributes.ContainsKey(EAttributeType.Level);
-        if (keepProgress) { savedLevel = GetAttributeValue(EAttributeType.Level); savedExp = GetAttributeValue(EAttributeType.Exp); }
+        bool hadProgress = keepProgress && Attributes.ContainsKey(EAttributeType.Level);
+        if (hadProgress) { savedLevel = GetAttributeValue(EAttributeType.Level); savedExp = GetAttributeValue(EAttributeType.Exp); }
 
         Attributes.Clear();
 
@@ -186,7 +190,7 @@ public class AbilitySystemComponent : MonoBehaviour
         if (!Attributes.ContainsKey(EAttributeType.Exp))    Attributes[EAttributeType.Exp]    = new AttributeValue(0);
         if (!Attributes.ContainsKey(EAttributeType.MaxExp)) Attributes[EAttributeType.MaxExp] = new AttributeValue(100);
 
-        if (keepProgress && savedLevel > 1)
+        if (hadProgress && savedLevel > 1)
         {
             Attributes[EAttributeType.Level].CurrentValue = savedLevel;
             Attributes[EAttributeType.Exp].CurrentValue   = savedExp;
@@ -204,6 +208,28 @@ public class AbilitySystemComponent : MonoBehaviour
     {
         if (type == EAttributeType.Health && val < 1f && HasTag(EGameplayTag.Status_Immortal))
             val = 1f;
+
+        // Clampeo de "pools": la vida (y el maná) nunca quedan en negativo ni
+        // superan su máximo. Sin esto, un golpe fuerte dejaba la Vida en negativo
+        // (ej. -30/100), que se colaba a la barra de vida y a los cálculos que
+        // escalan con la vida faltante (MaxHealth - Health). El tope superior solo
+        // se aplica si el Max existe y es > 0 (los NPC/objetos sin MaxHealth
+        // definido no se ven afectados). El chequeo de muerte de más abajo sigue
+        // disparándose porque val queda exactamente en 0.
+        if (type == EAttributeType.Health)
+        {
+            float max = GetAttributeValue(EAttributeType.MaxHealth);
+            val = max > 0f ? Mathf.Clamp(val, 0f, max) : Mathf.Max(0f, val);
+        }
+        else if (type == EAttributeType.Mana)
+        {
+            float max = GetAttributeValue(EAttributeType.MaxMana);
+            val = max > 0f ? Mathf.Clamp(val, 0f, max) : Mathf.Max(0f, val);
+        }
+        else if (type == EAttributeType.Shield)
+        {
+            val = Mathf.Max(0f, val);
+        }
 
         if (Attributes.ContainsKey(type)) Attributes[type].CurrentValue = val;
         else Attributes[type] = new AttributeValue(val);

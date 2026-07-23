@@ -126,6 +126,13 @@ public class PlayerController : NetworkBehaviour
     // propia, así que GetAimPoint() cae a este valor cuando IsOwner es falso.
     [HideInInspector] public Vector3 NetworkAimPoint;
 
+    // Dirección de movimiento (WASD/stick en espacio de mundo, plano horizontal)
+    // que el dueño tenía al activar la última habilidad. La usa la esquiva
+    // direccional del dash. Igual que NetworkAimPoint: el servidor no tiene input
+    // del dueño, así que este se la envía con el pedido (ver GetMoveDirection y
+    // NetworkAbilitySystemComponent.ServerActivateAbility). Cero = quieto.
+    [HideInInspector] public Vector3 NetworkMoveDirection;
+
     // Índice de clase sincronizado a los observadores remotos (ver
     // EquipCharacterClass/ServerSetClass) — mandamos el índice y no el
     // asset porque FishNet no serializa referencias a ScriptableObjects.
@@ -133,6 +140,12 @@ public class PlayerController : NetworkBehaviour
 
     [HideInInspector] public bool isRadialMenuOpen = false;
     private GameplayAbility currentRadialAbility;
+
+    // Menú de selección de clase (UI_InitialClassMenu) del dueño local. Se resuelve
+    // al spawnear la cámara (OnStartClient); la acción ChangeClass lo reabre para
+    // cambiar de clase en pleno juego. Solo el dueño lo tiene (null en las copias
+    // remotas/servidor).
+    private UI_InitialClassMenu _initialClassMenu;
 
     // Habilidad de zona (IGroundTargetAbility) que se está apuntando ahora mismo,
     // mientras se mantiene su botón. Ver UI_GroundTargetIndicator.
@@ -241,8 +254,8 @@ public class PlayerController : NetworkBehaviour
                 // Bloquea el input hasta que el jugador elige. Vive en el mismo
                 // prefab de cámara; GetComponentInChildren(true) lo encuentra aunque
                 // su panel arranque inactivo.
-                UI_InitialClassMenu initialMenu = camObj.GetComponentInChildren<UI_InitialClassMenu>(true);
-                if (initialMenu != null) initialMenu.InitializeMenu(this);
+                _initialClassMenu = camObj.GetComponentInChildren<UI_InitialClassMenu>(true);
+                if (_initialClassMenu != null) _initialClassMenu.InitializeMenu(this);
 
                 // La retícula (crosshair) vive en el Canvas del prefab "Player
                 // Camera" (componente Reticle sobre un objeto de UI). Como esta
@@ -304,6 +317,16 @@ public class PlayerController : NetworkBehaviour
         if (_input.Cheat.WasPressedThisFrame())
         {
             if (NetASC != null) NetASC.ServerCheatMaxLevel();
+        }
+
+        // Cambiar de clase (acción ChangeClass: tecla C / D-pad arriba): reabre el
+        // menú de clases base. El menú es modal (bloquea el input mientras está
+        // abierto vía SetInputLocked), así que _inputLocked ya evita reabrirlo
+        // encima. Al elegir, la clase nueva arranca en nivel 1 (ver
+        // UI_InitialClassMenu.ConfirmSelection).
+        if (_input.ChangeClass.WasPressedThisFrame() && _initialClassMenu != null)
+        {
+            _initialClassMenu.ReopenMenu();
         }
 
         // Watchdog: si isAttacking quedó trabado (una habilidad no reseteó el
@@ -480,12 +503,17 @@ public class PlayerController : NetworkBehaviour
     // dirección (incluida la vertical) que se atenúa solo, SIN gravedad mientras
     // dura. Funciona en el aire. El fin lo maneja quien lo disparó llamando
     // ClearDashVelocity (ver NetworkAbilitySystemComponent.DashRoutine).
-    public void ApplyDashVelocity(Vector3 velocity)
+    public void ApplyDashVelocity(Vector3 velocity, bool faceVelocity = true)
     {
         _dashVelocity    = velocity;
         _dashActive      = true;
         // Durante el dash no hay gravedad; al terminar, la caída arranca de 0.
         verticalVelocity = 0f;
+
+        // En la esquiva direccional (faceVelocity=false) NO giramos el cuerpo:
+        // mantiene la orientación hacia la mira que RequestAbility ya fijó, así la
+        // esquiva lateral/hacia atrás no te da vuelta.
+        if (!faceVelocity) return;
 
         Vector3 flatDir = new Vector3(velocity.x, 0, velocity.z);
         if (flatDir.sqrMagnitude > 0.0001f) transform.forward = flatDir.normalized;
@@ -686,6 +714,11 @@ public class PlayerController : NetworkBehaviour
             // sí es la cámara correcta, y lo mandamos junto con el input.
             Vector3 aimPoint = GetAimPoint();
 
+            // Dirección de movimiento actual (WASD/stick en mundo) para la esquiva
+            // direccional del dash. El servidor no la puede leer, así que viaja con
+            // el pedido (ver GetMoveDirection).
+            Vector3 moveDir = GetMoveDirection();
+
             // Rotamos también en el cliente dueño AHORA. El NetworkTransform es
             // client-authoritative: si solo rotamos en el servidor (dentro de la
             // Ability), el próximo paquete de transform que mande este mismo
@@ -693,7 +726,7 @@ public class PlayerController : NetworkBehaviour
             // el daño. Rotando acá, la rotación correcta es la que se sincroniza.
             RotateToAim(aimPoint);
 
-            NetASC.ServerRequestActivateAbility(slot, aimPoint);
+            NetASC.ServerRequestActivateAbility(slot, aimPoint, moveDir);
         }
         else
             ActivateAbilityBySlot(slot); // Fallback singleplayer
@@ -821,7 +854,11 @@ public class PlayerController : NetworkBehaviour
     // visuales/armas, otorga las nuevas habilidades por slot, recarga
     // atributos base, y (si sos el dueño) sincroniza el cambio por red y
     // refresca el HUD.
-    public void EquipCharacterClass(CharacterClassDefinition newClass)
+    // resetProgress=true reinicia nivel/exp a 1/0 (empezás la clase nueva desde
+    // cero) — lo usa el cambio manual de clase desde el menú. En false (por
+    // defecto) conserva el progreso, que es lo correcto al evolucionar a subclase
+    // o al equipar la clase inicial (que ya está en nivel 1).
+    public void EquipCharacterClass(CharacterClassDefinition newClass, bool resetProgress = false)
     {
         if (newClass == null || ASC == null) return;
 
@@ -854,7 +891,7 @@ public class PlayerController : NetworkBehaviour
         if (newClass.BaseAttributes != null)
         {
             ASC.CharacterRoleDefinition = newClass.BaseAttributes;
-            ASC.InitializeAttributes();
+            ASC.InitializeAttributes(keepProgress: !resetProgress);
         }
 
         // Pasivas de la clase (GEs siempre activos, ej: Ataque Furtivo del Pícaro).
@@ -868,7 +905,7 @@ public class PlayerController : NetworkBehaviour
         if (IsOwner)
         {
             int idx = GetClassIndex(newClass);
-            if (idx >= 0) ServerSetClass(idx);
+            if (idx >= 0) ServerSetClass(idx, resetProgress);
             else
                 // La clase no está en la lista plana (no es alcanzable desde
                 // MainBaseClasses vía AvailableSubclasses). Sin sincronizar,
@@ -899,18 +936,20 @@ public class PlayerController : NetworkBehaviour
     // habilidades de la clase vieja y tiraba "No se encontró habilidad en
     // slot ..." al intentar activar una habilidad de la subclase nueva.
     [ServerRpc]
-    private void ServerSetClass(int classIndex)
+    private void ServerSetClass(int classIndex, bool resetProgress)
     {
         _netClassIndex.Value = classIndex;
 
         // Si somos el dueño (host), ya lo equipamos localmente en
         // EquipCharacterClass. Para un jugador remoto, esta copia server-side
         // necesita el equip completo (otorga las habilidades que después
-        // FindAbilityBySlot busca).
+        // FindAbilityBySlot busca). resetProgress viaja igual que en el dueño para
+        // que el reinicio a nivel 1 sea autoritativo (los atributos son
+        // server-authoritative y se sincronizan de vuelta).
         if (!IsOwner)
         {
             CharacterClassDefinition def = GetClassByIndex(classIndex);
-            if (def != null) EquipCharacterClass(def);
+            if (def != null) EquipCharacterClass(def, resetProgress);
         }
     }
 
@@ -1166,6 +1205,20 @@ public class PlayerController : NetworkBehaviour
             }
         }
         return bestPoint;
+    }
+
+    // Dirección de movimiento del dueño (WASD/stick) en espacio de mundo, plano
+    // horizontal y normalizada; Vector3.zero si está quieto. En el dueño se lee
+    // en vivo del input; en el servidor/observadores (IsOwner falso) no hay input
+    // que leer, así que se usa el último valor que el dueño envió
+    // (NetworkMoveDirection) — mismo patrón que GetAimPoint. La usa la esquiva
+    // direccional del dash (GA_Dash).
+    public Vector3 GetMoveDirection()
+    {
+        if (!IsOwner) return NetworkMoveDirection;
+        if (_input == null || !_input.IsReady) return Vector3.zero;
+        Vector2 mv = _input.MoveValue;
+        return GetWASDInputVector(mv.x, mv.y);
     }
 
     // Rota al personaje para mirar hacia GetAimPoint().

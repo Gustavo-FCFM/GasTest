@@ -643,8 +643,8 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // observadores. El dueño ya la disparó por predicción (o, en el host, vía
     // Activate()); ObserversPlayAbilityAnimation la reproduce en los demás.
     [ServerRpc]
-    public void ServerRequestActivateAbility(EAbilityInput inputSlot, Vector3 aimPoint)
-        => ServerActivateAbility(inputSlot, aimPoint);
+    public void ServerRequestActivateAbility(EAbilityInput inputSlot, Vector3 aimPoint, Vector3 moveDir)
+        => ServerActivateAbility(inputSlot, aimPoint, moveDir);
 
     // Valida y ejecuta la habilidad de un slot con autoridad de servidor, y
     // replica su animación a los observadores. Separado del ServerRpc de arriba
@@ -653,7 +653,7 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // el [ServerRpc] de dueño —que el servidor NO puede invocar sobre un cliente
     // remoto (fallaría por RequireOwnership) y dejaba al Inmortal remoto tirado—.
     [Server]
-    public void ServerActivateAbility(EAbilityInput inputSlot, Vector3 aimPoint)
+    public void ServerActivateAbility(EAbilityInput inputSlot, Vector3 aimPoint, Vector3 moveDir = default)
     {
         if (_asc == null) return;
 
@@ -686,7 +686,14 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         // disponible en el PlayerController para que RotateToAim()/GetAimPoint()
         // lo usen en vez de intentar leer Camera.main en el servidor.
         PlayerController pc = GetComponent<PlayerController>();
-        if (pc != null) pc.NetworkAimPoint = aimPoint;
+        if (pc != null)
+        {
+            pc.NetworkAimPoint     = aimPoint;
+            // Dirección de movimiento del dueño al activar (para la esquiva
+            // direccional del dash). Igual que NetworkAimPoint: el servidor no
+            // puede leer el input del dueño, así que este la envía con el pedido.
+            pc.NetworkMoveDirection = moveDir;
+        }
 
         ability.Activate();
         ObserversPlayAbilityAnimation(ability.AnimationTriggerName, ability.AnimationID);
@@ -912,19 +919,21 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // =========================================================
 
     [Server]
-    public void ServerStartDash(Vector3 velocity, float duration, int excludeMask)
+    public void ServerStartDash(Vector3 velocity, float duration, int excludeMask, bool faceVelocity = true)
     {
-        TargetExecuteDash(Owner, velocity, duration, excludeMask);
+        TargetExecuteDash(Owner, velocity, duration, excludeMask, faceVelocity);
     }
 
     [TargetRpc]
-    private void TargetExecuteDash(NetworkConnection conn, Vector3 velocity, float duration, int excludeMask)
+    private void TargetExecuteDash(NetworkConnection conn, Vector3 velocity, float duration, int excludeMask, bool faceVelocity)
     {
         PlayerController pc = GetComponent<PlayerController>();
         if (pc == null) return;
 
         // Dash 3D: se puede en el aire y en cualquier dirección (incluye vertical).
-        pc.ApplyDashVelocity(velocity);
+        // faceVelocity=false en la esquiva direccional del pícaro: el cuerpo NO gira
+        // hacia el dash, mantiene la orientación a la mira.
+        pc.ApplyDashVelocity(velocity, faceVelocity);
         StartCoroutine(DashRoutine(pc, duration, excludeMask));
     }
 

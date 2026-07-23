@@ -27,6 +27,10 @@ public class UI_InitialClassMenu : MonoBehaviour
     private PlayerController targetPlayer;
     private bool _open;
 
+    // True mientras el menú está abierto. Lo consulta PlayerController para no
+    // reabrirlo si ya está en pantalla.
+    public bool IsOpen => _open;
+
     // Clases en el mismo orden en que se muestran las tarjetas — el índice acá
     // es el que mapean las teclas 1/2/3...
     private readonly List<CharacterClassDefinition> _built = new List<CharacterClassDefinition>();
@@ -53,6 +57,20 @@ public class UI_InitialClassMenu : MonoBehaviour
 
         if (MenuContainer == null || CardsParent == null || ClassCardPrefab == null) return;
         if (player.MainBaseClasses == null || player.MainBaseClasses.Length == 0) return;
+
+        BuildMenu();
+        OpenMenu();
+    }
+
+    // Reabre el menú a demanda para CAMBIAR de clase en pleno juego (lo dispara
+    // PlayerController con la acción ChangeClass — tecla C / D-pad arriba). Reusa
+    // el mismo menú de clases base; al elegir, la clase se reinicia a nivel 1 (ver
+    // ConfirmSelection). No hace nada si ya está abierto o si no fue inicializado.
+    public void ReopenMenu()
+    {
+        if (_open || targetPlayer == null) return;
+        if (MenuContainer == null || CardsParent == null || ClassCardPrefab == null) return;
+        if (targetPlayer.MainBaseClasses == null || targetPlayer.MainBaseClasses.Length == 0) return;
 
         BuildMenu();
         OpenMenu();
@@ -162,7 +180,10 @@ public class UI_InitialClassMenu : MonoBehaviour
     {
         if (!_open || targetPlayer == null || selectedClass == null) return;
 
-        targetPlayer.EquipCharacterClass(selectedClass);
+        // resetProgress: true → la clase elegida arranca en nivel 1. Al elegir la
+        // clase inicial da igual (ya estás en nivel 1); al CAMBIAR de clase en
+        // juego reinicia el progreso, como se definió para esta feature.
+        targetPlayer.EquipCharacterClass(selectedClass, resetProgress: true);
         CloseMenu();
     }
 

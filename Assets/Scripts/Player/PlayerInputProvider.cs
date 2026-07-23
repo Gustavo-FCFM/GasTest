@@ -51,6 +51,7 @@ public class PlayerInputProvider : MonoBehaviour
     public InputAction Ability2        { get; private set; }
     public InputAction Ability3        { get; private set; }
     public InputAction Cheat           { get; private set; }
+    public InputAction ChangeClass     { get; private set; }
 
     // Acciones del mapa "UI" (para navegar menús con control sin chocar con las
     // de juego). Se leen solo cuando el jugador está en modo UI (ver SetUIMode).
@@ -111,6 +112,7 @@ public class PlayerInputProvider : MonoBehaviour
         Ability2        = _playerMap.FindAction("Ability2", true);
         Ability3        = _playerMap.FindAction("Ability3", true);
         Cheat           = _playerMap.FindAction("Cheat", true);
+        ChangeClass     = _playerMap.FindAction("ChangeClass", true);
 
         _uiMap   = _assetInstance.FindActionMap("UI", true);
         Navigate = _uiMap.FindAction("Navigate", true);

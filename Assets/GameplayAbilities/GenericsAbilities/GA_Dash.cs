@@ -44,6 +44,19 @@ public class GA_Dash : GameplayAbility, IChargedAbility
     public float DashDistance = 8f;
     [Tooltip("Velocidad del impulso. El frenado/inercia lo da la atenuación de PlayerController.")]
     public float DashSpeed = 30f;
+    [Tooltip("Esquiva direccional (estilo shooter): el dash va hacia donde APUNTA el " +
+             "movimiento (WASD/stick) y el cuerpo NO gira — sigue mirando a la mira, así " +
+             "podés esquivar de costado o hacia atrás sin dejar de encarar al enemigo. " +
+             "Si el jugador está quieto, cae a la dirección de la mira (dash hacia adelante). " +
+             "Desactivado = comportamiento clásico: dashea hacia la mira y encara esa dirección.")]
+    public bool DirectionalDodge = true;
+
+    [Tooltip("Solo con Directional Dodge: qué tan 'hacia adelante' (alineado con la mira) " +
+             "debe ir el dash para tomar el ÁNGULO VERTICAL de la mira y elevarte al apuntar " +
+             "arriba. 1 = solo adelante exacto; 0.5 ≈ incluye diagonales hacia adelante. Los " +
+             "costados y hacia atrás siempre quedan horizontales (no elevan).")]
+    [Range(0f, 1f)]
+    public float ForwardDashElevationDot = 0.5f;
 
     [Header("Colisión")]
     [Tooltip("Capas que FRENAN el dash (paredes/entorno). Se usa para recortar la distancia.")]
@@ -114,13 +127,43 @@ public class GA_Dash : GameplayAbility, IChargedAbility
             else OwnerASC.StartAbilityCoroutine(PlayVisualsSequence());
         }
 
-        // Dirección: hacia la mira, en 3D — importa si el jugador mira arriba o
-        // abajo (no se aplana al plano horizontal).
-        Vector3 origin   = OwnerASC.transform.position;
+        // Dirección del dash.
+        Vector3 origin = OwnerASC.transform.position;
+
+        // Dirección de la mira en 3D (incluye ángulo vertical): se usa para el
+        // fallback estático y para el dash hacia adelante que sí se eleva.
         Vector3 aimPoint = pc != null ? pc.GetAimPoint() : origin + OwnerASC.transform.forward * DashDistance;
-        Vector3 dir = aimPoint - origin;
-        if (dir.sqrMagnitude < 0.0001f) dir = OwnerASC.transform.forward;
-        dir.Normalize();
+        Vector3 aimDir = aimPoint - origin;
+        if (aimDir.sqrMagnitude < 0.0001f) aimDir = OwnerASC.transform.forward;
+        aimDir.Normalize();
+
+        Vector3 dir;
+
+        // Esquiva direccional: hacia donde se MUEVE el jugador (WASD/stick en
+        // espacio de mundo, plano horizontal). El cuerpo NO gira hacia el dash
+        // (faceVelocity=false más abajo): sigue encarando a la mira, que
+        // RequestAbility ya orientó — así esquivar de costado/atrás no te da vuelta.
+        Vector3 moveDir = (DirectionalDodge && pc != null) ? pc.GetMoveDirection() : Vector3.zero;
+        if (moveDir.sqrMagnitude > 0.0001f)
+        {
+            // Por defecto la esquiva es horizontal (de costado o hacia atrás NO
+            // eleva). Excepción: si el dash es hacia ADELANTE —el movimiento está
+            // alineado con la mira— tomamos el ángulo vertical de la mira para
+            // poder elevarte apuntando hacia arriba.
+            Vector3 aimFlat = new Vector3(aimDir.x, 0f, aimDir.z);
+            bool forward = aimFlat.sqrMagnitude > 0.0001f &&
+                           Vector3.Dot(moveDir, aimFlat.normalized) >= ForwardDashElevationDot;
+            dir = forward ? aimDir : moveDir;
+        }
+        else
+        {
+            // Quieto: hacia la mira en 3D (mira arriba/abajo sí importa), como antes.
+            dir = aimDir;
+        }
+
+        // El cuerpo solo encara la dirección del dash en el modo clásico. En la
+        // esquiva direccional se mantiene mirando a la mira.
+        bool faceDashDir = !DirectionalDodge;
 
         // Recorte por paredes: no aplicamos daño (ni impulsamos) más allá de un
         // muro. El movimiento real del CC también choca con las paredes, así que
@@ -136,9 +179,9 @@ public class GA_Dash : GameplayAbility, IChargedAbility
         // Impulso en el proceso dueño (atraviesa jugadores, frena con inercia).
         float duration = Mathf.Clamp(dist / Mathf.Max(1f, DashSpeed), 0.1f, 0.6f);
         if (netAsc != null)
-            netAsc.ServerStartDash(dir * DashSpeed, duration, ExcludePlayerLayer.value);
+            netAsc.ServerStartDash(dir * DashSpeed, duration, ExcludePlayerLayer.value, faceDashDir);
         else if (pc != null)
-            pc.ApplyDashVelocity(dir * DashSpeed); // fallback sin red (no gestiona el fin del impulso)
+            pc.ApplyDashVelocity(dir * DashSpeed, faceDashDir); // fallback sin red (no gestiona el fin del impulso)
 
         if (pc != null) pc.PlayAnimation(AnimationTriggerName, AnimationID);
 
