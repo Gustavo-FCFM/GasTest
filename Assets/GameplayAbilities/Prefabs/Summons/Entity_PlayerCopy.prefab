@@ -117,7 +117,9 @@ MonoBehaviour:
   <ComponentIndex>k__BackingField: 0
   <PredictedSpawn>k__BackingField: {fileID: 0}
   <PredictedOwner>k__BackingField: {fileID: 0}
-  NetworkBehaviours: []
+  NetworkBehaviours:
+  - {fileID: 6461565900983733085}
+  - {fileID: 2729557734295906414}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -128,7 +130,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: 0
+  _initializedTimestamp: -8584166914880760834
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
@@ -147,15 +149,15 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 65535
+  <PrefabId>k__BackingField: 16
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 15944263387403432917
   SceneId: 0
   SerializedTransformProperties:
     Position: {x: 0, y: 0, z: 0}
-    Rotation: {x: 0, y: 0, z: 0, w: 0}
-    Scale: {x: 0, y: 0, z: 0}
-    IsValid: 0
+    Rotation: {x: 0, y: 0, z: 0, w: 1}
+    Scale: {x: 1, y: 1, z: 1}
+    IsValid: 1
 --- !u!114 &6461565900983733085
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -168,9 +170,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2836e36774ca1c4bbbee976e17b649c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 0
   _addedNetworkObject: {fileID: 4476957916214017658}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 4476957916214017658}
   _componentConfiguration: 0
   _synchronizeParent: 0
   _packing:
@@ -255,15 +257,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 95fa104b1cf89aa4385376aba4d52b21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 1
   _addedNetworkObject: {fileID: 4476957916214017658}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 4476957916214017658}
   Asc: {fileID: 7915255226965009303}
   WalkAnimator: {fileID: 7282554269085434644}
+  MainHandSocketName: Socket_MainHand
+  OffHandSocketName: Socket_OffHand
   BlindEffect: {fileID: 11400000, guid: 4977fa5de2b622e47babd8c0336d1df8, type: 2}
   WoundEffect: {fileID: 11400000, guid: b65597dae42471f4a8486b95b0d43ee3, type: 2}
   StopDistance: 2
   AnimatorSpeedParam: Speed
+  WallLayer:
+    serializedVersion: 2
+    m_Bits: 1
+  WallCheckRadius: 0.4
 --- !u!1001 &1763469884958096674
 PrefabInstance:
   m_ObjectHideFlags: 0

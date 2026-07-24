@@ -1043,6 +1043,17 @@ public class PlayerController : NetworkBehaviour
         return AllClasses[idx];
     }
 
+    // Índice de clase SINCRONIZADO de este jugador. Vale en todos los peers (es un
+    // SyncVar). Lo usan las Copias exactas para saber a qué jugador copiar el arma/anim.
+    public int VisualClassIndex => _netClassIndex.Value;
+
+    // Resuelve un índice de clase → definición, en cualquier peer. Como AllClasses se
+    // arma igual en todos (desde MainBaseClasses del prefab), un peer puede resolver la
+    // clase de OTRO jugador usando su propia lista. Lo usa Entity_PlayerCopy para
+    // copiar el arma/animator del jugador origen sin depender de su CurrentClassDef
+    // (que puede no estar seteado en un observador puro).
+    public CharacterClassDefinition ResolveClassByIndex(int idx) => GetClassByIndex(idx);
+
     // Reemplaza el animator override y las armas equipadas según la
     // clase dada. La llaman tanto el dueño (al equipar) como los
     // observadores remotos (al recibir el cambio de clase por red).

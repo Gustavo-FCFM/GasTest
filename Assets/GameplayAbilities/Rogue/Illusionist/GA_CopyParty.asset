@@ -9,24 +9,27 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 42e937ee4edd66c49b7ff38aa56a444a, type: 3}
-  m_Name: GA_ExactCopy
+  m_Script: {fileID: 11500000, guid: d2a3372d309bf60438260e81e6ec570f, type: 3}
+  m_Name: GA_CopyParty
   m_EditorClassIdentifier: 
-  AbilityName: Exact Copy
-  AbilityIcon: {fileID: 21300000, guid: 09b948e96c5bb1947b9287a87da3d5fb, type: 3}
+  AbilityName: Copy Party
+  AbilityIcon: {fileID: 21300000, guid: e9a8255d2465643468b2dd5ed648cc47, type: 3}
   CostEffect: {fileID: 0}
-  CooldownEffect: {fileID: 11400000, guid: bd07a782525833e47889b22896900f13, type: 2}
+  CooldownEffect: {fileID: 11400000, guid: 4165da9d9de274a4aa511261df047340, type: 2}
   CooldownDuration: 0
   UseAttackSpeedAsCooldown: 0
-  UltimateChargeAmount: 1
+  UltimateChargeAmount: 0
   ActivationBlockedTags: 0100000003000000
   ActivationRequiredTags: 
   AnimationTriggerName: AttackTrigger
-  AnimationID: 3
+  AnimationID: 5
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
   VisualsSequence: []
-  MaxCharges: 2
+  Range: 15
+  DisperseDistance: 8
   MoveSpeedOverride: 0
-  MaxRange: 10
+  CharacterLayer:
+    serializedVersion: 2
+    m_Bits: 128

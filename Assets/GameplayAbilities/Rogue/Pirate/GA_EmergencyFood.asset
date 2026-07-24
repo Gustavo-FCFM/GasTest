@@ -9,24 +9,25 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 42e937ee4edd66c49b7ff38aa56a444a, type: 3}
-  m_Name: GA_ExactCopy
+  m_Script: {fileID: 11500000, guid: 9c883fe6eb270f64e8367b89db9052bc, type: 3}
+  m_Name: GA_EmergencyFood
   m_EditorClassIdentifier: 
-  AbilityName: Exact Copy
-  AbilityIcon: {fileID: 21300000, guid: 09b948e96c5bb1947b9287a87da3d5fb, type: 3}
+  AbilityName: Emergency Food
+  AbilityIcon: {fileID: 21300000, guid: 72087692fc8469047840263552e982ad, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: bd07a782525833e47889b22896900f13, type: 2}
   CooldownDuration: 0
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 1
-  ActivationBlockedTags: 0100000003000000
+  ActivationBlockedTags: 
   ActivationRequiredTags: 
   AnimationTriggerName: AttackTrigger
-  AnimationID: 3
+  AnimationID: 4
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
   VisualsSequence: []
-  MaxCharges: 2
-  MoveSpeedOverride: 0
-  MaxRange: 10
+  BuffEffect: {fileID: 11400000, guid: a60c1ff3aa529094fbf317dbc5a7b98c, type: 2}
+  AdditionalEffects:
+  - {fileID: 11400000, guid: 7401ee38ed3d42c4a9347cf7b1ac5e0c, type: 2}
+  - {fileID: 11400000, guid: 2f1a275914c11b04db78f1c7d72dccf2, type: 2}

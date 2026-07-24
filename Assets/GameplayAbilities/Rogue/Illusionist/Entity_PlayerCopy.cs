@@ -1,5 +1,6 @@
 using UnityEngine;
 using FishNet.Object;
+using FishNet.Object.Synchronizing;
 
 // ============================================================
 // Entity_PlayerCopy  (Copia exacta — señuelo del Ilusionista)
@@ -30,8 +31,15 @@ public class Entity_PlayerCopy : NetworkBehaviour
     [Header("Referencias")]
     [Tooltip("ASC del señuelo (normalmente en la misma raíz). Da el equipo y recibe el golpe.")]
     public AbilitySystemComponent Asc;
-    [Tooltip("Animator de la copia (con la animación de caminar del jugador).")]
+    [Tooltip("Animator de la copia. El controller (animator override) se toma de la clase del jugador copiado.")]
     public Animator WalkAnimator;
+
+    [Header("Sockets de arma (bones del Avatar, se buscan por nombre)")]
+    [Tooltip("Nombre del socket de la mano principal. Se busca por nombre en la jerarquía (los bones " +
+             "del Avatar son un prefab anidado y no se pueden arrastrar como referencia).")]
+    public string MainHandSocketName = "Socket_MainHand";
+    [Tooltip("Nombre del socket de la mano secundaria.")]
+    public string OffHandSocketName = "Socket_OffHand";
 
     [Header("Efectos al ser golpeada")]
     [Tooltip("Flashbang: se aplica al enemigo que golpea la copia (otorga Status_Blinded).")]
@@ -44,6 +52,15 @@ public class Entity_PlayerCopy : NetworkBehaviour
     public float StopDistance = 0.4f;
     [Tooltip("Nombre del parámetro float del Animator que controla la mezcla caminar/idle.")]
     public string AnimatorSpeedParam = "Speed";
+    [Tooltip("Capas de pared/entorno que frenan a la copia (no las atraviesa). Asigná la misma capa de paredes que usa el Dash.")]
+    public LayerMask WallLayer;
+    [Tooltip("Radio del chequeo de pared al caminar.")]
+    public float WallCheckRadius = 0.4f;
+
+    // Índice de clase del jugador COPIADO, sincronizado a todos los peers. Cada peer
+    // lo resuelve a una clase (vía PlayerController.ResolveClassByIndex) para copiar
+    // su arma y animator override. -1 = todavía sin asignar.
+    private readonly SyncVar<int> _sourceClassIndex = new SyncVar<int>(-1);
 
     // Estado solo-servidor.
     private AbilitySystemComponent _ownerASC;
@@ -57,13 +74,69 @@ public class Entity_PlayerCopy : NetworkBehaviour
     // Para animar en todos los peers según el movimiento observado.
     private Vector3 _lastAnimPos;
     private bool    _hasLastAnimPos;
+    private bool    _visualsApplied; // el arma/animator del jugador copiado ya se aplicó
+
+    // Aplica el ARMA + animator override del jugador copiado (resuelto por su índice
+    // de clase). Corre en cada peer cuando el índice ya llegó y hay jugador local para
+    // resolver la clase — se reintenta desde Update hasta lograrlo (una sola vez). El
+    // avatar es compartido, así que solo cambian arma y animación por clase.
+    private void TryApplyVisuals()
+    {
+        if (_visualsApplied) return;
+
+        int idx = _sourceClassIndex.Value;
+        if (idx < 0) return;                                   // el índice todavía no sincronizó
+
+        PlayerController localPc = PlayerController.LocalPlayer;
+        if (localPc == null) return;                           // sin jugador local no se puede resolver (reintenta)
+
+        _visualsApplied = true;
+
+        CharacterClassDefinition cls = localPc.ResolveClassByIndex(idx);
+        if (cls == null) return;                               // índice inválido: sin arma (degradación silenciosa)
+
+        if (WalkAnimator != null && cls.ClassAnimatorOverride != null)
+            WalkAnimator.runtimeAnimatorController = cls.ClassAnimatorOverride;
+
+        EquipWeapon(cls.MainHandWeaponPrefab, FindDeep(transform, MainHandSocketName));
+        EquipWeapon(cls.OffHandWeaponPrefab,  FindDeep(transform, OffHandSocketName));
+    }
+
+    // Instancia un arma en su socket con transform local en cero (igual que
+    // PlayerController.UpdateVisuals). Apaga el rastro del arma: es solo para los
+    // golpes del jugador, el señuelo no lo necesita.
+    private void EquipWeapon(GameObject prefab, Transform socket)
+    {
+        if (prefab == null || socket == null) return;
+        GameObject weapon = Instantiate(prefab, socket);
+        weapon.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+        Transform trail = weapon.transform.Find("WeaponTrail");
+        if (trail != null) trail.gameObject.SetActive(false);
+    }
+
+    // Busca un transform por nombre en toda la jerarquía (profundidad primero).
+    // transform.Find no sirve: los sockets están varios niveles adentro del esqueleto.
+    private static Transform FindDeep(Transform root, string name)
+    {
+        if (root == null || string.IsNullOrEmpty(name)) return null;
+        if (root.name == name) return root;
+        for (int i = 0; i < root.childCount; i++)
+        {
+            Transform found = FindDeep(root.GetChild(i), name);
+            if (found != null) return found;
+        }
+        return null;
+    }
 
     // La llama PlayerCopyManager en el servidor justo después de spawnear.
-    public void ServerInit(AbilitySystemComponent owner, Vector3 target, float speed)
+    // sourceClassIndex = índice de clase del jugador COPIADO (para su arma/anim); en la
+    // Copia exacta es el propio Ilusionista, en Fiesta puede ser un aliado.
+    public void ServerInit(AbilitySystemComponent owner, Vector3 target, float speed, int sourceClassIndex)
     {
         _ownerASC = owner;
         _target   = target;
         _speed    = Mathf.Max(0f, speed);
+        _sourceClassIndex.Value = sourceClassIndex;
 
         if (Asc != null)
         {
@@ -90,9 +163,16 @@ public class Entity_PlayerCopy : NetworkBehaviour
 
     private void Update()
     {
-        // Animación (todos los peers): velocidad horizontal observada → parámetro del
-        // Animator, así la copia camina mientras se mueve y queda idle al llegar.
-        if (WalkAnimator != null && !string.IsNullOrEmpty(AnimatorSpeedParam))
+        // Copia el arma/animator del jugador origen apenas se pueda (todos los peers).
+        TryApplyVisuals();
+
+        // Animación (todos los peers): velocidad horizontal observada → parámetros del
+        // Animator, así la copia camina mientras se mueve y queda idle al llegar. Como
+        // la copia siempre ENCARA su dirección de avance, en su espacio local se mueve
+        // hacia adelante (MoveY = velocidad, MoveX = 0). Seteamos Speed y MoveX/MoveY
+        // igual que PlayerController.UpdateAnimations, para blends 1D o 2D
+        // (los SetFloat sobre un parámetro inexistente son no-ops inofensivos).
+        if (WalkAnimator != null)
         {
             Vector3 p = transform.position;
             float observed = 0f;
@@ -103,7 +183,17 @@ public class Entity_PlayerCopy : NetworkBehaviour
             }
             _lastAnimPos = p;
             _hasLastAnimPos = true;
-            WalkAnimator.SetFloat(AnimatorSpeedParam, observed, 0.1f, Time.deltaTime);
+
+            // La copia siempre encara su avance, así que se mueve "de frente":
+            // MoveY = 1 mientras camina, 0 al frenar; MoveX = 0. MoveX/MoveY van
+            // normalizados (~[-1,1]) como en el jugador, no en velocidad cruda. Todo
+            // sale del movimiento OBSERVADO (delta de posición), así anda en todos los
+            // peers sin conocer _speed (que solo existe en el servidor). Speed va crudo.
+            bool moving = observed > 0.3f;
+            if (!string.IsNullOrEmpty(AnimatorSpeedParam))
+                WalkAnimator.SetFloat(AnimatorSpeedParam, observed, 0.1f, Time.deltaTime);
+            WalkAnimator.SetFloat("MoveX", 0f,               0.1f, Time.deltaTime);
+            WalkAnimator.SetFloat("MoveY", moving ? 1f : 0f, 0.1f, Time.deltaTime);
         }
 
         // La lógica (caminar y explotar) es autoridad del servidor.
@@ -116,6 +206,7 @@ public class Entity_PlayerCopy : NetworkBehaviour
 
     // Camina en línea recta (horizontal) hacia el objetivo, manteniendo su altura
     // de spawn (no sigue el ángulo vertical del punto de mira). Al llegar, idle.
+    // No atraviesa paredes: si hay una en el tramo, frena ahí y se queda quieta.
     private void Walk()
     {
         Vector3 pos = transform.position;
@@ -124,9 +215,22 @@ public class Entity_PlayerCopy : NetworkBehaviour
 
         if (dist <= StopDistance) { _arrived = true; return; }
 
-        Vector3 dir = to / dist;
-        transform.position  = pos + dir * _speed * Time.deltaTime;
-        transform.rotation  = Quaternion.LookRotation(dir);
+        Vector3 dir  = to / dist;
+        float   step = _speed * Time.deltaTime;
+
+        // Pared adelante (el collider es trigger y el movimiento es por transform, así
+        // que no choca solo): frenamos antes de atravesarla. Chequeo a la altura del
+        // torso para no pegar contra el piso.
+        Vector3 castOrigin = pos + Vector3.up * 0.9f;
+        if (Physics.SphereCast(castOrigin, WallCheckRadius, dir, out _,
+                               step + WallCheckRadius, WallLayer, QueryTriggerInteraction.Ignore))
+        {
+            _arrived = true; // se queda donde está, sin meterse en la pared
+            return;
+        }
+
+        transform.position = pos + dir * step;
+        transform.rotation = Quaternion.LookRotation(dir);
     }
 
     // Aplica flashbang + Herida SOLO al enemigo que la golpeó y se despawnea.

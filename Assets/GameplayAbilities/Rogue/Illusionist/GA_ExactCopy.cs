@@ -86,7 +86,9 @@ public class GA_ExactCopy : GameplayAbility, IChargedAbility
             ? MoveSpeedOverride
             : OwnerASC.GetAttributeValue(EAttributeType.MovSpeed);
 
-        manager.SpawnCopy(spawnPos, target, speed);
+        // La Copia exacta copia al PROPIO Ilusionista → su índice de clase.
+        int sourceClassIndex = pc != null ? pc.VisualClassIndex : -1;
+        manager.SpawnCopy(spawnPos, target, speed, sourceClassIndex);
 
         if (pc != null) pc.PlayAnimation(AnimationTriggerName, AnimationID);
 

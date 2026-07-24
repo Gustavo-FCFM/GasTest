@@ -335,6 +335,13 @@ public class AbilitySystemComponent : MonoBehaviour
     {
         if (effect == null) return;
 
+        // Inmunidad a debuffs (Imparable del Pirata): mientras Status_Unstoppable esté
+        // activo, los efectos marcados como Debuff CON DURACIÓN (CC, DoT) no entran. El
+        // daño instantáneo (Duration 0) sí — no queremos hacerlo invulnerable, solo a CC.
+        if (effect.EffectType == GameplayEffect.EEffectType.Debuff && effect.Duration > 0 &&
+            HasTag(EGameplayTag.Status_Unstoppable))
+            return;
+
         float finalDuration = (durationOverride > 0) ? durationOverride : effect.Duration;
 
         if (finalDuration <= 0)
@@ -433,7 +440,14 @@ public class AbilitySystemComponent : MonoBehaviour
             ApplyEffectModifiers(effect, true);
 
             if (effect.GrantedTags != null)
+            {
                 foreach (EGameplayTag tag in effect.GrantedTags) AddTag(tag);
+
+                // Imparable: al otorgarse el tag de inmunidad, limpia los debuffs ya
+                // activos (la inmunidad de arriba se encarga de bloquear los futuros).
+                if (effect.GrantedTags.Contains(EGameplayTag.Status_Unstoppable))
+                    RemoveAllDebuffs();
+            }
 
             OnActiveEffectAddedCallback?.Invoke(effect, finalDuration);
         }
@@ -518,6 +532,17 @@ public class AbilitySystemComponent : MonoBehaviour
     {
         for (int i = ActiveEffects.Count - 1; i >= 0; i--)
             if (ActiveEffects[i].Definition.GrantedTags.Contains(tag))
+                RemoveActiveEffect(ActiveEffects[i]);
+    }
+
+    // Quita todos los efectos activos marcados como Debuff (EffectType, el mismo campo
+    // que usa la UI para pintarlos de rojo). Lo usa el buff Imparable del Pirata para
+    // limpiar CC/debuffs al activarse. Solo recorre ActiveEffects (efectos con
+    // duración), así que el daño instantáneo no cuenta.
+    public void RemoveAllDebuffs()
+    {
+        for (int i = ActiveEffects.Count - 1; i >= 0; i--)
+            if (ActiveEffects[i].Definition.EffectType == GameplayEffect.EEffectType.Debuff)
                 RemoveActiveEffect(ActiveEffects[i]);
     }
 

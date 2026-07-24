@@ -682,8 +682,6 @@ MonoBehaviour:
   MaxLevel: 3
   GrantedAbilities: []
   LastAttacker: {fileID: 0}
-  FirstStrikeWindow: 6
-  FirstStrikeCooldown: 12
 --- !u!114 &1688608165834369433
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -718,6 +716,7 @@ MonoBehaviour:
   gravity: -9.81
   aimTurnSpeed: 15
   NetworkAimPoint: {x: 0, y: 0, z: 0}
+  NetworkMoveDirection: {x: 0, y: 0, z: 0}
   isRadialMenuOpen: 0
 --- !u!143 &7812325225803870869
 CharacterController:
