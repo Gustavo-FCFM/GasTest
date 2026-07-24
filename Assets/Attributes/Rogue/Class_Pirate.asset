@@ -12,27 +12,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 749805704a6088741af34d91f0891ced, type: 3}
   m_Name: Class_Pirate
   m_EditorClassIdentifier: 
-  ClassName: Illusionist
-  ClassIcon: {fileID: 21300000, guid: ebb0861afeabc5446b5b1150acbdd804, type: 3}
-  Description: Shhh Flashbang Ahead
-  BaseAttributes: {fileID: 11400000, guid: ad90278268b53f54cbc8bab17cc2a8ce, type: 2}
+  ClassName: Pirate
+  ClassIcon: {fileID: 21300000, guid: f8781bcf6ee31544c93d046f2471bd70, type: 3}
+  Description: NOISE, CANONS AND GRUB
+  BaseAttributes: {fileID: 11400000, guid: 4568fbd577293b241b798a4ed81d6af7, type: 2}
   Abilities:
   - InputSlot: 1
-    Ability: {fileID: 11400000, guid: 74b2d1eee6bbe944aa11845e9c41b4df, type: 2}
+    Ability: {fileID: 11400000, guid: 7ee9af6fe95ba4e4ca642ac2920d3c17, type: 2}
   - InputSlot: 2
-    Ability: {fileID: 11400000, guid: 71345ef822f086d438ac931efffd0afe, type: 2}
+    Ability: {fileID: 0}
   - InputSlot: 3
     Ability: {fileID: 11400000, guid: 5b2baabbde4a86e48bed0823da7a55b6, type: 2}
   - InputSlot: 6
-    Ability: {fileID: 11400000, guid: b018c3af0c78c7146b98fb93e7186332, type: 2}
+    Ability: {fileID: 11400000, guid: 9db99063e5c4e01409e0c85f976aff92, type: 2}
   - InputSlot: 4
-    Ability: {fileID: 11400000, guid: 2729cca432fceb7438489a0fb81987dd, type: 2}
+    Ability: {fileID: 11400000, guid: 5440252ddba79b64391ca1bdd6f64234, type: 2}
   - InputSlot: 5
-    Ability: {fileID: 11400000, guid: 7cf327837f69f074fa2979acda0e5477, type: 2}
-  PassiveBehaviorsPrefab: {fileID: 5050769150704488624, guid: 6faa814e866e1324289f5eb873e834b7, type: 3}
+    Ability: {fileID: 0}
+  PassiveBehaviorsPrefab: {fileID: 0}
   PassiveEffects: []
   StatGrowthPerLevel: []
   AvailableSubclasses: []
   ClassAnimatorOverride: {fileID: 22100000, guid: f175085a22aa728459655748dd969669, type: 2}
-  MainHandWeaponPrefab: {fileID: 5857225396379586743, guid: 2bd1d7cd9d0928f458195d58dfb564b6, type: 3}
-  OffHandWeaponPrefab: {fileID: 5857225396379586743, guid: 2bd1d7cd9d0928f458195d58dfb564b6, type: 3}
+  MainHandWeaponPrefab: {fileID: 5350318134101461513, guid: e1afdd18cd0f53640bee5855f33dac40, type: 3}
+  OffHandWeaponPrefab: {fileID: 5822899519971928179, guid: a7334e93e9f06d7479fa097474e90b57, type: 3}
