@@ -67,4 +67,5 @@ public enum EGameplayTag
 
     // --- PIRATA ---
     Status_Unstoppable,      // Imparable: limpia los debuffs al otorgarse y bloquea nuevos debuffs con duración (CC/DoT) mientras dura (ver ApplyGameplayEffect)
+    Status_Gambled,          // Apostar: el enemigo sobre el que el Pirata apostó. Recibe más daño DEL PIRATA (ver GamblePassive)
 }
