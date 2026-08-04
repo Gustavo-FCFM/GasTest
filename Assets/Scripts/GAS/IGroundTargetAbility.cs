@@ -21,4 +21,11 @@ public interface IGroundTargetAbility
 
     // Radio de la zona objetivo: define el tamaño del marcador.
     float TargetRadius { get; }
+
+    // Si ESTA configuración se apunta con el marcador. Existe porque hay habilidades
+    // genéricas que pueden desplegarse de dos formas según su asset (ver el DeployMode
+    // de GA_ContinuousAoE / GA_InstantAoE): implementan la interfaz siempre, pero solo
+    // entran en modo apuntado cuando esto da true. Las que SIEMPRE se apuntan
+    // (ej. Marcado para morir) devuelven true fijo.
+    bool UsesGroundTarget { get; }
 }

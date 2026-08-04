@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using FishNet;
@@ -15,7 +16,14 @@ using FishNet;
 //             (una versión menor de esos beneficios, por poco tiempo).
 //   · Si expira sin muertes, no pasa nada: se espera al próximo intervalo.
 //
-// El "daño aumentado" es SOLO del Pirata contra su propio marcado — por eso es un
+// VARIAS APUESTAS A LA VEZ: puede haber muchas apuestas abiertas en paralelo, cada
+// una con su propio vencimiento. La pasiva mantiene UNA apuesta automática (la de su
+// intervalo), y la ultimate (Cañones) abre una por cada enemigo al que le pegue, sin
+// pisar la automática ni entre ellas. Cada apuesta ganada cobra sus WinEffects, así
+// que rematar a varios marcados de una cobra varias veces (regulalo con la
+// StackingPolicy del GE si no querés que se acumule).
+//
+// El "daño aumentado" es SOLO del Pirata contra sus propios marcados — por eso es un
 // IDamageModifier (igual que el Ataque Furtivo del Pícaro base) y no un sistema de
 // vulnerabilidad general: la marca no hace que le peguen más los demás.
 //
@@ -66,21 +74,31 @@ public class GamblePassive : MonoBehaviour, IDamageModifier
              "por poco tiempo).")]
     public List<GameplayEffect> LossEffects;
 
+    // UNA apuesta abierta contra un enemigo concreto.
+    private class Bet
+    {
+        public AbilitySystemComponent Target;
+        // Cuándo vence ESTA apuesta. Llevamos el tiempo nosotros en vez de preguntar por
+        // el tag Status_Gambled del objetivo: los tags del ASC son un CONTEO, así que si
+        // otro Pirata también le apostó al mismo enemigo, el tag sigue puesto por la marca
+        // del otro y daríamos la nuestra por viva (seguiríamos pegando de más y podríamos
+        // cobrar una apuesta ya vencida).
+        public float EndTime;
+        // Handler suscrito a Target.OnDeath. Lo guardamos porque OnDeath no dice QUIÉN
+        // murió: cada apuesta se suscribe con su propio closure para saber cuál se resolvió
+        // (y para poder desuscribirse exactamente de esa).
+        public Action DeathHandler;
+        // True si la abrió el marcado automático de la pasiva (no la ultimate).
+        public bool IsAuto;
+
+        public bool IsLive => Target != null && Time.time < EndTime;
+    }
+
     // ASC del Pirata (este componente vive en un hijo suyo).
     private AbilitySystemComponent _asc;
 
-    // Enemigo sobre el que hay una apuesta activa ahora mismo (solo server). null = sin apuesta.
-    private AbilitySystemComponent _marked;
-
-    // Cuándo vence ESTA apuesta. Llevamos el tiempo nosotros en vez de preguntar por el
-    // tag Status_Gambled del objetivo: los tags del ASC son un CONTEO, así que si otro
-    // Pirata también le apostó al mismo enemigo, el tag sigue puesto por la marca del
-    // otro y daríamos la nuestra por viva (seguiríamos pegando de más y podríamos cobrar
-    // una apuesta ya vencida).
-    private float _markEndTime;
-
-    // True mientras la apuesta de ESTE Pirata siga vigente.
-    private bool HasActiveMark => _marked != null && Time.time < _markEndTime;
+    // Apuestas abiertas ahora mismo (solo server).
+    private readonly List<Bet> _bets = new List<Bet>();
 
     private void Awake() => _asc = GetComponentInParent<AbilitySystemComponent>();
 
@@ -90,7 +108,7 @@ public class GamblePassive : MonoBehaviour, IDamageModifier
 
         _asc.RegisterDamageModifier(this);
         // Para detectar la apuesta PERDIDA: si el Pirata muere, miramos si lo mató
-        // justo el enemigo al que le había apostado.
+        // justo alguno de los enemigos a los que les había apostado.
         _asc.OnDeath += HandleOwnerDeath;
 
         StartCoroutine(GambleRoutine());
@@ -103,22 +121,22 @@ public class GamblePassive : MonoBehaviour, IDamageModifier
             _asc.UnregisterDamageModifier(this);
             _asc.OnDeath -= HandleOwnerDeath;
         }
-        // Cambio de clase / destrucción: soltamos la suscripción al marcado para no
-        // dejar callbacks colgando sobre un enemigo que sigue vivo.
-        ClearMark();
+        // Cambio de clase / destrucción: soltamos las suscripciones para no dejar
+        // callbacks colgando sobre enemigos que siguen vivos.
+        CloseAllBets();
     }
 
     // =========================================================
-    // DAÑO AUMENTADO CONTRA EL MARCADO
+    // DAÑO AUMENTADO CONTRA LOS MARCADOS
     // =========================================================
 
-    // Amplifica el daño del Pirata contra SU enemigo marcado. Magnitude es negativa
-    // (es daño), así que multiplicarla por >1 pega más fuerte. No aplica a ticks de
-    // DoT, por consistencia con las demás pasivas de daño.
+    // Amplifica el daño del Pirata contra cualquier enemigo con una apuesta suya viva.
+    // Magnitude es negativa (es daño), así que multiplicarla por >1 pega más fuerte. No
+    // aplica a ticks de DoT, por consistencia con las demás pasivas de daño.
     public void ModifyOutgoingDamage(ref DamageContext ctx)
     {
         if (ctx.IsPeriodicTick || ctx.Target == null) return;
-        if (!HasActiveMark || !ReferenceEquals(ctx.Target, _marked)) return;
+        if (FindLiveBet(ctx.Target) == null) return;
 
         ctx.Magnitude *= Mathf.Max(1f, DamageMultiplier);
     }
@@ -127,9 +145,10 @@ public class GamblePassive : MonoBehaviour, IDamageModifier
     // CICLO DE LA APUESTA
     // =========================================================
 
-    // Cada MarkInterval segundos, si no hay una apuesta en curso, elige un enemigo
-    // cercano al azar y le apuesta. Corre en todos los peers pero solo actúa en el
-    // servidor (la marca es un GE: aplicarlo es autoridad de servidor).
+    // Cada MarkInterval segundos, si no hay una apuesta AUTOMÁTICA en curso, elige un
+    // enemigo cercano al azar y le apuesta. Mira solo la automática: las que reparte la
+    // ultimate no deben cortarle el ritmo a la pasiva. Corre en todos los peers pero
+    // solo actúa en el servidor (la marca es un GE: aplicarlo es autoridad de servidor).
     private IEnumerator GambleRoutine()
     {
         WaitForSeconds wait = new WaitForSeconds(Mathf.Max(0.5f, MarkInterval));
@@ -141,19 +160,20 @@ public class GamblePassive : MonoBehaviour, IDamageModifier
             if (!InstanceFinder.IsServerStarted) continue;
             if (_asc == null || _asc.HasTag(EGameplayTag.State_Dead)) continue;
 
-            // Si la apuesta anterior venció sola (nadie murió), la damos por cerrada.
-            if (!HasActiveMark) ClearMark();
-            else continue; // apuesta todavía en curso
+            // Cierra las apuestas que vencieron solas (nadie murió).
+            PruneExpiredBets();
+
+            if (HasLiveAutoBet()) continue; // la automática sigue en curso
 
             AbilitySystemComponent target = PickRandomNearbyEnemy();
-            if (target != null) ServerMarkTarget(target);
+            if (target != null) ServerMarkTarget(target, isAuto: true);
         }
     }
 
-    // Apuesta por un enemigo concreto. Público para que la ultimate del Pirata
-    // (Cañones) pueda marcar a quien golpee, además del marcado automático de acá.
-    // Si ya había una apuesta en curso, la reemplaza.
-    public void ServerMarkTarget(AbilitySystemComponent target)
+    // Apuesta por un enemigo concreto, SIN cerrar las demás apuestas abiertas. Público
+    // para que la ultimate del Pirata (Cañones) le apueste a todos los que golpea,
+    // además del marcado automático de acá.
+    public void ServerMarkTarget(AbilitySystemComponent target, bool isAuto = false)
     {
         if (!InstanceFinder.IsServerStarted) return;
         if (_asc == null || target == null || MarkEffect == null) return;
@@ -161,21 +181,27 @@ public class GamblePassive : MonoBehaviour, IDamageModifier
         // Ya le estamos apostando a ESE mismo y la apuesta sigue viva: no la reiniciamos
         // (si no, los impactos repetidos de Cañones la refrescarían para siempre). Si ya
         // venció, seguimos de largo y se le vuelve a apostar normalmente.
-        if (HasActiveMark && ReferenceEquals(target, _marked)) return;
+        if (FindLiveBet(target) != null) return;
 
-        ClearMark();
+        PruneExpiredBets();
 
-        _marked      = target;
-        _markEndTime = Time.time + MarkEffect.Duration;
-        // Para detectar la apuesta GANADA: nos avisa cuando el marcado muere, y ahí
+        Bet bet = new Bet
+        {
+            Target  = target,
+            EndTime = Time.time + MarkEffect.Duration,
+            IsAuto  = isAuto,
+        };
+        // Para detectar la apuesta GANADA: nos avisa cuando ESTE marcado muere, y ahí
         // miramos si fue el Pirata quien lo mató.
-        _marked.OnDeath += HandleMarkedDeath;
+        bet.DeathHandler = () => HandleMarkedDeath(bet);
+        target.OnDeath += bet.DeathHandler;
 
+        _bets.Add(bet);
         target.ApplyGameplayEffect(MarkEffect, _asc);
     }
 
     // Enemigo vivo AL AZAR dentro de SearchRadius (el diseño pide aleatorio, no el
-    // más cercano). Devuelve null si no hay ninguno.
+    // más cercano) que no tenga ya una apuesta viva. Devuelve null si no hay ninguno.
     private AbilitySystemComponent PickRandomNearbyEnemy()
     {
         Collider[] cols = Physics.OverlapSphere(_asc.transform.position, SearchRadius, CharacterLayer);
@@ -188,54 +214,90 @@ public class GamblePassive : MonoBehaviour, IDamageModifier
             AbilitySystemComponent asc = c.GetComponentInParent<AbilitySystemComponent>();
             if (asc == null || ReferenceEquals(asc, _asc) || !seen.Add(asc)) continue;
             if (!_asc.IsEnemyOf(asc) || asc.HasTag(EGameplayTag.State_Dead)) continue;
+            if (FindLiveBet(asc) != null) continue; // ya tiene una apuesta nuestra viva
             candidates.Add(asc);
         }
 
         if (candidates.Count == 0) return null;
-        return candidates[Random.Range(0, candidates.Count)];
+        // UnityEngine.Random explícito: este archivo tiene 'using System', que también
+        // trae System.Random y dejaría 'Random' ambiguo.
+        return candidates[UnityEngine.Random.Range(0, candidates.Count)];
     }
 
     // =========================================================
     // RESOLUCIÓN
     // =========================================================
 
-    // Murió el enemigo marcado. Si lo mató el Pirata, cobramos la apuesta; si lo
-    // mató otro, la apuesta simplemente se cierra sin premio.
-    private void HandleMarkedDeath()
+    // Murió un enemigo marcado. Si lo mató el Pirata, cobramos ESA apuesta; si lo
+    // mató otro, se cierra sin premio. Las demás apuestas siguen abiertas.
+    private void HandleMarkedDeath(Bet bet)
     {
-        if (!InstanceFinder.IsServerStarted) { ClearMark(); return; }
+        if (!InstanceFinder.IsServerStarted) { CloseBet(bet); return; }
 
         // Solo cobramos si la apuesta seguía vigente Y lo mató el Pirata. LastAttacker
         // lo anota el ASC en cada golpe que baja vida (server-side).
-        bool wonByOwner = HasActiveMark && ReferenceEquals(_marked.LastAttacker, _asc);
+        bool wonByOwner = bet.IsLive && ReferenceEquals(bet.Target.LastAttacker, _asc);
 
         if (wonByOwner) ApplyAll(WinEffects, _asc);
 
-        ClearMark();
+        CloseBet(bet);
     }
 
-    // Murió el Pirata. Si el que lo mató es justo el enemigo al que le había
-    // apostado, ese enemigo se lleva el premio de consolación.
+    // Murió el Pirata. Si el que lo mató es justo un enemigo al que le había apostado,
+    // ese enemigo se lleva el premio de consolación.
     private void HandleOwnerDeath()
     {
-        if (!InstanceFinder.IsServerStarted) { ClearMark(); return; }
+        if (!InstanceFinder.IsServerStarted) { CloseAllBets(); return; }
 
         AbilitySystemComponent killer = _asc != null ? _asc.LastAttacker : null;
-        if (killer != null && HasActiveMark && ReferenceEquals(killer, _marked))
+        if (killer != null && FindLiveBet(killer) != null)
             ApplyAll(LossEffects, killer);
 
-        // La apuesta se cierra al morir: al revivir se empieza una nueva.
-        ClearMark();
+        // Todas las apuestas se cierran al morir: al revivir se empieza de cero.
+        CloseAllBets();
     }
 
-    // Cierra la apuesta en curso: suelta la suscripción a la muerte del marcado.
-    // NO le quitamos el GE de la marca a mano — su propia duración se encarga (y si
-    // el marcado murió, ya no importa).
-    private void ClearMark()
+    // =========================================================
+    // REGISTRO DE APUESTAS
+    // =========================================================
+
+    // La apuesta viva contra ese objetivo, o null si no hay.
+    private Bet FindLiveBet(AbilitySystemComponent target)
     {
-        if (_marked != null) _marked.OnDeath -= HandleMarkedDeath;
-        _marked      = null;
-        _markEndTime = 0f;
+        if (target == null) return null;
+        for (int i = 0; i < _bets.Count; i++)
+            if (_bets[i].IsLive && ReferenceEquals(_bets[i].Target, target)) return _bets[i];
+        return null;
+    }
+
+    private bool HasLiveAutoBet()
+    {
+        for (int i = 0; i < _bets.Count; i++)
+            if (_bets[i].IsAuto && _bets[i].IsLive) return true;
+        return false;
+    }
+
+    // Cierra una apuesta: suelta la suscripción a la muerte de su objetivo y la saca
+    // del registro. NO le quitamos el GE de la marca a mano — su propia duración se
+    // encarga (y si el marcado murió, ya no importa).
+    private void CloseBet(Bet bet)
+    {
+        if (bet == null) return;
+        if (bet.Target != null) bet.Target.OnDeath -= bet.DeathHandler;
+        _bets.Remove(bet);
+    }
+
+    // Cierra las apuestas ya vencidas (nadie murió a tiempo).
+    private void PruneExpiredBets()
+    {
+        for (int i = _bets.Count - 1; i >= 0; i--)
+            if (!_bets[i].IsLive) CloseBet(_bets[i]);
+    }
+
+    private void CloseAllBets()
+    {
+        for (int i = _bets.Count - 1; i >= 0; i--) CloseBet(_bets[i]);
+        _bets.Clear();
     }
 
     // Aplica una lista de GEs a un objetivo, usando al Pirata como fuente (para

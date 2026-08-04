@@ -603,7 +603,7 @@ public class PlayerController : NetworkBehaviour
             currentRadialAbility = ability;
             if (UI_RadialMenu.Instance != null) UI_RadialMenu.Instance.Show(radial);
         }
-        else if (ability is IGroundTargetAbility ground)
+        else if (ability is IGroundTargetAbility ground && ground.UsesGroundTarget)
         {
             // Habilidad de zona: al presionar solo entramos en modo apuntado y
             // mostramos el marcador. Se lanza al SOLTAR (ver ProcessAbilityRelease).

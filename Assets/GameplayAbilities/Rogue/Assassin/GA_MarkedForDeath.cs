@@ -32,6 +32,7 @@ public class GA_MarkedForDeath : GameplayAbility, IGroundTargetAbility
     // la mira, y al soltar se lanza sobre esa zona. Ver UI_GroundTargetIndicator.
     public float MaxTargetRange => MaxRange;
     public float TargetRadius   => ZoneRadius;
+    public bool  UsesGroundTarget => true; // esta habilidad SIEMPRE se apunta
 
     [Header("Efectos")]
     [Tooltip("Daño a cada enemigo de la zona. Para que pegue por su vida faltante, en su " +
