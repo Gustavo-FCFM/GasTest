@@ -24,7 +24,6 @@ public class GA_LineAttack : GameplayAbility
     // Efectos EXTRA que se aplican a cada enemigo golpeado, además del daño
     // (ralentizar, heridas, marcar, etc.). Opcional.
     public List<GameplayEffect> AdditionalEffects;
-    public float DamageDelay = 0.4f;
 
     public GameObject HitVFX;
 
@@ -43,24 +42,23 @@ public class GA_LineAttack : GameplayAbility
             if (pc != null)
             {
                 pc.RotateToAim();
-                pc.PlayAnimation(AnimationTriggerName, AnimationID);
+                pc.PlayAnimation(this);
             }
             OwnerASC.StartAbilityCoroutine(AttackSequence());
         }
     }
 
-    // Espera DamageDelay (ajustado por velocidad de ataque), ejecuta el
-    // daño, espera el remate de la animación, y termina.
+    // Resuelve el golpe en el/los frames de impacto que marca el clip, espera el
+    // remate de la animación, y termina.
     private IEnumerator AttackSequence()
     {
         float speedMultiplier = 1f;
         float atkSpeedStat = OwnerASC.GetAttributeValue(EAttributeType.AtkSpeed);
         if (atkSpeedStat > 0) speedMultiplier = 1f / atkSpeedStat;
 
-        if (DamageDelay > 0)
-            yield return new WaitForSeconds(DamageDelay / speedMultiplier);
-
-        PerformDamage();
+        // El timing lo maneja GameplayAbility: si el clip tiene varios eventos de
+        // impacto, esto se convierte solo en una estocada de varios tiempos.
+        yield return HitTimingRoutine(PerformDamage);
 
         yield return new WaitForSeconds(0.5f / speedMultiplier);
 
@@ -70,7 +68,10 @@ public class GA_LineAttack : GameplayAbility
     // Arma la caja (Length x Width) frente al dueño y le aplica daño a
     // todos los enemigos que caigan dentro, reproduciendo el VFX de golpe
     // en todos los peers.
-    private void PerformDamage()
+    //
+    // enemiesHit lo provee HitTimingRoutine y se COMPARTE entre los frames de impacto
+    // del mismo golpe: así no se le pega dos veces al mismo enemigo.
+    private void PerformDamage(HashSet<AbilitySystemComponent> enemiesHit)
     {
         Vector3 origin    = OwnerASC.transform.position;
         Vector3 direction = OwnerASC.transform.forward;
@@ -78,7 +79,6 @@ public class GA_LineAttack : GameplayAbility
         Vector3 halfExtents = new Vector3(Width / 2, 1, Length / 2);
 
         Collider[] hits = Physics.OverlapBox(center, halfExtents, OwnerASC.transform.rotation, TargetLayer);
-        HashSet<AbilitySystemComponent> enemiesHit = new HashSet<AbilitySystemComponent>();
         NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
 
         foreach (var hit in hits)

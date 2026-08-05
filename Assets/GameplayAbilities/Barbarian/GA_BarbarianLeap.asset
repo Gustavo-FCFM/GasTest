@@ -16,20 +16,24 @@ MonoBehaviour:
   AbilityIcon: {fileID: 21300000, guid: d04fb6a6eb3903243b98d5ef08e89617, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 10f0981bf286ed844b33e0f4b4b974e3, type: 2}
+  CooldownDuration: 0
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 1
   ActivationBlockedTags: 02000000
+  ActivationRequiredTags: 
+  AnimationClip: {fileID: 3094330708855449807, guid: a4c3612a3929d1242a7101211f988b85, type: 3}
   AnimationTriggerName: AttackTrigger
-  AnimationID: 4
-  AbilityRadius: 3
+  AnimationID: 99
+  HitFrameEventName: AnimationEvent_HitFrame
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  ConeAngle: 90
   VisualsSequence: []
   JumpVelocity: 15
   ForwardForce: 10
+  AbilityRadius: 3
   DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   CrowdControlEffect: {fileID: 11400000, guid: 70c9bebbbfba254448fb78d4cf1f9726, type: 2}
+  AdditionalEffects: []
   ImpactVFX: {fileID: 4994997792314849709, guid: 3dd50886582244645be87adb42aa8528, type: 3}
   ImpactVFXScaleMultiplier: 0.8

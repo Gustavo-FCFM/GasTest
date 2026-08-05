@@ -183,7 +183,7 @@ public class GA_Dash : GameplayAbility, IChargedAbility
         else if (pc != null)
             pc.ApplyDashVelocity(dir * DashSpeed, faceDashDir); // fallback sin red (no gestiona el fin del impulso)
 
-        if (pc != null) pc.PlayAnimation(AnimationTriggerName, AnimationID);
+        if (pc != null) pc.PlayAnimation(this);
 
         // Recarga de cargas y vigilancia de muertes para el reembolso.
         StartRecharge();

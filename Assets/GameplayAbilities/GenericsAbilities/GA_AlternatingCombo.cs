@@ -63,6 +63,8 @@ public class GA_AlternatingCombo : GameplayAbility
                     stepInstance.Initialize(OwnerASC);
                     stepInstance.SourceTemplate = step.AbilityToCast; // para su índice en GameplayAbilityRegistry
 
+                    if (step.AnimationClipOverride != null)
+                        stepInstance.AnimationClip = step.AnimationClipOverride;
                     if (step.AnimationIDOverride > 0)
                         stepInstance.AnimationID = step.AnimationIDOverride;
 

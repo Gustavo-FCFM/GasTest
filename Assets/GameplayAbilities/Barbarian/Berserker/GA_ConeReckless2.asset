@@ -16,29 +16,22 @@ MonoBehaviour:
   AbilityIcon: {fileID: 21300000, guid: 42f3bcccc10a0554babbba7c68cdf7e1, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 05cc155d13a28254980c2a8040c35e21, type: 2}
+  CooldownDuration: 0
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 4
   ActivationBlockedTags: 
+  ActivationRequiredTags: 
+  AnimationClip: {fileID: 3094330708855449807, guid: 786865feb8624b243b38f3ab37c847a3, type: 3}
   AnimationTriggerName: AttackTrigger
-  AnimationID: 1
-  AbilityRadius: 3
+  AnimationID: 99
+  HitFrameEventName: AnimationEvent_HitFrame
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  HitboxShape: 0
-  HitboxOffsetZ: 1.5
-  HitboxHalfExtents: {x: 1, y: 1, z: 1}
-  ConeAngle: 180
-  VisualsSequence:
-  - VFXPrefab: {fileID: 6389406066330802589, guid: 5ef8d476ac4025a4e85cc5e7c5004889, type: 3}
-    Delay: 0.5
-    Offset: {x: 0, y: -0.3, z: 0}
-    RotationOffset: {x: 90, y: 0, z: 0}
-    Scale: {x: 0.3, y: 0.3, z: 0.3}
-    AttachToOwner: 0
-    DestroyTime: 0
-    EndWithTag: 0
+  VisualsSequence: []
   Range: 3
+  ConeAngle: 180
   DamageEffect: {fileID: 11400000, guid: 3e5f2d02283eb744b9c29dbe4b11d901, type: 2}
+  AdditionalEffects: []
   DamageDelay: 0.5
   HitVFX: {fileID: 1758473627833946668, guid: 9b21333b068a5084ba09535839bee3c8, type: 3}

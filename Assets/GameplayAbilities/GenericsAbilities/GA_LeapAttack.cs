@@ -53,7 +53,7 @@ public class GA_LeapAttack : GameplayAbility
         NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
 
         if (pc != null)
-            pc.PlayAnimation(AnimationTriggerName, AnimationID);
+            pc.PlayAnimation(this);
 
         // El salto en sí (mover el CharacterController) tiene que resolverse
         // en el proceso DUEÑO del jugador, no acá — Activate() corre en el

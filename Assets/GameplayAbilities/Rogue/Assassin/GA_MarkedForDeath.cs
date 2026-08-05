@@ -75,7 +75,7 @@ public class GA_MarkedForDeath : GameplayAbility, IGroundTargetAbility
         if (netAsc != null)  netAsc.ServerTeleportOwnerTo(zoneCenter, faceDir);
         else if (pc != null) pc.TeleportTo(zoneCenter, faceDir); // fallback sin red
 
-        if (pc != null) pc.PlayAnimation(AnimationTriggerName, AnimationID);
+        if (pc != null) pc.PlayAnimation(this);
 
         // Daño a todos los enemigos de la zona (autoridad de servidor).
         Collider[] cols = Physics.OverlapSphere(zoneCenter, ZoneRadius, TargetLayer);

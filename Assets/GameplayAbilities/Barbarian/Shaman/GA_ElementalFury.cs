@@ -46,7 +46,7 @@ public class GA_ElementalFury : GameplayAbility
         if (OwnerASC != null)
         {
             PlayerController pc = OwnerASC.GetComponent<PlayerController>();
-            if (pc != null) pc.PlayAnimation(AnimationTriggerName, AnimationID);
+            if (pc != null) pc.PlayAnimation(this);
             OwnerASC.StartAbilityCoroutine(ElementalFuryRoutine());
         }
         else

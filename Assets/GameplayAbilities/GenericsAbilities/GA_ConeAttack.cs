@@ -27,9 +27,6 @@ public class GA_ConeAttack : GameplayAbility
     // Efectos EXTRA que se aplican a cada enemigo golpeado, además del daño
     // (ralentizar, heridas, marcar, etc.). Opcional.
     public List<GameplayEffect> AdditionalEffects;
-    // Tiempo entre activar la habilidad y que el golpe realmente
-    // conecte (para sincronizar con la animación).
-    public float DamageDelay = 0.3f;
 
     // VFX que aparece en cada enemigo golpeado.
     public GameObject HitVFX;
@@ -49,24 +46,23 @@ public class GA_ConeAttack : GameplayAbility
             if (pc != null)
             {
                 pc.RotateToAim();
-                pc.PlayAnimation(AnimationTriggerName, AnimationID);
+                pc.PlayAnimation(this);
             }
             OwnerASC.StartAbilityCoroutine(AttackSequence());
         }
     }
 
-    // Espera DamageDelay (ajustado por velocidad de ataque), ejecuta la
-    // detección/daño, espera el remate de la animación, y termina.
+    // Resuelve el golpe en el/los frames de impacto que marca el clip, espera el
+    // remate de la animación, y termina.
     private IEnumerator AttackSequence()
     {
         float speedMultiplier = 1f;
         float atkSpeedStat = OwnerASC.GetAttributeValue(EAttributeType.AtkSpeed);
         if (atkSpeedStat > 0) speedMultiplier = 1f / atkSpeedStat;
 
-        if (DamageDelay > 0)
-            yield return new WaitForSeconds(DamageDelay / speedMultiplier);
-
-        PerformDetectionAndDamage();
+        // El timing lo maneja GameplayAbility: si el clip tiene varios eventos de
+        // impacto, esto se convierte solo en un barrido escalonado.
+        yield return HitTimingRoutine(PerformDetectionAndDamage);
 
         yield return new WaitForSeconds(0.5f / speedMultiplier);
 
@@ -76,10 +72,12 @@ public class GA_ConeAttack : GameplayAbility
     // Busca enemigos dentro de Range (esfera) y filtra por ángulo contra
     // ConeAngle; a cada uno que pase el filtro le aplica el daño y
     // reproduce el VFX de golpe en todos los peers.
-    private void PerformDetectionAndDamage()
+    //
+    // enemiesHit lo provee HitTimingRoutine y se COMPARTE entre los frames de impacto
+    // del mismo swing: así un barrido escalonado no le pega dos veces al mismo enemigo.
+    private void PerformDetectionAndDamage(HashSet<AbilitySystemComponent> enemiesHit)
     {
         Collider[] potentialTargets = Physics.OverlapSphere(OwnerASC.transform.position, Range, TargetLayer);
-        HashSet<AbilitySystemComponent> enemiesHit = new HashSet<AbilitySystemComponent>();
         NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
 
         foreach (var targetCollider in potentialTargets)

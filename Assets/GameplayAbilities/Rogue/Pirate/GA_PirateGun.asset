@@ -15,29 +15,29 @@ MonoBehaviour:
   AbilityName: Pirate Gun
   AbilityIcon: {fileID: 0}
   CostEffect: {fileID: 0}
-  CooldownEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: ecfe07a06c63704479a331a9bae55086, type: 2}
   CooldownDuration: 0
-  UseAttackSpeedAsCooldown: 0
+  UseAttackSpeedAsCooldown: 1
   UltimateChargeAmount: 0
-  ActivationBlockedTags: 
+  ActivationBlockedTags: 01000000
   ActivationRequiredTags: 
   AnimationTriggerName: AttackTrigger
-  AnimationID: 1
+  AnimationID: 2
   TargetLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128
   VisualsSequence: []
-  MaxRange: 50
+  MaxRange: 1000
   BulletRadius: 0.15
   MuzzleHeight: 1.4
   WallLayer:
     serializedVersion: 2
-    m_Bits: 0
-  DamageEffect: {fileID: 0}
+    m_Bits: 1
+  DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   AdditionalEffects: []
   HitVFX: {fileID: 0}
-  RecoilSpeed: 0
+  RecoilSpeed: 20
   RecoilDuration: 0.25
   ExcludePlayerLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128

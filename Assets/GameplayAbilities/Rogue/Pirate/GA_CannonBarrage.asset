@@ -12,20 +12,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 247e06776a091e245836fdb021f5e932, type: 3}
   m_Name: GA_CannonBarrage
   m_EditorClassIdentifier: 
-  AbilityName: New Ability
+  AbilityName: Cannon Barrage
   AbilityIcon: {fileID: 0}
   CostEffect: {fileID: 0}
-  CooldownEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: 4165da9d9de274a4aa511261df047340, type: 2}
   CooldownDuration: 0
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 0
-  ActivationBlockedTags: 
+  ActivationBlockedTags: 0100000003000000
   ActivationRequiredTags: 
   AnimationTriggerName: AttackTrigger
-  AnimationID: 1
+  AnimationID: 5
   TargetLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128
   VisualsSequence: []
   Targets: 0
   Radius: 4

@@ -16,19 +16,18 @@ MonoBehaviour:
   AbilityIcon: {fileID: 21300000, guid: 72087692fc8469047840263552e982ad, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 0}
+  CooldownDuration: 0
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 1
   ActivationBlockedTags: 0300000001000000
+  ActivationRequiredTags: 
+  AnimationClip: {fileID: 3094330708855449807, guid: 8ab57abc06f7ffd47ae8d91e99f41fa2, type: 3}
   AnimationTriggerName: AttackTrigger
-  AnimationID: 4
-  AbilityRadius: 3
+  AnimationID: 99
+  HitFrameEventName: AnimationEvent_HitFrame
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  HitboxShape: 0
-  HitboxOffsetZ: 1.5
-  HitboxHalfExtents: {x: 1, y: 1, z: 1}
-  ConeAngle: 90
   VisualsSequence: []
   TotemPrefabs:
   - {fileID: 1564936832730364612, guid: d4cec081c92d2c04fbf4a2eae5e1aec7, type: 3}

@@ -24,7 +24,12 @@ public class GA_ComboSequence : GameplayAbility
         [Tooltip("Tiempo a esperar DESPUÉS de lanzar esta habilidad antes de la siguiente")]
         public float DelayAfter;
 
-        [Tooltip("Si > 0, fuerza a la habilidad a usar este AnimationID en lugar del suyo")]
+        [Tooltip("Clip propio de ESTE paso: si lo asignás, pisa el AnimationClip de la habilidad. " +
+                 "Es lo que permite que dos pasos de la MISMA habilidad se vean distintos (ej. dos " +
+                 "cortes encadenados, o estocada en una secuencia y barrido en otra).")]
+        public AnimationClip AnimationClipOverride;
+
+        [Tooltip("Esquema viejo (solo si no usás clips): si > 0, fuerza a la habilidad a usar este AnimationID en lugar del suyo")]
         public int AnimationIDOverride;
     }
 
@@ -57,6 +62,8 @@ public class GA_ComboSequence : GameplayAbility
                 stepInstance.Initialize(OwnerASC);
                 stepInstance.SourceTemplate = step.AbilityToCast; // para resolver su índice en GameplayAbilityRegistry
 
+                if (step.AnimationClipOverride != null)
+                    stepInstance.AnimationClip = step.AnimationClipOverride;
                 if (step.AnimationIDOverride > 0)
                     stepInstance.AnimationID = step.AnimationIDOverride;
 

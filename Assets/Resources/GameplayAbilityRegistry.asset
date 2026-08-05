@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GameplayAbilityRegistry
   m_EditorClassIdentifier: 
   Abilities:
+  - {fileID: 11400000, guid: 7ee9af6fe95ba4e4ca642ac2920d3c17, type: 2}
   - {fileID: 11400000, guid: 06280d7ea4148f142912712dcda4ec7d, type: 2}
   - {fileID: 11400000, guid: 2c40eaebc42e5cd48b76a0b3dd759af6, type: 2}
   - {fileID: 11400000, guid: 8b4c8a4d4b8922a49943317306b6ba16, type: 2}
@@ -25,6 +26,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 5b2baabbde4a86e48bed0823da7a55b6, type: 2}
   - {fileID: 11400000, guid: 80e8c2b99459134409681a187b325173, type: 2}
   - {fileID: 11400000, guid: 11a9cd014a96d6d4fb0f56ed9789d54b, type: 2}
+  - {fileID: 11400000, guid: 2bfe0b6ac89ecfe4286e8ee01d24a4dd, type: 2}
   - {fileID: 11400000, guid: fc5ae4e61f4738e48b09f1c666da74b4, type: 2}
   - {fileID: 11400000, guid: 830101eba8c1e234c9bc8d55c6d4b4d5, type: 2}
   - {fileID: 11400000, guid: 28ccd4d41e3a4a546b2915b40eef9aa2, type: 2}
@@ -34,6 +36,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: dd44f73b3d9170446913f3c4a1fcc47c, type: 2}
   - {fileID: 11400000, guid: 9db99063e5c4e01409e0c85f976aff92, type: 2}
   - {fileID: 11400000, guid: c0119bad393d6f74f9f62aa452dea6ad, type: 2}
+  - {fileID: 11400000, guid: 5440252ddba79b64391ca1bdd6f64234, type: 2}
   - {fileID: 11400000, guid: 2729cca432fceb7438489a0fb81987dd, type: 2}
   - {fileID: 11400000, guid: 841ec26c95a61014994aee639a5c6d47, type: 2}
   - {fileID: 11400000, guid: af94aa4ebeffdc248bc2a80f60b01014, type: 2}
@@ -48,6 +51,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 8414b99a63f36c949a2ea0e8fb5ec3b1, type: 2}
   - {fileID: 11400000, guid: f5b8c13a15cbefd47aa60586da5a1693, type: 2}
   - {fileID: 11400000, guid: 66be1fd7369d74e40834def8e6f6ad57, type: 2}
+  - {fileID: 11400000, guid: 2a19f99ef64ae634b8735680952d87d0, type: 2}
   - {fileID: 11400000, guid: 7f53883b772b6f34f8b3d5f6701bc219, type: 2}
   - {fileID: 11400000, guid: acda43e15e9bc1c4da89c6727b5d73c2, type: 2}
   - {fileID: 11400000, guid: 5a74aa86edab3724888ca994d80725c6, type: 2}

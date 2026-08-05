@@ -87,7 +87,7 @@ public class GA_HitscanShot : GameplayAbility
 
         ResolveShot(origin, dir, pc, netAsc);
 
-        if (pc != null) pc.PlayAnimation(AnimationTriggerName, AnimationID);
+        if (pc != null) pc.PlayAnimation(this);
 
         // Retroceso: impulso en la dirección OPUESTA al disparo. faceVelocity=false
         // para que el cuerpo siga mirando a donde disparó mientras sale despedido.

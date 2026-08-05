@@ -76,7 +76,7 @@ public class GA_InstantAoE : GameplayAbility, IGroundTargetAbility
         // El centro se resuelve ACÁ, al activar (ver nota de cabecera sobre StartDelay).
         Vector3 center = ResolveCenter(pc);
 
-        if (pc != null) pc.PlayAnimation(AnimationTriggerName, AnimationID);
+        if (pc != null) pc.PlayAnimation(this);
 
         if (StartDelay > 0f) OwnerASC.StartAbilityCoroutine(ImpactRoutine(center));
         else                 { Detonate(center); EndAbility(); }

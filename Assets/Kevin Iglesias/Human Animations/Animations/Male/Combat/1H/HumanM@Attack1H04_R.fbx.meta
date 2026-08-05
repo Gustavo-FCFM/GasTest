@@ -1,5 +1,12 @@
 fileFormatVersion: 2
 guid: 2c2c84ffdf3b64f4195f0b9a4931e399
+AssetOrigin:
+  serializedVersion: 1
+  productId: 151650
+  packageName: Human Melee Animations
+  packageVersion: 2.1
+  assetPath: Assets/Kevin Iglesias/Human Animations/Animations/Male/Combat/1H/HumanM@Attack1H04_R.fbx
+  uploadId: 937378
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -54,7 +61,35 @@ ModelImporter:
       mirror: 0
       bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
       curves: []
-      events: []
+      events:
+      - time: 0.29330185
+        functionName: AnimationEvent_HitFrame
+        data: 
+        objectReferenceParameter: {instanceID: 0}
+        floatParameter: 0
+        intParameter: 0
+        messageOptions: 0
+      - time: 0.30602962
+        functionName: AnimationEvent_HitFrame
+        data: 
+        objectReferenceParameter: {instanceID: 0}
+        floatParameter: 0
+        intParameter: 0
+        messageOptions: 0
+      - time: 0.3463823
+        functionName: AnimationEvent_HitFrame
+        data: 
+        objectReferenceParameter: {instanceID: 0}
+        floatParameter: 0
+        intParameter: 0
+        messageOptions: 0
+      - time: 0.39352643
+        functionName: AnimationEvent_HitFrame
+        data: 
+        objectReferenceParameter: {instanceID: 0}
+        floatParameter: 0
+        intParameter: 0
+        messageOptions: 0
       transformMask:
       - path: 
         weight: 1
@@ -951,8 +986,7 @@ ModelImporter:
     hasTranslationDoF: 0
     hasExtraRoot: 0
     skeletonHasParents: 1
-  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: 2faa610713d3b3c439473daa55e8c60a,
-    type: 3}
+  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: 2faa610713d3b3c439473daa55e8c60a, type: 3}
   autoGenerateAvatarMappingIfUnspecified: 1
   animationType: 3
   humanoidOversampling: 1
@@ -964,10 +998,3 @@ ModelImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 151650
-  packageName: Human Melee Animations
-  packageVersion: 2.1
-  assetPath: Assets/Kevin Iglesias/Human Animations/Animations/Male/Combat/1H/HumanM@Attack1H04_R.fbx
-  uploadId: 937378

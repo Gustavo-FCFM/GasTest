@@ -89,7 +89,7 @@ public class GA_FinalBlow : GameplayAbility
             yield break;
         }
 
-        if (pc != null) pc.PlayAnimation(AnimationTriggerName, AnimationID);
+        if (pc != null) pc.PlayAnimation(this);
 
         Vector3    hitboxCenter = pc.transform.position + pc.transform.forward * HitboxOffsetZ;
         Collider[] hitColliders = Physics.OverlapBox(hitboxCenter, HitboxHalfExtents, pc.transform.rotation, TargetLayer);

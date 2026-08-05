@@ -20,8 +20,11 @@ MonoBehaviour:
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 1
   ActivationBlockedTags: 03000000
+  ActivationRequiredTags: 
+  AnimationClip: {fileID: 3094330708855449807, guid: 18afe56f6fdf0b0478209f4b1512c8cc, type: 3}
   AnimationTriggerName: AttackTrigger
-  AnimationID: 3
+  AnimationID: 99
+  HitFrameEventName: AnimationEvent_HitFrame
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
@@ -36,5 +39,3 @@ MonoBehaviour:
     EndWithTag: 20
   BuffEffect: {fileID: 11400000, guid: 57531014ec461034a8d81bc8144045b6, type: 2}
   AdditionalEffects: []
-  ParticlePrefab: {fileID: 0}
-  ParticleOffset: {x: 0, y: 0, z: 0}

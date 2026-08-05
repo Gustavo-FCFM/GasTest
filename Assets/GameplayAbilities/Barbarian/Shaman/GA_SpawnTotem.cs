@@ -136,7 +136,7 @@ public class GA_SpawnTotem : GameplayAbility, IRadialMenuAbility
         else PlayImpactVFX(groundPosition);
 
         PlayerController pc = OwnerASC.GetComponent<PlayerController>();
-        if (pc != null) pc.PlayAnimation(AnimationTriggerName, AnimationID);
+        if (pc != null) pc.PlayAnimation(this);
 
         EndAbility();
     }

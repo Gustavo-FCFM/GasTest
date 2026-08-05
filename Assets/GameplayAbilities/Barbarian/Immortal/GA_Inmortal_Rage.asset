@@ -20,8 +20,11 @@ MonoBehaviour:
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 0
   ActivationBlockedTags: 
+  ActivationRequiredTags: 
+  AnimationClip: {fileID: 3094330708855449807, guid: 18afe56f6fdf0b0478209f4b1512c8cc, type: 3}
   AnimationTriggerName: AttackTrigger
-  AnimationID: 3
+  AnimationID: 99
+  HitFrameEventName: AnimationEvent_HitFrame
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128

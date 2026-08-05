@@ -100,7 +100,7 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
             // jugador ya podría estar apuntando a otro lado).
             Vector3 center = ResolveCenter(pc);
 
-            if (pc != null) pc.PlayAnimation(AnimationTriggerName, AnimationID);
+            if (pc != null) pc.PlayAnimation(this);
             OwnerASC.StartAbilityCoroutine(AoESequence(center));
         }
     }
@@ -192,6 +192,29 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
     // Gancho para que una habilidad concreta reaccione a cada objetivo alcanzado, en
     // cada tick (ej: los Cañones del Pirata, que además le apuestan a quien golpean).
     protected virtual void OnTargetHit(AbilitySystemComponent target) { }
+
+    // Vista previa del área en el Editor. Con AtReticle además dibuja el alcance
+    // máximo (dónde se puede llegar a poner la zona) y la zona en ese tope.
+    public override void DrawGizmos(Transform origin)
+    {
+        if (origin == null) return;
+
+        if (DeployMode == EAoEDeploy.AtReticle)
+        {
+            // Alcance al que se puede desplegar.
+            Gizmos.color = new Color(0.4f, 0.8f, 1f, 0.5f);
+            Gizmos.DrawWireSphere(origin.position, MaxRange);
+
+            // La zona, dibujada en el tope del alcance hacia adelante.
+            Vector3 preview = origin.position + origin.forward * MaxRange;
+            Gizmos.color = new Color(0.2f, 0.9f, 0.5f, 0.35f);
+            Gizmos.DrawSphere(preview, Radius);
+            return;
+        }
+
+        Gizmos.color = new Color(0.2f, 0.9f, 0.5f, 0.35f);
+        Gizmos.DrawSphere(origin.position, Radius);
+    }
 
     // Instancia VisualPrefab en el punto de origen (parentado al dueño si
     // FollowOwner) y lo destruye solo tras TotalDuration segundos.

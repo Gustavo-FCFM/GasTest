@@ -59,6 +59,37 @@ public class PlayerController : NetworkBehaviour
     [Header("Animación")]
     public Animator characterAnimator;
 
+    [Tooltip("Nombre del clip PLACEHOLDER que ocupa el estado genérico de acción en el controller " +
+             "BASE (AC_Player). Es la 'ranura' donde se mete el clip de cada habilidad que tenga " +
+             "AnimationClip asignado, así no hace falta un estado por ataque.")]
+    public string ActionClipSlotName = "PLACEHOLDER_Action";
+
+    [Tooltip("Valor de ActionID que lleva al estado genérico de acción (la transición desde AnyState " +
+             "de ese estado se filtra por este número).")]
+    public int ActionClipStateID = 99;
+
+    [Tooltip("Trigger que dispara el estado genérico de acción.")]
+    public string ActionClipTrigger = "AttackTrigger";
+
+    [Tooltip("Parámetro float que controla la VELOCIDAD del estado genérico de acción. Es propio y " +
+             "NO se toca cada frame (a diferencia de AttackSpeedMult, que UpdateAnimations reescribe " +
+             "siempre): se fija una vez al activar la habilidad, con la velocidad que hace que el clip " +
+             "entre justo en el ritmo de ataque (ver GameplayAbility.ResolveAnimationSpeed).")]
+    public string ActionSpeedParam = "ActionSpeedMult";
+
+    // Copia en RUNTIME del controller (base + overrides de la clase). Es la que
+    // permite intercambiar el clip de la ranura de acción sin tocar los assets.
+    private AnimatorOverrideController _runtimeAnimator;
+    // Clip que está puesto ahora en la ranura, para no re-asignarlo si no cambió
+    // (asignar un override provoca un rebind del Animator).
+    private AnimationClip _currentActionClip;
+    // Nombre EXACTO del clip placeholder encontrado en el controller (la "llave" de la
+    // ranura). null = el estado genérico todavía no existe, así que las habilidades
+    // con AnimationClip igual usan el esquema viejo.
+    private string _actionSlotKey;
+    private bool HasActionSlot => !string.IsNullOrEmpty(_actionSlotKey);
+    private bool _warnedNoActionSlot;
+
     [Header("Huesos")]
     public Transform MainHandSocket;
     public Transform OffHandSocket;
@@ -635,7 +666,7 @@ public class PlayerController : NetworkBehaviour
                 // segundo trigger queda buffeado y reproduce el ataque una
                 // SEGUNDA vez solo, sin haber presionado nada.
                 if (!IsServerInitialized)
-                    PlayAnimation(ability.AnimationTriggerName, ability.AnimationID);
+                    PlayAnimation(ability);
                 RequestAbility(slot);
             }
         }
@@ -658,8 +689,7 @@ public class PlayerController : NetworkBehaviour
             // ningún lado para el dueño remoto (no hay RPC de animación y el
             // Activate del servidor se saltea por el guard de PlayAnimation).
             if (sel != -1 && !IsServerInitialized)
-                PlayAnimation(currentRadialAbility.AnimationTriggerName,
-                              currentRadialAbility.AnimationID);
+                PlayAnimation(currentRadialAbility);
 
             ServerRequestRadialAbility(sel, pos);
         }
@@ -674,7 +704,7 @@ public class PlayerController : NetworkBehaviour
             // Predicción local de la animación, mismo criterio que arriba: solo en
             // cliente remoto (en el host la dispara el propio Activate del servidor).
             if (!IsServerInitialized)
-                PlayAnimation(_groundTargetAbility.AnimationTriggerName, _groundTargetAbility.AnimationID);
+                PlayAnimation(_groundTargetAbility);
 
             RequestAbility(_groundTargetSlot);
             _groundTargetAbility = null;
@@ -749,7 +779,7 @@ public class PlayerController : NetworkBehaviour
                 radial.ActivateWithSelection(selectedIndex, targetPosition);
 
                 if (selectedIndex != -1 && NetASC != null)
-                    NetASC.ServerBroadcastAbilityAnimation(ability.AnimationTriggerName, ability.AnimationID);
+                    NetASC.ServerBroadcastAbilityAnimation(ability);
                 return;
             }
         }
@@ -1059,8 +1089,7 @@ public class PlayerController : NetworkBehaviour
     // observadores remotos (al recibir el cambio de clase por red).
     private void UpdateVisuals(CharacterClassDefinition newClass)
     {
-        if (newClass.ClassAnimatorOverride != null && characterAnimator != null)
-            characterAnimator.runtimeAnimatorController = newClass.ClassAnimatorOverride;
+        RebuildRuntimeAnimator(newClass);
 
         if (currentMainWeapon != null) Destroy(currentMainWeapon);
         if (currentOffWeapon  != null) Destroy(currentOffWeapon);
@@ -1125,6 +1154,159 @@ public class PlayerController : NetworkBehaviour
             characterAnimator.SetFloat("AttackSpeedMult", 1f / spd);
     }
 
+    // (Re)arma la copia de runtime del Animator: parte del controller BASE y le
+    // aplica encima los overrides de la clase. Se hace así —y no asignando el
+    // override de clase directo— para poder intercambiar el clip de la ranura de
+    // acción sin modificar ningún asset.
+    //
+    // Importante: la copia se construye sobre el controller BASE a propósito. Si la
+    // construyéramos sobre el override de la clase, las claves de los overrides
+    // serían los clips DE ESA CLASE (distintos en cada una) y el nombre de la ranura
+    // dejaría de servir. Sobre el base, la clave es siempre el mismo placeholder.
+    private void RebuildRuntimeAnimator(CharacterClassDefinition cls)
+    {
+        if (characterAnimator == null) return;
+
+        RuntimeAnimatorController source = cls != null && cls.ClassAnimatorOverride != null
+            ? cls.ClassAnimatorOverride
+            : characterAnimator.runtimeAnimatorController;
+        if (source == null) return;
+
+        // Separamos el controller base de los overrides que traiga la clase.
+        RuntimeAnimatorController baseController = source;
+        var classOverrides = new List<KeyValuePair<AnimationClip, AnimationClip>>();
+
+        if (source is AnimatorOverrideController sourceOverride)
+        {
+            baseController = sourceOverride.runtimeAnimatorController;
+            sourceOverride.GetOverrides(classOverrides);
+        }
+        if (baseController == null) return;
+
+        _runtimeAnimator = new AnimatorOverrideController(baseController);
+        if (classOverrides.Count > 0) _runtimeAnimator.ApplyOverrides(classOverrides);
+
+        _currentActionClip = null; // la ranura vuelve al placeholder
+        characterAnimator.runtimeAnimatorController = _runtimeAnimator;
+
+        // ¿El controller base tiene realmente la ranura de acción? Si el estado
+        // genérico todavía no se creó en el Animator, el esquema nuevo no puede
+        // funcionar y hay que seguir con el viejo (ver ApplyAbilityAnimation).
+        //
+        // La búsqueda ignora mayúsculas/minúsculas por comodidad, pero guardamos el
+        // nombre EXACTO del clip: el indexador del AnimatorOverrideController sí
+        // distingue mayúsculas y, si no coincide al carácter, la asignación no hace
+        // nada EN SILENCIO (el ataque se quedaría con el clip placeholder).
+        _actionSlotKey = null;
+        if (!string.IsNullOrEmpty(ActionClipSlotName))
+        {
+            var slots = new List<KeyValuePair<AnimationClip, AnimationClip>>();
+            _runtimeAnimator.GetOverrides(slots);
+            foreach (var pair in slots)
+            {
+                if (pair.Key == null) continue;
+                if (string.Equals(pair.Key.name, ActionClipSlotName, System.StringComparison.OrdinalIgnoreCase))
+                {
+                    _actionSlotKey = pair.Key.name;
+                    break;
+                }
+            }
+        }
+    }
+
+    // Pone un clip en la ranura genérica de acción. Solo reasigna si cambió: cada
+    // override provoca un rebind del Animator, así que repetir el mismo clip
+    // (ej. atacar varias veces seguidas) no debe tocarlo.
+    private void SetActionClip(AnimationClip clip)
+    {
+        if (_runtimeAnimator == null || clip == null || _currentActionClip == clip) return;
+        if (!HasActionSlot) return;
+
+        _runtimeAnimator[_actionSlotKey] = clip;
+        _currentActionClip = clip;
+    }
+
+    // Reproduce la animación de una habilidad en la copia DUEÑA. Es la entrada que
+    // usan las habilidades (pc.PlayAnimation(this)): elige sola entre el clip del
+    // asset y el esquema viejo de ActionID.
+    public void PlayAnimation(GameplayAbility ability)
+    {
+        if (ability == null) return;
+        // Mismo guard que abajo: Activate() corre en el servidor y no debe animar
+        // copias ajenas (los observadores reciben la animación por su propio RPC).
+        if (IsSpawned && !IsOwner) return;
+
+        ApplyAbilityAnimation(ability);
+    }
+
+    // Aplica la animación de una habilidad SIN guard de dueño. La usa la réplica a
+    // observadores (NetworkAbilitySystemComponent), que corre justamente sobre
+    // copias que no son el dueño.
+    // animationSpeed: velocidad a la que reproducir el clip. -1 = calcularla acá. La
+    // réplica a observadores la manda ya calculada desde el SERVIDOR, porque allá la
+    // habilidad es el template del registro (sin dueño) y no podría resolverla igual.
+    public void ApplyAbilityAnimation(GameplayAbility ability, float animationSpeed = -1f)
+    {
+        if (characterAnimator == null || ability == null) return;
+
+        // Camino nuevo: el clip viene en el propio asset de la habilidad. Requiere que
+        // la ranura exista en el Animator; si no, seguimos con el esquema viejo (si
+        // no, dispararíamos un ActionID que ninguna transición atiende y el ataque se
+        // quedaría sin animación, dejando el trigger colgado).
+        if (ability.AnimationClip != null && !HasActionSlot && !_warnedNoActionSlot)
+        {
+            _warnedNoActionSlot = true;
+
+            // Listamos los clips que SÍ tiene el controller: casi siempre el problema
+            // es que ActionClipSlotName no coincide con el nombre real del placeholder.
+            string available = "(ninguno)";
+            if (_runtimeAnimator != null)
+            {
+                var slots = new List<KeyValuePair<AnimationClip, AnimationClip>>();
+                _runtimeAnimator.GetOverrides(slots);
+                var names = new List<string>();
+                foreach (var pair in slots) if (pair.Key != null) names.Add(pair.Key.name);
+                if (names.Count > 0) available = string.Join(", ", names);
+            }
+
+            Debug.LogWarning($"[PlayerController] '{ability.AbilityName}' tiene AnimationClip, pero el " +
+                             $"controller no tiene la ranura '{ActionClipSlotName}'. Se usa el esquema viejo " +
+                             $"(AnimationID). Creá el estado genérico de acción con ese clip placeholder, o " +
+                             $"corregí ActionClipSlotName.\nClips disponibles en el controller: {available}");
+        }
+
+        if (ability.AnimationClip != null && HasActionSlot)
+        {
+            SetActionClip(ability.AnimationClip);
+
+            // Velocidad del swing: la que hace que el clip dure lo que el ritmo de
+            // ataque. Va en su propio parámetro para que UpdateAnimations no la pise.
+            float speed = animationSpeed > 0f ? animationSpeed : ability.ResolveAnimationSpeed();
+            if (!string.IsNullOrEmpty(ActionSpeedParam) && speed > 0f)
+                characterAnimator.SetFloat(ActionSpeedParam, speed);
+
+            // El ActionID igual hay que setearlo: las transiciones salen de AnyState
+            // filtradas por ese número, así que sin esto iríamos al estado del ataque
+            // anterior en vez de a la ranura genérica.
+            characterAnimator.SetInteger("ActionID", ActionClipStateID);
+            if (!string.IsNullOrEmpty(ActionClipTrigger)) characterAnimator.SetTrigger(ActionClipTrigger);
+            return;
+        }
+
+        // Camino viejo: un estado propio por ataque, elegido por ActionID. Va por
+        // TriggerAnimator (sin guard): este método también corre en observadores.
+        TriggerAnimator(ability.AnimationTriggerName, ability.AnimationID);
+    }
+
+    // Setea ActionID + trigger en el Animator, sin ningún guard. Lo comparten la
+    // ruta del dueño y la de observadores.
+    private void TriggerAnimator(string trigger, int actionID)
+    {
+        if (characterAnimator == null || string.IsNullOrEmpty(trigger)) return;
+        characterAnimator.SetInteger("ActionID", actionID);
+        characterAnimator.SetTrigger(trigger);
+    }
+
     // Dispara un trigger de animación con el ID de acción dado (usado por
     // las habilidades para animar el ataque correspondiente).
     public void PlayAnimation(string trigger, int actionID)
@@ -1143,12 +1325,18 @@ public class PlayerController : NetworkBehaviour
         // sin red (pruebas locales sin NetworkObject spawneado).
         if (IsSpawned && !IsOwner) return;
 
-        characterAnimator.SetInteger("ActionID", actionID);
-        characterAnimator.SetTrigger(trigger);
+        TriggerAnimator(trigger, actionID);
     }
 
-    // Gancho de Animation Event, sin uso actualmente (reservado para
-    // lógica en el frame exacto de impacto de la animación).
+    // Gancho del Animation Event que marca el frame de impacto. A propósito NO hace
+    // nada: el evento sirve como MARCA DE TIEMPO dentro del clip, y quien lo usa es el
+    // servidor, que lee su timestamp del asset (GameplayAbility.GetHitFrameTimes) y
+    // programa el daño ahí. Así el golpe cae en el frame exacto sin depender de que
+    // cada cliente reporte nada (los eventos corren local en cada peer y no serían
+    // confiables para daño).
+    //
+    // NO borrar este método: Unity dispara igual el evento en cada peer y, sin un
+    // receptor, la consola se llena de "AnimationEvent has no receiver!".
     public void AnimationEvent_HitFrame()    { }
 
     // Gancho de Animation Event: prende/apaga el trail del arma principal

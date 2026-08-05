@@ -90,7 +90,7 @@ public class GA_ExactCopy : GameplayAbility, IChargedAbility
         int sourceClassIndex = pc != null ? pc.VisualClassIndex : -1;
         manager.SpawnCopy(spawnPos, target, speed, sourceClassIndex);
 
-        if (pc != null) pc.PlayAnimation(AnimationTriggerName, AnimationID);
+        if (pc != null) pc.PlayAnimation(this);
 
         StartRecharge();
         EndAbility();

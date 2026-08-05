@@ -42,7 +42,7 @@ public class GA_SelfBuff : GameplayAbility
         ApplyEffectsTo(AdditionalEffects, OwnerASC);
 
         PlayerController pc = OwnerASC.GetComponent<PlayerController>();
-        if (pc != null) pc.PlayAnimation(AnimationTriggerName, AnimationID);
+        if (pc != null) pc.PlayAnimation(this);
 
         EndAbility();
     }

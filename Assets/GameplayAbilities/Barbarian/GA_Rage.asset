@@ -16,19 +16,18 @@ MonoBehaviour:
   AbilityIcon: {fileID: 21300000, guid: f4e1082d5e4844446b03f3be01feec06, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: edc8f7b5f2c7d684d8f67cdabbccd4df, type: 2}
+  CooldownDuration: 0
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 0
   ActivationBlockedTags: 
+  ActivationRequiredTags: 
+  AnimationClip: {fileID: 3094330708855449807, guid: 18afe56f6fdf0b0478209f4b1512c8cc, type: 3}
   AnimationTriggerName: AttackTrigger
-  AnimationID: 3
-  AbilityRadius: 3
+  AnimationID: 99
+  HitFrameEventName: AnimationEvent_HitFrame
   TargetLayer:
     serializedVersion: 2
     m_Bits: 0
-  HitboxShape: 0
-  HitboxOffsetZ: 1.5
-  HitboxHalfExtents: {x: 1, y: 1, z: 1}
-  ConeAngle: 90
   VisualsSequence:
   - VFXPrefab: {fileID: 7155335147208632822, guid: 268b1b15038d49b418cf03198b835136, type: 3}
     Delay: 0
@@ -39,5 +38,4 @@ MonoBehaviour:
     DestroyTime: 0
     EndWithTag: 19
   BuffEffect: {fileID: 11400000, guid: 14fddbd2425f29045b44a19b2f109b88, type: 2}
-  ParticlePrefab: {fileID: 7155335147208632822, guid: 268b1b15038d49b418cf03198b835136, type: 3}
-  ParticleOffset: {x: 0, y: 0, z: 0}
+  AdditionalEffects: []

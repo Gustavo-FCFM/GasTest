@@ -696,7 +696,16 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         }
 
         ability.Activate();
-        ObserversPlayAbilityAnimation(ability.AnimationTriggerName, ability.AnimationID);
+
+        // Mandamos también el índice del registro: con él, cada observador resuelve el
+        // asset y puede usar su AnimationClip (esquema nuevo). Sin índice válido, el
+        // trigger + ActionID alcanzan para el esquema viejo.
+        int animIndex = GameplayAbilityRegistry.Instance != null
+            ? GameplayAbilityRegistry.Instance.GetIndex(ability) : -1;
+        // La velocidad se calcula ACÁ (el servidor tiene el dueño y sus stats); en el
+        // observador la habilidad es el template del registro y no podría resolverla.
+        ObserversPlayAbilityAnimation(animIndex, ability.AnimationTriggerName, ability.AnimationID,
+                                      ability.ResolveAnimationSpeed());
     }
 
     // El NetworkAnimator del prefab NO sincroniza los SetTrigger de forma
@@ -708,10 +717,25 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // directo, sin pasar por PlayerController.PlayAnimation, porque ese método
     // tiene un guard de IsOwner que justamente bloquea las copias ajenas.
     [ObserversRpc]
-    private void ObserversPlayAbilityAnimation(string trigger, int actionID)
+    private void ObserversPlayAbilityAnimation(int abilityIndex, string trigger, int actionID,
+                                               float animationSpeed)
     {
         if (IsOwner) return;
 
+        // Esquema nuevo: si la habilidad trae su propio AnimationClip, se lo pedimos a
+        // PlayerController (que lo mete en la ranura genérica de acción). Va por
+        // ApplyAbilityAnimation, la variante SIN guard de dueño — acá justamente
+        // estamos en copias que no son el dueño.
+        GameplayAbility ability = abilityIndex >= 0
+            ? GameplayAbilityRegistry.Instance?.GetAbility(abilityIndex) : null;
+
+        if (ability != null && ability.AnimationClip != null)
+        {
+            PlayerController pc = GetComponent<PlayerController>();
+            if (pc != null) { pc.ApplyAbilityAnimation(ability, animationSpeed); return; }
+        }
+
+        // Esquema viejo: seteamos el Animator directo.
         Animator anim = GetComponentInChildren<Animator>();
         if (anim == null || string.IsNullOrEmpty(trigger)) return;
 
@@ -725,7 +749,19 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     [Server]
     public void ServerBroadcastAbilityAnimation(string trigger, int actionID)
     {
-        ObserversPlayAbilityAnimation(trigger, actionID);
+        ObserversPlayAbilityAnimation(-1, trigger, actionID, -1f);
+    }
+
+    // Igual que la anterior pero a partir de la habilidad, para que los observadores
+    // puedan usar su AnimationClip. Preferí esta cuando tengas el asset a mano.
+    [Server]
+    public void ServerBroadcastAbilityAnimation(GameplayAbility ability)
+    {
+        if (ability == null) return;
+        int index = GameplayAbilityRegistry.Instance != null
+            ? GameplayAbilityRegistry.Instance.GetIndex(ability) : -1;
+        ObserversPlayAbilityAnimation(index, ability.AnimationTriggerName, ability.AnimationID,
+                                      ability.ResolveAnimationSpeed());
     }
 
     // =========================================================

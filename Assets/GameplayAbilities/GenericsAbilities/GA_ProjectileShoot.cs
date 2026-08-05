@@ -54,7 +54,7 @@ public class GA_ProjectileShoot : GameplayAbility
             PlayerController pc = OwnerASC.GetComponent<PlayerController>();
             if (pc != null)
             {
-                pc.PlayAnimation(AnimationTriggerName, AnimationID);
+                pc.PlayAnimation(this);
             }
             else
             {
@@ -144,6 +144,52 @@ public class GA_ProjectileShoot : GameplayAbility
             rb.linearVelocity = launchDirection * LaunchForce;
             if (AddSpin) rb.AddRelativeTorque(Vector3.right * 1000f);
         }
+    }
+
+    // Vista previa de la TRAYECTORIA en el Editor: sale del mismo SpawnOffset y con
+    // la misma velocidad (LaunchForce) que usa el disparo real, así que la curva que
+    // ves es la que va a volar. Si el Rigidbody del prefab usa gravedad, simula el
+    // arco balístico paso a paso hasta tocar el suelo; si no, dibuja la línea recta.
+    public override void DrawGizmos(Transform origin)
+    {
+        if (origin == null) return;
+
+        Vector3 start = origin.TransformPoint(SpawnOffset);
+        Vector3 velocity = origin.forward * LaunchForce;
+
+        // La gravedad la decide el Rigidbody del prefab (por defecto, sí la usa).
+        bool useGravity = true;
+        if (ProjectilePrefab != null)
+        {
+            Rigidbody rb = ProjectilePrefab.GetComponent<Rigidbody>();
+            if (rb != null) useGravity = rb.useGravity;
+        }
+
+        Gizmos.color = new Color(0.3f, 0.8f, 1f, 0.9f);
+        Gizmos.DrawWireSphere(start, 0.15f);
+
+        if (!useGravity)
+        {
+            Vector3 end = start + origin.forward * 30f;
+            Gizmos.DrawLine(start, end);
+            Gizmos.DrawWireSphere(end, 0.3f);
+            return;
+        }
+
+        // Integración simple del tiro parabólico (mismo modelo que la física).
+        Vector3 point = start;
+        const float step = 0.05f;
+        for (int i = 0; i < 300; i++)
+        {
+            Vector3 next = point + velocity * step;
+            velocity += Physics.gravity * step;
+            Gizmos.DrawLine(point, next);
+            point = next;
+
+            // Cortamos al llegar a la altura del piso del lanzador.
+            if (point.y <= origin.position.y) break;
+        }
+        Gizmos.DrawWireSphere(point, 0.3f);
     }
 
     // Instancia ImpactVFX en el punto de impacto. Llamado por GC_Projectile

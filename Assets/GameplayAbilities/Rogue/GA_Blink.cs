@@ -70,7 +70,7 @@ public class GA_Blink : GameplayAbility
         if (netAsc != null) netAsc.ServerTeleportOwnerTo(behind, faceDir);
         else if (pc != null) pc.TeleportTo(behind, faceDir); // fallback sin red
 
-        if (pc != null) pc.PlayAnimation(AnimationTriggerName, AnimationID);
+        if (pc != null) pc.PlayAnimation(this);
 
         // Daño (con autoridad de servidor). Guardamos si el objetivo ya estaba
         // muerto para saber si fue ESTA habilidad la que lo mató.
