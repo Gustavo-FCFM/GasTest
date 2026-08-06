@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GameplayAbilityRegistry
   m_EditorClassIdentifier: 
   Abilities:
+  - {fileID: 11400000, guid: dbd13729b70e393459dea58007d521f1, type: 2}
   - {fileID: 11400000, guid: 7ee9af6fe95ba4e4ca642ac2920d3c17, type: 2}
   - {fileID: 11400000, guid: 06280d7ea4148f142912712dcda4ec7d, type: 2}
   - {fileID: 11400000, guid: 2c40eaebc42e5cd48b76a0b3dd759af6, type: 2}
@@ -53,6 +54,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 66be1fd7369d74e40834def8e6f6ad57, type: 2}
   - {fileID: 11400000, guid: 2a19f99ef64ae634b8735680952d87d0, type: 2}
   - {fileID: 11400000, guid: 7f53883b772b6f34f8b3d5f6701bc219, type: 2}
+  - {fileID: 11400000, guid: cbf0da3a5f0d30245bd6dddc9df00aa2, type: 2}
+  - {fileID: 11400000, guid: db75fe2261851a543a93a553d25a5233, type: 2}
   - {fileID: 11400000, guid: acda43e15e9bc1c4da89c6727b5d73c2, type: 2}
   - {fileID: 11400000, guid: 5a74aa86edab3724888ca994d80725c6, type: 2}
   - {fileID: 11400000, guid: 99fd8d5071408fa46a61f0fb309a57fe, type: 2}

@@ -24,7 +24,6 @@ MonoBehaviour:
   AnimationClip: {fileID: 3094330708855449807, guid: 8ab57abc06f7ffd47ae8d91e99f41fa2, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 99
-  HitFrameEventName: AnimationEvent_HitFrame
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
@@ -44,5 +43,5 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 167def151585bb34c9cf21cc923b2010, type: 2}
   - {fileID: 11400000, guid: edf7f61866b81824bb584b3a4002a48f, type: 2}
   - {fileID: 11400000, guid: 4f826c6e2a70e3c4ebd81be8b061245a, type: 2}
-  MaxSpawnRange: 10
+  MaxSpawnRange: 5
   SpawnVFX: {fileID: 0}

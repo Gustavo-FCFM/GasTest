@@ -752,6 +752,65 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         ObserversPlayAbilityAnimation(-1, trigger, actionID, -1f);
     }
 
+    // =========================================================
+    // ANIMACIÓN DE UN PASO DE COMBO
+    //
+    // Un combo (GA_ComboSequence / GA_AlternatingCombo) transmite su PROPIA animación
+    // al activarse, pero sus pasos corren después, dentro de una corutina server-side.
+    // Cada paso llama a pc.PlayAnimation(this), que tiene guard de dueño — o sea que
+    // en el host se ve, pero para un cliente remoto (dueño u observador) no se veía
+    // NADA: se quedaban con la animación del combo padre, que normalmente ni siquiera
+    // tiene clip propio. Esto replica cada paso a todos los demás peers.
+    //
+    // Va por COORDENADAS (índice del combo en el registro + qué secuencia + qué paso)
+    // en vez de por la habilidad del paso: el paso puede traer un AnimationClipOverride
+    // distinto al clip de su propio asset, y resolver la habilidad en el registro daría
+    // el clip equivocado. Ver GameplayAbility.GetStepAnimationClip.
+    // =========================================================
+
+    [Server]
+    public void ServerBroadcastComboStepAnimation(GameplayAbility parent, int sequenceIndex,
+                                                  int stepIndex, GameplayAbility stepInstance)
+    {
+        if (parent == null || stepInstance == null) return;
+
+        int parentIndex = GameplayAbilityRegistry.Instance != null
+            ? GameplayAbilityRegistry.Instance.GetIndex(parent) : -1;
+
+        if (parentIndex < 0)
+            Debug.LogWarning($"[NetworkASC] '{parent.AbilityName}' no está en GameplayAbilityRegistry — " +
+                             $"las animaciones de sus pasos no se replicarán a los clientes remotos.");
+
+        // La velocidad se resuelve ACÁ: el paso ya trae el AnimationSpeedOverride que le
+        // impuso el combo, y en el observador es solo un clip suelto sin dueño.
+        ObserversPlayComboStepAnimation(parentIndex, sequenceIndex, stepIndex,
+                                        stepInstance.AnimationTriggerName, stepInstance.AnimationID,
+                                        stepInstance.ResolveAnimationSpeed());
+    }
+
+    [ObserversRpc]
+    private void ObserversPlayComboStepAnimation(int parentIndex, int sequenceIndex, int stepIndex,
+                                                 string trigger, int actionID, float animationSpeed)
+    {
+        // El host ya la reprodujo: el Activate() del paso corre en ESTE mismo proceso y
+        // llama a pc.PlayAnimation. Repetirla acá dispararía el trigger dos veces sobre
+        // el mismo Animator y el segundo queda buffeado, reproduciendo el ataque de
+        // nuevo solo. Ojo que acá NO salteamos al dueño (a diferencia de
+        // ObserversPlayAbilityAnimation): un dueño remoto también necesita esto, porque
+        // su predicción local cubrió el combo padre, no los pasos.
+        if (IsServerInitialized) return;
+
+        PlayerController pc = GetComponent<PlayerController>();
+        if (pc == null) return;
+
+        GameplayAbility parent = parentIndex >= 0
+            ? GameplayAbilityRegistry.Instance?.GetAbility(parentIndex) : null;
+
+        // Si no se puede resolver el clip, PlayActionClip cae solo al esquema viejo.
+        AnimationClip clip = parent != null ? parent.GetStepAnimationClip(sequenceIndex, stepIndex) : null;
+        pc.PlayActionClip(clip, animationSpeed, trigger, actionID);
+    }
+
     // Igual que la anterior pero a partir de la habilidad, para que los observadores
     // puedan usar su AnimationClip. Preferí esta cuando tengas el asset a mano.
     [Server]

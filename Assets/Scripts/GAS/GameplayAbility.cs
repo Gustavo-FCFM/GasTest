@@ -111,6 +111,12 @@ public abstract class GameplayAbility : ScriptableObject
     // programar el golpe), así el daño siempre cae en el frame que se ve.
     public float ResolveAnimationSpeed()
     {
+        // Velocidad impuesta desde afuera: la fijan los combos en cada paso, porque el
+        // ritmo lo conoce el PADRE (es él quien tiene UseAttackSpeedAsCooldown) y no el
+        // paso suelto, que por sí solo devolvería velocidad natural. Ver
+        // GA_ComboSequence/GA_AlternatingCombo.
+        if (AnimationSpeedOverride > 0f) return AnimationSpeedOverride;
+
         if (AnimationClip != null && UseAttackSpeedAsCooldown && AnimationClip.length > 0.001f)
         {
             float target = ResolveCooldownDuration();
@@ -244,6 +250,24 @@ public abstract class GameplayAbility : ScriptableObject
     // NonSerialized a propósito: es estado de runtime, no se guarda en el asset
     // ni se copia al clonar (se setea a mano justo después del Instantiate).
     [System.NonSerialized] public GameplayAbility SourceTemplate;
+
+    // Velocidad de animación forzada desde afuera (0 = sin forzar, se calcula sola).
+    // La usan los combos: el ritmo de ataque lo conoce el PADRE, así que se lo imponen
+    // a cada paso — que por sí solo devolvería velocidad natural, porque no tiene
+    // UseAttackSpeedAsCooldown ni cooldown propio. Ver ResolveAnimationSpeed.
+    // NonSerialized: estado de runtime por instancia, igual que SourceTemplate.
+    [System.NonSerialized] public float AnimationSpeedOverride;
+
+    // Clip de un PASO de esta habilidad, si es un combo (ver GA_ComboSequence /
+    // GA_AlternatingCombo). Devuelve null en cualquier otra habilidad.
+    //
+    // Existe para la RED: un paso puede traer un AnimationClipOverride que NO es el
+    // clip del asset de la habilidad del paso, así que un observador no lo puede
+    // deducir resolviendo esa habilidad en el registro. En vez de mandar el clip (no
+    // se puede serializar), se mandan las COORDENADAS del paso y cada peer lo resuelve
+    // contra su propia copia del asset del combo — que sí está en el registro por ser
+    // la habilidad de nivel superior.
+    public virtual AnimationClip GetStepAnimationClip(int sequenceIndex, int stepIndex) => null;
 
     // Para no repetir el aviso de "CooldownEffect sin tag" en cada activación.
     [System.NonSerialized] private bool _warnedNoCooldownTag;

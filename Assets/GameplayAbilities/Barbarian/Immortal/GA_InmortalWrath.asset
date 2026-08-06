@@ -20,15 +20,14 @@ MonoBehaviour:
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 0
   ActivationBlockedTags: 
-  ActivationRequiredTags: 
+  ActivationRequiredTags: 04000000
   AnimationClip: {fileID: 3094330708855449807, guid: b98582042c1292a4e81193a2e417a4d2, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 99
-  HitFrameEventName: AnimationEvent_HitFrame
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
   VisualsSequence: []
   ImmortalBuffEffect: {fileID: 11400000, guid: 5e963c4cf94ade34189d61e2213972ef, type: 2}
   ExplosionDamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
-  AbilityRadius: 3
+  AbilityRadius: 5

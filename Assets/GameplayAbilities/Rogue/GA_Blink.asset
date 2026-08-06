@@ -21,13 +21,14 @@ MonoBehaviour:
   UltimateChargeAmount: 1
   ActivationBlockedTags: 010000000200000003000000
   ActivationRequiredTags: 
+  AnimationClip: {fileID: 3094330708855449807, guid: f62fd7f5d0c35984dad933b3a3fa074b, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 4
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
   VisualsSequence: []
-  MaxRange: 12
+  MaxRange: 10
   SelectionAngle: 25
   BehindDistance: 1.5
   DamageEffect: {fileID: 11400000, guid: ee10fcfb885afb54a81bc1874c75cfe5, type: 2}

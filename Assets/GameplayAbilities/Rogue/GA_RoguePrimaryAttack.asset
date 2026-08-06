@@ -21,16 +21,19 @@ MonoBehaviour:
   UltimateChargeAmount: 1
   ActivationBlockedTags: 01000000
   ActivationRequiredTags: 
+  AnimationClip: {fileID: 0}
   AnimationTriggerName: AttackTrigger
   AnimationID: 1
   TargetLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128
   VisualsSequence: []
   Sequence:
   - AbilityToCast: {fileID: 11400000, guid: 2258c23867170244e937630928348433, type: 2}
-    DelayAfter: 0.12
-    AnimationIDOverride: 1
+    DelayAfter: 0.8
+    AnimationClipOverride: {fileID: 0}
+    AnimationIDOverride: 0
   - AbilityToCast: {fileID: 11400000, guid: 17fd5d900f9eb5140bfbd70dd7e6e170, type: 2}
     DelayAfter: 0
-    AnimationIDOverride: 1
+    AnimationClipOverride: {fileID: 0}
+    AnimationIDOverride: 0

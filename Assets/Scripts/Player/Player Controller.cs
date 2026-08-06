@@ -1298,6 +1298,35 @@ public class PlayerController : NetworkBehaviour
         TriggerAnimator(ability.AnimationTriggerName, ability.AnimationID);
     }
 
+    // Reproduce un CLIP suelto en la ranura genérica de acción, sin necesitar la
+    // habilidad que lo trae. La usa la réplica de los pasos de un combo: ahí el clip
+    // puede ser un AnimationClipOverride del paso, que no coincide con el AnimationClip
+    // del asset de esa habilidad, así que el observador no lo puede resolver por la
+    // habilidad — lo resuelve por las coordenadas del paso y llega acá con el clip ya
+    // en mano (ver GameplayAbility.GetStepAnimationClip).
+    //
+    // Sin guard de dueño a propósito: corre en observadores Y en el dueño remoto.
+    // Si el clip es null o falta la ranura, cae al esquema viejo con trigger/ActionID.
+    public void PlayActionClip(AnimationClip clip, float animationSpeed,
+                               string fallbackTrigger, int fallbackActionID)
+    {
+        if (characterAnimator == null) return;
+
+        if (clip == null || !HasActionSlot)
+        {
+            TriggerAnimator(fallbackTrigger, fallbackActionID);
+            return;
+        }
+
+        SetActionClip(clip);
+
+        if (!string.IsNullOrEmpty(ActionSpeedParam) && animationSpeed > 0f)
+            characterAnimator.SetFloat(ActionSpeedParam, animationSpeed);
+
+        characterAnimator.SetInteger("ActionID", ActionClipStateID);
+        if (!string.IsNullOrEmpty(ActionClipTrigger)) characterAnimator.SetTrigger(ActionClipTrigger);
+    }
+
     // Setea ActionID + trigger en el Animator, sin ningún guard. Lo comparten la
     // ruta del dueño y la de observadores.
     private void TriggerAnimator(string trigger, int actionID)

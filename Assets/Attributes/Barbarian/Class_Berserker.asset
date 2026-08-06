@@ -18,7 +18,7 @@ MonoBehaviour:
   BaseAttributes: {fileID: 11400000, guid: 5f2d453bdca4bc847bc79581b5e6b791, type: 2}
   Abilities:
   - InputSlot: 1
-    Ability: {fileID: 11400000, guid: d3f383ba0b1a5dc46847a2fa679a266e, type: 2}
+    Ability: {fileID: 11400000, guid: dbd13729b70e393459dea58007d521f1, type: 2}
   - InputSlot: 2
     Ability: {fileID: 11400000, guid: 02d07c3295dba8341a727a557148876d, type: 2}
   - InputSlot: 3
@@ -29,6 +29,7 @@ MonoBehaviour:
     Ability: {fileID: 11400000, guid: acda43e15e9bc1c4da89c6727b5d73c2, type: 2}
   - InputSlot: 5
     Ability: {fileID: 11400000, guid: 95426c07a66a6ba4aab2f0b1325a5dcb, type: 2}
+  PassiveBehaviorsPrefab: {fileID: 0}
   PassiveEffects: []
   StatGrowthPerLevel: []
   AvailableSubclasses: []

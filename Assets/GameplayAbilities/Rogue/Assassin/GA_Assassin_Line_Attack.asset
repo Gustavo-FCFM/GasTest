@@ -21,15 +21,15 @@ MonoBehaviour:
   UltimateChargeAmount: 0
   ActivationBlockedTags: 
   ActivationRequiredTags: 
+  AnimationClip: {fileID: 3094330708855449807, guid: ef751e951ed91ed4fbc94d82726c9eed, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 1
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
   VisualsSequence: []
-  Length: 3.5
-  Width: 2
+  Length: 1.2
+  Width: 1
   DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   AdditionalEffects: []
-  DamageDelay: 0.3
   HitVFX: {fileID: 0}

@@ -24,17 +24,16 @@ MonoBehaviour:
   AnimationClip: {fileID: 3094330708855449807, guid: b98582042c1292a4e81193a2e417a4d2, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 99
-  HitFrameEventName: AnimationEvent_HitFrame
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
   VisualsSequence: []
   Targets: 0
-  Radius: 1
+  Radius: 3
   TotalDuration: 10
   TickInterval: 0.5
   DeployMode: 0
-  MaxRange: 15
+  MaxRange: 0
   FollowOwner: 1
   VisualPrefab: {fileID: 7986504087968017091, guid: b10bcfd32615d844291d18c9d2d35007, type: 3}
   VisualScaleMultiplier: 1

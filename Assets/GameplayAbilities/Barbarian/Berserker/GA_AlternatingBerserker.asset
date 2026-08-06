@@ -9,31 +9,32 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1c79a6ef63759774f8125f583fee8f7e, type: 3}
-  m_Name: GA_IllusionistPrimaryAttack
+  m_Script: {fileID: 11500000, guid: 31428d1adfa5abc4aa3ce3d9bd3c958d, type: 3}
+  m_Name: GA_AlternatingBerserker
   m_EditorClassIdentifier: 
-  AbilityName: Illusionist Primary Attack
-  AbilityIcon: {fileID: 21300000, guid: c024da923d4feae4b8a14883e3f4b4de, type: 3}
+  AbilityName: Alternating Berserker Primary Attack
+  AbilityIcon: {fileID: 21300000, guid: 936ec1fa27e394e47a0560a93b4bf933, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 45327044be4f41c4d8f5289bc6f9b3be, type: 2}
   CooldownDuration: 0
   UseAttackSpeedAsCooldown: 1
-  UltimateChargeAmount: 1
+  UltimateChargeAmount: 0
   ActivationBlockedTags: 01000000
   ActivationRequiredTags: 
   AnimationClip: {fileID: 0}
   AnimationTriggerName: AttackTrigger
-  AnimationID: 1
+  AnimationID: 99
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
   VisualsSequence: []
-  Sequence:
-  - AbilityToCast: {fileID: 11400000, guid: 2e01f13b2794f9749bc8a2bec872d819, type: 2}
-    DelayAfter: 0.8
+  FirstSequence:
+  - AbilityToCast: {fileID: 11400000, guid: d3f383ba0b1a5dc46847a2fa679a266e, type: 2}
+    DelayAfter: 0
     AnimationClipOverride: {fileID: 3094330708855449807, guid: c2f07439e693fa44aafbe0e6acebb19c, type: 3}
-    AnimationIDOverride: 1
-  - AbilityToCast: {fileID: 11400000, guid: 2e01f13b2794f9749bc8a2bec872d819, type: 2}
+    AnimationIDOverride: 99
+  SecondSequence:
+  - AbilityToCast: {fileID: 11400000, guid: d3f383ba0b1a5dc46847a2fa679a266e, type: 2}
     DelayAfter: 0
     AnimationClipOverride: {fileID: 3094330708855449807, guid: 21d6b8f558c014046ae463be0828e850, type: 3}
-    AnimationIDOverride: 1
+    AnimationIDOverride: 99

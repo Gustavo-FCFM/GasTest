@@ -24,14 +24,12 @@ MonoBehaviour:
   AnimationClip: {fileID: 3094330708855449807, guid: 81ae9e97c51ac17498f6e7ccda0bb15d, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 99
-  HitFrameEventName: AnimationEvent_HitFrame
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
   VisualsSequence: []
-  Length: 5
-  Width: 2
+  Length: 2
+  Width: 1
   DamageEffect: {fileID: 11400000, guid: c724c673f706d3d47b65f864d4719e97, type: 2}
   AdditionalEffects: []
-  DamageDelay: 0.5
   HitVFX: {fileID: 0}

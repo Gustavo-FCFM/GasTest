@@ -21,6 +21,7 @@ MonoBehaviour:
   UltimateChargeAmount: 1
   ActivationBlockedTags: 0200000001000000
   ActivationRequiredTags: 
+  AnimationClip: {fileID: 3094330708855449807, guid: b60a66816575aaf4997091f5be44ac42, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 4
   TargetLayer:

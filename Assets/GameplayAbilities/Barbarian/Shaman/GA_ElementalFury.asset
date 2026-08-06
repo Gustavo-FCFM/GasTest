@@ -24,7 +24,6 @@ MonoBehaviour:
   AnimationClip: {fileID: 3094330708855449807, guid: b98582042c1292a4e81193a2e417a4d2, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 99
-  HitFrameEventName: AnimationEvent_HitFrame
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
@@ -37,8 +36,8 @@ MonoBehaviour:
   SquareRadius: 4
   Duration: 10
   DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
-  DamageRadius: 5
+  DamageRadius: 10
   TickRate: 0.5
   TornadoVFXPrefab: {fileID: 7986504087968017091, guid: b10bcfd32615d844291d18c9d2d35007, type: 3}
-  TornadoVfxScaleMultiplier: 0.6
+  TornadoVfxScaleMultiplier: 0.5
   FollowPlayer: 0

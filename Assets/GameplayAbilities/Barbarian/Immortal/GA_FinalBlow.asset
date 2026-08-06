@@ -24,7 +24,6 @@ MonoBehaviour:
   AnimationClip: {fileID: 3094330708855449807, guid: 81ae9e97c51ac17498f6e7ccda0bb15d, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 99
-  HitFrameEventName: AnimationEvent_HitFrame
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
@@ -33,5 +32,5 @@ MonoBehaviour:
   ChargeShieldEffect: {fileID: 11400000, guid: 6d6df215326fd3c41a4f214bd424b8ac, type: 2}
   DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   StunEffect: {fileID: 11400000, guid: 599bef532c08eae4a8e05af2dc063cf9, type: 2}
-  HitboxOffsetZ: 3
-  HitboxHalfExtents: {x: 2, y: 1, z: 3}
+  HitboxOffsetZ: 2
+  HitboxHalfExtents: {x: 1.2, y: 1, z: 2}
