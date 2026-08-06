@@ -92,6 +92,11 @@ public class AbilitySystemComponent : MonoBehaviour
     // ver notas en NetworkAbilitySystemComponent.
     protected List<ActiveGameplayEffect> ActiveEffects = new List<ActiveGameplayEffect>();
 
+    // Copia de trabajo que reutiliza ProcessActiveEffects para recorrer los efectos
+    // sin iterar la lista viva (un tick puede modificarla). Es un campo y no una
+    // variable local para no alocar una lista por frame y por personaje.
+    private readonly List<ActiveGameplayEffect> _tickBuffer = new List<ActiveGameplayEffect>();
+
     // Tags de estado activos, con el CONTEO de cuántas fuentes los otorgan.
     // El tag existe mientras su conteo sea > 0.
     //
@@ -193,15 +198,20 @@ public class AbilitySystemComponent : MonoBehaviour
 
         Attributes.Clear();
 
+        // Primero TODO lo que el set define explícitamente.
         foreach (var attrData in CharacterRoleDefinition.InitialAttributes)
-        {
             if (!Attributes.ContainsKey(attrData.Attribute))
                 Attributes.Add(attrData.Attribute, new AttributeValue(attrData.BaseValue));
-            if (attrData.Attribute == EAttributeType.Health)
-                Attributes[EAttributeType.MaxHealth] = new AttributeValue(attrData.BaseValue);
-            if (attrData.Attribute == EAttributeType.Mana)
-                Attributes[EAttributeType.MaxMana] = new AttributeValue(attrData.BaseValue);
-        }
+
+        // Recién después derivamos los "Max" de su pool, y SOLO si el set no los trae.
+        // Antes se pisaban siempre con el valor de Health/Mana, así que un
+        // AttributeSetDefinition que definiera MaxHealth distinto a Health lo veía
+        // ignorado en silencio (imposible arrancar con la vida no llena, por ejemplo).
+        if (!Attributes.ContainsKey(EAttributeType.MaxHealth) && Attributes.ContainsKey(EAttributeType.Health))
+            Attributes[EAttributeType.MaxHealth] = new AttributeValue(Attributes[EAttributeType.Health].BaseValue);
+
+        if (!Attributes.ContainsKey(EAttributeType.MaxMana) && Attributes.ContainsKey(EAttributeType.Mana))
+            Attributes[EAttributeType.MaxMana] = new AttributeValue(Attributes[EAttributeType.Mana].BaseValue);
 
         if (!Attributes.ContainsKey(EAttributeType.Level))  Attributes[EAttributeType.Level]  = new AttributeValue(1);
         if (!Attributes.ContainsKey(EAttributeType.Exp))    Attributes[EAttributeType.Exp]    = new AttributeValue(0);
@@ -710,13 +720,30 @@ public class AbilitySystemComponent : MonoBehaviour
     // frame desde Update().
     private void ProcessActiveEffects(float deltaTime)
     {
-        List<ActiveGameplayEffect> expired = new List<ActiveGameplayEffect>();
+        if (ActiveEffects.Count == 0) return;
 
-        foreach (var active in ActiveEffects)
+        // Recorremos una COPIA, no la lista viva: un tick puede bajar la vida a 0 y
+        // disparar Die() → OnDeath, y cualquier handler que aplique o quite un efecto
+        // sobre ESTE mismo personaje modificaría ActiveEffects en plena iteración
+        // (InvalidOperationException). Con la copia, esos cambios son seguros.
+        _tickBuffer.Clear();
+        _tickBuffer.AddRange(ActiveEffects);
+
+        // Un cadáver no recibe ticks: pegarle a un muerto no hace nada y evita
+        // re-entrar en la muerte. Las duraciones SÍ siguen corriendo, así que los
+        // efectos vencen normalmente aunque el personaje esté esperando revivir.
+        bool isDead = HasTag(EGameplayTag.State_Dead);
+
+        List<ActiveGameplayEffect> expired = null;
+
+        foreach (var active in _tickBuffer)
         {
+            // Pudo haberlo quitado un handler durante este mismo barrido.
+            if (!ActiveEffects.Contains(active)) continue;
+
             active.DurationRemaining -= deltaTime;
 
-            if (active.Definition.Period > 0)
+            if (!isDead && active.Definition.Period > 0)
             {
                 active.PeriodRemaining -= deltaTime;
                 if (active.PeriodRemaining <= 0)
@@ -730,8 +757,12 @@ public class AbilitySystemComponent : MonoBehaviour
                 }
             }
 
-            if (active.IsExpired) expired.Add(active);
+            if (active.IsExpired) (expired ??= new List<ActiveGameplayEffect>()).Add(active);
         }
+
+        // Solo se aloca la lista si de verdad venció algo (antes se creaba una
+        // lista nueva CADA frame, para todos los personajes).
+        if (expired == null) return;
 
         foreach (var e in expired)
             RemoveActiveEffect(e);
@@ -864,6 +895,12 @@ public class AbilitySystemComponent : MonoBehaviour
         // DeathZone o morimos por otra vía, no queremos darle la baja a alguien
         // que nos pegó hace rato.
         LastAttacker = null;
+
+        // Empezar la vida nueva limpio: sin esto reaparecías con TODO lo que
+        // tenías al morir, y un veneno/Heridas todavía activo te podía volver a
+        // matar apenas spawneabas. Solo se van los DEBUFFS (EffectType.Debuff):
+        // los buffs propios y los cooldowns de tus habilidades se conservan.
+        RemoveAllDebuffs();
 
         RemoveTag(EGameplayTag.State_Dead);
         if (Attributes.ContainsKey(EAttributeType.MaxHealth))

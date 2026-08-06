@@ -66,6 +66,13 @@ public class UI_WorldHealthbar : MonoBehaviour
     private int _lastEffectChildCount = -1;
     private bool? _lastWasAlly; // para no re-aplicar material si no cambió
 
+    // Cachés de LateUpdate (ver la nota ahí): la cámara y el ASC del jugador local no
+    // cambian entre frames, y esto corre una vez por personaje en pantalla.
+    private Camera                 _cam;
+    private PlayerController              _cachedLocal;
+    private AbilitySystemComponent        _cachedLocalASC;
+    private NetworkAbilitySystemComponent _cachedLocalNet;
+
     private void Awake()
     {
         _asc    = GetComponent<AbilitySystemComponent>();
@@ -87,7 +94,12 @@ public class UI_WorldHealthbar : MonoBehaviour
     // quede un frame atrás.
     private void LateUpdate()
     {
-        Camera cam = Camera.main;
+        // Cacheados: esto corre CADA frame y hay un nameplate por personaje, así que
+        // con una partida llena se multiplica por 9. Camera.main hace una búsqueda por
+        // tag y GetComponent recorre los componentes del jugador — ninguno de los dos
+        // cambia entre frames, así que se resuelven una sola vez.
+        if (_cam == null) _cam = Camera.main;
+        Camera cam = _cam;
         if (cam == null || BarRoot == null) { SetVisible(false); return; }
 
         // Uno mismo: sin nameplate (para eso está el HUD).
@@ -95,7 +107,14 @@ public class UI_WorldHealthbar : MonoBehaviour
         if (local != null && _pc == local) { SetVisible(false); return; }
 
         // Relación con el jugador local. Sin jugador local no hay a quién comparar.
-        AbilitySystemComponent localASC = local != null ? local.GetComponent<AbilitySystemComponent>() : null;
+        // El caché se rehace si cambia el jugador local (respawn, cambio de clase).
+        if (local != _cachedLocal)
+        {
+            _cachedLocal    = local;
+            _cachedLocalASC = local != null ? local.GetComponent<AbilitySystemComponent>() : null;
+            _cachedLocalNet = local != null ? local.GetComponent<NetworkAbilitySystemComponent>() : null;
+        }
+        AbilitySystemComponent localASC = _cachedLocalASC;
         bool isEnemy = localASC == null || localASC.IsEnemyOf(_asc);
 
         // Oclusión: solo los enemigos se tapan con el entorno.
@@ -112,7 +131,7 @@ public class UI_WorldHealthbar : MonoBehaviour
 
         ApplyXray(!isEnemy);
         UpdateHealth(isEnemy);
-        UpdateFirstStrikeMarker(local, localASC, isEnemy);
+        UpdateFirstStrikeMarker(localASC, isEnemy);
     }
 
     // Actualiza el relleno de vida (de los datos sincronizados) y el color por equipo.
@@ -132,15 +151,16 @@ public class UI_WorldHealthbar : MonoBehaviour
     // clavarle un Crítico mejorado a ESTE enemigo. El gate global sale del
     // NetworkASC del local (sincronizado, sirve en cliente remoto); la frescura
     // por-objetivo solo es exacta en el host (ver IsFirstStrikeReadyAgainst).
-    private void UpdateFirstStrikeMarker(PlayerController local, AbilitySystemComponent localASC, bool isEnemy)
+    private void UpdateFirstStrikeMarker(AbilitySystemComponent localASC, bool isEnemy)
     {
         if (FirstStrikeMarker == null) return;
 
         bool show = false;
         if (isEnemy && localASC != null)
         {
-            NetworkAbilitySystemComponent localNet = local != null ? local.GetComponent<NetworkAbilitySystemComponent>() : null;
-            bool globalReady = localNet != null ? localNet.NetFirstStrikeReady : localASC.IsFirstStrikeReady;
+            // Cacheado junto al ASC local (ver LateUpdate): también corría cada frame.
+            bool globalReady = _cachedLocalNet != null ? _cachedLocalNet.NetFirstStrikeReady
+                                                       : localASC.IsFirstStrikeReady;
             show = globalReady && localASC.IsFirstStrikeReadyAgainst(_asc);
         }
 

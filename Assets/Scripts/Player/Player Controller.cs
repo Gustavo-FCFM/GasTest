@@ -467,13 +467,30 @@ public class PlayerController : NetworkBehaviour
         characterController.Move(finalMove * Time.deltaTime);
     }
 
+    // Cámara del dueño, cacheada. Camera.main busca por TAG cada vez que se llama, y
+    // acá se usa varias veces por frame (movimiento, giro del cuerpo, punto de mira).
+    // Se re-resuelve sola si la cámara actual se destruyó o desactivó (respawn,
+    // cambio de escena).
+    private Camera _mainCamera;
+    private Camera MainCamera
+    {
+        get
+        {
+            if (_mainCamera == null || !_mainCamera.isActiveAndEnabled) _mainCamera = Camera.main;
+            return _mainCamera;
+        }
+    }
+
     // Convierte el input horizontal/vertical crudo en un vector de mundo
     // relativo a hacia dónde mira la cámara del dueño.
     private Vector3 GetWASDInputVector(float h, float v)
     {
-        if (Camera.main == null) return Vector3.zero;
-        Vector3 f = Camera.main.transform.forward; f.y = 0; f.Normalize();
-        Vector3 r = Camera.main.transform.right;   r.y = 0; r.Normalize();
+        Camera cam = MainCamera;
+        if (cam == null) return Vector3.zero;
+
+        Transform camT = cam.transform;
+        Vector3 f = camT.forward; f.y = 0; f.Normalize();
+        Vector3 r = camT.right;   r.y = 0; r.Normalize();
         return (f * v + r * h).normalized;
     }
 
@@ -488,8 +505,9 @@ public class PlayerController : NetworkBehaviour
     // HandleMovementInput con algo como: if (inputVec != Vector3.zero) ...
     private void FaceCameraForward()
     {
-        if (Camera.main == null) return;
-        Vector3 fwd = Camera.main.transform.forward;
+        Camera cam = MainCamera;
+        if (cam == null) return;
+        Vector3 fwd = cam.transform.forward;
         fwd.y = 0f;
         if (fwd.sqrMagnitude < 0.0001f) return;
 
@@ -1450,10 +1468,11 @@ public class PlayerController : NetworkBehaviour
     {
         if (!IsOwner) return NetworkAimPoint;
 
-        if (Camera.main == null)
+        Camera cam = MainCamera;
+        if (cam == null)
             return transform.position + transform.forward * 10f;
 
-        Ray          ray  = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+        Ray          ray  = cam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
         RaycastHit[] hits = Physics.RaycastAll(ray, maxRange);
         float   bestDist  = float.MaxValue;
         Vector3 bestPoint = ray.GetPoint(maxRange);
