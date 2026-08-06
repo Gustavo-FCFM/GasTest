@@ -115,9 +115,10 @@ public class GA_LeapAttack : GameplayAbility
         if (ImpactVFX == null) return;
 
         GameObject vfx = Instantiate(ImpactVFX, position, Quaternion.identity);
-        float vfxScale  = AbilityRadius * ImpactVFXScaleMultiplier;
-        vfx.transform.localScale = new Vector3(vfxScale, vfxScale, vfxScale);
-        Destroy(vfx, 2.0f);
+
+        // Con VFX_AreaVisual el círculo de impacto calza EXACTO con AbilityRadius y se
+        // desvanece; si no, cae al multiplicador a ojo de siempre.
+        VFX_AreaVisual.Configure(vfx, AbilityRadius, ImpactVFXScaleMultiplier, 2.0f);
     }
 
     // El impacto real se resuelve alrededor de OwnerASC.transform.position al

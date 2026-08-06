@@ -792,13 +792,18 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     private void ObserversPlayComboStepAnimation(int parentIndex, int sequenceIndex, int stepIndex,
                                                  string trigger, int actionID, float animationSpeed)
     {
-        // El host ya la reprodujo: el Activate() del paso corre en ESTE mismo proceso y
-        // llama a pc.PlayAnimation. Repetirla acá dispararía el trigger dos veces sobre
-        // el mismo Animator y el segundo queda buffeado, reproduciendo el ataque de
-        // nuevo solo. Ojo que acá NO salteamos al dueño (a diferencia de
-        // ObserversPlayAbilityAnimation): un dueño remoto también necesita esto, porque
-        // su predicción local cubrió el combo padre, no los pasos.
-        if (IsServerInitialized) return;
+        // Salteamos SOLO donde el Activate() del paso ya animó por su cuenta: en el
+        // servidor Y siendo el dueño, o sea el personaje propio del host. Repetirla ahí
+        // dispararía el trigger dos veces sobre el mismo Animator y el segundo queda
+        // buffeado, reproduciendo el ataque de nuevo solo.
+        //
+        // Las dos condiciones importan:
+        //  · IsOwner solo (sin IsServerInitialized) saltearía al dueño REMOTO, que sí
+        //    necesita esto: su predicción local cubrió el combo padre, no los pasos.
+        //  · IsServerInitialized solo saltearía, en el host, a los jugadores AJENOS —
+        //    y ahí Activate() no animó nada, porque pc.PlayAnimation tiene guard de
+        //    dueño y esas copias no son del host. Sus combos se veían mudos.
+        if (IsServerInitialized && IsOwner) return;
 
         PlayerController pc = GetComponent<PlayerController>();
         if (pc == null) return;

@@ -41,7 +41,7 @@ ParticleSystem:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3301859001294354502}
   serializedVersion: 8
-  lengthInSec: 4
+  lengthInSec: 99
   simulationSpeed: 1
   stopAction: 0
   cullingMode: 0
@@ -4941,7 +4941,7 @@ ParticleSystem:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3989901854192163758}
   serializedVersion: 8
-  lengthInSec: 4
+  lengthInSec: 99
   simulationSpeed: 1
   stopAction: 0
   cullingMode: 0
@@ -9832,7 +9832,7 @@ ParticleSystem:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4217862762997978641}
   serializedVersion: 8
-  lengthInSec: 4
+  lengthInSec: 99
   simulationSpeed: 1
   stopAction: 0
   cullingMode: 0
@@ -14734,7 +14734,7 @@ ParticleSystem:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7834758006639453087}
   serializedVersion: 8
-  lengthInSec: 4
+  lengthInSec: 99
   simulationSpeed: 1
   stopAction: 0
   cullingMode: 0
@@ -19746,6 +19746,7 @@ GameObject:
   - component: {fileID: 8037160467862551414}
   - component: {fileID: 6211125795773073634}
   - component: {fileID: 959509697232157438}
+  - component: {fileID: -5044621615418411733}
   m_Layer: 0
   m_Name: Aura-Eagle
   m_TagString: Untagged
@@ -24630,3 +24631,17 @@ ParticleSystemRenderer:
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
   m_MaskInteraction: 0
+--- !u!114 &-5044621615418411733
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7986504087968017091}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abc36fd3886451d40bcd5ce928892262, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  RadiusAtScaleOne: 4
+  FadeOutTime: 0

@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: GA_AlternatingComboPirate
   m_EditorClassIdentifier: 
   AbilityName: Primary attack Pirate
-  AbilityIcon: {fileID: 21300000, guid: fc1c5ea4e68459a4092232b46faae97d, type: 3}
+  AbilityIcon: {fileID: 21300000, guid: bc0a3b7a464f2b04c8b3a4a42fd4eeb1, type: 3}
   CostEffect: {fileID: 0}
-  CooldownEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: 45327044be4f41c4d8f5289bc6f9b3be, type: 2}
   CooldownDuration: 0
   UseAttackSpeedAsCooldown: 1
   UltimateChargeAmount: 1

@@ -223,10 +223,10 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
         if (VisualPrefab == null || OwnerASC == null) return;
 
         GameObject vfxInstance = Instantiate(VisualPrefab, position, Quaternion.identity);
-        float finalScale = Radius * VisualScaleMultiplier;
-        vfxInstance.transform.localScale = new Vector3(finalScale, finalScale, finalScale);
         if (ShouldFollowOwner) vfxInstance.transform.SetParent(OwnerASC.transform);
 
-        Destroy(vfxInstance, TotalDuration);
+        // Si el prefab tiene VFX_AreaVisual, el círculo calza EXACTO con Radius y se
+        // desvanece al terminar; si no, cae al multiplicador a ojo de siempre.
+        VFX_AreaVisual.Configure(vfxInstance, Radius, VisualScaleMultiplier, TotalDuration);
     }
 }

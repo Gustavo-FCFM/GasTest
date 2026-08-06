@@ -13,14 +13,15 @@ MonoBehaviour:
   m_Name: GA_PirateGun
   m_EditorClassIdentifier: 
   AbilityName: Pirate Gun
-  AbilityIcon: {fileID: 0}
+  AbilityIcon: {fileID: 21300000, guid: 1b293360748837d41940d3f7b838d10e, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: ecfe07a06c63704479a331a9bae55086, type: 2}
   CooldownDuration: 0
-  UseAttackSpeedAsCooldown: 1
+  UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 0
   ActivationBlockedTags: 01000000
   ActivationRequiredTags: 
+  AnimationClip: {fileID: 3094330708855449807, guid: 8ab57abc06f7ffd47ae8d91e99f41fa2, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 2
   TargetLayer:
@@ -36,8 +37,8 @@ MonoBehaviour:
   DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   AdditionalEffects: []
   HitVFX: {fileID: 0}
-  RecoilSpeed: 20
-  RecoilDuration: 0.25
+  RecoilSpeed: 100
+  RecoilDuration: 0.1
   ExcludePlayerLayer:
     serializedVersion: 2
     m_Bits: 128

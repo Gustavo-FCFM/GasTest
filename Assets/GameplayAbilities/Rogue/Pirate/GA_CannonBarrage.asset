@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: GA_CannonBarrage
   m_EditorClassIdentifier: 
   AbilityName: Cannon Barrage
-  AbilityIcon: {fileID: 0}
+  AbilityIcon: {fileID: 21300000, guid: 107b2910c7b4adc42a5858debd33198a, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 4165da9d9de274a4aa511261df047340, type: 2}
   CooldownDuration: 0
@@ -21,6 +21,7 @@ MonoBehaviour:
   UltimateChargeAmount: 0
   ActivationBlockedTags: 0100000003000000
   ActivationRequiredTags: 
+  AnimationClip: {fileID: 3094330708855449807, guid: 8d3c95e724e453047940371ad39c4153, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 5
   TargetLayer:
@@ -28,13 +29,15 @@ MonoBehaviour:
     m_Bits: 128
   VisualsSequence: []
   Targets: 0
-  Radius: 4
-  TotalDuration: 5
-  TickInterval: 0.5
-  DeployMode: 0
-  MaxRange: 15
-  FollowOwner: 1
-  VisualPrefab: {fileID: 0}
-  VisualScaleMultiplier: 2
-  EffectsToApply: []
-  StartDelay: 0.5
+  Radius: 6
+  TotalDuration: 6
+  TickInterval: 1
+  DeployMode: 1
+  MaxRange: 20
+  FollowOwner: 0
+  VisualPrefab: {fileID: 7986504087968017091, guid: b10bcfd32615d844291d18c9d2d35007, type: 3}
+  VisualScaleMultiplier: 1
+  EffectsToApply:
+  - {fileID: 11400000, guid: 02b74f3f70f902048b083ee3c1cdc4ee, type: 2}
+  - {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
+  StartDelay: 0.3

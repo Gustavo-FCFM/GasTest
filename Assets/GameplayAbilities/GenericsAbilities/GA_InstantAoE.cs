@@ -156,9 +156,10 @@ public class GA_InstantAoE : GameplayAbility, IGroundTargetAbility
         if (VisualPrefab == null) return;
 
         GameObject vfx = Instantiate(VisualPrefab, position, Quaternion.identity);
-        float finalScale = Radius * VisualScaleMultiplier;
-        vfx.transform.localScale = new Vector3(finalScale, finalScale, finalScale);
-        Destroy(vfx, VisualLifetime);
+
+        // Con VFX_AreaVisual el círculo calza EXACTO con Radius y se desvanece al
+        // terminar; si no, cae al multiplicador a ojo de siempre.
+        VFX_AreaVisual.Configure(vfx, Radius, VisualScaleMultiplier, VisualLifetime);
     }
 
     // Vista previa del área en el Editor.

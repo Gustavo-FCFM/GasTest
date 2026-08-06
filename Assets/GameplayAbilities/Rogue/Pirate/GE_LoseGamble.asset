@@ -10,25 +10,43 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 923ea9fbcde13614b8da2b7689d349ea, type: 3}
-  m_Name: GE_Wolf_Buff
+  m_Name: GE_LoseGamble
   m_EditorClassIdentifier: 
-  Duration: 15
+  Duration: 5
   Period: 0
-  StackingPolicy: 0
+  StackingPolicy: 2
   MaxStacks: 0
   OnMaxStacksEffect: {fileID: 0}
-  EffectGroup: 23
-  Priority: 0
-  Icon: {fileID: 21300000, guid: 11b1ee7ff303aa04382ca53cd7824af7, type: 3}
+  EffectGroup: 37
+  Priority: 1
+  Icon: {fileID: 21300000, guid: 72087692fc8469047840263552e982ad, type: 3}
   EffectType: 0
   Modifiers:
   - Attribute: 8
+    Type: 0
+    Magnitude: 0
+    UseAttributeScaling: 1
+    SourceAttribute: 8
+    AttributeCoefficient: 0.1
+    UseTargetHealthScaling: 0
+    TargetHealthMode: 0
+    TargetHealthCoefficient: 0
+  - Attribute: 9
     Type: 1
-    Magnitude: 1.1
+    Magnitude: 1.15
+    UseAttributeScaling: 0
+    SourceAttribute: 8
+    AttributeCoefficient: 0
+    UseTargetHealthScaling: 0
+    TargetHealthMode: 0
+    TargetHealthCoefficient: 0
+  - Attribute: 10
+    Type: 1
+    Magnitude: 0.9
     UseAttributeScaling: 0
     SourceAttribute: 0
     AttributeCoefficient: 0
     UseTargetHealthScaling: 0
     TargetHealthMode: 0
     TargetHealthCoefficient: 0
-  GrantedTags: 17000000
+  GrantedTags: 

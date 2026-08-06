@@ -154,10 +154,10 @@ public class GA_ElementalFury : GameplayAbility
         if (TornadoVFXPrefab == null || OwnerASC == null) return;
 
         GameObject tornadoInstance = Instantiate(TornadoVFXPrefab, position, Quaternion.identity);
-        float finalScale = DamageRadius * TornadoVfxScaleMultiplier;
-        tornadoInstance.transform.localScale = new Vector3(finalScale, finalScale, finalScale);
         if (FollowPlayer) tornadoInstance.transform.SetParent(OwnerASC.transform);
 
-        Destroy(tornadoInstance, Duration);
+        // Con VFX_AreaVisual el tornado calza EXACTO con DamageRadius y se desvanece al
+        // terminar; si no, cae al multiplicador a ojo de siempre.
+        VFX_AreaVisual.Configure(tornadoInstance, DamageRadius, TornadoVfxScaleMultiplier, Duration);
     }
 }

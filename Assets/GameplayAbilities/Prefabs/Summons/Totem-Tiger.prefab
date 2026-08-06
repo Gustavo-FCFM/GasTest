@@ -76,13 +76,13 @@ MonoBehaviour:
   AuraEffect: {fileID: 11400000, guid: 35b156309f8afee4fb8cb3a0023e3e1a, type: 2}
   EmpoweredAuraEffect: {fileID: 11400000, guid: 30726dafd142a9047b08f0d003f6025a, type: 2}
   RageTag: 19
-  AuraRadius: 5
+  AuraRadius: 6
   TickRate: 0.1
   CharacterLayer:
     serializedVersion: 2
     m_Bits: 128
   AuraVFXPrefab: {fileID: 7986504087968017091, guid: 77fbe396c6ab7844a9c06a0a55ecedf8, type: 3}
-  VfxScaleMultiplier: 0.3
+  VfxScaleMultiplier: 1
   MyTeamID: 0
   CreatorASC: {fileID: 0}
 --- !u!114 &9001100220033004402
@@ -115,7 +115,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584156264245604478
+  _initializedTimestamp: -8584155649240984403
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1

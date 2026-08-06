@@ -19746,6 +19746,7 @@ GameObject:
   - component: {fileID: 8037160467862551414}
   - component: {fileID: 6211125795773073634}
   - component: {fileID: 959509697232157438}
+  - component: {fileID: -2373809519134465316}
   m_Layer: 0
   m_Name: Aura-Bear
   m_TagString: Untagged
@@ -24630,3 +24631,17 @@ ParticleSystemRenderer:
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
   m_MaskInteraction: 0
+--- !u!114 &-2373809519134465316
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7986504087968017091}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abc36fd3886451d40bcd5ce928892262, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  RadiusAtScaleOne: 4
+  FadeOutTime: 0

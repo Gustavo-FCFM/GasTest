@@ -24,12 +24,12 @@ MonoBehaviour:
   - InputSlot: 3
     Ability: {fileID: 11400000, guid: 5b2baabbde4a86e48bed0823da7a55b6, type: 2}
   - InputSlot: 6
-    Ability: {fileID: 11400000, guid: 9db99063e5c4e01409e0c85f976aff92, type: 2}
+    Ability: {fileID: 11400000, guid: 064fc6de9e5490044b6666cf88bb646c, type: 2}
   - InputSlot: 4
     Ability: {fileID: 11400000, guid: 5440252ddba79b64391ca1bdd6f64234, type: 2}
   - InputSlot: 5
     Ability: {fileID: 11400000, guid: 2bfe0b6ac89ecfe4286e8ee01d24a4dd, type: 2}
-  PassiveBehaviorsPrefab: {fileID: 0}
+  PassiveBehaviorsPrefab: {fileID: 5050769150704488624, guid: 01914ede8838b8645bf8820765675b0e, type: 3}
   PassiveEffects: []
   StatGrowthPerLevel: []
   AvailableSubclasses: []

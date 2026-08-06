@@ -68,8 +68,11 @@ public class Entity_Totem : NetworkBehaviour
         if (AuraVFXPrefab != null)
         {
             currentAuraVFX = Instantiate(AuraVFXPrefab, transform.position, Quaternion.identity, transform);
-            float finalScale = AuraRadius * VfxScaleMultiplier;
-            currentAuraVFX.transform.localScale = new Vector3(finalScale, finalScale, finalScale);
+
+            // Con VFX_AreaVisual el círculo calza EXACTO con AuraRadius (si no, cae al
+            // multiplicador a ojo). Duración 0: el aura vive lo que viva el tótem, así
+            // que su VFX se destruye con él y no se apaga solo.
+            VFX_AreaVisual.Configure(currentAuraVFX, AuraRadius, VfxScaleMultiplier, 0f);
         }
 
         // La aplicación del aura (ApplyGameplayEffect) sí es autoridad del

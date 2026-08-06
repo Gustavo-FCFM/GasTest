@@ -29,7 +29,7 @@ MonoBehaviour:
     m_Bits: 128
   VisualsSequence: []
   Targets: 0
-  Radius: 3
+  Radius: 4
   TotalDuration: 10
   TickInterval: 0.5
   DeployMode: 0
