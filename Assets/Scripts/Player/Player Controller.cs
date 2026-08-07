@@ -176,11 +176,11 @@ public class PlayerController : NetworkBehaviour
     [HideInInspector] public bool isRadialMenuOpen = false;
     private GameplayAbility currentRadialAbility;
 
-    // Menú de selección de clase (UI_InitialClassMenu) del dueño local. Se resuelve
-    // al spawnear la cámara (OnStartClient); la acción ChangeClass lo reabre para
-    // cambiar de clase en pleno juego. Solo el dueño lo tiene (null en las copias
+    // Menú ÚNICO de clases del dueño local (UI_ClassMenu). Se resuelve al spawnear la
+    // cámara (OnStartClient) y atiende las dos teclas: C abre las clases base y V las
+    // subclases de la clase actual. Solo el dueño lo tiene (null en las copias
     // remotas/servidor).
-    private UI_InitialClassMenu _initialClassMenu;
+    private UI_ClassMenu _classMenu;
 
     // Habilidad de zona (IGroundTargetAbility) que se está apuntando ahora mismo,
     // mientras se mantiene su botón. Ver UI_GroundTargetIndicator.
@@ -194,7 +194,7 @@ public class PlayerController : NetworkBehaviour
     private bool IsAimingAbility => isRadialMenuOpen || _groundTargetAbility != null;
 
     // Bloquea el input del dueño (movimiento y habilidades) mientras un menú
-    // modal está abierto — ej. la selección de clase inicial (UI_InitialClassMenu).
+    // modal está abierto — ej. la selección de clase (UI_ClassMenu).
     private bool _inputLocked;
     // La usan los menús modales para tomar/soltar el control del jugador.
     public void SetInputLocked(bool locked) => _inputLocked = locked;
@@ -274,23 +274,15 @@ public class PlayerController : NetworkBehaviour
                     Cursor.visible = false;
                 }
 
-                // El UI_ClassSelectionMenu (menú de subclase con tarjetas) vive
-                // en ESTE prefab de cámara, que se instancia acá — DESPUÉS de
-                // EquipCharacterClass/UpdateHUD. Por eso hay que engancharlo a
-                // este jugador dueño acá y no en UpdateHUD: allá la cámara
-                // todavía no existía y FindFirstObjectByType no lo encontraba
-                // (por eso el menú nunca aparecía). GetComponentInChildren(true)
-                // lo encuentra aunque su panel arranque inactivo.
-                UI_ClassSelectionMenu classMenu = camObj.GetComponentInChildren<UI_ClassSelectionMenu>(true);
-                if (classMenu != null) classMenu.InitializeMenu(this);
-
-                // Menú de selección de clase INICIAL: aparece al conectarse y se
-                // elige clickeando una tarjeta de las clases base (MainBaseClasses).
-                // Bloquea el input hasta que el jugador elige. Vive en el mismo
-                // prefab de cámara; GetComponentInChildren(true) lo encuentra aunque
-                // su panel arranque inactivo.
-                _initialClassMenu = camObj.GetComponentInChildren<UI_InitialClassMenu>(true);
-                if (_initialClassMenu != null) _initialClassMenu.InitializeMenu(this);
+                // Menú ÚNICO de clases (UI_ClassMenu): sirve tanto para elegir la
+                // clase base (tecla C) como para evolucionar a una subclase (tecla V),
+                // sobre el mismo panel. Vive en ESTE prefab de cámara, que se
+                // instancia acá — DESPUÉS de EquipCharacterClass/UpdateHUD. Por eso se
+                // engancha acá y no en UpdateHUD: allá la cámara todavía no existía.
+                // GetComponentInChildren(true) lo encuentra aunque su panel arranque
+                // inactivo.
+                _classMenu = camObj.GetComponentInChildren<UI_ClassMenu>(true);
+                if (_classMenu != null) _classMenu.InitializeMenu(this);
 
                 // La retícula (crosshair) vive en el Canvas del prefab "Player
                 // Camera" (componente Reticle sobre un objeto de UI). Como esta
@@ -345,23 +337,24 @@ public class PlayerController : NetworkBehaviour
         // mueve ni activa habilidades hasta cerrarlo (elegir una tarjeta).
         if (_inputLocked) return;
 
-        // CHEAT (debug): subir al nivel máximo para disparar la selección de
-        // subclase. Acción "Cheat" (Alt en teclado; Start/Menu en el mando).
-        // Ver el mapa Player en InputSystem_Actions. OJO: el mando usa Start
-        // (button 7), NO Back (button 6), porque button 6 es la Ultimate.
-        if (_input.Cheat.WasPressedThisFrame())
+        // SUBCLASES (acción "Cheat", rebindeada a la tecla V): abre el menú con las
+        // subclases de la clase que tenés puesta ahora. Al elegir, conserva el
+        // progreso — es una evolución, no un cambio de clase.
+        //
+        // Esta acción antes era el cheat de subir al nivel máximo, que existía solo
+        // para forzar la aparición de este mismo menú; ahora se abre directo.
+        if (_input.Cheat.WasPressedThisFrame() && _classMenu != null)
         {
-            if (NetASC != null) NetASC.ServerCheatMaxLevel();
+            _classMenu.OpenSubclasses();
         }
 
-        // Cambiar de clase (acción ChangeClass: tecla C / D-pad arriba): reabre el
-        // menú de clases base. El menú es modal (bloquea el input mientras está
-        // abierto vía SetInputLocked), así que _inputLocked ya evita reabrirlo
-        // encima. Al elegir, la clase nueva arranca en nivel 1 (ver
-        // UI_InitialClassMenu.ConfirmSelection).
-        if (_input.ChangeClass.WasPressedThisFrame() && _initialClassMenu != null)
+        // CLASES BASE (acción ChangeClass: tecla C / D-pad arriba). Al elegir, la
+        // clase nueva arranca en nivel 1. Ambos menús son modales (bloquean el input
+        // vía SetInputLocked), así que _inputLocked de arriba ya evita reabrirlos
+        // encima de sí mismos.
+        if (_input.ChangeClass.WasPressedThisFrame() && _classMenu != null)
         {
-            _initialClassMenu.ReopenMenu();
+            _classMenu.OpenBaseClasses();
         }
 
         // Watchdog: si isAttacking quedó trabado (una habilidad no reseteó el

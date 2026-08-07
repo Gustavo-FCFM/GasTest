@@ -31,5 +31,11 @@ public enum EAttributeType
     // IMPORTANTE: agregar valores nuevos SIEMPRE al final. Los .asset serializan
     // los atributos por su número de enum; insertarlos en el medio correría los
     // índices y rompería las referencias ya guardadas en los assets existentes.
-    CritDamage   // Multiplicador de daño crítico (ej: 2 = x2). Lo usa el ataque furtivo por la espalda del Pícaro
+    CritDamage,  // Multiplicador de daño crítico (ej: 2 = x2). Lo usa el ataque furtivo por la espalda del Pícaro
+
+    // Defensas del que RECIBE el golpe. Se aplican en ExecuteInstantEffect en este
+    // orden: Vulnerabilidad → Resistencia → redondeo → Def → escudo → vida.
+    // Ver AbilitySystemComponent.ApplyDefenses.
+    Vulnerability, // % de daño EXTRA que recibe (0.1 = +10%). Lo suben los debuffs de "marcar" a un objetivo
+    Resistance     // % de daño que EVITA (0.2 = -20%). Lo sube la pasiva del Paladín sobre sus aliados
 }

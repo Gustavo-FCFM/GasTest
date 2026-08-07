@@ -418,18 +418,7 @@
                 {
                     "name": "",
                     "id": "b000001d-0000-4000-8000-00000000001d",
-                    "path": "<Keyboard>/leftAlt",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Keyboard&Mouse",
-                    "action": "Cheat",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "b000001e-0000-4000-8000-00000000001e",
-                    "path": "<Keyboard>/rightAlt",
+                    "path": "<Keyboard>/v",
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard&Mouse",

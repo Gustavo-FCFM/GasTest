@@ -45,6 +45,8 @@ public class UI_WorldHealthbar : MonoBehaviour
     public UI_EffectContainer EffectContainer;
     [Tooltip("Aviso de Crítico mejorado disponible contra ESTE enemigo. Solo en enemigos. Opcional.")]
     public GameObject FirstStrikeMarker;
+    [Tooltip("Nombre del jugador (el que eligió al entrar). Se pinta del color de su equipo. Opcional.")]
+    public TMPro.TMP_Text NameText;
 
     [Header("Colores por Equipo")]
     public Color AllyColor  = new Color(0.2f, 0.9f, 0.2f, 1f);
@@ -117,6 +119,16 @@ public class UI_WorldHealthbar : MonoBehaviour
         AbilitySystemComponent localASC = _cachedLocalASC;
         bool isEnemy = localASC == null || localASC.IsEnemyOf(_asc);
 
+        // Invisibilidad: si el modelo no se ve para los enemigos, su nameplate tampoco
+        // debe verse — una barra de vida flotando delata la posición exacta y hacía
+        // inútil la invisibilidad. Los ALIADOS sí lo siguen viendo, y además le notan
+        // el buff en su barra de efectos.
+        if (isEnemy && _asc != null && _asc.HasTag(EGameplayTag.Status_Invisible))
+        {
+            SetVisible(false);
+            return;
+        }
+
         // Oclusión: solo los enemigos se tapan con el entorno.
         if (isEnemy && Physics.Linecast(cam.transform.position, BarRoot.position, ObstacleLayer, QueryTriggerInteraction.Ignore))
         {
@@ -145,6 +157,16 @@ public class UI_WorldHealthbar : MonoBehaviour
 
         if (HealthFill != null)   { HealthFill.fillAmount = fill; HealthFill.color = color; }
         if (HealthSlider != null) HealthSlider.value = fill;
+
+        // Nombre del jugador, del mismo color que su barra (verde aliado / rojo
+        // enemigo). Solo se reescribe si cambió: setear text en TMP fuerza un
+        // remesh, y esto corre cada frame.
+        if (NameText != null && _netAsc != null)
+        {
+            string playerName = _netAsc.PlayerName;
+            if (NameText.text != playerName) NameText.text = playerName;
+            NameText.color = color;
+        }
     }
 
     // El marcador solo aplica a ENEMIGOS: se prende si el jugador local puede

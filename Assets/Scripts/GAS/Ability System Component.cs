@@ -626,6 +626,11 @@ public class AbilitySystemComponent : MonoBehaviour
 
                 float physicalDamage = Mathf.Abs(calculatedMagnitude);
                 float magicDamage    = sourceASC != null ? sourceASC.GetAttributeValue(EAttributeType.MagicDamage) : 0f;
+
+                // Defensas del que RECIBE, ya con TODO el daño entrante sumado
+                // (físico + mágico) y antes de tocar el escudo. Ver ApplyDefenses.
+                ApplyDefenses(ref physicalDamage, ref magicDamage);
+
                 float currentShield  = GetAttributeValue(EAttributeType.Shield);
 
                 if (currentShield > 0)
@@ -670,6 +675,52 @@ public class AbilitySystemComponent : MonoBehaviour
                 NotifyTookDamage(sourceASC);         // reacciones "al ser golpeado" (ej. Copia exacta)
             }
         }
+    }
+
+    // =========================================================
+    // DEFENSAS (del que RECIBE el golpe)
+    // =========================================================
+
+    // Aplica las tres defensas al daño que está por entrar, en este orden:
+    //
+    //   1) VULNERABILIDAD (%): sube el daño. 0.1 = recibe 10% más.
+    //   2) RESISTENCIA (%): lo baja. 0.2 = evita el 20%.
+    //   3) Redondeo hacia ABAJO.
+    //   4) DEFENSA (fija): resta un valor plano.
+    //
+    // Ejemplo del diseño: 10 de daño, +10% vulnerabilidad → 11; −20% resistencia →
+    // 8.8; redondeo → 8; defensa 1 → 7. Recién después entran escudo y vida.
+    //
+    // Las dos porcentuales se combinan en UN multiplicador y se aplican por igual al
+    // daño físico y al mágico (son "cuánto duele todo lo que entra"). La DEFENSA en
+    // cambio solo recorta el FÍSICO: el daño mágico la ignora, igual que ya penetra
+    // el escudo — es lo que hace que subir defensa no vuelva a nadie inmune a magia.
+    //
+    // Ojo de balance: la defensa se descuenta POR GOLPE, así que castiga mucho más a
+    // los ataques rápidos y a los ticks de veneno que a un golpe único y grande.
+    private void ApplyDefenses(ref float physicalDamage, ref float magicDamage)
+    {
+        float vulnerability = GetAttributeValue(EAttributeType.Vulnerability);
+        float resistance    = GetAttributeValue(EAttributeType.Resistance);
+
+        // Tope de resistencia: al 100% el daño sería 0 (inmunidad total) y por encima
+        // el golpe pasaría a CURAR. Se corta en 90% por más que se apilen buffs.
+        resistance = Mathf.Min(resistance, 0.9f);
+
+        float multiplier = (1f + vulnerability) * (1f - resistance);
+        if (multiplier < 0f) multiplier = 0f; // una vulnerabilidad negativa enorme tampoco cura
+
+        physicalDamage *= multiplier;
+        magicDamage    *= multiplier;
+
+        // Redondeo hacia abajo (8.8 → 8): a favor de quien recibe, y deja números
+        // enteros en los indicadores de daño.
+        physicalDamage = Mathf.Floor(physicalDamage);
+        magicDamage    = Mathf.Floor(magicDamage);
+
+        // Defensa: reducción FIJA al físico. Nunca deja el golpe en negativo.
+        float defense = GetAttributeValue(EAttributeType.Def);
+        if (defense > 0f) physicalDamage = Mathf.Max(0f, physicalDamage - defense);
     }
 
     // Suma/resta los modificadores Add/Multiply de un efecto CON duración

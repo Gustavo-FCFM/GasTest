@@ -38,6 +38,5 @@ MonoBehaviour:
   VisualPrefab: {fileID: 7986504087968017091, guid: b10bcfd32615d844291d18c9d2d35007, type: 3}
   VisualScaleMultiplier: 1
   EffectsToApply:
-  - {fileID: 11400000, guid: 02b74f3f70f902048b083ee3c1cdc4ee, type: 2}
   - {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   StartDelay: 0.3

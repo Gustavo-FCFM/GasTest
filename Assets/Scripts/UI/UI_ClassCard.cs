@@ -17,7 +17,7 @@ public class UI_ClassCard : MonoBehaviour, ISelectHandler, IDeselectHandler, IPo
     [HideInInspector] public CharacterClassDefinition AssignedClass;
 
     // Callback que dispara la tarjeta al hacerle CLICK. Lo setea el menú que la
-    // construye (ej: UI_InitialClassMenu). Si queda null (ej: el menú de subclase
+    // construye (UI_ClassMenu). Si queda null (ej: el menú de subclase
     // que se maneja por teclas), el click simplemente no hace nada.
     [HideInInspector] public System.Action<CharacterClassDefinition> OnCardClicked;
 

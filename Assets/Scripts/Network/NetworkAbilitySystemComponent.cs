@@ -633,6 +633,19 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         Debug.Log($"{gameObject.name} → Equipo {teamID}");
     }
 
+    // Nombre elegido por el jugador en el menú de entrada. Se sincroniza a todos
+    // para mostrarlo sobre su barra de vida (ver UI_WorldHealthbar). Vive acá y no
+    // en el ASC porque es puramente identidad de red, no un stat de juego.
+    private readonly SyncVar<string> _netPlayerName = new SyncVar<string>(string.Empty);
+    public string PlayerName => _netPlayerName.Value;
+
+    // La llama NetworkGameManager al spawnear, con el nombre que mandó el cliente.
+    [Server]
+    public void AssignPlayerName(string playerName)
+    {
+        _netPlayerName.Value = string.IsNullOrWhiteSpace(playerName) ? "Jugador" : playerName.Trim();
+    }
+
     // =========================================================
     // ACTIVACIÓN DE HABILIDADES POR RED
     // El PlayerController llama ServerRequestActivateAbility()

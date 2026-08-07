@@ -106,14 +106,40 @@ public class NetworkGameManager : NetworkBehaviour
     private void HandleClientLoadedStartScenes(NetworkConnection conn, bool asServer)
     {
         if (!asServer) return;
-        // Ya lo spawneamos (p. ej. si vuelve a cargar escenas de inicio).
-        if (_playerObjects.ContainsKey(conn)) return;
 
+        // YA NO se spawnea acá. El jugador aparece recién cuando confirma el menú de
+        // entrada (nombre + equipo), que llega por ServerRequestSpawn. Así el equipo
+        // lo elige el jugador en vez de asignarse automático, y el personaje entra a
+        // la partida ya con su nombre puesto.
+    }
+
+    // Pedido del cliente desde el menú de entrada: "spawneame con este nombre y en
+    // este equipo". RequireOwnership=false porque quien llama es una conexión que
+    // todavía NO tiene personaje — no es dueña de nada.
+    //
+    // 'sender' lo completa FishNet solo: es la conexión real que hizo el pedido, así
+    // que un cliente no puede spawnear a otro.
+    [ServerRpc(RequireOwnership = false)]
+    public void ServerRequestSpawn(string playerName, int teamID, NetworkConnection sender = null)
+    {
+        if (sender == null) return;
+        // Ya tiene personaje (doble clic en confirmar, o un cliente insistente).
+        if (_playerObjects.ContainsKey(sender)) return;
+
+        SpawnPlayerFor(sender, playerName, teamID);
+    }
+
+    // Crea el personaje de una conexión con el nombre y equipo elegidos.
+    [Server]
+    private void SpawnPlayerFor(NetworkConnection conn, string playerName, int teamID)
+    {
         _totalPlayersEverConnected++;
         _currentPlayerCount++;
 
-        // TODOS CONTRA TODOS: TeamID único por jugador
-        int uniqueTeamID  = _totalPlayersEverConnected;
+        // El equipo lo elige el jugador en el menú de entrada. Se acota al rango
+        // válido (1..3): fuera de eso, TeamID 0 significa "neutral, hostil a todos"
+        // y rompería la lógica de aliados sin que se note por qué.
+        int uniqueTeamID = Mathf.Clamp(teamID, 1, 3);
 
         Transform  spawnPoint = GetSpawnPoint(_totalPlayersEverConnected);
         GameObject playerObj  = Instantiate(PlayerPrefab, spawnPoint.position, spawnPoint.rotation);
@@ -130,14 +156,21 @@ public class NetworkGameManager : NetworkBehaviour
             playerObj.GetComponent<NetworkAbilitySystemComponent>();
 
         if (netASC != null)
+        {
             netASC.AssignTeam(uniqueTeamID);
+            // Nombre elegido en el menú de entrada: se sincroniza a todos para
+            // mostrarlo sobre su barra de vida (ver UI_WorldHealthbar).
+            netASC.AssignPlayerName(playerName);
+        }
         else
+        {
             Debug.LogError("[GameManager] El Prefab no tiene NetworkAbilitySystemComponent.");
+        }
 
         _playerObjects[conn]  = playerObj;
         _netPlayerCount.Value = _currentPlayerCount;
 
-        Debug.Log($"[GameManager] Jugador #{_totalPlayersEverConnected} conectado. " +
+        Debug.Log($"[GameManager] '{playerName}' entró como jugador #{_totalPlayersEverConnected}. " +
                   $"TeamID={uniqueTeamID}. En partida: {_currentPlayerCount}");
     }
 
