@@ -222,6 +222,27 @@ public class AbilitySystemComponent : MonoBehaviour
             Attributes[EAttributeType.Level].CurrentValue = savedLevel;
             Attributes[EAttributeType.Exp].CurrentValue   = savedExp;
         }
+
+        // Avisar de los valores recién cargados para que la capa de red los sincronice.
+        //
+        // Acá los atributos se escriben DIRECTO en el diccionario (no por
+        // SetCurrentAttributeValue), así que no dispararon OnAttributeChangedCallback.
+        // Para los stats derivados no importa —RecalculateAllAttributes los notifica—,
+        // pero los POOLS (Vida, Maná, Energía) están excluidos de ese recálculo: su
+        // SyncVar quedaba en 0 hasta el primer golpe o curación, y por eso los demás
+        // jugadores veían la barra de vida VACÍA de alguien que estaba a full.
+        NotifyAttribute(EAttributeType.Health);
+        NotifyAttribute(EAttributeType.MaxHealth);
+        NotifyAttribute(EAttributeType.Mana);
+        NotifyAttribute(EAttributeType.MaxMana);
+        NotifyAttribute(EAttributeType.Energy);
+    }
+
+    // Dispara el callback de cambio de un atributo con su valor actual (si existe).
+    private void NotifyAttribute(EAttributeType type)
+    {
+        if (Attributes.ContainsKey(type))
+            OnAttributeChangedCallback?.Invoke(type, Attributes[type].CurrentValue);
     }
 
     // Lee el valor actual de un atributo (0 si el personaje no lo tiene).
@@ -698,6 +719,11 @@ public class AbilitySystemComponent : MonoBehaviour
     //
     // Ojo de balance: la defensa se descuenta POR GOLPE, así que castiga mucho más a
     // los ataques rápidos y a los ticks de veneno que a un golpe único y grande.
+    // Daño mínimo que deja pasar la DEFENSA: si la resta fija dejaría el golpe en 0
+    // (o menos), igual entra 1. Evita que acumular defensa vuelva a alguien
+    // literalmente inmune a un ataque, sin tocar el valor fijo en sí.
+    private const float MinDamageAfterDefense = 1f;
+
     private void ApplyDefenses(ref float physicalDamage, ref float magicDamage)
     {
         float vulnerability = GetAttributeValue(EAttributeType.Vulnerability);
@@ -718,9 +744,15 @@ public class AbilitySystemComponent : MonoBehaviour
         physicalDamage = Mathf.Floor(physicalDamage);
         magicDamage    = Mathf.Floor(magicDamage);
 
-        // Defensa: reducción FIJA al físico. Nunca deja el golpe en negativo.
+        // Defensa: reducción FIJA al físico. Si la resta dejaría el golpe en 0 o menos,
+        // igual entra 1 de daño: un ataque que conecta nunca debería no hacer NADA, y
+        // así acumular defensa no vuelve a nadie inmune a los ataques chicos.
+        //
+        // El piso solo aplica a golpes que traían daño físico: si el ataque era puro
+        // daño mágico (physicalDamage 0), no se inventa daño de la nada.
         float defense = GetAttributeValue(EAttributeType.Def);
-        if (defense > 0f) physicalDamage = Mathf.Max(0f, physicalDamage - defense);
+        if (defense > 0f && physicalDamage > 0f)
+            physicalDamage = Mathf.Max(MinDamageAfterDefense, physicalDamage - defense);
     }
 
     // Suma/resta los modificadores Add/Multiply de un efecto CON duración

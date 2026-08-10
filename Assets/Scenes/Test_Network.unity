@@ -1123,6 +1123,42 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 967465110323249601, guid: 70007537b8938c1479f48af7634d6a0f, type: 3}
+      propertyPath: CardSize
+      value: 250
+      objectReference: {fileID: 0}
+    - target: {fileID: 967465110323249601, guid: 70007537b8938c1479f48af7634d6a0f, type: 3}
+      propertyPath: IconsOnly
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 967465110323249601, guid: 70007537b8938c1479f48af7634d6a0f, type: 3}
+      propertyPath: SelectedOutlineSize
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 967465110323249601, guid: 70007537b8938c1479f48af7634d6a0f, type: 3}
+      propertyPath: SelectedClassColor.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 967465110323249601, guid: 70007537b8938c1479f48af7634d6a0f, type: 3}
+      propertyPath: SelectedClassColor.g
+      value: 0.08282876
+      objectReference: {fileID: 0}
+    - target: {fileID: 967465110323249601, guid: 70007537b8938c1479f48af7634d6a0f, type: 3}
+      propertyPath: SelectedClassColor.r
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 967465110323249601, guid: 70007537b8938c1479f48af7634d6a0f, type: 3}
+      propertyPath: HiddenCardParts.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 967465110323249601, guid: 70007537b8938c1479f48af7634d6a0f, type: 3}
+      propertyPath: 'HiddenCardParts.Array.data[0]'
+      value: ClassDescription
+      objectReference: {fileID: 0}
+    - target: {fileID: 967465110323249601, guid: 70007537b8938c1479f48af7634d6a0f, type: 3}
+      propertyPath: 'HiddenCardParts.Array.data[1]'
+      value: ClassTittle
+      objectReference: {fileID: 0}
     - target: {fileID: 1047162014647744421, guid: 70007537b8938c1479f48af7634d6a0f, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
