@@ -1173,7 +1173,7 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         if (killerNet != null) killerNet.ServerGainExperience(ExperiencePerKill);
     }
 
-    // El ASC llegó a nivel máximo (por bajas o por el cheat). OnMaxLevelReached se
+    // El ASC llegó a nivel máximo (por experiencia de bajas). OnMaxLevelReached se
     // disparó en la copia del SERVIDOR, pero la UI de selección de subclase escucha
     // ese evento en el ASC LOCAL del dueño — así que a un dueño remoto hay que
     // avisarle por su conexión. En el host el dueño ES este proceso y su UI ya
@@ -1244,39 +1244,6 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     public void ServerGainExperience(float amount)
     {
         if (_asc != null) _asc.GainExperience(amount);
-    }
-
-    // =========================================================
-    // CHEAT (debug) — subir al nivel máximo para probar subclases
-    //
-    // El dueño lo pide con una tecla/botón (ver PlayerController). El subir
-    // de nivel corre en el servidor (autoridad de atributos); después
-    // avisamos por TargetRpc al dueño para que la selección de subclase
-    // aparezca en SU pantalla (la UI escucha OnMaxLevelReached del ASC local,
-    // que de otro modo nunca se enteraría porque el level-up pasó en el server).
-    // =========================================================
-
-    [ServerRpc]
-    public void ServerCheatMaxLevel()
-    {
-        if (_asc == null) return;
-
-        // Si ya está al máximo, no hacemos nada — así apretar Alt de nuevo por
-        // accidente no vuelve a mostrar el anuncio/menú de nivel máximo.
-        if (_asc.GetAttributeValue(EAttributeType.Level) >= _asc.MaxLevel) return;
-
-        _asc.GainExperience(999999f); // sube al máximo (aplica el crecimiento de stats)
-        TargetCheatShowSubclass(Owner);
-    }
-
-    [TargetRpc]
-    private void TargetCheatShowSubclass(NetworkConnection conn)
-    {
-        // Corre en el proceso DUEÑO (host o cliente remoto). Dispara el evento
-        // en su ASC local para que aparezca la selección de subclase. Si es el
-        // host, GainExperience de arriba pudo haberlo disparado también, pero
-        // los suscriptores (UI) son idempotentes, así que no molesta.
-        if (_asc != null) _asc.TriggerMaxLevelReached();
     }
 
     // =========================================================

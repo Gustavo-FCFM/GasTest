@@ -17,7 +17,7 @@ using FishNet;
 // directo con su equipo y su nombre puestos.
 //
 // Reparto de responsabilidades:
-//   · NOMBRE y EQUIPO viajan al servidor (NetworkGameManager.ServerRequestSpawn), que
+//   · NOMBRE y EQUIPO viajan al servidor por broadcast (SpawnRequestBroadcast), que
 //     es quien crea el personaje y los asigna.
 //   · La CLASE la equipa el propio dueño en cuanto su personaje aparece, por el mismo
 //     camino de siempre (EquipCharacterClass, que ya se sincroniza solo). No hace
@@ -45,7 +45,10 @@ public class UI_LobbyMenu : MonoBehaviour
     public Button[] TeamButtons;
     [Tooltip("Color del botón del equipo elegido.")]
     public Color SelectedTeamColor = new Color(0.3f, 0.8f, 1f, 1f);
+    [Tooltip("Color del botón sin elegir.")]
     public Color NormalTeamColor   = Color.white;
+    [Tooltip("Color al pasar el mouse por encima (sin elegir todavía).")]
+    public Color HoverTeamColor    = new Color(0.12f, 0.16f, 0.22f, 1f);
 
     [Header("Clase inicial")]
     [Tooltip("Clases elegibles al entrar. Poné las mismas que MainBaseClasses del Player.")]
@@ -54,6 +57,19 @@ public class UI_LobbyMenu : MonoBehaviour
     public Transform CardsParent;
     [Tooltip("Prefab de UI_ClassCard.")]
     public GameObject ClassCardPrefab;
+    [Tooltip("Simplificar la tarjeta en el lobby: deja el icono y el NOMBRE, y oculta lo demás. " +
+             "El mismo prefab se sigue usando completo en el menú de clases del juego.")]
+    public bool IconsOnly = true;
+    [Tooltip("Objetos de la tarjeta que se ocultan con 'Icons Only', por nombre. El nombre de la " +
+             "clase (ClassTittle) se deja visible para saber qué es cada icono.")]
+    public string[] HiddenCardParts = { "ClassDescription" };
+    [Tooltip("Lado de cada tarjeta en píxeles: quedan cuadradas y todas iguales. El Canvas Scaler " +
+             "es el que las escala según el tamaño de pantalla.")]
+    public float CardSize = 180f;
+    [Tooltip("Color del contorno que marca la clase elegida.")]
+    public Color SelectedClassColor = new Color(0.3f, 0.8f, 1f, 1f);
+    [Tooltip("Grosor de ese contorno.")]
+    public float SelectedOutlineSize = 4f;
 
     [Header("Confirmar")]
     [Tooltip("Botón para entrar a la partida. Se habilita al elegir equipo y clase.")]
@@ -73,6 +89,16 @@ public class UI_LobbyMenu : MonoBehaviour
     {
         BuildTeamButtons();
         BuildClassCards();
+
+        // El nombre también habilita/deshabilita Confirmar, así que hay que
+        // reevaluarlo mientras se escribe.
+        if (NameInput != null) NameInput.onValueChanged.AddListener(_ => UpdateConfirmState());
+        if (ConfirmButton != null)
+        {
+            ConfirmButton.onClick.RemoveAllListeners();
+            ConfirmButton.onClick.AddListener(Confirm);
+        }
+
         UpdateConfirmState();
     }
 
@@ -137,8 +163,20 @@ public class UI_LobbyMenu : MonoBehaviour
         for (int i = 0; i < TeamButtons.Length; i++)
         {
             if (TeamButtons[i] == null) continue;
-            Image img = TeamButtons[i].GetComponent<Image>();
-            if (img != null) img.color = (i + 1 == _teamID) ? SelectedTeamColor : NormalTeamColor;
+
+            // Se pinta el ColorBlock del Button, NO el color de su Image: el Button
+            // tiñe su Image solo en cada evento de puntero (hover, salir, clic), así
+            // que escribir Image.color se perdía apenas movías el mouse — parecía que
+            // el equipo "se deseleccionaba".
+            bool selected = (i + 1 == _teamID);
+            ColorBlock cb = TeamButtons[i].colors;
+            cb.normalColor      = selected ? SelectedTeamColor : NormalTeamColor;
+            cb.selectedColor    = cb.normalColor;
+            // Al pasar el mouse: azul oscuro si no está elegido (antes se ponía
+            // blanco, el default de Unity). Si ya está elegido, mantiene su azul.
+            cb.highlightedColor = selected ? SelectedTeamColor : HoverTeamColor;
+            cb.pressedColor     = SelectedTeamColor;
+            TeamButtons[i].colors = cb;
         }
     }
 
@@ -167,34 +205,96 @@ public class UI_LobbyMenu : MonoBehaviour
                 // todavía no existe.
                 card.OnCardClicked = SelectClass;
             }
+
+            if (IconsOnly) SimplifyCard(card, cls);
+
+            // Todas del mismo tamaño y cuadradas, para que la fila quede pareja.
+            LayoutElement le = cardObj.GetComponent<LayoutElement>();
+            if (le == null) le = cardObj.AddComponent<LayoutElement>();
+            le.preferredWidth  = CardSize;
+            le.preferredHeight = CardSize;
+
             _cards.Add(card);
         }
+    }
+
+    // Deja la tarjeta con lo justo para el lobby: ICONO + NOMBRE.
+    //
+    // Usa las referencias que la propia tarjeta ya tiene (DescriptionText,
+    // ClassNameText) en vez de buscar objetos por nombre: es lo que hace que funcione
+    // aunque en el prefab los objetos se llamen distinto.
+    private void SimplifyCard(UI_ClassCard card, CharacterClassDefinition cls)
+    {
+        if (card == null) return;
+
+        // Fuera la descripción.
+        if (card.DescriptionText != null) card.DescriptionText.gameObject.SetActive(false);
+
+        // El nombre, SIN el "[1]" de adelante: ese prefijo lo agrega SetupCard cuando
+        // la tarjeta no tiene un NumberText propio, y en el lobby se elige con el
+        // mouse, así que el número no aporta nada.
+        if (card.ClassNameText != null && cls != null) card.ClassNameText.text = cls.ClassName;
+        if (card.NumberText != null) card.NumberText.gameObject.SetActive(false);
+
+        // Escape hatch por si querés ocultar algo más, por nombre de objeto.
+        if (HiddenCardParts == null) return;
+        foreach (Transform t in card.GetComponentsInChildren<Transform>(true))
+            foreach (string hidden in HiddenCardParts)
+                if (t.name == hidden) t.gameObject.SetActive(false);
     }
 
     private void SelectClass(CharacterClassDefinition cls)
     {
         _chosenClass = cls;
 
-        // Resaltar la elegida.
         for (int i = 0; i < _cards.Count; i++)
-            if (_cards[i] != null) _cards[i].SetHighlighted(_cards[i].AssignedClass == cls);
+            if (_cards[i] != null) MarkSelected(_cards[i], _cards[i].AssignedClass == cls);
 
         UpdateConfirmState();
+    }
+
+    // Marca la tarjeta elegida con un CONTORNO, no con el agrandado de UI_ClassCard:
+    // esa tarjeta usa el mismo efecto para el hover y lo revierte en OnPointerExit, así
+    // que la elección se borraba apenas sacabas el mouse. El contorno es independiente
+    // y queda puesto.
+    private void MarkSelected(UI_ClassCard card, bool selected)
+    {
+        if (card == null) return;
+
+        // Va sobre el icono porque un Outline necesita un Graphic donde dibujarse, y
+        // el icono es el que siempre existe en la tarjeta.
+        Transform icon = FindChild(card.transform, "ClassIcon");
+        Graphic target = icon != null ? icon.GetComponent<Graphic>() : card.GetComponent<Graphic>();
+        if (target == null) return;
+
+        Outline outline = target.GetComponent<Outline>();
+        if (outline == null) outline = target.gameObject.AddComponent<Outline>();
+
+        outline.effectColor    = SelectedClassColor;
+        outline.effectDistance = new Vector2(SelectedOutlineSize, SelectedOutlineSize);
+        outline.enabled        = selected;
+    }
+
+    private static Transform FindChild(Transform root, string name)
+    {
+        foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
+            if (t.name == name) return t;
+        return null;
     }
 
     // =========================================================
     // CONFIRMAR
     // =========================================================
 
+    // Confirmar solo se habilita con las TRES cosas elegidas: nombre, equipo y clase.
     private void UpdateConfirmState()
     {
         if (ConfirmButton == null) return;
 
-        bool ready = _teamID > 0 && _chosenClass != null;
-        if (ConfirmButton.interactable != ready) ConfirmButton.interactable = ready;
+        bool hasName = NameInput == null || !string.IsNullOrWhiteSpace(NameInput.text);
+        bool ready   = hasName && _teamID > 0 && _chosenClass != null;
 
-        ConfirmButton.onClick.RemoveAllListeners();
-        ConfirmButton.onClick.AddListener(Confirm);
+        if (ConfirmButton.interactable != ready) ConfirmButton.interactable = ready;
     }
 
     // Le pide al servidor que cree el personaje con el nombre y equipo elegidos, y
@@ -203,10 +303,9 @@ public class UI_LobbyMenu : MonoBehaviour
     {
         if (_sent || _teamID <= 0 || _chosenClass == null) return;
 
-        NetworkGameManager gm = FindFirstObjectByType<NetworkGameManager>();
-        if (gm == null)
+        if (!InstanceFinder.IsClientStarted)
         {
-            Debug.LogError("[Lobby] No encontré el NetworkGameManager en la escena — no puedo entrar.");
+            Debug.LogWarning("[Lobby] Todavía no hay conexión — no puedo pedir el spawn.");
             return;
         }
 
@@ -217,7 +316,14 @@ public class UI_LobbyMenu : MonoBehaviour
         _sent = true;
         if (MenuContainer != null) MenuContainer.SetActive(false);
 
-        gm.ServerRequestSpawn(playerName, _teamID);
+        // Se manda por BROADCAST y no por ServerRpc: un RPC necesita un NetworkObject
+        // ya inicializado en el cliente, y acá el jugador todavía no tiene personaje.
+        InstanceFinder.ClientManager.Broadcast(new SpawnRequestBroadcast
+        {
+            PlayerName = playerName,
+            TeamID     = _teamID,
+        });
+
         StartCoroutine(EquipChosenClassWhenSpawned());
     }
 

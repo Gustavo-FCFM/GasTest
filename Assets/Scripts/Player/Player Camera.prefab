@@ -842,7 +842,7 @@ MonoBehaviour:
   MenuContainer: {fileID: 2424656966912703289}
   CardsParent: {fileID: 6905805592414016542}
   ClassCardPrefab: {fileID: 811954012191032356, guid: 99a5afcd5d0f3a841889c3a33e79e27d, type: 3}
-  OpenOnSpawn: 1
+  OpenOnSpawn: 0
   OpenSubclassesOnMaxLevel: 1
 --- !u!1 &2516487794832868040
 GameObject:

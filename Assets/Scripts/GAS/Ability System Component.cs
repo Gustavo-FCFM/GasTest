@@ -1007,9 +1007,10 @@ public class AbilitySystemComponent : MonoBehaviour
         if (newLevel >= MaxLevel) OnMaxLevelReached?.Invoke();
     }
 
-    // Dispara OnMaxLevelReached a mano (sin pasar por GainExperience). Lo usa
-    // el cheat de subir de nivel para hacer aparecer la selección de subclase
-    // en el cliente DUEÑO — ver NetworkAbilitySystemComponent.ServerCheatMaxLevel.
+    // Dispara OnMaxLevelReached a mano (sin pasar por GainExperience). Lo usa la
+    // capa de red para hacer aparecer la selección de subclase en el cliente DUEÑO:
+    // el nivel sube en el SERVIDOR, así que el ASC local del dueño remoto nunca se
+    // enteraría — ver NetworkAbilitySystemComponent.TargetShowSubclassSelection.
     public void TriggerMaxLevelReached() => OnMaxLevelReached?.Invoke();
 
     // =========================================================

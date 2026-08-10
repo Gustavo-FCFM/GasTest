@@ -3,19 +3,34 @@ using System.Collections.Generic;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using FishNet.Connection;
+using FishNet.Broadcast;
+using FishNet.Transporting;
+
+// Pedido de entrada a la partida que manda el menú (UI_LobbyMenu) al servidor.
+//
+// Es un BROADCAST y no un ServerRpc a propósito: un ServerRpc viaja "a través de" un
+// NetworkObject ya inicializado en el cliente, y acá el jugador todavía NO tiene
+// personaje — de ahí el error "Cannot complete action because client is not active".
+// Los broadcasts no dependen de ningún objeto, que es justo lo que hace falta antes
+// de spawnear.
+public struct SpawnRequestBroadcast : IBroadcast
+{
+    public string PlayerName;
+    public int    TeamID;
+}
 
 // ============================================================
 // NetworkGameManager
 //
-// Administra la partida en el servidor: spawnea al jugador de cada
-// conexión que entra (con un punto de spawn y TeamID únicos, modo
-// "todos contra todos"), lo despawnea al desconectarse, y maneja el
+// Administra la partida en el servidor: crea el personaje de cada jugador cuando
+// este confirma el menú de entrada, lo despawnea al desconectarse, y maneja el
 // respawn tras morir. Vive en la escena de la arena, no en un prefab.
 //
-// PARA HACER EQUIPOS EN VEZ DE FFA: cambiar
-// "int uniqueTeamID = _totalPlayersEverConnected;" por
-// "int uniqueTeamID = (_totalPlayersEverConnected % 2) + 1;" en
-// HandleClientLoadedStartScenes — da equipos 1 y 2 alternados.
+// EQUIPOS: el jugador elige el suyo (1, 2 o 3) en el menú de entrada; ya no se
+// asigna automático. Antes cada conexión recibía un TeamID único —todos contra
+// todos—, y por eso NADIE era aliado de nadie: IsAllyOf comparaba TeamIDs que nunca
+// coincidían, así que las habilidades con Targets = Allies solo afectaban a quien
+// las lanzaba.
 // ============================================================
 public class NetworkGameManager : NetworkBehaviour
 {
@@ -56,6 +71,10 @@ public class NetworkGameManager : NetworkBehaviour
         ServerManager.OnRemoteConnectionState -= OnRemoteConnectionStateChanged;
         ServerManager.OnRemoteConnectionState += OnRemoteConnectionStateChanged;
 
+        // Escuchar los pedidos de entrada del menú (ver SpawnRequestBroadcast).
+        ServerManager.UnregisterBroadcast<SpawnRequestBroadcast>(OnSpawnRequest);
+        ServerManager.RegisterBroadcast<SpawnRequestBroadcast>(OnSpawnRequest);
+
         // El spawn del jugador va atado a OnClientLoadedStartScenes, NO a
         // OnRemoteConnectionState. FishNet avisa explícitamente: "not recommended
         // to spawn objects for connections until they have loaded start scenes".
@@ -67,13 +86,14 @@ public class NetworkGameManager : NetworkBehaviour
         SceneManager.OnClientLoadedStartScenes -= HandleClientLoadedStartScenes;
         SceneManager.OnClientLoadedStartScenes += HandleClientLoadedStartScenes;
 
-        Debug.Log("[GameManager] Servidor FFA iniciado. Sin límite de jugadores.");
+        Debug.Log("[GameManager] Servidor iniciado. Esperando que los jugadores confirmen el menú de entrada.");
     }
 
     public override void OnStopServer()
     {
         base.OnStopServer();
         ServerManager.OnRemoteConnectionState -= OnRemoteConnectionStateChanged;
+        ServerManager.UnregisterBroadcast<SpawnRequestBroadcast>(OnSpawnRequest);
         SceneManager.OnClientLoadedStartScenes -= HandleClientLoadedStartScenes;
     }
 
@@ -108,25 +128,20 @@ public class NetworkGameManager : NetworkBehaviour
         if (!asServer) return;
 
         // YA NO se spawnea acá. El jugador aparece recién cuando confirma el menú de
-        // entrada (nombre + equipo), que llega por ServerRequestSpawn. Así el equipo
+        // entrada (nombre + equipo), que llega por SpawnRequestBroadcast. Así el equipo
         // lo elige el jugador en vez de asignarse automático, y el personaje entra a
         // la partida ya con su nombre puesto.
     }
 
-    // Pedido del cliente desde el menú de entrada: "spawneame con este nombre y en
-    // este equipo". RequireOwnership=false porque quien llama es una conexión que
-    // todavía NO tiene personaje — no es dueña de nada.
-    //
-    // 'sender' lo completa FishNet solo: es la conexión real que hizo el pedido, así
-    // que un cliente no puede spawnear a otro.
-    [ServerRpc(RequireOwnership = false)]
-    public void ServerRequestSpawn(string playerName, int teamID, NetworkConnection sender = null)
+    // Llega el pedido del menú de entrada de un cliente. La conexión la da FishNet
+    // ('conn'), así que un cliente no puede pedir el spawn de otro.
+    private void OnSpawnRequest(NetworkConnection conn, SpawnRequestBroadcast msg, Channel channel)
     {
-        if (sender == null) return;
+        if (conn == null) return;
         // Ya tiene personaje (doble clic en confirmar, o un cliente insistente).
-        if (_playerObjects.ContainsKey(sender)) return;
+        if (_playerObjects.ContainsKey(conn)) return;
 
-        SpawnPlayerFor(sender, playerName, teamID);
+        SpawnPlayerFor(conn, msg.PlayerName, msg.TeamID);
     }
 
     // Crea el personaje de una conexión con el nombre y equipo elegidos.
