@@ -27,7 +27,7 @@ MonoBehaviour:
     Magnitude: 0
     UseAttributeScaling: 1
     SourceAttribute: 8
-    AttributeCoefficient: 1
+    AttributeCoefficient: 2
     UseTargetHealthScaling: 0
     TargetHealthMode: 0
     TargetHealthCoefficient: 0

@@ -19,7 +19,7 @@ MonoBehaviour:
   CooldownDuration: 0
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 1
-  ActivationBlockedTags: 
+  ActivationBlockedTags: 01000000
   ActivationRequiredTags: 
   AnimationClip: {fileID: 0}
   AnimationTriggerName: AttackTrigger
@@ -30,14 +30,13 @@ MonoBehaviour:
   VisualsSequence: []
   AllyEffects:
   - {fileID: 11400000, guid: e020fa4d41da96d43b303363eadf0129, type: 2}
-  ProjectilePrefab: {fileID: 406129108226925510, guid: 8c21a3df091c8204ea5a34229c270862, type: 3}
+  ProjectilePrefab: {fileID: 406129108226925510, guid: 29b7325ea45914c4bb7592ed1cdc376b, type: 3}
   LaunchForce: 12
   SpawnOffset: {x: 1, y: 1, z: 0}
   AddSpin: 1
-  InstantDamageEffect: {fileID: 0}
+  InstantDamageEffect: {fileID: 11400000, guid: bf104105cbbe8054da222dfa8de9a76a, type: 2}
   DurationEffect: {fileID: 0}
-  AdditionalEffects:
-  - {fileID: 11400000, guid: bf104105cbbe8054da222dfa8de9a76a, type: 2}
+  AdditionalEffects: []
   LifeTime: 4
   SpawnDelay: 0.5
   ImpactVFX: {fileID: 0}
