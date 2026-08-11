@@ -68,4 +68,9 @@ public enum EGameplayTag
     // --- PIRATA ---
     Status_Unstoppable,      // Imparable: limpia los debuffs al otorgarse y bloquea nuevos debuffs con duración (CC/DoT) mientras dura (ver ApplyGameplayEffect)
     Status_Gambled,          // Apostar: el enemigo sobre el que el Pirata apostó. Recibe más daño DEL PIRATA (ver GamblePassive)
+
+    // --- PALADÍN ---
+    Status_Blocking,         // Escudo levantado (GA_ShieldBlock). Dura lo que el jugador mantenga el botón; lo usan la animación de hold y el VFX de la barrera
+    Status_DivineSmite,      // Castigo divino cargado: el próximo ataque principal se cambia por el combo cono+estela (ver GA_TagSwitch)
+    Status_Aura_Protection,  // El personaje está dentro del Aura de protección de un Paladín aliado (marca para VFX; el stat lo da el GE del aura)
 }

@@ -63,15 +63,22 @@ public class AbilitySystemComponent : MonoBehaviour
     public event Action OnRevive;
     public event Action OnMaxLevelReached;
 
-    // Se dispara cuando ESTE personaje le REPARTE un golpe de daño a alguien (el
-    // parámetro es la víctima). Solo en golpes directos (no ticks de DoT), y con
-    // autoridad de servidor (ver ExecuteInstantEffect). Lo usan las pasivas "al
-    // golpear", ej. Cuchillas ilusorias del Ilusionista.
-    public event Action<AbilitySystemComponent> OnDealtDamage;
+    // Se dispara cuando ESTE personaje le REPARTE un golpe de daño a alguien.
+    // Parámetros: la víctima y CUÁNTO daño entró de verdad (ya pasado por el
+    // bloqueo, las defensas y el escudo — o sea, lo que realmente le bajó de la
+    // vida, siempre positivo). Solo en golpes directos (no ticks de DoT), y con
+    // autoridad de servidor (ver ExecuteInstantEffect).
+    //
+    // La cantidad viaja en el evento porque hay pasivas que curan/escalan con el
+    // daño hecho (Aura de protección del Paladín), y recalcularla afuera sería
+    // imposible: el atacante no conoce las defensas ni el escudo de la víctima.
+    // Las pasivas que no la necesitan (Cuchillas ilusorias) simplemente la ignoran.
+    public event Action<AbilitySystemComponent, float> OnDealtDamage;
 
     // Permite que ExecuteInstantEffect (que corre sobre la VÍCTIMA) dispare el
     // evento en el ATACANTE. Los eventos solo se pueden invocar desde su clase.
-    public void NotifyDealtDamage(AbilitySystemComponent victim) => OnDealtDamage?.Invoke(victim);
+    public void NotifyDealtDamage(AbilitySystemComponent victim, float damageDealt)
+        => OnDealtDamage?.Invoke(victim, damageDealt);
 
     // Se dispara cuando ESTE personaje RECIBE un golpe de daño directo (el
     // parámetro es el atacante). Mismo criterio que OnDealtDamage: solo golpes
@@ -272,6 +279,15 @@ public class AbilitySystemComponent : MonoBehaviour
         else if (type == EAttributeType.Mana)
         {
             float max = GetAttributeValue(EAttributeType.MaxMana);
+            val = max > 0f ? Mathf.Clamp(val, 0f, max) : Mathf.Max(0f, val);
+        }
+        else if (type == EAttributeType.Energy)
+        {
+            // La energía es un pool igual que Vida/Maná: la regeneración la empuja
+            // hacia arriba (un GE pasivo con Period) y el escudo la consume. Sin este
+            // clamp, la regeneración se pasaba de MaxEnergy sin techo y la barra del
+            // HUD quedaba por encima del 100% (y el escudo duraba de más).
+            float max = GetAttributeValue(EAttributeType.MaxEnergy);
             val = max > 0f ? Mathf.Clamp(val, 0f, max) : Mathf.Max(0f, val);
         }
         else if (type == EAttributeType.Shield)
@@ -622,6 +638,12 @@ public class AbilitySystemComponent : MonoBehaviour
 
         bool wasDamagingHit = false;
 
+        // Daño que de verdad llegó a la VIDA en este golpe (después de bloqueo,
+        // defensas y escudo). Se acumula sobre todos los modificadores del efecto y
+        // viaja en OnDealtDamage, para las pasivas que curan/escalan con lo hecho
+        // (Aura de protección del Paladín).
+        float damageToHealth = 0f;
+
         foreach (var mod in effect.Modifiers)
         {
             if (!Attributes.ContainsKey(mod.Attribute)) continue;
@@ -648,6 +670,11 @@ public class AbilitySystemComponent : MonoBehaviour
                 float physicalDamage = Mathf.Abs(calculatedMagnitude);
                 float magicDamage    = sourceASC != null ? sourceASC.GetAttributeValue(EAttributeType.MagicDamage) : 0f;
 
+                // Bloqueo DIRECCIONAL antes que nada (escudo del Paladín y compañía):
+                // lo que la barrera frena no llega siquiera a las defensas. Ver
+                // ResolveIncomingDamage / IIncomingDamageModifier.
+                ResolveIncomingDamage(sourceASC, ref physicalDamage, ref magicDamage, isPeriodicTick);
+
                 // Defensas del que RECIBE, ya con TODO el daño entrante sumado
                 // (físico + mágico) y antes de tocar el escudo. Ver ApplyDefenses.
                 ApplyDefenses(ref physicalDamage, ref magicDamage);
@@ -671,6 +698,7 @@ public class AbilitySystemComponent : MonoBehaviour
                 }
 
                 calculatedMagnitude = -(physicalDamage + magicDamage);
+                damageToHealth     += physicalDamage + magicDamage;
             }
 
             float newValue = CalculateModifiedValue(Attributes[mod.Attribute].CurrentValue, mod, calculatedMagnitude);
@@ -692,7 +720,7 @@ public class AbilitySystemComponent : MonoBehaviour
             if (sourceASC != null && !ReferenceEquals(sourceASC, this))
             {
                 sourceASC.BreakInvisibility();       // el atacante se delata al golpear
-                sourceASC.NotifyDealtDamage(this);   // pasivas "al golpear" (ej. Cuchillas ilusorias)
+                sourceASC.NotifyDealtDamage(this, damageToHealth); // pasivas "al golpear" (Cuchillas ilusorias, Aura del Paladín)
                 NotifyTookDamage(sourceASC);         // reacciones "al ser golpeado" (ej. Copia exacta)
             }
         }
@@ -1138,6 +1166,62 @@ public class AbilitySystemComponent : MonoBehaviour
         }
 
         return magnitude;
+    }
+
+    // =========================================================
+    // DAÑO ENTRANTE (bloqueo direccional)
+    // =========================================================
+
+    // Modificadores de daño ENTRANTE que registran las mecánicas de bloqueo de
+    // ESTE personaje (ver IIncomingDamageModifier). Gemelo de _damageModifiers,
+    // pero del lado del que recibe: existen mientras la barrera/postura esté
+    // levantada, y se dan de baja al bajarla.
+    private readonly List<IIncomingDamageModifier> _incomingDamageModifiers = new List<IIncomingDamageModifier>();
+
+    public void RegisterIncomingDamageModifier(IIncomingDamageModifier modifier)
+    {
+        if (modifier != null && !_incomingDamageModifiers.Contains(modifier))
+            _incomingDamageModifiers.Add(modifier);
+    }
+
+    public void UnregisterIncomingDamageModifier(IIncomingDamageModifier modifier)
+    {
+        _incomingDamageModifiers.Remove(modifier);
+    }
+
+    // Corre el pipeline de daño ENTRANTE sobre un golpe que va a recibir este
+    // personaje, ANTES de las defensas (ver ExecuteInstantEffect).
+    //
+    // Recibe el daño ya separado en físico y mágico porque las etapas siguientes
+    // los tratan distinto (la Defensa solo recorta el físico; el escudo cuesta el
+    // doble contra el mágico). Pero un bloqueo frena "el golpe", no una de sus
+    // componentes — así que el pipeline trabaja sobre el TOTAL y el resultado se
+    // reparte de vuelta en la MISMA proporción, sin inventar ni perder la mezcla.
+    private void ResolveIncomingDamage(AbilitySystemComponent sourceASC, ref float physicalDamage,
+                                       ref float magicDamage, bool isPeriodicTick)
+    {
+        if (_incomingDamageModifiers.Count == 0) return;
+
+        float total = physicalDamage + magicDamage;
+        if (total <= 0f) return;
+
+        IncomingDamageContext ctx = new IncomingDamageContext
+        {
+            Source         = sourceASC,
+            Target         = this,
+            IsPeriodicTick = isPeriodicTick,
+            Magnitude      = -total,   // negativa = daño, igual que en el pipeline saliente
+        };
+
+        for (int i = 0; i < _incomingDamageModifiers.Count; i++)
+            _incomingDamageModifiers[i]?.ModifyIncomingDamage(ref ctx);
+
+        float remaining = Mathf.Max(0f, -ctx.Magnitude);
+        if (Mathf.Approximately(remaining, total)) return;
+
+        float ratio = remaining / total;
+        physicalDamage *= ratio;
+        magicDamage    *= ratio;
     }
 
     // Readout del Crítico mejorado para el HUD/nameplate. El estado y la lógica

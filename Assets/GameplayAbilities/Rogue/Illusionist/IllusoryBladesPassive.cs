@@ -48,7 +48,11 @@ public class IllusoryBladesPassive : MonoBehaviour
     // uno DISTINTO a la víctima; si no hay otro cerca, cae sobre la misma víctima.
     // OnDealtDamage ya es server-side; igual chequeamos que haya servidor antes de
     // spawnear en red.
-    private void HandleDealtDamage(AbilitySystemComponent victim)
+    //
+    // 'damageDealt' (cuánto entró de verdad) no se usa acá: la cuchilla sale igual
+    // sin importar el tamaño del golpe. El parámetro está en el evento para las
+    // pasivas que sí escalan con el daño (ver PaladinAuraPassive).
+    private void HandleDealtDamage(AbilitySystemComponent victim, float damageDealt)
     {
         if (BladePrefab == null) return;
         if (!InstanceFinder.IsServerStarted) return;

@@ -34,3 +34,40 @@ public interface IDamageModifier
     // Ajusta el contexto de un golpe saliente del dueño de este modificador.
     void ModifyOutgoingDamage(ref DamageContext ctx);
 }
+
+// ============================================================
+// IIncomingDamageModifier / IncomingDamageContext
+//
+// El GEMELO del de arriba, pero del lado del que RECIBE. Existe porque las
+// defensas normales (Resistance/Def, ver AbilitySystemComponent.ApplyDefenses)
+// son un número plano: no saben de DÓNDE viene el golpe, y por lo tanto no
+// pueden expresar un bloqueo DIRECCIONAL (el escudo del Paladín) ni consumir un
+// recurso proporcional al daño frenado (la barra de energía).
+//
+// Los modificadores se registran en el ASC de la VÍCTIMA y corren en
+// ExecuteInstantEffect ANTES de ApplyDefenses: primero se frena lo que el escudo
+// frena, y sobre lo que pasa se aplican Resistencia/Defensa como siempre.
+//
+// Igual que el saliente, el core queda genérico: no sabe qué es una barrera,
+// solo recorre la lista. Ver Entity_ShieldBarrier.
+// ============================================================
+
+// Contexto de UN golpe ENTRANTE, que los modificadores pueden leer y mutar.
+// Struct pasado por ref: sin allocation por golpe.
+public struct IncomingDamageContext
+{
+    public AbilitySystemComponent Source;   // Atacante (puede ser null: caídas, zonas de muerte...)
+    public AbilitySystemComponent Target;   // Víctima (dueño de los modificadores)
+    public bool  IsPeriodicTick;            // True si es un tick de DoT
+    public float Magnitude;                 // Magnitud actual (negativa = daño). Mutable.
+
+    // Lo marca un modificador que haya frenado (total o parcialmente) el golpe.
+    // Sirve para feedback (VFX/sonido de bloqueo) sin tener que comparar magnitudes.
+    public bool WasBlocked;
+}
+
+public interface IIncomingDamageModifier
+{
+    // Ajusta el contexto de un golpe que va a recibir el dueño de este modificador.
+    void ModifyIncomingDamage(ref IncomingDamageContext ctx);
+}

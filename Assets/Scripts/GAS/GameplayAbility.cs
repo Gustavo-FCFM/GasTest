@@ -269,6 +269,21 @@ public abstract class GameplayAbility : ScriptableObject
     // la habilidad de nivel superior.
     public virtual AnimationClip GetStepAnimationClip(int sequenceIndex, int stepIndex) => null;
 
+    // De qué habilidad hay que sacar la animación al activar ESTA. Por defecto, de
+    // sí misma — que es el caso de todas menos las que DELEGAN en otra.
+    //
+    // Existe por las habilidades "envoltorio" (GA_TagSwitch: el ataque principal que
+    // cambia según un tag). Ahí la animación correcta no es la del envoltorio —que ni
+    // siquiera tiene clip— sino la de la variante que realmente se va a ejecutar. Sin
+    // este gancho, el dueño predecía la animación del envoltorio (un trigger sin
+    // estado asociado) y a los observadores les llegaba su índice de registro, así
+    // que ninguno veía el ataque de verdad.
+    //
+    // Lo consultan PlayerController.ApplyAbilityAnimation (predicción del dueño) y
+    // NetworkASC.ServerActivateAbility (réplica a observadores), o sea las DOS puntas.
+    // Se puede resolver en el dueño porque los tags se sincronizan.
+    public virtual GameplayAbility ResolveAnimationSource() => this;
+
     // Para no repetir el aviso de "CooldownEffect sin tag" en cada activación.
     [System.NonSerialized] private bool _warnedNoCooldownTag;
 
@@ -423,6 +438,54 @@ public abstract class GameplayAbility : ScriptableObject
         if (effects == null || target == null) return;
         foreach (GameplayEffect effect in effects)
             if (effect != null) target.ApplyGameplayEffect(effect, OwnerASC);
+    }
+
+    // =========================================================
+    // EFECTOS A ALIADOS
+    // =========================================================
+
+    [Header("Efectos a Aliados")]
+    [Tooltip("Efectos que esta habilidad le aplica a los ALIADOS que alcance (mismo TeamID que el " +
+             "dueño, uno mismo incluido). Los campos de daño y AdditionalEffects de cada habilidad " +
+             "siguen siendo lo que se le aplica a los ENEMIGOS.\n\n" +
+             "Dejarlo VACÍO mantiene el comportamiento clásico: la habilidad ignora por completo a " +
+             "los aliados (no los detecta ni los atraviesa distinto). En cuanto tenga al menos un " +
+             "efecto, la habilidad empieza a considerarlos objetivos válidos — es lo que convierte " +
+             "un ataque normal en uno que daña enemigos Y cura aliados a su paso (Castigo divino " +
+             "del Paladín).")]
+    public List<GameplayEffect> AllyEffects;
+
+    // True si esta habilidad tiene algo que hacerle a los aliados. Las habilidades
+    // concretas lo consultan para decidir si un aliado detectado se saltea (el
+    // comportamiento de siempre) o se procesa.
+    public bool AffectsAllies => AllyEffects != null && AllyEffects.Count > 0;
+
+    // Aplica a 'target' lo que corresponda según su AFILIACIÓN con el dueño, y
+    // devuelve true si el objetivo era válido (o sea, si hubo que hacerle algo).
+    //
+    // Es el punto único que reparte "esto le pasa a los enemigos" vs "esto a los
+    // aliados", para que cada habilidad no repita el if. El daño va aparte porque
+    // cada habilidad lo dispara con su propio campo (DamageEffect) y necesita saber
+    // si el golpe conectó (para el VFX de impacto y la carga de ultimate).
+    protected bool ApplyAffiliationEffects(AbilitySystemComponent target, GameplayEffect enemyDamage)
+    {
+        if (target == null) return false;
+
+        if (IsEnemy(target))
+        {
+            if (enemyDamage != null) target.ApplyGameplayEffect(enemyDamage, OwnerASC);
+            return true;
+        }
+
+        // Aliado (incluido uno mismo): solo cuenta como objetivo si la habilidad
+        // tiene efectos para aliados configurados.
+        if (AffectsAllies && IsAlly(target))
+        {
+            ApplyEffectsTo(AllyEffects, target);
+            return true;
+        }
+
+        return false;
     }
 
     // =========================================================

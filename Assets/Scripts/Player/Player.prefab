@@ -845,6 +845,15 @@ MonoBehaviour:
   ActionClipStateID: 99
   ActionClipTrigger: AttackTrigger
   ActionSpeedParam: ActionSpeedMult
+  HoldLoopSlotName: PLACEHOLDER_HoldLoop
+  HoldStartSlotName: PLACEHOLDER_HoldStart
+  HoldEndSlotName: PLACEHOLDER_HoldEnd
+  HoldImpactSlotName: PLACEHOLDER_HoldImpact
+  HoldStateID: 98
+  HoldImpactStateID: 97
+  HoldTrigger: HoldTrigger
+  HoldImpactTrigger: HoldImpactTrigger
+  HoldingParam: IsHolding
   MainHandSocket: {fileID: 7146974001845245483}
   OffHandSocket: {fileID: 8897914063047295575}
   MovementAbility: {fileID: 0}

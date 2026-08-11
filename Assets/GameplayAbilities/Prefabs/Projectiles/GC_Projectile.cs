@@ -20,6 +20,9 @@ public class GC_Projectile : NetworkBehaviour
     private GameplayEffect damageEffect;    // Daño instantáneo al impactar
     private GameplayEffect durationEffect;  // Efecto con duración adicional al impactar
     private List<GameplayEffect> additionalEffects; // Efectos EXTRA al impactar (opcional)
+    // Efectos que se le aplican a los ALIADOS que atraviesa (curaciones, escudos...).
+    // Vacío = el proyectil los ignora por completo, como hizo siempre.
+    private List<GameplayEffect> allyEffects;
     private AbilitySystemComponent sourceASC; // Quién disparó (solo poblado en el servidor)
     private float lifeTime = 5f;
     private float ultChargeAmount = 0f;
@@ -32,6 +35,10 @@ public class GC_Projectile : NetworkBehaviour
     // Enemigos ya golpeados, para no repetir daño en el mismo frame si el
     // proyectil atraviesa varios colliders del mismo objetivo.
     private HashSet<AbilitySystemComponent> enemiesHit = new HashSet<AbilitySystemComponent>();
+
+    // Lo mismo del lado aliado: un proyectil que cura y atraviesa no debe curar
+    // varias veces al mismo aliado mientras lo recorre.
+    private HashSet<AbilitySystemComponent> alliesHit = new HashSet<AbilitySystemComponent>();
 
     // Quién disparó, sincronizado a TODOS los peers. sourceASC (arriba) solo
     // se llena en el servidor porque Initialize() solo corre ahí — pero el
@@ -96,7 +103,9 @@ public class GC_Projectile : NetworkBehaviour
     // resolver el impacto y publicar quién disparó.
     // Nota: la velocidad NO se pasa acá — la setea GA_ProjectileShoot.SpawnProjectile
     // directo sobre el Rigidbody. Antes había un parámetro 'speed' que no se usaba.
-    public void Initialize(GameplayEffect damage, GameplayEffect durationEffect, AbilitySystemComponent source, float ultCharge, GameObject impactVFX, GameplayAbility ability = null, List<GameplayEffect> extraEffects = null)
+    // 'allyEffects' y 'lifeTimeSeconds' son opcionales: sin ellos el proyectil se
+    // comporta igual que siempre (ignora aliados, vive 5 segundos).
+    public void Initialize(GameplayEffect damage, GameplayEffect durationEffect, AbilitySystemComponent source, float ultCharge, GameObject impactVFX, GameplayAbility ability = null, List<GameplayEffect> extraEffects = null, List<GameplayEffect> allyEffects = null, float lifeTimeSeconds = 0f)
     {
         damageEffect         = damage;
         this.durationEffect  = durationEffect;
@@ -105,6 +114,11 @@ public class GC_Projectile : NetworkBehaviour
         impactVfxPrefab      = impactVFX;
         sourceAbility        = ability;
         additionalEffects    = extraEffects;
+        this.allyEffects     = allyEffects;
+
+        // Alcance del proyectil expresado como tiempo de vuelo: con velocidad
+        // constante, "vive 2s" es "llega hasta 2s × velocidad". 0 = dejar el default.
+        if (lifeTimeSeconds > 0f) lifeTime = lifeTimeSeconds;
 
         // Publicamos quién disparó para que cada cliente pueda resolver su
         // propia arma local (ver comentario en _shooterNob más arriba).
@@ -141,24 +155,31 @@ public class GC_Projectile : NetworkBehaviour
         if (!IsServerInitialized) return;
 
         if (sourceASC != null && other.gameObject == sourceASC.gameObject) return;
+
+        // BARRERA (escudo del Paladín y compañía). Va ANTES del descarte de triggers
+        // de abajo a propósito: la barrera ES un trigger (para no empujar a nadie ni
+        // pelearse con el CharacterController de su dueño), así que si la dejáramos
+        // caer en ese return el proyectil la atravesaría como si no existiera.
+        //
+        // Solo para una barrera LEVANTADA y ENEMIGA: los proyectiles de tu propio
+        // equipo la cruzan sin frenarse, como en cualquier hero shooter.
+        Entity_ShieldBarrier barrier = other.GetComponent<Entity_ShieldBarrier>();
+        if (barrier != null)
+        {
+            if (!barrier.IsRaised || !barrier.IsHostile(sourceASC)) return;
+
+            barrier.NotifyProjectileBlocked();
+            PlayImpactVFXEverywhere();
+            DespawnSelf();
+            return;
+        }
+
         if (other.isTrigger) return;
 
         AbilitySystemComponent targetASC = other.GetComponentInParent<AbilitySystemComponent>();
 
-        // 1. Instanciar VFX si existe (Independiente de lo que golpeemos)
-        // OnTriggerEnter ya está garantizado server-only (guard de arriba),
-        // así que reusamos el mismo mecanismo que las demás habilidades:
-        // el servidor lo reproduce localmente y le avisa a cada cliente que
-        // haga lo mismo con SU PROPIA copia de esta misma habilidad (sin
-        // necesidad de sincronizar el GameObject del VFX en sí).
-        if (impactVfxPrefab != null && sourceAbility != null && sourceASC != null)
-        {
-            NetworkAbilitySystemComponent shooterNetAsc = sourceASC.GetComponent<NetworkAbilitySystemComponent>();
-            if (shooterNetAsc != null)
-                shooterNetAsc.ServerPlayAbilityVFX(sourceAbility, transform.position);
-            else
-                sourceAbility.PlayImpactVFX(transform.position); // fallback sin red
-        }
+        // 1. VFX de impacto, sea lo que sea lo que golpeamos.
+        PlayImpactVFXEverywhere();
 
         // 2. ¿Es un personaje?
         if (targetASC != null)
@@ -193,8 +214,17 @@ public class GC_Projectile : NetworkBehaviour
             // B) Es aliado
             else
             {
-                // Si es aliado, no hacemos daño.
-                // El proyectil lo atraviesa por defecto porque no lo destruimos aquí.
+                // Nunca le hacemos daño, pero SÍ le aplicamos los efectos de aliado
+                // si la habilidad los trae (Castigo divino del Paladín: la estela
+                // daña enemigos y cura aliados a su paso). Sin ellos la lista está
+                // vacía y esto no hace nada, que es el comportamiento de siempre.
+                //
+                // El proyectil lo atraviesa en los dos casos: no lo destruimos acá.
+                if (allyEffects != null && alliesHit.Add(targetASC))
+                {
+                    foreach (var effect in allyEffects)
+                        if (effect != null) targetASC.ApplyGameplayEffect(effect, sourceASC);
+                }
             }
         }
         else
@@ -203,6 +233,22 @@ public class GC_Projectile : NetworkBehaviour
             // Si llegamos aquí, no tiene ASC y no es trigger.
             DespawnSelf();
         }
+    }
+
+    // Reproduce el VFX de impacto en TODOS los peers. Un Instantiate() local acá
+    // solo existiría en el proceso servidor (que es donde corre OnTriggerEnter), así
+    // que reusamos el mismo mecanismo que las demás habilidades: el servidor lo
+    // reproduce y le avisa a cada cliente que haga lo mismo con SU PROPIA copia de
+    // esta habilidad, sin sincronizar el GameObject del VFX en sí.
+    private void PlayImpactVFXEverywhere()
+    {
+        if (impactVfxPrefab == null || sourceAbility == null || sourceASC == null) return;
+
+        NetworkAbilitySystemComponent shooterNetAsc = sourceASC.GetComponent<NetworkAbilitySystemComponent>();
+        if (shooterNetAsc != null)
+            shooterNetAsc.ServerPlayAbilityVFX(sourceAbility, transform.position);
+        else
+            sourceAbility.PlayImpactVFX(transform.position); // fallback sin red
     }
 
     // Despawnea el proyectil en red (avisa a todos los clientes que

@@ -34,6 +34,14 @@ public class UI_PlayerHUD : MonoBehaviour
     public Slider ManaSlider;
     public TextMeshProUGUI ManaText;
 
+    [Header("Barra de Energía (Opcional)")]
+    [Tooltip("Recurso de las mecánicas de BLOQUEO (el escudo del Paladín/Guerrero). Igual que la " +
+             "de maná, el contenedor entero se oculta en las clases que no la usan — o sea, en las " +
+             "que su AttributeSetDefinition no define MaxEnergy.")]
+    public GameObject EnergyBarContainer;
+    public Slider EnergySlider;
+    public TextMeshProUGUI EnergyText;
+
     [Header("Panel Derecho (Habilidades)")]
     public UI_AbilitySlot slotShift;
     public UI_AbilitySlot slotQ;
@@ -102,6 +110,7 @@ public class UI_PlayerHUD : MonoBehaviour
 
             InitializeAbilitySlots();
             CheckIfManaExists();
+            CheckIfEnergyExists();
 
             if (LevelUpNotification != null) LevelUpNotification.SetActive(false);
         }
@@ -122,6 +131,7 @@ public class UI_PlayerHUD : MonoBehaviour
         if (asc == null) return;
         UpdateHealthUI();
         UpdateManaUI();
+        UpdateEnergyUI();
         UpdateFirstStrikeIndicator();
     }
 
@@ -187,6 +197,34 @@ public class UI_PlayerHUD : MonoBehaviour
         if (ManaBarContainer == null || asc == null) return;
         bool hasMana = asc.GetAttributeValue(EAttributeType.MaxMana) > 0;
         ManaBarContainer.SetActive(hasMana);
+    }
+
+    // =========================================================
+    // ENERGÍA (recurso de bloqueo)
+    // =========================================================
+
+    // Actualiza la barra de energía, si el panel está activo. La energía la
+    // consume el escudo al frenar daño y se regenera sola con el tiempo (un GE
+    // pasivo con Period en la clase — ver CharacterClassDefinition.PassiveEffects).
+    void UpdateEnergyUI()
+    {
+        if (EnergyBarContainer != null && !EnergyBarContainer.activeSelf) return;
+
+        float currentEnergy = asc.GetAttributeValue(EAttributeType.Energy);
+        float maxEnergy     = asc.GetAttributeValue(EAttributeType.MaxEnergy);
+        if (maxEnergy <= 0) maxEnergy = 1;
+
+        if (EnergySlider) EnergySlider.value = currentEnergy / maxEnergy;
+        if (EnergyText)   EnergyText.text    = $"{currentEnergy:F0} / {maxEnergy:F0}";
+    }
+
+    // Oculta el panel de energía entero si la clase actual no tiene MaxEnergy
+    // (o sea, en todas las que no usan mecánicas de bloqueo).
+    void CheckIfEnergyExists()
+    {
+        if (EnergyBarContainer == null || asc == null) return;
+        bool hasEnergy = asc.GetAttributeValue(EAttributeType.MaxEnergy) > 0;
+        EnergyBarContainer.SetActive(hasEnergy);
     }
 
     // =========================================================

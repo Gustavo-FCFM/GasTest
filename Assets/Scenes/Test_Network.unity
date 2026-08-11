@@ -756,7 +756,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6732329970705502742, guid: b9ae24c0801eef249b8cf224861422a9, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1047,7 +1047,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Abilities:
-  - {fileID: 11400000, guid: 2bfe0b6ac89ecfe4286e8ee01d24a4dd, type: 2}
+  - {fileID: 11400000, guid: fd24cab436f632c4c9710c0b95196996, type: 2}
   DrawDistanceRings: 1
   RingSpacing: 1
   RingCount: 10

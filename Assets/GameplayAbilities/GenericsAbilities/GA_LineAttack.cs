@@ -69,9 +69,9 @@ public class GA_LineAttack : GameplayAbility
     // todos los enemigos que caigan dentro, reproduciendo el VFX de golpe
     // en todos los peers.
     //
-    // enemiesHit lo provee HitTimingRoutine y se COMPARTE entre los frames de impacto
-    // del mismo golpe: así no se le pega dos veces al mismo enemigo.
-    private void PerformDamage(HashSet<AbilitySystemComponent> enemiesHit)
+    // targetsHit lo provee HitTimingRoutine y se COMPARTE entre los frames de impacto
+    // del mismo golpe: así no se le pega dos veces al mismo objetivo.
+    private void PerformDamage(HashSet<AbilitySystemComponent> targetsHit)
     {
         Vector3 origin    = OwnerASC.transform.position;
         Vector3 direction = OwnerASC.transform.forward;
@@ -84,19 +84,24 @@ public class GA_LineAttack : GameplayAbility
         foreach (var hit in hits)
         {
             AbilitySystemComponent targetASC = hit.GetComponentInParent<AbilitySystemComponent>();
-            if (targetASC != null && IsEnemy(targetASC) && !enemiesHit.Contains(targetASC))
+            if (targetASC == null || targetsHit.Contains(targetASC)) continue;
+
+            // Daño a enemigos, AllyEffects a aliados (ver GameplayAbility).
+            if (!ApplyAffiliationEffects(targetASC, DamageEffect)) continue;
+
+            if (IsEnemy(targetASC))
             {
-                if (DamageEffect != null) targetASC.ApplyGameplayEffect(DamageEffect, OwnerASC);
                 ApplyEffectsTo(AdditionalEffects, targetASC);
                 ChargeUltimate();
-                enemiesHit.Add(targetASC);
-
-                // Instantiate() acá solo se vería en el proceso servidor —
-                // ServerPlayAbilityVFX lo reproduce en todos los peers.
-                Vector3 hitPos = targetASC.transform.position + Vector3.up;
-                if (netAsc != null) netAsc.ServerPlayAbilityVFX(this, hitPos);
-                else PlayImpactVFX(hitPos);
             }
+
+            targetsHit.Add(targetASC);
+
+            // Instantiate() acá solo se vería en el proceso servidor —
+            // ServerPlayAbilityVFX lo reproduce en todos los peers.
+            Vector3 hitPos = targetASC.transform.position + Vector3.up;
+            if (netAsc != null) netAsc.ServerPlayAbilityVFX(this, hitPos);
+            else PlayImpactVFX(hitPos);
         }
     }
 

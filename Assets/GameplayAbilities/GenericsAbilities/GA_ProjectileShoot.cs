@@ -32,6 +32,13 @@ public class GA_ProjectileShoot : GameplayAbility
     // Efectos EXTRA que se aplican al golpear, además de los dos anteriores. Opcional.
     public List<GameplayEffect> AdditionalEffects;
 
+    [Tooltip("Alcance del proyectil expresado en SEGUNDOS de vuelo (con velocidad constante, " +
+             "alcance = LifeTime × LaunchForce). Pasado ese tiempo se despawnea solo aunque no haya " +
+             "chocado con nada. 0 = usar el default del prefab (5s).\n\n" +
+             "Para una estela/rayo que avanza lento y no cae, ponele al Rigidbody del prefab " +
+             "Use Gravity en false y bajá LaunchForce.")]
+    public float LifeTime = 0f;
+
     [Header("Sincronización")]
     // Espera entre activar la habilidad y que el proyectil realmente
     // salga (para sincronizar con la animación de disparo).
@@ -94,6 +101,15 @@ public class GA_ProjectileShoot : GameplayAbility
     // punto de mira del dueño.
     private void SpawnProjectile()
     {
+        // Sin prefab no hay nada que disparar. Sin este guard, Instantiate(null) tira
+        // una excepción que corta la corutina y deja al jugador trabado en "atacando"
+        // hasta que salta el watchdog — un fallo de configuración difícil de leer.
+        if (ProjectilePrefab == null)
+        {
+            Debug.LogWarning($"[{AbilityName}] no tiene ProjectilePrefab asignado: no se dispara nada.");
+            return;
+        }
+
         Vector3    spawnPos       = OwnerASC.transform.TransformPoint(SpawnOffset);
         Quaternion spawnRot       = Quaternion.identity;
         Vector3    launchDirection = Vector3.forward;
@@ -135,7 +151,11 @@ public class GA_ProjectileShoot : GameplayAbility
             // Le pasamos 'this' para que, al impactar (siempre en el
             // servidor), el proyectil pueda pedirle a NetworkASC que
             // reproduzca ImpactVFX en todos los peers vía PlayImpactVFX().
-            projectileScript.Initialize(InstantDamageEffect, DurationEffect, OwnerASC, UltimateChargeAmount, ImpactVFX, this, AdditionalEffects);
+            // AllyEffects viene de GameplayAbility: si está vacío el proyectil sigue
+            // ignorando a los aliados como siempre; si tiene algo, se lo aplica a los
+            // que atraviese (la estela del Castigo divino, que cura al pasar).
+            projectileScript.Initialize(InstantDamageEffect, DurationEffect, OwnerASC, UltimateChargeAmount,
+                                        ImpactVFX, this, AdditionalEffects, AllyEffects, LifeTime);
         }
 
         Rigidbody rb = newProjectile.GetComponent<Rigidbody>();

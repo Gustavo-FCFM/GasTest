@@ -77,6 +77,73 @@ public class PlayerController : NetworkBehaviour
              "entre justo en el ritmo de ataque (ver GameplayAbility.ResolveAnimationSpeed).")]
     public string ActionSpeedParam = "ActionSpeedMult";
 
+    // =========================================================
+    // RANURAS DE "MANTENER" (habilidades IHoldAbility)
+    //
+    // Mismo principio que la ranura de acción de arriba, pero en TRES tiempos:
+    // levantar (one-shot) → mantener (bucle) → bajar (one-shot). Los clips viven en
+    // el asset de la habilidad y se meten en runtime en estos placeholders, así no
+    // hace falta un estado por habilidad ni tocar el override de cada clase.
+    //
+    // SETUP MÍNIMO EN EL ANIMATOR BASE (AC_Player) — UN SOLO ESTADO:
+    //   · Parámetros: bool "IsHolding", trigger "HoldTrigger", int "ActionID" (ya está).
+    //   · 1 estado con el clip placeholder HoldLoopSlotName.
+    //   · AnyState  → HoldLoop:   ActionID == HoldStateID  +  trigger HoldTrigger.
+    //   · HoldLoop  → Locomotion: IsHolding == false  (SIN exit time: tiene que salir ya).
+    //
+    // Con eso alcanza y sobra: el escudo se levanta y se baja sin más. Las ranuras de
+    // LEVANTAR y BAJAR son OPCIONALES — solo hacen falta si querés esas dos poses de
+    // transición, y se agregan después sin tocar código:
+    //   · HoldStart entre AnyState y HoldLoop (HoldStart → HoldLoop por Exit Time).
+    //   · HoldEnd después del bucle (HoldLoop → HoldEnd con IsHolding == false, y
+    //     HoldEnd → Locomotion por Exit Time).
+    //
+    // OPCIONAL TAMBIÉN — reacción al recibir un golpe EN el escudo:
+    //   · 1 estado con el clip placeholder HoldImpactSlotName.
+    //   · AnyState    → HoldImpact: ActionID == HoldImpactStateID + trigger HoldImpactTrigger.
+    //   · HoldImpact  → HoldLoop:   por Exit Time, con IsHolding == true.
+    //   · HoldImpact  → Locomotion: IsHolding == false (por si te bajan el escudo en pleno golpe).
+    //
+    // Lo único IMPRESCINDIBLE es la ranura del bucle. Si falta, se avisa una vez por
+    // consola y la habilidad funciona igual, solo que sin animación.
+    // =========================================================
+
+    [Header("Animación — Mantener (escudo, canalizados)")]
+    [Tooltip("Clip placeholder del estado 'mantener' (en bucle) en el controller BASE. Es el " +
+             "ÚNICO obligatorio de los tres.")]
+    public string HoldLoopSlotName  = "PLACEHOLDER_HoldLoop";
+
+    [Tooltip("OPCIONAL: clip placeholder del estado 'levantar'. Vacío (o sin el estado en el " +
+             "Animator) = se entra directo al bucle.")]
+    public string HoldStartSlotName = "PLACEHOLDER_HoldStart";
+
+    [Tooltip("OPCIONAL: clip placeholder del estado 'bajar'. Vacío (o sin el estado en el " +
+             "Animator) = se sale del bucle directo a la locomoción.")]
+    public string HoldEndSlotName   = "PLACEHOLDER_HoldEnd";
+
+    [Tooltip("OPCIONAL: clip placeholder de la reacción al recibir un golpe mientras bloqueás " +
+             "(el escudo 'acusa' el impacto). Vacío = sin reacción.")]
+    public string HoldImpactSlotName = "PLACEHOLDER_HoldImpact";
+
+    [Tooltip("Valor de ActionID que lleva al estado de mantener (la transición desde AnyState " +
+             "se filtra por este número). Tiene que ser distinto de ActionClipStateID.")]
+    public int HoldStateID = 98;
+
+    [Tooltip("Valor de ActionID que lleva al estado de reacción al golpe en el escudo. Tiene que " +
+             "ser distinto de ActionClipStateID y de HoldStateID.")]
+    public int HoldImpactStateID = 97;
+
+    [Tooltip("Trigger que dispara la entrada al mantenido.")]
+    public string HoldTrigger = "HoldTrigger";
+
+    [Tooltip("Trigger que dispara la reacción al golpe en el escudo.")]
+    public string HoldImpactTrigger = "HoldImpactTrigger";
+
+    [Tooltip("Parámetro BOOL que sostiene el bucle: mientras esté en true el personaje se queda " +
+             "en el estado de mantener; al ponerse en false sale (al estado de bajar si existe, " +
+             "o directo a la locomoción).")]
+    public string HoldingParam = "IsHolding";
+
     // Copia en RUNTIME del controller (base + overrides de la clase). Es la que
     // permite intercambiar el clip de la ranura de acción sin tocar los assets.
     private AnimatorOverrideController _runtimeAnimator;
@@ -89,6 +156,17 @@ public class PlayerController : NetworkBehaviour
     private string _actionSlotKey;
     private bool HasActionSlot => !string.IsNullOrEmpty(_actionSlotKey);
     private bool _warnedNoActionSlot;
+
+    // Llaves reales de las ranuras de mantener (mismo criterio que _actionSlotKey).
+    private string _holdStartKey, _holdLoopKey, _holdEndKey, _holdImpactKey;
+    // Qué clip está puesto ahora en cada una, para no provocar rebinds al pedo.
+    private AnimationClip _currentHoldStart, _currentHoldLoop, _currentHoldEnd, _currentHoldImpact;
+
+    // El BUCLE es lo único imprescindible: levantar, bajar y la reacción al golpe son
+    // estados opcionales del Animator, y sin ellos el mantenido funciona igual.
+    private bool HasHoldSlots   => !string.IsNullOrEmpty(_holdLoopKey);
+    private bool HasHoldImpact  => !string.IsNullOrEmpty(_holdImpactKey);
+    private bool _warnedNoHoldSlots;
 
     [Header("Huesos")]
     public Transform MainHandSocket;
@@ -187,11 +265,20 @@ public class PlayerController : NetworkBehaviour
     private GameplayAbility _groundTargetAbility;
     private EAbilityInput   _groundTargetSlot;
 
+    // Habilidad de MANTENER (IHoldAbility) que el dueño está sosteniendo ahora
+    // mismo, y en qué slot está. null = no hay ninguna. Ver ProcessHoldRelease.
+    private GameplayAbility _holdAbility;
+    private EAbilityInput   _holdSlot;
+
+    // True mientras el dueño sostiene una habilidad de mantener.
+    public bool IsHoldingAbility => _holdAbility != null;
+
     // True mientras se mantiene apretada una habilidad que se apunta antes de
-    // lanzarse (menú radial o zona en el suelo). En ese estado isAttacking está en
-    // true a propósito, pero HAY que seguir leyendo el input para detectar cuándo
-    // se suelta el botón — y el watchdog no debe contar.
-    private bool IsAimingAbility => isRadialMenuOpen || _groundTargetAbility != null;
+    // lanzarse (menú radial o zona en el suelo), o una de MANTENER. En ese estado
+    // isAttacking está en true a propósito, pero HAY que seguir leyendo el input
+    // para detectar cuándo se suelta el botón — y el watchdog no debe contar (un
+    // escudo puede sostenerse mucho más que MaxAttackSeconds).
+    private bool IsAimingAbility => isRadialMenuOpen || _groundTargetAbility != null || IsHoldingAbility;
 
     // Bloquea el input del dueño (movimiento y habilidades) mientras un menú
     // modal está abierto — ej. la selección de clase (UI_ClassMenu).
@@ -423,7 +510,12 @@ public class PlayerController : NetworkBehaviour
         // rotación del personaje. Mientras se ejecuta una habilidad no tocamos
         // la rotación: varias (salto, dash, ataques) orientan al personaje a
         // propósito hacia el punto de mira.
-        if (!isAttacking) FaceCameraForward();
+        //
+        // EXCEPCIÓN: las habilidades de MANTENER (escudo). Ahí isAttacking está en
+        // true todo el rato que sostenés el botón, y sin esta excepción el cuerpo
+        // quedaba clavado mirando a donde apuntabas al levantar el escudo — o sea
+        // que no podías APUNTARLO, que es justamente de lo que se trata.
+        if (!isAttacking || IsHoldingAbility) FaceCameraForward();
 
         // Dash 3D (Dash siniestro): movimiento recto en la dirección apuntada,
         // incluyendo arriba/abajo, SIN gravedad durante el impulso. Se atenúa
@@ -625,10 +717,20 @@ public class PlayerController : NetworkBehaviour
     private void CheckAbilityButton(UnityEngine.InputSystem.InputAction action, GameplayAbility ability, EAbilityInput slot)
     {
         if (ability == null || action == null) return;
+
         if (action.WasPressedThisFrame())
+        {
             ProcessAbilityPress(ability, slot);
-        else if (action.WasReleasedThisFrame() && (currentRadialAbility == ability || _groundTargetAbility == ability))
-            ProcessAbilityRelease();
+        }
+        else if (action.WasReleasedThisFrame())
+        {
+            // Habilidad de MANTENER: soltar la TERMINA (a diferencia del radial y
+            // la zona en el suelo, donde soltar es lo que recién la lanza).
+            if (_holdAbility == ability)
+                ProcessHoldRelease();
+            else if (currentRadialAbility == ability || _groundTargetAbility == ability)
+                ProcessAbilityRelease();
+        }
     }
 
     // Al presionar el input de una habilidad: si es de menú radial, abre
@@ -636,6 +738,12 @@ public class PlayerController : NetworkBehaviour
     // activación al servidor.
     private void ProcessAbilityPress(GameplayAbility ability, EAbilityInput slot)
     {
+        // Con una habilidad de MANTENER activa no se puede empezar ninguna otra: el
+        // escudo ocupa las manos. El input se sigue leyendo igual (HandleAbilityInput
+        // no corta por IsAimingAbility) porque hace falta detectar cuándo se SUELTA
+        // la que está en curso — pero las demás presiones se descartan acá.
+        if (IsHoldingAbility) return;
+
         if (ability is IRadialMenuAbility radial)
         {
             if (!ability.CanActivate()) return;
@@ -644,6 +752,26 @@ public class PlayerController : NetworkBehaviour
             isRadialMenuOpen     = true;
             currentRadialAbility = ability;
             if (UI_RadialMenu.Instance != null) UI_RadialMenu.Instance.Show(radial);
+        }
+        else if (ability is IHoldAbility)
+        {
+            // Habilidad de MANTENER: se activa por el camino NORMAL (el servidor
+            // valida y arranca el estado), y queda registrada acá para que soltar el
+            // botón la termine. isAttacking se sostiene todo el mantenido — bloquea
+            // las demás habilidades pero no el movimiento, y IsAimingAbility saca al
+            // watchdog del medio (un escudo puede durar más que MaxAttackSeconds).
+            if (!ability.CanActivate()) return;
+
+            isAttacking      = true;
+            _attackStartTime = Time.time;
+            _holdAbility     = ability;
+            _holdSlot        = slot;
+
+            // Predicción local del "levantar", mismo criterio que el camino normal:
+            // solo en cliente remoto (en el host la dispara el Activate del servidor).
+            if (!IsServerInitialized) PlayHoldAnimation(ability);
+
+            RequestAbility(slot);
         }
         else if (ability is IGroundTargetAbility ground && ground.UsesGroundTarget)
         {
@@ -726,6 +854,29 @@ public class PlayerController : NetworkBehaviour
         // Reiniciar el reloj del watchdog: recién ahora isAttacking pasa a
         // contar para el timeout (mientras se apuntaba no contaba).
         _attackStartTime     = Time.time;
+    }
+
+    // Al SOLTAR el botón de una habilidad de mantener: baja la animación en el acto
+    // (feedback inmediato, sin esperar el round-trip) y le pide al servidor que
+    // termine el estado real.
+    //
+    // isAttacking NO se libera acá: eso lo hace el servidor cuando la habilidad
+    // llama EndAbility() al terminar de verdad (llega por ObserversFinishAttack).
+    // Soltar antes de tiempo el bloqueo local dejaría al jugador atacar mientras el
+    // servidor todavía lo tiene con el escudo arriba.
+    private void ProcessHoldRelease()
+    {
+        GameplayAbility ability = _holdAbility;
+        _holdAbility = null;
+
+        StopHoldAnimation();
+
+        if (NetASC != null) NetASC.ServerRequestEndHoldAbility(_holdSlot);
+        else if (ability is IHoldAbility hold) hold.EndHold(); // fallback singleplayer
+
+        // Recién ahora isAttacking pasa a contar para el watchdog (mientras se
+        // mantenía, IsAimingAbility lo excluía).
+        _attackStartTime = Time.time;
     }
 
     // Mientras se mantiene una habilidad de zona, el marcador sigue la mira
@@ -815,7 +966,21 @@ public class PlayerController : NetworkBehaviour
 
     // Libera el estado "atacando" — lo llama GameplayAbility.EndAbility()
     // (directo o vía RPC) al terminar una habilidad.
-    public void FinishAttack() => isAttacking = false;
+    //
+    // También cierra el estado de MANTENER si quedó abierto. Cubre los dos casos en
+    // que el mantenido termina sin que el jugador suelte el botón: que el servidor
+    // rechace la activación (NotifyOwnerAbilityRejected) y que la corte por su
+    // cuenta (quedarse sin energía, morir). Sin esto el escudo se quedaba "pegado"
+    // en el cliente: la animación de mantener seguía y soltar el botón mandaba un
+    // fin de algo que ya no existía.
+    public void FinishAttack()
+    {
+        isAttacking = false;
+
+        if (_holdAbility == null) return;
+        _holdAbility = null;
+        StopHoldAnimation();
+    }
 
     // =========================================================
     // MUERTE Y RESPAWN
@@ -1208,21 +1373,40 @@ public class PlayerController : NetworkBehaviour
         // nombre EXACTO del clip: el indexador del AnimatorOverrideController sí
         // distingue mayúsculas y, si no coincide al carácter, la asignación no hace
         // nada EN SILENCIO (el ataque se quedaría con el clip placeholder).
-        _actionSlotKey = null;
-        if (!string.IsNullOrEmpty(ActionClipSlotName))
+        var slots = new List<KeyValuePair<AnimationClip, AnimationClip>>();
+        _runtimeAnimator.GetOverrides(slots);
+
+        _actionSlotKey = ResolveSlotKey(slots, ActionClipSlotName);
+
+        // Ranuras de mantener (escudo y compañía). Se resuelven una por una y por
+        // separado a propósito: todas menos el bucle son opcionales, así que la que
+        // no exista simplemente queda en null y se saltea al animar.
+        _holdLoopKey   = ResolveSlotKey(slots, HoldLoopSlotName);
+        _holdStartKey  = ResolveSlotKey(slots, HoldStartSlotName);
+        _holdEndKey    = ResolveSlotKey(slots, HoldEndSlotName);
+        _holdImpactKey = ResolveSlotKey(slots, HoldImpactSlotName);
+        _currentHoldStart = _currentHoldLoop = _currentHoldEnd = _currentHoldImpact = null;
+    }
+
+    // Busca en los overrides del controller el clip placeholder que se llame
+    // 'slotName' y devuelve su nombre EXACTO (la llave de esa ranura), o null si no
+    // existe.
+    //
+    // La búsqueda ignora mayúsculas/minúsculas por comodidad, pero se guarda el
+    // nombre exacto: el indexador del AnimatorOverrideController sí las distingue y,
+    // si no coincide al carácter, la asignación no hace nada EN SILENCIO (la
+    // habilidad se quedaría con el clip placeholder).
+    private static string ResolveSlotKey(List<KeyValuePair<AnimationClip, AnimationClip>> slots, string slotName)
+    {
+        if (string.IsNullOrEmpty(slotName)) return null;
+
+        foreach (var pair in slots)
         {
-            var slots = new List<KeyValuePair<AnimationClip, AnimationClip>>();
-            _runtimeAnimator.GetOverrides(slots);
-            foreach (var pair in slots)
-            {
-                if (pair.Key == null) continue;
-                if (string.Equals(pair.Key.name, ActionClipSlotName, System.StringComparison.OrdinalIgnoreCase))
-                {
-                    _actionSlotKey = pair.Key.name;
-                    break;
-                }
-            }
+            if (pair.Key == null) continue;
+            if (string.Equals(pair.Key.name, slotName, System.StringComparison.OrdinalIgnoreCase))
+                return pair.Key.name;
         }
+        return null;
     }
 
     // Pone un clip en la ranura genérica de acción. Solo reasigna si cambió: cada
@@ -1259,6 +1443,11 @@ public class PlayerController : NetworkBehaviour
     public void ApplyAbilityAnimation(GameplayAbility ability, float animationSpeed = -1f)
     {
         if (characterAnimator == null || ability == null) return;
+
+        // Las habilidades "envoltorio" (el ataque principal que cambia según un tag)
+        // delegan su animación en la variante que realmente se ejecuta. Para todas
+        // las demás esto devuelve la misma habilidad. Ver ResolveAnimationSource.
+        ability = ability.ResolveAnimationSource() ?? ability;
 
         // Camino nuevo: el clip viene en el propio asset de la habilidad. Requiere que
         // la ranura exista en el Animator; si no, seguimos con el esquema viejo (si
@@ -1336,6 +1525,108 @@ public class PlayerController : NetworkBehaviour
 
         characterAnimator.SetInteger("ActionID", ActionClipStateID);
         if (!string.IsNullOrEmpty(ActionClipTrigger)) characterAnimator.SetTrigger(ActionClipTrigger);
+    }
+
+    // =========================================================
+    // ANIMACIÓN DE MANTENER (IHoldAbility)
+    // =========================================================
+
+    // Arranca la animación de mantener de una habilidad en la copia DUEÑA
+    // (levantar → bucle). Entrada que usan las habilidades y la predicción del input.
+    public void PlayHoldAnimation(GameplayAbility ability)
+    {
+        // Mismo guard que PlayAnimation: Activate() corre en el servidor y no debe
+        // animar copias ajenas (los observadores lo reciben por su propio RPC).
+        if (IsSpawned && !IsOwner) return;
+        ApplyHoldAnimation(ability);
+    }
+
+    // Termina la animación de mantener en la copia DUEÑA (bucle → bajar).
+    public void StopHoldAnimation()
+    {
+        if (IsSpawned && !IsOwner) return;
+        ApplyStopHoldAnimation();
+    }
+
+    // Igual que PlayHoldAnimation pero SIN guard de dueño: la usa la réplica a
+    // observadores (NetworkAbilitySystemComponent), que corre justamente sobre
+    // copias que no son el dueño.
+    //
+    // Los tres clips salen del asset de la habilidad, así que cada peer resuelve los
+    // suyos desde el registro y no hay que mandar nada más que el índice.
+    public void ApplyHoldAnimation(GameplayAbility ability)
+    {
+        if (characterAnimator == null || ability is not IHoldAbility hold) return;
+
+        if (!HasHoldSlots)
+        {
+            if (!_warnedNoHoldSlots)
+            {
+                _warnedNoHoldSlots = true;
+                Debug.LogWarning($"[PlayerController] '{ability.AbilityName}' es una habilidad de mantener, " +
+                                 $"pero el controller no tiene la ranura del bucle ('{HoldLoopSlotName}'). " +
+                                 $"La habilidad funciona igual, pero sin animación: alcanza con crear UN " +
+                                 $"estado con ese clip placeholder en AC_Player (ver el bloque de " +
+                                 $"comentarios de HoldLoopSlotName).");
+            }
+            return;
+        }
+
+        SetHoldClips(hold.HoldStartClip, hold.HoldLoopClip, hold.HoldEndClip);
+
+        // El bool va ANTES del trigger: si se seteara después, el Animator podría
+        // evaluar la transición bucle → bajar con IsHolding todavía en false (del
+        // mantenido anterior) y salir del bucle en el primer frame.
+        if (!string.IsNullOrEmpty(HoldingParam)) characterAnimator.SetBool(HoldingParam, true);
+
+        // El ActionID igual hay que setearlo: la transición sale de AnyState filtrada
+        // por ese número (mismo esquema que la ranura de acción).
+        characterAnimator.SetInteger("ActionID", HoldStateID);
+        if (!string.IsNullOrEmpty(HoldTrigger)) characterAnimator.SetTrigger(HoldTrigger);
+    }
+
+    // Igual que StopHoldAnimation pero SIN guard de dueño (para observadores).
+    // Basta con bajar el bool: la transición bucle → bajar la resuelve el Animator.
+    public void ApplyStopHoldAnimation()
+    {
+        if (characterAnimator == null || string.IsNullOrEmpty(HoldingParam)) return;
+        characterAnimator.SetBool(HoldingParam, false);
+    }
+
+    // Reacción al recibir un golpe MIENTRAS se bloquea (el escudo acusa el impacto).
+    // Es un one-shot que sale del bucle y vuelve solo. Todo opcional: sin clip o sin
+    // el estado en el Animator, no hace nada.
+    //
+    // Sin guard de dueño: la usan por igual el dueño y la réplica a observadores.
+    public void ApplyHoldImpactAnimation(AnimationClip clip)
+    {
+        if (characterAnimator == null || clip == null || !HasHoldImpact) return;
+
+        if (clip != _currentHoldImpact)
+        {
+            _runtimeAnimator[_holdImpactKey] = clip;
+            _currentHoldImpact = clip;
+        }
+
+        characterAnimator.SetInteger("ActionID", HoldImpactStateID);
+        if (!string.IsNullOrEmpty(HoldImpactTrigger)) characterAnimator.SetTrigger(HoldImpactTrigger);
+    }
+
+    // Mete los clips en sus ranuras, salteando las que no existen (levantar, bajar e
+    // impacto son opcionales) y las que no cambiaron — cada override provoca un rebind
+    // del Animator, así que levantar el escudo dos veces seguidas no debe tocarlo.
+    private void SetHoldClips(AnimationClip start, AnimationClip loop, AnimationClip end)
+    {
+        if (_runtimeAnimator == null) return;
+
+        if (loop != null && loop != _currentHoldLoop && !string.IsNullOrEmpty(_holdLoopKey))
+        { _runtimeAnimator[_holdLoopKey] = loop; _currentHoldLoop = loop; }
+
+        if (start != null && start != _currentHoldStart && !string.IsNullOrEmpty(_holdStartKey))
+        { _runtimeAnimator[_holdStartKey] = start; _currentHoldStart = start; }
+
+        if (end != null && end != _currentHoldEnd && !string.IsNullOrEmpty(_holdEndKey))
+        { _runtimeAnimator[_holdEndKey] = end; _currentHoldEnd = end; }
     }
 
     // Setea ActionID + trigger en el Animator, sin ningún guard. Lo comparten la

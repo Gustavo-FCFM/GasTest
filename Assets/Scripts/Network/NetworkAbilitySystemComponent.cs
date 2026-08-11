@@ -710,15 +710,25 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
 
         ability.Activate();
 
+        // Una habilidad de MANTENER no anima con un clip one-shot sino con un estado
+        // sostenido: su Activate() ya mandó ServerBroadcastHoldAnimation. Mandar acá
+        // además el clip suelto pisaría ese estado apenas se levanta.
+        if (ability is IHoldAbility) return;
+
+        // De qué habilidad sale la animación: normalmente ella misma, pero las
+        // envoltorio (ataque que cambia según un tag) delegan en su variante — y hay
+        // que resolverlo DESPUÉS de Activate(), cuando el tag ya se consumió o no.
+        GameplayAbility animSource = ability.ResolveAnimationSource() ?? ability;
+
         // Mandamos también el índice del registro: con él, cada observador resuelve el
         // asset y puede usar su AnimationClip (esquema nuevo). Sin índice válido, el
         // trigger + ActionID alcanzan para el esquema viejo.
         int animIndex = GameplayAbilityRegistry.Instance != null
-            ? GameplayAbilityRegistry.Instance.GetIndex(ability) : -1;
+            ? GameplayAbilityRegistry.Instance.GetIndex(animSource) : -1;
         // La velocidad se calcula ACÁ (el servidor tiene el dueño y sus stats); en el
         // observador la habilidad es el template del registro y no podría resolverla.
-        ObserversPlayAbilityAnimation(animIndex, ability.AnimationTriggerName, ability.AnimationID,
-                                      ability.ResolveAnimationSpeed());
+        ObserversPlayAbilityAnimation(animIndex, animSource.AnimationTriggerName, animSource.AnimationID,
+                                      animSource.ResolveAnimationSpeed());
     }
 
     // El NetworkAnimator del prefab NO sincroniza los SetTrigger de forma
@@ -763,6 +773,80 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     public void ServerBroadcastAbilityAnimation(string trigger, int actionID)
     {
         ObserversPlayAbilityAnimation(-1, trigger, actionID, -1f);
+    }
+
+    // =========================================================
+    // HABILIDADES DE MANTENER (IHoldAbility — escudo del Paladín, etc.)
+    //
+    // La ACTIVACIÓN va por el camino normal (ServerRequestActivateAbility). Lo que
+    // hace falta acá es el otro extremo: avisarle al servidor que el dueño SOLTÓ el
+    // botón, y replicar el levantar/bajar de la animación a los observadores (que
+    // no reciben nada por ObserversPlayAbilityAnimation, porque un mantenido no es
+    // un clip one-shot sino un estado con bool).
+    // =========================================================
+
+    // El dueño soltó el botón. Se busca la habilidad del slot y se le pide que
+    // termine; EndHold es idempotente, así que un pedido duplicado (soltar justo
+    // cuando el servidor ya la cortó por falta de energía) no hace nada.
+    [ServerRpc]
+    public void ServerRequestEndHoldAbility(EAbilityInput inputSlot)
+    {
+        GameplayAbility ability = FindAbilityBySlot(inputSlot);
+        if (ability is IHoldAbility hold) hold.EndHold();
+    }
+
+    // Qué le pedimos a los observadores respecto de la animación de mantenido.
+    public enum EHoldAnimationPhase
+    {
+        Start,   // levantar → entrar al bucle
+        Stop,    // salir del bucle (bajar)
+        Impact   // reacción one-shot al recibir un golpe en el escudo, sin salir del mantenido
+    }
+
+    // Replica una fase de la animación de mantenido a los observadores. La habilidad
+    // viaja por índice de registro para que cada peer resuelva SUS clips desde su
+    // propia copia del asset.
+    [Server]
+    public void ServerBroadcastHoldAnimation(GameplayAbility ability, EHoldAnimationPhase phase)
+    {
+        int index = GameplayAbilityRegistry.Instance != null
+            ? GameplayAbilityRegistry.Instance.GetIndex(ability) : -1;
+
+        if (index < 0 && phase != EHoldAnimationPhase.Stop)
+            Debug.LogWarning($"[NetworkASC] '{ability?.AbilityName}' no está en GameplayAbilityRegistry — " +
+                             $"su animación de mantenido no se replicará a los clientes remotos.");
+
+        ObserversPlayHoldAnimation(index, phase);
+    }
+
+    [ObserversRpc]
+    private void ObserversPlayHoldAnimation(int abilityIndex, EHoldAnimationPhase phase)
+    {
+        // Levantar y bajar los salteamos en el DUEÑO: ya los disparó por predicción
+        // (cliente remoto) o vía Activate()/ProcessHoldRelease (host).
+        //
+        // El IMPACTO no: es un evento que nace en el SERVIDOR (lo dispara la barrera al
+        // frenar daño), así que el dueño remoto no lo predijo y sí necesita recibirlo.
+        // Solo se saltea el personaje del HOST, donde el propio evento ya lo animó —
+        // mismo criterio que ObserversPlayComboStepAnimation.
+        bool skip = phase == EHoldAnimationPhase.Impact
+            ? (IsServerInitialized && IsOwner)
+            : IsOwner;
+        if (skip) return;
+
+        PlayerController pc = GetComponent<PlayerController>();
+        if (pc == null) return;
+
+        // Bajar solo necesita el bool, así que no depende de resolver la habilidad:
+        // si el índice no estaba registrado, al menos el escudo no queda pegado.
+        if (phase == EHoldAnimationPhase.Stop) { pc.ApplyStopHoldAnimation(); return; }
+
+        GameplayAbility ability = abilityIndex >= 0
+            ? GameplayAbilityRegistry.Instance?.GetAbility(abilityIndex) : null;
+        if (ability == null) return;
+
+        if (phase == EHoldAnimationPhase.Start) pc.ApplyHoldAnimation(ability);
+        else if (ability is IHoldAbility hold)  pc.ApplyHoldImpactAnimation(hold.HoldImpactClip);
     }
 
     // =========================================================
