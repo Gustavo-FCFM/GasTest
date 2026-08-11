@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d7b10a5bff65714b92132ef46073a0c, type: 3}
+  m_Name: GA_SmiteBeam
+  m_EditorClassIdentifier: 
+  AbilityName: Smite
+  AbilityIcon: {fileID: 0}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 0}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 1
+  ActivationBlockedTags: 
+  ActivationRequiredTags: 
+  AnimationClip: {fileID: 0}
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  VisualsSequence: []
+  AllyEffects:
+  - {fileID: 11400000, guid: e020fa4d41da96d43b303363eadf0129, type: 2}
+  ProjectilePrefab: {fileID: 406129108226925510, guid: 8c21a3df091c8204ea5a34229c270862, type: 3}
+  LaunchForce: 12
+  SpawnOffset: {x: 1, y: 1, z: 0}
+  AddSpin: 1
+  InstantDamageEffect: {fileID: 0}
+  DurationEffect: {fileID: 0}
+  AdditionalEffects:
+  - {fileID: 11400000, guid: bf104105cbbe8054da222dfa8de9a76a, type: 2}
+  LifeTime: 4
+  SpawnDelay: 0.5
+  ImpactVFX: {fileID: 0}

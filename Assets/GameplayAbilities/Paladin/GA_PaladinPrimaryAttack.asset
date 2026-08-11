@@ -31,6 +31,6 @@ MonoBehaviour:
   AllyEffects: []
   Range: 2
   ConeAngle: 60
-  DamageEffect: {fileID: 0}
+  DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   AdditionalEffects: []
-  HitVFX: {fileID: 0}
+  HitVFX: {fileID: 1758473627833946668, guid: 9b21333b068a5084ba09535839bee3c8, type: 3}
