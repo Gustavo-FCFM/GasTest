@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c79a6ef63759774f8125f583fee8f7e, type: 3}
+  m_Name: GA_AttackWithSmite
+  m_EditorClassIdentifier: 
+  AbilityName: Attack With Smite
+  AbilityIcon: {fileID: 21300000, guid: fb60bffd72a47f64c97da735dbd28983, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 0}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 1
+  UltimateChargeAmount: 2
+  ActivationBlockedTags: 01000000
+  ActivationRequiredTags: 
+  AnimationClip: {fileID: 0}
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  VisualsSequence: []
+  MaxCharges: 1
+  AllyEffects: []
+  Sequence:
+  - AbilityToCast: {fileID: 11400000, guid: fd24cab436f632c4c9710c0b95196996, type: 2}
+    DelayAfter: 0
+    AnimationClipOverride: {fileID: 8679305495483603795, guid: 363565adc5b6b5e408d5f862a04367b8, type: 3}
+    AnimationIDOverride: 99
+  - AbilityToCast: {fileID: 11400000, guid: 7246db634db6ccb478b73953df2c75e7, type: 2}
+    DelayAfter: 0
+    AnimationClipOverride: {fileID: 0}
+    AnimationIDOverride: 0

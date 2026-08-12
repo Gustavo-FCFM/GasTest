@@ -16,32 +16,20 @@ using System.Collections;
 // (ResolveCooldownDuration) define el cooldown y la recarga por carga.
 // ============================================================
 [CreateAssetMenu(fileName = "GA_ExactCopy", menuName = "GAS/Specific Abilities/Illusionist/Exact Copy")]
-public class GA_ExactCopy : GameplayAbility, IChargedAbility
+public class GA_ExactCopy : GameplayAbility
 {
-    public int MaxChargeCount => MaxCharges;
-
-    [Header("Cargas")]
-    [Tooltip("Cantidad de cargas. Cada carga tarda en volver lo que dure el cooldown de la habilidad.")]
-    public int MaxCharges = 2;
-
     [Header("Copia")]
     [Tooltip("Velocidad de caminado de la copia. 0 = usar la velocidad del jugador (MovSpeed).")]
     public float MoveSpeedOverride = 0f;
     [Tooltip("Alcance máximo hacia donde puede caminar la copia (recorta el punto de mira si está muy lejos). 0 = sin recorte.")]
     public float MaxRange = 0f;
 
-    // Cargas disponibles en el SERVIDOR. -1 = sin inicializar (se toma como lleno).
-    [System.NonSerialized] private int  _charges = -1;
-    [System.NonSerialized] private bool _recharging;
-
     public override void Activate()
     {
         if (!IsServer) return;
-        if (_charges < 0) _charges = MaxCharges;
 
-        // Gate estándar (incluye el tag de cooldown que ve el dueño).
+        // Gate estándar: incluye el tag de cooldown que ve el dueño, y las cargas.
         if (!CanActivate()) return;
-        if (_charges <= 0) { EndAbility(); return; }
 
         PlayerCopyManager manager = OwnerASC.GetComponentInChildren<PlayerCopyManager>();
         if (manager == null)
@@ -56,19 +44,9 @@ public class GA_ExactCopy : GameplayAbility, IChargedAbility
         NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
         PlayerController pc = OwnerASC.GetComponent<PlayerController>();
 
-        _charges--;
-        ReportCharges();
-
-        // Costo siempre; cooldown solo al agotar la última carga (como GA_Dash).
-        if (CostEffect != null) OwnerASC.ApplyGameplayEffect(CostEffect, this);
-        if (_charges <= 0 && CooldownEffect != null)
-            OwnerASC.ApplyGameplayEffect(CooldownEffect, this, ResolveCooldownDuration());
-
-        if (VisualsSequence != null && VisualsSequence.Count > 0)
-        {
-            if (netAsc != null) netAsc.ServerPlayAbilityVisualsSequence(this);
-            else OwnerASC.StartAbilityCoroutine(PlayVisualsSequence());
-        }
+        // Gasta la carga, cobra el costo, aplica el cooldown solo si era la última y
+        // reproduce la VisualsSequence. Todo eso vive en la clase base.
+        CommitAbility();
 
         // Origen = jugador; objetivo = a donde apunta al presionar.
         Vector3 spawnPos = OwnerASC.transform.position;
@@ -92,50 +70,6 @@ public class GA_ExactCopy : GameplayAbility, IChargedAbility
 
         if (pc != null) pc.PlayAnimation(this);
 
-        StartRecharge();
         EndAbility();
-    }
-
-    // --- Cargas (mismo patrón que GA_Dash, sin reembolso por muerte) ---
-
-    private void ReportCharges()
-    {
-        if (OwnerASC == null) return;
-        NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
-        if (netAsc != null) netAsc.ServerReportCharges(this, _charges);
-    }
-
-    private void StartRecharge()
-    {
-        if (_recharging || OwnerASC == null) return;
-        OwnerASC.StartAbilityCoroutine(RechargeRoutine());
-    }
-
-    // Devuelve 1 carga cada "cooldown" hasta llenar MaxCharges. Al recuperar una
-    // carga limpia el tag de cooldown para que quede disponible al instante.
-    private IEnumerator RechargeRoutine()
-    {
-        _recharging = true;
-        while (_charges < MaxCharges)
-        {
-            float cd = ResolveCooldownDuration();
-            if (cd <= 0f) cd = 1f;
-
-            yield return new WaitForSeconds(cd);
-
-            if (_charges < MaxCharges)
-            {
-                _charges++;
-                ReportCharges();
-                ClearCooldownTag();
-            }
-        }
-        _recharging = false;
-    }
-
-    private void ClearCooldownTag()
-    {
-        if (OwnerASC != null && CooldownEffect != null && CooldownEffect.GrantedTags.Count > 0)
-            OwnerASC.ReduceCooldownByTag(CooldownEffect.GrantedTags[0], 99999f);
     }
 }

@@ -582,6 +582,34 @@ public class AbilitySystemComponent : MonoBehaviour
                 RemoveActiveEffect(ActiveEffects[i]);
     }
 
+    // Quita UNA SOLA acumulación de las que otorgan un tag: la que está por vencer.
+    // Devuelve true si encontró alguna.
+    //
+    // Es la versión "de a una" de RemoveEffectsWithTag, para los estados que se
+    // CONSUMEN por uso y pueden acumularse (ej. las cargas del Castigo divino del
+    // Paladín). Quitando una sola, el CONTEO del tag baja de 2 a 1 y el personaje
+    // sigue teniendo el tag — o sea, sigue cargado para el próximo golpe. Con la
+    // versión que las borra todas, un solo ataque se llevaba puestas las dos cargas.
+    //
+    // Se elige la más vieja (menor DurationRemaining) porque es la que se perdería
+    // sola por tiempo: gastar esa primero es lo que más aprovecha las acumulaciones.
+    public bool RemoveOneEffectWithTag(EGameplayTag tag)
+    {
+        ActiveGameplayEffect oldest = null;
+
+        foreach (var active in ActiveEffects)
+        {
+            if (!active.Definition.GrantedTags.Contains(tag)) continue;
+            if (oldest == null || active.DurationRemaining < oldest.DurationRemaining)
+                oldest = active;
+        }
+
+        if (oldest == null) return false;
+
+        RemoveActiveEffect(oldest);
+        return true;
+    }
+
     // Quita todos los efectos activos marcados como Debuff (EffectType, el mismo campo
     // que usa la UI para pintarlos de rojo). Lo usa el buff Imparable del Pirata para
     // limpiar CC/debuffs al activarse. Solo recorre ActiveEffects (efectos con

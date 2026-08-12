@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c273186160e84441a7e43da8ed5284e, type: 3}
+  m_Name: GA_PaladinSmiteSwitch
+  m_EditorClassIdentifier: 
+  AbilityName: Paladin Smite Switch
+  AbilityIcon: {fileID: 21300000, guid: fb60bffd72a47f64c97da735dbd28983, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: 45327044be4f41c4d8f5289bc6f9b3be, type: 2}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 1
+  UltimateChargeAmount: 0
+  ActivationBlockedTags: 
+  ActivationRequiredTags: 
+  AnimationClip: {fileID: 3094330708855449807, guid: 2c2c84ffdf3b64f4195f0b9a4931e399, type: 3}
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 0
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  VisualsSequence: []
+  MaxCharges: 1
+  AllyEffects: []
+  DefaultAbility: {fileID: 11400000, guid: fd24cab436f632c4c9710c0b95196996, type: 2}
+  Variants:
+  - RequiredTag: 40
+    Ability: {fileID: 11400000, guid: 24119e21f28789646ad4aa0caea72ed6, type: 2}
+    ConsumeTag: 1

@@ -34,11 +34,8 @@ using System.Collections.Generic;
 // golpeado muere en una ventana corta, se reembolsa una carga.
 // ============================================================
 [CreateAssetMenu(fileName = "GA_Dash", menuName = "GAS/Generics/Dash")]
-public class GA_Dash : GameplayAbility, IChargedAbility
+public class GA_Dash : GameplayAbility
 {
-    // Máximo de cargas, para que el HUD sepa el valor "lleno" (ver IChargedAbility).
-    public int MaxChargeCount => MaxCharges;
-
     [Header("Movimiento del Dash")]
     [Tooltip("Distancia objetivo del dash (se recorta si hay una pared antes).")]
     public float DashDistance = 8f;
@@ -72,60 +69,26 @@ public class GA_Dash : GameplayAbility, IChargedAbility
     public float HitRadius = 1.2f;
     public GameObject HitVFX;
 
-    [Header("Cargas")]
-    [Tooltip("Cantidad de cargas. Cada carga tarda en volver lo que dure el cooldown de la " +
-             "habilidad (CooldownDuration / AtkSpeed / Duration del GE): un solo valor define " +
-             "cooldown Y recarga por carga.")]
-    public int MaxCharges = 2;
-
     [Header("Reinicio por Muerte")]
     [Tooltip("Si un enemigo golpeado por el dash muere dentro de esta ventana (seg), se recupera una carga.")]
     public float KillResetWindow = 2f;
-
-    // Cargas disponibles en el SERVIDOR. -1 = sin inicializar (se toma como lleno).
-    // NonSerialized: estado de runtime por instancia otorgada, no se guarda en el asset.
-    [System.NonSerialized] private int  _charges = -1;
-    [System.NonSerialized] private bool _recharging;
 
     // Valida (con el cooldown estándar, que se sincroniza al dueño), consume una
     // carga, resuelve el daño del trayecto y le pide al dueño que se impulse.
     public override void Activate()
     {
         if (!IsServer) return;
-        if (_charges < 0) _charges = MaxCharges;
 
-        // Gate estándar: incluye el tag de cooldown, que el dueño también ve
-        // (NetTags), así su predicción coincide con la decisión del servidor.
+        // Gate estándar: incluye el tag de cooldown (que el dueño también ve por
+        // NetTags, así su predicción coincide con el servidor) y las cargas.
         if (!CanActivate()) return;
-
-        // Red de seguridad: si por algún desajuste el tag no bloqueó pero tampoco
-        // hay cargas, no dashamos y liberamos al dueño para que no quede trabado
-        // en "atacando".
-        if (_charges <= 0) { EndAbility(); return; }
-
-        _charges--;
-        ReportCharges();
 
         PlayerController pc = OwnerASC.GetComponent<PlayerController>();
         NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
 
-        // Costo (siempre). El cooldown se aplica SOLO al agotar la última carga
-        // (ver nota de cabecera). Reproducimos también la VisualsSequence, como
-        // haría CommitAbility.
-        if (CostEffect != null) OwnerASC.ApplyGameplayEffect(CostEffect, this);
-
-        if (_charges <= 0 && CooldownEffect != null)
-        {
-            // Sin cargas: aplicamos el cooldown (misma duración que la recarga por
-            // carga, ResolveCooldownDuration) para bloquear y mostrar la barra en la UI.
-            OwnerASC.ApplyGameplayEffect(CooldownEffect, this, ResolveCooldownDuration());
-        }
-
-        if (VisualsSequence != null && VisualsSequence.Count > 0)
-        {
-            if (netAsc != null) netAsc.ServerPlayAbilityVisualsSequence(this);
-            else OwnerASC.StartAbilityCoroutine(PlayVisualsSequence());
-        }
+        // Gasta la carga, cobra el costo, aplica el cooldown solo si era la última, y
+        // reproduce la VisualsSequence. Todo eso vive en la clase base.
+        CommitAbility();
 
         // Dirección del dash.
         Vector3 origin = OwnerASC.transform.position;
@@ -185,8 +148,8 @@ public class GA_Dash : GameplayAbility, IChargedAbility
 
         if (pc != null) pc.PlayAnimation(this);
 
-        // Recarga de cargas y vigilancia de muertes para el reembolso.
-        StartRecharge();
+        // La recarga ya la arrancó CommitAbility; acá solo queda vigilar las muertes
+        // para el reembolso.
         if (hitEnemies.Count > 0)
             OwnerASC.StartAbilityCoroutine(WatchForKills(hitEnemies));
 
@@ -246,57 +209,9 @@ public class GA_Dash : GameplayAbility, IChargedAbility
         return hitList;
     }
 
-    // Reporta las cargas actuales a la capa de red para que la UI del dueño las
-    // muestre (ver NetworkAbilitySystemComponent.ServerReportCharges).
-    private void ReportCharges()
-    {
-        if (OwnerASC == null) return;
-        NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
-        if (netAsc != null) netAsc.ServerReportCharges(this, _charges);
-    }
-
-    // Arranca la corutina de recarga si no está corriendo ya.
-    private void StartRecharge()
-    {
-        if (_recharging || OwnerASC == null) return;
-        OwnerASC.StartAbilityCoroutine(RechargeRoutine());
-    }
-
-    // Devuelve 1 carga cada "cooldown" (ResolveCooldownDuration) hasta llenar
-    // MaxCharges. Al recuperar una carga limpia el tag de cooldown, así la
-    // habilidad queda disponible al instante (el gate/predicción miran el tag) sin
-    // esperar a que el GE expire por su cuenta — evita el desfase carga/tag.
-    private IEnumerator RechargeRoutine()
-    {
-        _recharging = true;
-        while (_charges < MaxCharges)
-        {
-            float cd = ResolveCooldownDuration();
-            if (cd <= 0f) cd = 1f; // salvaguarda si la habilidad no tiene cooldown configurado
-
-            yield return new WaitForSeconds(cd);
-
-            if (_charges < MaxCharges)
-            {
-                _charges++;
-                ReportCharges();
-                ClearCooldownTag();
-            }
-        }
-        _recharging = false;
-    }
-
-    // Limpia el tag de cooldown (lo baja a 0). Se usa al recuperar/reembolsar una
-    // carga para que la habilidad vuelva a estar disponible de inmediato.
-    private void ClearCooldownTag()
-    {
-        if (OwnerASC != null && CooldownEffect != null && CooldownEffect.GrantedTags.Count > 0)
-            OwnerASC.ReduceCooldownByTag(CooldownEffect.GrantedTags[0], 99999f);
-    }
-
     // Vigila a los enemigos golpeados por este dash: si alguno muere dentro de
-    // KillResetWindow, reembolsa una carga y limpia el tag de cooldown (para que
-    // el dueño pueda volver a usar la habilidad de inmediato) — el "reinicio" del doc.
+    // KillResetWindow, reembolsa una carga (RefundCharge, en la clase base, ya limpia
+    // el tag de cooldown para que quede usable al instante) — el "reinicio" del doc.
     private IEnumerator WatchForKills(List<AbilitySystemComponent> enemies)
     {
         float elapsed = 0f;
@@ -306,10 +221,7 @@ public class GA_Dash : GameplayAbility, IChargedAbility
             {
                 if (e != null && e.HasTag(EGameplayTag.State_Dead))
                 {
-                    if (_charges < MaxCharges) _charges++;
-                    ClearCooldownTag();
-                    ReportCharges();
-                    StartRecharge();
+                    RefundCharge();
                     yield break;
                 }
             }

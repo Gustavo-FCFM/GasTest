@@ -132,7 +132,14 @@ public class GA_TagSwitch : GameplayAbility
     {
         if (OwnerASC == null || tag == EGameplayTag.None) return;
 
-        OwnerASC.RemoveEffectsWithTag(tag);
+        // UNA sola acumulación por uso. Si el estado se puede acumular (ej. las 2
+        // cargas del Castigo divino), gastar una deja la otra viva: el conteo del tag
+        // baja de 2 a 1 y el jugador sigue cargado para el próximo golpe. Antes se
+        // borraban TODAS de una y la segunda carga se perdía sin usarse.
+        if (OwnerASC.RemoveOneEffectWithTag(tag)) return;
+
+        // No vino de ningún efecto: es un tag suelto (como el crítico asegurado),
+        // así que se lo quita a mano.
         if (OwnerASC.HasTag(tag)) OwnerASC.RemoveTag(tag);
     }
 
@@ -150,6 +157,7 @@ public class GA_TagSwitch : GameplayAbility
         instance.SourceTemplate = template;   // para resolver su índice en GameplayAbilityRegistry
         instance.CooldownEffect = null;
         instance.CostEffect     = null;
+        instance.DisableCharges();
 
         _instances[template] = instance;
         return instance;

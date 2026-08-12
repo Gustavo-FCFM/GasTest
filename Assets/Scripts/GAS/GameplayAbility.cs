@@ -13,7 +13,7 @@ using System.Collections.Generic;
 // (GA_ConeAttack, GA_LeapAttack, etc.) implementa Activate() con su
 // propia lógica de detección/daño.
 // ============================================================
-public abstract class GameplayAbility : ScriptableObject
+public abstract class GameplayAbility : ScriptableObject, IChargedAbility
 {
     // =========================================================
     // CONFIGURACIÓN GENERAL
@@ -336,6 +336,13 @@ public abstract class GameplayAbility : ScriptableObject
 
         if (CostEffect != null && !OwnerASC.CanAffordGameplayEffect(CostEffect)) return false;
 
+        // Sin cargas disponibles no se puede activar. Red de seguridad más que gate
+        // real: el bloqueo de cara al jugador lo hace el TAG del cooldown (que sí se
+        // sincroniza al dueño), y ese tag solo se aplica al gastar la última carga —
+        // ver CommitAbility. En un cliente el conteo arranca "lleno" porque el estado
+        // es server-only, así que su predicción sigue siendo permisiva, igual que antes.
+        if (UsesCharges && ChargesRemaining <= 0) return false;
+
         return true;
     }
 
@@ -352,10 +359,16 @@ public abstract class GameplayAbility : ScriptableObject
     {
         if (OwnerASC == null) return;
 
+        // Gasta una carga y arranca la recarga. Con MaxCharges <= 1 no hace nada:
+        // la habilidad se comporta como siempre (cooldown en cada uso).
+        bool spentLastCharge = ConsumeCharge();
+
         if (CostEffect != null)
             OwnerASC.ApplyGameplayEffect(CostEffect, this);
 
-        if (CooldownEffect != null)
+        // Con cargas, el cooldown se aplica SOLO al gastar la última: mientras queden
+        // cargas no debe haber tag, o el jugador no podría encadenarlas.
+        if (CooldownEffect != null && spentLastCharge)
         {
             // Sin GrantedTags, CanActivate() no tiene con qué bloquear la
             // reactivación (ver el guard de GrantedTags.Count ahí): la habilidad
@@ -384,6 +397,145 @@ public abstract class GameplayAbility : ScriptableObject
             if (netAsc != null) netAsc.ServerPlayAbilityVisualsSequence(this);
             else OwnerASC.StartAbilityCoroutine(PlayVisualsSequence()); // fallback sin red
         }
+    }
+
+    // =========================================================
+    // CARGAS  (varios usos antes de tener que esperar la recarga)
+    //
+    // Vive acá y no en cada habilidad porque el esquema es SIEMPRE el mismo y estaba
+    // duplicado idéntico en el dash, la copia exacta y la intercepción heroica. Ahora
+    // cualquier GA tiene cargas con solo subir MaxCharges — incluido un GA_SelfBuff
+    // como el Castigo divino del Paladín, que era el caso que faltaba.
+    //
+    // CÓMO SE BLOQUEA (la parte no obvia): el estado de cargas es SERVER-ONLY, porque
+    // Activate() es server-only y la instancia del dueño nunca lo tocaría. Si el gate
+    // dependiera del contador, la predicción del dueño no coincidiría con el servidor.
+    // Por eso el bloqueo de cara al jugador se hace con el TAG del cooldown, que sí se
+    // sincroniza (NetTags): el CooldownEffect se aplica únicamente al gastar la ÚLTIMA
+    // carga, así que mientras queden cargas no hay tag y el jugador puede encadenarlas.
+    // Al recuperar una carga se limpia el tag a mano, para no esperar a que el GE
+    // expire solo (si no, quedaría un desfase entre "tengo carga" y "puedo usarla").
+    //
+    // COOLDOWN = RECARGA POR CARGA: un solo valor (ResolveCooldownDuration) define
+    // cuánto dura el cooldown Y cuánto tarda en volver cada carga.
+    // =========================================================
+
+    [Header("Cargas")]
+    [Tooltip("Usos disponibles antes de tener que esperar la recarga. 1 (o 0) = sin sistema de " +
+             "cargas: cooldown normal en cada uso, como cualquier habilidad.\n\n" +
+             "Con 2 o más, el cooldown se aplica solo al gastar la ÚLTIMA carga, y cada carga " +
+             "tarda en volver lo que dure ese mismo cooldown.")]
+    public int MaxCharges = 1;
+
+    // IChargedAbility: la UI lo lee para mostrar el contador junto al ícono (solo si es > 1).
+    public int MaxChargeCount => MaxCharges;
+
+    // Cargas disponibles en el SERVIDOR. -1 = sin inicializar (se toma como lleno).
+    // NonSerialized: estado de runtime por instancia otorgada, no se guarda en el asset.
+    [System.NonSerialized] private int  _charges = -1;
+    [System.NonSerialized] private bool _recharging;
+
+    // True si esta habilidad usa el sistema de cargas.
+    protected bool UsesCharges => MaxCharges > 1;
+
+    // Cargas que quedan ahora mismo (inicializa perezosamente al máximo).
+    protected int ChargesRemaining
+    {
+        get
+        {
+            if (_charges < 0) _charges = Mathf.Max(1, MaxCharges);
+            return _charges;
+        }
+    }
+
+    // Gasta una carga y arranca la recarga si hace falta. Devuelve true si con esto se
+    // agotó la última (o si la habilidad no usa cargas), que es cuando corresponde
+    // aplicar el cooldown. La llama CommitAbility.
+    private bool ConsumeCharge()
+    {
+        if (!UsesCharges) return true;   // sin cargas: cooldown en cada uso, como siempre
+
+        int remaining = ChargesRemaining;
+        if (remaining > 0) _charges = remaining - 1;
+
+        ReportCharges();
+        StartRecharge();
+
+        return _charges <= 0;
+    }
+
+    // Devuelve una carga (sin pasarse del máximo) y deja la habilidad usable ya mismo.
+    // La usa el dash para su reembolso cuando un enemigo atravesado muere.
+    protected void RefundCharge()
+    {
+        if (!UsesCharges) return;
+
+        if (ChargesRemaining < MaxCharges) _charges = ChargesRemaining + 1;
+
+        ClearCooldownTag();
+        ReportCharges();
+        StartRecharge();
+    }
+
+    // Baja a 0 el cooldown vigente de esta habilidad, para que vuelva a estar
+    // disponible al instante en vez de esperar a que el GE expire.
+    protected void ClearCooldownTag()
+    {
+        if (OwnerASC == null || CooldownEffect == null) return;
+        if (CooldownEffect.GrantedTags == null || CooldownEffect.GrantedTags.Count == 0) return;
+
+        OwnerASC.ReduceCooldownByTag(CooldownEffect.GrantedTags[0], 99999f);
+    }
+
+    // Publica las cargas para que la UI del dueño las muestre. Solo tiene sentido en
+    // habilidades con cargas: si no, ensuciaría NetCharges con una entrada por cada
+    // habilidad del juego.
+    private void ReportCharges()
+    {
+        if (!UsesCharges || OwnerASC == null) return;
+
+        NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
+        if (netAsc != null) netAsc.ServerReportCharges(this, _charges);
+    }
+
+    private void StartRecharge()
+    {
+        if (!UsesCharges || _recharging || OwnerASC == null) return;
+        OwnerASC.StartAbilityCoroutine(RechargeRoutine());
+    }
+
+    // Devuelve 1 carga cada "cooldown" hasta llenar MaxCharges.
+    private System.Collections.IEnumerator RechargeRoutine()
+    {
+        _recharging = true;
+
+        while (ChargesRemaining < MaxCharges)
+        {
+            float cd = ResolveCooldownDuration();
+            if (cd <= 0f) cd = 1f; // salvaguarda si la habilidad no tiene cooldown configurado
+
+            yield return new WaitForSeconds(cd);
+
+            if (ChargesRemaining < MaxCharges)
+            {
+                _charges = ChargesRemaining + 1;
+                ReportCharges();
+                ClearCooldownTag();
+            }
+        }
+
+        _recharging = false;
+    }
+
+    // Apaga el sistema de cargas en ESTA instancia. La usan los combos y el TagSwitch
+    // al clonar un paso/variante: ese clon es solo la ejecución, su ciclo de vida
+    // (costo, cooldown y por lo tanto también las cargas) es del padre. Sin esto, un
+    // paso cuyo asset tuviera cargas las gastaría por su cuenta y terminaría
+    // bloqueándose en silencio, igual que pasaba con el cooldown.
+    public void DisableCharges()
+    {
+        MaxCharges = 1;
+        _charges   = -1;
     }
 
     // Cierra la activación: libera el estado "atacando" del dueño y le

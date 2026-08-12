@@ -131,6 +131,7 @@ public class GA_ComboSequence : GameplayAbility
                 // ni daño, en silencio.
                 stepInstance.CooldownEffect = null;
                 stepInstance.CostEffect     = null;
+                stepInstance.DisableCharges();
 
                 if (step.AnimationClipOverride != null)
                     stepInstance.AnimationClip = step.AnimationClipOverride;

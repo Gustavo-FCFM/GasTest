@@ -28,7 +28,7 @@ using System.Collections.Generic;
 // cooldown de la habilidad ES, además, lo que tarda en volver cada carga.
 // ============================================================
 [CreateAssetMenu(fileName = "GA_HeroicInterception", menuName = "GAS/Specific Abilities/Paladin/Heroic Interception")]
-public class GA_HeroicInterception : GameplayAbility, IChargedAbility
+public class GA_HeroicInterception : GameplayAbility
 {
     [Header("Selección de Aliado")]
     [Tooltip("Alcance máximo para buscar al aliado al que interceptar.")]
@@ -57,20 +57,8 @@ public class GA_HeroicInterception : GameplayAbility, IChargedAbility
     // (el mismo buff, normalmente): así el campo es el mismo que en el resto de las
     // habilidades que tocan aliados y no inventamos uno nuevo.
 
-    [Header("Cargas")]
-    [Tooltip("Cantidad de cargas. Cada una tarda en volver lo que dure el cooldown de la habilidad.")]
-    public int MaxCharges = 2;
-
     [Header("Visuales")]
     public GameObject ImpactVFX;
-
-    // IChargedAbility: el HUD lo usa como valor "lleno".
-    public int MaxChargeCount => MaxCharges;
-
-    // Cargas disponibles en el SERVIDOR. -1 = sin inicializar (se toma como lleno).
-    // NonSerialized: estado de runtime por instancia otorgada, no va al asset.
-    [System.NonSerialized] private int  _charges = -1;
-    [System.NonSerialized] private bool _recharging;
 
     // =========================================================
     // ACTIVACIÓN
@@ -79,15 +67,10 @@ public class GA_HeroicInterception : GameplayAbility, IChargedAbility
     public override void Activate()
     {
         if (!IsServer) return;
-        if (_charges < 0) _charges = MaxCharges;
 
-        // Gate estándar: incluye el tag de cooldown, que el dueño también ve por
-        // NetTags, así su predicción coincide con lo que decide el servidor.
+        // Gate estándar: incluye el tag de cooldown (que el dueño también ve por
+        // NetTags, así su predicción coincide con el servidor) y las cargas.
         if (!CanActivate()) return;
-
-        // Red de seguridad: si el tag no bloqueó pero tampoco quedan cargas, no
-        // saltamos y liberamos al dueño para que no quede trabado en "atacando".
-        if (_charges <= 0) { EndAbility(); return; }
 
         AbilitySystemComponent ally = FindAlly();
 
@@ -98,21 +81,12 @@ public class GA_HeroicInterception : GameplayAbility, IChargedAbility
             return;
         }
 
-        _charges--;
-        ReportCharges();
-
-        // Costo siempre; cooldown solo al agotar la última carga (ver cabecera).
-        if (CostEffect != null) OwnerASC.ApplyGameplayEffect(CostEffect, this);
-        if (_charges <= 0 && CooldownEffect != null)
-            OwnerASC.ApplyGameplayEffect(CooldownEffect, this, ResolveCooldownDuration());
+        // Recién acá se cobra: gasta la carga, el costo, aplica el cooldown solo si
+        // era la última, y reproduce la VisualsSequence (todo en la clase base). Va
+        // DESPUÉS de encontrar aliado a propósito — sin aliado no se gasta nada.
+        CommitAbility();
 
         NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
-
-        if (VisualsSequence != null && VisualsSequence.Count > 0)
-        {
-            if (netAsc != null) netAsc.ServerPlayAbilityVisualsSequence(this);
-            else OwnerASC.StartAbilityCoroutine(PlayVisualsSequence());
-        }
 
         // Punto de aterrizaje: delante del aliado, del lado al que MIRA él (no al que
         // mira el Paladín). Se conserva su altura para no aparecer flotando ni
@@ -143,7 +117,6 @@ public class GA_HeroicInterception : GameplayAbility, IChargedAbility
         if (netAsc != null) netAsc.ServerPlayAbilityVFX(this, vfxPos);
         else PlayImpactVFX(vfxPos);
 
-        StartRecharge();
         EndAbility();
     }
 
@@ -188,49 +161,6 @@ public class GA_HeroicInterception : GameplayAbility, IChargedAbility
             if (align > bestAlign) { bestAlign = align; best = asc; } // el más centrado en la mira
         }
         return best;
-    }
-
-    // =========================================================
-    // CARGAS
-    // =========================================================
-
-    // Publica las cargas actuales para que la UI del dueño las muestre.
-    private void ReportCharges()
-    {
-        if (OwnerASC == null) return;
-        NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
-        if (netAsc != null) netAsc.ServerReportCharges(this, _charges);
-    }
-
-    private void StartRecharge()
-    {
-        if (_recharging || OwnerASC == null) return;
-        OwnerASC.StartAbilityCoroutine(RechargeRoutine());
-    }
-
-    // Devuelve 1 carga cada "cooldown" hasta llenar MaxCharges. Al recuperar una,
-    // limpia el tag para que la habilidad quede disponible al instante (el gate y la
-    // predicción miran el tag) sin esperar a que el GE expire por su cuenta.
-    private IEnumerator RechargeRoutine()
-    {
-        _recharging = true;
-        while (_charges < MaxCharges)
-        {
-            float cd = ResolveCooldownDuration();
-            if (cd <= 0f) cd = 1f; // salvaguarda si no se configuró cooldown
-
-            yield return new WaitForSeconds(cd);
-
-            if (_charges < MaxCharges)
-            {
-                _charges++;
-                ReportCharges();
-
-                if (CooldownEffect != null && CooldownEffect.GrantedTags.Count > 0)
-                    OwnerASC.ReduceCooldownByTag(CooldownEffect.GrantedTags[0], 99999f);
-            }
-        }
-        _recharging = false;
     }
 
     // =========================================================

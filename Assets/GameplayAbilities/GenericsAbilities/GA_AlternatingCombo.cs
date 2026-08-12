@@ -97,6 +97,7 @@ public class GA_AlternatingCombo : GameplayAbility
                     // cuyo paso compartía el CooldownEffect del combo.
                     stepInstance.CooldownEffect = null;
                     stepInstance.CostEffect     = null;
+                    stepInstance.DisableCharges();
 
                     if (step.AnimationClipOverride != null)
                         stepInstance.AnimationClip = step.AnimationClipOverride;
