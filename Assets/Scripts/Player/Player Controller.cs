@@ -1273,8 +1273,13 @@ public class PlayerController : NetworkBehaviour
         if (newClass.MainHandWeaponPrefab != null && MainHandSocket != null)
         {
             currentMainWeapon = Instantiate(newClass.MainHandWeaponPrefab, MainHandSocket);
+            // La pose sale de la CLASE, no del prefab del arma: los dos sockets tienen
+            // orientaciones distintas, así que un mismo modelo necesita ajustes según
+            // en qué mano vaya. En cero queda pegado al hueso, como antes.
             currentMainWeapon.transform.SetLocalPositionAndRotation(
-                Vector3.zero, Quaternion.identity);
+                newClass.MainHandPositionOffset,
+                Quaternion.Euler(newClass.MainHandRotationOffset));
+
             Transform trail = currentMainWeapon.transform.Find("WeaponTrail");
             if (trail != null)
             {
@@ -1287,7 +1292,8 @@ public class PlayerController : NetworkBehaviour
         {
             currentOffWeapon = Instantiate(newClass.OffHandWeaponPrefab, OffHandSocket);
             currentOffWeapon.transform.SetLocalPositionAndRotation(
-                Vector3.zero, Quaternion.identity);
+                newClass.OffHandPositionOffset,
+                Quaternion.Euler(newClass.OffHandRotationOffset));
         }
     }
 

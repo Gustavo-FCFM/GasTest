@@ -839,6 +839,7 @@ MonoBehaviour:
   MainBaseClasses:
   - {fileID: 11400000, guid: 94ade0794681b0248a3b0176ad1651c6, type: 2}
   - {fileID: 11400000, guid: 390e03f3a9d111e46ba5dc758818e4cb, type: 2}
+  - {fileID: 11400000, guid: 9704f66316c658c4d9e4fa5c7aa06d9c, type: 2}
   CharacterIcon: {fileID: 0}
   characterAnimator: {fileID: 3955734438643649906}
   ActionClipSlotName: PLACEHOLDER_Action
@@ -926,7 +927,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584174709408698250
+  _initializedTimestamp: -8584150209427580741
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
@@ -945,7 +946,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 12
+  <PrefabId>k__BackingField: 14
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 13623089071726480599
   SceneId: 0

@@ -302,6 +302,30 @@ public class AbilitySystemComponent : MonoBehaviour
 
         if (type == EAttributeType.Health && val <= 0 && !HasTag(EGameplayTag.State_Dead))
             Die();
+
+        // Si lo que acaba de cambiar es un TECHO y quedó por debajo de su pool, hay que
+        // bajar el pool: el clamp de arriba solo actúa cuando se escribe el pool, así
+        // que un máximo que BAJA dejaba la vida por encima de su tope (ej. 120/100 al
+        // pasar del Bárbaro —120 de vida— al Paladín —100—, o al expirar un buff de
+        // vida máxima). Se veía "120/100" hasta el primer golpe o curación, que recién
+        // ahí escribía la Vida y la clampeaba de golpe.
+        ClampPoolToMax(type, EAttributeType.MaxHealth,  EAttributeType.Health);
+        ClampPoolToMax(type, EAttributeType.MaxMana,    EAttributeType.Mana);
+        ClampPoolToMax(type, EAttributeType.MaxEnergy,  EAttributeType.Energy);
+    }
+
+    // Si 'changed' es el atributo techo indicado y el pool asociado lo supera, baja el
+    // pool hasta el techo. La reentrada es segura: vuelve a entrar a
+    // SetCurrentAttributeValue con el POOL, y ese camino no toca ningún techo.
+    private void ClampPoolToMax(EAttributeType changed, EAttributeType maxType, EAttributeType poolType)
+    {
+        if (changed != maxType) return;
+
+        float max = GetAttributeValue(maxType);
+        if (max <= 0f) return; // sin techo definido no clampeamos (NPCs/objetos)
+
+        if (GetAttributeValue(poolType) > max)
+            SetCurrentAttributeValue(poolType, max);
     }
 
     // Sube permanentemente el valor BASE de un atributo (ej: al elegir una

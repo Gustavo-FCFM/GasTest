@@ -21,7 +21,7 @@ MonoBehaviour:
   UltimateChargeAmount: 0
   ActivationBlockedTags: 01000000
   ActivationRequiredTags: 
-  AnimationClip: {fileID: 3094330708855449807, guid: 47e702d39cca6d040a91d04069cdee77, type: 3}
+  AnimationClip: {fileID: 0}
   AnimationTriggerName: HoldTrigger
   AnimationID: 98
   TargetLayer:
@@ -32,7 +32,7 @@ MonoBehaviour:
   AllyEffects: []
   BlockEffect: {fileID: 11400000, guid: 1054c3ec700fed144bdc881c3366fd5d, type: 2}
   MinEnergyToActivate: 10
-  EnergyDrainPerSecond: 1
+  EnergyDrainPerSecond: 0
   MaxHoldTime: 0
   HoldClip: {fileID: 3094330708855449807, guid: 47e702d39cca6d040a91d04069cdee77, type: 3}
   RaiseClip: {fileID: 0}

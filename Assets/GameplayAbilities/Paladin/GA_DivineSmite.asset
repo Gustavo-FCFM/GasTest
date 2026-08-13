@@ -16,7 +16,7 @@ MonoBehaviour:
   AbilityIcon: {fileID: 21300000, guid: 6ba75a20c3e6f424bacf8d450dba4f8b, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: edc8f7b5f2c7d684d8f67cdabbccd4df, type: 2}
-  CooldownDuration: 2
+  CooldownDuration: 3
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 1
   ActivationBlockedTags: 0100000003000000
@@ -36,7 +36,7 @@ MonoBehaviour:
     AttachToOwner: 1
     DestroyTime: 0
     EndWithTag: 40
-  MaxCharges: 1
+  MaxCharges: 2
   AllyEffects: []
   BuffEffect: {fileID: 11400000, guid: d1f642fb3bb9aab44966f092fd42ceeb, type: 2}
   AdditionalEffects: []

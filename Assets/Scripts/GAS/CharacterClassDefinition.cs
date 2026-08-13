@@ -68,6 +68,38 @@ public class CharacterClassDefinition : ScriptableObject
     [Tooltip("Configura aquí las armas que usa esta clase")]
     public GameObject MainHandWeaponPrefab; // Arma principal (mano derecha)
     public GameObject OffHandWeaponPrefab;  // Arma secundaria, opcional
+
+    // ============================================================
+    // AJUSTE DE POSE DE LAS ARMAS
+    //
+    // El arma se instancia como hija del socket del hueso y su transform local se
+    // fija desde acá. La rotación PROPIA del prefab se descarta a propósito: un
+    // prefab de arma suele venir con la rotación con la que quedó guardado en la
+    // escena de origen, que no significa nada respecto de la mano.
+    //
+    // POR QUÉ EL AJUSTE VA EN LA CLASE Y NO EN EL ARMA: los dos sockets no tienen la
+    // misma orientación (Socket_OffHand lleva 180° de "roll" extra respecto de
+    // Socket_MainHand), así que un mismo modelo necesita poses distintas según en qué
+    // mano vaya. Además dos clases pueden usar el mismo modelo empuñado distinto.
+    //
+    // En CERO (por defecto) el arma queda exactamente pegada al hueso, que es como
+    // se comportaba antes: las clases ya configuradas no cambian en nada.
+    // ============================================================
+
+    [Tooltip("Rotación extra (grados) del arma principal respecto del hueso de la mano. " +
+             "En cero queda pegada al hueso. Usalo si el modelo aparece torcido o al revés.")]
+    public Vector3 MainHandRotationOffset;
+
+    [Tooltip("Desplazamiento extra del arma principal respecto del hueso, en espacio local.")]
+    public Vector3 MainHandPositionOffset;
+
+    [Tooltip("Rotación extra (grados) del arma secundaria. Ojo: el socket de esta mano viene " +
+             "con 180° de giro respecto del de la principal, así que un escudo suele necesitar " +
+             "compensarlo acá (probá 180 en Z).")]
+    public Vector3 OffHandRotationOffset;
+
+    [Tooltip("Desplazamiento extra del arma secundaria respecto del hueso, en espacio local.")]
+    public Vector3 OffHandPositionOffset;
 }
 
 // Cuánto sube UN atributo por cada nivel que gana el personaje. La lista

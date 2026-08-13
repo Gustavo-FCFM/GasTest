@@ -290,14 +290,14 @@ MonoBehaviour:
   SelectableClasses:
   - {fileID: 11400000, guid: 94ade0794681b0248a3b0176ad1651c6, type: 2}
   - {fileID: 11400000, guid: 390e03f3a9d111e46ba5dc758818e4cb, type: 2}
+  - {fileID: 11400000, guid: 9704f66316c658c4d9e4fa5c7aa06d9c, type: 2}
   CardsParent: {fileID: 5789165921115486233}
   ClassCardPrefab: {fileID: 811954012191032356, guid: 99a5afcd5d0f3a841889c3a33e79e27d, type: 3}
   IconsOnly: 1
-  HiddenCardParts:
-  - ClassDescription
-  CardSize: 180
-  SelectedClassColor: {r: 0.3, g: 0.8, b: 1, a: 1}
-  SelectedOutlineSize: 4
+  HiddenCardParts: []
+  CardSize: 250
+  SelectedClassColor: {r: 1, g: 0.08282876, b: 0, a: 1}
+  SelectedOutlineSize: 1
   ConfirmButton: {fileID: 219243577620256218}
 --- !u!114 &6528670980255431203
 MonoBehaviour:

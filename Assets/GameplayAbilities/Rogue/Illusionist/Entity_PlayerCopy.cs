@@ -98,18 +98,22 @@ public class Entity_PlayerCopy : NetworkBehaviour
         if (WalkAnimator != null && cls.ClassAnimatorOverride != null)
             WalkAnimator.runtimeAnimatorController = cls.ClassAnimatorOverride;
 
-        EquipWeapon(cls.MainHandWeaponPrefab, FindDeep(transform, MainHandSocketName));
-        EquipWeapon(cls.OffHandWeaponPrefab,  FindDeep(transform, OffHandSocketName));
+        EquipWeapon(cls.MainHandWeaponPrefab, FindDeep(transform, MainHandSocketName),
+                    cls.MainHandPositionOffset, cls.MainHandRotationOffset);
+        EquipWeapon(cls.OffHandWeaponPrefab,  FindDeep(transform, OffHandSocketName),
+                    cls.OffHandPositionOffset,  cls.OffHandRotationOffset);
     }
 
-    // Instancia un arma en su socket con transform local en cero (igual que
-    // PlayerController.UpdateVisuals). Apaga el rastro del arma: es solo para los
+    // Instancia un arma en su socket con la MISMA pose que le da la clase al jugador
+    // real (ver PlayerController.UpdateVisuals): si no, la copia mostraría el arma con
+    // otra orientación que el original. Apaga el rastro del arma: es solo para los
     // golpes del jugador, el señuelo no lo necesita.
-    private void EquipWeapon(GameObject prefab, Transform socket)
+    private void EquipWeapon(GameObject prefab, Transform socket,
+                             Vector3 positionOffset, Vector3 rotationOffset)
     {
         if (prefab == null || socket == null) return;
         GameObject weapon = Instantiate(prefab, socket);
-        weapon.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+        weapon.transform.SetLocalPositionAndRotation(positionOffset, Quaternion.Euler(rotationOffset));
         Transform trail = weapon.transform.Find("WeaponTrail");
         if (trail != null) trail.gameObject.SetActive(false);
     }

@@ -275,6 +275,23 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
         Vector3 from = attackerPos + Vector3.up * AimHeight;
         Vector3 to   = victimPos   + Vector3.up * AimHeight;
 
+        // Si el segmento queda ENTERO por encima o por debajo de la caja, el escudo
+        // no bloquearía nunca por un simple desajuste de alturas (ej: la barrera
+        // montada a la altura de los pies y AimHeight a la del pecho). En ese caso
+        // bajamos/subimos el segmento entero hasta el centro de la caja: el chequeo
+        // sigue siendo direccional, que es lo que importa, y conserva el desnivel
+        // relativo entre atacante y víctima.
+        Bounds box = _box.bounds;
+        float lowest  = Mathf.Min(from.y, to.y);
+        float highest = Mathf.Max(from.y, to.y);
+
+        if (lowest > box.max.y || highest < box.min.y)
+        {
+            float shift = box.center.y - (lowest > box.max.y ? lowest : highest);
+            from.y += shift;
+            to.y   += shift;
+        }
+
         Vector3 delta = to - from;
         float   dist  = delta.magnitude;
         if (dist < 0.001f) return false;

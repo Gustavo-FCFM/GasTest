@@ -382,6 +382,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &547436316 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8607894374043660639, guid: 6cb57ab5ff075d44ea0ca589b1d76a3b, type: 3}
+  m_PrefabInstance: {fileID: 1497600578}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &603574666
 GameObject:
   m_ObjectHideFlags: 0
@@ -756,7 +761,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6732329970705502742, guid: b9ae24c0801eef249b8cf224861422a9, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1017,6 +1022,63 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}
+--- !u!1001 &1497600578
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1598972752}
+    m_Modifications:
+    - target: {fileID: 8607894374043660639, guid: 6cb57ab5ff075d44ea0ca589b1d76a3b, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8607894374043660639, guid: 6cb57ab5ff075d44ea0ca589b1d76a3b, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8607894374043660639, guid: 6cb57ab5ff075d44ea0ca589b1d76a3b, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8607894374043660639, guid: 6cb57ab5ff075d44ea0ca589b1d76a3b, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8607894374043660639, guid: 6cb57ab5ff075d44ea0ca589b1d76a3b, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8607894374043660639, guid: 6cb57ab5ff075d44ea0ca589b1d76a3b, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8607894374043660639, guid: 6cb57ab5ff075d44ea0ca589b1d76a3b, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8607894374043660639, guid: 6cb57ab5ff075d44ea0ca589b1d76a3b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8607894374043660639, guid: 6cb57ab5ff075d44ea0ca589b1d76a3b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8607894374043660639, guid: 6cb57ab5ff075d44ea0ca589b1d76a3b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9026357972262154142, guid: 6cb57ab5ff075d44ea0ca589b1d76a3b, type: 3}
+      propertyPath: m_Name
+      value: PaladinBehaviours
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 6cb57ab5ff075d44ea0ca589b1d76a3b, type: 3}
 --- !u!1 &1598972750
 GameObject:
   m_ObjectHideFlags: 0
@@ -1046,8 +1108,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a51f98d766d6d4b4989662c4bf86a0d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Abilities:
-  - {fileID: 11400000, guid: a0f11893e7b547f4cb7859680a104a35, type: 2}
+  Abilities: []
   DrawDistanceRings: 1
   RingSpacing: 1
   RingCount: 10
@@ -1064,7 +1125,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 547436316}
   m_Father: {fileID: 2095147158}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1668284489
@@ -1095,10 +1157,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: UI_LobbyMenu
       objectReference: {fileID: 0}
-    - target: {fileID: 507185444253389956, guid: 70007537b8938c1479f48af7634d6a0f, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 620437572549488891, guid: 70007537b8938c1479f48af7634d6a0f, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -1123,50 +1181,6 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 967465110323249601, guid: 70007537b8938c1479f48af7634d6a0f, type: 3}
-      propertyPath: CardSize
-      value: 250
-      objectReference: {fileID: 0}
-    - target: {fileID: 967465110323249601, guid: 70007537b8938c1479f48af7634d6a0f, type: 3}
-      propertyPath: IconsOnly
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 967465110323249601, guid: 70007537b8938c1479f48af7634d6a0f, type: 3}
-      propertyPath: SelectedOutlineSize
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 967465110323249601, guid: 70007537b8938c1479f48af7634d6a0f, type: 3}
-      propertyPath: SelectedClassColor.b
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 967465110323249601, guid: 70007537b8938c1479f48af7634d6a0f, type: 3}
-      propertyPath: SelectedClassColor.g
-      value: 0.08282876
-      objectReference: {fileID: 0}
-    - target: {fileID: 967465110323249601, guid: 70007537b8938c1479f48af7634d6a0f, type: 3}
-      propertyPath: SelectedClassColor.r
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 967465110323249601, guid: 70007537b8938c1479f48af7634d6a0f, type: 3}
-      propertyPath: HiddenCardParts.Array.size
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 967465110323249601, guid: 70007537b8938c1479f48af7634d6a0f, type: 3}
-      propertyPath: SelectableClasses.Array.size
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 967465110323249601, guid: 70007537b8938c1479f48af7634d6a0f, type: 3}
-      propertyPath: 'HiddenCardParts.Array.data[0]'
-      value: ClassDescription
-      objectReference: {fileID: 0}
-    - target: {fileID: 967465110323249601, guid: 70007537b8938c1479f48af7634d6a0f, type: 3}
-      propertyPath: 'HiddenCardParts.Array.data[1]'
-      value: ClassTittle
-      objectReference: {fileID: 0}
-    - target: {fileID: 967465110323249601, guid: 70007537b8938c1479f48af7634d6a0f, type: 3}
-      propertyPath: 'SelectableClasses.Array.data[2]'
-      value: 
-      objectReference: {fileID: 11400000, guid: 9704f66316c658c4d9e4fa5c7aa06d9c, type: 2}
     - target: {fileID: 1047162014647744421, guid: 70007537b8938c1479f48af7634d6a0f, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
