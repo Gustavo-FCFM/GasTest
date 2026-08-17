@@ -37,5 +37,17 @@ public enum EAttributeType
     // orden: Vulnerabilidad → Resistencia → redondeo → Def → escudo → vida.
     // Ver AbilitySystemComponent.ApplyDefenses.
     Vulnerability, // % de daño EXTRA que recibe (0.1 = +10%). Lo suben los debuffs de "marcar" a un objetivo
-    Resistance     // % de daño que EVITA (0.2 = -20%). Lo sube la pasiva del Paladín sobre sus aliados
+    Resistance,    // % de daño que EVITA (0.2 = -20%). Lo sube la pasiva del Paladín sobre sus aliados
+
+    // % que ACORTA la duración de los efectos de control que te aplican (aturdir,
+    // enraizar, silenciar). 0.3 = te duran un 30% menos; 0 = duración normal.
+    //
+    // Acepta NEGATIVOS a propósito, y ahí alarga: -0.5 = te duran un 50% más. Eso es
+    // lo que permite que un aura enemiga "reduzca tu resistencia al aturdimiento"
+    // (Aura conquistadora del Paladín) con el mismo atributo y sin inventar otro.
+    //
+    // Tiene tope (ver AbilitySystemComponent.MaxCCResistance): por más que se apilen
+    // fuentes nunca llega a inmunidad total — para eso está Status_Unstoppable, que
+    // es explícito.
+    CCResistance
 }

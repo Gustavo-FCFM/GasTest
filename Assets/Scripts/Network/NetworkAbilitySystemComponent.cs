@@ -850,6 +850,35 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     }
 
     // =========================================================
+    // DESTELLO DE LA BARRERA AL BLOQUEAR
+    //
+    // El bloqueo se resuelve SOLO en el servidor (es donde corre el pipeline de daño),
+    // así que el feedback visual del escudo necesita su propia réplica: sin esto, el
+    // que dispara nunca vería que su tiro pegó contra un escudo, que es justamente la
+    // información que tiene que leer para dejar de disparar y rodearlo.
+    //
+    // Solo viaja el punto de impacto: el resto (colores, duración, prefab del efecto)
+    // lo resuelve cada peer con su propia copia del ShieldBlockFlash del prefab.
+    // =========================================================
+
+    [Server]
+    public void ServerBroadcastShieldBlockFlash(Vector3 hitPoint)
+    {
+        ObserversPlayShieldBlockFlash(hitPoint);
+    }
+
+    [ObserversRpc]
+    private void ObserversPlayShieldBlockFlash(Vector3 hitPoint)
+    {
+        // El servidor ya lo reprodujo local en Entity_ShieldBarrier.BroadcastFlash
+        // (importa para el host, que renderiza esa misma copia).
+        if (IsServerInitialized) return;
+
+        Entity_ShieldBarrier barrier = GetComponentInChildren<Entity_ShieldBarrier>(true);
+        if (barrier != null) barrier.PlayFlash(hitPoint);
+    }
+
+    // =========================================================
     // ANIMACIÓN DE UN PASO DE COMBO
     //
     // Un combo (GA_ComboSequence / GA_AlternatingCombo) transmite su PROPIA animación

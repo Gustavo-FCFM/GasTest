@@ -179,7 +179,7 @@ public class GA_ShieldBlock : GameplayAbility, IHoldAbility
     // bloqueo se resuelve ahí), así que la animación se reproduce en el dueño y se
     // replica al resto. Con estrangulador de tiempo: varios impactos seguidos (un
     // ataque rápido, los ticks de un área) reiniciarían el clip en cada frame.
-    private void HandleDamageBlocked(float amountBlocked)
+    private void HandleDamageBlocked(float amountBlocked, Vector3 hitPoint)
     {
         if (!_holding || ShieldHitClip == null || OwnerASC == null) return;
         if (Time.time - _lastShieldHitTime < ShieldHitCooldown) return;

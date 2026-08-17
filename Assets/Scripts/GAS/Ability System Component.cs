@@ -415,6 +415,14 @@ public class AbilitySystemComponent : MonoBehaviour
 
         float finalDuration = (durationOverride > 0) ? durationOverride : effect.Duration;
 
+        // Resistencia al control: recorta (o alarga) lo que dura el CC que entra.
+        // Si el objetivo lo resiste del todo, el efecto NO se aplica en absoluto.
+        if (finalDuration > 0f && effect.CountsAsCrowdControl)
+        {
+            finalDuration = ResolveCrowdControlDuration(finalDuration);
+            if (finalDuration <= 0f) return;
+        }
+
         if (finalDuration <= 0)
         {
             ExecuteInstantEffect(effect, source);
@@ -524,6 +532,40 @@ public class AbilitySystemComponent : MonoBehaviour
         }
     }
 
+    // =========================================================
+    // RESISTENCIA AL CONTROL (CC)
+    // =========================================================
+
+    // Tope de la resistencia: por más fuentes que se apilen, un CC nunca se recorta más
+    // allá de esto. Sin tope, dos auras juntas darían inmunidad total al control por la
+    // puerta de atrás — y para eso ya está Status_Unstoppable, que es explícito y se ve
+    // venir. Mismo criterio que el tope de Resistance en ApplyDefenses.
+    private const float MaxCCResistance = 0.9f;
+
+    // Por debajo de esto, un CC deja de tener sentido y se descarta entero.
+    //
+    // El umbral NO es cosmético: si dejáramos que la duración cayera a 0,
+    // ApplyGameplayEffect lo tomaría como efecto INSTANTÁNEO y le aplicaría los
+    // modificadores una vez. O sea que "resistir un aturdimiento por completo" te
+    // aplicaría igual lo que ese aturdimiento trajera. Devolviendo 0 acá, quien llama
+    // corta antes de llegar a esa rama.
+    private const float MinCCDuration = 0.05f;
+
+    // Duración final de un efecto de control sobre ESTE personaje, según su
+    // CCResistance. Devuelve 0 si lo resiste del todo.
+    //
+    // La resistencia negativa (un aura enemiga que te la baja) alarga el CC en vez de
+    // acortarlo, y eso es a propósito: es lo que deja expresar "reduce la resistencia
+    // al aturdimiento de los enemigos" sin un segundo atributo.
+    private float ResolveCrowdControlDuration(float duration)
+    {
+        float resistance = Mathf.Min(GetAttributeValue(EAttributeType.CCResistance), MaxCCResistance);
+        if (Mathf.Approximately(resistance, 0f)) return duration;
+
+        float scaled = duration * (1f - resistance);
+        return scaled < MinCCDuration ? 0f : scaled;
+    }
+
     // Calcula la magnitud final de un modificador: su valor fijo + el escalado
     // con un atributo del ATACANTE + el escalado con la vida del OBJETIVO (this).
     // No incluye el crítico por la espalda (eso es exclusivo del daño a la vida).
@@ -553,6 +595,44 @@ public class AbilitySystemComponent : MonoBehaviour
         }
 
         return magnitude;
+    }
+
+    // Cuánto daño a la VIDA le haría a ESTE personaje un efecto instantáneo lanzado
+    // por 'sourceASC', si se aplicara ahora. Devuelve un número positivo (0 si el
+    // efecto no hace daño).
+    //
+    // Es una ESTIMACIÓN a propósito: incluye la magnitud base, el escalado por stats
+    // del atacante, el escalado por la vida de este objetivo y el daño mágico plano —
+    // o sea, todo lo que se puede saber sin llegar a aplicar el golpe. Lo que NO
+    // incluye es lo que solo se resuelve al impactar: críticos, bloqueo, defensas y
+    // escudo.
+    //
+    // Existe para los casos en los que un golpe se FRENA antes de resolverse y aun así
+    // hace falta saber cuánto valía. Hoy: un proyectil que muere contra una barrera
+    // (ver Entity_ShieldBarrier.NotifyProjectileBlocked), donde el escudo tiene que
+    // reportar cuánto daño evitó para que las pasivas que escalan con eso —la curación
+    // del aura del Paladín— funcionen igual que con un golpe normal.
+    public float EstimateInstantDamage(GameplayEffect effect, AbilitySystemComponent sourceASC)
+    {
+        // Solo los instantáneos: un efecto con duración no "pega" al aplicarse.
+        if (effect == null || effect.Duration > 0f) return 0f;
+
+        float total = 0f;
+
+        foreach (var mod in effect.Modifiers)
+        {
+            if (mod.Attribute != EAttributeType.Health) continue;
+
+            float magnitude = CalculateBaseMagnitude(mod, sourceASC);
+            if (magnitude < 0f) total += -magnitude;   // negativo = daño
+        }
+
+        // El daño mágico plano del atacante se suma a cualquier golpe que ya hiciera
+        // daño, igual que en ExecuteInstantEffect.
+        if (total > 0f && sourceASC != null)
+            total += sourceASC.GetAttributeValue(EAttributeType.MagicDamage);
+
+        return total;
     }
 
     // Efectos ya avisados, para no repetir el mismo warning de config cada vez
@@ -711,6 +791,18 @@ public class AbilitySystemComponent : MonoBehaviour
 
             if (mod.Attribute == EAttributeType.Health && calculatedMagnitude < 0)
             {
+                // INMUNIDAD TOTAL (Status_Immunity, ej. Protección divina del Paladín):
+                // el golpe no entra y punto. Se saltea el modificador entero, así que
+                // tampoco consume escudo, ni anota al atacante, ni rompe invisibilidad,
+                // ni dispara las pasivas de "al golpear".
+                //
+                // Es distinto de Status_Immortal, que NO es inmunidad: ahí el daño entra
+                // normal y lo único que pasa es que la vida no puede bajar de 1.
+                //
+                // Solo se saltea este modificador: un efecto que además ralentice sigue
+                // ralentizando. Lo que la inmunidad niega es el DAÑO.
+                if (HasTag(EGameplayTag.Status_Immunity)) continue;
+
                 wasDamagingHit = true;
 
                 // Registrar al atacante para atribuir la baja (EXP al matador). Se

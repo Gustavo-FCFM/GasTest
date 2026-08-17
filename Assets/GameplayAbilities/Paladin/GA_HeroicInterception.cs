@@ -132,36 +132,8 @@ public class GA_HeroicInterception : GameplayAbility
     // (IsAllyOf con includeSelf daría true y el Paladín podría "saltar" a su propio
     // frente, gastando una carga por nada).
     private AbilitySystemComponent FindAlly()
-    {
-        if (OwnerASC == null) return null;
-
-        PlayerController pc = OwnerASC.GetComponent<PlayerController>();
-        Vector3 origin   = OwnerASC.transform.position;
-        Vector3 aimPoint = pc != null ? pc.GetAimPoint(MaxRange) : origin + OwnerASC.transform.forward * MaxRange;
-
-        Vector3 aimDir = aimPoint - origin; aimDir.y = 0;
-        if (aimDir.sqrMagnitude < 0.0001f) aimDir = OwnerASC.transform.forward;
-        aimDir.Normalize();
-
-        Collider[] cols = Physics.OverlapSphere(origin, MaxRange, TargetLayer);
-        AbilitySystemComponent best = null;
-        float bestAlign = Mathf.Cos(SelectionAngle * Mathf.Deg2Rad); // umbral: dentro del ángulo
-
-        foreach (var c in cols)
-        {
-            AbilitySystemComponent asc = c.GetComponentInParent<AbilitySystemComponent>();
-            if (asc == null || ReferenceEquals(asc, OwnerASC)) continue;
-            if (!IsAlly(asc, includeSelf: false)) continue;
-            if (!AllowDeadTargets && asc.HasTag(EGameplayTag.State_Dead)) continue;
-
-            Vector3 toTarget = asc.transform.position - origin; toTarget.y = 0;
-            if (toTarget.sqrMagnitude < 0.0001f) continue;
-
-            float align = Vector3.Dot(aimDir, toTarget.normalized);
-            if (align > bestAlign) { bestAlign = align; best = asc; } // el más centrado en la mira
-        }
-        return best;
-    }
+        => FindBestTargetInAim(MaxRange, SelectionAngle, ETargetAffiliation.Allies,
+                               includeSelf: false, allowDead: AllowDeadTargets);
 
     // =========================================================
     // VISUALES Y GIZMOS

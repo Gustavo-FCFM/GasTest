@@ -15,6 +15,10 @@ MonoBehaviour:
   Duration: 5
   Period: 0
   StackingPolicy: 2
+  MaxStacks: 0
+  OnMaxStacksEffect: {fileID: 0}
+  EffectGroup: 0
+  Priority: 0
   Icon: {fileID: 21300000, guid: 735022b86e5b53645a5a735809c8d862, type: 3}
   EffectType: 1
   Modifiers:
@@ -24,4 +28,8 @@ MonoBehaviour:
     UseAttributeScaling: 0
     SourceAttribute: 0
     AttributeCoefficient: 0
+    UseTargetHealthScaling: 0
+    TargetHealthMode: 0
+    TargetHealthCoefficient: 0
+  IsCrowdControl: 1
   GrantedTags: 0f000000

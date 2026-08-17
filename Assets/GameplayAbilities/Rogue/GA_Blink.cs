@@ -98,34 +98,7 @@ public class GA_Blink : GameplayAbility
     // SelectionAngle. En el servidor, GetAimPoint() usa el NetworkAimPoint que el
     // dueño envió con el input (ver ServerActivateAbility).
     private AbilitySystemComponent FindTarget()
-    {
-        if (OwnerASC == null) return null;
-
-        PlayerController pc = OwnerASC.GetComponent<PlayerController>();
-        Vector3 origin   = OwnerASC.transform.position;
-        Vector3 aimPoint = pc != null ? pc.GetAimPoint(MaxRange) : origin + OwnerASC.transform.forward * MaxRange;
-
-        Vector3 aimDir = aimPoint - origin; aimDir.y = 0;
-        if (aimDir.sqrMagnitude < 0.0001f) aimDir = OwnerASC.transform.forward;
-        aimDir.Normalize();
-
-        Collider[] cols = Physics.OverlapSphere(origin, MaxRange, TargetLayer);
-        AbilitySystemComponent best = null;
-        float bestAlign = Mathf.Cos(SelectionAngle * Mathf.Deg2Rad); // umbral: dentro del ángulo
-
-        foreach (var c in cols)
-        {
-            AbilitySystemComponent asc = c.GetComponentInParent<AbilitySystemComponent>();
-            if (asc == null || !IsEnemy(asc) || asc.HasTag(EGameplayTag.State_Dead)) continue;
-
-            Vector3 toTarget = asc.transform.position - origin; toTarget.y = 0;
-            if (toTarget.sqrMagnitude < 0.0001f) continue;
-
-            float align = Vector3.Dot(aimDir, toTarget.normalized);
-            if (align > bestAlign) { bestAlign = align; best = asc; } // el más centrado en la mira
-        }
-        return best;
-    }
+        => FindBestTargetInAim(MaxRange, SelectionAngle, ETargetAffiliation.Enemies);
 
     // Instancia ImpactVFX en el punto de impacto. La llama cada peer con su
     // propia copia (ver NetworkAbilitySystemComponent.ServerPlayAbilityVFX).

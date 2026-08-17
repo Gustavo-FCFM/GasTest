@@ -168,7 +168,9 @@ public class GC_Projectile : NetworkBehaviour
         {
             if (!barrier.IsRaised || !barrier.IsHostile(sourceASC)) return;
 
-            barrier.NotifyProjectileBlocked();
+            // Le pasamos el efecto de daño (no un número) para que la barrera pueda
+            // reportar cuánto daño evitó de verdad — ver NotifyProjectileBlocked.
+            barrier.NotifyProjectileBlocked(damageEffect, sourceASC, transform.position);
             PlayImpactVFXEverywhere();
             DespawnSelf();
             return;

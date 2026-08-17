@@ -82,14 +82,23 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
              "siempre se decide con la geometría al momento del golpe.")]
     public float AllyScanInterval = 0.25f;
 
-    // Se dispara cada vez que la barrera frena daño, con cuánto frenó. Lo usa la
-    // pasiva del Paladín para curar a su aura al bloquear ("cada vez que evite daño,
-    // el jugador sanará a los aliados que estén en su aura").
-    public event System.Action<float> OnDamageBlocked;
+    // Se dispara cada vez que la barrera frena daño: cuánto frenó y en qué punto del
+    // mundo. Lo usa la pasiva del Paladín para curar a su aura al bloquear ("cada vez
+    // que evite daño, el jugador sanará a los aliados que estén en su aura").
+    //
+    // OJO: es un evento de GAMEPLAY y solo corre en el SERVIDOR (es ahí donde se
+    // resuelve el daño). Para feedback visual usá OnFlash, que sí llega a todos.
+    public event System.Action<float, Vector3> OnDamageBlocked;
+
+    // Gemelo puramente VISUAL del anterior: se dispara en TODOS los peers con el punto
+    // de impacto, para el destello/ripple del escudo (ver ShieldBlockFlash). Va por su
+    // propio canal porque el bloqueo se resuelve solo en el servidor, y si el efecto
+    // colgara de OnDamageBlocked únicamente el host lo vería.
+    public event System.Action<Vector3> OnFlash;
 
     private AbilitySystemComponent _ownerASC;
     private BoxCollider            _box;
-    private Transform              _visual;
+    private Transform[]            _visuals;
 
     // ASCs en los que este modificador está registrado ahora mismo (el dueño +
     // los aliados cubiertos). Hay que llevar la cuenta para poder darse de baja
@@ -116,12 +125,23 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
                              $"empuja a los jugadores y pelea con el CharacterController del dueño. " +
                              $"Marcalo como Is Trigger.");
 
-        // El mesh visual (si lo hay) se apaga solo, sin apagar este GameObject: si
-        // desactiváramos el objeto entero, este script dejaría de correr y nunca
-        // volvería a ver el tag para levantarse.
-        _visual = transform.childCount > 0 ? transform.GetChild(0) : null;
+        // Los visuales de la barrera son TODOS sus hijos: se apagan y prenden con
+        // ella, pero este GameObject nunca se desactiva — si lo hiciéramos, el script
+        // dejaría de correr y no volvería a ver el tag para levantarse.
+        //
+        // Se toman todos y no solo el primero para que se pueda componer el efecto con
+        // varios objetos (el panel translúcido, un borde, un sistema de partículas)
+        // sin que los que sobran queden encendidos para siempre.
+        _visuals = new Transform[transform.childCount];
+        for (int i = 0; i < transform.childCount; i++) _visuals[i] = transform.GetChild(i);
 
-        SetRaised(false);
+        // Estado inicial FORZADO, no vía SetRaised: ese método corta cuando el estado
+        // pedido es el que ya cree tener, y _raised arranca en false — así que
+        // SetRaised(false) acá no hacía nada y el escudo quedaba con el collider y los
+        // visuales tal como estuvieran guardados en el prefab (o sea, encendidos).
+        // Se veía como que el Paladín nace con el escudo puesto, y recién se acomodaba
+        // después de levantarlo y bajarlo una vez.
+        ApplyRaisedState(false);
     }
 
     private void OnDisable() => SetRaised(false);
@@ -151,10 +171,20 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
     private void SetRaised(bool raised)
     {
         if (_raised == raised) return;
+        ApplyRaisedState(raised);
+    }
+
+    // Aplica el estado SIN el guard de "ya estaba así". Separado de SetRaised para que
+    // Awake pueda forzar el estado apagado de arranque (ver el comentario allá).
+    private void ApplyRaisedState(bool raised)
+    {
         _raised = raised;
 
-        if (_box    != null) _box.enabled = raised;
-        if (_visual != null) _visual.gameObject.SetActive(raised);
+        if (_box != null) _box.enabled = raised;
+
+        if (_visuals != null)
+            foreach (var v in _visuals)
+                if (v != null) v.gameObject.SetActive(raised);
 
         if (raised)
         {
@@ -236,7 +266,7 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
         if (incoming <= 0f) return;
 
         // ¿La barrera se interpone de verdad entre el atacante y la víctima?
-        if (!Blocks(ctx.Source.transform.position, ctx.Target.transform.position)) return;
+        if (!Blocks(ctx.Source.transform.position, ctx.Target.transform.position, out Vector3 hitPoint)) return;
 
         float energy = _ownerASC.GetAttributeValue(EAttributeType.Energy);
         if (energy <= 0f) return; // sin energía no frena nada (la habilidad ya está bajando el escudo)
@@ -259,7 +289,33 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
         ctx.Magnitude  = -(incoming - blocked);
         ctx.WasBlocked = true;
 
-        OnDamageBlocked?.Invoke(blocked);
+        OnDamageBlocked?.Invoke(blocked, hitPoint);
+        BroadcastFlash(hitPoint);
+    }
+
+    // =========================================================
+    // FEEDBACK VISUAL DEL BLOQUEO
+    // =========================================================
+
+    // Dispara el destello acá y en todos los demás peers. Se llama desde el SERVIDOR
+    // (los dos caminos de bloqueo se resuelven ahí), así que sin la RPC el efecto solo
+    // lo vería el host — y en un hero shooter el que dispara TIENE que ver que su tiro
+    // pegó en un escudo.
+    private void BroadcastFlash(Vector3 hitPoint)
+    {
+        PlayFlash(hitPoint);   // el que resuelve (host) lo ve ya mismo
+
+        if (_ownerASC == null) return;
+        NetworkAbilitySystemComponent netAsc = _ownerASC.GetComponent<NetworkAbilitySystemComponent>();
+        if (netAsc != null) netAsc.ServerBroadcastShieldBlockFlash(hitPoint);
+    }
+
+    // Reproduce el destello en ESTE peer. Pública porque la llama la RPC de
+    // NetworkAbilitySystemComponent al llegar a cada cliente.
+    public void PlayFlash(Vector3 hitPoint)
+    {
+        if (!_raised) return;
+        OnFlash?.Invoke(hitPoint);
     }
 
     // True si el segmento atacante → víctima atraviesa el volumen de la barrera.
@@ -270,8 +326,11 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
     // Collider.Raycast devuelve false si el rayo ARRANCA dentro del collider, y eso
     // es justo lo que queremos: un enemigo que se te mete encima del escudo te pega
     // igual, como en cualquier hero shooter.
-    private bool Blocks(Vector3 attackerPos, Vector3 victimPos)
+    // 'hitPoint' devuelve dónde entró el golpe en la barrera, para el destello.
+    private bool Blocks(Vector3 attackerPos, Vector3 victimPos, out Vector3 hitPoint)
     {
+        hitPoint = Vector3.zero;
+
         Vector3 from = attackerPos + Vector3.up * AimHeight;
         Vector3 to   = victimPos   + Vector3.up * AimHeight;
 
@@ -296,16 +355,26 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
         float   dist  = delta.magnitude;
         if (dist < 0.001f) return false;
 
-        return _box.Raycast(new Ray(from, delta / dist), out _, dist);
+        if (!_box.Raycast(new Ray(from, delta / dist), out RaycastHit hit, dist)) return false;
+
+        hitPoint = hit.point;
+        return true;
     }
 
     // True si esta barrera está levantada. Lo consulta GC_Projectile al chocar.
     public bool IsRaised => _raised;
 
     // Le avisa a la barrera que paró un PROYECTIL físico (que se resuelve por
-    // colisión, no por el pipeline de daño). Cobra EnergyPerProjectileBlocked y
-    // dispara el mismo feedback que un bloqueo normal.
-    public void NotifyProjectileBlocked()
+    // colisión con el collider, no por el pipeline de daño). Cobra
+    // EnergyPerProjectileBlocked y dispara el mismo feedback que un bloqueo normal.
+    //
+    // Se le pasa el EFECTO de daño que traía el proyectil, no un número: el evento
+    // OnDamageBlocked reporta DAÑO EVITADO, y quien lo escucha escala con eso (la
+    // curación del aura del Paladín). Antes acá se mandaba el costo en energía, que
+    // es otra unidad — un proyectil de 5 y uno de 80 curaban exactamente lo mismo.
+    // El daño real se estima contra el dueño de la barrera, que es quien lo habría
+    // recibido (ver AbilitySystemComponent.EstimateInstantDamage).
+    public void NotifyProjectileBlocked(GameplayEffect damageEffect, AbilitySystemComponent shooter, Vector3 hitPoint)
     {
         if (!_raised || _ownerASC == null) return;
 
@@ -316,7 +385,10 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
                                                Mathf.Max(0f, energy - EnergyPerProjectileBlocked));
         }
 
-        OnDamageBlocked?.Invoke(EnergyPerProjectileBlocked);
+        float blocked = _ownerASC.EstimateInstantDamage(damageEffect, shooter);
+        if (blocked > 0f) OnDamageBlocked?.Invoke(blocked, hitPoint);
+
+        BroadcastFlash(hitPoint);
     }
 
     // True si este golpe viene de un enemigo del dueño de la barrera. Lo usa

@@ -167,6 +167,7 @@ public class PlayerController : NetworkBehaviour
     private bool HasHoldSlots   => !string.IsNullOrEmpty(_holdLoopKey);
     private bool HasHoldImpact  => !string.IsNullOrEmpty(_holdImpactKey);
     private bool _warnedNoHoldSlots;
+    private bool _warnedNoHoldImpact;
 
     [Header("Huesos")]
     public Transform MainHandSocket;
@@ -284,7 +285,15 @@ public class PlayerController : NetworkBehaviour
     // modal está abierto — ej. la selección de clase (UI_ClassMenu).
     private bool _inputLocked;
     // La usan los menús modales para tomar/soltar el control del jugador.
-    public void SetInputLocked(bool locked) => _inputLocked = locked;
+    public void SetInputLocked(bool locked)
+    {
+        // Al ENTRAR a un menú se baja cualquier mantenido en curso: con el input
+        // bloqueado nunca se detectaría que soltaste el botón, y el jugador saldría
+        // del menú trabado con el escudo arriba. Ver CancelHeldAbility.
+        if (locked) CancelHeldAbility();
+
+        _inputLocked = locked;
+    }
 
     // =========================================================
     // CICLO DE VIDA DE RED
@@ -866,6 +875,35 @@ public class PlayerController : NetworkBehaviour
     // servidor todavía lo tiene con el escudo arriba.
     private void ProcessHoldRelease()
     {
+        if (!ReleaseHold(forceFinish: false)) return;
+
+        // Recién ahora isAttacking pasa a contar para el watchdog (mientras se
+        // mantenía, IsAimingAbility lo excluía).
+        _attackStartTime = Time.time;
+    }
+
+    // Corta el mantenido en curso desde AFUERA del input, o sea sin que el jugador
+    // haya soltado el botón. Lo llaman los menús modales al abrirse.
+    //
+    // Hace falta porque en esos casos el "soltar" NUNCA se llega a detectar: Update()
+    // corta antes por _inputLocked. Sin esto, el jugador volvía del menú con
+    // _holdAbility todavía apuntando al escudo, y como ProcessAbilityPress descarta
+    // toda presión mientras haya un mantenido activo —y el watchdog excluye los
+    // mantenidos a propósito, para que un escudo pueda sostenerse más de 5 s— quedaba
+    // sin poder usar NINGUNA habilidad, para siempre.
+    public void CancelHeldAbility() => ReleaseHold(forceFinish: true);
+
+    // Baja el mantenido: avisa al servidor y limpia el estado local. Devuelve false si
+    // no había ninguno.
+    //
+    // forceFinish libera además isAttacking en el acto, en vez de esperar el aviso de
+    // fin del servidor. Se usa cuando ese aviso podría no llegar nunca (ver
+    // EndActiveHolds: si la instancia de la habilidad ya se descartó, su EndHold no
+    // hace nada y nadie manda ObserversFinishAttack).
+    private bool ReleaseHold(bool forceFinish)
+    {
+        if (_holdAbility == null) return false;
+
         GameplayAbility ability = _holdAbility;
         _holdAbility = null;
 
@@ -874,9 +912,8 @@ public class PlayerController : NetworkBehaviour
         if (NetASC != null) NetASC.ServerRequestEndHoldAbility(_holdSlot);
         else if (ability is IHoldAbility hold) hold.EndHold(); // fallback singleplayer
 
-        // Recién ahora isAttacking pasa a contar para el watchdog (mientras se
-        // mantenía, IsAimingAbility lo excluía).
-        _attackStartTime = Time.time;
+        if (forceFinish) FinishAttack();
+        return true;
     }
 
     // Mientras se mantiene una habilidad de zona, el marcador sigue la mira
@@ -1072,6 +1109,11 @@ public class PlayerController : NetworkBehaviour
     {
         if (newClass == null || ASC == null) return;
 
+        // ANTES de tocar nada: cerrar los mantenidos en curso. Sus instancias están a
+        // punto de descartarse, y una habilidad de mantener que se va sin cerrarse
+        // deja su corutina viva y al jugador trabado. Ver EndActiveHolds.
+        EndActiveHolds();
+
         ASC.RemoveAllActiveEffects();
         CurrentClassDef  = newClass;
         ASC.CurrentClass = newClass;
@@ -1137,6 +1179,32 @@ public class PlayerController : NetworkBehaviour
                                $"la clase al servidor. Las habilidades de esta clase fallarán en red.");
             UpdateHUD();
         }
+    }
+
+    // Cierra cualquier habilidad de MANTENER que siga activa, justo antes de descartar
+    // las instancias otorgadas (cambio de clase / evolución a subclase).
+    //
+    // Corre en TODOS los peers, y hace falta en los dos lados por motivos distintos:
+    //
+    //  · En el SERVIDOR: un GA_ShieldBlock a medio mantener tiene su corutina de
+    //    vigilancia corriendo sobre el ASC. Si simplemente descartamos la instancia,
+    //    esa corutina queda viva para siempre girando en el vacío, y el efecto de
+    //    bloqueo nunca se retira por la vía normal.
+    //
+    //  · En el DUEÑO: libera el estado de input. Se hace acá y no con el pedido normal
+    //    al servidor porque para este punto CurrentClass ya apunta a la clase NUEVA,
+    //    así que resolver la habilidad por slot daría cualquier cosa. Recorremos las
+    //    instancias directamente, que es lo único fiable.
+    private void EndActiveHolds()
+    {
+        if (ASC != null)
+        {
+            foreach (var granted in ASC.GrantedAbilities)
+                if (granted is IHoldAbility hold && hold.IsHolding) hold.EndHold();
+        }
+
+        // Suelta _holdAbility, baja la animación de mantenido y libera isAttacking.
+        FinishAttack();
     }
 
     // Aplica los GEs pasivos de la clase (CharacterClassDefinition.PassiveEffects).
@@ -1606,7 +1674,26 @@ public class PlayerController : NetworkBehaviour
     // Sin guard de dueño: la usan por igual el dueño y la réplica a observadores.
     public void ApplyHoldImpactAnimation(AnimationClip clip)
     {
-        if (characterAnimator == null || clip == null || !HasHoldImpact) return;
+        if (characterAnimator == null || clip == null) return;
+
+        // La habilidad TRAE un clip de impacto pero el Animator no tiene dónde
+        // ponerlo. Sin este aviso, asignar el clip en el asset no hacía absolutamente
+        // nada y no había forma de darse cuenta: la reacción simplemente no se veía.
+        if (!HasHoldImpact)
+        {
+            if (!_warnedNoHoldImpact)
+            {
+                _warnedNoHoldImpact = true;
+                Debug.LogWarning($"[PlayerController] Hay un clip de reacción al golpe en el escudo " +
+                                 $"('{clip.name}'), pero el controller no tiene la ranura " +
+                                 $"'{HoldImpactSlotName}'. La reacción no se va a ver.\n" +
+                                 $"Creá un estado con ese clip placeholder en AC_Player: " +
+                                 $"AnyState → HoldImpact con ActionID == {HoldImpactStateID} + trigger " +
+                                 $"'{HoldImpactTrigger}', y HoldImpact → HoldLoop por Exit Time con " +
+                                 $"{HoldingParam} == true.");
+            }
+            return;
+        }
 
         if (clip != _currentHoldImpact)
         {

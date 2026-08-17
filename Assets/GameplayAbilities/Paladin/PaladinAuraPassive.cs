@@ -201,8 +201,9 @@ public class PaladinAuraPassive : MonoBehaviour
         HealAura(damageDealt * HealPercentOfDamage);
     }
 
-    // El escudo frenó daño: misma curación, con su propio porcentaje.
-    private void HandleDamageBlocked(float damageBlocked)
+    // El escudo frenó daño: misma curación, con su propio porcentaje. El punto de
+    // impacto no se usa acá (es para el destello, ver ShieldBlockFlash).
+    private void HandleDamageBlocked(float damageBlocked, Vector3 hitPoint)
     {
         if (HealPercentOfBlocked <= 0f || damageBlocked <= 0f) return;
         HealAura(damageBlocked * HealPercentOfBlocked);

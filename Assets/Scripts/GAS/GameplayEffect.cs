@@ -74,6 +74,42 @@ public class GameplayEffect : ScriptableObject
     // Qué atributos cambia este efecto y cuánto (ver Modifier.cs).
     public List<Modifier> Modifiers = new List<Modifier>();
 
+    [Header("Control de Masas (CC)")]
+    [Tooltip("Marca este efecto como CONTROL: su duración se acorta (o se alarga) con la " +
+             "Resistencia al control del objetivo — ver EAttributeType.CCResistance.\n\n" +
+             "No hace falta marcarlo si el efecto otorga State_Stunned, State_Rooted o " +
+             "State_Silenced: esos ya cuentan como control solos. Es para el CC que no pasa por " +
+             "esos tags (cegueras, miedos, ralentizaciones fuertes) y que igual querés que la " +
+             "resistencia recorte.")]
+    public bool IsCrowdControl = false;
+
+    // Tags de control "duros" del core: un efecto que otorgue cualquiera de estos cuenta
+    // como CC aunque no tenga la casilla marcada. Existe para que los GEs que YA estaban
+    // (GE_Stun y compañía) obedezcan la resistencia sin tener que editarlos uno por uno.
+    private static readonly EGameplayTag[] CoreControlTags =
+    {
+        EGameplayTag.State_Stunned,
+        EGameplayTag.State_Rooted,
+        EGameplayTag.State_Silenced,
+    };
+
+    // True si a este efecto le corresponde que la Resistencia al control le toque la
+    // duración. Lo consulta AbilitySystemComponent.ApplyGameplayEffect.
+    public bool CountsAsCrowdControl
+    {
+        get
+        {
+            if (IsCrowdControl) return true;
+            if (GrantedTags == null) return false;
+
+            foreach (EGameplayTag granted in GrantedTags)
+                foreach (EGameplayTag control in CoreControlTags)
+                    if (granted == control) return true;
+
+            return false;
+        }
+    }
+
     [Header("Tags")]
     // Tags que se le agregan al objetivo mientras el efecto está activo
     // (ej: Stunned) y se le quitan al terminar. El primer tag de esta

@@ -652,6 +652,69 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         => OwnerASC != null && OwnerASC.IsAllyOf(target, includeSelf);
 
     // =========================================================
+    // SELECCIÓN DE OBJETIVO APUNTADO
+    // =========================================================
+
+    // A quién busca FindBestTargetInAim.
+    protected enum ETargetAffiliation { Enemies, Allies }
+
+    // Devuelve el personaje MÁS CENTRADO en la mira del dueño, dentro de 'maxRange' y
+    // de un cono de 'selectionAngle' grados. null si no hay ninguno válido.
+    //
+    // Vive acá porque es la misma búsqueda para todas las habilidades de objetivo
+    // único, cambiando solo a quién apuntan: el Golpe mortal del Pícaro (enemigos, para
+    // aparecer detrás), la Intercepción heroica del Paladín (aliados, para aparecer
+    // delante) y las de seleccionar-y-aplicar (GA_TargetedAlly). Estaba copiada casi
+    // igual en cada una.
+    //
+    // En el servidor, GetAimPoint() usa el NetworkAimPoint que el dueño mandó junto con
+    // el input (ver NetworkASC.ServerActivateAbility), así que la selección se resuelve
+    // con la mira REAL del jugador y no con hacia dónde apunta su cuerpo.
+    //
+    // El filtro de física sale de TargetLayer; la afiliación se resuelve en código.
+    protected AbilitySystemComponent FindBestTargetInAim(float maxRange, float selectionAngle,
+                                                        ETargetAffiliation affiliation,
+                                                        bool includeSelf = false,
+                                                        bool allowDead   = false)
+    {
+        if (OwnerASC == null) return null;
+
+        PlayerController pc = OwnerASC.GetComponent<PlayerController>();
+        Vector3 origin   = OwnerASC.transform.position;
+        Vector3 aimPoint = pc != null ? pc.GetAimPoint(maxRange)
+                                      : origin + OwnerASC.transform.forward * maxRange;
+
+        Vector3 aimDir = aimPoint - origin; aimDir.y = 0;
+        if (aimDir.sqrMagnitude < 0.0001f) aimDir = OwnerASC.transform.forward;
+        aimDir.Normalize();
+
+        Collider[] cols = Physics.OverlapSphere(origin, maxRange, TargetLayer);
+        AbilitySystemComponent best = null;
+        // Umbral de "está dentro del cono": comparar cosenos evita un Acos por candidato.
+        float bestAlign = Mathf.Cos(selectionAngle * Mathf.Deg2Rad);
+
+        foreach (var c in cols)
+        {
+            AbilitySystemComponent asc = c.GetComponentInParent<AbilitySystemComponent>();
+            if (asc == null) continue;
+            if (!includeSelf && ReferenceEquals(asc, OwnerASC)) continue;
+            if (!allowDead && asc.HasTag(EGameplayTag.State_Dead)) continue;
+
+            bool valid = affiliation == ETargetAffiliation.Allies
+                ? IsAlly(asc, includeSelf)
+                : IsEnemy(asc);
+            if (!valid) continue;
+
+            Vector3 toTarget = asc.transform.position - origin; toTarget.y = 0;
+            if (toTarget.sqrMagnitude < 0.0001f) continue;
+
+            float align = Vector3.Dot(aimDir, toTarget.normalized);
+            if (align > bestAlign) { bestAlign = align; best = asc; } // el más centrado
+        }
+        return best;
+    }
+
+    // =========================================================
     // VFX
     // =========================================================
 
