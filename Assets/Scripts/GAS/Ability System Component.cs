@@ -344,6 +344,22 @@ public class AbilitySystemComponent : MonoBehaviour
     // todos los atributos "derivados" (no toca Vida/Maná/Energía/Exp/
     // Nivel/Escudo, que se manejan aparte porque son "pools" con su
     // propio valor actual independiente del recálculo).
+    // True si el atributo es un "POOL": tiene su propio valor actual que sube y baja
+    // por consumo (daño, gasto, regeneración) en vez de calcularse como
+    // (Base + Aditivos) × Multiplicativos.
+    //
+    // Los pools quedan afuera del sistema de modificadores por completo: no se
+    // recalculan (RecalculateAllAttributes los saltea, o el recálculo les pisaría el
+    // valor actual) y un modificador CON DURACIÓN sobre uno de ellos es inerte —
+    // para tocarlos hay que usar Period (por ticks) o Shield. Ver WarnInertPoolModifiers.
+    private static bool IsPoolAttribute(EAttributeType type)
+    {
+        return type == EAttributeType.Health || type == EAttributeType.Mana   ||
+               type == EAttributeType.Energy || type == EAttributeType.Exp    ||
+               type == EAttributeType.MaxExp || type == EAttributeType.Level  ||
+               type == EAttributeType.Shield;
+    }
+
     private void RecalculateAllAttributes()
     {
         foreach (var pair in Attributes)
@@ -351,10 +367,7 @@ public class AbilitySystemComponent : MonoBehaviour
             EAttributeType type = pair.Key;
             AttributeValue attr = pair.Value;
 
-            if (type == EAttributeType.Health  || type == EAttributeType.Mana   ||
-                type == EAttributeType.Energy  || type == EAttributeType.Exp    ||
-                type == EAttributeType.MaxExp  || type == EAttributeType.Level  ||
-                type == EAttributeType.Shield) continue;
+            if (IsPoolAttribute(type)) continue;
 
             float newValue = (attr.BaseValue + attr.AdditiveModifier) * attr.MultiplicativeModifier;
 
@@ -940,7 +953,27 @@ public class AbilitySystemComponent : MonoBehaviour
             // GrantTemporaryShield y RemoveActiveEffect.
             if (mod.Attribute == EAttributeType.Shield) continue;
 
-            if (!Attributes.TryGetValue(mod.Attribute, out AttributeValue attr)) continue;
+            // Si el personaje todavía no tiene ese atributo, se CREA en 0 y el
+            // modificador entra igual.
+            //
+            // Antes acá había un `continue` y era un agujero grande y SILENCIOSO: si el
+            // atributo no estaba listado en el AttributeSetDefinition de la clase, el
+            // modificador se descartaba sin aviso. Como ninguna clase declaraba
+            // Resistance, el Aura de protección del Paladín y el buff de la Intercepción
+            // heroica no hacían absolutamente nada, y no había forma de notarlo salvo
+            // midiendo el daño a mano.
+            //
+            // Crear en 0 es lo coherente con el resto del sistema: GetAttributeValue ya
+            // devuelve 0 para un atributo ausente, o sea que "no declarado" siempre
+            // significó "vale 0". Los POOLS quedan afuera porque un modificador con
+            // duración sobre ellos es inerte por diseño (ver WarnInertPoolModifiers).
+            if (!Attributes.TryGetValue(mod.Attribute, out AttributeValue attr))
+            {
+                if (IsPoolAttribute(mod.Attribute)) continue;
+
+                attr = new AttributeValue(0f);
+                Attributes[mod.Attribute] = attr;
+            }
             if (mod.Type == Modifier.EModificationType.Add)
                 attr.AdditiveModifier += mod.Magnitude * sign;
             else if (mod.Type == Modifier.EModificationType.Multiply)

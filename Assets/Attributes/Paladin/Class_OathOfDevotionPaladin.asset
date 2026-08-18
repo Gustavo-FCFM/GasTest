@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 749805704a6088741af34d91f0891ced, type: 3}
+  m_Name: Class_OathOfDevotionPaladin
+  m_EditorClassIdentifier: 
+  ClassName: Oath Of Devotion
+  ClassIcon: {fileID: 0}
+  Description: Justice, order and SMITES
+  BaseAttributes: {fileID: 11400000, guid: 4bf621f34b0c1d441be65c51b90d77e5, type: 2}
+  Abilities:
+  - InputSlot: 1
+    Ability: {fileID: 11400000, guid: 97d55b34db628d84f9b76de7d688d654, type: 2}
+  - InputSlot: 2
+    Ability: {fileID: 11400000, guid: 8d51fde4b2bdfbd48929947f0b00f484, type: 2}
+  - InputSlot: 3
+    Ability: {fileID: 11400000, guid: c0385947266c84944b448bda69bbd77e, type: 2}
+  - InputSlot: 6
+    Ability: {fileID: 11400000, guid: a0f11893e7b547f4cb7859680a104a35, type: 2}
+  PassiveBehaviorsPrefab: {fileID: 9026357972262154142, guid: 6cb57ab5ff075d44ea0ca589b1d76a3b, type: 3}
+  PassiveEffects:
+  - {fileID: 11400000, guid: 5425dc3edd0320d4a8b0ad013919b6cc, type: 2}
+  StatGrowthPerLevel: []
+  AvailableSubclasses: []
+  ClassAnimatorOverride: {fileID: 22100000, guid: 75ec53281b263d24dbe5fee5e2ab9c9e, type: 2}
+  MainHandWeaponPrefab: {fileID: 5073896408682217672, guid: 1dd30a155c67b2b499185ae1abb43b21, type: 3}
+  OffHandWeaponPrefab: {fileID: 3844116661835162637, guid: 355227fa58c247448aac64714c11cb4a, type: 3}
+  MainHandRotationOffset: {x: 0, y: 0, z: 0}
+  MainHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandRotationOffset: {x: 0, y: 180, z: 0}
+  OffHandPositionOffset: {x: 0, y: 0, z: -0.1}

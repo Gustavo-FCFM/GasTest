@@ -73,4 +73,5 @@ public enum EGameplayTag
     Status_Blocking,         // Escudo levantado (GA_ShieldBlock). Dura lo que el jugador mantenga el botón; lo usan la animación de hold y el VFX de la barrera
     Status_DivineSmite,      // Castigo divino cargado: el próximo ataque principal se cambia por el combo cono+estela (ver GA_TagSwitch)
     Status_Aura_Protection,  // El personaje está dentro del Aura de protección de un Paladín aliado (marca para VFX; el stat lo da el GE del aura)
+    Status_Aura_Devotion,
 }
