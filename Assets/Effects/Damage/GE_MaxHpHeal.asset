@@ -20,7 +20,16 @@ MonoBehaviour:
   EffectGroup: 0
   Priority: 0
   Icon: {fileID: 0}
-  EffectType: 0
-  Modifiers: []
+  EffectType: 2
+  Modifiers:
+  - Attribute: 1
+    Type: 0
+    Magnitude: 0
+    UseAttributeScaling: 1
+    SourceAttribute: 2
+    AttributeCoefficient: 1
+    UseTargetHealthScaling: 0
+    TargetHealthMode: 0
+    TargetHealthCoefficient: 0
   IsCrowdControl: 0
   GrantedTags: 

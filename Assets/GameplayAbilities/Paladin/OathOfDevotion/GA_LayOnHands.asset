@@ -12,26 +12,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 636f4f13857926149bb632c6a7a4371c, type: 3}
   m_Name: GA_LayOnHands
   m_EditorClassIdentifier: 
-  AbilityName: New Ability
+  AbilityName: LayOnHands
   AbilityIcon: {fileID: 0}
   CostEffect: {fileID: 0}
-  CooldownEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: bd07a782525833e47889b22896900f13, type: 2}
   CooldownDuration: 0
   UseAttackSpeedAsCooldown: 0
-  UltimateChargeAmount: 0
-  ActivationBlockedTags: 
+  UltimateChargeAmount: 1
+  ActivationBlockedTags: 0100000003000000
   ActivationRequiredTags: 
-  AnimationClip: {fileID: 0}
+  AnimationClip: {fileID: 3094330708855449807, guid: 8d3c95e724e453047940371ad39c4153, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 1
   TargetLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128
   VisualsSequence: []
   MaxCharges: 1
-  AllyEffects: []
-  MaxRange: 12
+  AllyEffects:
+  - {fileID: 11400000, guid: ab05ab65a33c9754bbeb168b51e81d90, type: 2}
+  MaxRange: 6
   SelectionAngle: 30
   SelfIfNoTarget: 1
   AllowDeadTargets: 0
-  ImpactVFX: {fileID: 0}
+  ImpactVFX: {fileID: 7155335147208632822, guid: 97c43495f80a3244fad1301dfafbe252, type: 3}

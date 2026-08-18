@@ -25,6 +25,10 @@ MonoBehaviour:
     Ability: {fileID: 11400000, guid: c0385947266c84944b448bda69bbd77e, type: 2}
   - InputSlot: 6
     Ability: {fileID: 11400000, guid: a0f11893e7b547f4cb7859680a104a35, type: 2}
+  - InputSlot: 4
+    Ability: {fileID: 11400000, guid: 2a249ba8a84f6bf44841c936e2f501cd, type: 2}
+  - InputSlot: 5
+    Ability: {fileID: 0}
   PassiveBehaviorsPrefab: {fileID: 9026357972262154142, guid: 6cb57ab5ff075d44ea0ca589b1d76a3b, type: 3}
   PassiveEffects:
   - {fileID: 11400000, guid: 5425dc3edd0320d4a8b0ad013919b6cc, type: 2}
