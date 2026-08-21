@@ -62,6 +62,14 @@ public class PaladinAuraPassive : MonoBehaviour
                  "IMPORTANTE: StackingPolicy = Refresh y Duration ≈ 2× el intervalo de tick, " +
                  "o se van a apilar sin freno (ver la nota de la cabecera del script).")]
         public List<GameplayEffect> Effects = new List<GameplayEffect>();
+
+        [Tooltip("OPCIONAL: si se pone un tag, el anillo SOLO tickea mientras el Paladín lo tenga.\n\n" +
+                 "Es lo que permite que una habilidad temporal agregue efectos a las auras sin " +
+                 "duplicar la lógica: el Ángel vengador otorga su tag y con eso se encienden dos " +
+                 "anillos extra (velocidad de movimiento sobre el aura de protección, velocidad de " +
+                 "ataque sobre la de venganza) que el resto del tiempo están apagados.\n\n" +
+                 "None = el anillo está siempre activo, que es el caso normal.")]
+        public EGameplayTag RequiredOwnerTag = EGameplayTag.None;
     }
 
     [Header("Anillos del Aura")]
@@ -159,6 +167,10 @@ public class PaladinAuraPassive : MonoBehaviour
     {
         if (ring == null || ring.Effects == null || ring.Effects.Count == 0) return;
         if (ring.Radius <= 0f) return;
+
+        // Anillo condicional: solo tickea mientras el Paladín tenga el tag. Los efectos
+        // que ya repartió se caen solos un tick después, porque duran ~2× el intervalo.
+        if (ring.RequiredOwnerTag != EGameplayTag.None && !_asc.HasTag(ring.RequiredOwnerTag)) return;
 
         CollectTargets(ring.Radius, ring.Targets, ring.IncludeSelf);
 

@@ -74,4 +74,9 @@ public enum EGameplayTag
     Status_DivineSmite,      // Castigo divino cargado: el próximo ataque principal se cambia por el combo cono+estela (ver GA_TagSwitch)
     Status_Aura_Protection,  // El personaje está dentro del Aura de protección de un Paladín aliado (marca para VFX; el stat lo da el GE del aura)
     Status_Aura_Devotion,
+
+    // --- PALADÍN · JURAMENTO DE LA VENGANZA ---
+    Status_Aura_Vengeance,   // El enemigo está dentro del Aura de venganza (marca para VFX; la Vulnerabilidad la da el GE del aura)
+    Status_SwornEnemy,       // Enemigo jurado: recibe más daño y CURA a los aliados que lo golpean (ver GA_SwornEnemy)
+    Status_AvengingAngel,    // Ángel vengador activo: cambia el ataque principal (vía GA_TagSwitch) y habilita los anillos de aura condicionales
 }

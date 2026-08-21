@@ -664,7 +664,7 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // Vive acá porque es la misma búsqueda para todas las habilidades de objetivo
     // único, cambiando solo a quién apuntan: el Golpe mortal del Pícaro (enemigos, para
     // aparecer detrás), la Intercepción heroica del Paladín (aliados, para aparecer
-    // delante) y las de seleccionar-y-aplicar (GA_TargetedAlly). Estaba copiada casi
+    // delante) y las de seleccionar-y-aplicar (GA_Target). Estaba copiada casi
     // igual en cada una.
     //
     // En el servidor, GetAimPoint() usa el NetworkAimPoint que el dueño mandó junto con

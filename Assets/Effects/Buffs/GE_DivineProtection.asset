@@ -10,26 +10,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 923ea9fbcde13614b8da2b7689d349ea, type: 3}
-  m_Name: GE_AuraOfDevotion
+  m_Name: GE_DivineProtection
   m_EditorClassIdentifier: 
-  Duration: 1.1
+  Duration: 6
   Period: 0
   StackingPolicy: 0
   MaxStacks: 0
   OnMaxStacksEffect: {fileID: 0}
-  EffectGroup: 42
+  EffectGroup: 0
   Priority: 0
-  Icon: {fileID: 21300000, guid: a12036e45c28f8c42bef0f62e15f2b39, type: 3}
+  Icon: {fileID: 21300000, guid: 7967cc9ccbddea6408dc9f8591279a5d, type: 3}
   EffectType: 0
-  Modifiers:
-  - Attribute: 21
-    Type: 0
-    Magnitude: 0.1
-    UseAttributeScaling: 0
-    SourceAttribute: 0
-    AttributeCoefficient: 0
-    UseTargetHealthScaling: 0
-    TargetHealthMode: 0
-    TargetHealthCoefficient: 0
+  Modifiers: []
   IsCrowdControl: 0
-  GrantedTags: 2a000000
+  GrantedTags: 1200000025000000

@@ -1,21 +1,23 @@
 using UnityEngine;
 
 // ============================================================
-// GA_TargetedAlly  (genérico — "elegí un aliado y aplicale esto")
+// GA_Target  (genérico — "elegí un objetivo y aplicale esto")
 //
-// Apunta al aliado que el jugador tiene más centrado en la mira dentro de un
-// alcance, y le aplica los efectos de la habilidad. Si no hay nadie a la vista
-// puede caer sobre UNO MISMO, que es el patrón que se repite en todo el juego:
+// Apunta al personaje que el jugador tiene más centrado en la mira dentro de un
+// alcance, y le aplica los efectos de la habilidad. Sirve para las dos afiliaciones
+// (ver el campo Targets), que es el patrón que se repite en todo el juego:
 //
 //   · Imposición de manos (Paladín/Devoción): cura fuerte a un aliado cercano;
 //     sin aliado seleccionado, se cura él.
-//   · Protección divina (Paladín/Devoción, ult): vuelve inmune a un aliado;
-//     sin aliado seleccionado, a él mismo.
-//   · La curación apuntada del Clérigo.
+//   · Protección divina (Paladín/Devoción, ult): vuelve inmune a un aliado.
+//   · Presencia conquistadora (Paladín/Conquista): aturde a un enemigo lejano.
+//   · La curación apuntada del Clérigo y su "Canalizar divinidad: Aturdir".
 //
-// QUÉ APLICA: la lista AllyEffects de GameplayAbility — la misma que usan el resto
-// de las habilidades que tocan aliados, así que no hay un campo nuevo que aprender.
-// Podés poner tantos GE como quieras (curación, escudo, un buff con tag, los tres).
+// QUÉ APLICA: la lista AllyEffects de GameplayAbility. El nombre viene de la clase
+// base, donde significa "lo que esta habilidad le hace a los aliados que alcanza"
+// — acá, como el objetivo es UNO SOLO y elegido a propósito, hay que leerlo como
+// "los efectos que recibe el objetivo", apunte a un aliado o a un enemigo.
+// Podés poner tantos GE como quieras (curación, escudo, un debuff con tag, los tres).
 //
 // Para una curación "del total de la vida máxima del lanzador", el GE va con un
 // Modifier sobre Health con UseAttributeScaling, SourceAttribute = MaxHealth y
@@ -24,11 +26,22 @@ using UnityEngine;
 // NO gasta nada si no hay a quién aplicárselo: sin objetivo válido (y con el
 // autocasteo apagado) la habilidad sale sin cobrar costo, cooldown ni carga.
 // ============================================================
-[CreateAssetMenu(fileName = "GA_TargetedAlly", menuName = "GAS/Generics/Targeted Ally")]
-public class GA_TargetedAlly : GameplayAbility
+[CreateAssetMenu(fileName = "GA_Target", menuName = "GAS/Generics/Target")]
+public class GA_Target : GameplayAbility
 {
+    // A quién apunta la habilidad. Allies es el valor 0 = el comportamiento original,
+    // así que los assets ya configurados no cambian al agregar esto.
+    public enum ETargetSide { Allies, Enemies }
+
     [Header("Selección")]
-    [Tooltip("Alcance máximo para buscar al aliado.")]
+    [Tooltip("A quién apunta. Allies: curaciones, escudos y protecciones. Enemies: marcas, " +
+             "aturdimientos y debuffs de objetivo único (Enemigo jurado, Presencia conquistadora, " +
+             "el 'Canalizar divinidad: Aturdir' del Clérigo).\n\n" +
+             "Con Enemies, el autocasteo sobre uno mismo se ignora aunque esté marcado: no tiene " +
+             "sentido aplicarte a vos mismo un debuff porque no encontraste a nadie.")]
+    public ETargetSide Targets = ETargetSide.Allies;
+
+    [Tooltip("Alcance máximo para buscar al objetivo.")]
     public float MaxRange = 12f;
 
     [Tooltip("Ángulo máximo (grados) entre la mira y el aliado para que cuente como objetivo. " +
@@ -98,11 +111,20 @@ public class GA_TargetedAlly : GameplayAbility
     // "centrado", y nunca alcanzarías al aliado que tenés un poco al costado.
     private AbilitySystemComponent ResolveTarget()
     {
-        AbilitySystemComponent ally = FindBestTargetInAim(
-            MaxRange, SelectionAngle, ETargetAffiliation.Allies,
+        ETargetAffiliation side = Targets == ETargetSide.Enemies
+            ? ETargetAffiliation.Enemies
+            : ETargetAffiliation.Allies;
+
+        AbilitySystemComponent target = FindBestTargetInAim(
+            MaxRange, SelectionAngle, side,
             includeSelf: false, allowDead: AllowDeadTargets);
 
-        if (ally != null) return ally;
+        if (target != null) return target;
+
+        // El autocasteo solo tiene sentido apuntando a aliados: si la habilidad
+        // aplica un debuff y no encontró enemigo, lo correcto es no hacer nada.
+        if (Targets == ETargetSide.Enemies) return null;
+
         return SelfIfNoTarget ? OwnerASC : null;
     }
 

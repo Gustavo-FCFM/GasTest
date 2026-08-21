@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Class_OathOfDevotionPaladin
   m_EditorClassIdentifier: 
   ClassName: Oath Of Devotion
-  ClassIcon: {fileID: 0}
-  Description: Justice, order and SMITES
+  ClassIcon: {fileID: 21300000, guid: 69034b55979ea1b41b859edfc97723d5, type: 3}
+  Description: My Friends are my POWER
   BaseAttributes: {fileID: 11400000, guid: 4bf621f34b0c1d441be65c51b90d77e5, type: 2}
   Abilities:
   - InputSlot: 1
@@ -28,8 +28,8 @@ MonoBehaviour:
   - InputSlot: 4
     Ability: {fileID: 11400000, guid: 2a249ba8a84f6bf44841c936e2f501cd, type: 2}
   - InputSlot: 5
-    Ability: {fileID: 0}
-  PassiveBehaviorsPrefab: {fileID: 9026357972262154142, guid: 6cb57ab5ff075d44ea0ca589b1d76a3b, type: 3}
+    Ability: {fileID: 11400000, guid: 61c6d1212f012104a9d77d4744c35a53, type: 2}
+  PassiveBehaviorsPrefab: {fileID: 9026357972262154142, guid: 8c7284c475c63bd41ac77dd71a838ed4, type: 3}
   PassiveEffects:
   - {fileID: 11400000, guid: 5425dc3edd0320d4a8b0ad013919b6cc, type: 2}
   StatGrowthPerLevel: []

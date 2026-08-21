@@ -390,6 +390,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1598972752}
     m_Modifications:
+    - target: {fileID: -2306051200101516951, guid: 8c7284c475c63bd41ac77dd71a838ed4, type: 3}
+      propertyPath: Rings.Array.data[1].Radius
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 8607894374043660639, guid: 8c7284c475c63bd41ac77dd71a838ed4, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
