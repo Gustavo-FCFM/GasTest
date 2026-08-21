@@ -29,7 +29,7 @@ MonoBehaviour:
     m_Bits: 128
   VisualsSequence: []
   MaxCharges: 1
-  AllyEffects:
+  TargetEffects:
   - {fileID: 11400000, guid: e020fa4d41da96d43b303363eadf0129, type: 2}
   ProjectilePrefab: {fileID: 406129108226925510, guid: 29b7325ea45914c4bb7592ed1cdc376b, type: 3}
   LaunchForce: 12

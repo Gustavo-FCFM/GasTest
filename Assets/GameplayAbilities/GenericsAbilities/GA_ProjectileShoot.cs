@@ -151,11 +151,11 @@ public class GA_ProjectileShoot : GameplayAbility
             // Le pasamos 'this' para que, al impactar (siempre en el
             // servidor), el proyectil pueda pedirle a NetworkASC que
             // reproduzca ImpactVFX en todos los peers vía PlayImpactVFX().
-            // AllyEffects viene de GameplayAbility: si está vacío el proyectil sigue
+            // TargetEffects viene de GameplayAbility: si está vacío el proyectil sigue
             // ignorando a los aliados como siempre; si tiene algo, se lo aplica a los
             // que atraviese (la estela del Castigo divino, que cura al pasar).
             projectileScript.Initialize(InstantDamageEffect, DurationEffect, OwnerASC, UltimateChargeAmount,
-                                        ImpactVFX, this, AdditionalEffects, AllyEffects, LifeTime);
+                                        ImpactVFX, this, AdditionalEffects, TargetEffects, LifeTime);
         }
 
         Rigidbody rb = newProjectile.GetComponent<Rigidbody>();

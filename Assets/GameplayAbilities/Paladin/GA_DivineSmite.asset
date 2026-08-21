@@ -37,6 +37,6 @@ MonoBehaviour:
     DestroyTime: 0
     EndWithTag: 40
   MaxCharges: 2
-  AllyEffects: []
+  TargetEffects: []
   BuffEffect: {fileID: 11400000, guid: d1f642fb3bb9aab44966f092fd42ceeb, type: 2}
   AdditionalEffects: []

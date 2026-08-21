@@ -29,7 +29,7 @@ MonoBehaviour:
     m_Bits: 128
   VisualsSequence: []
   MaxCharges: 2
-  AllyEffects:
+  TargetEffects:
   - {fileID: 11400000, guid: 8c560dd9602d93b4badb1ee5dbd65dce, type: 2}
   MaxRange: 10
   SelectionAngle: 30

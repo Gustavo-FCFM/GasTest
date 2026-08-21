@@ -29,7 +29,7 @@ MonoBehaviour:
     m_Bits: 128
   VisualsSequence: []
   MaxCharges: 1
-  AllyEffects: []
+  TargetEffects: []
   DefaultAbility: {fileID: 11400000, guid: fd24cab436f632c4c9710c0b95196996, type: 2}
   Variants:
   - RequiredTag: 40

@@ -29,7 +29,7 @@ MonoBehaviour:
     m_Bits: 128
   VisualsSequence: []
   MaxCharges: 1
-  AllyEffects: []
+  TargetEffects: []
   BlockEffect: {fileID: 11400000, guid: 1054c3ec700fed144bdc881c3366fd5d, type: 2}
   MinEnergyToActivate: 10
   EnergyDrainPerSecond: 0

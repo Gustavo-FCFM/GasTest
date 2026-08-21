@@ -86,7 +86,7 @@ public class GA_LineAttack : GameplayAbility
             AbilitySystemComponent targetASC = hit.GetComponentInParent<AbilitySystemComponent>();
             if (targetASC == null || targetsHit.Contains(targetASC)) continue;
 
-            // Daño a enemigos, AllyEffects a aliados (ver GameplayAbility).
+            // Daño a enemigos, TargetEffects a aliados (ver GameplayAbility).
             if (!ApplyAffiliationEffects(targetASC, DamageEffect)) continue;
 
             if (IsEnemy(targetASC))

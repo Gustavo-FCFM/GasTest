@@ -13,7 +13,7 @@ using UnityEngine;
 //   · Presencia conquistadora (Paladín/Conquista): aturde a un enemigo lejano.
 //   · La curación apuntada del Clérigo y su "Canalizar divinidad: Aturdir".
 //
-// QUÉ APLICA: la lista AllyEffects de GameplayAbility. El nombre viene de la clase
+// QUÉ APLICA: la lista TargetEffects de GameplayAbility — los efectos que recibe el
 // base, donde significa "lo que esta habilidad le hace a los aliados que alcanza"
 // — acá, como el objetivo es UNO SOLO y elegido a propósito, hay que leerlo como
 // "los efectos que recibe el objetivo", apunte a un aliado o a un enemigo.
@@ -82,11 +82,11 @@ public class GA_Target : GameplayAbility
 
         CommitAbility();
 
-        if (AllyEffects == null || AllyEffects.Count == 0)
+        if (TargetEffects == null || TargetEffects.Count == 0)
             Debug.LogWarning($"[{AbilityName}] no tiene ningún AllyEffect configurado: " +
                              $"selecciona objetivo pero no le aplica nada.");
 
-        ApplyEffectsTo(AllyEffects, target);
+        ApplyEffectsTo(TargetEffects, target);
 
         PlayerController pc = OwnerASC.GetComponent<PlayerController>();
         NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();

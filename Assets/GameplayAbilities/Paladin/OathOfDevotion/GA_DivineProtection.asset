@@ -37,7 +37,7 @@ MonoBehaviour:
     DestroyTime: 0
     EndWithTag: 18
   MaxCharges: 1
-  AllyEffects:
+  TargetEffects:
   - {fileID: 11400000, guid: 95de6baf0c24ee240931bc84bba45fe4, type: 2}
   MaxRange: 6
   SelectionAngle: 30

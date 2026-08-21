@@ -53,7 +53,7 @@ public class GA_HeroicInterception : GameplayAbility
     [Header("Efectos")]
     [Tooltip("Buff que se aplica al PROPIO Paladín al interceptar (la resistencia al daño).")]
     public List<GameplayEffect> SelfEffects;
-    // Al ALIADO interceptado se le aplica la lista AllyEffects de GameplayAbility
+    // Al ALIADO interceptado se le aplica la lista TargetEffects de GameplayAbility
     // (el mismo buff, normalmente): así el campo es el mismo que en el resto de las
     // habilidades que tocan aliados y no inventamos uno nuevo.
 
@@ -110,7 +110,7 @@ public class GA_HeroicInterception : GameplayAbility
         if (pc != null) pc.PlayAnimation(this);
 
         // Buffs: al aliado interceptado y a uno mismo.
-        ApplyEffectsTo(AllyEffects, ally);
+        ApplyEffectsTo(TargetEffects, ally);
         ApplyEffectsTo(SelfEffects, OwnerASC);
 
         Vector3 vfxPos = landing + Vector3.up;

@@ -91,7 +91,7 @@ public class GA_ConeAttack : GameplayAbility
             AbilitySystemComponent targetASC = targetCollider.GetComponentInParent<AbilitySystemComponent>();
             if (targetASC == null || targetsHit.Contains(targetASC)) continue;
 
-            // Reparte según afiliación: daño a enemigos, AllyEffects a aliados (solo
+            // Reparte según afiliación: daño a enemigos, TargetEffects a aliados (solo
             // si la habilidad los tiene configurados — si no, devuelve false y el
             // aliado se saltea, que es el comportamiento clásico).
             if (!ApplyAffiliationEffects(targetASC, DamageEffect)) continue;
