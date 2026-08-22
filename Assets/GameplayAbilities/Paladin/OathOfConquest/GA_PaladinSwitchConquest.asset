@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c273186160e84441a7e43da8ed5284e, type: 3}
+  m_Name: GA_PaladinSwitchConquest
+  m_EditorClassIdentifier: 
+  AbilityName: Paladin Switch conquest
+  AbilityIcon: {fileID: 21300000, guid: fb60bffd72a47f64c97da735dbd28983, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: 45327044be4f41c4d8f5289bc6f9b3be, type: 2}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 1
+  UltimateChargeAmount: 0
+  ActivationBlockedTags: 
+  ActivationRequiredTags: 
+  AnimationClip: {fileID: 3094330708855449807, guid: 81ae9e97c51ac17498f6e7ccda0bb15d, type: 3}
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 0
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  VisualsSequence: []
+  MaxCharges: 1
+  DefaultAbility: {fileID: 11400000, guid: d4cadf7ad8a0b2e4ba47dd0b7e7e1455, type: 2}
+  Variants:
+  - RequiredTag: 40
+    Ability: {fileID: 11400000, guid: ed18b508fbc4d1c438c981c1446a1d31, type: 2}
+    ConsumeTag: 1
+  - RequiredTag: 48
+    Ability: {fileID: 11400000, guid: a06c3b35c630a6a43ad8f062c2c5f234, type: 2}
+    ConsumeTag: 0

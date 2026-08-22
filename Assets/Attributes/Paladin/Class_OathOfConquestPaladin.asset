@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 749805704a6088741af34d91f0891ced, type: 3}
+  m_Name: Class_OathOfConquestPaladin
+  m_EditorClassIdentifier: 
+  ClassName: Oath Of Conquest
+  ClassIcon: {fileID: 21300000, guid: 3d668b3feb2ee524b9dee68f59e4c7b5, type: 3}
+  Description: Get Stunned, NOOB
+  BaseAttributes: {fileID: 11400000, guid: 49d87f366d01d224286f17fe6265c30a, type: 2}
+  Abilities:
+  - InputSlot: 1
+    Ability: {fileID: 11400000, guid: c385f78b7264e2647ad02c0147a3747e, type: 2}
+  - InputSlot: 2
+    Ability: {fileID: 11400000, guid: e0d3c5273aa307d49b68c8a3c7a2d8c1, type: 2}
+  - InputSlot: 3
+    Ability: {fileID: 11400000, guid: c0385947266c84944b448bda69bbd77e, type: 2}
+  - InputSlot: 6
+    Ability: {fileID: 11400000, guid: a0f11893e7b547f4cb7859680a104a35, type: 2}
+  - InputSlot: 4
+    Ability: {fileID: 11400000, guid: b48f11ab9c3a9204cb401a8c4b15cf35, type: 2}
+  - InputSlot: 5
+    Ability: {fileID: 11400000, guid: ce7c0a4ca80d7934ebe7497cb444c084, type: 2}
+  PassiveBehaviorsPrefab: {fileID: 9026357972262154142, guid: 9403e0bad0214464c850f0784abd7f95, type: 3}
+  PassiveEffects:
+  - {fileID: 11400000, guid: 5425dc3edd0320d4a8b0ad013919b6cc, type: 2}
+  StatGrowthPerLevel: []
+  AvailableSubclasses: []
+  ClassAnimatorOverride: {fileID: 22100000, guid: e47a346ec4e5aa9448604654217f459b, type: 2}
+  MainHandWeaponPrefab: {fileID: 5073896408682217672, guid: 1dd30a155c67b2b499185ae1abb43b21, type: 3}
+  OffHandWeaponPrefab: {fileID: 0}
+  MainHandRotationOffset: {x: 0, y: 0, z: 0}
+  MainHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandPositionOffset: {x: 0, y: 0, z: 0}

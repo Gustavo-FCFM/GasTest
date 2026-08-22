@@ -29,18 +29,19 @@ MonoBehaviour:
     m_Bits: 128
   VisualsSequence:
   - VFXPrefab: {fileID: 9017484664307500583, guid: 1245b8d2997d5b34fb1637be70a7eb05, type: 3}
-    Delay: 0
+    Delay: 0.1
     Offset: {x: 0, y: 0, z: 0}
     RotationOffset: {x: 0, y: 0, z: 0}
     Scale: {x: 0, y: 0, z: 0}
     AttachToOwner: 0
-    DestroyTime: 0.5
+    DestroyTime: 0.2
     EndWithTag: 0
   MaxCharges: 1
-  TargetEffects:
-  - {fileID: 11400000, guid: ab05ab65a33c9754bbeb168b51e81d90, type: 2}
+  Targets: 0
   MaxRange: 6
   SelectionAngle: 30
   SelfIfNoTarget: 1
   AllowDeadTargets: 0
+  TargetEffects:
+  - {fileID: 11400000, guid: ab05ab65a33c9754bbeb168b51e81d90, type: 2}
   ImpactVFX: {fileID: 0}

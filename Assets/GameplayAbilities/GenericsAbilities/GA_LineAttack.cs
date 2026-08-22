@@ -25,6 +25,17 @@ public class GA_LineAttack : GameplayAbility
     // (ralentizar, heridas, marcar, etc.). Opcional.
     public List<GameplayEffect> AdditionalEffects;
 
+    [Tooltip("Efectos que esta habilidad le aplica a los ALIADOS que alcance. El daño y los " +
+             "AdditionalEffects van a los enemigos; esta lista, a los aliados.\n\n" +
+             "VACÍA (lo normal) = la habilidad ignora por completo a los aliados. En cuanto tenga " +
+             "algo, empieza a considerarlos objetivos válidos: es lo que convierte un ataque normal " +
+             "en uno que daña enemigos Y cura aliados a su paso (Castigo divino del Paladín).")]
+    // FormerlySerializedAs: se llamó "AllyEffects" y vivía en GameplayAbility. Unity
+    // serializa por NOMBRE, así que mientras el campo siga llamándose TargetEffects los
+    // assets ya configurados conservan su valor al bajarlo a esta clase.
+    [UnityEngine.Serialization.FormerlySerializedAs("AllyEffects")]
+    public List<GameplayEffect> TargetEffects;
+
     public GameObject HitVFX;
 
     // Valida, rota al dueño hacia el punto de mira, cobra costo/cooldown
@@ -86,8 +97,8 @@ public class GA_LineAttack : GameplayAbility
             AbilitySystemComponent targetASC = hit.GetComponentInParent<AbilitySystemComponent>();
             if (targetASC == null || targetsHit.Contains(targetASC)) continue;
 
-            // Daño a enemigos, TargetEffects a aliados (ver GameplayAbility).
-            if (!ApplyAffiliationEffects(targetASC, DamageEffect)) continue;
+            // Daño a enemigos, TargetEffects a aliados (ver el campo, más arriba).
+            if (!ApplyAffiliationEffects(targetASC, DamageEffect, TargetEffects)) continue;
 
             if (IsEnemy(targetASC))
             {

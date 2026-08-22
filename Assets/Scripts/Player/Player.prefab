@@ -865,6 +865,9 @@ MonoBehaviour:
   AimAbility: {fileID: 0}
   jumpForce: 4
   gravity: -9.81
+  featherFallGravityScale: 0.4
+  flapForce: 4
+  featherFallMaxSpeed: 6
   aimTurnSpeed: 15
   NetworkAimPoint: {x: 0, y: 0, z: 0}
   NetworkMoveDirection: {x: 0, y: 0, z: 0}

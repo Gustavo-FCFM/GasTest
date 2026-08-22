@@ -28,6 +28,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   VisualsSequence: []
+  MaxCharges: 1
   ProjectilePrefab: {fileID: 406129108226925510, guid: 8c21a3df091c8204ea5a34229c270862, type: 3}
   LaunchForce: 30
   SpawnOffset: {x: 0, y: 0.5, z: 1}
@@ -35,5 +36,7 @@ MonoBehaviour:
   InstantDamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   DurationEffect: {fileID: 11400000, guid: b65597dae42471f4a8486b95b0d43ee3, type: 2}
   AdditionalEffects: []
+  TargetEffects: []
+  LifeTime: 0
   SpawnDelay: 0.5
-  ImpactVFX: {fileID: 0}
+  ImpactVFX: {fileID: 1758473627833946668, guid: 9b21333b068a5084ba09535839bee3c8, type: 3}

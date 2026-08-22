@@ -62,7 +62,7 @@ public enum EGameplayTag
     Passive_FirstStrikeCrit, // OBSOLETO: el crítico mejorado ahora es FirstStrikeCritModifier (pasiva por prefab). No borrar (corre índices).
 
     // --- ILUSIONISTA ---
-    Passive_IllusoryBlades,  // OBSOLETO: las cuchillas ahora son IllusoryBladesPassive (pasiva por prefab). No borrar (corre índices).
+    Passive_Illusory_Blades,  // OBSOLETO: las cuchillas ahora son IllusoryBladesPassive (pasiva por prefab). No borrar (corre índices).
     Status_Blinded,          // Cegado ("flashbang"): lo aplica la Copia exacta al enemigo que la golpea (ver Entity_PlayerCopy)
 
     // --- PIRATA ---
@@ -71,12 +71,20 @@ public enum EGameplayTag
 
     // --- PALADÍN ---
     Status_Blocking,         // Escudo levantado (GA_ShieldBlock). Dura lo que el jugador mantenga el botón; lo usan la animación de hold y el VFX de la barrera
-    Status_DivineSmite,      // Castigo divino cargado: el próximo ataque principal se cambia por el combo cono+estela (ver GA_TagSwitch)
+    Status_Divine_Smite,      // Castigo divino cargado: el próximo ataque principal se cambia por el combo cono+estela (ver GA_TagSwitch)
     Status_Aura_Protection,  // El personaje está dentro del Aura de protección de un Paladín aliado (marca para VFX; el stat lo da el GE del aura)
     Status_Aura_Devotion,
 
     // --- PALADÍN · JURAMENTO DE LA VENGANZA ---
     Status_Aura_Vengeance,   // El enemigo está dentro del Aura de venganza (marca para VFX; la Vulnerabilidad la da el GE del aura)
-    Status_SwornEnemy,       // Enemigo jurado: recibe más daño y CURA a los aliados que lo golpean (ver GA_SwornEnemy)
-    Status_AvengingAngel,    // Ángel vengador activo: cambia el ataque principal (vía GA_TagSwitch) y habilita los anillos de aura condicionales
+    Status_Sworn_Enemy,       // Enemigo jurado: recibe más daño y CURA a los aliados que lo golpean (ver GA_SwornEnemy)
+    Status_Avenging_Angel,    // Ángel vengador activo: cambia el ataque principal (vía GA_TagSwitch) y habilita los anillos de aura condicionales
+
+    // --- MOVIMIENTO ---
+    Status_Feather_Fall,      // Caída de pluma: cae más lento y puede volver a impulsarse en el aire sin límite mientras dure, como un aleteo (ver PlayerController.HandleMovementInput). NO es volar libremente — eso sería un Status_Flight aparte, con control vertical propio
+
+    // --- DEFENSIVOS COMPARTIDOS ---
+    Status_HealShield,       // Mientras dure, lo que el ESCUDO frena se devuelve como vida (Cubrir con escudo de la Conquista, defensa mejorada del Monje). Ver ExecuteInstantEffect
+    Status_Invincible_Conqueror, // Invencible de la definitiva del Juramento de la conquista
+    Status_Aura_Conqueror,       // El personaje está dentro del Aura de la Conquista de un Paladín aliado (marca para VFX; el stat lo da el GE del aura)
 }

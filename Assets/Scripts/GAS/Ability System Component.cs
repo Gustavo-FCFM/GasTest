@@ -836,7 +836,8 @@ public class AbilitySystemComponent : MonoBehaviour
                 // (físico + mágico) y antes de tocar el escudo. Ver ApplyDefenses.
                 ApplyDefenses(ref physicalDamage, ref magicDamage);
 
-                float currentShield  = GetAttributeValue(EAttributeType.Shield);
+                float currentShield      = GetAttributeValue(EAttributeType.Shield);
+                float damageBeforeShield = physicalDamage + magicDamage;
 
                 if (currentShield > 0)
                 {
@@ -853,6 +854,32 @@ public class AbilitySystemComponent : MonoBehaviour
                     }
                     SetCurrentAttributeValue(EAttributeType.Shield, currentShield);
                 }
+
+                // ESCUDO QUE CURA (Status_HealShield — "Cubrir con escudo" del Juramento
+                // de la conquista, y más adelante la defensa mejorada del Monje): lo que
+                // el escudo alcanzó a frenar no solo no duele, además vuelve como VIDA.
+                //
+                // El escudo se gasta igual, así que es un INTERCAMBIO: un escudo de 50
+                // contra un golpe de 60 cura 50, se rompe, y los 10 que sobran entran
+                // normal (ya pasados por bloqueo y defensas, que corren más arriba).
+                //
+                // Se cura el DAÑO NEUTRALIZADO, no los puntos de escudo gastados. Solo
+                // se diferencian con daño MÁGICO, que cuesta el doble de escudo: 50 de
+                // escudo frenan 25 de magia, y son 25 los que se curan.
+                //
+                // Esto es A PROPÓSITO, no un descuido de la conversión: el escudo es
+                // mágico, así que las clases que pegan con daño mágico son su contra
+                // natural. Le rompen el doble de escudo por punto de daño y, al frenarse
+                // menos daño, el dueño se cura menos. Es el mismo hecho visto dos veces,
+                // y hace que un mago sea la respuesta a un Paladín de la Conquista.
+                //
+                // El tag lo trae el mismo GE que otorga el escudo, así que cuando el
+                // escudo se agota la curación deja de sumar sola (absorbed queda en 0)
+                // aunque al tag le quede duración.
+                float absorbedByShield = damageBeforeShield - (physicalDamage + magicDamage);
+                if (absorbedByShield > 0f && HasTag(EGameplayTag.Status_HealShield))
+                    SetCurrentAttributeValue(EAttributeType.Health,
+                                             GetAttributeValue(EAttributeType.Health) + absorbedByShield);
 
                 calculatedMagnitude = -(physicalDamage + magicDamage);
                 damageToHealth     += physicalDamage + magicDamage;

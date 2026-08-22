@@ -28,8 +28,10 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   VisualsSequence: []
+  MaxCharges: 1
   Length: 2
   Width: 1
   DamageEffect: {fileID: 11400000, guid: c724c673f706d3d47b65f864d4719e97, type: 2}
   AdditionalEffects: []
-  HitVFX: {fileID: 0}
+  TargetEffects: []
+  HitVFX: {fileID: 1758473627833946668, guid: 9b21333b068a5084ba09535839bee3c8, type: 3}

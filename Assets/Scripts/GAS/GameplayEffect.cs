@@ -110,6 +110,27 @@ public class GameplayEffect : ScriptableObject
         }
     }
 
+    [Header("VFX en el Objetivo")]
+    [Tooltip("VFX que aparece sobre QUIEN RECIBE este efecto y vive lo que viva el efecto. " +
+             "Pensado para que un debuff importante se vea encima del jugador afectado (las " +
+             "flechas cayendo, un aura, unas cadenas), sin tener que instanciarlo a mano desde " +
+             "la habilidad. Siempre queda ENGANCHADO al objetivo: lo sigue si se mueve, y se " +
+             "destruye solo cuando el efecto expira o se lo quitan. Solo tiene sentido en " +
+             "efectos CON duración: uno instantáneo se aplica y se va en el mismo frame. " +
+             "Dejalo en None si el efecto no necesita nada visible.")]
+    public GameObject TargetVFX;
+
+    [Tooltip("Desplazamiento del VFX respecto al pivote del objetivo, en su espacio local. " +
+             "Los pivotes están a los pies, así que casi siempre vas a querer subirlo en Y " +
+             "(2-3 para algo que flote sobre la cabeza).")]
+    public Vector3 TargetVFXOffset;
+
+    [Tooltip("Rotación extra del VFX respecto al objetivo, en grados.")]
+    public Vector3 TargetVFXRotation;
+
+    [Tooltip("Escala del VFX. En CERO usa la escala del prefab tal cual.")]
+    public Vector3 TargetVFXScale;
+
     [Header("Tags")]
     // Tags que se le agregan al objetivo mientras el efecto está activo
     // (ej: Stunned) y se le quitan al terminar. El primer tag de esta

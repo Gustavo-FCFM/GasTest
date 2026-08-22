@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 749805704a6088741af34d91f0891ced, type: 3}
+  m_Name: Class_OathOfVengeancePaladin
+  m_EditorClassIdentifier: 
+  ClassName: Oath Of Vengeance
+  ClassIcon: {fileID: 21300000, guid: d412d87adf9614e44bc1af5f14b8341b, type: 3}
+  Description: I AM THE VENGEANCE
+  BaseAttributes: {fileID: 11400000, guid: a72a788970521214fa2df6a045aaaf2a, type: 2}
+  Abilities:
+  - InputSlot: 1
+    Ability: {fileID: 11400000, guid: 712371cc965ebf348a2c095b0041fe59, type: 2}
+  - InputSlot: 2
+    Ability: {fileID: 11400000, guid: 8d51fde4b2bdfbd48929947f0b00f484, type: 2}
+  - InputSlot: 3
+    Ability: {fileID: 11400000, guid: 37a905182ea05554d96670b11a93e01b, type: 2}
+  - InputSlot: 6
+    Ability: {fileID: 11400000, guid: a0f11893e7b547f4cb7859680a104a35, type: 2}
+  - InputSlot: 4
+    Ability: {fileID: 11400000, guid: 951d6b62a16c17940885660820aea7f0, type: 2}
+  - InputSlot: 5
+    Ability: {fileID: 11400000, guid: 0c07287c8aaec654db9f2cf213738a91, type: 2}
+  PassiveBehaviorsPrefab: {fileID: 9026357972262154142, guid: 9403e0bad0214464c850f0784abd7f95, type: 3}
+  PassiveEffects:
+  - {fileID: 11400000, guid: 5425dc3edd0320d4a8b0ad013919b6cc, type: 2}
+  StatGrowthPerLevel: []
+  AvailableSubclasses: []
+  ClassAnimatorOverride: {fileID: 22100000, guid: 75ec53281b263d24dbe5fee5e2ab9c9e, type: 2}
+  MainHandWeaponPrefab: {fileID: 1309212752354464438, guid: 7fa95640d05aad6418ff83caf186c2ea, type: 3}
+  OffHandWeaponPrefab: {fileID: 3844116661835162637, guid: 355227fa58c247448aac64714c11cb4a, type: 3}
+  MainHandRotationOffset: {x: 0, y: 0, z: 0}
+  MainHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandRotationOffset: {x: 0, y: 180, z: 0}
+  OffHandPositionOffset: {x: 0, y: 0, z: -0.1}

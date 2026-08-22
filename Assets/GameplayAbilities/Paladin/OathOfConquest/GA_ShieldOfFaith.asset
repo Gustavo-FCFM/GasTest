@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 636f4f13857926149bb632c6a7a4371c, type: 3}
+  m_Name: GA_ShieldOfFaith
+  m_EditorClassIdentifier: 
+  AbilityName: ShieldOfFaith
+  AbilityIcon: {fileID: 21300000, guid: cf20f2008440dec4bae7f5473afd3184, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: ecfe07a06c63704479a331a9bae55086, type: 2}
+  CooldownDuration: 6
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 1
+  ActivationBlockedTags: 0300000001000000
+  ActivationRequiredTags: 
+  AnimationClip: {fileID: 3094330708855449807, guid: 8ab57abc06f7ffd47ae8d91e99f41fa2, type: 3}
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  VisualsSequence: []
+  MaxCharges: 2
+  Targets: 0
+  MaxRange: 8
+  SelectionAngle: 30
+  SelfIfNoTarget: 1
+  AllowDeadTargets: 0
+  TargetEffects:
+  - {fileID: 11400000, guid: 97a675e6082b3c64aa1b911c1458eebb, type: 2}
+  ImpactVFX: {fileID: 0}

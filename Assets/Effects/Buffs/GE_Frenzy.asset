@@ -15,6 +15,8 @@ MonoBehaviour:
   Duration: 10
   Period: 0
   StackingPolicy: 0
+  MaxStacks: 0
+  OnMaxStacksEffect: {fileID: 0}
   EffectGroup: 20
   Priority: 1
   Icon: {fileID: 21300000, guid: 0a6b533789e6f664a901f55cd4a2be08, type: 3}
@@ -65,15 +67,6 @@ MonoBehaviour:
     UseTargetHealthScaling: 0
     TargetHealthMode: 0
     TargetHealthCoefficient: 0.3
-  - Attribute: 7
-    Type: 1
-    Magnitude: 1.2
-    UseAttributeScaling: 0
-    SourceAttribute: 0
-    AttributeCoefficient: 0
-    UseTargetHealthScaling: 0
-    TargetHealthMode: 0
-    TargetHealthCoefficient: 0.3
   - Attribute: 16
     Type: 0
     Magnitude: 0
@@ -83,4 +76,9 @@ MonoBehaviour:
     UseTargetHealthScaling: 1
     TargetHealthMode: 0
     TargetHealthCoefficient: 0.5
+  IsCrowdControl: 0
+  TargetVFX: {fileID: 0}
+  TargetVFXOffset: {x: 0, y: 0, z: 0}
+  TargetVFXRotation: {x: 0, y: 0, z: 0}
+  TargetVFXScale: {x: 0, y: 0, z: 0}
   GrantedTags: 14000000

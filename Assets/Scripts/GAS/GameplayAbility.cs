@@ -593,30 +593,8 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     }
 
     // =========================================================
-    // EFECTOS AL OBJETIVO NO DAÑADO
+    // REPARTO POR AFILIACIÓN
     // =========================================================
-
-    [Header("Efectos al Objetivo")]
-    [Tooltip("Efectos que esta habilidad le aplica a su objetivo NO dañado.\n\n" +
-             "En las habilidades de ÁREA (cono, línea, proyectil) eso son los ALIADOS que alcance: " +
-             "el daño y los AdditionalEffects van a los enemigos, y esta lista a los aliados. " +
-             "Dejarla VACÍA mantiene el comportamiento clásico — la habilidad ignora por completo a " +
-             "los aliados. En cuanto tenga algo, empieza a considerarlos objetivos válidos: es lo " +
-             "que convierte un ataque normal en uno que daña enemigos Y cura aliados a su paso " +
-             "(Castigo divino del Paladín).\n\n" +
-             "En las habilidades de OBJETIVO ÚNICO (GA_Target) son simplemente los efectos que " +
-             "recibe el elegido, apunte a un aliado o a un enemigo.")]
-    // FormerlySerializedAs: este campo se llamaba "AllyEffects". Unity serializa por
-    // NOMBRE, así que sin esto los assets ya configurados perderían su valor en
-    // silencio al renombrarlo. Se renombró al agregar GA_Target con selección de
-    // enemigos, donde "Ally" ya no describía lo que hace.
-    [UnityEngine.Serialization.FormerlySerializedAs("AllyEffects")]
-    public List<GameplayEffect> TargetEffects;
-
-    // True si esta habilidad tiene algo que hacerle a un objetivo que no sea dañarlo.
-    // Las habilidades de área lo consultan para decidir si un aliado detectado se
-    // saltea (el comportamiento de siempre) o se procesa.
-    public bool HasTargetEffects => TargetEffects != null && TargetEffects.Count > 0;
 
     // Aplica a 'target' lo que corresponda según su AFILIACIÓN con el dueño, y
     // devuelve true si el objetivo era válido (o sea, si hubo que hacerle algo).
@@ -625,7 +603,17 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // aliados", para que cada habilidad no repita el if. El daño va aparte porque
     // cada habilidad lo dispara con su propio campo (DamageEffect) y necesita saber
     // si el golpe conectó (para el VFX de impacto y la carga de ultimate).
-    protected bool ApplyAffiliationEffects(AbilitySystemComponent target, GameplayEffect enemyDamage)
+    //
+    // POR QUÉ allyEffects VIENE POR PARÁMETRO Y NO ES UN CAMPO DE ACÁ: de las dos
+    // docenas de habilidades del juego, solo un puñado le hace algo a los aliados que
+    // alcanza. Con la lista en la base, TODAS mostraban en el inspector un campo que
+    // nunca iban a usar. Ahora cada habilidad que sí lo necesita declara la suya (ver
+    // TargetEffects en GA_ConeAttack, GA_LineAttack y GA_ProjectileShoot).
+    //
+    // Lista vacía o nula = los aliados se saltean por completo, que es el
+    // comportamiento clásico de un ataque normal.
+    protected bool ApplyAffiliationEffects(AbilitySystemComponent target, GameplayEffect enemyDamage,
+                                           List<GameplayEffect> allyEffects)
     {
         if (target == null) return false;
 
@@ -637,9 +625,9 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
 
         // Aliado (incluido uno mismo): solo cuenta como objetivo si la habilidad
         // tiene efectos configurados para él.
-        if (HasTargetEffects && IsAlly(target))
+        if (allyEffects != null && allyEffects.Count > 0 && IsAlly(target))
         {
-            ApplyEffectsTo(TargetEffects, target);
+            ApplyEffectsTo(allyEffects, target);
             return true;
         }
 

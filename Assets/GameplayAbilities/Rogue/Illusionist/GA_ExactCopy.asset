@@ -27,7 +27,15 @@ MonoBehaviour:
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  VisualsSequence: []
+  VisualsSequence:
+  - VFXPrefab: {fileID: 4809171458859421548, guid: 4e91ed1a8efe7044785b9bd97a47d87f, type: 3}
+    Delay: 0
+    Offset: {x: 0, y: 0, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    AttachToOwner: 0
+    DestroyTime: 1
+    EndWithTag: 0
   MaxCharges: 2
   MoveSpeedOverride: 0
   MaxRange: 10

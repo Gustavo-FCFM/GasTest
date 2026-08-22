@@ -28,6 +28,17 @@ public class GA_ConeAttack : GameplayAbility
     // (ralentizar, heridas, marcar, etc.). Opcional.
     public List<GameplayEffect> AdditionalEffects;
 
+    [Tooltip("Efectos que esta habilidad le aplica a los ALIADOS que alcance. El daño y los " +
+             "AdditionalEffects van a los enemigos; esta lista, a los aliados.\n\n" +
+             "VACÍA (lo normal) = la habilidad ignora por completo a los aliados. En cuanto tenga " +
+             "algo, empieza a considerarlos objetivos válidos: es lo que convierte un ataque normal " +
+             "en uno que daña enemigos Y cura aliados a su paso (Castigo divino del Paladín).")]
+    // FormerlySerializedAs: se llamó "AllyEffects" y vivía en GameplayAbility. Unity
+    // serializa por NOMBRE, así que mientras el campo siga llamándose TargetEffects los
+    // assets ya configurados conservan su valor al bajarlo a esta clase.
+    [UnityEngine.Serialization.FormerlySerializedAs("AllyEffects")]
+    public List<GameplayEffect> TargetEffects;
+
     // VFX que aparece en cada enemigo golpeado.
     public GameObject HitVFX;
 
@@ -94,7 +105,7 @@ public class GA_ConeAttack : GameplayAbility
             // Reparte según afiliación: daño a enemigos, TargetEffects a aliados (solo
             // si la habilidad los tiene configurados — si no, devuelve false y el
             // aliado se saltea, que es el comportamiento clásico).
-            if (!ApplyAffiliationEffects(targetASC, DamageEffect)) continue;
+            if (!ApplyAffiliationEffects(targetASC, DamageEffect, TargetEffects)) continue;
 
             // Los efectos extra y la carga de ultimate son parte del GOLPE: solo
             // corresponden cuando lo alcanzado es un enemigo.

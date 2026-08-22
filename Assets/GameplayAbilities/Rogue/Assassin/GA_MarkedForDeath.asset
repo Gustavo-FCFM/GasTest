@@ -27,11 +27,20 @@ MonoBehaviour:
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  VisualsSequence: []
+  VisualsSequence:
+  - VFXPrefab: {fileID: 7986504087968017091, guid: b10bcfd32615d844291d18c9d2d35007, type: 3}
+    Delay: 0
+    Offset: {x: 0, y: 0, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    AttachToOwner: 0
+    DestroyTime: 0.2
+    EndWithTag: 0
+  MaxCharges: 1
   MaxRange: 15
   ZoneRadius: 5
   DamageEffect: {fileID: 11400000, guid: 6c513cb2261d125408d83a0ddbb859bf, type: 2}
   AdditionalEffects:
   - {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   InvisibilityOnKillEffect: {fileID: 11400000, guid: 69e60dd731b6a8d47b7b7ba31d0b709e, type: 2}
-  ImpactVFX: {fileID: 0}
+  ImpactVFX: {fileID: 1758473627833946668, guid: 9b21333b068a5084ba09535839bee3c8, type: 3}

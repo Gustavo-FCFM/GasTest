@@ -438,6 +438,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: OathOfDevotionBehaviours
       objectReference: {fileID: 0}
+    - target: {fileID: 9026357972262154142, guid: 8c7284c475c63bd41ac77dd71a838ed4, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1112,7 +1116,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a51f98d766d6d4b4989662c4bf86a0d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Abilities: []
+  Abilities:
+  - {fileID: 11400000, guid: 841ec26c95a61014994aee639a5c6d47, type: 2}
   DrawDistanceRings: 1
   RingSpacing: 1
   RingCount: 10

@@ -27,7 +27,16 @@ MonoBehaviour:
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  VisualsSequence: []
+  VisualsSequence:
+  - VFXPrefab: {fileID: 3377181292992421420, guid: 48c5715f9603c3842a353516a8baefbb, type: 3}
+    Delay: 0.2
+    Offset: {x: 0, y: 0, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    AttachToOwner: 1
+    DestroyTime: 0.5
+    EndWithTag: 0
+  MaxCharges: 1
   ImmortalBuffEffect: {fileID: 11400000, guid: 5e963c4cf94ade34189d61e2213972ef, type: 2}
   ExplosionDamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   AbilityRadius: 5

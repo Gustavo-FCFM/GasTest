@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 039d8724faf9c694ea663715441edb3a, type: 3}
+  m_Name: GA_SwornEnemy
+  m_EditorClassIdentifier: 
+  AbilityName: Sworn Enemy
+  AbilityIcon: {fileID: 21300000, guid: 603cff73d408f7a4eb3e3efbbc6088d7, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: bd07a782525833e47889b22896900f13, type: 2}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 1
+  ActivationBlockedTags: 0100000003000000
+  ActivationRequiredTags: 
+  AnimationClip: {fileID: 3094330708855449807, guid: c2160d1a58a158543817a3f1c504dc91, type: 3}
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  VisualsSequence:
+  - VFXPrefab: {fileID: 6126188424833946103, guid: a58aa9a78f2b45b45bb0f3e2e1e3ad3c, type: 3}
+    Delay: 0
+    Offset: {x: 0, y: 0, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    AttachToOwner: 0
+    DestroyTime: 0.2
+    EndWithTag: 0
+  MaxCharges: 1
+  MaxRange: 20
+  SelectionAngle: 30
+  MarkEffect: {fileID: 11400000, guid: 6e59b97783b793240bf253b764cb44cc, type: 2}
+  AllyRewardEffects:
+  - {fileID: 11400000, guid: 915ce433672a7fb4c8475dc2f4c92796, type: 2}
+  RewardCooldownPerAlly: 0.2
+  ImpactVFX: {fileID: 0}

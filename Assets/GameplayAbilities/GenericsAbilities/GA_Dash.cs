@@ -6,7 +6,9 @@ using System.Collections.Generic;
 // GA_Dash  (Dash siniestro / genérico)
 //
 // Impulsa al jugador con gran velocidad hacia donde apunta, una distancia
-// corta, frenando con inercia al final (para seguir desplazándose un poco).
+// corta. Al terminar el impulso no frena en seco: conserva una fracción
+// configurable de la velocidad (ExitSpeedPercent) que se disipa sola
+// mientras el jugador ya tiene el control normal de vuelta.
 // Durante el impulso atraviesa a otros jugadores (se excluye su capa de la
 // colisión del CharacterController) pero sigue chocando con las paredes, y
 // hace daño a todos los enemigos por los que pasa.
@@ -54,6 +56,19 @@ public class GA_Dash : GameplayAbility
              "costados y hacia atrás siempre quedan horizontales (no elevan).")]
     [Range(0f, 1f)]
     public float ForwardDashElevationDot = 0.5f;
+
+    [Header("Inercia al Terminar")]
+    [Tooltip("Qué fracción de la velocidad del dash se CONSERVA cuando termina el impulso, en vez " +
+             "de frenar en seco. 0 = frenada seca (el comportamiento viejo). 0.35 = salís del dash " +
+             "todavía corriendo y se va disipando. Se conserva también la parte VERTICAL, así que " +
+             "un dash hacia arriba sigue subiendo un poco antes de caer en lugar de desplomarse.")]
+    [Range(0f, 1f)]
+    public float ExitSpeedPercent = 0.35f;
+
+    [Tooltip("Qué tan rápido se disipa esa inercia, en 1/segundos. Más alto = se va antes " +
+             "(3 deja alrededor de un 5% al segundo y medio). Mientras dura, el jugador conserva " +
+             "el control normal: puede girar, frenar y saltar.")]
+    public float ExitDamping = 3f;
 
     [Header("Colisión")]
     [Tooltip("Capas que FRENAN el dash (paredes/entorno). Se usa para recortar la distancia.")]
@@ -142,7 +157,8 @@ public class GA_Dash : GameplayAbility
         // Impulso en el proceso dueño (atraviesa jugadores, frena con inercia).
         float duration = Mathf.Clamp(dist / Mathf.Max(1f, DashSpeed), 0.1f, 0.6f);
         if (netAsc != null)
-            netAsc.ServerStartDash(dir * DashSpeed, duration, ExcludePlayerLayer.value, faceDashDir);
+            netAsc.ServerStartDash(dir * DashSpeed, duration, ExcludePlayerLayer.value, faceDashDir,
+                                   ExitSpeedPercent, ExitDamping);
         else if (pc != null)
             pc.ApplyDashVelocity(dir * DashSpeed, faceDashDir); // fallback sin red (no gestiona el fin del impulso)
 

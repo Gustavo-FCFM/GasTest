@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac50c65172ac2b54d9127395b05455b7, type: 3}
+  m_Name: GA_ConqueringPresence
+  m_EditorClassIdentifier: 
+  AbilityName: Conquering Presence
+  AbilityIcon: {fileID: 21300000, guid: 21010f49c4bf45b49b169ae4edf5031f, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: bd07a782525833e47889b22896900f13, type: 2}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 1
+  ActivationBlockedTags: 0100000003000000
+  ActivationRequiredTags: 
+  AnimationClip: {fileID: 3094330708855449807, guid: 18afe56f6fdf0b0478209f4b1512c8cc, type: 3}
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  VisualsSequence:
+  - VFXPrefab: {fileID: 4994997792314849709, guid: 3dd50886582244645be87adb42aa8528, type: 3}
+    Delay: 0.1
+    Offset: {x: 0, y: -1, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    AttachToOwner: 0
+    DestroyTime: 0.2
+    EndWithTag: 0
+  MaxCharges: 1
+  Targets: 0
+  Radius: 6
+  DeployMode: 0
+  MaxRange: 0
+  EffectsToApply:
+  - {fileID: 11400000, guid: 599bef532c08eae4a8e05af2dc063cf9, type: 2}
+  VisualPrefab: {fileID: 0}
+  VisualScaleMultiplier: 1
+  VisualLifetime: 1
+  StartDelay: 0.1

@@ -211,6 +211,9 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         _netExp.OnChange       -= OnNetExpChanged;
         NetTags.OnChange       -= OnNetTagsChanged;
         NetStats.OnChange      -= OnNetStatChanged;
+        NetActiveEffectDuration.OnChange -= OnNetActiveEffectVfxChanged;
+
+        DespawnAllEffectVfx();
     }
 
     public override void OnStartServer()
@@ -252,6 +255,7 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         _netExp.OnChange       += OnNetExpChanged;
         NetTags.OnChange       += OnNetTagsChanged;
         NetStats.OnChange      += OnNetStatChanged;
+        NetActiveEffectDuration.OnChange += OnNetActiveEffectVfxChanged;
 
         // OnChange solo dispara para cambios FUTUROS — aplicamos de una los
         // stats que ya venían sincronizados al momento de conectarnos (ej: un
@@ -259,6 +263,10 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         if (!IsServerInitialized && _asc != null)
             foreach (var kvp in NetStats)
                 _asc.SetCurrentAttributeValue(kvp.Key, kvp.Value);
+
+        // Lo mismo para los VFX: si entramos a la partida con un debuff ya puesto
+        // encima de este personaje, su VFX tiene que aparecer igual.
+        foreach (int index in NetActiveEffectDuration.Keys) SpawnEffectVfx(index);
     }
 
     // Solo en el servidor: re-sincroniza los cooldowns cada
@@ -617,6 +625,82 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
 
         remaining = Mathf.Max(0f, total - (float)elapsedSeconds);
         return remaining > 0f;
+    }
+
+    // =========================================================
+    // VFX DE EFECTOS ACTIVOS (GameplayEffect.TargetVFX)
+    //
+    // Un debuff importante tiene que VERSE encima de quien lo sufre, y eso la
+    // VisualsSequence de la habilidad no lo puede resolver: esa secuencia solo conoce
+    // al que LANZA, y arranca en CommitAbility() —antes de que la habilidad sepa
+    // siquiera a quién le pegó— (ver GameplayAbility.PlayVisualsSequence).
+    //
+    // Se cuelga de NetActiveEffectDuration, que YA replica a todos los peers qué
+    // efectos están activos en este personaje, indexados por GameplayEffectRegistry.
+    // O sea que el VFX aparece igual en el dueño, en los observadores y en el host sin
+    // un solo RPC nuevo: ese diccionario ya viajaba para la barra de buffs.
+    //
+    // Corre solo del lado CLIENTE (asServer = false): en un servidor dedicado no hay
+    // nada que dibujar, y en host es la copia cliente del callback la que instancia.
+    // =========================================================
+
+    // VFX vivos ahora mismo, uno por efecto (índice del registro → instancia).
+    private readonly Dictionary<int, GameObject> _activeEffectVfx = new Dictionary<int, GameObject>();
+
+    private void OnNetActiveEffectVfxChanged(SyncDictionaryOperation op, int effectIndex,
+                                             float duration, bool asServer)
+    {
+        if (asServer) return;
+
+        switch (op)
+        {
+            case SyncDictionaryOperation.Add:
+            case SyncDictionaryOperation.Set:
+                SpawnEffectVfx(effectIndex);
+                break;
+            case SyncDictionaryOperation.Remove:
+                DespawnEffectVfx(effectIndex);
+                break;
+            case SyncDictionaryOperation.Clear:
+                DespawnAllEffectVfx();
+                break;
+        }
+    }
+
+    // Instancia el TargetVFX del efecto como HIJO de este personaje, así lo sigue a
+    // donde vaya. Idempotente a propósito: un efecto que se refresca o suma un stack
+    // vuelve a disparar Set, y no queremos dos partículas encimadas.
+    private void SpawnEffectVfx(int effectIndex)
+    {
+        if (_activeEffectVfx.ContainsKey(effectIndex)) return;
+
+        GameplayEffectRegistry registry = GameplayEffectRegistry.Instance;
+        GameplayEffect definition = registry != null ? registry.GetEffect(effectIndex) : null;
+        if (definition == null || definition.TargetVFX == null) return;
+
+        Vector3    pos = transform.position + transform.TransformDirection(definition.TargetVFXOffset);
+        Quaternion rot = transform.rotation * Quaternion.Euler(definition.TargetVFXRotation);
+
+        GameObject vfx = Instantiate(definition.TargetVFX, pos, rot, transform);
+        if (definition.TargetVFXScale != Vector3.zero)
+            vfx.transform.localScale = definition.TargetVFXScale;
+
+        _activeEffectVfx[effectIndex] = vfx;
+    }
+
+    private void DespawnEffectVfx(int effectIndex)
+    {
+        if (!_activeEffectVfx.TryGetValue(effectIndex, out GameObject vfx)) return;
+        if (vfx != null) Destroy(vfx);
+        _activeEffectVfx.Remove(effectIndex);
+    }
+
+    private void DespawnAllEffectVfx()
+    {
+        foreach (var kvp in _activeEffectVfx)
+            if (kvp.Value != null) Destroy(kvp.Value);
+
+        _activeEffectVfx.Clear();
     }
 
     // =========================================================
@@ -1145,13 +1229,15 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // =========================================================
 
     [Server]
-    public void ServerStartDash(Vector3 velocity, float duration, int excludeMask, bool faceVelocity = true)
+    public void ServerStartDash(Vector3 velocity, float duration, int excludeMask, bool faceVelocity = true,
+                               float exitSpeedPercent = 0f, float exitDamping = 3f)
     {
-        TargetExecuteDash(Owner, velocity, duration, excludeMask, faceVelocity);
+        TargetExecuteDash(Owner, velocity, duration, excludeMask, faceVelocity, exitSpeedPercent, exitDamping);
     }
 
     [TargetRpc]
-    private void TargetExecuteDash(NetworkConnection conn, Vector3 velocity, float duration, int excludeMask, bool faceVelocity)
+    private void TargetExecuteDash(NetworkConnection conn, Vector3 velocity, float duration, int excludeMask,
+                                  bool faceVelocity, float exitSpeedPercent, float exitDamping)
     {
         PlayerController pc = GetComponent<PlayerController>();
         if (pc == null) return;
@@ -1160,18 +1246,19 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         // faceVelocity=false en la esquiva direccional del pícaro: el cuerpo NO gira
         // hacia el dash, mantiene la orientación a la mira.
         pc.ApplyDashVelocity(velocity, faceVelocity);
-        StartCoroutine(DashRoutine(pc, duration, excludeMask));
+        StartCoroutine(DashRoutine(pc, duration, excludeMask, exitSpeedPercent, exitDamping));
     }
 
     // Corre en el proceso dueño: mantiene la exclusión de colisión durante el
     // dash y, al terminar, la restaura, devuelve el control del movimiento y
     // libera el estado "atacando".
-    private IEnumerator DashRoutine(PlayerController pc, float duration, int excludeMask)
+    private IEnumerator DashRoutine(PlayerController pc, float duration, int excludeMask,
+                                   float exitSpeedPercent, float exitDamping)
     {
         pc.SetCollisionExclusion(excludeMask, true);
         yield return new WaitForSeconds(duration);
         pc.SetCollisionExclusion(excludeMask, false);
-        pc.ClearDashVelocity();
+        pc.ClearDashVelocity(exitSpeedPercent, exitDamping);
         pc.FinishAttack();
     }
 

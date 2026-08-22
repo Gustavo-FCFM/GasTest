@@ -27,10 +27,19 @@ MonoBehaviour:
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  VisualsSequence: []
+  VisualsSequence:
+  - VFXPrefab: {fileID: 1289543790355709915, guid: b99922c2f59b1a542bdd06ae8bee47ae, type: 3}
+    Delay: 0
+    Offset: {x: 0, y: -1, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    AttachToOwner: 1
+    DestroyTime: 1.5
+    EndWithTag: 0
+  MaxCharges: 1
   ChargeTime: 1.5
   ChargeShieldEffect: {fileID: 11400000, guid: 6d6df215326fd3c41a4f214bd424b8ac, type: 2}
   DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   StunEffect: {fileID: 11400000, guid: 599bef532c08eae4a8e05af2dc063cf9, type: 2}
-  HitboxOffsetZ: 2
-  HitboxHalfExtents: {x: 1.2, y: 1, z: 2}
+  HitboxOffsetZ: 2.2
+  HitboxHalfExtents: {x: 1.2, y: 1, z: 2.5}

@@ -207,6 +207,22 @@ public class PlayerController : NetworkBehaviour
     public float jumpForce  = 8f;
     public float gravity    = -9.8f;
 
+    [Header("Caída de Pluma / Aleteo")]
+    [Tooltip("Multiplicador de gravedad mientras el personaje tenga el tag Status_FeatherFall. " +
+             "0.35 = cae a poco más de un tercio de la velocidad normal. 1 = gravedad normal.")]
+    [Range(0f, 1f)]
+    public float featherFallGravityScale = 0.35f;
+
+    [Tooltip("Impulso de cada ALETEO. Mientras dure la caída de pluma se puede volver a saltar en " +
+             "el aire las veces que se quiera, y cada aleteo vale esto. Conviene por debajo de " +
+             "jumpForce, porque se encadenan uno atrás del otro.")]
+    public float flapForce = 3f;
+
+    [Tooltip("Tope de velocidad de caída mientras dura (valor positivo). Sin esto, la gravedad se " +
+             "sigue acumulando entre aleteo y aleteo y caer desde muy alto termina en picada. " +
+             "0 = sin tope.")]
+    public float featherFallMaxSpeed = 6f;
+
     [Header("Apuntado (Third Person Shooter)")]
     // Qué tan rápido el cuerpo gira para alinearse con el frente de la cámara.
     // Más alto = casi instantáneo; más bajo = giro más suave/perezoso.
@@ -233,6 +249,13 @@ public class PlayerController : NetworkBehaviour
     // jugador. Se atenúa solo (inercia). Ver ApplyDashVelocity/HandleMovementInput.
     private Vector3 _dashVelocity;
     private bool    _dashActive;
+
+    // Resto de velocidad que deja un dash al TERMINAR (ver ClearDashVelocity). No es
+    // lo mismo que _abilityVelocity: acá el jugador conserva el control normal —gira,
+    // frena y SALTA— y esto solo se suma a su movimiento mientras se disipa. Es lo que
+    // evita que un dash termine en una frenada seca.
+    private Vector3 _inertiaVelocity;
+    private float   _inertiaDamping = 3f;
 
     // Último punto de mira que el dueño calculó con SU cámara y envió al
     // servidor junto con el input de habilidad. El servidor (y por lo tanto
@@ -493,6 +516,7 @@ public class PlayerController : NetworkBehaviour
     {
         if (ASC.HasTag(EGameplayTag.State_Rooted))
         {
+            _inertiaVelocity  = Vector3.zero;
             verticalVelocity += gravity * Time.deltaTime;
             characterController.Move(Vector3.up * verticalVelocity * Time.deltaTime);
             return;
@@ -540,6 +564,18 @@ public class PlayerController : NetworkBehaviour
             return;
         }
 
+        // Inercia que dejó el último dash: se disipa sola y se SUMA al movimiento
+        // normal, así que el jugador nunca pierde el control mientras se le va.
+        if (_inertiaVelocity.sqrMagnitude > 0.01f)
+            _inertiaVelocity *= Mathf.Exp(-_inertiaDamping * Time.deltaTime);
+        else
+            _inertiaVelocity = Vector3.zero;
+
+        // Caída de pluma (ult del Ángel vengador): cae más lento y puede volver a
+        // impulsarse en el aire tantas veces como quiera, batiendo las alas. No es
+        // volar libre: no hay ascenso sostenido, solo aleteos contra una gravedad floja.
+        bool feathered = ASC.HasTag(EGameplayTag.Status_Feather_Fall);
+
         Vector3 horizontal;
 
         if (_abilityVelocityActive)
@@ -549,12 +585,18 @@ public class PlayerController : NetworkBehaviour
         }
         else
         {
-            horizontal = inputVec * baseSpeed;
-            if (characterController.isGrounded && _input.Jump.WasPressedThisFrame())
-                verticalVelocity = jumpForce;
+            horizontal = inputVec * baseSpeed + _inertiaVelocity;
+
+            // En el piso es un salto normal; en el aire, solo con la caída de pluma
+            // activa, y con el impulso más chico del aleteo.
+            if (_input.Jump.WasPressedThisFrame() && (characterController.isGrounded || feathered))
+                verticalVelocity = characterController.isGrounded ? jumpForce : flapForce;
         }
 
-        verticalVelocity += gravity * Time.deltaTime;
+        verticalVelocity += gravity * (feathered ? featherFallGravityScale : 1f) * Time.deltaTime;
+
+        if (feathered && featherFallMaxSpeed > 0f && verticalVelocity < -featherFallMaxSpeed)
+            verticalVelocity = -featherFallMaxSpeed;
 
         Vector3 finalMove = new Vector3(horizontal.x, 0, horizontal.z)
                             + Vector3.up * verticalVelocity;
@@ -654,6 +696,7 @@ public class PlayerController : NetworkBehaviour
     {
         _dashVelocity    = velocity;
         _dashActive      = true;
+        _inertiaVelocity = Vector3.zero;   // el impulso nuevo pisa el resto del anterior
         // Durante el dash no hay gravedad; al terminar, la caída arranca de 0.
         verticalVelocity = 0f;
 
@@ -667,10 +710,24 @@ public class PlayerController : NetworkBehaviour
     }
 
     // Termina el dash 3D y devuelve el movimiento al control normal (con gravedad).
-    public void ClearDashVelocity()
+    //
+    // retainPercent conserva una fracción de la velocidad que traía el dash en vez de
+    // frenar en seco: la parte HORIZONTAL pasa a _inertiaVelocity (se disipa sola,
+    // sumándose al input del jugador) y la VERTICAL vuelve a verticalVelocity, así un
+    // dash hacia arriba sigue subiendo un poco antes de caer en vez de desplomarse
+    // apenas termina el impulso.
+    //
+    // En 0 (el default) el comportamiento es exactamente el de antes.
+    public void ClearDashVelocity(float retainPercent = 0f, float damping = 3f)
     {
+        Vector3 leftover = _dashVelocity * Mathf.Clamp01(retainPercent);
+
         _dashActive   = false;
         _dashVelocity = Vector3.zero;
+
+        _inertiaDamping  = Mathf.Max(0.01f, damping);
+        _inertiaVelocity = new Vector3(leftover.x, 0f, leftover.z);
+        verticalVelocity = leftover.y;
     }
 
     // Teletransporta instantáneamente a una posición (blink de Golpe mortal).
@@ -1090,6 +1147,7 @@ public class PlayerController : NetworkBehaviour
         characterController.enabled = false;
         transform.position = new Vector3(spawnPosition.x, 3f, spawnPosition.z);
         verticalVelocity   = 0f;
+        _inertiaVelocity   = Vector3.zero;
         characterController.enabled = true;
     }
 

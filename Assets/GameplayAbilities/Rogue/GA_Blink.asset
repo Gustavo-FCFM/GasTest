@@ -28,10 +28,11 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   VisualsSequence: []
+  MaxCharges: 1
   MaxRange: 10
   SelectionAngle: 25
   BehindDistance: 1.5
   DamageEffect: {fileID: 11400000, guid: ee10fcfb885afb54a81bc1874c75cfe5, type: 2}
   AdditionalEffects:
   - {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
-  ImpactVFX: {fileID: 0}
+  ImpactVFX: {fileID: 1758473627833946668, guid: 9b21333b068a5084ba09535839bee3c8, type: 3}

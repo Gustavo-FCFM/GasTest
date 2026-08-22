@@ -32,6 +32,17 @@ public class GA_ProjectileShoot : GameplayAbility
     // Efectos EXTRA que se aplican al golpear, además de los dos anteriores. Opcional.
     public List<GameplayEffect> AdditionalEffects;
 
+    [Tooltip("Efectos que esta habilidad le aplica a los ALIADOS que alcance. El daño y los " +
+             "AdditionalEffects van a los enemigos; esta lista, a los aliados.\n\n" +
+             "VACÍA (lo normal) = la habilidad ignora por completo a los aliados. En cuanto tenga " +
+             "algo, empieza a considerarlos objetivos válidos: es lo que convierte un ataque normal " +
+             "en uno que daña enemigos Y cura aliados a su paso (Castigo divino del Paladín).")]
+    // FormerlySerializedAs: se llamó "AllyEffects" y vivía en GameplayAbility. Unity
+    // serializa por NOMBRE, así que mientras el campo siga llamándose TargetEffects los
+    // assets ya configurados conservan su valor al bajarlo a esta clase.
+    [UnityEngine.Serialization.FormerlySerializedAs("AllyEffects")]
+    public List<GameplayEffect> TargetEffects;
+
     [Tooltip("Alcance del proyectil expresado en SEGUNDOS de vuelo (con velocidad constante, " +
              "alcance = LifeTime × LaunchForce). Pasado ese tiempo se despawnea solo aunque no haya " +
              "chocado con nada. 0 = usar el default del prefab (5s).\n\n" +
@@ -151,7 +162,7 @@ public class GA_ProjectileShoot : GameplayAbility
             // Le pasamos 'this' para que, al impactar (siempre en el
             // servidor), el proyectil pueda pedirle a NetworkASC que
             // reproduzca ImpactVFX en todos los peers vía PlayImpactVFX().
-            // TargetEffects viene de GameplayAbility: si está vacío el proyectil sigue
+            // TargetEffects: si está vacío el proyectil sigue
             // ignorando a los aliados como siempre; si tiene algo, se lo aplica a los
             // que atraviese (la estela del Castigo divino, que cura al pasar).
             projectileScript.Initialize(InstantDamageEffect, DurationEffect, OwnerASC, UltimateChargeAmount,

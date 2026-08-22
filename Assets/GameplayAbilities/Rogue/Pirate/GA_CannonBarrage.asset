@@ -28,6 +28,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   VisualsSequence: []
+  MaxCharges: 1
   Targets: 0
   Radius: 6
   TotalDuration: 6
@@ -35,8 +36,8 @@ MonoBehaviour:
   DeployMode: 1
   MaxRange: 20
   FollowOwner: 0
-  VisualPrefab: {fileID: 7986504087968017091, guid: b10bcfd32615d844291d18c9d2d35007, type: 3}
-  VisualScaleMultiplier: 1
+  VisualPrefab: {fileID: 7957833072274404953, guid: 3355f6bfa6db8b24281b827de929694c, type: 3}
+  VisualScaleMultiplier: 0.2
   EffectsToApply:
   - {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   StartDelay: 0.3

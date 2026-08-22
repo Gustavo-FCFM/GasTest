@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 // ============================================================
 // GA_Target  (genérico — "elegí un objetivo y aplicale esto")
@@ -13,11 +14,9 @@ using UnityEngine;
 //   · Presencia conquistadora (Paladín/Conquista): aturde a un enemigo lejano.
 //   · La curación apuntada del Clérigo y su "Canalizar divinidad: Aturdir".
 //
-// QUÉ APLICA: la lista TargetEffects de GameplayAbility — los efectos que recibe el
-// base, donde significa "lo que esta habilidad le hace a los aliados que alcanza"
-// — acá, como el objetivo es UNO SOLO y elegido a propósito, hay que leerlo como
-// "los efectos que recibe el objetivo", apunte a un aliado o a un enemigo.
-// Podés poner tantos GE como quieras (curación, escudo, un debuff con tag, los tres).
+// QUÉ APLICA: su lista TargetEffects — los efectos que recibe el elegido, apunte a
+// un aliado o a un enemigo. Podés poner tantos GE como quieras (curación, escudo,
+// un debuff con tag, los tres).
 //
 // Para una curación "del total de la vida máxima del lanzador", el GE va con un
 // Modifier sobre Health con UseAttributeScaling, SourceAttribute = MaxHealth y
@@ -57,6 +56,16 @@ public class GA_Target : GameplayAbility
              "revivan; para una curación normal dejalo apagado o vas a desperdiciar el uso.")]
     public bool AllowDeadTargets = false;
 
+    [Header("Efectos")]
+    [Tooltip("Efectos que recibe el objetivo elegido, apunte a un aliado o a un enemigo: curación, " +
+             "escudo, inmunidad, un debuff con tag... los que quieras.\n\n" +
+             "Para una curación 'del total de la vida máxima del lanzador', el GE va con un Modifier " +
+             "sobre Health con UseAttributeScaling, SourceAttribute = MaxHealth y coeficiente 1: el " +
+             "escalado siempre mira los stats de QUIEN lanza, no los del objetivo.")]
+    // FormerlySerializedAs: se llamó "AllyEffects" y vivía en GameplayAbility.
+    [UnityEngine.Serialization.FormerlySerializedAs("AllyEffects")]
+    public List<GameplayEffect> TargetEffects;
+
     [Header("Visuales")]
     [Tooltip("VFX que aparece sobre el objetivo alcanzado.")]
     public GameObject ImpactVFX;
@@ -83,7 +92,7 @@ public class GA_Target : GameplayAbility
         CommitAbility();
 
         if (TargetEffects == null || TargetEffects.Count == 0)
-            Debug.LogWarning($"[{AbilityName}] no tiene ningún AllyEffect configurado: " +
+            Debug.LogWarning($"[{AbilityName}] no tiene ningún TargetEffect configurado: " +
                              $"selecciona objetivo pero no le aplica nada.");
 
         ApplyEffectsTo(TargetEffects, target);

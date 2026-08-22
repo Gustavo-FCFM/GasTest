@@ -23,7 +23,7 @@ using System.Collections.Generic;
 // Es lo que se espera de un "Canalizar divinidad" con tiempo de reutilización, y
 // evita tener que llevar una lista de marcas vivas.
 // ============================================================
-[CreateAssetMenu(fileName = "GA_SwornEnemy", menuName = "GAS/Specific Abilities/Paladin/Sworn Enemy")]
+[CreateAssetMenu(fileName = "GA_SwornEnemy", menuName = "GAS/Specific Abilities/Vengeance/Sworn Enemy")]
 public class GA_SwornEnemy : GameplayAbility
 {
     [Header("Selección de Enemigo")]

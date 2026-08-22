@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: GA_PaladinPrimaryAttack
   m_EditorClassIdentifier: 
   AbilityName: Paladin Primary Attack
-  AbilityIcon: {fileID: 21300000, guid: d779b56911e425b4e99247c2d8d72bcf, type: 3}
+  AbilityIcon: {fileID: 0}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 45327044be4f41c4d8f5289bc6f9b3be, type: 2}
   CooldownDuration: 0
@@ -28,6 +28,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   VisualsSequence: []
+  MaxCharges: 1
   TargetEffects: []
   Range: 2
   ConeAngle: 60

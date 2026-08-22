@@ -28,7 +28,8 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   VisualsSequence: []
-  MaxRange: 1000
+  MaxCharges: 1
+  MaxRange: 9999
   BulletRadius: 0.15
   MuzzleHeight: 1.4
   WallLayer:
@@ -36,9 +37,11 @@ MonoBehaviour:
     m_Bits: 1
   DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   AdditionalEffects: []
-  HitVFX: {fileID: 0}
+  HitVFX: {fileID: 1758473627833946668, guid: 9b21333b068a5084ba09535839bee3c8, type: 3}
   RecoilSpeed: 100
   RecoilDuration: 0.1
+  RecoilExitSpeedPercent: 0.1
+  RecoilExitDamping: 3
   ExcludePlayerLayer:
     serializedVersion: 2
     m_Bits: 128

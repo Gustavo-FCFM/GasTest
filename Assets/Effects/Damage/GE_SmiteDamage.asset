@@ -26,9 +26,10 @@ MonoBehaviour:
     Type: 0
     Magnitude: 0
     UseAttributeScaling: 1
-    SourceAttribute: 8
+    SourceAttribute: 17
     AttributeCoefficient: -1
     UseTargetHealthScaling: 0
     TargetHealthMode: 0
     TargetHealthCoefficient: 0
+  IsCrowdControl: 0
   GrantedTags: 

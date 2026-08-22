@@ -28,6 +28,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   VisualsSequence: []
+  MaxCharges: 1
   TotemPrefabs:
   - {fileID: 1564936832730364612, guid: d4cec081c92d2c04fbf4a2eae5e1aec7, type: 3}
   - {fileID: 1564936832730364612, guid: b5fed081739057d40a1f79c0cec54762, type: 3}
@@ -44,4 +45,4 @@ MonoBehaviour:
   - {fileID: 11400000, guid: edf7f61866b81824bb584b3a4002a48f, type: 2}
   - {fileID: 11400000, guid: 4f826c6e2a70e3c4ebd81be8b061245a, type: 2}
   MaxSpawnRange: 5
-  SpawnVFX: {fileID: 0}
+  SpawnVFX: {fileID: 3744133877081091469, guid: a2a060732547fe64581bb0cb3c2bdf1d, type: 3}

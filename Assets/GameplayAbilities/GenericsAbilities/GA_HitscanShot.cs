@@ -19,7 +19,9 @@ using System.Collections.Generic;
 // CONTRARIA al tiro, con el mismo sistema de impulso del dash. Como usa la dirección
 // 3D completa de la mira, disparar hacia ABAJO te impulsa hacia ARRIBA (el clásico
 // "rocket jump"), y disparar al frente te tira hacia atrás. Con RecoilSpeed = 0 no
-// hay retroceso y queda un disparo normal.
+// hay retroceso y queda un disparo normal. Al terminar el empujón no frena en seco:
+// conserva una fracción configurable de la velocidad (RecoilExitSpeedPercent), igual
+// que el dash — es lo que hace que el rocket jump describa un arco.
 //
 // RED: la resolución del tiro es server-authoritative (Activate es server-only) y usa
 // el punto de mira que el dueño ya sincroniza (GetAimPoint → NetworkAimPoint). El
@@ -59,6 +61,17 @@ public class GA_HitscanShot : GameplayAbility
     [Tooltip("Cuánto dura el empujón (después cae por gravedad).")]
     public float RecoilDuration = 0.25f;
 
+    [Tooltip("Qué fracción de la velocidad del retroceso se CONSERVA cuando termina el empujón, " +
+             "en vez de frenar en seco. 0 = frenada seca. 0.35 = seguís volando hacia atrás un " +
+             "rato y se va disipando. Se conserva también la parte VERTICAL, así que un rocket " +
+             "jump mantiene el arco en vez de caer a plomo apenas termina el impulso.")]
+    [Range(0f, 1f)]
+    public float RecoilExitSpeedPercent = 0.35f;
+
+    [Tooltip("Qué tan rápido se disipa esa inercia, en 1/segundos. Más alto = se va antes. " +
+             "Mientras dura, el jugador conserva el control normal: puede girar, frenar y saltar.")]
+    public float RecoilExitDamping = 3f;
+
     [Tooltip("Capa de JUGADORES a atravesar durante el empujón (igual que en el dash).")]
     public LayerMask ExcludePlayerLayer;
 
@@ -97,7 +110,8 @@ public class GA_HitscanShot : GameplayAbility
             Vector3 recoilVelocity = -dir * RecoilSpeed;
             if (netAsc != null)
             {
-                netAsc.ServerStartDash(recoilVelocity, RecoilDuration, ExcludePlayerLayer.value, false);
+                netAsc.ServerStartDash(recoilVelocity, RecoilDuration, ExcludePlayerLayer.value, false,
+                                       RecoilExitSpeedPercent, RecoilExitDamping);
                 recoiled = true;
             }
             else if (pc != null)
