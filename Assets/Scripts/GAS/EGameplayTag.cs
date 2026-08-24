@@ -87,4 +87,8 @@ public enum EGameplayTag
     Status_HealShield,       // Mientras dure, lo que el ESCUDO frena se devuelve como vida (Cubrir con escudo de la Conquista, defensa mejorada del Monje). Ver ExecuteInstantEffect
     Status_Invincible_Conqueror, // Invencible de la definitiva del Juramento de la conquista
     Status_Aura_Conqueror,       // El personaje está dentro del Aura de la Conquista de un Paladín aliado (marca para VFX; el stat lo da el GE del aura)
+
+    // --- MODO MERCENARIOS ---
+    Status_Carrying_Objective, // Lleva el Objetivo encima: se mueve más lento y su botón de definitiva pasa a SOLTARLO (ver MercObjective)
+    Status_SafeZone,           // Está dentro de la sala segura de SU equipo: vida topeada, inmune al daño, y es el único lugar donde puede cambiar de clase (ver MercTeamBase)
 }

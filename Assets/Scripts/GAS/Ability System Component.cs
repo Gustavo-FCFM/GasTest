@@ -1271,6 +1271,30 @@ public class AbilitySystemComponent : MonoBehaviour
         if (newLevel >= MaxLevel) OnMaxLevelReached?.Invoke();
     }
 
+    // Lleva al personaje HASTA 'targetLevel' aplicando, nivel por nivel, el mismo
+    // crecimiento de stats que la experiencia (HandleLevelUp). Nunca baja de nivel.
+    //
+    // Existe para la progresión COMPARTIDA del modo Mercenarios: ahí el nivel es una
+    // propiedad del EQUIPO (sale de una bolsa de experiencia común), así que el
+    // servidor tiene que poder decir "este jugador va en el nivel 2" sin fabricar
+    // experiencia individual. También es lo que hace que cambiar de clase no cueste
+    // progreso: equipar una clase nueva reinicia al personaje a nivel 1, y el modo de
+    // juego le vuelve a poner el nivel del equipo en el tick siguiente.
+    //
+    // Es idempotente: llamarla con un nivel que ya se tiene no hace nada.
+    public void SetLevelTo(int targetLevel)
+    {
+        if (!Attributes.ContainsKey(EAttributeType.Level)) return;
+
+        targetLevel = Mathf.Min(targetLevel, MaxLevel);
+
+        // Tope de seguridad: si algo dejara el nivel sin subir, un while sobre un
+        // atributo que no avanza congelaría el juego entero.
+        int guard = 0;
+        while (GetAttributeValue(EAttributeType.Level) < targetLevel && guard++ < 100)
+            HandleLevelUp();
+    }
+
     // Dispara OnMaxLevelReached a mano (sin pasar por GainExperience). Lo usa la
     // capa de red para hacer aparecer la selección de subclase en el cliente DUEÑO:
     // el nivel sube en el SERVIDOR, así que el ASC local del dueño remoto nunca se

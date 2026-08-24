@@ -11,6 +11,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Test_Network.unity
     guid: 8c46a5a94527ae944a262a6798ac7b08
+  - enabled: 1
+    path: Assets/Scenes/Mercenaries_Gamemode.unity
+    guid: 9c27d0bd10a732045a0d1f5d1ca263b7
   m_configObjects:
     com.unity.input.settings: {fileID: 11400000, guid: 6bce9f88629db8a4ab7e4f841afa1d13, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

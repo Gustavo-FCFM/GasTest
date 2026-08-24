@@ -88,6 +88,30 @@ public class UI_ClassMenu : MonoBehaviour
     // APERTURA (lo que llama PlayerController con C y V)
     // =========================================================
 
+    // ¿Se puede cambiar de clase base acá y ahora? Sin modo Mercenarios en la escena
+    // (una escena de pruebas suelta) siempre se puede: la restricción es una regla de
+    // ESE modo, no del menú.
+    private bool CanChangeBaseClassHere()
+    {
+        MercenariesGameMode gm = MercenariesGameMode.Instance;
+        if (gm == null || !gm.ClassChangeOnlyInSafeRoom) return true;
+        if (_playerASC == null) return true;
+
+        return _playerASC.HasTag(EGameplayTag.Status_SafeZone);
+    }
+
+    // Avisa por qué no se abrió. Usa el cartelón del modo si está en la escena; si no,
+    // al menos queda en la consola.
+    private void WarnClassChangeBlocked()
+    {
+        UI_MatchAnnouncer announcer = FindFirstObjectByType<UI_MatchAnnouncer>();
+        if (announcer != null)
+            announcer.Push("Solo podés cambiar de clase dentro de tu base",
+                           new Color(1f, 0.75f, 0.3f), 26f);
+        else
+            Debug.Log("[UI_ClassMenu] Cambio de clase bloqueado: hay que estar en la sala segura del equipo.");
+    }
+
     // Tecla C: elegir entre las clases base. Reinicia el progreso a nivel 1.
     public void OpenBaseClasses() => Open(EMode.BaseClasses);
 
@@ -100,6 +124,19 @@ public class UI_ClassMenu : MonoBehaviour
     {
         if (_open || _player == null) return;
         if (MenuContainer == null || CardsParent == null || ClassCardPrefab == null) return;
+
+        // MODO MERCENARIOS: la sala segura de tu base es el ÚNICO lugar donde se puede
+        // cambiar de clase. Afuera el menú ni se abre y se avisa por qué, en vez de
+        // dejarlo elegir y rechazarlo después (eso se sentiría como un bug).
+        //
+        // Solo aplica a las clases BASE. La evolución a subclase (tecla V, o la que se
+        // abre sola al llegar al nivel máximo) se puede hacer donde sea: es progresión,
+        // no un cambio de personaje.
+        if (mode == EMode.BaseClasses && !CanChangeBaseClassHere())
+        {
+            WarnClassChangeBlocked();
+            return;
+        }
 
         _mode = mode;
         if (!BuildMenu()) return; // sin clases que mostrar, no bloqueamos al jugador

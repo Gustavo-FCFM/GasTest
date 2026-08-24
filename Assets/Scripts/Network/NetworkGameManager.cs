@@ -156,7 +156,11 @@ public class NetworkGameManager : NetworkBehaviour
         // y rompería la lógica de aliados sin que se note por qué.
         int uniqueTeamID = Mathf.Clamp(teamID, 1, 3);
 
-        Transform  spawnPoint = GetSpawnPoint(_totalPlayersEverConnected);
+        // Con el modo Mercenarios en la escena, cada equipo entra por SU base (es
+        // media regla del modo: los tres equipos arrancan encerrados en su sala
+        // segura). Sin modo de juego, se cae al reparto redondo de siempre.
+        Transform  spawnPoint = ResolveSpawnPointForTeam(uniqueTeamID)
+                                ?? GetSpawnPoint(_totalPlayersEverConnected);
         GameObject playerObj  = Instantiate(PlayerPrefab, spawnPoint.position, spawnPoint.rotation);
         ServerManager.Spawn(playerObj, conn);
 
@@ -213,6 +217,11 @@ public class NetworkGameManager : NetworkBehaviour
     [Server]
     public void RespawnPlayer(NetworkConnection conn, float delay = 3f)
     {
+        // El modo de juego manda sobre el tiempo de reaparición: en Mercenarios son 5
+        // segundos (y se toca desde ahí, no desde cada llamador).
+        if (MercenariesGameMode.Instance != null)
+            delay = MercenariesGameMode.Instance.RespawnSeconds;
+
         StartCoroutine(RespawnCoroutine(conn, delay));
     }
 
@@ -229,7 +238,9 @@ public class NetworkGameManager : NetworkBehaviour
             playerObj.GetComponent<NetworkAbilitySystemComponent>();
         if (netASC == null) yield break;
 
-        Transform spawnPoint = GetRandomSpawnPoint();
+        // Reaparecer en la BASE PROPIA (regla del modo): dentro de la sala segura la
+        // vida vuelve al máximo y no te pueden tocar mientras te reorganizás.
+        Transform spawnPoint = ResolveSpawnPointForTeam(netASC.NetTeamID) ?? GetRandomSpawnPoint();
 
         // BUG QUE ARREGLAMOS: acá se movía el transform DESDE EL SERVIDOR. Pero el
         // NetworkTransform del jugador es client-authoritative, así que el próximo
@@ -245,6 +256,15 @@ public class NetworkGameManager : NetworkBehaviour
     // =========================================================
     // HELPERS
     // =========================================================
+
+    // Punto de aparición de la base de un equipo, si hay un modo de juego que las
+    // administre. Devuelve null cuando no lo hay (escena de pruebas suelta), y ahí
+    // quien llama usa el reparto de SpawnPoints de siempre.
+    private Transform ResolveSpawnPointForTeam(int teamID)
+    {
+        MercenariesGameMode gm = MercenariesGameMode.Instance;
+        return gm != null ? gm.GetTeamSpawnPoint(teamID) : null;
+    }
 
     // Punto de spawn determinístico por número de jugador (round-robin).
     private Transform GetSpawnPoint(int playerNumber)

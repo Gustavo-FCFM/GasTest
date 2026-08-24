@@ -1369,6 +1369,16 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         AbilitySystemComponent killer = _asc.LastAttacker;
         if (killer == null || ReferenceEquals(killer, _asc)) return;
 
+        // En el modo Mercenarios la experiencia NO es individual: va a la bolsa
+        // compartida del equipo del que remató, y de ahí sale el nivel de sus tres
+        // jugadores. Este es el único punto del core que sabe quién dio el golpe final,
+        // así que la baja se rutea acá y el modo decide cuánto vale (NPC o jugador).
+        if (MercenariesGameMode.Instance != null)
+        {
+            MercenariesGameMode.Instance.ServerAwardKill(killer, _asc);
+            return;
+        }
+
         NetworkAbilitySystemComponent killerNet = killer.GetComponent<NetworkAbilitySystemComponent>();
         if (killerNet != null) killerNet.ServerGainExperience(ExperiencePerKill);
     }

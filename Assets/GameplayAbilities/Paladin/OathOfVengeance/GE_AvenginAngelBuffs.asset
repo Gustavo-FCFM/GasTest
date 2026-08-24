@@ -32,8 +32,8 @@ MonoBehaviour:
     TargetHealthMode: 0
     TargetHealthCoefficient: 0
   - Attribute: 10
-    Type: 0
-    Magnitude: -0.2
+    Type: 1
+    Magnitude: 0.8
     UseAttributeScaling: 0
     SourceAttribute: 0
     AttributeCoefficient: 0

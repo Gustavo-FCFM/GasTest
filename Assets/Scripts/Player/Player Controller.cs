@@ -771,7 +771,22 @@ public class PlayerController : NetworkBehaviour
         CheckAbilityButton(_input.MovementAbility, MovementAbility,      EAbilityInput.Movement);
         CheckAbilityButton(_input.Ability1,        AbilityQ,             EAbilityInput.Action1);
         CheckAbilityButton(_input.Ability2,        AbilityE,             EAbilityInput.Action2);
-        CheckAbilityButton(_input.Ability3,        AbilityR,             EAbilityInput.Action3);
+
+        // MODO MERCENARIOS: con el Objetivo en las manos, el botón de la DEFINITIVA
+        // deja de lanzar la definitiva y pasa a SOLTAR el Objetivo. Es la regla del
+        // diseño ("se limita el uso de su Habilidad definitiva"), y se implementa acá
+        // —antes de CheckAbilityButton— para que la habilidad ni se evalúe: si la
+        // dejáramos pasar, el mismo click soltaría la bolsa Y tiraría la definitiva.
+        if (ASC.HasTag(EGameplayTag.Status_Carrying_Objective))
+        {
+            if (_input.Ability3 != null && _input.Ability3.WasPressedThisFrame())
+                MercObjective.RequestDropFromOwner();
+        }
+        else
+        {
+            CheckAbilityButton(_input.Ability3, AbilityR, EAbilityInput.Action3);
+        }
+
         CheckAbilityButton(_input.PrimaryAttack,   PrimaryAttackAbility, EAbilityInput.PrimaryAttack);
         CheckAbilityButton(_input.Secondary,       AimAbility,           EAbilityInput.SecondaryAttack);
     }
