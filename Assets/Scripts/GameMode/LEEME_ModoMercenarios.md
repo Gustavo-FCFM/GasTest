@@ -3,9 +3,42 @@
 Modo principal **3c3c3 PvEvP**: tres equipos de tres, NPCs por todo el escenario, un
 Objetivo en el centro y **dos entregas para ganar**.
 
-Todo vive en `Assets/Scripts/GameMode/`. La escena de la arena es **nueva y aparte**
-(`Assets/Scenes/Arena_Mercenaries.unity`): `Test_Network.unity` queda intacta para tus
+Todo el código vive en `Assets/Scripts/GameMode/`. La arena tiene su **escena propia**
+(`Assets/Scenes/Mercenaries_Gamemode.unity`): `Test_Network.unity` queda intacta para las
 pruebas rápidas de clases.
+
+---
+
+# 0. Estado actual — 24 de agosto de 2026
+
+**Lo que ya está y funciona:**
+
+- El modo entero en código: fases, Objetivo, puntaje, experiencia compartida, wipes,
+  avisos, NPCs en red, HUD. Compila limpio.
+- La escena `Mercenaries_Gamemode.unity` con la arena generada y después **editada a
+  mano**: colliders convex en lugar de los cilindros, las tres bases movidas afuera del
+  muro con techo propio, y las bases ya acomodadas en simetría (el validador da ✓ en
+  distancias y ángulos).
+- 3 bases, 9 campamentos (18 fantasmas a la vez), NavMesh horneado, HUD en la escena.
+
+**Lo que quedó pendiente en la escena** (todo trabajo de editor, ver la sección 2):
+
+1. **Asignar el prefab del Objetivo** en `NetworkGameManager → Mercenaries Game Mode →
+   Objective Prefab`. Sin eso el Objetivo no aparece nunca. El menú
+   `6 · Revisar el montaje` lo detecta y ofrece asignarlo solo.
+2. **Poner `MercArenaBounds`** en un objeto vacío en el centro de la arena (techo y
+   paredes invisibles). Hoy no está.
+3. **Abrir los portones del muro y poner las rejas.** Como las bases quedaron afuera del
+   muro, hay que borrar los bloques `Wall_XX` que quedan enfrente de cada base y poner ahí
+   un `MercGate`. Hoy no hay ninguno.
+4. **Decorar** con el pack `Medieval Cute Series` usando el espejado por sectores.
+5. **Subir el daño de los fantasmas** si se los quiere sentir como amenaza (ver la sección
+   del panel de control: hoy hacen 5 por golpe contra 120 de vida).
+
+**Convención de nombres:** todo lo que el generador crea está en **inglés**
+(`ARENA_MERCENARIES`, `Base_Team1`, `Lane`, `Deck`, `Plateau`, `Mat_ArenaSand`). Lo que
+quedó de las primeras versiones en la escena puede tener nombres viejos en español —
+renombrar a mano lo que se vaya tocando.
 
 ---
 
@@ -79,8 +112,30 @@ hecho a mano pero sigue siendo justo para los tres equipos — que es lo que un 
 Dos detalles: las copias mantienen el vínculo con el prefab (cambiás el original y cambian
 las tres), y si algún adorno tiene collider grande, volvé a hornear el NavMesh después.
 
-Te pide guardar lo que tengas abierto antes de cambiar de escena, y si `Arena_Mercenaries`
-ya existe te pregunta antes de reemplazarla.
+Te pide guardar lo que tengas abierto antes de cambiar de escena, y si la escena ya existe
+te pregunta antes de reemplazarla.
+
+> El paso 2 crea `Assets/Scenes/Arena_Mercenaries.unity`. La escena que estamos usando se
+> llama **`Mercenaries_Gamemode.unity`** porque la renombraste después de generarla — o sea
+> que si volvés a correr el paso 2 te va a crear una segunda escena en vez de pisar la tuya.
+
+### Si el Objetivo no aparece
+
+Es lo primero que suele fallar. Tres causas, en orden:
+
+1. **No esperaste lo suficiente.** Sale a los **90 s** (30 de preparación + 60 de espera).
+   El HUD lo dice: *"Próximo Objetivo en 0:45"*.
+2. **El campo `Objective Prefab` está vacío.** Corré `6 · Revisar el montaje`: busca el
+   prefab por componente y te ofrece asignarlo.
+3. **El prefab no está registrado como spawneable en FishNet.** Mismo menú lo detecta;
+   se arregla con `Tools ▸ Fish-Networking ▸ Utility ▸ Refresh Default Prefabs`.
+
+Para probar sin esperar el reloj: con el juego corriendo, clic derecho en el componente
+`MercenariesGameMode` → **DEBUG · Hacer aparecer el Objetivo ya**.
+
+Y desde que se cablea **por componente y no por ruta**, renombrar o mover el prefab ya no
+rompe el cableado: el Objetivo es "el prefab que tiene `MercObjective`", se llame como se
+llame.
 
 ## Lo que la herramienta NO puede hacer por vos
 
@@ -138,12 +193,15 @@ mata un fantasma          →    NetworkASC.AwardKill       →   SyncList: nive
 | `MercObjective.cs` | El Objetivo: recolección, ralentización, caída, entrega. | Prefab de red que el modo spawnea y despawnea. |
 | `MercEnemyAI.cs` | Los fantasmas en red: percepción, persecución, correa y golpe. | Prefab de red. |
 | `MercEnemySpawner.cs` | Un campamento: mantiene N vivos y los repone. | Objetos sueltos en la escena (no son de red). |
+| `MercArenaBounds.cs` | Techo y paredes invisibles, con huecos hacia cada base. Se arma en runtime. | Un objeto vacío en el centro de la arena. |
+| `MercGate.cs` | La reja que cierra la base durante la preparación. No es de red: lee la fase sincronizada. | Uno por puerta. |
 | `UI/UI_MercenariesHUD.cs` | El marcador de arriba (color, nivel, barra de entregas). | `HUD_Mercenarios` en la escena. |
 | `UI/UI_MatchAnnouncer.cs` | Los avisos grandes del centro. | ídem |
 | `UI/UI_ObjectiveMarker.cs` | El rombo con la distancia que señala el Objetivo. | ídem |
 | `UI/MercUIFactory.cs` | Fabriquita de recuadros y textos que usan los tres de arriba. | — |
 | `Editor/MercSetupTools.cs` | Los tres menús: prefabs, escena y cableado. | — |
 | `Editor/MercArenaBuilder.cs` | La FORMA de la arena: piso, muro, meseta, tablados, rampas, bases y campamentos. Separado de los menús para poder iterar el diseño sin tocar la plomería. | — |
+| `Editor/MercLayoutTools.cs` | Los menús 4, 5 y 6: acomodar bases, espejar la selección y revisar el montaje. A diferencia del generador, estos **no borran nada** y todo se deshace con Ctrl+Z. | — |
 
 **Todo el HUD se dibuja por código.** No hay prefab de UI que cablear: cada componente se
 arma solo y se crea su propio Canvas. Es a propósito — así no se rompe cuando tocás un
