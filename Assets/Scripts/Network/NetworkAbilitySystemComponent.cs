@@ -1364,7 +1364,7 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     [Server]
     private void AwardKillExperience()
     {
-        if (_asc == null || ExperiencePerKill <= 0f) return;
+        if (_asc == null) return;
 
         AbilitySystemComponent killer = _asc.LastAttacker;
         if (killer == null || ReferenceEquals(killer, _asc)) return;
@@ -1378,6 +1378,15 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
             MercenariesGameMode.Instance.ServerAwardKill(killer, _asc);
             return;
         }
+
+        // CAMINO VIEJO (sin modo de juego, ej. la escena de pruebas): experiencia
+        // INDIVIDUAL para el que remató, con el valor de este componente.
+        //
+        // El chequeo de ExperiencePerKill va acá abajo y no arriba de todo a propósito:
+        // arriba cortaba el método entero, así que poner este campo en 0 —cosa razonable
+        // cuando uno cree que no se usa— dejaba también al modo Mercenarios sin repartir
+        // NADA de experiencia por bajas, sin ningún aviso.
+        if (ExperiencePerKill <= 0f) return;
 
         NetworkAbilitySystemComponent killerNet = killer.GetComponent<NetworkAbilitySystemComponent>();
         if (killerNet != null) killerNet.ServerGainExperience(ExperiencePerKill);

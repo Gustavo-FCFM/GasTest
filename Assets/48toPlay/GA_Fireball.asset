@@ -16,25 +16,27 @@ MonoBehaviour:
   AbilityIcon: {fileID: 0}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: ecfe07a06c63704479a331a9bae55086, type: 2}
+  CooldownDuration: 0
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 0
   ActivationBlockedTags: 03000000
+  ActivationRequiredTags: 
+  AnimationClip: {fileID: 0}
   AnimationTriggerName: AttackTrigger
   AnimationID: 2
-  AbilityRadius: 3
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  HitboxShape: 0
-  HitboxOffsetZ: 1.5
-  HitboxHalfExtents: {x: 1, y: 1, z: 1}
-  ConeAngle: 90
   VisualsSequence: []
+  MaxCharges: 1
   ProjectilePrefab: {fileID: 406129108226925510, guid: a08202d5fe7dac94e81bd9893f3f35ca, type: 3}
   LaunchForce: 40
   SpawnOffset: {x: 0, y: 1.5, z: 1}
   AddSpin: 0
   InstantDamageEffect: {fileID: 11400000, guid: dd5463b7faed3034982a56c117d7fa5f, type: 2}
   DurationEffect: {fileID: 0}
+  AdditionalEffects: []
+  TargetEffects: []
+  LifeTime: 0
   SpawnDelay: 0.4
-  ImpactVFX: {fileID: 0}
+  ImpactVFX: {fileID: 5435998012328932994, guid: d8703a33a4eb0b84a875202fde23e8f7, type: 3}

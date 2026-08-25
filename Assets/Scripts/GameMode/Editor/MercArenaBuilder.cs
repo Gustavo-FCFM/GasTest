@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using Unity.AI.Navigation;
@@ -369,6 +370,16 @@ public static class MercArenaBuilder
         spawner.Count          = count;
         spawner.SpawnRadius    = radius;
         spawner.RespawnSeconds = 20f;
+
+        // La curva de dificultad de la partida, puesta de fábrica: fantasmas desde el
+        // arranque, magos desde el minuto 2, un jefe (uno solo) desde el 5. A medida que
+        // los equipos suben de nivel, el mapa se pone más feo solo.
+        spawner.SpawnTable = new List<MercEnemySpawner.SpawnRule>
+        {
+            new MercEnemySpawner.SpawnRule { Type = EMercEnemyType.Ghost, Weight = 70f, UnlockMinute = 0f },
+            new MercEnemySpawner.SpawnRule { Type = EMercEnemyType.Mage,  Weight = 30f, UnlockMinute = 2f },
+            new MercEnemySpawner.SpawnRule { Type = EMercEnemyType.Boss,  Weight = 10f, UnlockMinute = 5f, MaxAlive = 1 },
+        };
     }
 
     // ============================================================

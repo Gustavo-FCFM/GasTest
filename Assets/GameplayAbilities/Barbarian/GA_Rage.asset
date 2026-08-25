@@ -24,10 +24,9 @@ MonoBehaviour:
   AnimationClip: {fileID: 3094330708855449807, guid: 18afe56f6fdf0b0478209f4b1512c8cc, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 99
-  HitFrameEventName: AnimationEvent_HitFrame
   TargetLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128
   VisualsSequence:
   - VFXPrefab: {fileID: 7155335147208632822, guid: 268b1b15038d49b418cf03198b835136, type: 3}
     Delay: 0
@@ -37,5 +36,6 @@ MonoBehaviour:
     AttachToOwner: 1
     DestroyTime: 0
     EndWithTag: 19
+  MaxCharges: 1
   BuffEffect: {fileID: 11400000, guid: 14fddbd2425f29045b44a19b2f109b88, type: 2}
   AdditionalEffects: []

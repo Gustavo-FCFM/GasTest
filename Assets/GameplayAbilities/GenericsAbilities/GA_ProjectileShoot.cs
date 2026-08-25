@@ -76,17 +76,38 @@ public class GA_ProjectileShoot : GameplayAbility
             }
             else
             {
+                // Sin PlayerController (un NPC): se le habla directo al Animator. Los
+                // parámetros se chequean antes porque el Animator de un NPC no tiene por
+                // qué tener el esquema del jugador — el del fantasma, por ejemplo, no
+                // tiene "ActionID". Sin este guard, Unity escupe un warning por CADA
+                // disparo y termina tapando la consola.
                 Animator anim = OwnerASC.GetComponent<Animator>();
                 if (anim == null) anim = OwnerASC.GetComponentInChildren<Animator>();
                 if (anim != null)
                 {
-                    anim.SetInteger("ActionID", AnimationID);
-                    anim.SetTrigger(AnimationTriggerName);
+                    if (HasAnimatorParameter(anim, "ActionID", AnimatorControllerParameterType.Int))
+                        anim.SetInteger("ActionID", AnimationID);
+
+                    if (HasAnimatorParameter(anim, AnimationTriggerName, AnimatorControllerParameterType.Trigger))
+                        anim.SetTrigger(AnimationTriggerName);
                 }
             }
 
             OwnerASC.StartAbilityCoroutine(ShootSequence());
         }
+    }
+
+    // ¿Este Animator tiene ese parámetro, del tipo esperado? Pedirle algo que no tiene
+    // no rompe nada, pero llena la consola de warnings.
+    private static bool HasAnimatorParameter(Animator anim, string parameterName,
+                                             AnimatorControllerParameterType type)
+    {
+        if (anim == null || string.IsNullOrEmpty(parameterName)) return false;
+
+        foreach (AnimatorControllerParameter p in anim.parameters)
+            if (p.type == type && p.name == parameterName) return true;
+
+        return false;
     }
 
     // Espera SpawnDelay (ajustado por velocidad de ataque), suelta el

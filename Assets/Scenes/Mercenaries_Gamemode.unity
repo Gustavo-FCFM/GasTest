@@ -1730,9 +1730,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9a1e81edb07e3a468b748c86b7ff7f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  SpawnTable:
+  - Type: 0
+    Weight: 100
+    UnlockMinute: 0
+    MaxAlive: 0
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
-  Count: 2
-  SpawnRadius: 3.5
+  Count: 3
+  SpawnRadius: 10
   RespawnSeconds: 20
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
@@ -1873,9 +1878,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9a1e81edb07e3a468b748c86b7ff7f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  SpawnTable:
+  - Type: 0
+    Weight: 100
+    UnlockMinute: 0
+    MaxAlive: 0
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
-  Count: 2
-  SpawnRadius: 3.5
+  Count: 3
+  SpawnRadius: 10
   RespawnSeconds: 20
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
@@ -2758,9 +2768,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9a1e81edb07e3a468b748c86b7ff7f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  SpawnTable:
+  - Type: 0
+    Weight: 100
+    UnlockMinute: 0
+    MaxAlive: 0
+  - Type: 1
+    Weight: 30
+    UnlockMinute: 1
+    MaxAlive: 0
+  - Type: 4
+    Weight: 30
+    UnlockMinute: 5
+    MaxAlive: 1
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
-  Count: 2
-  SpawnRadius: 2.5
+  Count: 4
+  SpawnRadius: 3.5
   RespawnSeconds: 20
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
@@ -7253,9 +7276,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9a1e81edb07e3a468b748c86b7ff7f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  SpawnTable:
+  - Type: 0
+    Weight: 100
+    UnlockMinute: 0
+    MaxAlive: 0
+  - Type: 1
+    Weight: 30
+    UnlockMinute: 1
+    MaxAlive: 0
+  - Type: 4
+    Weight: 30
+    UnlockMinute: 5
+    MaxAlive: 1
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
-  Count: 2
-  SpawnRadius: 2.5
+  Count: 4
+  SpawnRadius: 3.5
   RespawnSeconds: 20
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
@@ -10761,9 +10797,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9a1e81edb07e3a468b748c86b7ff7f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  SpawnTable:
+  - Type: 0
+    Weight: 100
+    UnlockMinute: 0
+    MaxAlive: 0
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
-  Count: 2
-  SpawnRadius: 3.5
+  Count: 3
+  SpawnRadius: 10
   RespawnSeconds: 20
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
@@ -10919,9 +10960,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9a1e81edb07e3a468b748c86b7ff7f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  SpawnTable:
+  - Type: 0
+    Weight: 100
+    UnlockMinute: 0
+    MaxAlive: 0
+  - Type: 1
+    Weight: 50
+    UnlockMinute: 0
+    MaxAlive: 0
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
-  Count: 2
-  SpawnRadius: 3
+  Count: 3
+  SpawnRadius: 5
   RespawnSeconds: 20
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
@@ -11077,9 +11127,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9a1e81edb07e3a468b748c86b7ff7f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  SpawnTable:
+  - Type: 0
+    Weight: 100
+    UnlockMinute: 0
+    MaxAlive: 0
+  - Type: 1
+    Weight: 30
+    UnlockMinute: 1
+    MaxAlive: 0
+  - Type: 4
+    Weight: 30
+    UnlockMinute: 5
+    MaxAlive: 1
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
-  Count: 2
-  SpawnRadius: 2.5
+  Count: 4
+  SpawnRadius: 3.5
   RespawnSeconds: 20
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
@@ -11235,9 +11298,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9a1e81edb07e3a468b748c86b7ff7f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  SpawnTable:
+  - Type: 0
+    Weight: 100
+    UnlockMinute: 0
+    MaxAlive: 0
+  - Type: 1
+    Weight: 50
+    UnlockMinute: 0
+    MaxAlive: 0
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
-  Count: 2
-  SpawnRadius: 3
+  Count: 3
+  SpawnRadius: 5
   RespawnSeconds: 20
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
@@ -12568,9 +12640,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9a1e81edb07e3a468b748c86b7ff7f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  SpawnTable:
+  - Type: 0
+    Weight: 100
+    UnlockMinute: 0
+    MaxAlive: 0
+  - Type: 1
+    Weight: 50
+    UnlockMinute: 0
+    MaxAlive: 0
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
-  Count: 2
-  SpawnRadius: 3
+  Count: 3
+  SpawnRadius: 5
   RespawnSeconds: 20
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
@@ -18026,7 +18107,8 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 7443408887813606060, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 4393252310584637057, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}

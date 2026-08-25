@@ -50,6 +50,10 @@ public class GC_Projectile : NetworkBehaviour
     private readonly SyncVar<NetworkObject> _shooterNob = new SyncVar<NetworkObject>();
     private bool _weaponVisualsApplied = false;
 
+    // Los Renderer que trae el prefab (su modelo por defecto). Se anotan en Awake para
+    // poder apagarlos y volver a prenderlos sin tocar el arma clonada.
+    private Renderer[] _defaultRenderers;
+
     // =========================================================
     // CICLO DE VIDA
     // =========================================================
@@ -58,16 +62,29 @@ public class GC_Projectile : NetworkBehaviour
     // existe.
     private void Awake()
     {
-        // Apagamos el placeholder (el cubo del prefab) ACÁ y no en
-        // OnStartClient(). Awake() corre síncrono como parte del propio
-        // Instantiate(), antes de que el objeto se dibuje por primera vez.
-        // OnStartClient() en cambio es un callback de FishNet que puede
-        // disparar uno o más frames después — en el servidor/host el objeto
-        // ya existe (y se renderiza) desde el Instantiate(), así que si
-        // esperábamos a OnStartClient() para ocultar el cubo, el host
-        // llegaba a ver el cubo real durante esos frames antes del swap
-        // (el cliente remoto no, porque recibe el spawn ya resuelto).
-        HideDefaultVisuals();
+        // Se anotan los renderers PROPIOS del prefab antes de tocar nada: son los que
+        // se apagan y se vuelven a prender. Guardarlos evita que, más adelante, un
+        // "prender todo" también encienda el arma clonada y se vean las dos cosas.
+        _defaultRenderers = GetComponentsInChildren<Renderer>(true);
+
+        // Apagamos el modelo propio ACÁ y no en OnStartClient(). Awake() corre síncrono
+        // como parte del propio Instantiate(), antes de que el objeto se dibuje por
+        // primera vez. OnStartClient() en cambio es un callback de FishNet que puede
+        // disparar uno o más frames después — en el servidor/host el objeto ya existe
+        // (y se renderiza) desde el Instantiate(), así que si esperáramos a
+        // OnStartClient() para ocultarlo, el host llegaría a ver el modelo por defecto
+        // durante esos frames antes del swap al arma.
+        SetDefaultVisuals(false);
+
+        // ...pero apagarlo es una APUESTA a que va a venir un arma a reemplazarlo, y esa
+        // apuesta solo la gana un jugador con arma equipada. Un NPC no tiene
+        // PlayerController ni arma, así que su proyectil quedaba apagado para siempre:
+        // volaba INVISIBLE, hacía daño, explotaba, y no se veía nada.
+        //
+        // Este temporizador es la red de seguridad: si en un par de frames nadie aplicó
+        // un arma, se vuelve a mostrar el modelo del prefab. Cubre al NPC, al jugador
+        // desarmado y a cualquier proyectil que se spawnee sin dueño.
+        Invoke(nameof(ShowDefaultVisualsIfNoSwap), 0.2f);
     }
 
     // En los clientes, apaga la física local (el servidor es quien
@@ -280,22 +297,41 @@ public class GC_Projectile : NetworkBehaviour
     {
         if (_weaponVisualsApplied) return; // idempotente: OnChange + el chequeo en OnStartClient pueden pisarse
 
-        PlayerController pc = shooterNob.GetComponent<PlayerController>();
-        if (pc == null) return;
+        PlayerController pc = shooterNob != null ? shooterNob.GetComponent<PlayerController>() : null;
+        GameObject weapon   = pc != null ? pc.GetCurrentMainWeapon() : null;
 
-        GameObject weapon = pc.GetCurrentMainWeapon();
-        if (weapon == null) return;
+        if (weapon == null)
+        {
+            // Quien disparó no tiene arma que clonar: un NPC (los magos fantasma, por
+            // ejemplo) o un jugador sin arma equipada. En ese caso el proyectil se
+            // muestra tal como viene el prefab — que para eso trae su propio modelo.
+            SetDefaultVisuals(true);
+            _weaponVisualsApplied = true;   // ya está resuelto: no hay que seguir intentando
+            return;
+        }
 
         OverrideVisuals(weapon);
         _weaponVisualsApplied = true;
     }
 
-    // Apaga todos los Renderer del prefab (el cubo placeholder), sin
-    // importar si están en la raíz o en un hijo.
-    private void HideDefaultVisuals()
+    // Red de seguridad del temporizador de Awake: si nadie resolvió los visuales, el
+    // proyectil se muestra con su propio modelo en vez de quedar invisible.
+    private void ShowDefaultVisualsIfNoSwap()
     {
-        foreach (Renderer r in GetComponentsInChildren<Renderer>())
-            r.enabled = false;
+        if (_weaponVisualsApplied) return;
+
+        SetDefaultVisuals(true);
+        _weaponVisualsApplied = true;
+    }
+
+    // Prende o apaga los Renderer PROPIOS del prefab (los que había al crearse), sin
+    // importar si están en la raíz o en un hijo. No toca el arma clonada.
+    private void SetDefaultVisuals(bool visible)
+    {
+        if (_defaultRenderers == null) return;
+
+        foreach (Renderer r in _defaultRenderers)
+            if (r != null) r.enabled = visible;
     }
 
     // Clona el modelo del arma real como hijo visual del proyectil,
@@ -305,8 +341,10 @@ public class GC_Projectile : NetworkBehaviour
     {
         if (weaponModel == null) return;
 
-        // El placeholder ya se apaga en HideDefaultVisuals() (OnStartClient,
-        // corre en todos los peers) — acá solo clonamos el arma real.
+        // El modelo propio del prefab ya se apagó en Awake — acá solo clonamos el arma
+        // real. Si nunca llegamos hasta acá (un NPC, que no tiene arma), ese modelo se
+        // vuelve a prender: ver TryApplyShooterWeaponVisuals.
+        SetDefaultVisuals(false);
 
         GameObject weaponClone = Instantiate(weaponModel, transform);
 

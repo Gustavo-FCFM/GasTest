@@ -530,6 +530,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7455726505504408553}
+  - component: {fileID: 5795354234577703133}
   m_Layer: 7
   m_Name: Ghost 1 con anim
   m_TagString: Untagged
@@ -555,6 +556,27 @@ Transform:
   - {fileID: 4185260843352799847}
   m_Father: {fileID: 1459593046178688801}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+--- !u!114 &5795354234577703133
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4575868227836298944}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 85bad88c251ac5f49af9679140e513b0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Target: {fileID: 0}
+  BobHeight: 0.22
+  BobSpeed: 0.6
+  RandomizePhase: 1
+  SwayAngle: 4
+  SwaySpeed: 0.37
+  LeanAngle: 8
+  LeanReferenceSpeed: 3.5
+  LeanSmoothing: 4
 --- !u!1 &4588815399044396543
 GameObject:
   m_ObjectHideFlags: 0
@@ -1049,7 +1071,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2bb1f10c2b3876743b62ff74066a386b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CharacterRoleDefinition: {fileID: 11400000, guid: 79b868a3987beea4d84822fce7834636, type: 2}
+  CharacterRoleDefinition: {fileID: 11400000, guid: 29f4015204a358c48b120471d2947247, type: 2}
   CurrentClass: {fileID: 0}
   TeamID: 0
   MaxLevel: 0
@@ -1095,7 +1117,10 @@ MonoBehaviour:
   <ComponentIndex>k__BackingField: 0
   <PredictedSpawn>k__BackingField: {fileID: 0}
   <PredictedOwner>k__BackingField: {fileID: 0}
-  NetworkBehaviours: []
+  NetworkBehaviours:
+  - {fileID: 2131653433936390291}
+  - {fileID: 1582373809362474999}
+  - {fileID: 4391854353800623865}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -1106,7 +1131,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: 0
+  _initializedTimestamp: -8584139241874792497
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
@@ -1125,15 +1150,15 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 65535
+  <PrefabId>k__BackingField: 5
   <SpawnableCollectionId>k__BackingField: 0
-  <AssetPathHash>k__BackingField: 3032064217014326872
+  <AssetPathHash>k__BackingField: 3889942666276558619
   SceneId: 0
   SerializedTransformProperties:
     Position: {x: 0, y: 0, z: 0}
-    Rotation: {x: 0, y: 0, z: 0, w: 0}
-    Scale: {x: 0, y: 0, z: 0}
-    IsValid: 0
+    Rotation: {x: 0, y: 0, z: 0, w: 1}
+    Scale: {x: 1, y: 1, z: 1}
+    IsValid: 1
 --- !u!114 &2131653433936390291
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1146,9 +1171,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2836e36774ca1c4bbbee976e17b649c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 0
   _addedNetworkObject: {fileID: 6042306428223974378}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 6042306428223974378}
   _componentConfiguration: 0
   _synchronizeParent: 0
   _packing:
@@ -1192,10 +1217,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b09233446f8fe4140b9273915b218fd9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 1
   _addedNetworkObject: {fileID: 6042306428223974378}
-  _networkObjectCache: {fileID: 0}
-  ExperiencePerKill: 50
+  _networkObjectCache: {fileID: 6042306428223974378}
+  ExperiencePerKill: 0
 --- !u!114 &4391854353800623865
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1208,21 +1233,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7a2e093616dd4e4b8a732182c30f7e6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 2
   _addedNetworkObject: {fileID: 6042306428223974378}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 6042306428223974378}
   DetectionRadius: 9
-  LeashRadius: 18
+  LeashRadius: 16
   RetargetInterval: 0.4
   CharacterLayer:
     serializedVersion: 2
     m_Bits: 128
   AttackRange: 2.2
   AttackCooldown: 1.6
-  DamageEffect: {fileID: 11400000, guid: fa84c48515fdeb04682695f0b7d82572, type: 2}
+  KeepDistance: 0
+  TurnSpeed: 10
+  AimTolerance: 15
+  RequireLineOfSight: 1
+  SightBlockers:
+    serializedVersion: 2
+    m_Bits: 127
+  EyeHeight: 1.4
+  DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   FallbackDamage: 25
   AbilityToUse: {fileID: 0}
   HitVFX: {fileID: 6823302871133167919, guid: 3138a83bedbd6ad4481ba0b061da2eb6, type: 3}
+  ExperienceReward: 15
   DespawnDelay: 2
   SpeedParameter: Speed
   AttackTrigger: Attack

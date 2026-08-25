@@ -186,6 +186,22 @@ public class MercenariesGameMode : NetworkBehaviour
     public float PhaseTimeRemaining =>
         Mathf.Max(0f, _netPhaseTime.Value - (Time.time - _phaseTimeReceivedAt));
 
+    // Cuánto se lleva jugado desde que arrancó la partida (0 durante la preparación).
+    // Lo usan los campamentos para decidir qué enemigos ya se desbloquearon.
+    //
+    // En el servidor sale del reloj propio y no del sincronizado: el SyncVar se publica
+    // cada medio segundo y su corrección local depende de un callback que en un servidor
+    // sin cliente nunca corre.
+    public float MatchElapsedSeconds
+    {
+        get
+        {
+            if (State != EMatchState.Playing) return 0f;
+            float remaining = IsServerInitialized ? _phaseTimer : PhaseTimeRemaining;
+            return Mathf.Max(0f, MatchDurationSeconds - remaining);
+        }
+    }
+
     // Segundos hasta el próximo Objetivo. 0 = ya hay uno en juego (o todavía no aplica).
     public float ObjectiveEta =>
         Mathf.Max(0f, _netObjectiveEta.Value - (Time.time - _objectiveEtaReceivedAt));
@@ -658,6 +674,14 @@ public class MercenariesGameMode : NetworkBehaviour
 
         bool victimIsPlayer = victim.GetComponent<PlayerController>() != null;
         float amount = victimIsPlayer ? XpPerPlayerTakedown : XpPerNpcKill;
+
+        // Un NPC puede valer más que el resto (un jefe no da lo mismo que un fantasma):
+        // si trae su propia recompensa, esa manda sobre el valor general del modo.
+        if (!victimIsPlayer)
+        {
+            MercEnemyAI enemy = victim.GetComponent<MercEnemyAI>();
+            if (enemy != null && enemy.ExperienceReward > 0f) amount = enemy.ExperienceReward;
+        }
 
         ServerAddTeamXp(killer.TeamID, amount);
     }

@@ -1606,9 +1606,21 @@ MonoBehaviour:
   CamOffset: {x: 0, y: 0, z: -2.5}
   SensitivityX: 2
   SensitivityY: 2
-  MinY: -30
-  MaxY: 60
+  MinY: -85
+  MaxY: 85
   GamepadSensitivity: 120
+  CollideWithGeometry: 1
+  CollisionMask:
+    serializedVersion: 2
+    m_Bits: 127
+  CameraRadius: 0.28
+  CollisionSkin: 0.15
+  MinDistance: 0.4
+  PullInSpeed: 60
+  PushOutSpeed: 8
+  HideTargetWhenClose: 1
+  HideDistance: 1.2
+  ShowDistance: 1.5
 --- !u!1 &3338656838876514973
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99c7ada7f87c7a84eb0616ecd0c5ead7, type: 3}
+  m_Name: MercEnemyCatalog
+  m_EditorClassIdentifier: 
+  Enemies:
+  - Type: 0
+    Prefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
+  - Type: 1
+    Prefab: {fileID: 1950818362782579274, guid: 1af66b49cf03f2649b72b6f414fdc2be, type: 3}
+  - Type: 4
+    Prefab: {fileID: 6436750376057929738, guid: a47431746f355114b9754091e70930fd, type: 3}
