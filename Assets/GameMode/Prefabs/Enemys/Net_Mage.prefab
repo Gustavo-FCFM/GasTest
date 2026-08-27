@@ -218,6 +218,7 @@ GameObject:
   - component: {fileID: 2390721295109031817}
   - component: {fileID: 5166213538498688047}
   - component: {fileID: 2379363721211620052}
+  - component: {fileID: 7612384398322882618}
   m_Layer: 7
   m_Name: Net_Mage
   m_TagString: Untagged
@@ -460,11 +461,35 @@ MonoBehaviour:
   DamageEffect: {fileID: 0}
   FallbackDamage: 25
   AbilityToUse: {fileID: 11400000, guid: 8d25e6a3a6ab66c4ba62e20f82d7f442, type: 2}
+  ExtraAbilities: []
   HitVFX: {fileID: 0}
   ExperienceReward: 25
   DespawnDelay: 2
   SpeedParameter: Speed
   AttackTrigger: Attack
+--- !u!114 &7612384398322882618
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1950818362782579274}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 627e3ce1363ad064485fdaf7913287b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  BarRoot: {fileID: 838516075193476135}
+  HealthFill: {fileID: 1709953729902538317}
+  HealthSlider: {fileID: 1906026208055044762}
+  EffectContainer: {fileID: 0}
+  FirstStrikeMarker: {fileID: 0}
+  NameText: {fileID: 0}
+  AllyColor: {r: 0.2, g: 0.9, b: 0.2, a: 1}
+  EnemyColor: {r: 0.9, g: 0.2, b: 0.2, a: 1}
+  ObstacleLayer:
+    serializedVersion: 2
+    m_Bits: 1
 --- !u!1 &2405534297340935160
 GameObject:
   m_ObjectHideFlags: 0
@@ -552,7 +577,6 @@ GameObject:
   - component: {fileID: 6435237963641717277}
   - component: {fileID: 3478683156232414293}
   - component: {fileID: 8704103537548274915}
-  - component: {fileID: 1555576473992984292}
   m_Layer: 7
   m_Name: Canvas
   m_TagString: Untagged
@@ -644,21 +668,6 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
---- !u!114 &1555576473992984292
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6973597008634053179}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3aa04de9688cdb34a9191a14bc736a95, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  targetASC: {fileID: 7391729018211462708}
-  healthSlider: {fileID: 1906026208055044762}
-  cameraTransform: {fileID: 8117839390674504269, guid: 1c8752697b02867498ab2082002b4005, type: 3}
 --- !u!1 &7295475020100095268
 GameObject:
   m_ObjectHideFlags: 0

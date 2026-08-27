@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 389995739527428228}
   - component: {fileID: 1549812687399660615}
   - component: {fileID: 4981402441989511576}
-  - component: {fileID: 6618305006676395518}
   m_Layer: 7
   m_Name: Canvas
   m_TagString: Untagged
@@ -104,21 +103,6 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
---- !u!114 &6618305006676395518
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 835267556998388629}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3aa04de9688cdb34a9191a14bc736a95, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  targetASC: {fileID: 8478051811048977157}
-  healthSlider: {fileID: 1102088452028600226}
-  cameraTransform: {fileID: 8117839390674504269, guid: 1c8752697b02867498ab2082002b4005, type: 3}
 --- !u!1 &2747179785782642873
 GameObject:
   m_ObjectHideFlags: 0
@@ -208,6 +192,7 @@ GameObject:
   - component: {fileID: 5490237156789288239}
   - component: {fileID: -278300751405882859}
   - component: {fileID: 2323358331901711292}
+  - component: {fileID: 3272540594021166090}
   m_Layer: 7
   m_Name: Enemy_IceBoss
   m_TagString: Untagged
@@ -271,6 +256,7 @@ MonoBehaviour:
   TeamID: 0
   MaxLevel: 3
   GrantedAbilities: []
+  LastAttacker: {fileID: 0}
 --- !u!114 &5490237156789288239
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -327,6 +313,29 @@ MonoBehaviour:
   Damage: 5
   DamageEffect: {fileID: 0}
   HitVFX: {fileID: 0}
+--- !u!114 &3272540594021166090
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3462770889068711009}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 627e3ce1363ad064485fdaf7913287b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  BarRoot: {fileID: 6838892502388672252}
+  HealthFill: {fileID: 9026281005832252639}
+  HealthSlider: {fileID: 1102088452028600226}
+  EffectContainer: {fileID: 0}
+  FirstStrikeMarker: {fileID: 0}
+  NameText: {fileID: 0}
+  AllyColor: {r: 0.2, g: 0.9, b: 0.2, a: 1}
+  EnemyColor: {r: 0.9, g: 0.2, b: 0.2, a: 1}
+  ObstacleLayer:
+    serializedVersion: 2
+    m_Bits: 1
 --- !u!1 &6103628625113264754
 GameObject:
   m_ObjectHideFlags: 0

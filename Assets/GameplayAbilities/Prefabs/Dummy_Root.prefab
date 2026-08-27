@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 389995739527428228}
   - component: {fileID: 1549812687399660615}
   - component: {fileID: 4981402441989511576}
-  - component: {fileID: 6618305006676395518}
   m_Layer: 7
   m_Name: Canvas
   m_TagString: Untagged
@@ -104,21 +103,6 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
---- !u!114 &6618305006676395518
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 835267556998388629}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3aa04de9688cdb34a9191a14bc736a95, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  targetASC: {fileID: 0}
-  healthSlider: {fileID: 1102088452028600226}
-  cameraTransform: {fileID: 0}
 --- !u!1 &1596701833891045755
 GameObject:
   m_ObjectHideFlags: 0
@@ -293,6 +277,7 @@ GameObject:
   - component: {fileID: 8778380114887771939}
   - component: {fileID: 559173266477780699}
   - component: {fileID: 8478051811048977157}
+  - component: {fileID: 149929968054616331}
   m_Layer: 7
   m_Name: Dummy_Root
   m_TagString: Untagged
@@ -372,6 +357,30 @@ MonoBehaviour:
   TeamID: 0
   MaxLevel: 3
   GrantedAbilities: []
+  LastAttacker: {fileID: 0}
+--- !u!114 &149929968054616331
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3462770889068711009}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 627e3ce1363ad064485fdaf7913287b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  BarRoot: {fileID: 6838892502388672252}
+  HealthFill: {fileID: 9026281005832252639}
+  HealthSlider: {fileID: 1102088452028600226}
+  EffectContainer: {fileID: 0}
+  FirstStrikeMarker: {fileID: 0}
+  NameText: {fileID: 0}
+  AllyColor: {r: 0.2, g: 0.9, b: 0.2, a: 1}
+  EnemyColor: {r: 0.9, g: 0.2, b: 0.2, a: 1}
+  ObstacleLayer:
+    serializedVersion: 2
+    m_Bits: 1
 --- !u!1 &6103628625113264754
 GameObject:
   m_ObjectHideFlags: 0

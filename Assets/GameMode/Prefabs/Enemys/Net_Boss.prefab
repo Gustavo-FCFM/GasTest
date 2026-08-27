@@ -323,7 +323,6 @@ GameObject:
   - component: {fileID: 4015979431856339804}
   - component: {fileID: 182318369235677883}
   - component: {fileID: 2883149789516351410}
-  - component: {fileID: 119638888103622539}
   m_Layer: 7
   m_Name: Canvas
   m_TagString: Untagged
@@ -415,21 +414,6 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
---- !u!114 &119638888103622539
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3128201773159550697}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3aa04de9688cdb34a9191a14bc736a95, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  targetASC: {fileID: 4434214534048409090}
-  healthSlider: {fileID: 727258090052827929}
-  cameraTransform: {fileID: 8117839390674504269, guid: 1c8752697b02867498ab2082002b4005, type: 3}
 --- !u!1 &4165885773848635350
 GameObject:
   m_ObjectHideFlags: 0
@@ -597,6 +581,7 @@ GameObject:
   - component: {fileID: 8849558917171349310}
   - component: {fileID: 6685040937499168752}
   - component: {fileID: 5857001625909102738}
+  - component: {fileID: 8073099246914115165}
   m_Layer: 7
   m_Name: Net_Boss
   m_TagString: Untagged
@@ -839,11 +824,35 @@ MonoBehaviour:
   DamageEffect: {fileID: 0}
   FallbackDamage: 5
   AbilityToUse: {fileID: 11400000, guid: 80e8c2b99459134409681a187b325173, type: 2}
+  ExtraAbilities: []
   HitVFX: {fileID: 0}
   ExperienceReward: 75
   DespawnDelay: 2
   SpeedParameter: Speed
   AttackTrigger: Attack
+--- !u!114 &8073099246914115165
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6436750376057929738}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 627e3ce1363ad064485fdaf7913287b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  BarRoot: {fileID: 4600172730734747378}
+  HealthFill: {fileID: 5131044153695514844}
+  HealthSlider: {fileID: 727258090052827929}
+  EffectContainer: {fileID: 0}
+  FirstStrikeMarker: {fileID: 0}
+  NameText: {fileID: 0}
+  AllyColor: {r: 0.2, g: 0.9, b: 0.2, a: 1}
+  EnemyColor: {r: 0.9, g: 0.2, b: 0.2, a: 1}
+  ObstacleLayer:
+    serializedVersion: 2
+    m_Bits: 1
 --- !u!1 &6602246781308248107
 GameObject:
   m_ObjectHideFlags: 0
