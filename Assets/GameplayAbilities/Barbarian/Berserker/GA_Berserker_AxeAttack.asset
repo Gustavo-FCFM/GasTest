@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0673ae4a173fec245880d1c58fa5345e, type: 3}
   m_Name: GA_Berserker_AxeAttack
   m_EditorClassIdentifier: 
+  UseVerticalAim: 1
   AbilityName: Axe Attack
   AbilityIcon: {fileID: 21300000, guid: 936ec1fa27e394e47a0560a93b4bf933, type: 3}
   CostEffect: {fileID: 0}

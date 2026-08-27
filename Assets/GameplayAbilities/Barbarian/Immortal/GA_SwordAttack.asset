@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0673ae4a173fec245880d1c58fa5345e, type: 3}
   m_Name: GA_SwordAttack
   m_EditorClassIdentifier: 
+  UseVerticalAim: 1
   AbilityName: Sword Attack
   AbilityIcon: {fileID: 21300000, guid: fc1c5ea4e68459a4092232b46faae97d, type: 3}
   CostEffect: {fileID: 0}

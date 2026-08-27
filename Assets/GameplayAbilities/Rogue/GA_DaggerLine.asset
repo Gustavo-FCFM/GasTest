@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e14aad4ec29d2894eace4a88eebad1d4, type: 3}
   m_Name: GA_DaggerLine
   m_EditorClassIdentifier: 
+  UseVerticalAim: 1
   AbilityName: RoguePrimaryAttack2
   AbilityIcon: {fileID: 0}
   CostEffect: {fileID: 0}

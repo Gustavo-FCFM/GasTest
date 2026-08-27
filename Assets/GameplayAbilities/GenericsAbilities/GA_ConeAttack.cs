@@ -21,6 +21,14 @@ public class GA_ConeAttack : GameplayAbility
     // Ángulo de apertura del cono de detección.
     public float ConeAngle = 90f;
 
+    [Tooltip("El barrido se inclina hacia donde apunta la CÁMARA (arriba o abajo), en vez de " +
+             "salir siempre horizontal.\n\n" +
+             "El giro horizontal NO cambia: lo sigue dando el cuerpo, que acompaña la mira en " +
+             "vivo durante todo el swing. Lo único que se toma de la mira es la INCLINACIÓN.\n\n" +
+             "Apagado, el cono ignora por completo si el objetivo está arriba o abajo — el " +
+             "comportamiento de siempre.")]
+    public bool UseVerticalAim = false;
+
     [Header("Efectos")]
     // Efecto que se le aplica a cada enemigo golpeado.
     public GameplayEffect DamageEffect;
@@ -91,11 +99,25 @@ public class GA_ConeAttack : GameplayAbility
         Collider[] potentialTargets = Physics.OverlapSphere(OwnerASC.transform.position, Range, TargetLayer);
         NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
 
+        // Hacia dónde apunta el cono. Se resuelve UNA vez por frame de impacto, no por
+        // objetivo: en un barrido escalonado, cada golpe usa la dirección de SU momento.
+        Vector3 attackDirection = ResolveAttackDirection(UseVerticalAim);
+
         foreach (var targetCollider in potentialTargets)
         {
             Vector3 directionToTarget = (targetCollider.transform.position - OwnerASC.transform.position).normalized;
-            directionToTarget.y = 0;
-            float angleToTarget = Vector3.Angle(OwnerASC.transform.forward, directionToTarget);
+
+            // Sin puntería vertical se aplasta todo al plano horizontal — el
+            // comportamiento de siempre: el cono ignora si el objetivo está arriba o
+            // abajo, y solo importa el ángulo visto desde el cielo.
+            //
+            // CON puntería vertical hay que dejar de aplastar: si comparáramos una
+            // dirección inclinada contra un objetivo aplastado, apuntar hacia arriba
+            // haría fallar todo. Recién acá el ángulo pasa a medirse en 3D de verdad, y
+            // por eso empieza a importar mirar arriba o abajo.
+            if (!UseVerticalAim) directionToTarget.y = 0;
+
+            float angleToTarget = Vector3.Angle(attackDirection, directionToTarget);
 
             if (angleToTarget >= ConeAngle / 2f) continue;
 

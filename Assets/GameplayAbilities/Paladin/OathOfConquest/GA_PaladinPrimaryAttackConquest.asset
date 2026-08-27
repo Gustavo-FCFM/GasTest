@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e14aad4ec29d2894eace4a88eebad1d4, type: 3}
   m_Name: GA_PaladinPrimaryAttackConquest
   m_EditorClassIdentifier: 
+  UseVerticalAim: 1
   AbilityName: Primary Attack Conquest
   AbilityIcon: {fileID: 21300000, guid: fb60bffd72a47f64c97da735dbd28983, type: 3}
   CostEffect: {fileID: 0}

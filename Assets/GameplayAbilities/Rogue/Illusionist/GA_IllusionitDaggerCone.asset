@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0673ae4a173fec245880d1c58fa5345e, type: 3}
   m_Name: GA_IllusionitDaggerCone
   m_EditorClassIdentifier: 
+  UseVerticalAim: 1
   AbilityName: IllusionistPrimaryAttack1
   AbilityIcon: {fileID: 0}
   CostEffect: {fileID: 0}

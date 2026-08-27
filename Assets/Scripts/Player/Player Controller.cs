@@ -1847,11 +1847,34 @@ public class PlayerController : NetworkBehaviour
         // "raya" recta desde la última posición que tenía (antes de
         // reactivarse) hasta la posición actual del arma.
         foreach (var tr in currentWeaponTrail.GetComponentsInChildren<TrailRenderer>(true))
+        {
             tr.Clear();
+            tr.emitting = true;
+        }
     }
+    // Cortar la estela NO es apagar el objeto: es dejar de EMITIR y que la cola que ya
+    // está dibujada se consuma sola durante su Time.
+    //
+    // Apagándolo con SetActive(false) —como estaba— la estela desaparecía de golpe en
+    // cuanto terminaba el arco, así que no podía durar más que el tramo entre los dos
+    // eventos por más que se subiera el Time del TrailRenderer. Con emitting = false, el
+    // arco se sigue viendo desvanecerse detrás del arma después del golpe, que es lo que
+    // uno espera de una estela.
+    //
+    // Si el trail no está hecho con TrailRenderer (por ejemplo un prefab de partículas),
+    // se cae al apagado de siempre: para esos, cortar la emisión es otra cosa.
     public void AnimationEvent_DisableTrail()
     {
-        if (currentWeaponTrail != null) currentWeaponTrail.SetActive(false);
+        if (currentWeaponTrail == null) return;
+
+        var trails = currentWeaponTrail.GetComponentsInChildren<TrailRenderer>(true);
+        if (trails.Length == 0)
+        {
+            currentWeaponTrail.SetActive(false);
+            return;
+        }
+
+        foreach (var tr in trails) tr.emitting = false;
     }
 
     // =========================================================

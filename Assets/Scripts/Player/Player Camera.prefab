@@ -1602,8 +1602,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Target: {fileID: 0}
-  PivotOffset: {x: 0, y: 0.8, z: 0}
-  CamOffset: {x: 0, y: 0, z: -2.5}
+  PivotOffset: {x: 0, y: 1.5, z: 0}
+  CamOffset: {x: 0.6, y: 0, z: -2.6}
   SensitivityX: 2
   SensitivityY: 2
   MinY: -85

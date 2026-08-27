@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0673ae4a173fec245880d1c58fa5345e, type: 3}
   m_Name: GA_ConeReckless 1
   m_EditorClassIdentifier: 
+  UseVerticalAim: 1
   AbilityName: Reckless2
   AbilityIcon: {fileID: 21300000, guid: 42f3bcccc10a0554babbba7c68cdf7e1, type: 3}
   CostEffect: {fileID: 0}

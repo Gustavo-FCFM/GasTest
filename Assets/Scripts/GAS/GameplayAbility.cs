@@ -639,6 +639,66 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // usando al dueño de esta habilidad como referencia
     // =========================================================
 
+    // =========================================================
+    // DIRECCIÓN DEL GOLPE (puntería vertical)
+    // =========================================================
+
+    // Altura desde la que se mide la inclinación. El pivote del personaje está en los
+    // pies y la cámara a la altura de la cabeza: midiendo desde el piso, apuntar al
+    // horizonte daría una inclinación hacia arriba que no existe.
+    private const float AimOriginHeight = 1.4f;
+
+    // Hacia dónde sale el golpe. Sin puntería vertical es el frente del cuerpo, plano —
+    // el comportamiento de siempre.
+    //
+    // EL INTERRUPTOR NO VIVE ACÁ: lo declara cada habilidad que de verdad lo usa (hoy
+    // GA_ConeAttack y GA_LineAttack) y se pasa por parámetro. Es la misma decisión que
+    // se tomó con AllyEffects: un campo en la clase base aparece en el Inspector de las
+    // 78 habilidades del juego, incluidas las zonas, los buffs y los dashes, donde no
+    // hace absolutamente nada — y un campo que no hace nada es peor que no tenerlo,
+    // porque invita a prenderlo y esperar un resultado.
+    //
+    // CÓMO SE COMBINAN LAS DOS FUENTES, y por qué:
+    //   · El GIRO sale del cuerpo, que gira en vivo hacia la cámara. Por eso el defensor
+    //     puede leer el swing y esquivarlo, y el atacante corregir sobre la marcha.
+    //   · La INCLINACIÓN sale del punto de mira, que el dueño mandó AL ACTIVAR y queda
+    //     congelado (el servidor no tiene la cámara del jugador).
+    //
+    // Usar el punto de mira entero para las dos cosas sería un retroceso: el ataque
+    // saldría hacia donde apuntabas al apretar y dejaría de acompañar el giro, que es
+    // justo lo que hoy funciona bien.
+    protected Vector3 ResolveAttackDirection(bool useVerticalAim)
+    {
+        Vector3 bodyForward = OwnerASC != null ? OwnerASC.transform.forward : Vector3.forward;
+        bodyForward.y = 0f;
+
+        if (bodyForward.sqrMagnitude < 0.0001f) return Vector3.forward;
+        bodyForward.Normalize();
+
+        if (!useVerticalAim || OwnerASC == null) return bodyForward;
+
+        // Los NPCs no tienen cámara: se quedan con el golpe plano.
+        PlayerController pc = OwnerASC.GetComponent<PlayerController>();
+        if (pc == null) return bodyForward;
+
+        // Se lee NetworkAimPoint y no GetAimPoint() a propósito: en el host, GetAimPoint
+        // haría un raycast de cámara EN VIVO y en los clientes remotos devolvería el
+        // punto congelado. Serían dos reglas distintas según quién hostea. Este campo lo
+        // escribe el servidor al activar, igual para todos.
+        Vector3 aimPoint = pc.NetworkAimPoint;
+        if (aimPoint == Vector3.zero) return bodyForward;   // nunca se envió
+
+        Vector3 origin = OwnerASC.transform.position + Vector3.up * AimOriginHeight;
+        Vector3 toAim  = aimPoint - origin;
+
+        float horizontal = new Vector2(toAim.x, toAim.z).magnitude;
+        if (horizontal < 0.01f) return bodyForward;         // apuntando a los pies
+
+        // La inclinación de la mira, aplicada al frente del cuerpo.
+        float pitch = Mathf.Atan2(toAim.y, horizontal);
+        return bodyForward * Mathf.Cos(pitch) + Vector3.up * Mathf.Sin(pitch);
+    }
+
     protected bool IsEnemy(AbilitySystemComponent target)
         => OwnerASC != null && OwnerASC.IsEnemyOf(target);
 

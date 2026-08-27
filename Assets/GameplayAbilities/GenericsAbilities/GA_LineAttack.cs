@@ -19,6 +19,12 @@ public class GA_LineAttack : GameplayAbility
     // Ancho de la caja de detección.
     public float Width  = 2f;
 
+    [Tooltip("La estocada se inclina hacia donde apunta la CÁMARA (arriba o abajo), en vez de " +
+             "salir siempre horizontal. La caja de detección se inclina con ella.\n\n" +
+             "El giro horizontal NO cambia: lo sigue dando el cuerpo, que acompaña la mira en " +
+             "vivo. Lo único que se toma de la mira es la INCLINACIÓN.")]
+    public bool UseVerticalAim = false;
+
     [Header("Efectos")]
     public GameplayEffect DamageEffect;
     // Efectos EXTRA que se aplican a cada enemigo golpeado, además del daño
@@ -85,11 +91,18 @@ public class GA_LineAttack : GameplayAbility
     private void PerformDamage(HashSet<AbilitySystemComponent> targetsHit)
     {
         Vector3 origin    = OwnerASC.transform.position;
-        Vector3 direction = OwnerASC.transform.forward;
+        Vector3 direction = ResolveAttackDirection(UseVerticalAim);
         Vector3 center    = origin + (direction * (Length / 2));
         Vector3 halfExtents = new Vector3(Width / 2, 1, Length / 2);
 
-        Collider[] hits = Physics.OverlapBox(center, halfExtents, OwnerASC.transform.rotation, TargetLayer);
+        // La caja se orienta según la DIRECCIÓN del golpe y no según la rotación del
+        // cuerpo: son lo mismo mientras la estocada sea horizontal, pero cuando se
+        // apunta hacia arriba o hacia abajo la caja tiene que inclinarse con ella. Si
+        // se quedara con la rotación del cuerpo, la estocada apuntaría a un lado y
+        // seguiría golpeando al frente.
+        Quaternion boxRotation = Quaternion.LookRotation(direction, Vector3.up);
+
+        Collider[] hits = Physics.OverlapBox(center, halfExtents, boxRotation, TargetLayer);
         NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
 
         foreach (var hit in hits)
