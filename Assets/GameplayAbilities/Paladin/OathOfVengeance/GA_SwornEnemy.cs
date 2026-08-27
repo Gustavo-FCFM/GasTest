@@ -63,6 +63,21 @@ public class GA_SwornEnemy : GameplayAbility
     // ACTIVACIÓN
     // =========================================================
 
+    // Sin enemigo a la vista, la habilidad NO se puede activar. Esto corre también en
+    // el DUEÑO: PlayerController.ProcessAbilityPress consulta CanActivate ANTES de
+    // animar y de mandarle el pedido al servidor, así que apretar apuntando al aire ya
+    // no reproduce la animación, no traba el ataque y no gasta el turno — el botón
+    // simplemente no responde, que es lo que se espera de una habilidad de objetivo.
+    //
+    // El chequeo del null en Activate() se queda igual como red de seguridad: entre que
+    // el dueño apretó y que el servidor resuelve, el enemigo pudo morirse o salir del cono.
+    public override bool CanActivate()
+    {
+        if (!base.CanActivate()) return false;
+
+        return FindBestTargetInAim(MaxRange, SelectionAngle, ETargetAffiliation.Enemies) != null;
+    }
+
     public override void Activate()
     {
         if (!IsServer) return;

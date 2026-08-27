@@ -772,16 +772,14 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
             return;
         }
 
-        if (!ability.CanActivate())
-        {
-            Debug.Log($"[Server] Habilidad {ability.AbilityName} bloqueada.");
-            NotifyOwnerAbilityRejected();
-            return;
-        }
-
         // El dueño calculó este punto con SU cámara y nos lo mandó; lo dejamos
         // disponible en el PlayerController para que RotateToAim()/GetAimPoint()
         // lo usen en vez de intentar leer Camera.main en el servidor.
+        //
+        // VA ANTES DE CanActivate() a propósito: hay habilidades que validan si tienen
+        // un objetivo A TIRO (Enemigo jurado, las de GA_Target), y para eso necesitan la
+        // mira de ESTE pedido. Con la asignación después, el servidor las validaba
+        // contra la mira de la activación ANTERIOR y podía rechazar un tiro bueno.
         PlayerController pc = GetComponent<PlayerController>();
         if (pc != null)
         {
@@ -790,6 +788,13 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
             // direccional del dash). Igual que NetworkAimPoint: el servidor no
             // puede leer el input del dueño, así que este la envía con el pedido.
             pc.NetworkMoveDirection = moveDir;
+        }
+
+        if (!ability.CanActivate())
+        {
+            Debug.Log($"[Server] Habilidad {ability.AbilityName} bloqueada.");
+            NotifyOwnerAbilityRejected();
+            return;
         }
 
         ability.Activate();

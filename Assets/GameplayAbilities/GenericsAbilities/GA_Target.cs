@@ -74,6 +74,18 @@ public class GA_Target : GameplayAbility
     // ACTIVACIÓN
     // =========================================================
 
+    // Igual que en GA_SwornEnemy: sin objetivo válido la habilidad no se activa, así el
+    // dueño no gasta la animación ni el turno apuntando al aire. Con autocasteo hacia
+    // aliados siempre hay objetivo (uno mismo), así que ahí ni buscamos.
+    public override bool CanActivate()
+    {
+        if (!base.CanActivate()) return false;
+
+        if (SelfIfNoTarget && Targets == ETargetSide.Allies) return true;
+
+        return ResolveTarget() != null;
+    }
+
     public override void Activate()
     {
         if (!IsServer) return;

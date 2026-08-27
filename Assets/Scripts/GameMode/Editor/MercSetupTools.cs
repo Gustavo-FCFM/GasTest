@@ -7,6 +7,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 // ============================================================
 // MercSetupTools
@@ -21,6 +22,7 @@ using UnityEngine.SceneManagement;
 //   3 · Regenerar la arena          → rehace solo la geometría en la escena abierta.
 //   7 · Convertir enemigos          → pasa a red los enemigos de la jam, con su config.
 //   8 · Catálogo de enemigos        → la tabla tipo → prefab que usan los campamentos.
+//   9 · Barras de vida              → pasa los enemigos al nameplate nuevo del jugador.
 //
 // La escena de pruebas (Test_Network) NO se toca nunca: la arena vive aparte, así
 // podés seguir probando clases en la de siempre.
@@ -329,6 +331,9 @@ public static class MercSetupTools
         // Todos estos enemigos son fantasmas: que floten es parte de lo que son.
         AddFloatingVisual(instance);
 
+        // La barra de vida vieja de la jam por el nameplate que ya usa el jugador.
+        UpgradeHealthbar(instance);
+
         GameObject saved = PrefabUtility.SaveAsPrefabAsset(instance, outputPath);
         Object.DestroyImmediate(instance);
 
@@ -349,6 +354,119 @@ public static class MercSetupTools
         if (animator.GetComponent<FloatingVisual>() != null) return;
 
         animator.gameObject.AddComponent<FloatingVisual>();
+    }
+
+    // =========================================================
+    // 9 · BARRAS DE VIDA
+    //
+    // Los enemigos venían con HealthBarNPC, de la game jam: solo vida + billboard,
+    // leyendo el ASC local y con la cámara cableada a mano en el prefab. En una partida
+    // en red eso se ve mal —la cámara del prefab no es la de quien mira— y encima no
+    // sabe de equipos ni de oclusión.
+    //
+    // UI_WorldHealthbar, el nameplate que ya usa el jugador, resuelve las tres cosas:
+    // se orienta a la cámara de CADA espectador, se pinta según la relación con el
+    // jugador local (los monstruos son equipo 4, o sea enemigos de los tres equipos →
+    // rojo y se ocultan tras las paredes) y muestra los buffs/debuffs del personaje.
+    // Su propia cabecera ya decía que venía a reemplazar al viejo.
+    // =========================================================
+
+    [MenuItem("Mercenarios/9 · Actualizar las barras de vida de los enemigos", false, 25)]
+    public static void UpgradeAllHealthbars()
+    {
+        int upgraded = 0, skipped = 0;
+
+        // Por COMPONENTE, nunca por ruta: los prefabs se renombran y se mueven.
+        foreach (string guid in AssetDatabase.FindAssets("t:Prefab"))
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (asset == null) continue;
+            if (asset.GetComponentInChildren<HealthBarNPC>(true) == null) continue;
+
+            if (asset.GetComponent<AbilitySystemComponent>() == null)
+            {
+                Debug.LogWarning($"[Mercenarios] '{asset.name}' tiene la barra vieja pero no tiene " +
+                                 $"AbilitySystemComponent en la raíz, así que no se le puede poner el " +
+                                 $"nameplate nuevo (lo pide con RequireComponent). Se lo saltea.");
+                skipped++;
+                continue;
+            }
+
+            GameObject contents = PrefabUtility.LoadPrefabContents(path);
+            UpgradeHealthbar(contents);
+            PrefabUtility.SaveAsPrefabAsset(contents, path);
+            PrefabUtility.UnloadPrefabContents(contents);
+
+            Debug.Log($"[Mercenarios] '{asset.name}' → nameplate nuevo.");
+            upgraded++;
+        }
+
+        AssetDatabase.SaveAssets();
+        Debug.Log($"[Mercenarios] Barras de vida actualizadas: {upgraded}" +
+                  (skipped > 0 ? $" ({skipped} salteados)" : "") + ".");
+    }
+
+    // Cambia HealthBarNPC por UI_WorldHealthbar en un objeto ya instanciado (o en el
+    // contenido de un prefab abierto con LoadPrefabContents), reusando el canvas y el
+    // slider que ya estaban: no se toca la jerarquía visual, solo quién la maneja.
+    private static void UpgradeHealthbar(GameObject enemy)
+    {
+        if (enemy == null || enemy.GetComponent<AbilitySystemComponent>() == null) return;
+
+        HealthBarNPC legacy = enemy.GetComponentInChildren<HealthBarNPC>(true);
+
+        // El slider sale del script viejo si lo tenía cableado; si no, se busca en la
+        // jerarquía (algunos prefabs lo tenían suelto).
+        Slider slider = legacy != null && legacy.healthSlider != null
+            ? legacy.healthSlider
+            : enemy.GetComponentInChildren<Slider>(true);
+
+        // BarRoot es lo que se orienta a la cámara: el Canvas entero, para que el
+        // billboard mueva también cualquier texto o icono que le cuelgue después.
+        Canvas    canvas  = enemy.GetComponentInChildren<Canvas>(true);
+        Transform barRoot = canvas != null ? canvas.transform
+                                           : (slider != null ? slider.transform : null);
+
+        if (legacy != null) Object.DestroyImmediate(legacy, true);
+
+        UI_WorldHealthbar bar = enemy.GetComponent<UI_WorldHealthbar>();
+        if (bar == null) bar = enemy.AddComponent<UI_WorldHealthbar>();
+
+        bar.BarRoot      = barRoot;
+        bar.HealthSlider = slider;
+        if (slider != null && slider.fillRect != null)
+            bar.HealthFill = slider.fillRect.GetComponent<Image>();
+
+        // La configuración fina (qué capas tapan la barra, los colores) se copia del
+        // nameplate del JUGADOR en vez de inventarla acá: así los enemigos y los
+        // jugadores se ven parejos y hay un solo lugar donde ajustarla.
+        UI_WorldHealthbar template = FindPlayerHealthbarTemplate();
+        if (template != null && template != bar)
+        {
+            bar.ObstacleLayer = template.ObstacleLayer;
+            bar.AllyColor     = template.AllyColor;
+            bar.EnemyColor    = template.EnemyColor;
+        }
+
+        if (barRoot == null)
+            Debug.LogWarning($"[Mercenarios] '{enemy.name}' no tiene Canvas ni Slider en su jerarquía: " +
+                             $"el nameplate quedó puesto pero sin nada que mostrar.");
+    }
+
+    // El nameplate del jugador, buscado por COMPONENTE (el prefab que tiene a la vez
+    // UI_WorldHealthbar y PlayerController). Devuelve null si no aparece.
+    private static UI_WorldHealthbar FindPlayerHealthbarTemplate()
+    {
+        foreach (string guid in AssetDatabase.FindAssets("t:Prefab"))
+        {
+            GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(guid));
+            if (asset == null || asset.GetComponent<PlayerController>() == null) continue;
+
+            UI_WorldHealthbar bar = asset.GetComponent<UI_WorldHealthbar>();
+            if (bar != null) return bar;
+        }
+        return null;
     }
 
     // =========================================================
