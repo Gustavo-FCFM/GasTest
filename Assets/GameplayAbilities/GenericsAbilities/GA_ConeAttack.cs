@@ -29,6 +29,16 @@ public class GA_ConeAttack : GameplayAbility
              "comportamiento de siempre.")]
     public bool UseVerticalAim = false;
 
+    [Tooltip("Desde DÓNDE sale el cono, en espacio local del dueño (X = derecha, Y = arriba, " +
+             "Z = adelante).\n\n" +
+             "El pivote está a los PIES, así que por defecto el cono se mide desde el suelo: un " +
+             "enemigo parado en una rampa por encima tuyo puede quedar fuera del ángulo aunque " +
+             "lo tengas enfrente. Subir la Y al pecho (1.2-1.5) hace que el ángulo se mida desde " +
+             "donde de verdad sale el golpe.\n\n" +
+             "Importa MÁS con puntería vertical encendida, porque ahí el ángulo se mide en 3D.\n\n" +
+             "En CERO (el default) sale del pivote, como se comportó siempre.")]
+    public Vector3 OriginOffset = Vector3.zero;
+
     [Header("Efectos")]
     // Efecto que se le aplica a cada enemigo golpeado.
     public GameplayEffect DamageEffect;
@@ -96,7 +106,9 @@ public class GA_ConeAttack : GameplayAbility
     // del mismo swing: así un barrido escalonado no le pega dos veces al mismo objetivo.
     private void PerformDetectionAndDamage(HashSet<AbilitySystemComponent> targetsHit)
     {
-        Collider[] potentialTargets = Physics.OverlapSphere(OwnerASC.transform.position, Range, TargetLayer);
+        Vector3 origin = OwnerASC.transform.TransformPoint(OriginOffset);
+
+        Collider[] potentialTargets = Physics.OverlapSphere(origin, Range, TargetLayer);
         NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
 
         // Hacia dónde apunta el cono. Se resuelve UNA vez por frame de impacto, no por
@@ -105,7 +117,7 @@ public class GA_ConeAttack : GameplayAbility
 
         foreach (var targetCollider in potentialTargets)
         {
-            Vector3 directionToTarget = (targetCollider.transform.position - OwnerASC.transform.position).normalized;
+            Vector3 directionToTarget = (targetCollider.transform.position - origin).normalized;
 
             // Sin puntería vertical se aplasta todo al plano horizontal — el
             // comportamiento de siempre: el cono ignora si el objetivo está arriba o
@@ -166,7 +178,7 @@ public class GA_ConeAttack : GameplayAbility
 
         Gizmos.color = new Color(1f, 0.55f, 0f, 1f);
 
-        Vector3 center  = origin.position;
+        Vector3 center  = origin.TransformPoint(OriginOffset);
         float   halfAng = ConeAngle / 2f;
         const int segments = 24;
 

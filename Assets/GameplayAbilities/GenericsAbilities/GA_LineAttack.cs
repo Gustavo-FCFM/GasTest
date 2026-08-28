@@ -6,7 +6,7 @@ using System.Collections.Generic;
 // GA_LineAttack
 //
 // Ataque cuerpo a cuerpo en forma de caja rectangular frente al
-// dueño (Length x Width): detecta enemigos dentro de esa caja y les
+// dueño (Length x Width x Height): detecta enemigos dentro de esa caja y les
 // aplica DamageEffect. Pensada para ataques de arma larga/lanza que
 // pegan en línea recta en vez de en cono.
 // ============================================================
@@ -18,6 +18,24 @@ public class GA_LineAttack : GameplayAbility
     public float Length = 5f;
     // Ancho de la caja de detección.
     public float Width  = 2f;
+
+    [Tooltip("Alto TOTAL de la caja de detección. Antes estaba fijo en el código (2) y por eso " +
+             "no aparecía acá.\n\n" +
+             "OJO CON EL CENTRADO: la caja se centra en el pivote del dueño, que está a los " +
+             "PIES. Con 2 va de un metro BAJO el suelo a un metro sobre los pies — o sea que la " +
+             "mitad se desperdicia enterrada y apenas llega a la cintura de quien tenés " +
+             "enfrente.\n\n" +
+             "Para cubrir un cuerpo entero de pie querés 4 o más. Bajalo para un barrido rasante " +
+             "que pase por debajo de los que saltan.")]
+    public float Height = 2f;
+
+    [Tooltip("Desde DÓNDE sale la caja, en espacio local del dueño (X = derecha, Y = arriba, " +
+             "Z = adelante).\n\n" +
+             "El pivote está a los PIES, así que la caja nace a ras del suelo y la mitad de su " +
+             "alto queda enterrada. Subir la Y a la altura del pecho (1.2-1.5) es lo que hace " +
+             "que la estocada golpee donde se la ve.\n\n" +
+             "En CERO (el default) sale del pivote, como se comportó siempre.")]
+    public Vector3 OriginOffset = Vector3.zero;
 
     [Tooltip("La estocada se inclina hacia donde apunta la CÁMARA (arriba o abajo), en vez de " +
              "salir siempre horizontal. La caja de detección se inclina con ella.\n\n" +
@@ -90,10 +108,10 @@ public class GA_LineAttack : GameplayAbility
     // del mismo golpe: así no se le pega dos veces al mismo objetivo.
     private void PerformDamage(HashSet<AbilitySystemComponent> targetsHit)
     {
-        Vector3 origin    = OwnerASC.transform.position;
+        Vector3 origin    = OwnerASC.transform.TransformPoint(OriginOffset);
         Vector3 direction = ResolveAttackDirection(UseVerticalAim);
         Vector3 center    = origin + (direction * (Length / 2));
-        Vector3 halfExtents = new Vector3(Width / 2, 1, Length / 2);
+        Vector3 halfExtents = new Vector3(Width / 2f, Height / 2f, Length / 2f);
 
         // La caja se orienta según la DIRECCIÓN del golpe y no según la rotación del
         // cuerpo: son lo mismo mientras la estocada sea horizontal, pero cuando se
@@ -144,8 +162,9 @@ public class GA_LineAttack : GameplayAbility
     {
         if (origin == null) return;
 
-        Vector3 center      = origin.position + origin.forward * (Length / 2f);
-        Vector3 halfExtents = new Vector3(Width / 2f, 1f, Length / 2f);
+        Vector3 start       = origin.TransformPoint(OriginOffset);
+        Vector3 center      = start + origin.forward * (Length / 2f);
+        Vector3 halfExtents = new Vector3(Width / 2f, Height / 2f, Length / 2f);
 
         Matrix4x4 prevMatrix = Gizmos.matrix;
         Gizmos.matrix = Matrix4x4.TRS(center, origin.rotation, Vector3.one);

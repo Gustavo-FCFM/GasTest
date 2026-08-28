@@ -15,6 +15,10 @@ MonoBehaviour:
   Duration: 10
   Period: 0
   StackingPolicy: 0
+  MaxStacks: 0
+  OnMaxStacksEffect: {fileID: 0}
+  EffectGroup: 0
+  Priority: 0
   Icon: {fileID: 21300000, guid: f4e1082d5e4844446b03f3be01feec06, type: 3}
   EffectType: 0
   Modifiers:
@@ -24,28 +28,48 @@ MonoBehaviour:
     UseAttributeScaling: 0
     SourceAttribute: 0
     AttributeCoefficient: 1
+    UseTargetHealthScaling: 0
+    TargetHealthMode: 0
+    TargetHealthCoefficient: 0
   - Attribute: 10
     Type: 1
     Magnitude: 0.5
     UseAttributeScaling: 0
     SourceAttribute: 0
     AttributeCoefficient: 1
+    UseTargetHealthScaling: 0
+    TargetHealthMode: 0
+    TargetHealthCoefficient: 0
   - Attribute: 2
     Type: 1
     Magnitude: 1.5
     UseAttributeScaling: 0
     SourceAttribute: 0
     AttributeCoefficient: 1
+    UseTargetHealthScaling: 0
+    TargetHealthMode: 0
+    TargetHealthCoefficient: 0
   - Attribute: 12
     Type: 0
     Magnitude: 0.3
     UseAttributeScaling: 0
     SourceAttribute: 0
     AttributeCoefficient: 1
+    UseTargetHealthScaling: 0
+    TargetHealthMode: 0
+    TargetHealthCoefficient: 0
   - Attribute: 8
     Type: 1
     Magnitude: 1.2
     UseAttributeScaling: 0
     SourceAttribute: 0
     AttributeCoefficient: 1
+    UseTargetHealthScaling: 0
+    TargetHealthMode: 0
+    TargetHealthCoefficient: 0
+  IsCrowdControl: 0
+  TargetVFX: {fileID: 7155335147208632822, guid: 37ff539721304504b85bcc407cfedc7f, type: 3}
+  TargetVFXOffset: {x: 0, y: 0, z: 0}
+  TargetVFXRotation: {x: 0, y: 0, z: 0}
+  TargetVFXScale: {x: 0, y: 0, z: 0}
   GrantedTags: 13000000

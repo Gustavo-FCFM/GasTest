@@ -24,16 +24,19 @@ MonoBehaviour:
   AnimationClip: {fileID: 3094330708855449807, guid: a4c3612a3929d1242a7101211f988b85, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 99
-  HitFrameEventName: AnimationEvent_HitFrame
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
   VisualsSequence: []
+  MaxCharges: 1
   JumpVelocity: 15
-  ForwardForce: 10
-  AbilityRadius: 3
+  ForwardForce: 15
+  AbilityRadius: 5
   DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   CrowdControlEffect: {fileID: 11400000, guid: 70c9bebbbfba254448fb78d4cf1f9726, type: 2}
   AdditionalEffects: []
   ImpactVFX: {fileID: 4994997792314849709, guid: 3dd50886582244645be87adb42aa8528, type: 3}
   ImpactVFXScaleMultiplier: 0.8
+  AirStartAnimation: {fileID: 3094330708855449807, guid: 0d777a041738be6479b4da80daee9374, type: 3}
+  AirLoopAnimation: {fileID: -1282432417198617353, guid: 0d777a041738be6479b4da80daee9374, type: 3}
+  AirLandAnimation: {fileID: -8550972706156872637, guid: 0d777a041738be6479b4da80daee9374, type: 3}

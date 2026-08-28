@@ -13,7 +13,7 @@ using System.Collections.Generic;
 // (sección SALTO) para el flujo completo.
 // ============================================================
 [CreateAssetMenu(fileName = "GA_LeapAttack", menuName = "GAS/Generics/Leap Attack")]
-public class GA_LeapAttack : GameplayAbility
+public class GA_LeapAttack : GameplayAbility, ILeapAbility
 {
     [Header("Configuración del Salto")]
     // Impulso vertical inicial del salto.
@@ -38,6 +38,29 @@ public class GA_LeapAttack : GameplayAbility
     public GameObject ImpactVFX;
     [Tooltip("Multiplica AbilityRadius para el tamaño del VFX. No afecta el daño real — solo lo visual.")]
     public float ImpactVFXScaleMultiplier = 2f;
+
+    [Header("Animación aérea")]
+    [Tooltip("OPCIONAL: el DESPEGUE. Se reproduce una vez y encadena al bucle.\n\n" +
+             "Va separado del bucle a propósito: si el despegue vive dentro del clip que se " +
+             "loopea, el salto entero se repite una y otra vez mientras el personaje está en el " +
+             "aire.\n\nVacío = se entra directo al bucle.")]
+    public AnimationClip AirStartAnimation;
+
+    [Tooltip("Clip que se reproduce EN BUCLE mientras el personaje está en el aire.\n\n" +
+             "Existe porque el vuelo no dura lo que dura un clip: con la ranura de acción " +
+             "normal la animación terminaba a mitad del salto y el personaje caía en pose de " +
+             "locomoción. Acá el bucle se sostiene todo el vuelo y lo corta el aterrizaje.\n\n" +
+             "VACÍO = comportamiento de siempre (el AnimationClip de arriba, una sola vez).")]
+    public AnimationClip AirLoopAnimation;
+
+    [Tooltip("OPCIONAL: remate que se reproduce UNA vez al tocar el suelo (el hachazo).\n\n" +
+             "Vacío = del bucle se vuelve directo a la locomoción, sin remate.")]
+    public AnimationClip AirLandAnimation;
+
+    // ILeapAbility: PlayerController lee los clips por acá (ver ApplyLeapAnimation).
+    public AnimationClip AirStartClip => AirStartAnimation;
+    public AnimationClip AirLoopClip  => AirLoopAnimation;
+    public AnimationClip AirLandClip => AirLandAnimation;
 
     // Valida, cobra costo/cooldown, reproduce la animación y le pide a
     // NetworkAbilitySystemComponent que ejecute el salto en el cliente

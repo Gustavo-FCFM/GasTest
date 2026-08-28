@@ -54,6 +54,40 @@ public class GC_Projectile : NetworkBehaviour
     // poder apagarlos y volver a prenderlos sin tocar el arma clonada.
     private Renderer[] _defaultRenderers;
 
+    [Header("Blur de giro (opcional)")]
+    [Tooltip("Material translucido del efecto (el paquete Simple Spin Blur trae uno listo: " +
+             "'Spin Blur Material').\n\nVACIO = sin blur; el proyectil vuela como siempre.\n\n" +
+             "Con material puesto, cada malla del ARMA CLONADA recibe SimpleSpinBlur, que " +
+             "dibuja copias fantasma entre los frames de rotacion. Por eso el efecto sale solo " +
+             "cuando el proyectil gira de verdad (hacha con AddSpin) y no en un tiro recto.")]
+    public Material SpinBlurMaterial;
+
+    [Range(1, 128)]
+    [Tooltip("Cuantos frames de retraso cubre el blur. Mas alto = estela de giro mas larga.")]
+    public int SpinBlurShutterSpeed = 4;
+
+    [Range(1, 50)]
+    [Tooltip("Copias fantasma dibujadas entre cada par de rotaciones. Mas alto = mas suave y " +
+             "mas caro.")]
+    public int SpinBlurSamples = 4;
+
+    [Range(-0.1f, 0.1f)]
+    [Tooltip("Opacidad de las copias fantasma. El rango es chico a proposito: es el del paquete.")]
+    public float SpinBlurAlpha = 0f;
+
+    [Tooltip("Por debajo de esta velocidad angular no se dibuja nada. Es lo que hace que el " +
+             "blur aparezca solo mientras el arma gira y desaparezca sola si se frena.")]
+    public float SpinBlurAngularCutoff = 5f;
+
+    [Range(1, 8)]
+    [Tooltip("A cuantas mallas del arma se les monta el blur, empezando por las MAS GRANDES.\n\n" +
+             "Un arma esta hecha de varias piezas (el hacha tiene siete: hojas, mango y adornos) " +
+             "y el blur en un adorno chiquito no se distingue, pero cuesta igual. Con 2 alcanza " +
+             "para las hojas, que es lo unico que se nota girando.\n\n" +
+             "El criterio es el VOLUMEN de la malla, no el nombre: sigue funcionando aunque " +
+             "renombres las piezas.")]
+    public int SpinBlurMaxMeshes = 2;
+
     // =========================================================
     // CICLO DE VIDA
     // =========================================================
@@ -171,7 +205,11 @@ public class GC_Projectile : NetworkBehaviour
         // se llamó del lado servidor — y explota con NullReferenceException.
         if (!IsServerInitialized) return;
 
-        if (sourceASC != null && other.gameObject == sourceASC.gameObject) return;
+        // Se ignora TODO lo que cuelgue del lanzador, no solo el GameObject exacto de su
+        // ASC: el arma que lleva en la mano tiene colliders propios y cuelga del hueso
+        // del rig, así que un proyectil que sale cerca del cuerpo chocaba contra su
+        // propia arma y se despawneaba al instante, sin llegar a volar.
+        if (sourceASC != null && other.transform.root == sourceASC.transform.root) return;
 
         // BARRERA (escudo del Paladín y compañía). Va ANTES del descarte de triggers
         // de abajo a propósito: la barrera ES un trigger (para no empujar a nadie ni
@@ -348,10 +386,96 @@ public class GC_Projectile : NetworkBehaviour
 
         GameObject weaponClone = Instantiate(weaponModel, transform);
 
+        // El arma del jugador puede estar OCULTA justo ahora: las habilidades de
+        // lanzamiento la apagan al soltar (HideWeaponWhileFlying), y este clon se arma
+        // en CADA peer cuando le llega el SyncVar del tirador — que puede ser uno o
+        // varios frames despues. Clonar un arma ya apagada dejaba el proyectil
+        // invisible: no se veia ni el arma en mano ni el hacha volando.
+        //
+        // El clon siempre nace visible: su estado no tiene por que heredar el del
+        // original, que a esta altura ya no representa nada.
+        foreach (Renderer r in weaponClone.GetComponentsInChildren<Renderer>(true))
+            if (r != null) r.enabled = true;
+
         weaponClone.transform.localPosition = Vector3.zero;
         weaponClone.transform.localRotation = Quaternion.Euler(0f,90f,0f); // O la rotación que necesites para que apunte bien
 
         var colliders = weaponClone.GetComponentsInChildren<Collider>();
         foreach (var col in colliders) Destroy(col);
+
+        // La estela del arma NO se clona. Un TrailRenderer guarda sus puntos en espacio
+        // de MUNDO, así que el clon nace con los puntos que la estela tenía en la mano
+        // del jugador: mientras el proyectil vuela, esa estela dibuja una línea desde la
+        // mano hasta el arma, y al impactar esa línea es lo último que queda en pantalla
+        // — se ve como si el arma "volviera" desde el punto de impacto hasta la mano.
+        //
+        // Además la estela del arma la prenden y apagan los AnimationEvents del clip
+        // (EnableTrail/DisableTrail), que solo existen en el dueño: el clon nunca
+        // recibiría el apagado y seguiría emitiendo todo el vuelo.
+        //
+        // Si un proyectil necesita estela propia, va en SU prefab, no en la del arma.
+        foreach (var trail in weaponClone.GetComponentsInChildren<TrailRenderer>(true))
+            Destroy(trail);
+
+        ApplySpinBlur(weaponClone);
+    }
+
+    // Le monta el blur de giro (paquete Simple Spin Blur) a cada malla del arma
+    // clonada. El efecto dibuja copias fantasma del mesh entre los frames de rotacion,
+    // asi que aparece SOLO cuando el proyectil gira de verdad: un hacha lanzada con
+    // AddSpin lo muestra, un proyectil recto que no rota no dibuja nada gracias al
+    // corte por velocidad angular.
+    //
+    // Sin material asignado no se hace nada y el proyectil vuela como siempre.
+    private void ApplySpinBlur(GameObject weaponClone)
+    {
+        if (SpinBlurMaterial == null) return;
+
+        // Solo las mallas mas GRANDES reciben el blur — en un arma, las hojas. El mango
+        // y los adornos son piezas chicas cuyo blur no se distingue y que multiplican el
+        // costo: el hacha sola tiene siete mallas.
+        //
+        // Se ordena por VOLUMEN de bounds y NO por nombre a proposito. Un filtro por
+        // "blade" moriria en la primera espada que se llame distinto, y en este proyecto
+        // los assets se renombran seguido.
+        List<MeshFilter> meshes = new List<MeshFilter>();
+        foreach (MeshFilter mf in weaponClone.GetComponentsInChildren<MeshFilter>(true))
+        {
+            // El Start() del paquete hace GetComponent<MeshFilter>().mesh sin chequear:
+            // una malla vacia lo tira abajo.
+            if (mf.sharedMesh != null) meshes.Add(mf);
+        }
+
+        meshes.Sort((a, b) => BoundsVolume(b.sharedMesh).CompareTo(BoundsVolume(a.sharedMesh)));
+
+        int count = Mathf.Min(SpinBlurMaxMeshes, meshes.Count);
+        for (int i = 0; i < count; i++)
+        {
+            SimpleSpinBlur blur = meshes[i].gameObject.AddComponent<SimpleSpinBlur>();
+            blur.SSB_Material = SpinBlurMaterial;
+            blur.shutterSpeed = SpinBlurShutterSpeed;
+            blur.Samples      = SpinBlurSamples;
+            blur.alphaOffset  = SpinBlurAlpha;
+
+            // advancedSettings se arma a mano a proposito: AddComponent no pasa por el
+            // deserializador de Unity, asi que el campo llega en NULL — y el Start() del
+            // paquete lo desreferencia sin chequear. Sin esto, excepcion en cada tiro.
+            blur.advancedSettings = new AdvancedSettings
+            {
+                AngularVelocityCutoff = SpinBlurAngularCutoff,
+                enableGPUInstancing   = true,
+                subMaterialIndex      = 0,
+                unitLocalScale        = false
+            };
+        }
+    }
+
+    // Volumen de la caja envolvente de una malla. Sirve para separar las piezas con
+    // presencia visual (hojas, cabezas de maza) de los adornos, sin depender de como
+    // se llamen los objetos.
+    private static float BoundsVolume(Mesh mesh)
+    {
+        Vector3 size = mesh.bounds.size;
+        return size.x * size.y * size.z;
     }
 }

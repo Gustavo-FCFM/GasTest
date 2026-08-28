@@ -1317,6 +1317,33 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         if (ability != null) ability.PlayImpactVFXFor(_asc, position);
     }
 
+    // Muestra/oculta el arma en mano de este personaje en TODOS los peers.
+    //
+    // La usan las habilidades de lanzamiento: el hueso de prop del rig anima el arma
+    // como si la soltara, así que mientras vuela el proyectil hay que esconder la real
+    // o se ven dos armas. Es puramente cosmético, pero tiene que verse igual en todas
+    // las pantallas — por eso va por RPC y no localmente en el servidor.
+    [Server]
+    public void ServerSetWeaponVisible(bool visible)
+    {
+        SetWeaponVisibleLocal(visible);   // el host ve el cambio ya mismo
+        ObserversSetWeaponVisible(visible);
+    }
+
+    [ObserversRpc]
+    private void ObserversSetWeaponVisible(bool visible)
+    {
+        // El servidor ya lo aplicó en ServerSetWeaponVisible() de arriba.
+        if (IsServerInitialized) return;
+        SetWeaponVisibleLocal(visible);
+    }
+
+    private void SetWeaponVisibleLocal(bool visible)
+    {
+        PlayerController pc = GetComponent<PlayerController>();
+        if (pc != null) pc.SetMainWeaponVisible(visible);
+    }
+
     // Igual que ServerPlayAbilityVFX, pero para la secuencia automática de
     // GameplayAbility.VisualsSequence (CommitAbility) en vez de un único
     // impacto puntual. Como PlayVisualsSequence() ya calcula todo (delays,

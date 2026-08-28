@@ -29,9 +29,10 @@ MonoBehaviour:
     m_Bits: 128
   VisualsSequence: []
   MaxCharges: 1
-  UseVerticalAim: 1
-  Range: 2
+  Range: 2.5
   ConeAngle: 150
+  UseVerticalAim: 1
+  OriginOffset: {x: 0, y: 1, z: 0}
   DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   AdditionalEffects: []
   TargetEffects: []

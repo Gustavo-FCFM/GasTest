@@ -18,7 +18,7 @@ MonoBehaviour:
   CooldownEffect: {fileID: 11400000, guid: ecfe07a06c63704479a331a9bae55086, type: 2}
   CooldownDuration: 0
   UseAttackSpeedAsCooldown: 0
-  UltimateChargeAmount: 3
+  UltimateChargeAmount: 1
   ActivationBlockedTags: 
   ActivationRequiredTags: 
   AnimationClip: {fileID: 3094330708855449807, guid: c25522e533a3f5149b1926cb6ee3c8f1, type: 3}
@@ -28,12 +28,16 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   VisualsSequence: []
+  MaxCharges: 1
   ProjectilePrefab: {fileID: 406129108226925510, guid: 8c21a3df091c8204ea5a34229c270862, type: 3}
-  LaunchForce: 25
-  SpawnOffset: {x: 0, y: 0.5, z: 0.5}
+  LaunchForce: 50
+  SpawnOffset: {x: 0, y: 1.4, z: 0.35}
   AddSpin: 1
+  HideWeaponWhileFlying: 1
   InstantDamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   DurationEffect: {fileID: 11400000, guid: 70c9bebbbfba254448fb78d4cf1f9726, type: 2}
   AdditionalEffects: []
-  SpawnDelay: 0.8
+  TargetEffects: []
+  LifeTime: 0
+  SpawnDelay: 0.7
   ImpactVFX: {fileID: 1758473627833946668, guid: 9b21333b068a5084ba09535839bee3c8, type: 3}

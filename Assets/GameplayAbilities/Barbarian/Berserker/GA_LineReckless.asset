@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e14aad4ec29d2894eace4a88eebad1d4, type: 3}
   m_Name: GA_LineReckless
   m_EditorClassIdentifier: 
-  UseVerticalAim: 1
   AbilityName: Reckless
   AbilityIcon: {fileID: 21300000, guid: 90218e36f476d7a44b14d3fc12135ddf, type: 3}
   CostEffect: {fileID: 0}
@@ -30,8 +29,11 @@ MonoBehaviour:
     m_Bits: 128
   VisualsSequence: []
   MaxCharges: 1
-  Length: 2
-  Width: 1
+  Length: 2.5
+  Width: 1.3
+  Height: 2
+  OriginOffset: {x: 0, y: 1, z: 0}
+  UseVerticalAim: 1
   DamageEffect: {fileID: 11400000, guid: c724c673f706d3d47b65f864d4719e97, type: 2}
   AdditionalEffects: []
   TargetEffects: []

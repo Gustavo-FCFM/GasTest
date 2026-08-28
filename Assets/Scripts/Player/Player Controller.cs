@@ -144,6 +144,27 @@ public class PlayerController : NetworkBehaviour
              "o directo a la locomoción).")]
     public string HoldingParam = "IsHolding";
 
+    [Header("Animación — Salto de habilidad (leap)")]
+    [Tooltip("OPCIONAL: clip placeholder del DESPEGUE. Se reproduce una vez y encadena al bucle.\n\n" +
+             "Vacío (o sin el estado en el Animator) = se entra directo al bucle. Ojo: si el " +
+             "despegue vive DENTRO del clip del bucle, el salto entero se repite mientras el " +
+             "personaje está en el aire — por eso van separados.")]
+    public string AirStartSlotName = "PLACEHOLDER_AirStart";
+
+    [Tooltip("Clip placeholder del estado que se reproduce EN BUCLE mientras el personaje está " +
+             "en el aire. Es el único obligatorio de los tres.\n\n" +
+             "Tiene que ser SOLO la pose sostenida (el hacha arriba): si le metés el despegue, " +
+             "el salto entero se repite en loop mientras dura el vuelo.")]
+    public string AirLoopSlotName = "PLACEHOLDER_AirLoop";
+
+    [Tooltip("OPCIONAL: clip placeholder del remate al aterrizar. Vacío (o sin el estado en el " +
+             "Animator) = del bucle se vuelve directo a la locomoción.")]
+    public string AirLandSlotName = "PLACEHOLDER_AirLand";
+
+    [Tooltip("Valor de ActionID que lleva al estado del bucle aéreo. Tiene que ser distinto de " +
+             "ActionClipStateID, HoldStateID (98) y HoldImpactStateID (97).")]
+    public int LeapStateID = 96;
+
     // Copia en RUNTIME del controller (base + overrides de la clase). Es la que
     // permite intercambiar el clip de la ranura de acción sin tocar los assets.
     private AnimatorOverrideController _runtimeAnimator;
@@ -168,6 +189,22 @@ public class PlayerController : NetworkBehaviour
     private bool HasHoldImpact  => !string.IsNullOrEmpty(_holdImpactKey);
     private bool _warnedNoHoldSlots;
     private bool _warnedNoHoldImpact;
+
+    // Llaves reales de las ranuras del salto de habilidad (mismo criterio que las de
+    // mantener) y qué clip hay puesto en cada una, para no provocar rebinds al pedo.
+    private string _airStartKey, _airLoopKey, _airLandKey;
+    private AnimationClip _currentAirStart, _currentAirLoop, _currentAirLand;
+
+    // El BUCLE es lo único imprescindible: el remate del aterrizaje es opcional.
+    private bool HasAirSlots => !string.IsNullOrEmpty(_airLoopKey);
+    private bool _warnedNoAirSlots;
+
+    // Retención del despegue: entre que la habilidad dispara la animación y que el
+    // impulso realmente levanta al personaje pasan uno o más frames (el impulso viaja
+    // por TargetRpc). Mientras tanto se fuerza IsJumping en true para que el bucle
+    // aéreo no se corte solo. Ver UpdateAnimations.
+    private bool  _leapTakeoffPending;
+    private float _leapTakeoffDeadline;
 
     [Header("Huesos")]
     public Transform MainHandSocket;
@@ -1470,7 +1507,28 @@ public class PlayerController : NetworkBehaviour
         characterAnimator.SetFloat("MoveX", localVel.x, 0.1f, Time.deltaTime);
         characterAnimator.SetFloat("MoveY", localVel.z, 0.1f, Time.deltaTime);
 
-        characterAnimator.SetBool("IsJumping", !characterController.isGrounded);
+        // IsJumping se sostiene en TRUE desde que arranca un salto de habilidad hasta
+        // que el personaje despega de verdad.
+        //
+        // POR QUÉ: cuando la habilidad dispara la animación, el personaje TODAVÍA está
+        // en el piso — el impulso lo aplica un TargetRpc que llega uno o más frames
+        // después (ver GA_LeapAttack/ServerStartLeap). Sin esta retención, el Animator
+        // entraba al bucle aéreo y la transición de salida (IsJumping == false) se
+        // cumplía en el primer frame: solo se veía el aterrizaje, nunca el bucle.
+        //
+        // El latch se suelta en cuanto isGrounded da false una vez; de ahí en más manda
+        // la física como siempre, así que el aterrizaje se detecta normal.
+        bool airborne = !characterController.isGrounded;
+        if (_leapTakeoffPending)
+        {
+            // Se suelta al despegar, o por TIEMPO: si el impulso nunca llega (RPC perdido,
+            // salto bloqueado por un root), el personaje no puede quedarse clavado en el
+            // bucle aereo para siempre.
+            if (airborne || Time.time > _leapTakeoffDeadline) _leapTakeoffPending = false;
+            else                                              airborne = true;
+        }
+
+        characterAnimator.SetBool("IsJumping", airborne);
 
         float spd = ASC.GetAttributeValue(EAttributeType.AtkSpeed);
         if (spd > 0)
@@ -1533,6 +1591,14 @@ public class PlayerController : NetworkBehaviour
         _holdEndKey    = ResolveSlotKey(slots, HoldEndSlotName);
         _holdImpactKey = ResolveSlotKey(slots, HoldImpactSlotName);
         _currentHoldStart = _currentHoldLoop = _currentHoldEnd = _currentHoldImpact = null;
+
+        // Ranuras del salto de habilidad (leap). Mismo criterio que las de mantener:
+        // el bucle es lo imprescindible, el remate es opcional y queda en null si el
+        // estado no existe en el Animator.
+        _airStartKey = ResolveSlotKey(slots, AirStartSlotName);
+        _airLoopKey = ResolveSlotKey(slots, AirLoopSlotName);
+        _airLandKey = ResolveSlotKey(slots, AirLandSlotName);
+        _currentAirStart = _currentAirLoop = _currentAirLand = null;
     }
 
     // Busca en los overrides del controller el clip placeholder que se llame
@@ -1596,6 +1662,22 @@ public class PlayerController : NetworkBehaviour
         // las demás esto devuelve la misma habilidad. Ver ResolveAnimationSource.
         ability = ability.ResolveAnimationSource() ?? ability;
 
+        // SALTO DE HABILIDAD: bucle en el aire + remate al aterrizar, en vez de un
+        // clip que se reproduce una vez y termina aunque el personaje siga volando.
+        //
+        // Va ANTES de la ranura de acción normal a propósito: una habilidad de leap no
+        // tiene que caer nunca en el camino de un solo clip. Y va acá dentro —y no en
+        // un método aparte llamado desde Activate()— porque ApplyAbilityAnimation es la
+        // variante SIN guard de dueño que usan las DOS rutas: la del dueño y la de
+        // ObserversPlayAbilityAnimation. Poniéndolo acá, la réplica a los demás peers
+        // sale gratis, sin un RPC nuevo.
+        if (ability is ILeapAbility leap && leap.AirLoopClip != null)
+        {
+            if (ApplyLeapAnimation(ability, leap, animationSpeed)) return;
+            // Sin las ranuras en el Animator se sigue de largo al esquema de siempre:
+            // la habilidad se anima como antes en vez de quedarse muda.
+        }
+
         // Camino nuevo: el clip viene en el propio asset de la habilidad. Requiere que
         // la ranura exista en el Animator; si no, seguimos con el esquema viejo (si
         // no, dispararíamos un ActionID que ninguna transición atiende y el ataque se
@@ -1643,6 +1725,72 @@ public class PlayerController : NetworkBehaviour
         // Camino viejo: un estado propio por ataque, elegido por ActionID. Va por
         // TriggerAnimator (sin guard): este método también corre en observadores.
         TriggerAnimator(ability.AnimationTriggerName, ability.AnimationID);
+    }
+
+    // Mete los clips del leap en sus ranuras y manda al Animator al bucle aéreo.
+    // Devuelve FALSE si el controller no tiene la ranura del bucle, para que quien la
+    // llame siga con el esquema de siempre en vez de disparar un ActionID que ninguna
+    // transición atiende (eso dejaría el ataque sin animación y el trigger colgado).
+    //
+    // No corta el bucle: de eso se encarga el Animator con IsJumping, que
+    // UpdateAnimations alimenta cada frame. Por eso no hay un "StopLeapAnimation".
+    private bool ApplyLeapAnimation(GameplayAbility ability, ILeapAbility leap, float animationSpeed)
+    {
+        if (!HasAirSlots)
+        {
+            if (!_warnedNoAirSlots)
+            {
+                _warnedNoAirSlots = true;
+                Debug.LogWarning($"[PlayerController] '{ability.AbilityName}' trae clips de salto, pero el " +
+                                 $"controller no tiene la ranura del bucle ('{AirLoopSlotName}'). Se anima " +
+                                 $"con el esquema de siempre.\n" +
+                                 $"Para activarlo, en AC_Player: un estado EN BUCLE con ese clip " +
+                                 $"placeholder, AnyState → AirLoop con ActionID == {LeapStateID} + trigger " +
+                                 $"'{ActionClipTrigger}', y AirLoop → AirLand con IsJumping == false.");
+            }
+            return false;
+        }
+
+        // Cada override provoca un rebind del Animator, así que solo se asigna lo que
+        // cambió — saltar dos veces seguidas con la misma habilidad no debe tocarlo.
+        // El DESPEGUE es opcional por partida doble: puede no traer clip, o el Animator
+        // puede no tener el estado. Cualquiera de las dos y se entra directo al bucle.
+        if (leap.AirStartClip != null && leap.AirStartClip != _currentAirStart
+            && !string.IsNullOrEmpty(_airStartKey))
+        {
+            _runtimeAnimator[_airStartKey] = leap.AirStartClip;
+            _currentAirStart = leap.AirStartClip;
+        }
+
+        if (leap.AirLoopClip != _currentAirLoop)
+        {
+            _runtimeAnimator[_airLoopKey] = leap.AirLoopClip;
+            _currentAirLoop = leap.AirLoopClip;
+        }
+
+        // El remate es opcional por partida doble: puede no traer clip, o el Animator
+        // puede no tener el estado. Cualquiera de las dos cosas y se cae del bucle
+        // directo a la locomoción.
+        if (leap.AirLandClip != null && leap.AirLandClip != _currentAirLand
+            && !string.IsNullOrEmpty(_airLandKey))
+        {
+            _runtimeAnimator[_airLandKey] = leap.AirLandClip;
+            _currentAirLand = leap.AirLandClip;
+        }
+
+        float speed = animationSpeed > 0f ? animationSpeed : ability.ResolveAnimationSpeed();
+        if (!string.IsNullOrEmpty(ActionSpeedParam) && speed > 0f)
+            characterAnimator.SetFloat(ActionSpeedParam, speed);
+
+        // Arranca la retención del despegue: hasta que el personaje deje el piso de
+        // verdad, IsJumping se fuerza en true para que el bucle no se corte en el
+        // primer frame (ver UpdateAnimations).
+        _leapTakeoffPending  = true;
+        _leapTakeoffDeadline = Time.time + 0.5f;
+
+        characterAnimator.SetInteger("ActionID", LeapStateID);
+        if (!string.IsNullOrEmpty(ActionClipTrigger)) characterAnimator.SetTrigger(ActionClipTrigger);
+        return true;
     }
 
     // Reproduce un CLIP suelto en la ranura genérica de acción, sin necesitar la
@@ -2009,6 +2157,31 @@ public class PlayerController : NetworkBehaviour
     // Devuelve el GameObject del arma principal actualmente equipada
     // (lo usan los proyectiles para clonar su visual).
     public GameObject GetCurrentMainWeapon() => currentMainWeapon;
+
+    // Muestra u oculta el arma que el personaje tiene en la mano, sin desactivar el
+    // GameObject: se apagan los Renderer y nada más.
+    //
+    // POR QUÉ EXISTE: el rig de Kevin Iglesias tiene un hueso de prop (B-handProp) y
+    // sus animaciones de lanzamiento LO ANIMAN — el hueso sale volando para simular
+    // que el arma se suelta, y vuelve al final del clip. Como el arma cuelga de ese
+    // hueso, la animación "lanza" el arma real del jugador además del proyectil del
+    // GA: se ven dos. Ocultándola mientras dura el lanzamiento, lo único que vuela es
+    // el proyectil.
+    //
+    // Se apagan Renderer y no el GameObject a propósito: desactivarlo también apagaría
+    // el hijo WeaponTrail y perdería el estado que manejan los AnimationEvents.
+    public void SetMainWeaponVisible(bool visible)
+    {
+        if (currentMainWeapon == null) return;
+
+        foreach (Renderer r in currentMainWeapon.GetComponentsInChildren<Renderer>(true))
+        {
+            // La estela se maneja sola por AnimationEvents: si la tocáramos acá,
+            // volveríamos a prenderla en mitad de un swing que ya la había apagado.
+            if (r is TrailRenderer) continue;
+            r.enabled = visible;
+        }
+    }
 
     // =========================================================
     // GIZMOS — vista previa de las áreas de habilidad en el Editor
