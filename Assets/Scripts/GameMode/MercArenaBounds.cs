@@ -51,6 +51,14 @@ public class MercArenaBounds : MonoBehaviour
              "salas de los equipos si las pusiste afuera de la arena.")]
     public float CeilingMargin = 18f;
 
+    [Header("Capa")]
+    [Tooltip("Capa de los colliders invisibles. Por defecto 'Ignore Raycast' (2): siguen " +
+             "frenando igual al que salta o vuela — eso lo decide la matriz de colisiones, no " +
+             "la capa — pero dejan de contar en los raycasts que filtran por capa.\n\n" +
+             "Si quedan en Default, la oclusión de las barras de vida los trata como una pared " +
+             "y esconde a TODOS los enemigos apenas la cámara mira desde arriba del techo.")]
+    public int BoundsLayer = 2;
+
     [Header("Cuándo")]
     [Tooltip("Armar los límites al arrancar. Apagalo solo si querés armarlos a mano desde otro script.")]
     public bool BuildOnAwake = true;
@@ -71,6 +79,7 @@ public class MercArenaBounds : MonoBehaviour
 
         Transform root = new GameObject(ChildName).transform;
         root.SetParent(transform, false);
+        root.gameObject.layer = BoundsLayer;
 
         if (BuildCeiling) BuildCeilingCollider(root);
         BuildRing(root);
@@ -96,6 +105,7 @@ public class MercArenaBounds : MonoBehaviour
         GameObject go = new GameObject("Ceiling");
         go.transform.SetParent(parent, false);
         go.transform.localPosition = new Vector3(0f, CeilingHeight + 1f, 0f);
+        go.layer = BoundsLayer;
 
         BoxCollider box = go.AddComponent<BoxCollider>();
         box.size = new Vector3(half * 2f, 2f, half * 2f);
@@ -120,6 +130,7 @@ public class MercArenaBounds : MonoBehaviour
             go.transform.SetParent(parent, false);
             go.transform.localPosition = dir * Radius + Vector3.up * (wallHeight * 0.5f - 1f);
             go.transform.localRotation = Quaternion.Euler(0f, angle, 0f);
+            go.layer = BoundsLayer;
 
             BoxCollider box = go.AddComponent<BoxCollider>();
             box.size = new Vector3(chord, wallHeight, 1.5f);

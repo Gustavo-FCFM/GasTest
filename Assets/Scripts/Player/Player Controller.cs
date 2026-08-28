@@ -1984,9 +1984,22 @@ public class PlayerController : NetworkBehaviour
     // inclinar en el eje vertical).
     public void RotateToAim(Vector3 aimPoint)
     {
-        Vector3 dir = (aimPoint - transform.position).normalized;
-        dir.y = 0;
-        if (dir != Vector3.zero) transform.rotation = Quaternion.LookRotation(dir);
+        // Se APLANA antes de normalizar, no después. Normalizando primero, un punto de
+        // mira casi vertical (mirando al cielo o a los propios pies) deja un vector como
+        // (0.02, 0.99, 0.01); al aplastarle la Y queda una horizontal minúscula que ya no
+        // es dirección, es RUIDO — pero tampoco es Vector3.zero, así que pasaba el guard
+        // y LookRotation clavaba el cuerpo en un ángulo arbitrario. Ese era el volantazo
+        // al atacar: apareció al abrir el pitch de la cámara a ±85°, porque antes nunca
+        // se podía apuntar tan vertical.
+        Vector3 dir = aimPoint - transform.position;
+        dir.y = 0f;
+
+        // Menos de medio metro en horizontal = mira casi vertical. Ahí no se gira: el
+        // cuerpo se queda como está, que es mirando a la cámara (lo mantiene
+        // FaceCameraForward). Girar con ese dato sería inventar una dirección.
+        if (dir.sqrMagnitude < 0.25f) return;
+
+        transform.rotation = Quaternion.LookRotation(dir.normalized);
     }
 
     // =========================================================
