@@ -21,6 +21,7 @@ MonoBehaviour:
   UltimateChargeAmount: 0
   ActivationBlockedTags: 
   ActivationRequiredTags: 
+  UsableWhileChanneling: 0
   AnimationClip: {fileID: 3094330708855449807, guid: b98582042c1292a4e81193a2e417a4d2, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 99
@@ -28,6 +29,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   VisualsSequence: []
+  MaxCharges: 1
   Targets: 0
   Radius: 4
   TotalDuration: 10
@@ -35,8 +37,13 @@ MonoBehaviour:
   DeployMode: 0
   MaxRange: 0
   FollowOwner: 1
-  VisualPrefab: {fileID: 7986504087968017091, guid: b10bcfd32615d844291d18c9d2d35007, type: 3}
+  VisualPrefab: {fileID: 5628875811531650112, guid: 782d1ef844b5f9245a37743fd05a7a6c, type: 3}
+  ChannelLoopAnimation: {fileID: 1567689887318942030, guid: 5910535211ca95a4f9004236d61eabd4, type: 3}
+  ChannelStartAnimation: {fileID: 3094330708855449807, guid: 5910535211ca95a4f9004236d61eabd4, type: 3}
+  ChannelEndAnimation: {fileID: -8213459218275982721, guid: 5910535211ca95a4f9004236d61eabd4, type: 3}
+  ModelSpinSpeed: -1500
+  BlockOtherAbilities: 1
   VisualScaleMultiplier: 1
   EffectsToApply:
   - {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
-  StartDelay: 0.5
+  StartDelay: 0

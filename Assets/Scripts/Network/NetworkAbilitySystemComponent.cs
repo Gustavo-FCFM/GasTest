@@ -939,6 +939,46 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     }
 
     // =========================================================
+    // ANIMACIÓN DE CANALIZADO (molinete y compañía)
+    //
+    // Igual que la del mantenido, con UNA diferencia clave: acá NO se saltea al dueño.
+    // Un mantenido lo dispara el input del jugador, así que el dueño ya lo predijo
+    // localmente; un canalizado lo dispara Activate() en el SERVIDOR, así que el dueño
+    // tampoco lo vio y necesita recibir el RPC como cualquier observador.
+    // =========================================================
+
+    [Server]
+    public void ServerPlayChannelAnimation(GameplayAbility ability, bool start)
+    {
+        int index = GameplayAbilityRegistry.Instance != null
+            ? GameplayAbilityRegistry.Instance.GetIndex(ability) : -1;
+
+        if (index < 0 && start)
+            Debug.LogWarning($"[NetworkASC] '{ability?.AbilityName}' no está en GameplayAbilityRegistry — " +
+                             $"su animación de canalizado no se va a ver en ningún peer.");
+
+        ObserversPlayChannelAnimation(index, start);
+    }
+
+    [ObserversRpc]
+    private void ObserversPlayChannelAnimation(int abilityIndex, bool start)
+    {
+        PlayerController pc = GetComponent<PlayerController>();
+        if (pc == null) return;
+
+        // Cortar no depende de resolver la habilidad: si el índice no estaba
+        // registrado, al menos el personaje no queda girando para siempre.
+        if (!start) { pc.ApplyStopChannelAnimation(); return; }
+
+        GameplayAbility ability = abilityIndex >= 0
+            ? GameplayAbilityRegistry.Instance?.GetAbility(abilityIndex) : null;
+        if (ability is not IChanneledAbility channel) return;
+
+        pc.ApplyChannelAnimation(channel.ChannelStartClip, channel.ChannelLoopClip, channel.ChannelEndClip);
+        pc.SetModelSpin(channel.SpinSpeed);
+    }
+
+    // =========================================================
     // DESTELLO DE LA BARRERA AL BLOQUEAR
     //
     // El bloqueo se resuelve SOLO en el servidor (es donde corre el pipeline de daño),

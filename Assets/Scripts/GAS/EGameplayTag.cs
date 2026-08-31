@@ -91,4 +91,7 @@ public enum EGameplayTag
     // --- MODO MERCENARIOS ---
     Status_Carrying_Objective, // Lleva el Objetivo encima: se mueve más lento y su botón de definitiva pasa a SOLTARLO (ver MercObjective)
     Status_SafeZone,           // Está dentro de la sala segura de SU equipo: vida topeada, inmune al daño, y es el único lugar donde puede cambiar de clase (ver MercTeamBase)
+
+    // --- CANALIZADOS ---
+    Status_Channeling,         // Está en medio de una habilidad canalizada (el molinete del bárbaro). Mientras dure, CanActivate bloquea TODA otra habilidad salvo las marcadas con UsableWhileChanneling. Lo pone y lo saca GA_ContinuousAoE con BlockOtherAbilities
 }

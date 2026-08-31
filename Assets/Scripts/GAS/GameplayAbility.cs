@@ -66,6 +66,14 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
              "Vacío = sin requisitos.")]
     public List<EGameplayTag> ActivationRequiredTags;
 
+    [Tooltip("Esta habilidad SÍ se puede usar mientras el personaje está canalizando otra (el " +
+             "molinete del bárbaro).\n\n" +
+             "Un canalizado con BlockOtherAbilities bloquea TODO lo demás: la lista de lo " +
+             "permitido se arma marcando esta casilla en las pocas que sí, no enumerando las " +
+             "muchas que no. Así una habilidad nueva nace bloqueada por defecto, que es lo " +
+             "seguro — si fuera al revés habría que acordarse de agregarla a una lista.")]
+    public bool UsableWhileChanneling = false;
+
     [Header("Animación")]
     [Tooltip("FORMA RECOMENDADA: arrastrá acá el clip de esta habilidad y listo — no hace falta " +
              "crear un estado en el Animator, ni reservar un AnimationID, ni mapear el clip en el " +
@@ -232,6 +240,17 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         public bool         AttachToOwner;  // Si sigue al dueño como hijo de su transform
         public float        DestroyTime;    // Se destruye solo tras estos segundos (si EndWithTag es None)
         public EGameplayTag EndWithTag;     // En vez de DestroyTime, se destruye cuando el dueño pierde este tag
+
+        // Fin por ATRIBUTO AGOTADO, en vez de (o además de) por tag. El VFX vive
+        // mientras el atributo elegido sea mayor que cero.
+        //
+        // Existe para el escudo del Frenzy: el buff y el escudo son la MISMA
+        // habilidad, pero el escudo se consume con los golpes mientras el buff sigue
+        // corriendo. Con el tag solo, la burbuja quedaba puesta sin nada detrás.
+        //
+        // Con las dos condiciones configuradas, el VFX muere con la PRIMERA que falle.
+        public bool           EndWhenAttributeDepleted;
+        public EAttributeType DepletedAttribute;
     }
 
     [Header("Visuales de Habilidad (Automáticos)")]
@@ -326,6 +345,10 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         if (ActivationBlockedTags != null)
             foreach (EGameplayTag tag in ActivationBlockedTags)
                 if (OwnerASC.HasTag(tag)) return false;
+
+        // Canalizado en curso: solo pasan las marcadas como usables durante uno. El
+        // molinete del bárbaro deja seguir usando Frenzy y el salto, y nada más.
+        if (!UsableWhileChanneling && OwnerASC.HasTag(EGameplayTag.Status_Channeling)) return false;
 
         if (ActivationRequiredTags != null)
             foreach (EGameplayTag tag in ActivationRequiredTags)
@@ -809,35 +832,60 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
 
             vfx.transform.localScale = (v.Scale != Vector3.zero) ? v.Scale : Vector3.one;
 
-            if (v.EndWithTag != EGameplayTag.None)
-                owner.StartAbilityCoroutine(DestroyVfxWhenTagRemoved(owner, vfx, v.EndWithTag));
+            if (v.EndWithTag != EGameplayTag.None || v.EndWhenAttributeDepleted)
+                owner.StartAbilityCoroutine(DestroyVfxWhenExpired(owner, vfx, v.EndWithTag,
+                                                                 v.EndWhenAttributeDepleted,
+                                                                 v.DepletedAttribute));
             else if (v.DestroyTime > 0)
                 Destroy(vfx, v.DestroyTime);
         }
     }
 
-    // Destruye un VFX de la secuencia cuando el dueño pierde el tag
-    // EndWithTag configurado (en vez de por un tiempo fijo).
-    private System.Collections.IEnumerator DestroyVfxWhenTagRemoved(AbilitySystemComponent owner, GameObject vfx, EGameplayTag tag)
+    // Mantiene vivo un VFX de la secuencia hasta que se cumpla su condición de fin: que
+    // el dueño pierda un TAG, que se le agote un ATRIBUTO, o lo que pase primero si
+    // están configuradas las dos.
+    //
+    // El caso que motivó lo del atributo es el escudo del Frenzy: el aura del buff y la
+    // burbuja del escudo son dos entradas de la MISMA secuencia, pero el escudo se
+    // consume con los golpes mientras el buff sigue corriendo. Atado solo al tag, la
+    // burbuja quedaba puesta sin nada que absorber.
+    private System.Collections.IEnumerator DestroyVfxWhenExpired(
+        AbilitySystemComponent owner, GameObject vfx,
+        EGameplayTag tag, bool watchAttribute, EAttributeType attribute)
     {
-        // Primero esperamos a que el tag APAREZCA. En el servidor/host el efecto
-        // que lo otorga se aplica en el mismo frame, pero en un cliente remoto el
-        // tag llega por NetTags (asíncrono, puede tardar varios frames). Sin esta
-        // espera, el while de abajo veía "no tiene el tag" y destruía el VFX al
-        // instante en los observadores (el aura del buff parpadeaba y desaparecía).
-        const float tagWaitTimeout = 1f;
+        bool watchTag = tag != EGameplayTag.None;
+
+        // Primero esperamos a que la condición se CUMPLA. En el servidor/host el efecto
+        // se aplica en el mismo frame, pero en un cliente remoto el tag llega por
+        // NetTags y el atributo por su SyncVar — los dos asincrónicos. Sin esta espera,
+        // el bucle de abajo vería "sin tag / escudo en cero" y destruiría el VFX al
+        // instante en los observadores (el aura parpadeaba y desaparecía).
+        const float startTimeout = 1f;
         float elapsed = 0f;
-        while (elapsed < tagWaitTimeout && owner != null && vfx != null && !owner.HasTag(tag))
+        while (elapsed < startTimeout && owner != null && vfx != null
+               && !VisualShouldLive(owner, watchTag, tag, watchAttribute, attribute))
         {
             elapsed += Time.deltaTime;
             yield return null;
         }
 
-        // Ahora sí: vive mientras el dueño conserve el tag.
-        while (owner != null && owner.HasTag(tag) && vfx != null)
+        // Ahora sí: vive mientras se sostenga la condición.
+        while (owner != null && vfx != null
+               && VisualShouldLive(owner, watchTag, tag, watchAttribute, attribute))
             yield return null;
 
         if (vfx != null) Destroy(vfx);
+    }
+
+    // ¿Sigue en pie lo que mantiene vivo al VFX? Con las dos condiciones activas tienen
+    // que cumplirse AMBAS: el VFX muere en cuanto falla la primera.
+    private static bool VisualShouldLive(AbilitySystemComponent owner,
+                                         bool watchTag, EGameplayTag tag,
+                                         bool watchAttribute, EAttributeType attribute)
+    {
+        if (watchTag       && !owner.HasTag(tag))                       return false;
+        if (watchAttribute && owner.GetAttributeValue(attribute) <= 0f) return false;
+        return true;
     }
 
     // Reproduce el VFX de impacto puntual de la habilidad (no la

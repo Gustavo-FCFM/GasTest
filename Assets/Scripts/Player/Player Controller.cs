@@ -2156,6 +2156,93 @@ public class PlayerController : NetworkBehaviour
 
     // Devuelve el GameObject del arma principal actualmente equipada
     // (lo usan los proyectiles para clonar su visual).
+    // =========================================================
+    // GIRO DEL MODELO (molinete tipo Garen)
+    //
+    // Rota el MODELO, no la raíz. Es a propósito: la raíz la maneja FaceCameraForward
+    // para que el cuerpo mire donde apunta la cámara, y el movimiento WASD se calcula
+    // relativo a la cámara — girar la raíz rompería las dos cosas. El área del
+    // whirlwind es un radio alrededor del jugador, así que no tiene dirección y no le
+    // importa hacia dónde "mire" el modelo.
+    //
+    // Al ser puramente cosmético cada peer lo corre sobre su propia copia, sin
+    // autoridad ni sincronización de transform.
+    // =========================================================
+
+    private float _modelSpinSpeed;   // grados por segundo; 0 = sin giro
+    private float _modelSpinAngle;   // acumulado, para poder devolverlo a cero al terminar
+
+    // Arranca (o corta, con 0) el giro del modelo sobre su eje vertical.
+    public void SetModelSpin(float degreesPerSecond)
+    {
+        _modelSpinSpeed = degreesPerSecond;
+
+        // Al cortar, el modelo vuelve a mirar como la raíz: si lo dejáramos en un
+        // ángulo cualquiera, el personaje quedaría torcido respecto de su propia mira
+        // hasta el próximo giro.
+        if (Mathf.Approximately(degreesPerSecond, 0f))
+        {
+            _modelSpinAngle = 0f;
+            if (characterAnimator != null)
+                characterAnimator.transform.localRotation = Quaternion.identity;
+        }
+    }
+
+    // Va en LateUpdate y no en Update: el Animator escribe las poses en Update, así que
+    // rotar antes lo pisaría el propio animator en el mismo frame.
+    private void LateUpdate()
+    {
+        if (Mathf.Approximately(_modelSpinSpeed, 0f) || characterAnimator == null) return;
+
+        _modelSpinAngle += _modelSpinSpeed * Time.deltaTime;
+        characterAnimator.transform.localRotation = Quaternion.Euler(0f, _modelSpinAngle, 0f);
+    }
+
+    // Anima un CANALIZADO (una habilidad que se sostiene un rato: el molinete del
+    // bárbaro) reusando las ranuras del mantenido: inicio → bucle → final.
+    //
+    // Reusa esas ranuras y NO la interfaz IHoldAbility a propósito. Los estados del
+    // Animator ya existen y hacen exactamente esta forma, pero implementar la interfaz
+    // haría que el resto del sistema tratara la habilidad como un mantenido de botón
+    // (IsHoldingAbility, la excepción de FaceCameraForward, el botón de ultimate), que
+    // no es lo que un canalizado por tiempo necesita.
+    //
+    // Sin guard de dueño: la usan por igual el dueño y la réplica a observadores.
+    public void ApplyChannelAnimation(AnimationClip start, AnimationClip loop, AnimationClip end)
+    {
+        if (characterAnimator == null || loop == null) return;
+
+        if (!HasHoldSlots)
+        {
+            if (!_warnedNoHoldSlots)
+            {
+                _warnedNoHoldSlots = true;
+                Debug.LogWarning($"[PlayerController] Hay una habilidad canalizada con clips, pero el " +
+                                 $"controller no tiene la ranura del bucle ('{HoldLoopSlotName}'). " +
+                                 $"La habilidad funciona igual, pero sin animación sostenida.");
+            }
+            return;
+        }
+
+        SetHoldClips(start, loop, end);
+
+        // El bool ANTES del trigger, por lo mismo que en ApplyHoldAnimation: si se
+        // seteara después, el Animator podría evaluar la salida del bucle con el valor
+        // viejo y salirse en el primer frame.
+        if (!string.IsNullOrEmpty(HoldingParam)) characterAnimator.SetBool(HoldingParam, true);
+
+        characterAnimator.SetInteger("ActionID", HoldStateID);
+        if (!string.IsNullOrEmpty(HoldTrigger)) characterAnimator.SetTrigger(HoldTrigger);
+    }
+
+    // Corta el canalizado: baja el bool y para el giro. La transición bucle → final la
+    // resuelve el Animator solo.
+    public void ApplyStopChannelAnimation()
+    {
+        SetModelSpin(0f);
+        ApplyStopHoldAnimation();
+    }
+
     public GameObject GetCurrentMainWeapon() => currentMainWeapon;
 
     // Muestra u oculta el arma que el personaje tiene en la mano, sin desactivar el

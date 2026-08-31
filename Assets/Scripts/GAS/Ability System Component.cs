@@ -607,6 +607,16 @@ public class AbilitySystemComponent : MonoBehaviour
             magnitude += portion * mod.TargetHealthCoefficient;
         }
 
+        // Piso del resultado. El signo de MinMagnitude marca la direccion, asi que no hay
+        // que inferir nada del valor calculado: positivo empuja hacia arriba (otorgar),
+        // negativo hacia abajo (quitar). En 0 no toca nada.
+        //
+        // Sin esto, un escalado por vida faltante da CERO a vida llena — el escudo del
+        // Berserker se otorgaba y se agotaba en el mismo instante, con su burbuja
+        // prendiendose y apagandose de golpe.
+        if      (mod.MinMagnitude > 0f) magnitude = Mathf.Max(magnitude, mod.MinMagnitude);
+        else if (mod.MinMagnitude < 0f) magnitude = Mathf.Min(magnitude, mod.MinMagnitude);
+
         return magnitude;
     }
 

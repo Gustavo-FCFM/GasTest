@@ -20848,7 +20848,7 @@ PrefabInstance:
     - target: {fileID: 1689369883508155111, guid: 6ab0a839c9cfe1049a3d021c98bde0d4, type: 3}
       propertyPath: 'Abilities.Array.data[0]'
       value: 
-      objectReference: {fileID: 11400000, guid: d3f383ba0b1a5dc46847a2fa679a266e, type: 2}
+      objectReference: {fileID: 11400000, guid: 28ccd4d41e3a4a546b2915b40eef9aa2, type: 2}
     - target: {fileID: 4222018969901891060, guid: 6ab0a839c9cfe1049a3d021c98bde0d4, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

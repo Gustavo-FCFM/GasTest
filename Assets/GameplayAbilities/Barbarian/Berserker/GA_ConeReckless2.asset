@@ -32,6 +32,7 @@ MonoBehaviour:
   Range: 2.2
   ConeAngle: 120
   UseVerticalAim: 1
+  OriginOffset: {x: 0, y: 1, z: 0}
   DamageEffect: {fileID: 11400000, guid: 3e5f2d02283eb744b9c29dbe4b11d901, type: 2}
   AdditionalEffects: []
   TargetEffects: []

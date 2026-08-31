@@ -47,8 +47,11 @@ public class Modifier
     //  - Daño según la vida faltante del enemigo (ej: Golpe mortal del Pícaro).
     //  - Otorgar según la PROPIA vida faltante, si el efecto se aplica a uno
     //    mismo (ej: escudo del Berserker en un GA_SelfBuff).
-    // Solo funciona en efectos INSTANTÁNEOS (Duration = 0), que son los que
-    // pasan por ExecuteInstantEffect.
+    // DONDE SE APLICA: en efectos instantaneos (ExecuteInstantEffect) para cualquier
+    // atributo, y en efectos CON duracion solo para el atributo Shield, que tiene su
+    // propio camino (GrantTemporaryShield) porque es un pool y no un modificador. El
+    // escudo del Berserker es justamente ese caso: GE_Frenzy dura 10s y su escudo si
+    // escala por vida faltante.
     public bool UseTargetHealthScaling;
 
     // Sobre qué porción de la vida del objetivo escalar.
@@ -66,4 +69,18 @@ public class Modifier
     //   POSITIVO = otorga  (ej:  0.5 → escudo/curación por el 50% de la vida faltante)
     // Solo se usa si UseTargetHealthScaling está activo.
     public float TargetHealthCoefficient = 0f;
+
+    [Header("Piso del Resultado")]
+    [Tooltip("Valor MÍNIMO que puede dar este modificador después de todos los escalados. " +
+             "En 0 (el default) no hay piso y se comporta como siempre.\n\n" +
+             "EL SIGNO MARCA LA DIRECCIÓN, igual que Magnitude:\n" +
+             "  POSITIVO (ej. 30) = el resultado nunca baja de +30. Para otorgar: escudos, " +
+             "curaciones.\n" +
+             "  NEGATIVO (ej. -15) = el resultado nunca es más flojo que -15. Para quitar: daño.\n\n" +
+             "PARA QUÉ SIRVE: un escalado por vida faltante da CERO cuando el objetivo está a " +
+             "vida llena. El escudo del Berserker a vida completa vale 0 — se otorga y se agota " +
+             "en el mismo instante, y su burbuja aparece y desaparece de golpe. Con un piso, " +
+             "siempre hay algo que mostrar y que absorber.\n\n" +
+             "En modificadores de tipo Multiply el piso es un FACTOR mínimo, no un valor plano.")]
+    public float MinMagnitude = 0f;
 }
