@@ -2132,19 +2132,44 @@ public class PlayerController : NetworkBehaviour
     // inclinar en el eje vertical).
     public void RotateToAim(Vector3 aimPoint)
     {
-        // Se APLANA antes de normalizar, no después. Normalizando primero, un punto de
-        // mira casi vertical (mirando al cielo o a los propios pies) deja un vector como
-        // (0.02, 0.99, 0.01); al aplastarle la Y queda una horizontal minúscula que ya no
-        // es dirección, es RUIDO — pero tampoco es Vector3.zero, así que pasaba el guard
-        // y LookRotation clavaba el cuerpo en un ángulo arbitrario. Ese era el volantazo
-        // al atacar: apareció al abrir el pitch de la cámara a ±85°, porque antes nunca
-        // se podía apuntar tan vertical.
+        // EL CUERPO SE ALINEA CON LA CAMARA, NO CON EL PUNTO APUNTADO.
+        //
+        // Son cosas distintas y confundirlas era el bug: la camara va sobre el hombro,
+        // asi que el rayo de la mirilla no sale del cuerpo. La direccion jugador→punto
+        // se abre hacia el lado del hombro, y se abre MAS cuanto mas cerca este lo
+        // apuntado (a dos metros el angulo es enorme; a cincuenta, despreciable). Por
+        // eso el modelo se torcia al atacar, y por eso a veces se notaba y a veces no.
+        //
+        // Lo que el jugador espera es lo que ya hace FaceCameraForward cada frame:
+        // mirar hacia donde mira la camara. Aca solo lo hacemos de golpe, sin el Slerp,
+        // para que el cuerpo este en su sitio en el frame del golpe aunque acabes de
+        // girar la camara.
+        //
+        // La INCLINACION del ataque (apuntar arriba o abajo) no se pierde: eso lo
+        // resuelve GameplayAbility.ResolveAttackDirection con el punto de mira, aparte
+        // del yaw del cuerpo.
+        Camera cam = MainCamera;
+        if (IsOwner && cam != null)
+        {
+            Vector3 camFwd = cam.transform.forward;
+            camFwd.y = 0f;
+
+            if (camFwd.sqrMagnitude > 0.0001f)
+            {
+                transform.rotation = Quaternion.LookRotation(camFwd.normalized);
+                return;
+            }
+        }
+
+        // Copias que NO son el dueño (el servidor con un dueño remoto): ahi no hay una
+        // camara local que consultar, asi que se cae al punto de mira sincronizado. El
+        // desfase del hombro sigue existiendo en ese camino, pero no se ve: el transform
+        // es client-authoritative, y la rotacion buena que manda el dueno lo pisa.
         Vector3 dir = aimPoint - transform.position;
         dir.y = 0f;
 
-        // Menos de medio metro en horizontal = mira casi vertical. Ahí no se gira: el
-        // cuerpo se queda como está, que es mirando a la cámara (lo mantiene
-        // FaceCameraForward). Girar con ese dato sería inventar una dirección.
+        // Menos de medio metro en horizontal = mira casi vertical. Ahi no se gira: el
+        // cuerpo se queda como esta. Girar con ese dato seria inventar una direccion.
         if (dir.sqrMagnitude < 0.25f) return;
 
         transform.rotation = Quaternion.LookRotation(dir.normalized);

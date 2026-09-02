@@ -607,15 +607,26 @@ public class AbilitySystemComponent : MonoBehaviour
             magnitude += portion * mod.TargetHealthCoefficient;
         }
 
-        // Piso del resultado. El signo de MinMagnitude marca la direccion, asi que no hay
-        // que inferir nada del valor calculado: positivo empuja hacia arriba (otorgar),
-        // negativo hacia abajo (quitar). En 0 no toca nada.
+        // Piso del resultado, en VALOR ABSOLUTO: "que nunca de menos de X", aplicado en la
+        // direccion que el modificador ya tiene. Poner 1 en un efecto de dano significa
+        // "al menos 1 de dano", no "+1 de vida".
         //
-        // Sin esto, un escalado por vida faltante da CERO a vida llena — el escudo del
-        // Berserker se otorgaba y se agotaba en el mismo instante, con su burbuja
-        // prendiendose y apagandose de golpe.
-        if      (mod.MinMagnitude > 0f) magnitude = Mathf.Max(magnitude, mod.MinMagnitude);
-        else if (mod.MinMagnitude < 0f) magnitude = Mathf.Min(magnitude, mod.MinMagnitude);
+        // La direccion NO se saca del valor calculado: puede haber dado exactamente 0 (un
+        // escalado por vida faltante a vida llena) y ahi no hay signo del que agarrarse.
+        // Se saca de como esta CONFIGURADO el modificador.
+        if (mod.MinMagnitude != 0f)
+        {
+            float floor = Mathf.Abs(mod.MinMagnitude);
+
+            if (Mathf.Abs(magnitude) < floor)
+            {
+                float intent = mod.Magnitude;
+                if (Mathf.Approximately(intent, 0f) && mod.UseAttributeScaling)    intent = mod.AttributeCoefficient;
+                if (Mathf.Approximately(intent, 0f) && mod.UseTargetHealthScaling) intent = mod.TargetHealthCoefficient;
+
+                magnitude = intent < 0f ? -floor : floor;
+            }
+        }
 
         return magnitude;
     }
@@ -649,11 +660,6 @@ public class AbilitySystemComponent : MonoBehaviour
             float magnitude = CalculateBaseMagnitude(mod, sourceASC);
             if (magnitude < 0f) total += -magnitude;   // negativo = daño
         }
-
-        // El daño mágico plano del atacante se suma a cualquier golpe que ya hiciera
-        // daño, igual que en ExecuteInstantEffect.
-        if (total > 0f && sourceASC != null)
-            total += sourceASC.GetAttributeValue(EAttributeType.MagicDamage);
 
         return total;
     }
@@ -834,8 +840,20 @@ public class AbilitySystemComponent : MonoBehaviour
                 if (sourceASC != null && !ReferenceEquals(sourceASC, this))
                     LastAttacker = sourceASC;
 
-                float physicalDamage = Mathf.Abs(calculatedMagnitude);
-                float magicDamage    = sourceASC != null ? sourceASC.GetAttributeValue(EAttributeType.MagicDamage) : 0f;
+                // EL TIPO DE DANO SALE DEL ATRIBUTO DEL QUE ESCALA EL MODIFICADOR.
+                //
+                // Si escala de MagicDamage, es magico; de cualquier otra cosa (Attack, o un
+                // valor plano sin escalado), fisico. No hace falta declararlo aparte: el
+                // atributo YA lo dice, y tener las dos cosas invitaba a que se contradijeran.
+                //
+                // Antes se sumaba el MagicDamage del atacante a TODO golpe que hiciera dano,
+                // asi que un personaje con ese stat pegaba mitad magico incluso dando un
+                // bastonazo, y ninguna habilidad podia ser puramente fisica.
+                bool isMagic = mod.UseAttributeScaling && mod.SourceAttribute == EAttributeType.MagicDamage;
+
+                float rawDamage      = Mathf.Abs(calculatedMagnitude);
+                float physicalDamage = isMagic ? 0f : rawDamage;
+                float magicDamage    = isMagic ? rawDamage : 0f;
 
                 // Bloqueo DIRECCIONAL antes que nada (escudo del Paladín y compañía):
                 // lo que la barrera frena no llega siquiera a las defensas. Ver

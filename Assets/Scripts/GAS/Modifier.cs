@@ -71,12 +71,11 @@ public class Modifier
     public float TargetHealthCoefficient = 0f;
 
     [Header("Piso del Resultado")]
-    [Tooltip("Valor MÍNIMO que puede dar este modificador después de todos los escalados. " +
-             "En 0 (el default) no hay piso y se comporta como siempre.\n\n" +
-             "EL SIGNO MARCA LA DIRECCIÓN, igual que Magnitude:\n" +
-             "  POSITIVO (ej. 30) = el resultado nunca baja de +30. Para otorgar: escudos, " +
-             "curaciones.\n" +
-             "  NEGATIVO (ej. -15) = el resultado nunca es más flojo que -15. Para quitar: daño.\n\n" +
+    [Tooltip("Valor MÍNIMO que puede dar este modificador después de todos los escalados, en " +
+             "valor absoluto. En 0 (el default) no hay piso.\n\n" +
+             "Se aplica en la dirección que el modificador YA tiene: poner 1 en un efecto de " +
+             "daño significa \"al menos 1 de daño\", y en uno de escudo, \"al menos 1 de escudo\". " +
+             "El signo que escribas no importa — se usa el de la configuración del modificador.\n\n" +
              "PARA QUÉ SIRVE: un escalado por vida faltante da CERO cuando el objetivo está a " +
              "vida llena. El escudo del Berserker a vida completa vale 0 — se otorga y se agota " +
              "en el mismo instante, y su burbuja aparece y desaparece de golpe. Con un piso, " +

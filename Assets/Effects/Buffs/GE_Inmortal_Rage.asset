@@ -15,6 +15,10 @@ MonoBehaviour:
   Duration: 10
   Period: 0
   StackingPolicy: 0
+  MaxStacks: 0
+  OnMaxStacksEffect: {fileID: 0}
+  EffectGroup: 0
+  Priority: 0
   Icon: {fileID: 21300000, guid: 60ac2909fbe6b8f49a5eaedccd5ac4ce, type: 3}
   EffectType: 0
   Modifiers:
@@ -24,34 +28,63 @@ MonoBehaviour:
     UseAttributeScaling: 0
     SourceAttribute: 0
     AttributeCoefficient: 1
+    UseTargetHealthScaling: 0
+    TargetHealthMode: 0
+    TargetHealthCoefficient: 0
+    MinMagnitude: 0
   - Attribute: 10
     Type: 1
     Magnitude: 0.5
     UseAttributeScaling: 0
     SourceAttribute: 0
     AttributeCoefficient: 1
+    UseTargetHealthScaling: 0
+    TargetHealthMode: 0
+    TargetHealthCoefficient: 0
+    MinMagnitude: 0
   - Attribute: 2
     Type: 1
     Magnitude: 1.5
     UseAttributeScaling: 0
-    SourceAttribute: 0
-    AttributeCoefficient: 1
+    SourceAttribute: 2
+    AttributeCoefficient: 0
+    UseTargetHealthScaling: 0
+    TargetHealthMode: 0
+    TargetHealthCoefficient: 0
+    MinMagnitude: 0
   - Attribute: 12
     Type: 0
     Magnitude: 0.3
     UseAttributeScaling: 0
     SourceAttribute: 0
     AttributeCoefficient: 1
+    UseTargetHealthScaling: 0
+    TargetHealthMode: 0
+    TargetHealthCoefficient: 0
+    MinMagnitude: 0
   - Attribute: 8
     Type: 1
     Magnitude: 1.2
     UseAttributeScaling: 0
     SourceAttribute: 0
     AttributeCoefficient: 1
+    UseTargetHealthScaling: 0
+    TargetHealthMode: 0
+    TargetHealthCoefficient: 0
+    MinMagnitude: 0
   - Attribute: 17
     Type: 0
-    Magnitude: 15
+    Magnitude: 7
     UseAttributeScaling: 0
-    SourceAttribute: 0
-    AttributeCoefficient: 1
+    SourceAttribute: 17
+    AttributeCoefficient: 0
+    UseTargetHealthScaling: 0
+    TargetHealthMode: 0
+    TargetHealthCoefficient: 0
+    MinMagnitude: 1
+  IsCrowdControl: 0
+  TargetVFX: {fileID: 7155335147208632822, guid: b4239d075450fb04186c6555c3c8ce49, type: 3}
+  TargetVFXOffset: {x: 0, y: 0, z: 0}
+  TargetVFXRotation: {x: 0, y: 0, z: 0}
+  TargetVFXScale: {x: 0, y: 0, z: 0}
   GrantedTags: 13000000

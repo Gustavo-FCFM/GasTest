@@ -22,6 +22,13 @@ public class LevelUpSelectionSystem : MonoBehaviour
     // Texto opcional donde se listan las subclases disponibles.
     public TextMeshProUGUI optionsText;
 
+    [Header("Comportamiento")]
+    [Tooltip("Abrir esta selección SOLA al llegar al nivel máximo.\n\n" +
+             "Apagado (lo normal): al subir de nivel solo se avisa por el HUD y el jugador " +
+             "decide cuándo evolucionar, con la tecla V. Abrirlo solo lo dejaba plantado en " +
+             "medio de una pelea, sin poder moverse hasta elegir.")]
+    public bool OpenOnMaxLevel = false;
+
     private AbilitySystemComponent playerASC;
     // True mientras se están esperando las teclas 1/2/3 para elegir subclase.
     private bool isSelectionActive = false;
@@ -57,7 +64,7 @@ public class LevelUpSelectionSystem : MonoBehaviour
 
         player = ownerPlayer;
         playerASC = player.GetComponent<AbilitySystemComponent>();
-        if (playerASC != null) playerASC.OnMaxLevelReached += EnableSelectionMode;
+        if (playerASC != null && OpenOnMaxLevel) playerASC.OnMaxLevelReached += EnableSelectionMode;
     }
 
     // Mientras el modo selección está activo, revisa las teclas 1/2/3

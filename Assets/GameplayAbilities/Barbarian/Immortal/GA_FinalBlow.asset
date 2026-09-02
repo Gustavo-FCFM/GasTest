@@ -21,25 +21,22 @@ MonoBehaviour:
   UltimateChargeAmount: 0
   ActivationBlockedTags: 01000000
   ActivationRequiredTags: 
+  UsableWhileChanneling: 0
   AnimationClip: {fileID: 3094330708855449807, guid: 81ae9e97c51ac17498f6e7ccda0bb15d, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 99
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  VisualsSequence:
-  - VFXPrefab: {fileID: 1289543790355709915, guid: b99922c2f59b1a542bdd06ae8bee47ae, type: 3}
-    Delay: 0
-    Offset: {x: 0, y: -1, z: 0}
-    RotationOffset: {x: 0, y: 0, z: 0}
-    Scale: {x: 0, y: 0, z: 0}
-    AttachToOwner: 1
-    DestroyTime: 1.5
-    EndWithTag: 0
+  VisualsSequence: []
   MaxCharges: 1
   ChargeTime: 1.5
   ChargeShieldEffect: {fileID: 11400000, guid: 6d6df215326fd3c41a4f214bd424b8ac, type: 2}
   DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   StunEffect: {fileID: 11400000, guid: 599bef532c08eae4a8e05af2dc063cf9, type: 2}
-  HitboxOffsetZ: 2.2
-  HitboxHalfExtents: {x: 1.2, y: 1, z: 2.5}
+  HitboxOffsetZ: 2
+  HitboxOffsetY: 1
+  HitboxHalfExtents: {x: 1, y: 1, z: 2}
+  ChargeLoopAnimation: {fileID: -8123199073581041544, guid: 6961f3b37eaf3284ca4d3bf300640af3, type: 3}
+  ChargeStartAnimation: {fileID: 3094330708855449807, guid: 6961f3b37eaf3284ca4d3bf300640af3, type: 3}
+  ChargeEndAnimation: {fileID: -4735282465708731577, guid: 6961f3b37eaf3284ca4d3bf300640af3, type: 3}

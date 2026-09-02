@@ -21,21 +21,14 @@ MonoBehaviour:
   UltimateChargeAmount: 0
   ActivationBlockedTags: 
   ActivationRequiredTags: 
+  UsableWhileChanneling: 0
   AnimationClip: {fileID: 3094330708855449807, guid: 18afe56f6fdf0b0478209f4b1512c8cc, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 99
-  HitFrameEventName: AnimationEvent_HitFrame
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  VisualsSequence:
-  - VFXPrefab: {fileID: 7155335147208632822, guid: 268b1b15038d49b418cf03198b835136, type: 3}
-    Delay: 0
-    Offset: {x: 0, y: 0, z: 0}
-    RotationOffset: {x: 0, y: 0, z: 0}
-    Scale: {x: 0, y: 0, z: 0}
-    AttachToOwner: 1
-    DestroyTime: 0
-    EndWithTag: 19
+  VisualsSequence: []
+  MaxCharges: 1
   BuffEffect: {fileID: 11400000, guid: a75b70b476f860f4aaf3f1e7e0dea8f1, type: 2}
   AdditionalEffects: []

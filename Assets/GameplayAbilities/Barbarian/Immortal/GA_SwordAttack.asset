@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0673ae4a173fec245880d1c58fa5345e, type: 3}
   m_Name: GA_SwordAttack
   m_EditorClassIdentifier: 
-  UseVerticalAim: 1
   AbilityName: Sword Attack
   AbilityIcon: {fileID: 21300000, guid: fc1c5ea4e68459a4092232b46faae97d, type: 3}
   CostEffect: {fileID: 0}
@@ -22,6 +21,7 @@ MonoBehaviour:
   UltimateChargeAmount: 1
   ActivationBlockedTags: 
   ActivationRequiredTags: 
+  UsableWhileChanneling: 0
   AnimationClip: {fileID: 3094330708855449807, guid: a3b2bd75dc433e742844e9c7e0ecb01e, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 99
@@ -37,8 +37,15 @@ MonoBehaviour:
     AttachToOwner: 1
     DestroyTime: 0
     EndWithTag: 0
-  Range: 2
+    EndWhenAttributeDepleted: 0
+    DepletedAttribute: 0
+  MaxCharges: 1
+  Range: 2.5
   ConeAngle: 180
+  UseVerticalAim: 1
+  OriginOffset: {x: 0, y: 1, z: 0}
   DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
-  AdditionalEffects: []
+  AdditionalEffects:
+  - {fileID: 11400000, guid: 90d13d9d2cb765648a0d7e4619caa0bb, type: 2}
+  TargetEffects: []
   HitVFX: {fileID: 1758473627833946668, guid: 9b21333b068a5084ba09535839bee3c8, type: 3}

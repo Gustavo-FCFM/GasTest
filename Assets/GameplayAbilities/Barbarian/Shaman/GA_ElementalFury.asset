@@ -21,6 +21,7 @@ MonoBehaviour:
   UltimateChargeAmount: 0
   ActivationBlockedTags: 0300000002000000
   ActivationRequiredTags: 
+  UsableWhileChanneling: 0
   AnimationClip: {fileID: 3094330708855449807, guid: b98582042c1292a4e81193a2e417a4d2, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 99
@@ -28,6 +29,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   VisualsSequence: []
+  MaxCharges: 1
   TotemPrefabs:
   - {fileID: 1564936832730364612, guid: d4cec081c92d2c04fbf4a2eae5e1aec7, type: 3}
   - {fileID: 1564936832730364612, guid: b5fed081739057d40a1f79c0cec54762, type: 3}
@@ -38,6 +40,6 @@ MonoBehaviour:
   DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   DamageRadius: 10
   TickRate: 0.5
-  TornadoVFXPrefab: {fileID: 7986504087968017091, guid: b10bcfd32615d844291d18c9d2d35007, type: 3}
-  TornadoVfxScaleMultiplier: 0.5
+  TornadoVFXPrefab: {fileID: 5628875811531650112, guid: 25094fffe08a4ea42b4d444739ff5292, type: 3}
+  TornadoVfxScaleMultiplier: 1
   FollowPlayer: 0

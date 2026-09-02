@@ -20,7 +20,7 @@ MonoBehaviour:
   EffectGroup: 0
   Priority: 0
   Icon: {fileID: 0}
-  EffectType: 0
+  EffectType: 2
   Modifiers:
   - Attribute: 1
     Type: 0
@@ -31,4 +31,10 @@ MonoBehaviour:
     UseTargetHealthScaling: 1
     TargetHealthMode: 1
     TargetHealthCoefficient: 0.5
+    MinMagnitude: 0
+  IsCrowdControl: 0
+  TargetVFX: {fileID: 0}
+  TargetVFXOffset: {x: 0, y: 0, z: 0}
+  TargetVFXRotation: {x: 0, y: 0, z: 0}
+  TargetVFXScale: {x: 0, y: 0, z: 0}
   GrantedTags: 

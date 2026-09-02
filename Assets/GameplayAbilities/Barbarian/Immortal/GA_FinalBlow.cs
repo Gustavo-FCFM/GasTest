@@ -12,7 +12,7 @@ using System.Collections.Generic;
 // daño y aturdimiento normales.
 // ============================================================
 [CreateAssetMenu(fileName = "GA_FinalBlow", menuName = "GAS/Specific Abilities/Immortal/Final Blow")]
-public class GA_FinalBlow : GameplayAbility
+public class GA_FinalBlow : GameplayAbility, IChanneledAbility
 {
     [Header("Configuración Golpe Final")]
     public float ChargeTime = 1.5f;
@@ -28,8 +28,38 @@ public class GA_FinalBlow : GameplayAbility
     [Header("Hitbox del Golpe")]
     // Qué tan lejos del dueño está el centro de la caja de golpe.
     public float   HitboxOffsetZ     = 1.5f;
+
+    [Tooltip("A qué ALTURA queda el centro de la caja, respecto del pivote del dueño — que está " +
+             "a los PIES.\n\nEn 0 la caja nace a ras del suelo y la mitad de su alto queda " +
+             "enterrada, así que el golpe apenas llega a la cintura del que tenés enfrente. " +
+             "Subilo a la altura del pecho (1.2-1.5) para que conecte donde se lo ve.")]
+    public float   HitboxOffsetY     = 0f;
     // Mitad del tamaño de la caja de golpe en cada eje.
     public Vector3 HitboxHalfExtents = new Vector3(1f, 1f, 1f);
+
+    [Header("Animación de la carga")]
+    [Tooltip("Clip EN BUCLE mientras se carga el golpe: el arma sostenida en alto.\n\n" +
+             "Sin esto la carga es muda — el personaje se queda plantado 1.5 s sin hacer nada y " +
+             "recién ahí aparece el mandoble. El bucle se corta solo cuando termina la carga (o " +
+             "cuando la interrumpen).\n\n" +
+             "Reusa las ranuras del MANTENIDO en el Animator, así que no hay estados nuevos que " +
+             "crear: son las mismas del escudo.")]
+    public AnimationClip ChargeLoopAnimation;
+
+    [Tooltip("OPCIONAL: el gesto de LEVANTAR el arma, una vez, antes de entrar al bucle.")]
+    public AnimationClip ChargeStartAnimation;
+
+    [Tooltip("OPCIONAL: el gesto de BAJAR el arma. Se reproduce si la carga se interrumpe; " +
+             "cuando sale bien, el mandoble la pisa enseguida.")]
+    public AnimationClip ChargeEndAnimation;
+
+    // IChanneledAbility: la capa de red lee los clips por acá para replicarlos.
+    public AnimationClip ChannelStartClip => ChargeStartAnimation;
+    public AnimationClip ChannelLoopClip  => ChargeLoopAnimation;
+    public AnimationClip ChannelEndClip   => ChargeEndAnimation;
+
+    // La carga no gira al personaje: eso es cosa del molinete.
+    public float SpinSpeed => 0f;
 
     // Valida, cobra costo/cooldown y arranca la carga.
     public override void Activate()
@@ -61,6 +91,13 @@ public class GA_FinalBlow : GameplayAbility
 
         OwnerASC.AddTag(EGameplayTag.State_Rooted);
 
+        // Animacion sostenida de la carga: levantar el arma, mantenerla en alto, y bajarla.
+        // Va por la capa de red porque Activate() corre en el SERVIDOR: sin el RPC, el dueno
+        // remoto no veria nada durante el segundo y medio que dura.
+        var netAscChannel = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
+        if (ChargeLoopAnimation != null && netAscChannel != null)
+            netAscChannel.ServerPlayChannelAnimation(this, true);
+
         float timer = 0f;
         bool  wasInterrupted = false;
 
@@ -81,6 +118,11 @@ public class GA_FinalBlow : GameplayAbility
 
         OwnerASC.RemoveTag(EGameplayTag.State_Rooted);
 
+        // Se corta el bucle SIEMPRE, salga bien o la interrumpan: si no, el arma se queda
+        // en alto para siempre. Cuando sale bien, el mandoble pisa la salida enseguida.
+        if (ChargeLoopAnimation != null && netAscChannel != null)
+            netAscChannel.ServerPlayChannelAnimation(this, false);
+
         if (wasInterrupted)
         {
             // Se cortó la carga: el escudo no debe sobrevivir al golpe fallido.
@@ -91,7 +133,9 @@ public class GA_FinalBlow : GameplayAbility
 
         if (pc != null) pc.PlayAnimation(this);
 
-        Vector3    hitboxCenter = pc.transform.position + pc.transform.forward * HitboxOffsetZ;
+        Vector3    hitboxCenter = pc.transform.position
+                                   + pc.transform.forward * HitboxOffsetZ
+                                   + Vector3.up * HitboxOffsetY;
         Collider[] hitColliders = Physics.OverlapBox(hitboxCenter, HitboxHalfExtents, pc.transform.rotation, TargetLayer);
 
         HashSet<AbilitySystemComponent> enemiesHit = new HashSet<AbilitySystemComponent>();
@@ -127,7 +171,7 @@ public class GA_FinalBlow : GameplayAbility
     {
         if (origin == null) return;
 
-        Vector3 center = origin.position + origin.forward * HitboxOffsetZ;
+        Vector3 center = origin.position + origin.forward * HitboxOffsetZ + Vector3.up * HitboxOffsetY;
 
         Matrix4x4 prevMatrix = Gizmos.matrix;
         Gizmos.matrix = Matrix4x4.TRS(center, origin.rotation, Vector3.one);

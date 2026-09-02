@@ -15,8 +15,6 @@ MonoBehaviour:
   InitialAttributes:
   - Attribute: 1
     BaseValue: 260
-  - Attribute: 7
-    BaseValue: 0
   - Attribute: 9
     BaseValue: 6
   - Attribute: 10
@@ -28,4 +26,4 @@ MonoBehaviour:
   - Attribute: 16
     BaseValue: 0
   - Attribute: 17
-    BaseValue: 0
+    BaseValue: 8

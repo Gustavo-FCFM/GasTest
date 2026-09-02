@@ -39,8 +39,11 @@ public class UI_ClassMenu : MonoBehaviour
     [Header("Comportamiento")]
     [Tooltip("Abrir el menú de clases base automáticamente al entrar a la partida.")]
     public bool OpenOnSpawn = true;
-    [Tooltip("Abrir el de subclases solo al llegar al nivel máximo (además de la tecla V).")]
-    public bool OpenSubclassesOnMaxLevel = true;
+    [Tooltip("Abrir el menú de subclases SOLO al llegar al nivel máximo.\n\n" +
+             "Apagado (lo normal): al llegar a nivel máximo el HUD avisa que se puede evolucionar " +
+             "y el jugador abre el menú con la tecla V cuando le conviene. Abrirlo solo lo dejaba " +
+             "plantado en medio de una pelea, sin poder moverse hasta elegir.")]
+    public bool OpenSubclassesOnMaxLevel = false;
 
     private PlayerController        _player;
     private AbilitySystemComponent  _playerASC;
@@ -263,6 +266,12 @@ public class UI_ClassMenu : MonoBehaviour
         if (!_open || _player == null || selectedClass == null) return;
 
         _player.EquipCharacterClass(selectedClass, resetProgress: _mode == EMode.BaseClasses);
+
+        // Se apaga el aviso de "podés evolucionar" del HUD: ya evolucionaste. Nadie lo
+        // apagaba, asi que una vez encendido se quedaba puesto el resto de la partida.
+        UI_PlayerHUD hud = FindFirstObjectByType<UI_PlayerHUD>();
+        if (hud != null) hud.HideLevelUpNotification();
+
         CloseMenu();
     }
 

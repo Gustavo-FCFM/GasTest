@@ -1261,7 +1261,7 @@ MonoBehaviour:
   BarRoot: {fileID: 4185260843352799847}
   HealthFill: {fileID: 940503281035661377}
   HealthSlider: {fileID: 1514409403310321830}
-  EffectContainer: {fileID: 0}
+  EffectContainer: {fileID: 8384857730017083999}
   FirstStrikeMarker: {fileID: 0}
   NameText: {fileID: 0}
   AllyColor: {r: 0.2, g: 0.9, b: 0.2, a: 1}

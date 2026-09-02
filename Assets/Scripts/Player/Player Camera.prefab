@@ -1016,7 +1016,7 @@ MonoBehaviour:
   CardsParent: {fileID: 6905805592414016542}
   ClassCardPrefab: {fileID: 811954012191032356, guid: 99a5afcd5d0f3a841889c3a33e79e27d, type: 3}
   OpenOnSpawn: 0
-  OpenSubclassesOnMaxLevel: 1
+  OpenSubclassesOnMaxLevel: 0
 --- !u!1 &2516487794832868040
 GameObject:
   m_ObjectHideFlags: 0
@@ -1364,6 +1364,7 @@ MonoBehaviour:
   player: {fileID: 0}
   selectionVisuals: {fileID: 0}
   optionsText: {fileID: 0}
+  OpenOnMaxLevel: 0
 --- !u!114 &5812252177445579247
 MonoBehaviour:
   m_ObjectHideFlags: 0

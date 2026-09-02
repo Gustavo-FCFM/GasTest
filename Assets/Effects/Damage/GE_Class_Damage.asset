@@ -15,6 +15,10 @@ MonoBehaviour:
   Duration: 0
   Period: 0
   StackingPolicy: 1
+  MaxStacks: 0
+  OnMaxStacksEffect: {fileID: 0}
+  EffectGroup: 0
+  Priority: 0
   Icon: {fileID: 0}
   EffectType: 2
   Modifiers:
@@ -24,4 +28,13 @@ MonoBehaviour:
     UseAttributeScaling: 1
     SourceAttribute: 8
     AttributeCoefficient: -1
+    UseTargetHealthScaling: 0
+    TargetHealthMode: 0
+    TargetHealthCoefficient: 0
+    MinMagnitude: 1
+  IsCrowdControl: 0
+  TargetVFX: {fileID: 0}
+  TargetVFXOffset: {x: 0, y: 0, z: 0}
+  TargetVFXRotation: {x: 0, y: 0, z: 0}
+  TargetVFXScale: {x: 0, y: 0, z: 0}
   GrantedTags: 

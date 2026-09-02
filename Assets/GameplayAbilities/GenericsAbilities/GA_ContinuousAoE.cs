@@ -20,7 +20,7 @@ using System.Collections.Generic;
 // GA_InstantAoE — este es para zonas que persisten.
 // ============================================================
 [CreateAssetMenu(fileName = "GA_ContinuousAoE", menuName = "GAS/Generics/Continuous AoE")]
-public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility, IChanneledAbility
+public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
 {
     // A quién afecta el área.
     public enum EAoETarget { Enemies, Allies, All }
@@ -67,45 +67,6 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility, IChannele
 
     [Header("Efectos Visuales")]
     public GameObject VisualPrefab;
-
-    [Header("Canalizado — animación sostenida y giro")]
-    [Tooltip("Clip que se reproduce EN BUCLE mientras dura el área. Es lo que convierte el " +
-             "molinete en un molinete: sin esto la habilidad dispara un mandoble suelto que " +
-             "termina en un segundo, y el personaje se queda quieto los otros nueve mientras el " +
-             "daño sigue ticando.\n\n" +
-             "VACÍO = comportamiento de siempre (el AnimationClip de arriba, una sola vez).\n\n" +
-             "Reusa las ranuras del MANTENIDO en el Animator, así que no hay que crear estados " +
-             "nuevos: los del escudo sirven tal cual.")]
-    public AnimationClip ChannelLoopAnimation;
-
-    [Tooltip("OPCIONAL: arranque, una sola vez, antes de entrar al bucle.")]
-    public AnimationClip ChannelStartAnimation;
-
-    [Tooltip("OPCIONAL: remate al terminar el área.")]
-    public AnimationClip ChannelEndAnimation;
-
-    [Tooltip("Grados por segundo que gira el MODELO sobre su eje mientras dura el área — el " +
-             "molinete tipo Garen. 0 = sin giro.\n\n" +
-             "Gira el modelo y NO la raíz a propósito: la raíz la maneja la mira y el " +
-             "movimiento WASD se calcula relativo a la cámara. Como el área es un radio sin " +
-             "dirección, girar el modelo no cambia a quién le pega.\n\n" +
-             "360 = una vuelta por segundo. Para un molinete rápido, 500-700.")]
-    public float ModelSpinSpeed = 0f;
-
-    [Tooltip("Mientras dure el área, el personaje NO puede usar ninguna otra habilidad — salvo " +
-             "las que tengan marcado 'Usable While Channeling' en su propio asset.\n\n" +
-             "Así se arma la lista de excepciones desde el lado de las POCAS que sí (Frenzy y el " +
-             "salto, para el molinete) en vez de enumerar todas las que no. Una habilidad nueva " +
-             "nace bloqueada, que es lo seguro.\n\n" +
-             "El bloqueo dura lo mismo que el área (TotalDuration), no lo que tarde el jugador " +
-             "en quedar libre.")]
-    public bool BlockOtherAbilities = false;
-
-    // IChanneledAbility: la capa de red lee los clips y el giro por acá.
-    public AnimationClip ChannelStartClip => ChannelStartAnimation;
-    public AnimationClip ChannelLoopClip  => ChannelLoopAnimation;
-    public AnimationClip ChannelEndClip   => ChannelEndAnimation;
-    public float         SpinSpeed        => ModelSpinSpeed;
     // Multiplica Radius para el tamaño del VFX (no afecta el área real).
     public float VisualScaleMultiplier = 2.0f;
 
@@ -139,17 +100,11 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility, IChannele
             // jugador ya podría estar apuntando a otro lado).
             Vector3 center = ResolveCenter(pc);
 
-            // Con clip de bucle la animacion la maneja el canalizado (sostenida + giro) y no
-            // el disparo suelto de siempre. Va por la capa de red porque Activate() corre en
-            // el SERVIDOR: sin el RPC, el dueno remoto no veria nada.
-            var netAscAnim = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
-            if (ChannelLoopAnimation != null && netAscAnim != null)
-                netAscAnim.ServerPlayChannelAnimation(this, true);
-            else if (pc != null) pc.PlayAnimation(this);
+            // La animacion normal es un disparo suelto. Una subclase puede reemplazarla
+            // por algo sostenido (ver GA_Whirlwind) devolviendo true en el hook.
+            if (!TryPlayCustomAnimation(pc) && pc != null) pc.PlayAnimation(this);
 
-            // El bloqueo se marca con un TAG y no con un flag interno: asi lo ve
-            // CanActivate de cualquier habilidad sin que ninguna tenga que conocer a esta.
-            if (BlockOtherAbilities) OwnerASC.AddTag(EGameplayTag.Status_Channeling);
+            OnAreaStarted();
             OwnerASC.StartAbilityCoroutine(AoESequence(center));
         }
     }
@@ -189,27 +144,40 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility, IChannele
         EndAbility();
 
         // try/finally: si la corutina se corta a mitad (muerte, respawn, cambio de
-        // clase), Unity dispone el iterador y el finally corre igual. Sin eso, el tag
-        // de canalizado quedaria pegado y el jugador no podria usar NINGUNA habilidad
-        // por el resto de la partida.
+        // clase), Unity dispone el iterador y el finally corre igual. Una subclase que
+        // deje al jugador en un estado especial durante el area (bloqueado, girando)
+        // depende de eso para no dejarlo trabado si la habilidad se interrumpe.
         try
         {
             yield return OwnerASC.StartCoroutine(AreaRoutine(center));
         }
         finally
         {
-            // El canalizado se corta cuando termina el AREA, no cuando se libera al
-            // jugador (EndAbility, mas arriba): el area sigue viva TotalDuration y el
-            // giro tiene que acompanarla hasta el final.
-            if (ChannelLoopAnimation != null)
-            {
-                var netAscStop = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
-                if (netAscStop != null) netAscStop.ServerPlayChannelAnimation(this, false);
-            }
-
-            if (BlockOtherAbilities) OwnerASC.RemoveTag(EGameplayTag.Status_Channeling);
+            OnAreaFinished();
         }
     }
+
+    // =========================================================
+    // HOOKS PARA SUBCLASES
+    //
+    // El area en si (radio, ticks, VFX, seguir al dueno) es igual para todas: un aura
+    // de jefe, una zona de hielo y el molinete del barbaro comparten toda esa maquina.
+    // Lo que cambia es que ALGUNAS ademas le hacen algo al LANZADOR mientras dura.
+    //
+    // Estos tres hooks son ese punto de extension, y estan vacios a proposito: una
+    // habilidad de area normal no tiene por que saber que existe el molinete.
+    // =========================================================
+
+    // Reemplaza la animacion de disparo por una propia. Devolver true = ya se encargo
+    // la subclase y la base no dispara la suya.
+    protected virtual bool TryPlayCustomAnimation(PlayerController pc) => false;
+
+    // Justo despues de lanzar el area. Para lo que dure TODA el area.
+    protected virtual void OnAreaStarted() { }
+
+    // Al terminar el area — o al interrumpirse, gracias al finally de arriba. Todo lo
+    // que se haya prendido en OnAreaStarted se apaga aca.
+    protected virtual void OnAreaFinished() { }
 
     // Reproduce el VFX del área, y cada TickInterval revisa quién está
     // dentro del radio (según Objetivos) para aplicarle EffectsToApply,

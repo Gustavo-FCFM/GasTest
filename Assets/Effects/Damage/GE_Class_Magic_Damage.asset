@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 923ea9fbcde13614b8da2b7689d349ea, type: 3}
-  m_Name: GE_BlinkDamage
+  m_Name: GE_Class_Magic_Damage
   m_EditorClassIdentifier: 
   Duration: 0
   Period: 0
@@ -25,12 +25,12 @@ MonoBehaviour:
   - Attribute: 1
     Type: 0
     Magnitude: 0
-    UseAttributeScaling: 0
-    SourceAttribute: 0
-    AttributeCoefficient: 0
-    UseTargetHealthScaling: 1
+    UseAttributeScaling: 1
+    SourceAttribute: 17
+    AttributeCoefficient: -1
+    UseTargetHealthScaling: 0
     TargetHealthMode: 0
-    TargetHealthCoefficient: -0.3
+    TargetHealthCoefficient: 0
     MinMagnitude: 0
   IsCrowdControl: 0
   TargetVFX: {fileID: 0}
