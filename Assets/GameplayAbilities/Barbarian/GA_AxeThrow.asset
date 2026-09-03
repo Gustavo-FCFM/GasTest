@@ -32,7 +32,7 @@ MonoBehaviour:
   MaxCharges: 1
   ProjectilePrefab: {fileID: 406129108226925510, guid: 8c21a3df091c8204ea5a34229c270862, type: 3}
   LaunchForce: 40
-  SpawnOffset: {x: 0, y: 1.4, z: 0.35}
+  SpawnOffset: {x: 0, y: 1.5, z: 0.35}
   AddSpin: 1
   HideWeaponWhileFlying: 1
   InstantDamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}

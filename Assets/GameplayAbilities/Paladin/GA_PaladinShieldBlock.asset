@@ -21,6 +21,7 @@ MonoBehaviour:
   UltimateChargeAmount: 0
   ActivationBlockedTags: 01000000
   ActivationRequiredTags: 
+  UsableWhileChanneling: 0
   AnimationClip: {fileID: 0}
   AnimationTriggerName: HoldTrigger
   AnimationID: 98
@@ -29,7 +30,6 @@ MonoBehaviour:
     m_Bits: 128
   VisualsSequence: []
   MaxCharges: 1
-  TargetEffects: []
   BlockEffect: {fileID: 11400000, guid: 1054c3ec700fed144bdc881c3366fd5d, type: 2}
   MinEnergyToActivate: 10
   EnergyDrainPerSecond: 0

@@ -21,6 +21,7 @@ MonoBehaviour:
   UltimateChargeAmount: 1
   ActivationBlockedTags: 01000000
   ActivationRequiredTags: 
+  UsableWhileChanneling: 0
   AnimationClip: {fileID: 3094330708855449807, guid: c25522e533a3f5149b1926cb6ee3c8f1, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 2
@@ -31,8 +32,9 @@ MonoBehaviour:
   MaxCharges: 1
   ProjectilePrefab: {fileID: 406129108226925510, guid: 8c21a3df091c8204ea5a34229c270862, type: 3}
   LaunchForce: 60
-  SpawnOffset: {x: 0, y: 0.5, z: 0.5}
+  SpawnOffset: {x: 0, y: 1.5, z: 0.5}
   AddSpin: 1
+  HideWeaponWhileFlying: 1
   InstantDamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   DurationEffect: {fileID: 0}
   AdditionalEffects: []

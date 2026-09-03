@@ -21,6 +21,7 @@ MonoBehaviour:
   UltimateChargeAmount: 0
   ActivationBlockedTags: 010000000200000003000000
   ActivationRequiredTags: 20000000
+  UsableWhileChanneling: 0
   AnimationClip: {fileID: 3094330708855449807, guid: 39e2b573902399d4fbd58117e24ea1d2, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 5
@@ -36,8 +37,10 @@ MonoBehaviour:
     AttachToOwner: 0
     DestroyTime: 0.2
     EndWithTag: 0
+    EndWhenAttributeDepleted: 0
+    DepletedAttribute: 0
   MaxCharges: 1
-  MaxRange: 15
+  MaxRange: 10
   ZoneRadius: 5
   DamageEffect: {fileID: 11400000, guid: 6c513cb2261d125408d83a0ddbb859bf, type: 2}
   AdditionalEffects:

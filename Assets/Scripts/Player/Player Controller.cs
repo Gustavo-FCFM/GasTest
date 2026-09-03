@@ -77,6 +77,14 @@ public class PlayerController : NetworkBehaviour
              "entre justo en el ritmo de ataque (ver GameplayAbility.ResolveAnimationSpeed).")]
     public string ActionSpeedParam = "ActionSpeedMult";
 
+    [Tooltip("Parámetro FLOAT del Animator con la velocidad vertical del personaje: positiva " +
+             "subiendo, negativa cayendo.\n\n" +
+             "Sirve para separar el salto de la caída, que con IsJumping solo no se puede: ese " +
+             "bool dice que estás en el aire, no hacia dónde vas. Un dash hacia arriba se quedaba " +
+             "con la pose de despegue durante toda la bajada.\n\n" +
+             "Vacío = no se escribe (el Animator sigue funcionando con IsJumping como antes).")]
+    public string VerticalSpeedParam = "VerticalSpeed";
+
     // =========================================================
     // RANURAS DE "MANTENER" (habilidades IHoldAbility)
     //
@@ -1529,6 +1537,21 @@ public class PlayerController : NetworkBehaviour
         }
 
         characterAnimator.SetBool("IsJumping", airborne);
+
+        // VELOCIDAD VERTICAL, para que el Animator pueda distinguir SUBIR de CAER.
+        //
+        // Con IsJumping solo no alcanza: dice "esta en el aire", no si va para arriba o
+        // para abajo. Un dash hacia arriba se queda con la pose de despegue todo el
+        // trayecto, incluida la bajada.
+        //
+        // Durante un dash la componente vertical NO vive en verticalVelocity (se pone en
+        // cero y la gravedad se apaga): vive en _dashVelocity. Por eso se reporta la que
+        // de verdad esta moviendo al personaje en cada momento.
+        if (!string.IsNullOrEmpty(VerticalSpeedParam))
+        {
+            float vertical = _dashActive ? _dashVelocity.y : verticalVelocity;
+            characterAnimator.SetFloat(VerticalSpeedParam, vertical);
+        }
 
         float spd = ASC.GetAttributeValue(EAttributeType.AtkSpeed);
         if (spd > 0)

@@ -31,5 +31,10 @@ MonoBehaviour:
     UseTargetHealthScaling: 0
     TargetHealthMode: 0
     TargetHealthCoefficient: 0
+    MinMagnitude: 0
   IsCrowdControl: 0
+  TargetVFX: {fileID: 6126188424833946103, guid: 4d5f726985f59534ba1d3ef8bd85ce5d, type: 3}
+  TargetVFXOffset: {x: 0, y: 0, z: 0}
+  TargetVFXRotation: {x: 0, y: 0, z: 0}
+  TargetVFXScale: {x: 0, y: 0, z: 0}
   GrantedTags: 2c000000

@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0673ae4a173fec245880d1c58fa5345e, type: 3}
   m_Name: GA_RapierCone
   m_EditorClassIdentifier: 
-  UseVerticalAim: 1
   AbilityName: RoguePrimaryAttack1
   AbilityIcon: {fileID: 0}
   CostEffect: {fileID: 0}
@@ -22,6 +21,7 @@ MonoBehaviour:
   UltimateChargeAmount: 1
   ActivationBlockedTags: 
   ActivationRequiredTags: 
+  UsableWhileChanneling: 0
   AnimationClip: {fileID: 3094330708855449807, guid: ef751e951ed91ed4fbc94d82726c9eed, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 1
@@ -32,6 +32,8 @@ MonoBehaviour:
   MaxCharges: 1
   Range: 2
   ConeAngle: 90
+  UseVerticalAim: 1
+  OriginOffset: {x: 0, y: 1, z: 0}
   DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   AdditionalEffects:
   - {fileID: 11400000, guid: 16573965ce339a749892bca518120f2b, type: 2}

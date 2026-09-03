@@ -21,26 +21,20 @@ MonoBehaviour:
   UltimateChargeAmount: 0
   ActivationBlockedTags: 
   ActivationRequiredTags: 
+  UsableWhileChanneling: 0
   AnimationClip: {fileID: 3094330708855449807, guid: 39e2b573902399d4fbd58117e24ea1d2, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 1
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  VisualsSequence:
-  - VFXPrefab: {fileID: 6424583148328831481, guid: d2ffbc8b168cdf74a9dbb7c6c1cfdf2f, type: 3}
-    Delay: 0.1
-    Offset: {x: 0, y: -1, z: 0}
-    RotationOffset: {x: 0, y: 0, z: 0}
-    Scale: {x: 1, y: 1, z: 1}
-    AttachToOwner: 1
-    DestroyTime: 0
-    EndWithTag: 18
+  VisualsSequence: []
   MaxCharges: 1
-  TargetEffects:
-  - {fileID: 11400000, guid: 95de6baf0c24ee240931bc84bba45fe4, type: 2}
+  Targets: 0
   MaxRange: 6
   SelectionAngle: 30
   SelfIfNoTarget: 1
   AllowDeadTargets: 0
+  TargetEffects:
+  - {fileID: 11400000, guid: 95de6baf0c24ee240931bc84bba45fe4, type: 2}
   ImpactVFX: {fileID: 0}

@@ -114,7 +114,7 @@ Transform:
   m_GameObject: {fileID: 4753784605221766464}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.5}
+  m_LocalPosition: {x: 0, y: 1, z: 0.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -259,17 +259,19 @@ MonoBehaviour:
     IncludeSelf: 1
     Effects:
     - {fileID: 11400000, guid: 200c7bc44d0c52d449d61256b01e5f56, type: 2}
+    RequiredOwnerTag: 0
   - Name: Aura of Devotion
     Radius: 6
     Targets: 0
     IncludeSelf: 1
     Effects:
     - {fileID: 11400000, guid: 7c6954091dcefac4b8809f82e5c39409, type: 2}
+    RequiredOwnerTag: 0
   TickInterval: 0.5
   CharacterLayer:
     serializedVersion: 2
     m_Bits: 128
   HealPercentOfDamage: 0.5
-  HealPercentOfBlocked: 0.5
+  HealPercentOfBlocked: 0.1
   HealRingIndex: 0
   HealExtraEffects: []

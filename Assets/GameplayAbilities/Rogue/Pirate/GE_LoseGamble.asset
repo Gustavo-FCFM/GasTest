@@ -31,6 +31,7 @@ MonoBehaviour:
     UseTargetHealthScaling: 0
     TargetHealthMode: 0
     TargetHealthCoefficient: 0
+    MinMagnitude: 0
   - Attribute: 9
     Type: 1
     Magnitude: 1.15
@@ -40,6 +41,7 @@ MonoBehaviour:
     UseTargetHealthScaling: 0
     TargetHealthMode: 0
     TargetHealthCoefficient: 0
+    MinMagnitude: 0
   - Attribute: 10
     Type: 1
     Magnitude: 0.9
@@ -49,4 +51,10 @@ MonoBehaviour:
     UseTargetHealthScaling: 0
     TargetHealthMode: 0
     TargetHealthCoefficient: 0
+    MinMagnitude: 0
+  IsCrowdControl: 0
+  TargetVFX: {fileID: 9017484664307500583, guid: 1245b8d2997d5b34fb1637be70a7eb05, type: 3}
+  TargetVFXOffset: {x: 0, y: 0, z: 0}
+  TargetVFXRotation: {x: 0, y: 0, z: 0}
+  TargetVFXScale: {x: 0, y: 0, z: 0}
   GrantedTags: 

@@ -24,12 +24,17 @@ MonoBehaviour:
   Modifiers:
   - Attribute: 9
     Type: 1
-    Magnitude: 0.5
+    Magnitude: 0.2
     UseAttributeScaling: 0
     SourceAttribute: 0
     AttributeCoefficient: 0
     UseTargetHealthScaling: 0
     TargetHealthMode: 0
     TargetHealthCoefficient: 0
+    MinMagnitude: 0
   IsCrowdControl: 1
+  TargetVFX: {fileID: 0}
+  TargetVFXOffset: {x: 0, y: 0, z: 0}
+  TargetVFXRotation: {x: 0, y: 0, z: 0}
+  TargetVFXScale: {x: 0, y: 0, z: 0}
   GrantedTags: 0f000000

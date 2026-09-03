@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e14aad4ec29d2894eace4a88eebad1d4, type: 3}
   m_Name: GA_DaggerLine
   m_EditorClassIdentifier: 
-  UseVerticalAim: 1
   AbilityName: RoguePrimaryAttack2
   AbilityIcon: {fileID: 0}
   CostEffect: {fileID: 0}
@@ -22,6 +21,7 @@ MonoBehaviour:
   UltimateChargeAmount: 1
   ActivationBlockedTags: 
   ActivationRequiredTags: 
+  UsableWhileChanneling: 0
   AnimationClip: {fileID: 3094330708855449807, guid: fcae9c41b8da9dc46974f5351a44bb66, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 1
@@ -30,8 +30,11 @@ MonoBehaviour:
     m_Bits: 128
   VisualsSequence: []
   MaxCharges: 1
-  Length: 1.2
+  Length: 1.5
   Width: 1
+  Height: 1
+  OriginOffset: {x: 0, y: 1, z: 0}
+  UseVerticalAim: 1
   DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   AdditionalEffects: []
   TargetEffects: []

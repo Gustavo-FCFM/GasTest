@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e14aad4ec29d2894eace4a88eebad1d4, type: 3}
   m_Name: GA_PaladinPrimaryAttackConquestUltimate
   m_EditorClassIdentifier: 
-  UseVerticalAim: 1
   AbilityName: Primary Attack Conquest Ultimate
   AbilityIcon: {fileID: 21300000, guid: fb60bffd72a47f64c97da735dbd28983, type: 3}
   CostEffect: {fileID: 0}
@@ -22,6 +21,7 @@ MonoBehaviour:
   UltimateChargeAmount: 1
   ActivationBlockedTags: 01000000
   ActivationRequiredTags: 
+  UsableWhileChanneling: 0
   AnimationClip: {fileID: 3094330708855449807, guid: 81ae9e97c51ac17498f6e7ccda0bb15d, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 1
@@ -32,6 +32,9 @@ MonoBehaviour:
   MaxCharges: 1
   Length: 2.5
   Width: 1.5
+  Height: 2
+  OriginOffset: {x: 0, y: 1, z: 0}
+  UseVerticalAim: 1
   DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   AdditionalEffects:
   - {fileID: 11400000, guid: 599bef532c08eae4a8e05af2dc063cf9, type: 2}

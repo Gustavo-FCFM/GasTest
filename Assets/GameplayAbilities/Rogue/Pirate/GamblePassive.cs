@@ -51,6 +51,16 @@ public class GamblePassive : MonoBehaviour, IDamageModifier
     [Tooltip("Radio en el que busca enemigos a los que apostarle.")]
     public float SearchRadius = 20f;
 
+    [Tooltip("Apostar SOLO a jugadores, nunca a NPCs.\n\n" +
+             "Hace falta porque el filtro de enemigos es por EQUIPO, y los monstruos del modo " +
+             "Mercenarios son el equipo 4: cuentan como hostiles y entran al sorteo. Con un " +
+             "campamento de NPCs alrededor del objetivo, la apuesta automática casi siempre le " +
+             "tocaría a un monstruo — y como matarlo es trivial, el Pirata cobraría los " +
+             "WinEffects gratis cada 15 segundos.\n\n" +
+             "Se detecta por PlayerController y no por número de equipo: así cualquier NPC que " +
+             "agregues después queda fuera solo.")]
+    public bool OnlyBetOnPlayers = true;
+
     [Tooltip("Capa de personajes en la que buscar enemigos (Character).")]
     public LayerMask CharacterLayer;
 
@@ -178,6 +188,7 @@ public class GamblePassive : MonoBehaviour, IDamageModifier
         if (!InstanceFinder.IsServerStarted) return;
         if (_asc == null || target == null || MarkEffect == null) return;
         if (!_asc.IsEnemyOf(target) || target.HasTag(EGameplayTag.State_Dead)) return;
+        if (!IsBettable(target)) return;
         // Ya le estamos apostando a ESE mismo y la apuesta sigue viva: no la reiniciamos
         // (si no, los impactos repetidos de Cañones la refrescarían para siempre). Si ya
         // venció, seguimos de largo y se le vuelve a apostar normalmente.
@@ -200,6 +211,15 @@ public class GamblePassive : MonoBehaviour, IDamageModifier
         target.ApplyGameplayEffect(MarkEffect, _asc);
     }
 
+    // ¿Se le puede apostar a este? El filtro de enemigos es por EQUIPO, y en el modo
+    // Mercenarios los monstruos son el equipo 4 — o sea que cuentan como hostiles y
+    // entrarían al sorteo. Ver OnlyBetOnPlayers.
+    private bool IsBettable(AbilitySystemComponent asc)
+    {
+        if (!OnlyBetOnPlayers) return true;
+        return asc != null && asc.GetComponent<PlayerController>() != null;
+    }
+
     // Enemigo vivo AL AZAR dentro de SearchRadius (el diseño pide aleatorio, no el
     // más cercano) que no tenga ya una apuesta viva. Devuelve null si no hay ninguno.
     private AbilitySystemComponent PickRandomNearbyEnemy()
@@ -214,6 +234,7 @@ public class GamblePassive : MonoBehaviour, IDamageModifier
             AbilitySystemComponent asc = c.GetComponentInParent<AbilitySystemComponent>();
             if (asc == null || ReferenceEquals(asc, _asc) || !seen.Add(asc)) continue;
             if (!_asc.IsEnemyOf(asc) || asc.HasTag(EGameplayTag.State_Dead)) continue;
+            if (!IsBettable(asc)) continue;
             if (FindLiveBet(asc) != null) continue; // ya tiene una apuesta nuestra viva
             candidates.Add(asc);
         }

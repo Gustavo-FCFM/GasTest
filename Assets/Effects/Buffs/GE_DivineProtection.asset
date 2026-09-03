@@ -23,4 +23,8 @@ MonoBehaviour:
   EffectType: 0
   Modifiers: []
   IsCrowdControl: 0
+  TargetVFX: {fileID: 6424583148328831481, guid: d2ffbc8b168cdf74a9dbb7c6c1cfdf2f, type: 3}
+  TargetVFXOffset: {x: 0, y: 0, z: 0}
+  TargetVFXRotation: {x: 0, y: 0, z: 0}
+  TargetVFXScale: {x: 0, y: 0, z: 0}
   GrantedTags: 1200000025000000

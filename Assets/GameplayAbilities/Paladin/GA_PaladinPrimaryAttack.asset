@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0673ae4a173fec245880d1c58fa5345e, type: 3}
   m_Name: GA_PaladinPrimaryAttack
   m_EditorClassIdentifier: 
-  UseVerticalAim: 1
   AbilityName: Paladin Primary Attack
   AbilityIcon: {fileID: 0}
   CostEffect: {fileID: 0}
@@ -22,6 +21,7 @@ MonoBehaviour:
   UltimateChargeAmount: 1
   ActivationBlockedTags: 01000000
   ActivationRequiredTags: 
+  UsableWhileChanneling: 0
   AnimationClip: {fileID: 3094330708855449807, guid: 2c2c84ffdf3b64f4195f0b9a4931e399, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 1
@@ -30,9 +30,11 @@ MonoBehaviour:
     m_Bits: 128
   VisualsSequence: []
   MaxCharges: 1
-  TargetEffects: []
   Range: 2
-  ConeAngle: 60
+  ConeAngle: 90
+  UseVerticalAim: 1
+  OriginOffset: {x: 0, y: 1, z: 0}
   DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   AdditionalEffects: []
+  TargetEffects: []
   HitVFX: {fileID: 1758473627833946668, guid: 9b21333b068a5084ba09535839bee3c8, type: 3}
