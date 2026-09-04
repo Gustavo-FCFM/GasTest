@@ -4910,7 +4910,7 @@ MonoBehaviour:
   ClosedWhenMatchEnds: 0
   BarsWidth: 5.5
   BarsHeight: 4.5
-  BarCount: 7
+  BarCount: 11
   BarThickness: 0.18
 --- !u!1 &562894025
 GameObject:
@@ -9768,7 +9768,7 @@ MonoBehaviour:
   ClosedWhenMatchEnds: 0
   BarsWidth: 5.5
   BarsHeight: 4.5
-  BarCount: 7
+  BarCount: 11
   BarThickness: 0.18
 --- !u!1 &902474384
 GameObject:
@@ -20260,7 +20260,7 @@ MonoBehaviour:
   ClosedWhenMatchEnds: 0
   BarsWidth: 5.5
   BarsHeight: 4.5
-  BarCount: 7
+  BarCount: 11
   BarThickness: 0.18
 --- !u!1 &1914648471
 GameObject:
