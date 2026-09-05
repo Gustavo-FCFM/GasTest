@@ -322,6 +322,23 @@ public class MercenariesGameMode : NetworkBehaviour
 
         float dt = Time.deltaTime;
 
+        // --- gate de la sala de espera ---
+        //
+        // Mientras falte gente por marcar "listo", la preparación NO corre: el reloj se
+        // queda congelado en su valor inicial en vez de vaciarse solo. Sin esto, los
+        // 30 segundos empiezan a correr apenas levanta el servidor y el que entra
+        // último se pierde la mitad de la preparación (o aparece con la partida ya
+        // empezada).
+        //
+        // Sin LobbyManager en la escena —o con RequireAllReady apagado— AllReady da
+        // true y todo se comporta como antes. La escena de pruebas no cambia en nada.
+        if (State == EMatchState.Warmup && LobbyManager.Instance != null && !LobbyManager.Instance.AllReady)
+        {
+            if (_slowTickTimer + dt >= 0.5f) PublishPhaseTime();
+            _slowTickTimer = (_slowTickTimer + dt) % 0.5f;
+            return;
+        }
+
         // --- reloj de la fase ---
         _phaseTimer = Mathf.Max(0f, _phaseTimer - dt);
 

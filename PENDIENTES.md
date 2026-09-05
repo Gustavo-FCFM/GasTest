@@ -1,7 +1,11 @@
-# Pendientes — sesión del 2 al 4 de septiembre de 2026
+# Pendientes — actualizado el 5 de septiembre de 2026
 
-Todo lo de esta sesión está **commiteado y pusheado**. Lo que queda son tareas de
-EDITOR (que las hacés vos) más el plan hasta la demo de noviembre.
+Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
+editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
+siguen abiertas, más el plan.
+
+El proyecto compila limpio: 0 errores y 0 warnings en código propio (los 312 warnings
+del log son todos de packs importados).
 
 ## Cómo retomar en la otra máquina
 
@@ -15,101 +19,52 @@ julio y un pull normal recrea ese merge conflictivo. Ver `CLAUDE.md`.
 
 ---
 
-# 1. Tareas de editor pendientes
+# 0. Lo que ya está hecho (verificado, no hace falta volver a tocarlo)
 
-Ordenadas por cuánto molestan hoy. Las de "rápido" son un casillero o un número.
+Del documento anterior, ya están resueltos:
 
-## Cámara — arregla las barras de vida (rápido, alto impacto)
+- **Cámara**: `Player Camera.prefab` está taggeado `MainCamera`.
+- **Salto y caída**: existen el parámetro `VerticalSpeed`, el estado `Fall` y las
+  transiciones; `Movement → Jump` ya tiene `Has Exit Time` destildado.
+- **Escudo del Paladín**: `PLACEHOLDER_HoldLoop` ya no está en el Base Layer (queda una
+  sola copia, la de UpperBody) y `PLACEHOLDER_HoldImpact` ya existe.
+- **Salto por habilidad**: están los tres estados `PLACEHOLDER_AirStart/AirLoop/AirLand`.
+- **Nivel 3**: `OpenSubclassesOnMaxLevel` está en 0.
+- **Alas del Ángel**: `DemoAnimationSelector` ya no está en ningún prefab y
+  `GE_AvengingAngelTag.TargetVFX` ya tiene el prefab asignado.
+- **Molinete**: `Usable While Channeling` marcado en `GA_Frenzy` y `GA_BarbarianLeap`.
+- **Golpe final**: los tres `Charge*Animation` asignados (partiste el clip) y el
+  `HitboxOffsetY` subido a 1.
+- **Hacha arrojadiza**: `SpawnOffset.y` en 1.5.
+- **Daño mágico**: `GA_SwordAttack` ya usa `GE_Class_Damage`.
+- **Barras de vida de los enemigos**: los once prefabs migrados a `UI_WorldHealthbar`
+  (corriste `Mercenarios ▸ 9`). `HealthBarNpc.cs` quedó sin usar en todo el proyecto —
+  se puede borrar.
+- **`GA_BossAura.Radius`**: subido de 2 a 9 (lo cambié yo en esta sesión).
 
-`Player Camera.prefab` está **`Untagged`**, y el único objeto con tag `MainCamera` en
-`Mercenaries_Gamemode` es `Camara_Lobby`.
+---
 
-Como todo el código resuelve la cámara con `Camera.main`, los nameplates se orientan
-hacia la cámara del lobby (fija) en vez de hacia la tuya: por eso se ven como carteles
-estáticos que se leen bien desde un ángulo y mal desde otro.
+# 1. Tareas de editor que SIGUEN pendientes
 
-- [ ] Taggear `Player Camera.prefab` como **`MainCamera`**
+Son seis, y ninguna es urgente.
 
-Es seguro con varios jugadores: la cámara se instancia **solo para el dueño**
-(`if (base.IsOwner)` en `PlayerController`), así que en cada máquina hay una sola.
+## Molinete del bárbaro — el VFX
 
-De paso fijate si se acomoda algo más: `GetWASDInputVector`, `FaceCameraForward` y
-`GetAimPoint` salen de la misma `Camera.main`.
+- [ ] `GA_WhirlwindAttack.VisualPrefab` sigue apuntando al prefab **`Red`** (el círculo
+      rojo de prueba). Va el tornado, con **`VFX_AreaVisual`** en la raíz del prefab y su
+      `RadiusAtScaleOne` medido
 
-## Salto y caída
+Sin `VFX_AreaVisual` el efecto no se escala con el radio real de la habilidad: se ve del
+mismo tamaño aunque el área cambie.
 
-- [ ] En `AC_Player`, parámetro nuevo **`VerticalSpeed`** (Float)
-- [ ] Estado **`Fall`** con `HumanM@Fall01`, en **Loop**
-- [ ] `Movement → Fall`: `IsJumping` + `VerticalSpeed < -0.1` · Exit Time OFF · dur 0.15
-- [ ] `Jump → Fall`: `IsJumping` · Exit Time **ON 0.9** · dur 0.15
-- [ ] `Fall → Movement`: `IsJumping` = false · Exit Time OFF · dur 0.15
-- [ ] **Destildar `Has Exit Time` en `Movement → Jump`** (hoy está en 0.8 y retrasa la
-      animación de salto casi un segundo)
+## Hacha arrojadiza — el blur
 
-**NO pongas `Any State → Fall`.** Le roba el bucle aéreo al salto del bárbaro. El umbral
-en `-0.1` y no en `0` evita el parpadeo en el punto más alto del salto.
-
-## Escudo del Paladín
-
-- [ ] **Borrar `PLACEHOLDER_HoldLoop` del Base Layer** — es lo que impide caminar
-      bloqueando. El de UpperBody ya está bien configurado y no se toca.
-- [ ] Crear **`PLACEHOLDER_HoldImpact`** en UpperBody (el `ShieldHitClip` ya está
-      asignado en `GA_PaladinShieldBlock` y hoy no se ve nunca):
-  - `Any State → HoldImpact`: `ActionID == 97` + `HoldImpactTrigger` · Exit Time OFF · 0.05
-  - `HoldImpact → HoldLoop`: `IsHolding` = true · Exit Time **ON 0.9** · 0.1
-  - `HoldImpact → Empty`: `IsHolding` = false · Exit Time OFF · 0.1
-
-`RaiseClip` y `LowerClip` **dejalos vacíos**: el pack no trae esos gestos y son
-opcionales. El blend de 0.1 s ya se lee como levantar el escudo.
-
-## Nivel 3 / subclases
-
-- [ ] En `Player Camera.prefab`, destildar **`OpenSubclassesOnMaxLevel`** del
-      `UI_ClassMenu` (está serializado en `1`; el default del código ya es `false` pero
-      el valor guardado le gana)
-- [ ] *(Opcional)* Cablear **`LevelUpNotification`** del `UI_PlayerHUD`, que está en
-      `None`. Sirve como recordatorio fijo; el anuncio del centro se desvanece y si
-      estabas peleando te lo perdés.
-
-## Alas del Ángel Vengador
-
-- [ ] Sacar **`DemoAnimationSelector`** del prefab `AngelWings`
-- [ ] En `AngelWings_Controller`, poner el valor por defecto de **`Mode` en `2`** (es el
-      que corresponde a `Fly`; en `0` va a `Idle` y las alas se quedan quietas)
-- [ ] Asignar el prefab a **`GE_AvengingAngelTag.TargetVFX`**
-- [ ] `TargetVFXOffset`: Y ≈ 1.3-1.5, Z en negativo (que salgan de la espalda)
-
-El prefab **no tiene colliders**, así que no hay que limpiarlo.
-
-## Molinete del bárbaro
-
-- [ ] Marcar **`Usable While Channeling`** en `GA_Frenzy` y `GA_BarbarianLeap` — son las
-      dos únicas habilidades que deben poder usarse durante el molinete
-- [ ] Tornado en `GA_WhirlwindAttack.VisualPrefab` (hoy está el círculo rojo), con
-      **`VFX_AreaVisual`** en la raíz del prefab y su `RadiusAtScaleOne` medido
-
-## Golpe final (Inmortal)
-
-- [ ] **`HitboxOffsetY` ≈ 1.2** — hoy está en 0 y la caja nace a ras del suelo, así que
-      el golpe apenas llega a la cintura
-- [ ] Partir `HumanM@Attack2H02` en tres y asignar los `Charge*Animation`:
-  - `_ChargeStart` (hasta el punto más alto)
-  - `_ChargeLoop` (4-8 frames **en** el punto más alto, **Loop Time ON**)
-  - `_Strike` (del punto más alto al final) → va en el `AnimationClip` de la habilidad
-
-Si dejás el clip entero como `AnimationClip`, al terminar la carga levanta el arma otra
-vez antes de pegar: se ve el gesto dos veces.
-
-## Hacha arrojadiza
-
-- [ ] `SpawnOffset.y` ≈ **1.4** (hoy sale de la panza)
 - [ ] Material del spin blur en `PF_ExampleProjectile` →
       `AssetsExtra/Simple Spin Blur/Materials/Spin Blur Material.mat`
 
-## Rogue
+## Rogue — el giro del segundo golpe
 
-- [ ] `HumanM@Attack1H01_L` → Animation → **Root Transform Rotation → Offset**, para
-      reducir el giro a la izquierda del segundo golpe del combo
+- [ ] `HumanM@Attack1H01_L` → Animation → **Root Transform Rotation → Offset**
 
 **No lo lleves a cero**: algo de torsión es correcta para una puñalada con la izquierda.
 El combo alterna derecha-izquierda a propósito (las cuatro clases del rogue llevan dos
@@ -123,20 +78,55 @@ Los cuatro están **en uso**, no son huérfanos. Renombrarlos es seguro: Unity m
 GUID y las referencias no se rompen. Ese sufijo ya te hizo dudar una vez sobre cuál
 asset estabas editando.
 
+## Recordatorio de subida de nivel *(opcional)*
+
+- [ ] Cablear **`LevelUpNotification`** del `UI_PlayerHUD`, que sigue en `None`
+
+Sirve como recordatorio fijo; el anuncio del centro se desvanece y si estabas peleando
+te lo perdés.
+
+## Speed Multiplier de la animación de acción
+
+- [ ] Los dos `PlaceHolder_Action` tienen `ActionSpeedMult` asignado pero **la casilla
+      desactivada**
+
+No rompe nada (está igual en las dos capas), pero el ritmo de ataque no acelera la
+animación: un personaje con mucha velocidad de ataque pega más seguido pero el swing se
+ve igual de lento.
+
 ---
 
-# 2. Balance pendiente (decisiones tuyas, no tareas mecánicas)
+# 2. Montaje del lobby nuevo
+
+El código del lobby está terminado y compilando (ver la sección 3). Para probarlo:
+
+- [ ] `LobbyManager` en el mismo GameObject que `NetworkGameManager` (comparte su
+      `NetworkObject`, igual que `MercenariesGameMode`)
+- [ ] `UI_LobbyRoster` en cualquier GameObject de la escena del lobby
+- [ ] *(Opcional)* Cablear `SpectatorToggle` y `WarningText` en `UI_LobbyMenu` — sin
+      ellos funciona igual, solo que sin opción de espectador y con el aviso de nombre
+      repetido yendo a consola
+
+Con `MinPlayersToStart: 1` lo podés probar solo: confirmás y arranca la preparación.
+
+El panel se dibuja por código, así que no hay prefab de UI que armar — pero las
+posiciones y tamaños seguro quieran un ajuste cuando lo veas en pantalla (están en los
+campos del componente).
+
+---
+
+# 3. Balance pendiente (decisiones tuyas)
 
 ## El daño mágico cambió de raíz
 
-Antes el `MagicDamage` del atacante se sumaba **automáticamente a cada golpe**. Ahora el
-tipo de daño lo decide **el atributo del que escala el modificador**:
+El tipo de daño ahora lo decide **el atributo del que escala el modificador**:
 
 - escala de `Attack` → daño **físico** (paga armadura)
 - escala de `MagicDamage` → daño **mágico** (ignora armadura, vale doble contra escudos)
 
-Consecuencia: estas cinco clases **perdían 8-10 de daño en cada golpe** y ahora pegan
-solo su físico, hasta que les armes habilidades con efectos mágicos.
+Antes el `MagicDamage` del atacante se sumaba automáticamente a cada golpe. Estas cinco
+clases **perdieron 8-10 de daño por golpe** y pegan solo su físico hasta que les armes
+habilidades con efectos mágicos:
 
 | Clase | MagicDamage |
 |---|---|
@@ -146,42 +136,51 @@ solo su físico, hasta que les armes habilidades con efectos mágicos.
 | `ASDef_OathOfDevotionPaladin` | 10 |
 | `ASDef_OathOfVengeancePaladin` | 10 |
 
-El Paladín es el que más lo siente. Hay que decidir qué habilidades suyas son mágicas y
-ponerles un efecto que escale de `MagicDamage` (como ya hace `GE_SmiteDamage`).
+El Paladín es el que más lo siente. Hay que decidir **qué habilidades suyas son mágicas**
+y ponerles un efecto que escale de `MagicDamage`, como ya hace `GE_SmiteDamage`.
 
-- [ ] **`GA_SwordAttack` usa `GE_Class_Magic_Damage`** — era temporal para probar el daño
-      mágico. Si es un espadazo normal, cambialo a `GE_Class_Damage`.
+## Los rangos del jefe no calzan
 
-## Otros
+`Net_Boss` tiene `AttackRange: 20` pero `DetectionRadius: 16`: **nunca puede usar su
+alcance completo**, te ataca recién cuando ya estás cuatro metros adentro. Y
+`LeashRadius: 20` es igual al alcance, así que suelta la correa justo en el borde desde
+donde todavía podría pegarte.
 
-- [ ] El `Speed Multiplier` de los dos `PlaceHolder_Action` tiene `ActionSpeedMult`
-      asignado pero **la casilla desactivada**. No rompe nada (está igual en las dos
-      capas), pero el ritmo de ataque no acelera la animación.
-- [ ] `GA_BossAura.Radius` está en 2; debería ser 8-10.
-- [ ] Revisar `DetectionRadius` / `AttackRange` / `LeashRadius` del jefe, que no calzan.
+Lo que tiene sentido es detección ≥ alcance, y correa bastante mayor que las dos.
+`KeepDistance: 11` parece razonable si el alcance real termina siendo 16-20.
+
+## Los fantasmas siguen siendo sacos de experiencia
+
+Hacen 5 de daño contra 120 de vida: un 4 % por golpe, casi 40 segundos para matarte
+estando quieto. Si querés que se sientan una amenaza, lo que más rinde es el **ataque**
+en `ASDef_WaveEnemy` (probá 12-15), y después la vida (5 es muy poco: cualquier ataque
+los borra).
 
 ---
 
-# 3. Plan hasta noviembre
+# 4. Plan hasta noviembre
 
 El riesgo con tres meses y trabajando solo **no es que falten cosas: es que todo quede
 al 80%**. Este orden es por dependencias y riesgo, no por ganas.
 
-## 1º · Lobby
+## 1º · Lobby — CÓDIGO TERMINADO ✅
 
-No por lo visual: es **lo que se rompe con nueve personas de verdad**. Hoy no sabés si
-un nombre está repetido, cuántos hay por equipo, ni si alguien no eligió clase. Sin eso
-no podés hacer un playtest decente, y sin playtests no podés evaluar nada de lo demás.
+Ya está, falta solo el montaje de la sección 2. Lo que quedó implementado:
 
-Además el **pool de espectadores** vive acá, así que resuelve dos cosas de una.
+- **`LobbyManager`** (`Scripts/Network/`): la sala compartida en una `SyncList`, con
+  autoridad de servidor. Valida nombre repetido y cupo por equipo, maneja el estado
+  "listo" y saca a quien se desconecta.
+- **`UI_LobbyRoster`** (`Scripts/GameMode/UI/`): tres columnas por equipo con el cupo,
+  franja de espectadores, y una línea de estado que dice a quién se está esperando.
+- **`UI_LobbyMenu`**: te anota en la sala apenas abrís el menú (los demás te ven con `?`
+  mientras elegís), avisa del nombre repetido en vivo, y contempla al espectador.
+- **`MercenariesGameMode`**: la preparación no corre mientras falte gente por confirmar.
 
-Ya existe `UI_LobbyMenu`; esto es extenderlo. Lo que falta:
+Sin `LobbyManager` en la escena todo se comporta como antes, así que `Test_Network` no
+cambió en nada.
 
-- jugadores agrupados por equipo, con su clase elegida
-- un `?` para quien no eligió todavía
-- aviso de nombre repetido
-- gate de "todos listos" para poder empezar
-- lista de espectadores (no bloquean el inicio)
+**Lo que sigue faltando del lobby**, cuando lo pruebes con gente: nada bloqueante, pero
+el panel no tiene scroll — con nueve jugadores las columnas de tres entran justas.
 
 ## 2º · Sonido
 
@@ -198,7 +197,8 @@ Barata, y es **la herramienta para enseñar el juego**. La querés en octubre, n
 noviembre: el material se graba, se mira y se vuelve a grabar. Como bonus, es el mejor
 debugger para mirar peleas desde afuera.
 
-Cámara libre, sin UI.
+Cámara libre, sin UI. Ahora además tiene con qué engancharse: el lobby ya marca quién
+entra como espectador.
 
 ## 4º · Pantalla de inicio y ajustes
 
@@ -227,11 +227,11 @@ misma sensación de contenido. Ya tenés el generador de arena.
 
 ---
 
-# 4. Animaciones que siguen viéndose raras
+# 5. Animaciones que siguen viéndose raras
 
-No las dejes ahí. En esta sesión perseguimos cuatro causas distintas y al final **casi
-todo era una sola**: confundir el yaw del cuerpo con el punto de mira. Es muy posible
-que lo que queda también tenga un origen común.
+No las dejes ahí. En la sesión de septiembre perseguimos cuatro causas distintas y al
+final **casi todo era una sola**: confundir el yaw del cuerpo con el punto de mira. Es
+muy posible que lo que queda también tenga un origen común.
 
 El método que funcionó, para aplicarlo a cada caso:
 
@@ -243,3 +243,9 @@ El método que funcionó, para aplicarlo a cada caso:
    inmediata, sin teorías.
 
 Cuando lo retomes, anotá **cuáles se ven mal y con qué clase**, y vamos una por una.
+
+**Un caso menos:** los nameplates que se veían como carteles fijos ya están arreglados, y
+no era el tag de la cámara. `UI_WorldHealthbar` cacheaba `Camera.main` y solo la volvía a
+resolver si era `null` — pero al spawnear, `PlayerController` **apaga** la cámara del
+lobby, y un componente apagado no es `null`. Se quedaban orientándose hacia una cámara
+desactivada para siempre. Ahora usa el mismo criterio que `PlayerController.MainCamera`.

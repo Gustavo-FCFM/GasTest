@@ -31,7 +31,7 @@ MonoBehaviour:
   ConeAngle: 90
   VisualsSequence: []
   Objetivos: 1
-  Radius: 2
+  Radius: 9
   TotalDuration: 5
   TickInterval: 1
   FollowOwner: 1

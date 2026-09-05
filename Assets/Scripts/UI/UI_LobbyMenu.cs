@@ -75,6 +75,33 @@ public class UI_LobbyMenu : MonoBehaviour
     [Tooltip("Botón para entrar a la partida. Se habilita al elegir equipo y clase.")]
     public Button ConfirmButton;
 
+    [Header("Sala de espera (opcional)")]
+    [Tooltip("Casilla para entrar como ESPECTADOR: sin personaje, sin equipo y sin frenar el " +
+             "arranque de la partida. Dejala en None si no querés la opción.")]
+    public Toggle SpectatorToggle;
+
+    [Tooltip("Dónde se avisa que el nombre está repetido o que el equipo está lleno. Opcional.")]
+    public TMPro.TMP_Text WarningText;
+
+    // La lista de clases del menú es la MISMA en todos los peers (mismo asset, misma
+    // escena, mismo build), así que su índice sirve para decir "elegí esta clase" por
+    // red sin mandar el ScriptableObject. Lo usa LobbyEntry.ClassIndex, y el panel de
+    // la sala lo resuelve de vuelta con ClassByIndex para mostrar el icono.
+    public static UI_LobbyMenu Instance { get; private set; }
+
+    public CharacterClassDefinition ClassByIndex(int index)
+        => SelectableClasses != null && index >= 0 && index < SelectableClasses.Length
+            ? SelectableClasses[index]
+            : null;
+
+    private int IndexOfClass(CharacterClassDefinition cls)
+    {
+        if (SelectableClasses == null || cls == null) return -1;
+        for (int i = 0; i < SelectableClasses.Length; i++)
+            if (SelectableClasses[i] == cls) return i;
+        return -1;
+    }
+
     private int _teamID = -1;
     private CharacterClassDefinition _chosenClass;
     private readonly List<UI_ClassCard> _cards = new List<UI_ClassCard>();
@@ -82,8 +109,55 @@ public class UI_LobbyMenu : MonoBehaviour
 
     private void Awake()
     {
+        Instance = this;
         if (MenuContainer != null) MenuContainer.SetActive(false);
     }
+
+    private void OnEnable()  => LobbyManager.OnRejected += HandleRejected;
+    private void OnDisable() => LobbyManager.OnRejected -= HandleRejected;
+
+    private void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
+    }
+
+    // El servidor rechazó lo que mandamos. El TEXTO se arma acá y no viaja por red
+    // (mismo criterio que los avisos del modo de juego).
+    private void HandleRejected(ELobbyRejection reason)
+    {
+        switch (reason)
+        {
+            case ELobbyRejection.NameTaken:
+                ShowWarning("Ese nombre ya está en uso. Elegí otro.");
+                break;
+            case ELobbyRejection.TeamFull:
+                ShowWarning("Ese equipo está lleno.");
+                break;
+        }
+    }
+
+    private void ShowWarning(string message)
+    {
+        if (WarningText != null) WarningText.text = message;
+        else Debug.LogWarning($"[Lobby] {message}");
+    }
+
+    // Le cuenta al servidor lo que tenemos elegido AHORA, aunque esté a medias: así el
+    // resto ve aparecer tu fila con un "?" en vez de no verte hasta que confirmes, que
+    // es justo lo que hace imposible acomodar los equipos entre todos.
+    private void PushSelection()
+    {
+        LobbyManager lobby = LobbyManager.Instance;
+        if (lobby == null || !InstanceFinder.IsClientStarted) return;
+
+        string playerName = NameInput != null && !string.IsNullOrWhiteSpace(NameInput.text)
+            ? NameInput.text.Trim()
+            : DefaultName;
+
+        lobby.ServerSubmit(playerName, Mathf.Max(0, _teamID), IndexOfClass(_chosenClass), IsSpectator);
+    }
+
+    private bool IsSpectator => SpectatorToggle != null && SpectatorToggle.isOn;
 
     private void Start()
     {
@@ -92,7 +166,17 @@ public class UI_LobbyMenu : MonoBehaviour
 
         // El nombre también habilita/deshabilita Confirmar, así que hay que
         // reevaluarlo mientras se escribe.
-        if (NameInput != null) NameInput.onValueChanged.AddListener(_ => UpdateConfirmState());
+        if (NameInput != null)
+        {
+            NameInput.onValueChanged.AddListener(_ => UpdateConfirmState());
+            // El nombre se manda al TERMINAR de escribir, no en cada tecla: si no, cada
+            // letra sería un pedido al servidor y un rebote por "nombre repetido" a
+            // mitad de palabra.
+            NameInput.onEndEdit.AddListener(_ => PushSelection());
+        }
+
+        if (SpectatorToggle != null)
+            SpectatorToggle.onValueChanged.AddListener(_ => { PushSelection(); UpdateConfirmState(); });
         if (ConfirmButton != null)
         {
             ConfirmButton.onClick.RemoveAllListeners();
@@ -129,6 +213,11 @@ public class UI_LobbyMenu : MonoBehaviour
             string ip = hud != null ? hud.HostAddress : "—";
             HostAddressText.text = $"IP del Host: {ip}";
         }
+
+        // Nos anotamos ya, sin haber elegido nada: los demás tienen que VER que estás
+        // conectado y todavía decidiendo (aparecés con "?"), no descubrirte recién
+        // cuando confirmás.
+        PushSelection();
     }
 
     // =========================================================
@@ -154,6 +243,7 @@ public class UI_LobbyMenu : MonoBehaviour
         _teamID = team;
         RefreshTeamButtons();
         UpdateConfirmState();
+        PushSelection();
     }
 
     private void RefreshTeamButtons()
@@ -251,6 +341,7 @@ public class UI_LobbyMenu : MonoBehaviour
             if (_cards[i] != null) MarkSelected(_cards[i], _cards[i].AssignedClass == cls);
 
         UpdateConfirmState();
+        PushSelection();
     }
 
     // Marca la tarjeta elegida con un CONTORNO, no con el agrandado de UI_ClassCard:
@@ -292,7 +383,26 @@ public class UI_LobbyMenu : MonoBehaviour
         if (ConfirmButton == null) return;
 
         bool hasName = NameInput == null || !string.IsNullOrWhiteSpace(NameInput.text);
-        bool ready   = hasName && _teamID > 0 && _chosenClass != null;
+
+        // El espectador no elige equipo ni clase: con el nombre alcanza.
+        bool chosen = IsSpectator || (_teamID > 0 && _chosenClass != null);
+
+        // Aviso en vivo del nombre repetido, sin esperar a que el servidor lo rechace:
+        // así no confirmás para enterarte recién ahí.
+        bool nameTaken = false;
+        LobbyManager lobby = LobbyManager.Instance;
+        if (lobby != null && hasName && NameInput != null)
+        {
+            int myId = InstanceFinder.ClientManager != null && InstanceFinder.ClientManager.Connection != null
+                ? InstanceFinder.ClientManager.Connection.ClientId
+                : -1;
+            nameTaken = lobby.IsNameTaken(NameInput.text, myId);
+        }
+
+        if (WarningText != null)
+            WarningText.text = nameTaken ? "Ese nombre ya está en uso. Elegí otro." : string.Empty;
+
+        bool ready = hasName && chosen && !nameTaken;
 
         if (ConfirmButton.interactable != ready) ConfirmButton.interactable = ready;
     }
@@ -301,7 +411,9 @@ public class UI_LobbyMenu : MonoBehaviour
     // se queda esperando a que aparezca para equipar la clase.
     public void Confirm()
     {
-        if (_sent || _teamID <= 0 || _chosenClass == null) return;
+        // El espectador entra sin equipo ni clase: no se le pide ninguna de las dos.
+        bool spectator = IsSpectator;
+        if (_sent || (!spectator && (_teamID <= 0 || _chosenClass == null))) return;
 
         if (!InstanceFinder.IsClientStarted)
         {
@@ -315,6 +427,25 @@ public class UI_LobbyMenu : MonoBehaviour
 
         _sent = true;
         if (MenuContainer != null) MenuContainer.SetActive(false);
+
+        // "Listo" en la sala: es lo que destraba el arranque de la preparación para
+        // todos (ver LobbyManager.AllReady y el gate de MercenariesGameMode).
+        LobbyManager lobby = LobbyManager.Instance;
+        if (lobby != null)
+        {
+            lobby.ServerSubmit(playerName, spectator ? 0 : _teamID,
+                               spectator ? -1 : IndexOfClass(_chosenClass), spectator);
+            lobby.ServerSetReady(true);
+        }
+
+        // El espectador NO pide personaje: se queda mirando con la cámara del lobby.
+        // Tampoco frena el arranque (ver LobbyManager.AllReady).
+        if (spectator)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible   = true;
+            return;
+        }
 
         // Se manda por BROADCAST y no por ServerRpc: un RPC necesita un NetworkObject
         // ya inicializado en el cliente, y acá el jugador todavía no tiene personaje.

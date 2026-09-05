@@ -100,7 +100,13 @@ public class UI_WorldHealthbar : MonoBehaviour
         // con una partida llena se multiplica por 9. Camera.main hace una búsqueda por
         // tag y GetComponent recorre los componentes del jugador — ninguno de los dos
         // cambia entre frames, así que se resuelven una sola vez.
-        if (_cam == null) _cam = Camera.main;
+        // Se re-resuelve también si la cámara quedó DESACTIVADA, no solo si murió. Al
+        // spawnear, PlayerController apaga la cámara del lobby (Camera.main.SetActive
+        // false) — y un componente apagado NO es == null, así que con el chequeo de
+        // null a secas los nameplates se quedaban orientándose hacia la cámara del
+        // lobby para siempre: se veían como carteles fijos, bien desde un ángulo y mal
+        // desde cualquier otro. Mismo criterio que PlayerController.MainCamera.
+        if (_cam == null || !_cam.isActiveAndEnabled) _cam = Camera.main;
         Camera cam = _cam;
         if (cam == null || BarRoot == null) { SetVisible(false); return; }
 
