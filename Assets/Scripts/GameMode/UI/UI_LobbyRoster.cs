@@ -41,13 +41,23 @@ public class UI_LobbyRoster : MonoBehaviour
     [Tooltip("Color del texto de quien ya confirmó.")]
     public Color ReadyColor = new Color(0.55f, 0.95f, 0.55f, 1f);
 
+    [Tooltip("Alto visible de cada columna de equipo. Si entran más jugadores que este alto, la " +
+             "columna scrollea en vez de desbordarse.")]
+    public float ColumnHeight = 300f;
+
     private Canvas          _canvas;
     private RectTransform   _root;
     private RectTransform[] _teamColumns;
+    private RectTransform[] _teamContents;   // dónde van las filas (adentro del scroll)
     private TextMeshProUGUI[] _teamHeaders;
     private RectTransform   _spectatorColumn;
+    private RectTransform   _spectatorContent;
     private TextMeshProUGUI _spectatorHeader;
     private TextMeshProUGUI _statusText;
+
+    // Alto del encabezado de cada columna: queda FUERA del área que scrollea, para que
+    // el título del equipo no se vaya de pantalla al bajar la lista.
+    private const float HeaderHeight = 34f;
 
     // Las filas vivas, para poder borrarlas al redibujar.
     private readonly List<GameObject> _rows = new List<GameObject>();
@@ -98,8 +108,9 @@ public class UI_LobbyRoster : MonoBehaviour
                                          new Vector2(0.5f, 1f),
                                          new Vector2(0f, -90f), new Vector2(totalWidth, 320f));
 
-        _teamColumns = new RectTransform[LobbyManager.TeamCount];
-        _teamHeaders = new TextMeshProUGUI[LobbyManager.TeamCount];
+        _teamColumns  = new RectTransform[LobbyManager.TeamCount];
+        _teamContents = new RectTransform[LobbyManager.TeamCount];
+        _teamHeaders  = new TextMeshProUGUI[LobbyManager.TeamCount];
 
         for (int i = 0; i < LobbyManager.TeamCount; i++)
         {
@@ -108,7 +119,7 @@ public class UI_LobbyRoster : MonoBehaviour
 
             Image bg = MercUIFactory.CreateImage(_root, $"Column_Team{team}", PanelColor,
                                                  new Vector2(x, 0f),
-                                                 new Vector2(ColumnWidth - 8f, 300f),
+                                                 new Vector2(ColumnWidth - 8f, ColumnHeight),
                                                  new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
                                                  new Vector2(0.5f, 1f));
 
@@ -123,11 +134,13 @@ public class UI_LobbyRoster : MonoBehaviour
                                                        new Vector2(ColumnWidth - 16f, 28f),
                                                        new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
                                                        new Vector2(0.5f, 1f));
+
+            _teamContents[i] = MakeScrollArea(bg);
         }
 
         // Espectadores: una franja abajo, aparte de los equipos.
         Image specBg = MercUIFactory.CreateImage(_root, "Column_Spectators", PanelColor,
-                                                 new Vector2(0f, -308f),
+                                                 new Vector2(0f, -(ColumnHeight + 8f)),
                                                  new Vector2(totalWidth - 8f, 84f),
                                                  new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
                                                  new Vector2(0.5f, 1f));
@@ -140,13 +153,56 @@ public class UI_LobbyRoster : MonoBehaviour
                                                     new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
                                                     new Vector2(0.5f, 1f));
 
+        _spectatorContent = MakeScrollArea(specBg);
+
         _statusText = MercUIFactory.CreateText(_root, "Status", "",
                                                20f, Color.white, TextAlignmentOptions.Center,
-                                               new Vector2(0f, -400f),
+                                               new Vector2(0f, -(ColumnHeight + 100f)),
                                                new Vector2(totalWidth, 30f),
                                                new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
                                                new Vector2(0.5f, 1f));
         MercUIFactory.AddShadow(_statusText);
+    }
+
+    // Convierte una columna en un área que scrollea: un viewport recortado con
+    // RectMask2D y un content que crece con las filas.
+    //
+    // El ScrollRect va sobre el FONDO de la columna, que es un Image con raycastTarget:
+    // sin un gráfico que reciba el raycast, la rueda del mouse no llegaría a ningún
+    // lado y el scroll solo funcionaría arrastrando.
+    //
+    // El encabezado queda fuera del viewport a propósito: con nueve jugadores repartidos
+    // de a tres las columnas entran justas, y lo primero que se pierde al scrollear un
+    // panel chico es justamente el título que te dice de qué equipo estás mirando.
+    private RectTransform MakeScrollArea(Image columnBg)
+    {
+        RectTransform viewport = MercUIFactory.CreateRect(
+            columnBg.transform, "Viewport",
+            Vector2.zero, Vector2.one, new Vector2(0.5f, 1f),
+            Vector2.zero, Vector2.zero);
+
+        // Estirado a la columna, dejando el encabezado arriba y un margen abajo.
+        viewport.offsetMin = new Vector2(6f, 6f);
+        viewport.offsetMax = new Vector2(-6f, -HeaderHeight);
+        viewport.gameObject.AddComponent<RectMask2D>();
+
+        RectTransform content = MercUIFactory.CreateRect(
+            viewport, "Content",
+            new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f),
+            Vector2.zero, new Vector2(0f, 0f));
+
+        ScrollRect scroll = columnBg.gameObject.AddComponent<ScrollRect>();
+        scroll.viewport         = viewport;
+        scroll.content          = content;
+        scroll.horizontal       = false;
+        scroll.vertical         = true;
+        // Clamped y no Elastic: en una lista corta el rebote elástico se siente como si
+        // hubiera más contenido del que hay.
+        scroll.movementType     = ScrollRect.MovementType.Clamped;
+        scroll.scrollSensitivity = RowHeight;
+        scroll.inertia          = false;
+
+        return content;
     }
 
     // =========================================================
@@ -170,7 +226,7 @@ public class UI_LobbyRoster : MonoBehaviour
         {
             if (entry.Spectator)
             {
-                AddRow(_spectatorColumn, entry, spectators, wide: true);
+                AddRow(_spectatorContent, entry, spectators, wide: true);
                 spectators++;
                 continue;
             }
@@ -180,9 +236,16 @@ public class UI_LobbyRoster : MonoBehaviour
             if (entry.Team < 1 || entry.Team > LobbyManager.TeamCount) continue;
 
             int idx = entry.Team - 1;
-            AddRow(_teamColumns[idx], entry, perTeam[idx], wide: false);
+            AddRow(_teamContents[idx], entry, perTeam[idx], wide: false);
             perTeam[idx]++;
         }
+
+        // El content tiene que medir lo que ocupan las filas: es de ahí de donde el
+        // ScrollRect saca si hay algo fuera de la vista y cuánto se puede bajar.
+        for (int i = 0; i < LobbyManager.TeamCount; i++)
+            ResizeContent(_teamContents[i], perTeam[i]);
+
+        ResizeContent(_spectatorContent, spectators);
 
         for (int i = 0; i < LobbyManager.TeamCount; i++)
         {
@@ -199,12 +262,14 @@ public class UI_LobbyRoster : MonoBehaviour
     }
 
     // Una fila: "nombre · clase · listo". Nada de esto necesita prefab.
-    private void AddRow(RectTransform column, LobbyEntry entry, int slot, bool wide)
+    private void AddRow(RectTransform content, LobbyEntry entry, int slot, bool wide)
     {
-        if (column == null) return;
+        if (content == null) return;
 
         float width = (wide ? ColumnWidth * LobbyManager.TeamCount : ColumnWidth) - 24f;
-        float y     = -36f - slot * RowHeight;
+        // Relativo al borde superior del CONTENT, no de la columna: el encabezado ya
+        // no está adentro del área que scrollea.
+        float y     = -slot * RowHeight;
 
         // La clase se resuelve por índice contra la lista del menú, que es la misma en
         // todos los peers. El "?" es el aviso de que todavía no eligió.
@@ -219,13 +284,18 @@ public class UI_LobbyRoster : MonoBehaviour
         string check = entry.Spectator ? "" : (entry.Ready ? "  ✓" : "");
 
         TextMeshProUGUI text = MercUIFactory.CreateText(
-            column, $"Row_{entry.ClientId}", $"{entry.PlayerName}   ·   {className}{check}",
+            content, $"Row_{entry.ClientId}", $"{entry.PlayerName}   ·   {className}{check}",
             17f, entry.Ready ? ReadyColor : PendingColor,
             TextAlignmentOptions.Left,
             new Vector2(0f, y), new Vector2(width, RowHeight),
             new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f));
 
         _rows.Add(text.gameObject);
+    }
+
+    private void ResizeContent(RectTransform content, int rowCount)
+    {
+        if (content != null) content.sizeDelta = new Vector2(0f, rowCount * RowHeight);
     }
 
     // La línea de abajo: a quién se está esperando, que es la pregunta que todo el
