@@ -40,9 +40,9 @@ Después buscar `error CS` en el log.
 | Dónde | Qué |
 |---|---|
 | `Assets/Scripts/GAS/` | El motor de habilidades: ASC, efectos, habilidades, atributos, tags. |
-| `Assets/Scripts/Network/` | Capa de red: `NetworkAbilitySystemComponent`, `NetworkGameManager`, `ConnectionHUD`. |
+| `Assets/Scripts/Network/` | Capa de red: `NetworkAbilitySystemComponent`, `NetworkGameManager`, `ConnectionHUD` y `LobbyManager` (la sala de espera). |
 | `Assets/Scripts/Player/` | `PlayerController` (movimiento, input, animación) y el prefab del jugador. |
-| `Assets/Scripts/UI/` | HUD de clase, menús de clase y de entrada. |
+| `Assets/Scripts/UI/` | HUD de clase, menú de clases, y `UICursor` — el único dueño del cursor y del modo de input. |
 | `Assets/Scripts/GameMode/` | **El modo Mercenarios.** Ver su `LEEME_ModoMercenarios.md`. |
 | `Assets/Attributes/` | Clases jugables (`Class_*.asset`) y sus stats base (`ASDef_*.asset`). |
 | `Assets/GameplayAbilities/` | Los assets de habilidades y efectos, por clase. |
@@ -70,6 +70,14 @@ Después buscar `error CS` en el log.
   diccionarios sincronizados del `NetworkAbilitySystemComponent`, no del ASC local.
 - **El transform del jugador es client-authoritative**: teletransportes, saltos y dashes
   los ejecuta el DUEÑO por TargetRpc, nunca el servidor escribiendo el transform.
+- **Los registros de red se actualizan a mano.** Cada `GA_*` o `GE_*` nuevo tiene que
+  entrar en `GameplayAbilityRegistry` / `GameplayEffectRegistry` (los dos assets de
+  `Assets/Resources/`), porque FishNet manda el ÍNDICE dentro de esas listas y no la
+  referencia. Lo hace `Mercenarios ▸ Actualizar los registros de red`. Si falta uno, su
+  VFX se ve **solo en el host**.
+- **El cursor tiene un solo dueño: `UICursor`.** Ningún menú toca `Cursor.lockState` ni
+  `PlayerInputProvider.SetUIMode` por su cuenta — los pide con `UICursor.Request(this)` y
+  los suelta con `Release`. Si no, gana el último en cerrarse.
 
 Los detalles finos del GAS (pipeline de daño, acumulación de efectos, animaciones de
 combo) están en `DesignDocuments/GAS_Arquitectura.docx`.

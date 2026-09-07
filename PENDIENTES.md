@@ -178,16 +178,47 @@ Dos cosas que sí funcionaban, por si algún día hacen falta:
 - **`7 · Convertir enemigos de la jam a red`** — de los siete `Enemy_*` de `48toPlay`
   solo hay tres convertidos; faltan `DamageBoss`, `IceBoss`, `IceMage` y `RockMage`.
 
-Vuelven con un comando, apuntando al commit que los tenga:
+Vuelven con un comando. El último commit que los tenía es **`6143570`**:
 
 ```bash
-git checkout <commit> -- Assets/Scripts/GameMode/Editor/MercSetupTools.cs Assets/Scripts/GameMode/Editor/MercArenaBuilder.cs Assets/Scripts/GameMode/Editor/MercLayoutTools.cs
+git checkout 6143570 -- "Assets/Scripts/GameMode/Editor/MercSetupTools.cs" "Assets/Scripts/GameMode/Editor/MercArenaBuilder.cs" "Assets/Scripts/GameMode/Editor/MercLayoutTools.cs"
 ```
 
 Los tres van juntos: se llaman entre ellos (`MercArenaBuilder` usa los materiales y los
-buscadores de prefab de `MercSetupTools`, y `MercLayoutTools` usa los dos).
+buscadores de prefab de `MercSetupTools`, y `MercLayoutTools` usa a los dos).
 
-## Qué queda por ajustar
+**Una trampa si los restaurás.** Ese `MercSetupTools` de `6143570` es de ANTES de la sala
+nueva: su paso `2 · Crear la escena de la arena` instala el `UI_LobbyMenu` viejo, no el
+`LobbyManager` + `UI_LobbyPanel`. La versión corregida nunca llegó a commitearse, así que
+no está en el árbol de ningún commit — queda acá, para pegarla a mano dentro de
+`CreateNetworkStack()` reemplazando el bloque del "menú de entrada":
+
+```csharp
+managerGo.AddComponent<MercenariesGameMode>();
+
+// La SALA vive en el mismo NetworkObject que el modo: es un objeto DE ESCENA, y así
+// se spawnea con los otros dos sin cablear nada.
+managerGo.AddComponent<LobbyManager>();
+
+// ... (el bloque del ConnectionHUD queda igual) ...
+
+// El panel se dibuja por código, así que alcanza con el componente pelado. Las
+// clases elegibles se heredan del menú viejo, para no arrastrarlas una por una.
+GameObject lobbyGo = new GameObject("UI_LobbyPanel");
+UI_LobbyPanel lobbyPanel = lobbyGo.AddComponent<UI_LobbyPanel>();
+
+GameObject legacyMenu = AssetDatabase.LoadAssetAtPath<GameObject>(LobbyPrefabPath);
+UI_LobbyMenu legacy   = legacyMenu != null ? legacyMenu.GetComponent<UI_LobbyMenu>() : null;
+if (legacy != null && legacy.SelectableClasses != null)
+    lobbyPanel.SelectableClasses = legacy.SelectableClasses;
+else
+    Debug.LogWarning("[Mercenarios] UI_LobbyPanel quedó sin clases elegibles — asigná " +
+                     "SelectableClasses a mano o no vas a poder elegir clase en la sala.");
+```
+
+El paso 3 (regenerar la arena y las rejas) y los pasos 4-7 no tienen ese problema: no
+tocan la sala.
+
 
 Las medidas del panel están todas en el inspector del componente: `PanelSize`,
 `ColumnWidth`, `RowHeight` y los cinco colores. Y no tiene scroll: con nueve jugadores

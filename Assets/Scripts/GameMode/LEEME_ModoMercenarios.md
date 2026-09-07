@@ -9,17 +9,19 @@ pruebas rápidas de clases.
 
 ---
 
-# 0. Estado actual — 25 de agosto de 2026
+# 0. Estado actual — 7 de septiembre de 2026
 
-**Lo que ya está y funciona** (todo compila limpio en batch):
+**Lo que ya está y funciona** (todo compila limpio en batch, 0 errores y 0 warnings):
 
 - El modo entero: fases, Objetivo, puntaje, experiencia compartida, wipes, avisos, NPCs en
   red, HUD.
-- La escena `Mercenaries_Gamemode.unity` **armada y editada a mano**: arena generada con
+- **La sala de espera** (`LobbyManager` + `UI_LobbyPanel`): un solo panel con la IP del
+  host, el nombre, las tres columnas de equipo, la franja de espectadores, la grilla de
+  clases y el Start del host. Ver la sección 2.
+- La escena `Mercenaries_Gamemode.unity` **armada, editada a mano y guardada**: arena con
   colliders convex, las tres bases afuera del muro y acomodadas en simetría, con techo
   propio. 9 campamentos, 3 rejas (`MercGate`), techo y paredes invisibles
-  (`MercArenaBounds`), NavMesh horneado, HUD, y el modo cableado (Objetivo, punto de
-  aparición y las tres bases).
+  (`MercArenaBounds`), NavMesh horneado, HUD y la sala.
 - **Bestiario**: tres enemigos en red en `GameMode/Prefabs/Enemys/` con sus propios
   `ASDef_*` ya rebalanceados — fantasma 23 vida / 8 ataque, mago 15/24, jefe 35/50 — más el
   catálogo (`Resources/MercEnemyCatalog.asset`) y las tablas de aparición por campamento.
@@ -32,32 +34,40 @@ pruebas rápidas de clases.
 
 **Lo que sigue, por orden de impacto:**
 
-1. **`GA_BossAura.Radius` está en 2** — no le llega ni al fantasma de al lado. Subilo a
-   8-10. Todo lo demás del aura ya está bien (`Objetivos = Allies`, `GE_BossBuffs` +
-   `GE_BossHeal`, capa 7, 5 s con tick de 1 s).
-2. **El jefe lanza el aura para nadie.** Con `KeepDistance = 11` pelea lejos de su grupo y
-   el aura sale de él mismo. O le bajás la distancia a ~5, o subís el radio del aura a 12-14.
-3. **`AttackRange 20` con `DetectionRadius 16`**: el alcance real es 16, nunca dispara a 20.
+1. **El jefe lanza el aura para nadie.** `GA_BossAura.Radius` ya está en 9, pero con
+   `KeepDistance = 11` el jefe pelea lejos de su grupo y el aura sale de él mismo. O le
+   bajás la distancia a ~5, o subís el radio a 12-14.
+2. **`AttackRange 20` con `DetectionRadius 16`**: el alcance real es 16, nunca dispara a 20.
    Igualalos. Y con `LeashRadius 20` te suelta a los 4 m de correa — para un jefe, ~28.
-4. **Probar el balance en el centro.** El jefe pega 50 contra 120 de vida (42 % por golpe) y
+3. **Probar el balance en el centro.** El jefe pega 50 contra 120 de vida (42 % por golpe) y
    cada mago hace 16 de daño por segundo. Con dos magos y el jefe activos, la meseta puede
    volverse intomable — y es el lugar donde tiene que pasar toda la partida. Es lo primero
    que hay que jugar, antes de seguir puliendo.
-5. **Decorar** con `Medieval Cute Series` usando el espejado por sectores (menú 5).
-6. Solo 3 de los 9 campamentos tienen magos y jefe; los otros 6 son fantasmas puros. Si no
-   fue a propósito, está el botón *Copiar esta tabla a todos*.
+4. Solo 3 de los 9 campamentos tienen magos y jefe; los otros 6 son fantasmas puros. Si no
+   fue a propósito, está el botón *Copiar esta tabla a todos* del inspector del campamento.
+5. **Build Settings**: la escena tiene que quedar **primera** antes de compilar la build que
+   repartís, o tus amigos arrancan en otra.
 
-**Convención de nombres:** todo lo que el generador crea está en **inglés**
+**Las herramientas de armado ya no están.** El menú `Mercenarios` tenía ocho pasos para
+generar prefabs, escena, arena y enemigos; una vez hecho todo eso se borraron
+(`MercSetupTools.cs`, `MercArenaBuilder.cs`, `MercLayoutTools.cs`). Queda un solo ítem:
+`Actualizar los registros de red`. Cómo recuperarlas, y la trampa que tiene hacerlo, está
+en `PENDIENTES.md`.
+
+**Convención de nombres:** todo lo que el generador creaba está en **inglés**
 (`ARENA_MERCENARIES`, `Base_Team1`, `Lane`, `Deck`, `Plateau`, `Mat_ArenaSand`). Lo que
-quedó de las primeras versiones en la escena puede tener nombres viejos en español —
-renombrar a mano lo que se vaya tocando.
+quedó de las primeras versiones en la escena tiene nombres viejos en español
+(`Muro_03`, `Campamento_Carril_1`, `Camara_Lobby`) — renombrar a mano lo que se vaya
+tocando.
 
 ---
 
 # 1. Las reglas, en criollo
 
-**Antes de entrar.** Te conectás, aparece el menú de siempre (nombre + equipo 1/2/3 +
-clase) y recién cuando confirmás nace tu personaje, dentro de la sala segura de tu equipo.
+**Antes de entrar.** Te conectás y entrás a la **sala de espera**: quedás de espectador
+hasta que te unís a un equipo, elegís clase y confirmás. Nadie nace hasta que el **host
+aprieta Start** — así los que confirman primero no se quedan dando vueltas por el mapa
+mientras el resto elige. Al arrancar aparecés dentro de la sala segura de tu equipo.
 
 **Preparación (30 s).** Los tres equipos están en su base. Es el momento de acomodar
 composición: la sala segura es el **único lugar donde se puede cambiar de clase**.
@@ -94,42 +104,91 @@ segundo después el servidor te devuelve el nivel del equipo.
 
 ---
 
-# 2. Qué tenés que armar
+# 2. La escena, y la sala de espera
 
-## Paso a paso
+## La escena ya está armada
 
-Menú nuevo en la barra de Unity: **Mercenarios**.
+`Assets/Scenes/Mercenaries_Gamemode.unity` está hecha, editada a mano y guardada: la arena
+entera, las tres bases en simetría con techo, 9 campamentos, 3 rejas, los límites
+invisibles, el NavMesh horneado, el HUD, el `NetworkManager`, el `ConnectionHUD` y la sala.
+**No hay nada que generar.**
 
-| # | Menú | Qué hace |
-|---|---|---|
-| 1 | `1 · Crear prefabs de la demo` | Crea `Assets/GameMode/Prefabs/`: el **Objetivo** (caja dorada + luz + `MercObjective`) y el **fantasma EN RED** (agarra `Enemy_Ghost` de la game jam, le saca `EnemyAI` y `NPC_WaveEnemy` —que eran de un jugador— y le pone `NetworkObject`, `NetworkTransform`, `NetworkAbilitySystemComponent` y `MercEnemyAI`, conservando su efecto de daño). |
-| 2 | `2 · Crear la escena de la arena` | Crea **`Assets/Scenes/Arena_Mercenaries.unity`** de cero y la deja jugable: NetworkManager, NetworkGameManager + modo de juego, ConnectionHUD, menú de entrada, cámara de lobby, luz, la arena entera, los campamentos, **el NavMesh horneado** y el HUD. La agrega a Build Settings. |
-| 3 | `3 · Regenerar la arena en la escena actual` | Rehace solo la geometría. **Ojo: borra la arena entera**, así que si ya la editaste a mano, no lo uses. |
-| 4 | `4 · Acomodar las bases en simetría de 3` | Pone las tres bases a 120° exactos y mirando al centro, **sin tocar el resto de la escena**. La del equipo 1 manda: se respeta dónde la pusiste y las otras se acomodan a partir de esa. |
-| 5 | `5 · Espejar la selección a los otros 2 sectores` | Decorás **un tercio** de la arena a mano y esto lo copia girado 120° y 240°. Ctrl+Z deshace todo de una. |
-| 6 | `6 · Revisar el montaje` | Informe en la consola de qué está bien y qué falta (prefabs, bases, simetría, NavMesh, HUD, rejas…). |
+Las herramientas que la crearon (los ocho pasos del menú `Mercenarios`) se borraron una vez
+que cumplieron. Si algún día necesitás **regenerar la arena** —por ejemplo para rehacer las
+rejas, o para un segundo mapa— hay que restaurarlas primero; el comando y su trampa están
+en `PENDIENTES.md`.
 
-### Cómo decorar con el pack medieval
+## La sala de espera
+
+`LobbyManager` (en `Scripts/Network/`) es la sala compartida: una `SyncList` con autoridad
+de servidor que valida nombre repetido y cupo por equipo, maneja el "listo", saca a quien
+se desconecta y guarda el arranque del host en un `SyncVar`. Vive en el mismo
+`NetworkObject` que el `NetworkGameManager` y el modo.
+
+`UI_LobbyPanel` (en `GameMode/UI/`) es todo lo que se ve, **dibujado por código**: no hay
+prefab que armar ni referencias que cablear, solo el componente y su lista de clases
+elegibles.
+
+El flujo:
+
+1. Entrás y quedás de **espectador** automáticamente.
+2. Escribís tu nombre arriba (Enter para confirmarlo).
+3. **Unirte** en un lugar libre de un equipo.
+4. Tocás **tu propio ícono** para abrir la grilla de clases (el fondo la cierra sin elegir).
+5. **Confirmar** te pone en verde. Volver a tocarlo te apaga.
+6. El **host** aprieta **Start** cuando quiera. Solo él ve el botón; se pone verde cuando
+   están todos listos, y la línea de estado le dice cuántos faltan.
+
+Para volver a ser espectador, **Espectador** en la última fila de la columna de la derecha.
+
+**Dos cosas que no son obvias:**
+
+- El panel aparece **solo con conexión** (`LobbyManager.IsLobbyReady`, que se prende en
+  `OnStartClient`). Antes de hostear o conectarte lo único en pantalla es el recuadro de
+  red.
+- El `NetworkGameManager` mete cada conexión a la escena apenas carga
+  (`SceneManager.AddConnectionToScene`). Sin eso el `NetworkObject` DE ESCENA de la sala no
+  se spawnea del lado del cliente y el panel se queda mudo. Es el candado que costó
+  encontrar.
+
+## ESC, el cursor y el recuadro de red
+
+El `ConnectionHUD` se **minimiza solo** al conectarse, y **ESC lo abre y lo cierra en
+cualquier momento** —también en plena partida— porque ahí está el botón de Desconectar.
+Mientras está abierto suelta el mouse y apaga el mapa de input de juego, así la cámara no
+gira mientras buscás el botón.
+
+Eso lo arbitra **`UICursor`** (`Scripts/UI/`): el único dueño del cursor y del modo de
+input. Cada menú los pide mientras los necesita y los suelta al cerrarse. Antes cada uno
+los fijaba por su cuenta y ganaba el último en cerrarse. Si agregás un menú nuevo:
+
+```csharp
+void OnEnable()  => UICursor.Request(this);
+void OnDisable() => UICursor.Release(this);
+```
+
+La rueda de habilidades es la excepción declarada: pide el cursor con
+`blockGameplayInput: false`, porque elige la opción con el movimiento del jugador.
+
+## Decorar la arena
 
 El pack (`AssetsExtra/Medieval Cute Series/Prefabs`) tiene justo lo que hace falta:
-`Tower_1/2` y `Wall_1/2/3` para el perímetro, `Pillar_1/2` para reemplazar mis columnas,
+`Tower_1/2` y `Wall_1/2/3` para el perímetro, `Pillar_1/2` para reemplazar las columnas,
 `Tent_1/2` y `Sztandar` (estandarte) para las bases, `Barier_2` y `Archer Shield 1` como
 coberturas, `Fence_1/2` para las rejas, y rocas, arbustos y árboles para rellenar.
 
-El método es siempre el mismo: **poné todo en un solo sector** (el tercio que va de una base
-a la siguiente), acomodalo hasta que te guste, seleccionalo entero y apretá
-`5 · Espejar la selección`. Los otros dos tercios aparecen idénticos. Así el mapa queda
-hecho a mano pero sigue siendo justo para los tres equipos — que es lo que un 3c3c3 necesita.
+El método era: **poner todo en un solo sector** (el tercio que va de una base a la
+siguiente), acomodarlo, seleccionarlo entero y espejarlo a los otros dos con el paso 5. Así
+el mapa queda hecho a mano pero sigue siendo justo para los tres equipos — que es lo que un
+3c3c3 necesita.
 
-Dos detalles: las copias mantienen el vínculo con el prefab (cambiás el original y cambian
-las tres), y si algún adorno tiene collider grande, volvé a hornear el NavMesh después.
+**Ese espejado ya no está** (se fue con `MercLayoutTools.cs`). Para seguir decorando, o lo
+restaurás desde `PENDIENTES.md`, o duplicás y rotás a mano: los sectores están a 120° y
+240° alrededor del centro de la arena.
 
-Te pide guardar lo que tengas abierto antes de cambiar de escena, y si la escena ya existe
-te pregunta antes de reemplazarla.
-
-> El paso 2 crea `Assets/Scenes/Arena_Mercenaries.unity`. La escena que estamos usando se
-> llama **`Mercenaries_Gamemode.unity`** porque la renombraste después de generarla — o sea
-> que si volvés a correr el paso 2 te va a crear una segunda escena en vez de pisar la tuya.
+Dos detalles que siguen valiendo: las copias mantienen el vínculo con el prefab (cambiás el
+original y cambian las tres), y si algún adorno tiene collider grande, volvé a hornear el
+NavMesh después.
 
 ### Si el Objetivo no aparece
 
@@ -137,41 +196,41 @@ Es lo primero que suele fallar. Tres causas, en orden:
 
 1. **No esperaste lo suficiente.** Sale a los **90 s** (30 de preparación + 60 de espera).
    El HUD lo dice: *"Próximo Objetivo en 0:45"*.
-2. **El campo `Objective Prefab` está vacío.** Corré `6 · Revisar el montaje`: busca el
-   prefab por componente y te ofrece asignarlo.
-3. **El prefab no está registrado como spawneable en FishNet.** Mismo menú lo detecta;
-   se arregla con `Tools ▸ Fish-Networking ▸ Utility ▸ Refresh Default Prefabs`.
+2. **El campo `Objective Prefab` está vacío.** Se cablea por COMPONENTE, no por ruta: el
+   Objetivo es "el prefab que tiene `MercObjective`", así que renombrarlo o moverlo no
+   rompe nada — pero si el campo quedó vacío hay que arrastrarlo a mano en el inspector
+   del `MercenariesGameMode`.
+3. **El prefab no está registrado como spawneable en FishNet.** Se arregla con
+   `Tools ▸ Fish-Networking ▸ Utility ▸ Refresh Default Prefabs`.
 
 Para probar sin esperar el reloj: con el juego corriendo, clic derecho en el componente
 `MercenariesGameMode` → **DEBUG · Hacer aparecer el Objetivo ya**.
 
-Y desde que se cablea **por componente y no por ruta**, renombrar o mover el prefab ya no
-rompe el cableado: el Objetivo es "el prefab que tiene `MercObjective`", se llame como se
-llame.
-
-## Lo que la herramienta NO puede hacer por vos
+## Lo que hay que cuidar a mano
 
 1. **Elegir el ritmo.** Los tiempos por defecto son los de la sección 4. Para una demo con
    público en vivo, `FirstObjectiveDelay` en 60 s puede ser mucho: bajalo a 20-30 s.
 2. **El `MaxLevel` del jugador tiene que coincidir con `MaxTeamLevel`.** Los dos están en
    3 hoy (el `AbilitySystemComponent` del prefab `Player` y el modo de juego). Si subís
    uno, subí el otro.
-3. **Balancear los NPCs.** El fantasma hereda los stats de la jam. Miralo en el prefab
-   nuevo (`Enemy_Ghost_Networked`): vida, `FallbackDamage`, `DetectionRadius`,
-   `AttackCooldown`.
-4. **Build Settings para la demo.** La escena queda agregada pero al final de la lista;
-   movela al **primer lugar** antes de compilar la build que les pasás a tus amigos, o
-   van a arrancar en otra escena.
-5. **Las clases del lobby.** Ya están las tres (Bárbaro / Pícaro / Paladín = tanque / daño
-   / soporte) en el prefab `UI_LobbyMenu`. Si sumás una cuarta, agregala ahí.
-6. **Arte.** Todo es primitivas y colores planos. Cuando tengas modelos, reemplazá los
+3. **Balancear los NPCs.** Ver la sección 4 bis: los fantasmas siguen haciendo poco daño.
+4. **Build Settings para la demo.** La escena tiene que quedar **primera** antes de
+   compilar la build que les pasás a tus amigos, o van a arrancar en otra escena.
+5. **Las clases de la sala.** Están las tres (Bárbaro / Pícaro / Paladín = tanque / daño /
+   soporte) en el campo `SelectableClasses` del `UI_LobbyPanel` de la escena. Si sumás una
+   cuarta, agregala ahí **y** en `MainBaseClasses` del prefab `Player`: el índice que viaja
+   por la red es la posición en esa lista.
+6. **Los registros de red.** Cada `GA_*` o `GE_*` nuevo hay que agregarlo con
+   `Mercenarios ▸ Actualizar los registros de red`, o su VFX se ve solo en el host.
+7. **Arte.** Todo es primitivas y colores planos. Cuando tengas modelos, reemplazá los
    hijos visuales: la lógica no mira los meshes en ningún lado.
 
 ## Para probarlo vos solo
 
-Play en el editor → `Iniciar Host` → nombre, equipo, clase. Con un solo jugador la partida
-igual corre entera (preparación, Objetivo, entrega, victoria). Para probar de verdad los
-tres equipos hacen falta build + editor, como venías haciendo.
+Play en el editor → `Iniciar Host` → nombre, equipo, clase, Confirmar, **Start**. Con
+`MinPlayersToStart: 1` la partida corre entera con un solo jugador (preparación, Objetivo,
+entrega, victoria). Para probar de verdad los tres equipos hacen falta build + editor, como
+venías haciendo.
 
 ---
 
@@ -212,9 +271,15 @@ mata un fantasma          →    NetworkASC.AwardKill       →   SyncList: nive
 | `UI/UI_MatchAnnouncer.cs` | Los avisos grandes del centro. | ídem |
 | `UI/UI_ObjectiveMarker.cs` | El rombo con la distancia que señala el Objetivo. | ídem |
 | `UI/MercUIFactory.cs` | Fabriquita de recuadros y textos que usan los tres de arriba. | — |
-| `Editor/MercSetupTools.cs` | Los tres menús: prefabs, escena y cableado. | — |
-| `Editor/MercArenaBuilder.cs` | La FORMA de la arena: piso, muro, meseta, tablados, rampas, bases y campamentos. Separado de los menús para poder iterar el diseño sin tocar la plomería. | — |
-| `Editor/MercLayoutTools.cs` | Los menús 4, 5 y 6: acomodar bases, espejar la selección y revisar el montaje. A diferencia del generador, estos **no borran nada** y todo se deshace con Ctrl+Z. | — |
+| `Editor/MercRegistryTools.cs` | El único ítem que quedó del menú: rellena los dos registros de red (habilidades y efectos). | — |
+| `Editor/MercEnemySpawnerEditor.cs` | El inspector de los campamentos, con el botón *Copiar esta tabla a todos*. | — |
+
+Y fuera de esta carpeta, dos piezas que la sala necesita:
+
+| Archivo | Qué es |
+|---|---|
+| `Network/LobbyManager.cs` | La sala compartida en una `SyncList` con autoridad de servidor. Comparte el `NetworkObject` del modo. |
+| `UI/UICursor.cs` | El árbitro del cursor y del modo de input. Ver la sección 2. |
 
 **Todo el HUD se dibuja por código.** No hay prefab de UI que cablear: cada componente se
 arma solo y se crea su propio Canvas. Es a propósito — así no se rompe cuando tocás un
@@ -271,11 +336,15 @@ no tenés definitiva, y tenés que elegir por qué rampa salir con dos equipos m
 
 ### Las medidas, si querés tocarlas
 
-Están todas juntas arriba de [`Editor/MercArenaBuilder.cs`](Editor/MercArenaBuilder.cs) —
-radio de la arena, altura de la meseta, distancia de las bases, ancho de los carriles. La
-geometría se escribe **una sola vez** en el marco de un sector (origen en el centro, +Z
-hacia la base) y se instancia tres veces girada 120°: no hay tres copias del código, hay un
-sector y tres rotaciones. Cambiás un número y las tres bases cambian juntas.
+Estaban todas juntas arriba de `Editor/MercArenaBuilder.cs` — radio de la arena, altura de
+la meseta, distancia de las bases, ancho de los carriles. La geometría se escribía **una
+sola vez** en el marco de un sector (origen en el centro, +Z hacia la base) y se
+instanciaba tres veces girada 120°: no había tres copias del código, había un sector y tres
+rotaciones.
+
+**Ese archivo ya no está.** La arena de la escena es el resultado de haberlo corrido, y
+ahora se edita a mano. Para volver a tocar las medidas hay que restaurarlo primero — ver
+`PENDIENTES.md`.
 
 ## La línea de tiempo de una partida
 
@@ -414,7 +483,7 @@ experiencia que se muestra la escribe el modo de juego cada medio segundo.
 |---|---|---|
 | Vida, ataque y velocidad | `Assets/48toPlay/ASDef_WaveEnemy.asset` | **5 de vida**, **5 de ataque**, 3,5 de velocidad |
 | Cómo pega | `Assets/48toPlay/GE_EnemyDamage.asset` | daño = 1 × el ataque del fantasma → **5 por golpe** |
-| Cada cuánto pega | prefab `Enemy_Ghost_Networked` → `MercEnemyAI.AttackCooldown` | 1,6 s → ~3 de daño por segundo |
+| Cada cuánto pega | prefab `Net_Enemy` → `MercEnemyAI.AttackCooldown` | 1,6 s → ~3 de daño por segundo |
 | A qué distancia te ve | `MercEnemyAI.DetectionRadius` | 9 m |
 | Hasta dónde te persigue | `MercEnemyAI.LeashRadius` | 18 m desde su puesto |
 | Cuántos hay y cada cuánto vuelven | cada `MercEnemySpawner` → `Count`, `RespawnSeconds` | 2-3 por campamento, 20 s |
@@ -427,11 +496,14 @@ muy poco: cualquier ataque los borra).
 
 ### El resto del bestiario
 
-`Mercenarios ▸ 7 · Convertir enemigos de la jam a red` pasa a red los `Enemy_*` de
-`Assets/48toPlay` y les **traslada la configuración que ya tenían** (alcance, cadencia,
-habilidad, daño y experiencia): el balance de la jam no se tira. Convierte lo que tengas
-seleccionado en el Project, o todos si no seleccionás nada, y **nunca pisa un prefab que ya
-exista** — si querés rehacer uno, borralo primero.
+La herramienta que los traía (`Mercenarios ▸ 7`) ya no está, y quedaron **cuatro `Enemy_*`
+sin convertir** en `48toPlay`: `DamageBoss`, `IceBoss`, `IceMage` y `RockMage`. Si los
+querés en la demo, restaurá `MercSetupTools.cs` — ver `PENDIENTES.md`.
+
+Lo que hacía: pasar a red los `Enemy_*` de `Assets/48toPlay` **trasladando la configuración
+que ya tenían** (alcance, cadencia, habilidad, daño y experiencia), así el balance de la jam
+no se tiraba. Convertía lo seleccionado en el Project, o todos si no seleccionabas nada, y
+**nunca pisaba un prefab que ya existiera**.
 
 | Sale como | Vida / Ataque | Cómo pelea | Experiencia |
 |---|---|---|---|
@@ -524,10 +596,9 @@ propio de cada uno).
 
 ### El catálogo: qué prefab es cada tipo
 
-`Mercenarios ▸ 8 · Crear o actualizar el catálogo de enemigos` crea
-`Assets/Resources/MercEnemyCatalog.asset` y lo llena buscando los prefabs por nombre
-(`Net_Mage`, `Net_Boss`…; para el fantasma acepta también `Net_Enemy`, que es como se llamó
-el primero). **Lo que ya esté cargado no lo pisa.**
+El catálogo vive en `Assets/Resources/MercEnemyCatalog.asset` y ya está cargado: dice qué
+prefab es cada tipo (`Net_Mage`, `Net_Boss`, `Net_Enemy`). La herramienta que lo armaba
+(`Mercenarios ▸ 8`) tampoco está, así que hoy se edita a mano en el inspector del asset.
 
 Los campamentos eligen TIPOS, no prefabs, y el catálogo es el único lugar donde vive esa
 relación. Por eso cambiar el modelo de los fantasmas —o pasar todos los magos a una versión
@@ -558,7 +629,7 @@ vacío media partida.
 
 | Qué | Dónde |
 |---|---|
-| Medidas de la arena (radio, alturas, distancias) | `Editor/MercArenaBuilder.cs`, las constantes de arriba |
+| Medidas de la arena (radio, alturas, distancias) | a mano en la escena: el generador se borró |
 | Tamaño de la sala segura | cada `MercTeamBase` → `SafeRoomSize` |
 | Techo y paredes invisibles | `MercArenaBounds` (ver abajo) |
 | Rejas de la preparación | `MercGate` (ver abajo) |
@@ -643,13 +714,15 @@ los índices de los assets ya guardados):
 
 - **Los NPCs no roban el Objetivo.** El documento de diseño dice que intentan llevarlo de
   vuelta al centro; hoy solo pelean. Es un agregado chico sobre `MercEnemyAI`.
-- **Nadie está encerrado durante la preparación.** Podés salir de la base antes de que
-  arranque. Se arregla con una pared que se apague al empezar (o chequeando
-  `State == Warmup`).
-- **Enemigos a distancia**: `MercEnemyAI.AbilityToUse` ya está listo para el mago de la
-  jam, pero ningún campamento lo usa todavía.
 - **Marcadores de compañeros** (los rombitos con el nombre de cada aliado, como en las
   capturas de referencia): el marcador del Objetivo ya sirve de molde.
-- **Sin sonido**: los avisos son solo texto.
+- **Sin sonido**: los avisos son solo texto. Es lo que sigue en el plan de `PENDIENTES.md`.
+- **Sin cámara espectador.** La sala ya marca quién entra como espectador, pero todavía no
+  hay nada que mirar con: se quedan con la cámara de la escena.
 - **Sin pantalla de fin de partida**: hoy el resultado sale en el reloj del marcador y en
   el cartel del centro, y a los 15 s arranca otra.
+- **La sala no tiene scroll**: con nueve jugadores las columnas de tres entran justas.
+
+Dos que estaban acá y ya se resolvieron: **encerrar a los equipos en la preparación** (lo
+hace `MercGate`, sección 4 ter) y **los enemigos a distancia** (el mago y el jefe usan
+habilidades; el jefe encadena aura + bola de fuego con `GA_BossAbility`).
