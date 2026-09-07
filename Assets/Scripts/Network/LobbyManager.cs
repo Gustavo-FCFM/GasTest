@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using FishNet;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
@@ -81,6 +82,15 @@ public class LobbyManager : NetworkBehaviour
              "pueda darse por cumplido. En 1 alcanza con vos para probar solo.")]
     public int MinPlayersToStart = 1;
 
+    // El HOST apreto Start. Es lo que destraba la preparacion: antes arrancaba sola en
+    // cuanto todos estaban listos, y eso le sacaba al host la decision de esperar a
+    // alguien que todavia no se conecto.
+    private readonly SyncVar<bool> _netStarted = new SyncVar<bool>();
+    public bool MatchStarted => _netStarted.Value;
+
+    // Si ESTE proceso es el host. La UI lo usa para mostrar el boton de Start solo a
+    // quien puede apretarlo.
+    public static bool LocalIsHost => InstanceFinder.IsHostStarted;
     // La sala entera. Es lo único que viaja: el panel de la sala se dibuja leyendo
     // esto, sin un solo RPC extra.
     private readonly SyncList<LobbyEntry> _entries = new SyncList<LobbyEntry>();
@@ -96,6 +106,22 @@ public class LobbyManager : NetworkBehaviour
     // CICLO DE VIDA
     // =========================================================
 
+    // Estado de red en variables PROPIAS, no en las propiedades de FishNet.
+    //
+    // IsSpawned, IsClientInitialized y LocalConnection TIRAN NullReference si el
+    // NetworkObject todavia no asocio este behaviour — pasa mientras la escena carga, y
+    // tambien si la lista NetworkBehaviours del NetworkObject quedo sin poblar. La UI
+    // consulta la sala CADA FRAME, asi que no puede apoyarse en propiedades que
+    // revientan: se anota el estado a mano en OnStartClient/OnStopClient, que son los
+    // unicos momentos en los que leerlas es seguro.
+    private bool _netReady;
+    private int  _localClientId = -1;
+
+    // Si ya se puede hablar con la sala. La UI la consulta cada frame, por eso NO puede
+    // usar IsSpawned: esa propiedad TIRA EXCEPCION antes de que el objeto se inicialice,
+    // y un chequeo de null no la salva.
+    public bool IsLobbyReady => _netReady;
+
     private void Awake() => Instance = this;
 
     private void OnDestroy()
@@ -106,7 +132,6 @@ public class LobbyManager : NetworkBehaviour
     public override void OnStartServer()
     {
         base.OnStartServer();
-
         // Al desconectarse alguien hay que sacarlo de la sala, o su fila queda ahí para
         // siempre y el gate de "todos listos" no se cumple nunca porque espera a un
         // fantasma. Es el modo de fallo más molesto de una sala de espera.
@@ -123,6 +148,11 @@ public class LobbyManager : NetworkBehaviour
     {
         base.OnStartClient();
         _entries.OnChange += HandleEntriesChanged;
+
+        // Estado de red en variables PROPIAS: ver el comentario de TryGetLocalEntry.
+        _netReady      = true;
+        _localClientId = LocalConnection != null ? LocalConnection.ClientId : -1;
+
         OnLobbyChanged?.Invoke(); // la lista ya puede venir poblada al conectarse
     }
 
@@ -130,6 +160,9 @@ public class LobbyManager : NetworkBehaviour
     {
         base.OnStopClient();
         _entries.OnChange -= HandleEntriesChanged;
+
+        _netReady      = false;
+        _localClientId = -1;
     }
 
     private void HandleEntriesChanged(SyncListOperation op, int index,
@@ -162,9 +195,19 @@ public class LobbyManager : NetworkBehaviour
         return false;
     }
 
-    // La fila de ESTE cliente, si ya se anotó.
+    // La fila de ESTE cliente, si ya se anoto.
+    //
+    // El guard va ANTES de tocar LocalConnection: esa propiedad de FishNet TIRA una
+    // excepcion si el NetworkBehaviour todavia no se inicializo, asi que compararla
+    // contra null no protege nada — revienta al LEERLA. Y la UI la consulta cada frame,
+    // incluso antes de que haya conexion.
     public bool TryGetLocalEntry(out LobbyEntry entry)
-        => TryGetEntry(LocalConnection != null ? LocalConnection.ClientId : -1, out entry);
+    {
+        entry = default;
+        if (!_netReady || _localClientId < 0) return false;
+
+        return TryGetEntry(_localClientId, out entry);
+    }
 
     // Cuántos jugadores (sin espectadores) hay en un equipo.
     public int CountInTeam(int team)
@@ -301,6 +344,19 @@ public class LobbyManager : NetworkBehaviour
             return;
         }
         _entries.Add(entry);
+    }
+
+    // El HOST pide arrancar la partida. Solo el host: cualquier otro cliente que mande
+    // esto se ignora en silencio, porque la decision de empezar es suya.
+    //
+    // No exige AllReady a proposito: el boton se pinta de otro color cuando falta gente,
+    // pero si el host quiere arrancar igual (alguien se colgo, o esta probando solo),
+    // puede. La UI comunica el estado; la decision es del host.
+    [ServerRpc(RequireOwnership = false)]
+    public void ServerRequestStart(NetworkConnection sender = null)
+    {
+        if (sender == null || !sender.IsHost) return;
+        _netStarted.Value = true;
     }
 
     [Server]

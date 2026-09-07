@@ -148,7 +148,10 @@ public class UI_LobbyMenu : MonoBehaviour
     private void PushSelection()
     {
         LobbyManager lobby = LobbyManager.Instance;
-        if (lobby == null || !InstanceFinder.IsClientStarted) return;
+        // IsSpawned ademas de IsClientStarted: el cliente puede estar "arrancado" pero el
+        // objeto de red del lobby todavia no haber llegado, y ahi cada ServerRpc tira
+        // "Cannot complete action because client is not active" en la consola.
+        if (lobby == null || !lobby.IsSpawned || !InstanceFinder.IsClientStarted) return;
 
         string playerName = NameInput != null && !string.IsNullOrWhiteSpace(NameInput.text)
             ? NameInput.text.Trim()
@@ -431,7 +434,7 @@ public class UI_LobbyMenu : MonoBehaviour
         // "Listo" en la sala: es lo que destraba el arranque de la preparación para
         // todos (ver LobbyManager.AllReady y el gate de MercenariesGameMode).
         LobbyManager lobby = LobbyManager.Instance;
-        if (lobby != null)
+        if (lobby != null && lobby.IsSpawned)
         {
             lobby.ServerSubmit(playerName, spectator ? 0 : _teamID,
                                spectator ? -1 : IndexOfClass(_chosenClass), spectator);

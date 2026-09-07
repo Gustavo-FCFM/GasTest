@@ -131,6 +131,20 @@ public class NetworkGameManager : NetworkBehaviour
         // entrada (nombre + equipo), que llega por SpawnRequestBroadcast. Así el equipo
         // lo elige el jugador en vez de asignarse automático, y el personaje entra a
         // la partida ya con su nombre puesto.
+
+        // PERO SI se mete la conexion a la escena, y esto es imprescindible para la SALA.
+        //
+        // Un NetworkObject DE ESCENA (el que lleva LobbyManager y MercenariesGameMode)
+        // solo se spawnea para las conexiones que pertenecen a esa escena. Antes eso
+        // pasaba recien al aparecer el jugador (AddOwnerToDefaultScene), o sea DESPUES de
+        // confirmar el menu — pero la sala necesita hablar con el servidor JUSTO ANTES,
+        // para anotarte y para que los demas te vean elegir equipo.
+        //
+        // Sin esto el cliente no observaba el LobbyManager: su OnStartClient nunca corria
+        // y cada ServerRpc de la sala moria con "client is not active". Era un circulo
+        // cerrado — no habia jugador porque no se podia confirmar, y no se podia
+        // confirmar porque no habia jugador.
+        SceneManager.AddConnectionToScene(conn, gameObject.scene);
     }
 
     // Llega el pedido del menú de entrada de un cliente. La conexión la da FishNet

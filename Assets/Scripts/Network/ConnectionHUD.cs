@@ -43,10 +43,43 @@ public class ConnectionHUD : MonoBehaviour
     private string _portField;
     private string _status = "";
 
-    private void Awake()
+    // El recuadro estorba durante la partida: tapa una esquina y encima te obliga a
+    // tener el mouse suelto. Con ESC se abre y se cierra, y mientras esta abierto pide
+    // el cursor — asi se puede apretar Desconectar en cualquier momento.
+    //
+    // SIN conexion queda abierto siempre: es lo unico que hay en pantalla y sin el no
+    // se puede ni hostear ni conectarse.
+    private bool _panelOpen = true;
+    private bool _wasConnected;
+
+    private void OnDisable() => UICursor.Release(this);
+
+    private void Update()
     {
-        _addressField = HostAddress;
-        _portField    = Port.ToString();
+        bool connected = Nm != null && (Nm.IsServerStarted || Nm.IsClientStarted);
+
+        if (!connected)
+        {
+            // Sin conexion queda abierto siempre: es lo unico que hay en pantalla, y sin
+            // el no se puede ni hostear ni conectarse.
+            _panelOpen = true;
+        }
+        else
+        {
+            // Al conectarse se guarda solo: si no, se queda encima del panel de la sala,
+            // que es justo la esquina donde va la IP.
+            if (!_wasConnected) _panelOpen = false;
+            if (Input.GetKeyDown(KeyCode.Escape)) _panelOpen = !_panelOpen;
+        }
+
+        _wasConnected = connected;
+
+        // Con el recuadro abierto el cursor va suelto, conectado o no. Antes se pedia
+        // SOLO estando conectado, y al desconectarse pasaba esto: el recuadro volvia a
+        // aparecer pero nadie tenia el cursor pedido, asi que se trababa al centro y no
+        // habia forma de apretar Iniciar Host de nuevo.
+        if (_panelOpen) UICursor.Request(this);
+        else            UICursor.Release(this);
     }
 
     private NetworkManager Nm => InstanceFinder.NetworkManager;
@@ -106,11 +139,24 @@ public class ConnectionHUD : MonoBehaviour
         GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(scale, scale, 1f));
 
         const float pad = 10f;
-        GUILayout.BeginArea(new Rect(pad, pad, 280f, 260f), GUI.skin.box);
-        GUILayout.Label("<b>Red — Prueba de conexión</b>", RichLabel());
 
         bool serverStarted = Nm != null && Nm.IsServerStarted;
         bool clientStarted = Nm != null && Nm.IsClientStarted;
+
+        // Minimizado: solo un cartelito en la esquina que recuerda como volver.
+        if (!_panelOpen)
+        {
+            GUILayout.BeginArea(new Rect(pad, pad, 190f, 30f), GUI.skin.box);
+            GUILayout.Label("<b>ESC</b> — menú de red", RichLabel());
+            GUILayout.EndArea();
+            GUI.matrix = prev;
+            return;
+        }
+
+        float height = serverStarted || clientStarted ? 120f : 260f;
+        GUILayout.BeginArea(new Rect(pad, pad, 280f, height), GUI.skin.box);
+        GUILayout.Label("<b>Red — Prueba de conexión</b>", RichLabel());
+
 
         if (!serverStarted && !clientStarted)
         {
@@ -137,6 +183,9 @@ public class ConnectionHUD : MonoBehaviour
             GUILayout.Space(6);
             if (GUILayout.Button("Desconectar", GUILayout.Height(32)))
                 Disconnect();
+
+            GUILayout.Space(2);
+            GUILayout.Label("<i>ESC oculta este recuadro</i>", RichLabel());
         }
 
         if (!string.IsNullOrEmpty(_status))

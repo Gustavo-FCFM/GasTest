@@ -1141,7 +1141,7 @@ public class AbilitySystemComponent : MonoBehaviour
     // =========================================================
 
     // Fracción (0 a 1) de cooldown restante para el efecto que tenga este
-    // tag entre sus GrantedTags. La usa AbilityCooldownUI.
+    // tag entre sus GrantedTags. La usan UI_AbilitySlot y UI_UltimateSlot.
     public float GetCooldownRemainingNormalized(EGameplayTag tag)
     {
         foreach (var e in ActiveEffects)

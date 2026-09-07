@@ -7,7 +7,7 @@ using System.Collections.Generic;
 //
 // "Nameplate" WORLD-SPACE sobre la cabeza de cada personaje: barra de vida
 // coloreada por equipo, sus buffs/debuffs, y (para enemigos) el aviso de Crítico
-// mejorado. Reemplaza al viejo HealthBarNPC, que solo hacía vida + billboard.
+// mejorado. Reemplazó al viejo HealthBarNPC de la game jam, que ya no existe.
 //
 // REGLAS DE VISIBILIDAD (según la relación con el jugador LOCAL):
 //  - Aliado (mismo TeamID) → barra VERDE, se ve a TRAVÉS de las paredes.
@@ -26,8 +26,8 @@ using System.Collections.Generic;
 // (sin NetworkASC lee el ASC local directo).
 //
 // SETUP (prefab del Player): este componente va en la RAÍZ (junto al ASC), y se le
-// asignan las referencias del canvas world-space hijo (el que ya tenías con el
-// HealthBarNPC — reemplazá ese script por este).
+// asignan las referencias del canvas world-space hijo (barra y relleno). A los
+// enemigos se lo pone solo el paso 1 del menú Mercenarios, al convertirlos a red.
 // ============================================================
 [RequireComponent(typeof(AbilitySystemComponent))]
 public class UI_WorldHealthbar : MonoBehaviour

@@ -329,6 +329,15 @@ public class PlayerController : NetworkBehaviour
     // remotas/servidor).
     private UI_ClassMenu _classMenu;
 
+    // La camara que este jugador instancio para si mismo (solo el dueno tiene una).
+    // Se guarda para poder destruirla al despawnear: ver OnStopClient.
+    private GameObject _ownerCamera;
+
+    // La camara de la escena (la del lobby) que se apaga al spawnear. Se guarda para
+    // poder PRENDERLA de vuelta al desconectarse: Camera.main solo devuelve camaras
+    // activas, asi que una vez apagada no hay como volver a encontrarla.
+    private GameObject _lobbyCamera;
+
     // Habilidad de zona (IGroundTargetAbility) que se está apuntando ahora mismo,
     // mientras se mantiene su botón. Ver UI_GroundTargetIndicator.
     private GameplayAbility _groundTargetAbility;
@@ -425,17 +434,23 @@ public class PlayerController : NetworkBehaviour
             // Habilitar el input del Input System nuevo solo para el dueño local.
             if (_input != null) _input.InitializeForOwner();
 
-            if (Camera.main != null) Camera.main.gameObject.SetActive(false);
+            if (Camera.main != null)
+            {
+                _lobbyCamera = Camera.main.gameObject;
+                _lobbyCamera.SetActive(false);
+            }
 
             if (CameraPrefab != null)
             {
                 GameObject camObj = Instantiate(CameraPrefab);
+                _ownerCamera = camObj;
                 ThirdPersonOrbitCam cam = camObj.GetComponent<ThirdPersonOrbitCam>();
                 if (cam != null)
                 {
                     cam.Target = this.transform;
-                    Cursor.lockState = CursorLockMode.Locked;
-                    Cursor.visible = false;
+                    // El cursor lo arbitra UICursor: si hay un menu abierto (la sala, el
+                    // recuadro de red con ESC) no se lo traga el juego.
+                    UICursor.Apply();
                 }
 
                 // Menú ÚNICO de clases (UI_ClassMenu): sirve tanto para elegir la
@@ -484,6 +499,27 @@ public class PlayerController : NetworkBehaviour
         if (ASC != null) ASC.OnDeath -= HandlePlayerDeath;
         if (LocalPlayer == this) LocalPlayer = null;
         if (base.IsOwner && _input != null) _input.ShutdownOwner();
+
+        // La camara propia se destruye con el jugador. Sin esto quedaba viva al
+        // desconectarse o al respawnear, y como trae AudioListener terminabas con dos en
+        // la escena (la suya y la del lobby, que vuelve a habilitarse) — Unity avisa
+        // "There are 2 audio listeners in the scene" y el sonido queda indefinido.
+        if (_ownerCamera != null)
+        {
+            // Apagarla ANTES de destruirla: Destroy es diferido al fin del frame, y si
+            // se prende la del lobby en el medio quedan dos AudioListener vivos.
+            _ownerCamera.SetActive(false);
+            Destroy(_ownerCamera);
+            _ownerCamera = null;
+        }
+
+        // Y devolver la camara de la escena, o al desconectarse te quedas sin ninguna:
+        // pantalla negra con el recuadro de red flotando encima.
+        if (_lobbyCamera != null)
+        {
+            _lobbyCamera.SetActive(true);
+            _lobbyCamera = null;
+        }
     }
 
     // =========================================================

@@ -148,8 +148,7 @@ public class UI_RadialMenu : MonoBehaviour
         }
 
         MenuContainer.SetActive(true);
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        UICursor.Request(this, blockGameplayInput: false);   // la rueda usa el mapa de juego
     }
 
     // Cierra el menú, vuelve a bloquear el cursor para el modo juego, y
@@ -158,8 +157,7 @@ public class UI_RadialMenu : MonoBehaviour
     {
         if (MenuContainer != null) MenuContainer.SetActive(false);
 
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        UICursor.Release(this);
 
         return selectedIndex;
     }

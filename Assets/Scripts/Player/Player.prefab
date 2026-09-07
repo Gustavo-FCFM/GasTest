@@ -846,6 +846,7 @@ MonoBehaviour:
   ActionClipStateID: 99
   ActionClipTrigger: AttackTrigger
   ActionSpeedParam: ActionSpeedMult
+  VerticalSpeedParam: VerticalSpeed
   HoldLoopSlotName: PLACEHOLDER_HoldLoop
   HoldStartSlotName: PLACEHOLDER_HoldStart
   HoldEndSlotName: PLACEHOLDER_HoldEnd
@@ -855,6 +856,10 @@ MonoBehaviour:
   HoldTrigger: HoldTrigger
   HoldImpactTrigger: HoldImpactTrigger
   HoldingParam: IsHolding
+  AirStartSlotName: PLACEHOLDER_AirStart
+  AirLoopSlotName: PLACEHOLDER_AirLoop
+  AirLandSlotName: PLACEHOLDER_AirLand
+  LeapStateID: 96
   MainHandSocket: {fileID: 7146974001845245483}
   OffHandSocket: {fileID: 8897914063047295575}
   MovementAbility: {fileID: 0}
@@ -930,7 +935,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584139272961277849
+  _initializedTimestamp: -8584128025382236132
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
@@ -949,12 +954,12 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 16
+  <PrefabId>k__BackingField: 17
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 13623089071726480599
   SceneId: 0
   SerializedTransformProperties:
-    Position: {x: 0, y: 0.5, z: 0}
+    Position: {x: 0, y: 0, z: 0}
     Rotation: {x: 0, y: 0, z: 0, w: 1}
     Scale: {x: 1, y: 1, z: 1}
     IsValid: 1

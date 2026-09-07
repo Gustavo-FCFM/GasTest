@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 5 de septiembre de 2026
+# Pendientes — actualizado el 7 de septiembre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -37,9 +37,8 @@ Del documento anterior, ya están resueltos:
   `HitboxOffsetY` subido a 1.
 - **Hacha arrojadiza**: `SpawnOffset.y` en 1.5.
 - **Daño mágico**: `GA_SwordAttack` ya usa `GE_Class_Damage`.
-- **Barras de vida de los enemigos**: los once prefabs migrados a `UI_WorldHealthbar`
-  (corriste `Mercenarios ▸ 9`). `HealthBarNpc.cs` quedó sin usar en todo el proyecto —
-  se puede borrar.
+- **Barras de vida de los enemigos**: los once prefabs migrados a `UI_WorldHealthbar`.
+  `HealthBarNpc.cs` y todo su paso del menú ya no existen.
 - **`GA_BossAura.Radius`**: subido de 2 a 9 (lo cambié yo en esta sesión).
 
 ---
@@ -96,22 +95,108 @@ ve igual de lento.
 
 ---
 
-# 2. Montaje del lobby nuevo
+# 2. La sala nueva — YA ESTÁ MONTADA
 
-El código del lobby está terminado y compilando (ver la sección 3). Para probarlo:
+El lobby viejo (`UI_LobbyMenu` + `UI_LobbyRoster`) se cambió por **un solo panel**:
+`UI_LobbyPanel`. **La escena ya quedó armada y guardada**, no hay nada que cablear:
 
-- [ ] `LobbyManager` en el mismo GameObject que `NetworkGameManager` (comparte su
-      `NetworkObject`, igual que `MercenariesGameMode`)
-- [ ] `UI_LobbyRoster` en cualquier GameObject de la escena del lobby
-- [ ] *(Opcional)* Cablear `SpectatorToggle` y `WarningText` en `UI_LobbyMenu` — sin
-      ellos funciona igual, solo que sin opción de espectador y con el aviso de nombre
-      repetido yendo a consola
+- `LobbyManager` está en el mismo GameObject que `NetworkGameManager` (comparte su
+  `NetworkObject`, igual que `MercenariesGameMode`).
+- `UI_LobbyPanel` está en su propio GameObject, con las tres clases base ya asignadas
+  en `SelectableClasses` (Barbarian, Rogue, Paladin — las mismas del jugador).
+- El menú viejo y el marcador de sala se sacaron de la escena.
 
-Con `MinPlayersToStart: 1` lo podés probar solo: confirmás y arranca la preparación.
+La escena ya está armada y guardada; el generador que la creaba se borró (ver la sección
+del menú, más abajo).
 
-El panel se dibuja por código, así que no hay prefab de UI que armar — pero las
-posiciones y tamaños seguro quieran un ajuste cuando lo veas en pantalla (están en los
-campos del componente).
+## Cómo se usa
+
+El panel aparece **solo con conexión**: antes de iniciar el host o de conectarte, lo
+único en pantalla es el recuadro de red.
+
+1. Entrás y quedás de **espectador** automáticamente, sin tocar nada.
+2. Escribís tu nombre arriba (Enter para confirmarlo).
+3. Tocás **Unirte** en un lugar libre de un equipo.
+4. Tocás **tu propio ícono** para abrir la grilla de clases (el fondo la cierra sin
+   elegir).
+5. **Confirmar** te pone en verde. Volver a tocarlo te apaga.
+6. El **host** aprieta **Start** cuando quiera — el botón solo lo ve él, se pone verde
+   cuando todos están listos, y la línea de estado le dice cuántos faltan.
+
+Para salirte de un equipo, **Espectador** en la última fila de la columna de la derecha.
+
+**El personaje aparece recién con el Start**, no al confirmar. Antes el que confirmaba
+primero se quedaba dando vueltas por el mapa mientras los demás elegían.
+
+Con `MinPlayersToStart: 1` lo podés probar solo.
+
+## ESC y el recuadro de red
+
+El recuadro de conexión se **minimiza solo** al conectarse (si no, se queda encima de la
+IP del panel) y **ESC lo abre y lo cierra en cualquier momento**, también en plena
+partida: ahí es donde está el botón de Desconectar. Mientras está abierto suelta el mouse
+y apaga el mapa de input de juego, así la cámara no gira mientras buscás el botón.
+
+Eso lo hace **`UICursor`** (`Scripts/UI/`), que es **el único dueño del cursor y del modo
+de input**. Antes cada menú los fijaba por su cuenta y ganaba el último en cerrarse:
+cerrar el menú de clases con el recuadro de red abierto te volvía a tragar el mouse.
+Ahora cada menú los pide y los suelta, y quedan libres si los pide aunque sea uno.
+
+La **rueda de habilidades es la excepción declarada**: pide el cursor con
+`blockGameplayInput: false`, porque elige la opción con el movimiento del jugador.
+
+Si agregás un menú nuevo, el patrón es:
+
+```csharp
+void OnEnable()  => UICursor.Request(this);
+void OnDisable() => UICursor.Release(this);
+```
+
+## El menú Mercenarios — quedó en un solo ítem
+
+Los ocho pasos de armado ya cumplieron su función: la arena, los prefabs, los enemigos y
+el catálogo están hechos y guardados en la escena. Se borraron los tres archivos que los
+contenían — `MercSetupTools.cs`, `MercArenaBuilder.cs` y `MercLayoutTools.cs`.
+
+Lo único que queda en el menú es **`Actualizar los registros de red (habilidades y
+efectos)`**, en `MercRegistryTools.cs`. Hay que correrlo **cada vez que creás un `GA_*` o
+un `GE_*` nuevo**: FishNet manda el índice dentro de esas dos listas de `Resources`, así
+que una habilidad que falte tiene su VFX visible SOLO en el host. Antes había que
+acordarse de hacer click derecho ▸ *Auto-Fill From Project* sobre cada uno de los dos
+assets por separado.
+
+Ojo con una cosa: el índice tiene que significar lo mismo en todos los peers, así que
+después de rellenarlos **hay que repartir el mismo build a todos**.
+
+### Lo que se perdió con eso
+
+Dos cosas que sí funcionaban, por si algún día hacen falta:
+
+- **`3 · Regenerar la arena en la escena actual`** — el generador de la arena entera,
+  incluidas las rejas de las salas seguras (es el que corriste cuando los personajes se
+  escapaban de la jaula) y los espejados de los pasos 4 y 5.
+- **`7 · Convertir enemigos de la jam a red`** — de los siete `Enemy_*` de `48toPlay`
+  solo hay tres convertidos; faltan `DamageBoss`, `IceBoss`, `IceMage` y `RockMage`.
+
+Vuelven con un comando, apuntando al commit que los tenga:
+
+```bash
+git checkout <commit> -- Assets/Scripts/GameMode/Editor/MercSetupTools.cs Assets/Scripts/GameMode/Editor/MercArenaBuilder.cs Assets/Scripts/GameMode/Editor/MercLayoutTools.cs
+```
+
+Los tres van juntos: se llaman entre ellos (`MercArenaBuilder` usa los materiales y los
+buscadores de prefab de `MercSetupTools`, y `MercLayoutTools` usa los dos).
+
+## Qué queda por ajustar
+
+Las medidas del panel están todas en el inspector del componente: `PanelSize`,
+`ColumnWidth`, `RowHeight` y los cinco colores. Y no tiene scroll: con nueve jugadores
+las columnas de tres entran justas.
+
+`UI_LobbyMenu.cs` y su prefab ya no los usa nadie: eran la lista de clases que leía el
+generador de la arena, y ese generador se borró. Se pueden borrar los dos — pero antes
+copiá las tres clases (`Class_Barbarian`, `Class_Rogue`, `Class_Paladin`) del prefab, que
+es el único lugar del proyecto donde están juntas además del panel y del Player.
 
 ---
 
@@ -163,24 +248,26 @@ los borra).
 El riesgo con tres meses y trabajando solo **no es que falten cosas: es que todo quede
 al 80%**. Este orden es por dependencias y riesgo, no por ganas.
 
-## 1º · Lobby — CÓDIGO TERMINADO ✅
+## 1º · Lobby — TERMINADO ✅
 
-Ya está, falta solo el montaje de la sección 2. Lo que quedó implementado:
+Código y montaje, los dos. Ver la sección 2. Lo que quedó:
 
 - **`LobbyManager`** (`Scripts/Network/`): la sala compartida en una `SyncList`, con
   autoridad de servidor. Valida nombre repetido y cupo por equipo, maneja el estado
-  "listo" y saca a quien se desconecta.
-- **`UI_LobbyRoster`** (`Scripts/GameMode/UI/`): tres columnas por equipo con el cupo,
-  franja de espectadores, y una línea de estado que dice a quién se está esperando.
-- **`UI_LobbyMenu`**: te anota en la sala apenas abrís el menú (los demás te ven con `?`
-  mientras elegís), avisa del nombre repetido en vivo, y contempla al espectador.
-- **`MercenariesGameMode`**: la preparación no corre mientras falte gente por confirmar.
+  "listo", saca a quien se desconecta, y guarda el **arranque del host** (`MatchStarted`)
+  en un `SyncVar`.
+- **`UI_LobbyPanel`** (`Scripts/GameMode/UI/`): el panel entero dibujado por código — IP,
+  nombre, tres columnas de equipo, franja de espectadores, grilla de clases y los botones
+  de Confirmar y Start.
+- **`NetworkGameManager`**: mete cada conexión a la escena apenas carga. Sin eso el
+  `NetworkObject` DE ESCENA de la sala no se spawneaba del lado del cliente y el panel
+  se quedaba mudo — era el candado que trabó todo un día.
+- **`MercenariesGameMode`**: la preparación arranca con el Start del host, no sola.
+- **`UICursor`** (`Scripts/UI/`): el árbitro del cursor y del modo de input, que salió de
+  querer poder desconectarse con ESC en cualquier momento. Ver la sección 2.
 
 Sin `LobbyManager` en la escena todo se comporta como antes, así que `Test_Network` no
 cambió en nada.
-
-**Lo que sigue faltando del lobby**, cuando lo pruebes con gente: nada bloqueante, pero
-el panel no tiene scroll — con nueve jugadores las columnas de tres entran justas.
 
 ## 2º · Sonido
 
@@ -223,7 +310,8 @@ Un segundo modo trae su propio lobby, sus reglas, su balance y su HUD. Es exacta
 que se come una demo.
 
 Si querés variedad, **un segundo mapa para Mercenarios cuesta una fracción** y da la
-misma sensación de contenido. Ya tenés el generador de arena.
+misma sensación de contenido. Eso sí, el generador de arena está borrado: habría que
+restaurarlo (ver la sección 2) o armar el segundo mapa a mano.
 
 ---
 

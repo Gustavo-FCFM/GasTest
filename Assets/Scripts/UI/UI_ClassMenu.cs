@@ -151,15 +151,13 @@ public class UI_ClassMenu : MonoBehaviour
 
         _player.SetInputLocked(true);
 
-        // Modo UI: apaga el mapa Player y enciende el UI, para navegar con control
-        // sin disparar acciones de juego.
-        if (PlayerInputProvider.Local != null) PlayerInputProvider.Local.SetUIMode(true);
+        // Suelta el cursor y pasa al modo UI (apaga el mapa Player, enciende el UI) para
+        // navegar con control sin disparar acciones de juego. Lo hace UICursor, que es el
+        // único dueño de las dos cosas — ver ahí por qué.
+        UICursor.Request(this);
 
         // Arrancar con la primera tarjeta resaltada (punto de partida para el control).
         if (_cards.Count > 0) MoveSelection(1);
-
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible   = true;
     }
 
     // =========================================================
@@ -282,10 +280,7 @@ public class UI_ClassMenu : MonoBehaviour
 
         if (_player != null) _player.SetInputLocked(false);
 
-        if (PlayerInputProvider.Local != null) PlayerInputProvider.Local.SetUIMode(false);
-
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible   = false;
+        UICursor.Release(this);
     }
 
     // Crea un EventSystem si la escena no tiene uno: sin él no funciona NINGÚN

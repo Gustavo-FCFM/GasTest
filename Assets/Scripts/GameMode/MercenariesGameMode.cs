@@ -332,7 +332,10 @@ public class MercenariesGameMode : NetworkBehaviour
         //
         // Sin LobbyManager en la escena —o con RequireAllReady apagado— AllReady da
         // true y todo se comporta como antes. La escena de pruebas no cambia en nada.
-        if (State == EMatchState.Warmup && LobbyManager.Instance != null && !LobbyManager.Instance.AllReady)
+        // Ahora lo destraba el HOST con el boton Start, no el "todos listos" automatico:
+        // asi el host puede esperar a alguien que todavia no llego, o arrancar igual si
+        // alguien se colgo. AllReady pasa a ser solo el color del boton.
+        if (State == EMatchState.Warmup && LobbyManager.Instance != null && !LobbyManager.Instance.MatchStarted)
         {
             if (_slowTickTimer + dt >= 0.5f) PublishPhaseTime();
             _slowTickTimer = (_slowTickTimer + dt) % 0.5f;

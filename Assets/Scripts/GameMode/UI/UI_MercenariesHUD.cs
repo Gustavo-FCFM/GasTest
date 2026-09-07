@@ -189,6 +189,23 @@ public class UI_MercenariesHUD : MonoBehaviour
     // REFRESCO
     // =========================================================
 
+    // True mientras la partida todavia no arranco: seguimos en la sala de espera.
+    //
+    // Se mira MatchStarted y NO el "listo" del jugador local: con el panel nuevo el que
+    // confirma primero sigue en la sala esperando a los demas, y ver el marcador encima
+    // del panel era justo el empalme que molestaba.
+    //
+    // Sin LobbyManager en la escena devuelve false, asi que las escenas que no usan la
+    // sala (Test_Network) se comportan igual que antes: el marcador aparece apenas hay
+    // partida.
+    private static bool IsStillChoosingInLobby()
+    {
+        LobbyManager lobby = LobbyManager.Instance;
+        if (lobby == null) return false;
+
+        return !lobby.MatchStarted;
+    }
+
     private void Update()
     {
         if (_root == null) return;
@@ -196,7 +213,11 @@ public class UI_MercenariesHUD : MonoBehaviour
         MercenariesGameMode gm = MercenariesGameMode.Instance;
 
         // Sin partida (o antes de que llegue el objeto de red) el marcador no se muestra.
-        bool show = gm != null;
+        //
+        // Y TAMPOCO mientras sigas en la SALA eligiendo: el marcador aparecia apenas se
+        // conectaba el objeto de red, o sea encima del menu de clases y del panel de la
+        // sala. Se espera a que el jugador local haya confirmado.
+        bool show = gm != null && !IsStillChoosingInLobby();
         if (_root.gameObject.activeSelf != show) _root.gameObject.SetActive(show);
         if (!show) return;
 
