@@ -77,6 +77,18 @@ public class BotController : MonoBehaviour
              "levantado para siempre y no podría volver a usarlo.")]
     public float HoldSeconds = 1.6f;
 
+    [Header("Colisión del salto y el dash")]
+    [Tooltip("Contra qué choca un bot mientras salta o dashea. Todo MENOS la capa 7 " +
+             "(Character): los personajes no se frenan entre ellos, igual que en un dash normal.")]
+    public LayerMask CollisionMask = ~(1 << 7);
+
+    [Tooltip("Radio de la esfera que barre el camino. Un poco menos que el ancho del " +
+             "personaje, para no engancharse en cada esquina.")]
+    public float CollisionProbeRadius = 0.35f;
+
+    [Tooltip("A qué altura del pie se hace el barrido, para no chocar contra el propio suelo.")]
+    public float CollisionProbeHeight = 0.9f;
+
     [Header("Que no parezcan estatuas")]
     [Tooltip("Cuánto rodea al enemigo en cada decisión, en grados. En 0 se quedan de frente " +
              "como antes. Cada bot gira para su lado y cambia de sentido cada tanto.")]
@@ -98,6 +110,11 @@ public class BotController : MonoBehaviour
     [Tooltip("Mínimo entre dos intentos de habilidad (Q/E/R). Si están en cooldown, no pasa nada.")]
     public float AbilityInterval = 1.2f;
 
+    [Tooltip("El mismo mínimo, pero MIENTRAS SE ACERCAN. Más corto a propósito: es lo que " +
+             "hace que tiren el hacha en el camino en vez de guardarse todo para el cuerpo " +
+             "a cuerpo.")]
+    public float ApproachAbilityInterval = 0.45f;
+
     // --- referencias, resueltas en el servidor ---
     private PlayerController              _pc;
     private AbilitySystemComponent        _asc;
@@ -112,7 +129,9 @@ public class BotController : MonoBehaviour
     private bool  _subclassChosen;
 
     private AbilitySystemComponent _target;
-    private bool _retreating;             // el Pícaro está volviendo a curarse
+    private bool _retreating;   // el Pícaro está volviendo a curarse
+    private bool _chasing;      // persiguiendo al portador de la carga: nada de rodear
+    private bool _delivering;   // llevo la carga: correr al punto de entrega
     private IHoldAbility _held;           // habilidad de MANTENER en curso (el escudo)
     private float _heldUntil;
     private Vector3 _destination;
@@ -122,6 +141,8 @@ public class BotController : MonoBehaviour
 
     private bool      _dashing;      // corriendo un dash: el agente no manda mientras dure
     private Coroutine _dashRoutine;
+    private Coroutine _leapRoutine;
+
 
     // Se reusa entre búsquedas para no generar basura: la percepción corre 4 veces por
     // segundo por bot, y con nueve bots eso es mucho array descartado.
@@ -206,6 +227,92 @@ public class BotController : MonoBehaviour
     // el punto de muerte y vuelve caminando desde allá.
     public void OnServerTeleported() => WarpToNavMesh();
 
+    // Mueve al bot RESPETANDO las paredes.
+    //
+    // Mueve al bot RESPETANDO las paredes, con un barrido PROPIO.
+    //
+    // La primera versión usaba CharacterController.Move, que es lo que frena a un jugador.
+    // No alcanzó: un bot terminó a 64 m del centro y 12 m bajo el piso en pleno salto. El
+    // CharacterController tiene estado que otras partes del juego tocan —excludeLayers lo
+    // manipula el dash, y TeleportTo lo apaga y lo prende—, así que no es algo en lo que
+    // este script pueda confiar.
+    //
+    // Un SphereCast no depende de nada de eso: barre el camino que se va a recorrer y, si
+    // hay algo, deja al bot justo antes. Es lo mismo que hace el CharacterController por
+    // dentro, pero acá el estado lo controlamos nosotros.
+    private void MoveWithCollision(Vector3 delta)
+    {
+        float distance = delta.magnitude;
+        if (distance < 0.0001f) return;
+
+        Vector3 dir    = delta / distance;
+        Vector3 origin = transform.position + Vector3.up * CollisionProbeHeight;
+
+        if (Physics.SphereCast(origin, CollisionProbeRadius, dir, out RaycastHit hit,
+                               distance + 0.1f, CollisionMask, QueryTriggerInteraction.Ignore))
+        {
+            // Queda pegado a lo que chocó, sin meterse adentro.
+            transform.position += dir * Mathf.Max(0f, hit.distance - 0.1f);
+            return;
+        }
+
+        transform.position += delta;
+    }
+
+    // Red de seguridad después de un salto o un dash: si el bot quedó fuera de lo
+    // navegable —empujado por un impulso raro, o colado por un hueco— se lo devuelve a su
+    // base. Uno perdido en el vacío no vuelve solo: se queda cayendo para siempre.
+    // ¿Sigue en un lugar donde el juego quiere que esté?
+    //
+    // El invariante bueno es el NAVMESH: todo lo que el nivel considera transitable —la
+    // arena, las rampas, los pasillos y las bases, que están afuera del muro— está
+    // horneado. Estar lejos de él significa estar arriba de una pared, en el aire, o
+    // afuera del mundo.
+    //
+    // Se suma un tope de altura porque el techo invisible tiene tres huecos hacia las
+    // bases (MercArenaBounds.OpenTowardBases): por ahí se puede salir sin tocar nada.
+    private bool IsWhereItShouldBe()
+    {
+        if (!NavMesh.SamplePosition(transform.position, out _, 3f, NavMesh.AllAreas))
+            return false;
+
+        MercArenaBounds bounds = ResolveBounds();
+        if (bounds == null) return true;
+
+        return transform.position.y <= bounds.CeilingHeight + 3f;
+    }
+
+    private MercArenaBounds _bounds;
+    private bool            _boundsChecked;
+
+    private MercArenaBounds ResolveBounds()
+    {
+        if (_boundsChecked) return _bounds;
+
+        _boundsChecked = true;
+        _bounds = FindFirstObjectByType<MercArenaBounds>();
+        return _bounds;
+    }
+
+    private void RecoverIfLost()
+    {
+        if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 6f, NavMesh.AllAreas))
+        {
+            if (_agent != null && _agent.enabled) _agent.Warp(hit.position);
+            return;
+        }
+
+        MercenariesGameMode gm = MercenariesGameMode.Instance;
+        Transform spawn = gm != null ? gm.GetTeamSpawnPoint(_teamId) : null;
+
+        // El detalle importa: sin saber DÓNDE y HACIENDO QUÉ se escapan, taparlo es
+        // adivinar. Si esto aparece siempre con "saltando", el agujero está en el arco.
+        Debug.LogWarning($"[Bots] {name} quedó fuera del mapa en {transform.position} " +
+                         $"(saltando o dasheando: {_dashing}). Lo devuelvo a su base.");
+        if (_pc != null) _pc.ServerTeleportBot(spawn != null ? spawn.position : Vector3.zero,
+                                               transform.forward);
+    }
+
     // =========================================================
     // DASH
     // =========================================================
@@ -242,12 +349,9 @@ public class BotController : MonoBehaviour
         float elapsed = 0f;
         while (elapsed < duration)
         {
-            Vector3 next = transform.position + velocity * Time.deltaTime;
-
-            if (NavMesh.SamplePosition(next, out NavMeshHit hit, 1.5f, NavMesh.AllAreas))
-                transform.position = hit.position;
-            else
-                break;   // se topó con el borde de lo navegable: ahí termina el impulso
+            // Igual que el salto: por el CharacterController, que es lo que hace que el
+            // impulso se frene contra una pared en vez de atravesarla.
+            MoveWithCollision(velocity * Time.deltaTime);
 
             elapsed += Time.deltaTime;
             yield return null;
@@ -255,7 +359,71 @@ public class BotController : MonoBehaviour
 
         _dashing     = false;
         _dashRoutine = null;
-        WarpToNavMesh();
+        RecoverIfLost();
+    }
+
+    // =========================================================
+    // SALTO
+    // =========================================================
+
+    // La llama NetworkAbilitySystemComponent.ServerStartLeap cuando no hay dueño.
+    //
+    // En un jugador el salto lo aplica su CharacterController y una corutina espera a que
+    // vuelva a tocar el piso para resolver el impacto. Un bot no usa el CharacterController,
+    // así que acá se simula el arco a mano: sube, cae, y al aterrizar avisa para que el
+    // servidor resuelva el golpe en el mismo lugar donde cayó.
+    public void ServerLeap(Vector3 horizontalVelocity, float upVelocity, System.Action onLanded)
+    {
+        if (!_ready) { onLanded?.Invoke(); return; }
+
+        if (_leapRoutine != null) StopCoroutine(_leapRoutine);
+        _leapRoutine = StartCoroutine(LeapRoutine(horizontalVelocity, upVelocity, onLanded));
+    }
+
+    private IEnumerator LeapRoutine(Vector3 horizontalVelocity, float upVelocity, System.Action onLanded)
+    {
+        _dashing = true;
+
+        // El agente se APAGA, no se pausa: un NavMeshAgent encendido pega el transform al
+        // suelo en cada frame, y el salto no tendría altura.
+        bool hadAgent = _agent != null && _agent.enabled;
+        if (hadAgent) _agent.enabled = false;
+
+        float gravity  = Mathf.Abs(Physics.gravity.y);
+        float vy       = upVelocity;
+        float elapsed  = 0f;
+        float startY   = transform.position.y;
+
+        // Dos topes de seguridad. El de TIEMPO por si el arco nunca aterriza; el de
+        // ALTURA porque un bot cayendo sin encontrar piso llegó a 12 m bajo el nivel del
+        // suelo antes de que el tope de tiempo lo cortara.
+        const float maxFlight = 2.5f;
+        const float maxFall   = 12f;
+
+        while (elapsed < maxFlight && transform.position.y > startY - maxFall)
+        {
+            vy -= gravity * Time.deltaTime;
+
+            MoveWithCollision((horizontalVelocity + Vector3.up * vy) * Time.deltaTime);
+
+            // Aterrizó. NO se pregunta por el CharacterController: su estado lo tocan
+            // otras partes del juego y no se le puede creer (ver MoveWithCollision). Un
+            // rayo corto hacia abajo es la respuesta directa.
+            if (vy < 0f && Physics.Raycast(transform.position + Vector3.up * 0.4f, Vector3.down,
+                                           0.7f, CollisionMask, QueryTriggerInteraction.Ignore))
+                break;
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        if (hadAgent) _agent.enabled = true;
+        RecoverIfLost();
+
+        _dashing     = false;
+        _leapRoutine = null;
+
+        onLanded?.Invoke();
     }
 
     // =========================================================
@@ -288,6 +456,12 @@ public class BotController : MonoBehaviour
         if (_thinkTimer <= 0f)
         {
             _thinkTimer = ThinkInterval;
+
+            // Contención, antes de decidir nada: si ya está fuera del mundo, decidir a
+            // quién pegarle no sirve de nada. Se saltea en pleno salto o dash, que es
+            // cuando estar en el aire —lejos del NavMesh— es legítimo.
+            if (!_dashing && !IsWhereItShouldBe()) RecoverIfLost();
+
             Think();
         }
 
@@ -361,7 +535,10 @@ public class BotController : MonoBehaviour
             return;
         }
 
-        // 2 · La carga manda sobre todo lo demás.
+        // 2 · La carga manda sobre todo lo demás. Es la única forma de ganar, así que
+        //     cuando está en juego el resto de la partida deja de importar.
+        _chasing = false;
+
         if (obj != null)
         {
             if (obj.IsCarried)
@@ -370,25 +547,47 @@ public class BotController : MonoBehaviour
 
                 if (carrier == _asc)
                 {
-                    // La llevo yo: derecho al punto de entrega, sin distraerme.
+                    // La llevo YO: derecho al punto de entrega, sin distraerme con nadie.
+                    // Se limpia el objetivo para no frenarse a pelear en el camino — el que
+                    // lleva la carga corre, no se queda cambiando golpes.
                     MercTeamBase home = gm != null ? gm.GetBase(_teamId) : null;
-                    if (home != null) { _destination = home.DeliveryWorldPoint; return; }
+                    if (home != null)
+                    {
+                        _destination = home.DeliveryWorldPoint;
+                        _target      = null;
+                        _delivering  = true;
+                        return;
+                    }
                 }
                 else if (obj.CarrierTeam == _teamId)
                 {
-                    // La lleva un compañero: escoltarlo. Peleo con lo que se acerque,
-                    // pero sin alejarme de él.
+                    // La lleva un COMPAÑERO: escoltarlo, y pelear con lo que se le acerque
+                    // A ÉL, no con lo que me quede cómodo a mí. Es la diferencia entre un
+                    // equipo que protege al portador y tres bots que van cada uno a lo suyo.
                     if (carrier != null)
                     {
+                        AbilitySystemComponent threat = FindEnemyNear(carrier.transform.position,
+                                                                     SupportFollowDistance * 2f);
+                        if (threat != null)
+                        {
+                            _target      = threat;
+                            _chasing     = true;
+                            _destination = DecideCombatPosition(threat);
+                            return;
+                        }
+
                         _destination = PositionNear(carrier.transform.position, SupportFollowDistance);
                         return;
                     }
                 }
                 else if (carrier != null)
                 {
-                    // La lleva un enemigo: ES el objetivo, por encima de cualquier otro.
+                    // La lleva un ENEMIGO: es EL objetivo, por encima de cualquier otro y a
+                    // cualquier distancia. Nada de rodear ni despegarse esperando el
+                    // cooldown: acá se le va encima y se lo intercepta.
                     _target      = carrier;
-                    _destination = DecideCombatPosition(carrier);
+                    _chasing     = true;
+                    _destination = PositionNear(carrier.transform.position, MeleeRange * 0.7f);
                     return;
                 }
             }
@@ -399,6 +598,8 @@ public class BotController : MonoBehaviour
                 return;
             }
         }
+
+        _delivering = false;
 
         // 3 · Sin carga en juego: pelear con lo que haya.
         if (_target != null)
@@ -468,6 +669,11 @@ public class BotController : MonoBehaviour
                 // Bárbaro y Pícaro: encima cuando pueden pegar, y AFUERA mientras el
                 // ataque está en cooldown. Quedarse plantado comiendo golpes sin poder
                 // responder es lo que los hacía ver como muñecos.
+                // Persiguiendo al portador de la carga NO se rodea ni se espera el
+                // cooldown: se lo intercepta. Bailar alrededor mientras se escapa con la
+                // carga es perder la partida con estilo.
+                if (_chasing) return PositionNear(targetPos, MeleeRange * 0.7f);
+
                 float ring = PrimaryReady() ? MeleeRange * 0.8f : MeleeRange * BackOffRangeMult;
                 return OrbitPoint(targetPos, ring);
             }
@@ -507,6 +713,36 @@ public class BotController : MonoBehaviour
     // Un punto a "distance" del centro, del lado en el que ya estoy. Sin rodeo: lo usan
     // el que escolta al portador y el Paladín que sigue a un compañero, donde girar
     // alrededor no aporta nada.
+    // Corrige un destino que caiga dentro de la sala segura de OTRO equipo.
+    //
+    // Ahí adentro el enemigo es intocable y se cura, así que entrar no sirve de nada — y
+    // desde que las bases expulsan intrusos, un bot que insista queda rebotando contra el
+    // borde. Mejor que se plante justo afuera y espere a que salga.
+    private Vector3 AvoidEnemySafeRooms(Vector3 destination)
+    {
+        MercenariesGameMode gm = MercenariesGameMode.Instance;
+        if (gm == null) return destination;
+
+        for (int team = 1; team <= MercenariesGameMode.TeamCount; team++)
+        {
+            if (team == _teamId) continue;
+
+            MercTeamBase b = gm.GetBase(team);
+            if (b == null || !b.IsInsideSafeRoom(destination)) continue;
+
+            // Se queda en el borde, del lado por el que venía.
+            Vector3 away = destination - b.SafeRoomWorldCenter;
+            away.y = 0f;
+            if (away.sqrMagnitude < 0.01f) away = transform.position - b.SafeRoomWorldCenter;
+            if (away.sqrMagnitude < 0.01f) away = Vector3.forward;
+
+            float radius = Mathf.Max(b.SafeRoomSize.x, b.SafeRoomSize.z) * 0.5f + 2f;
+            return b.SafeRoomWorldCenter + away.normalized * radius;
+        }
+
+        return destination;
+    }
+
     private Vector3 PositionNear(Vector3 center, float distance)
     {
         Vector3 away = transform.position - center;
@@ -559,6 +795,32 @@ public class BotController : MonoBehaviour
         return best;
     }
 
+    // El enemigo más cercano a UN PUNTO que no es el mío. Lo usa la escolta: el que hay
+    // que sacar de encima es el que está cerca del portador, no el que me queda cómodo.
+    private AbilitySystemComponent FindEnemyNear(Vector3 center, float radius)
+    {
+        int count = Physics.OverlapSphereNonAlloc(
+            center, radius, _hits, CharacterLayer, QueryTriggerInteraction.Ignore);
+
+        AbilitySystemComponent best = null;
+        float bestDist = float.MaxValue;
+
+        for (int i = 0; i < count; i++)
+        {
+            AbilitySystemComponent other = _hits[i].GetComponentInParent<AbilitySystemComponent>();
+            if (other == null || other == _asc) continue;
+            if (other.HasTag(EGameplayTag.State_Dead)) continue;
+            if (_asc.IsAllyOf(other, includeSelf: false)) continue;
+
+            float dist = Vector3.Distance(center, other.transform.position);
+            if (dist >= bestDist) continue;
+            bestDist = dist;
+            best     = other;
+        }
+
+        return best;
+    }
+
     private AbilitySystemComponent FindNearestAlly()
     {
         int count = Physics.OverlapSphereNonAlloc(
@@ -603,7 +865,7 @@ public class BotController : MonoBehaviour
     {
         if (_agent == null || !_agent.enabled || !_agent.isOnNavMesh) return;
 
-        _agent.SetDestination(_destination);
+        _agent.SetDestination(AvoidEnemySafeRooms(_destination));
 
         // El NavMesh de la arena tiene cortes: escalones más altos de lo que el agente
         // puede subir, y bordes donde el horneado no llegó. Cuando el destino queda del
@@ -655,7 +917,20 @@ public class BotController : MonoBehaviour
 
     private void Fight()
     {
-        if (_target == null || _netASC == null) return;
+        if (_netASC == null) return;
+
+        // LLEVANDO LA CARGA no hay a quién pegarle, pero SÍ hay algo que hacer: gastar la
+        // habilidad de movimiento para llegar antes al punto de entrega. Es lo que haría
+        // cualquiera con la carga en la mano.
+        if (_delivering)
+        {
+            if (Time.time >= _nextAbilityAt &&
+                Activate(EAbilityInput.Movement, _destination + Vector3.up, DirectionTo(_destination)))
+                _nextAbilityAt = Time.time + AbilityInterval;
+            return;
+        }
+
+        if (_target == null) return;
         if (_target.HasTag(EGameplayTag.State_Dead)) { _target = null; return; }
 
         float dist = Vector3.Distance(transform.position, _target.transform.position);
@@ -669,8 +944,13 @@ public class BotController : MonoBehaviour
 
         if (Time.time >= _nextAbilityAt && dist <= VisionRadius)
         {
+            // Lejos prueban más seguido: así castigan mientras se acercan en vez de
+            // llegar con todo intacto y recién ahí soltarlo. Persiguiendo al portador, lo
+            // mismo — cada segundo cuenta.
+            bool approaching = _chasing || dist > MeleeRange * 1.6f;
+
             if (TryAbilities(role, dist, aim, moveDir))
-                _nextAbilityAt = Time.time + AbilityInterval;
+                _nextAbilityAt = Time.time + (approaching ? ApproachAbilityInterval : AbilityInterval);
         }
 
         if (Time.time >= _nextPrimaryAt && dist <= MeleeRange * 1.3f)
@@ -680,41 +960,56 @@ public class BotController : MonoBehaviour
         }
     }
 
-    // En qué orden prueba sus habilidades cada rol. No hay nada más fino que esto a
-    // propósito: el GAS ya rechaza lo que no se puede usar (cooldown, energía, tags), así
-    // que alcanza con proponer en un orden que tenga sentido y dejar que el sistema filtre.
+    private Vector3 DirectionTo(Vector3 point)
+    {
+        Vector3 d = point - transform.position;
+        d.y = 0f;
+        return d.sqrMagnitude > 0.01f ? d.normalized : transform.forward;
+    }
+
+    // En qué orden prueba sus habilidades cada rol.
+    //
+    // SE PRUEBAN LOS CUATRO SLOTS, y esto importa: las clases base no usan E ni R — su kit
+    // es LMB, RMB, Q y Shift. Antes acá solo se miraban Q/E/R, así que de las cuatro
+    // habilidades de cada clase el bot llegaba únicamente a la Q. Los bárbaros nunca
+    // tiraron el hacha (RMB) ni saltaron (Shift), y los pícaros nunca dispararon dagas ni
+    // dashearon. Las subclases sí usan E y R, por eso siguen en la lista.
+    //
+    // El resto lo filtra el GAS: cooldown, energía y tags. Acá solo se propone un orden.
     private bool TryAbilities(EBotRole role, float dist, Vector3 aim, Vector3 moveDir)
     {
-        switch (role)
+        bool far     = dist > MeleeRange * 1.6f;
+        bool veryFar = dist > MeleeRange * 2.5f;
+
+        if (role == EBotRole.Support)
         {
-            case EBotRole.Support:
-            {
-                // Los ataques del Paladín son los que CURAN, así que pega siempre que
-                // puede: quedarse a raya era justamente lo que lo volvía inútil.
-                //
-                // El escudo (una habilidad de MANTENER) sale cuando el enemigo ya está
-                // encima, que es cuando sirve para tapar al compañero.
-                bool covering = dist <= MeleeRange * 1.6f;
+            // El escudo (RMB) cuando ya lo tienen encima: es cuando tapa al compañero.
+            if (!far && Activate(EAbilityInput.SecondaryAttack, aim, moveDir)) return true;
 
-                if (Activate(EAbilityInput.Action1, aim, moveDir)) return true;
-                if (covering && Activate(EAbilityInput.SecondaryAttack, aim, moveDir)) return true;
-                if (Activate(EAbilityInput.Action2, aim, moveDir)) return true;
+            // Y el salto de socorro (Shift) para llegar cuando está lejos.
+            if (veryFar && Activate(EAbilityInput.Movement, aim, moveDir)) return true;
 
-                bool trouble = HealthFraction(_asc) < 0.6f || AllyInTrouble();
-                if (trouble && Activate(EAbilityInput.Action3, aim, moveDir)) return true;
-                return false;
-            }
+            if (Activate(EAbilityInput.Action1, aim, moveDir)) return true;
+            if (Activate(EAbilityInput.Action2, aim, moveDir)) return true;
 
-            default:
-            {
-                // Bárbaro y Pícaro: todo lo que esté listo, sale. La definitiva primero
-                // porque es la que decide.
-                if (Activate(EAbilityInput.Action3, aim, moveDir)) return true;
-                if (Activate(EAbilityInput.Action1, aim, moveDir)) return true;
-                if (Activate(EAbilityInput.Action2, aim, moveDir)) return true;
-                return false;
-            }
+            bool trouble = HealthFraction(_asc) < 0.6f || AllyInTrouble();
+            if (trouble && Activate(EAbilityInput.Action3, aim, moveDir)) return true;
+            return false;
         }
+
+        // Bárbaro y Pícaro. De LEJOS lo que llega de lejos —el arrojadizo (RMB) y el cierre
+        // de distancia (Shift)—; de CERCA, lo que pega fuerte.
+        if (far     && Activate(EAbilityInput.SecondaryAttack, aim, moveDir)) return true;
+        if (veryFar && Activate(EAbilityInput.Movement,        aim, moveDir)) return true;
+
+        if (Activate(EAbilityInput.Action3, aim, moveDir)) return true;
+        if (Activate(EAbilityInput.Action1, aim, moveDir)) return true;
+        if (Activate(EAbilityInput.Action2, aim, moveDir)) return true;
+
+        // Si de cerca no salió nada, el arrojadizo igual: mejor tirar el hacha que quedarse
+        // mirando el cooldown.
+        if (!far && Activate(EAbilityInput.SecondaryAttack, aim, moveDir)) return true;
+        return false;
     }
 
     // ¿Algún compañero a la vista está en problemas? Es lo que destraba la definitiva del
@@ -733,10 +1028,32 @@ public class BotController : MonoBehaviour
         GameplayAbility ability = FindAbility(slot);
         if (ability == null || !ability.CanActivate()) return false;
 
-        // Saltos, dashes y teletransportes los ejecuta la conexión DUEÑA (TargetRpc + el
-        // Update del PlayerController). Un bot no tiene dueño: activarlas le cobraría el
-        // cooldown sin moverlo un centímetro, y FishNet avisaría en cada intento.
+        // Lo único que un bot todavía no puede ejecutar. Ver GameplayAbility.MovesThroughOwner.
         if (ability.MovesThroughOwner) return false;
+
+        // Las de RUEDA (los tótems del Chamán) no se activan con Activate(): esperan que
+        // alguien elija una opción del menú circular. Un bot no abre menús, así que elige
+        // una al azar — que además hace que dos partidas no se vean iguales.
+        //
+        // Sin esto los chamanes nunca invocaban nada: la habilidad se activaba, no pasaba
+        // nada, y el cooldown se pagaba igual.
+        if (ability is IRadialMenuAbility radial)
+        {
+            int options = radial.RadialIcons != null ? radial.RadialIcons.Length : 0;
+            if (options <= 0) return false;
+
+            radial.ActivateWithSelection(Random.Range(0, options), GroundAimPoint(aim, radial.MaxRadialRange));
+
+            // La animación no viaja sola por este camino (el del jugador la manda aparte).
+            _netASC.ServerBroadcastAbilityAnimation(ability);
+            return true;
+        }
+
+        // Las de ZONA leen el punto de mira como cualquier otra, pero ese punto tiene que
+        // estar EN EL SUELO y dentro de su alcance: apuntando al pecho del enemigo a 30 m,
+        // la zona caía en el aire o fuera de rango.
+        if (ability is IGroundTargetAbility ground && ground.UsesGroundTarget)
+            aim = GroundAimPoint(aim, ground.MaxTargetRange);
 
         _netASC.ServerActivateAbility(slot, aim, moveDir);
 
@@ -749,6 +1066,21 @@ public class BotController : MonoBehaviour
         }
 
         return true;
+    }
+
+    // Un punto EN EL SUELO hacia donde apunto, recortado al alcance de la habilidad. Es lo
+    // que espera cualquier habilidad apuntada al piso: zonas, tótems, muros.
+    private Vector3 GroundAimPoint(Vector3 aim, float maxRange)
+    {
+        Vector3 flat = aim - transform.position;
+        flat.y = 0f;
+
+        if (maxRange > 0f && flat.magnitude > maxRange) flat = flat.normalized * maxRange;
+
+        Vector3 wanted = transform.position + flat;
+        return NavMesh.SamplePosition(wanted, out NavMeshHit hit, 4f, NavMesh.AllAreas)
+             ? hit.position
+             : wanted;
     }
 
     // Las instancias vivas están en el PlayerController, que es donde EquipCharacterClass

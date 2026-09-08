@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 7 de septiembre de 2026
+# Pendientes — actualizado el 8 de septiembre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -45,7 +45,7 @@ Del documento anterior, ya están resueltos:
 
 # 1. Tareas de editor que SIGUEN pendientes
 
-Son seis, y ninguna es urgente.
+Son siete, y ninguna es urgente.
 
 ## Molinete del bárbaro — el VFX
 
@@ -68,6 +68,28 @@ mismo tamaño aunque el área cambie.
 **No lo lleves a cero**: algo de torsión es correcta para una puñalada con la izquierda.
 El combo alterna derecha-izquierda a propósito (las cuatro clases del rogue llevan dos
 dagas). Probá con la mitad de lo que tiene.
+
+## El señuelo del Ilusionista tiene el avatar viejo
+
+- [ ] Cambiar el modelo dentro de `GameplayAbilities/Prefabs/Summons/Entity_PlayerCopy.prefab`
+
+Usa `AssetsExtra/RPG Tiny Hero Duo/Prefab/MaleCharacterPBR`, el avatar anterior al cambio
+a Kevin Iglesias. **Es el único asset del proyecto que quedó atrás** — lo verifiqué contra
+todos los prefabs y escenas.
+
+El script ya asume que el avatar es compartido (su comentario lo dice: *"solo cambian arma
+y animación por clase"*), así que alcanza con cambiar el hijo visual. La raíz no se toca:
+ahí viven el `NetworkObject`, el `NetworkTransform`, el ASC, el collider y el script.
+
+Tres cosas que tienen que sobrevivir al cambio:
+
+1. **`WalkAnimator`** repuntado al `Animator` del modelo nuevo, con el mismo Avatar
+   Humanoid del jugador (si no, el `ClassAnimatorOverride` está hecho para otro esqueleto).
+2. **`Socket_MainHand` y `Socket_OffHand`** con esos nombres EXACTOS, colgando de los
+   huesos de las manos. El script los busca por nombre en toda la jerarquía, no por
+   referencia.
+3. El `Animator` nuevo necesita un float **`Speed`** — es con lo que la copia mezcla
+   caminar e idle.
 
 ## Limpieza de nombres
 
@@ -281,26 +303,103 @@ al 80%**. Este orden es por dependencias y riesgo, no por ganas.
 
 ## 1º · Lobby — TERMINADO ✅
 
-Código y montaje, los dos. Ver la sección 2. Lo que quedó:
+Código y montaje, los dos. Ver la sección 2.
 
-- **`LobbyManager`** (`Scripts/Network/`): la sala compartida en una `SyncList`, con
-  autoridad de servidor. Valida nombre repetido y cupo por equipo, maneja el estado
-  "listo", saca a quien se desconecta, y guarda el **arranque del host** (`MatchStarted`)
-  en un `SyncVar`.
-- **`UI_LobbyPanel`** (`Scripts/GameMode/UI/`): el panel entero dibujado por código — IP,
-  nombre, tres columnas de equipo, franja de espectadores, grilla de clases y los botones
-  de Confirmar y Start.
-- **`NetworkGameManager`**: mete cada conexión a la escena apenas carga. Sin eso el
-  `NetworkObject` DE ESCENA de la sala no se spawneaba del lado del cliente y el panel
-  se quedaba mudo — era el candado que trabó todo un día.
-- **`MercenariesGameMode`**: la preparación arranca con el Start del host, no sola.
-- **`UICursor`** (`Scripts/UI/`): el árbitro del cursor y del modo de input, que salió de
-  querer poder desconectarse con ESC en cualquier momento. Ver la sección 2.
+## 2º · Bots y cámara espectador — CÓDIGO TERMINADO, falta probar
 
-Sin `LobbyManager` en la escena todo se comporta como antes, así que `Test_Network` no
-cambió en nada.
+No estaban en el plan: salieron de que para probar el modo espectador hacen falta otros
+jugadores, y juntar nueve personas cada vez no es viable.
 
-## 2º · Sonido
+**Los bots** (`GameMode/BotController.cs`) son jugadores de verdad: mismo prefab, mismo
+ASC, mismas habilidades, spawneados sin dueño para que el servidor los maneje. Piden sus
+habilidades por `ServerActivateAbility`, el MISMO punto de entrada que un jugador, así que
+pagan cooldowns, energía y tags igual que todos. Se agregan desde la sala con el `+` de
+cada lugar libre — solo lo ve el host.
+
+Tres roles, deducidos de la clase base (`MainBaseClasses`: 0 Bárbaro, 1 Pícaro,
+2 Paladín), así que una subclase nueva hereda el rol de su rama sin configurar nada:
+
+- **Bárbaro** — encima y sin guardarse nada.
+- **Pícaro** — todo el daño que pueda; se retira a su base a curarse bajo el 35 % de vida
+  y vuelve al 75 %.
+- **Paladín** — se pone ENTRE su compañero y quien lo ataca, y pega desde ahí (sus ataques
+  son los que curan).
+
+Rodean en vez de quedarse de frente, y se despegan mientras el ataque básico está en
+cooldown. Al llegar a nivel 3 eligen subclase al azar.
+
+**La cámara espectador** (`GameMode/SpectatorCamera.cs`) se enciende sola cuando tu fila
+de la sala dice Spectator y la partida arrancó. Vuelo libre WASD + Espacio/Ctrl + Shift,
+clic izquierdo/derecho para seguir jugadores, `F` para volver a libre, `H` para el panel
+del observado y `M` para el marcador.
+
+### Lo que falta verificar
+
+Nada de esto se vio corriendo. Es lo primero que hay que hacer al retomar.
+
+- **La cámara espectador entera.**
+- **Que ya no se salgan del mapa.** Ver abajo — es el problema que más vueltas dio.
+- El **dash y el blink** de los pícaros.
+- Los **cuatro slots de habilidad**. Las clases base usan LMB, RMB, Q y Shift; el bot solo
+  probaba Q/E/R, así que **nunca** tiraron el hacha ni saltaron ni dashearon. Ahora se
+  prueban los cuatro, con el arrojadizo de lejos y el cierre de distancia si está muy lejos.
+- Los **tótems del Chamán** (son de RUEDA: no se activan con Activate, hay que elegir una
+  opción del menú circular — el bot elige al azar).
+- El **salto del Bárbaro** y la **auto-revivida del Inmortal**.
+- Que **no entren a las salas seguras ajenas**, y que la expulsión no se vea brusca
+  (`EjectMargin` en cada `MercTeamBase`).
+
+### El problema de salirse del mapa
+
+Costó tres intentos y vale anotar por qué, porque el patrón se repite en este proyecto.
+
+Los bots saltaban a través del muro y caían al vacío. Los dos primeros arreglos fallaron:
+
+1. Escribir `transform.position` no colisiona con nada — obvio en retrospectiva.
+2. Pasar a `CharacterController.Move()` **tampoco alcanzó**. El log lo mostró: un bot
+   terminó a 64 m del centro y 12 m bajo el piso, en pleno salto. La matriz de colisiones
+   estaba bien y la referencia también; el problema es que **el CharacterController tiene
+   estado que otras partes del juego manipulan** (el dash le toca `excludeLayers`,
+   `TeleportTo` lo apaga y lo prende). No es algo en lo que un script externo pueda confiar.
+
+Lo que quedó: un **`Physics.SphereCast` propio** en `BotController.MoveWithCollision`, que
+no depende del estado de nadie. El aterrizaje tampoco pregunta por el CharacterController
+—un rayo corto hacia abajo—, y hay dos topes: 2,5 s de vuelo y 12 m de caída.
+
+Además hay una **red de contención** que corre cuatro veces por segundo: si un bot está a
+más de 3 m del NavMesh o por encima del techo, vuelve a su base. El invariante es el
+NavMesh porque todo lo transitable —arena, rampas, pasillos y bases— está horneado.
+
+**Si vuelve a pasar**, el log dice la posición exacta y si estaba saltando. Y queda un
+sospechoso sin descartar: `MercArenaBounds.OpenTowardBases` deja **tres huecos de 30°** en
+el anillo invisible para poder llegar a las bases — un cuarto del perímetro sin pared. Si
+el log dice `saltando o dasheando: False`, se están yendo caminando por ahí y lo que hay
+que cerrar es eso, no el bot.
+
+### Lo que quedó sabido y sin hacer
+
+- **Las perillas del bot no salen en el inspector.** El componente se agrega en runtime,
+  así que los valores son los defaults del código (`BotController.cs`). Si vas a iterar
+  mucho el comportamiento, conviene moverlas a un ScriptableObject cableado en el
+  `NetworkGameManager`.
+- **Los señuelos del Ilusionista se acumulan.** No tienen límite de tiempo (es el diseño),
+  pero un bot activa la habilidad apenas sale de cooldown y la arena se llena. Tres
+  caminos: dejarlo, ponerle vida útil a la copia (cambia el balance para todos), o que los
+  bots la usen con criterio (no toca el balance — es lo que yo haría).
+- **`Entity_PlayerCopy.prefab` usa el avatar VIEJO** (`RPG Tiny Hero Duo/MaleCharacterPBR`).
+  Es el único asset del proyecto que quedó atrás. Ver la sección 1.
+- **Las salas seguras ajenas ya están prohibidas.** Quien no es del equipo entra y sale
+  expulsado por la cara más cercana, mirando hacia afuera. Vale para jugadores y bots
+  (a una persona se le pide por TargetRpc; a un bot lo mueve el servidor). Se apaga con
+  `EjectEnemies` en cada `MercTeamBase`.
+- **El `DeathZone` no agarraba a los bots.** Tenía `if (!player.IsOwner) return;` y un bot
+  no tiene dueño: caerse al vacío los dejaba cayendo para siempre. Ahora, para un bot, la
+  guardia es estar en el servidor.
+- **Ninguna habilidad usa ya `MovesThroughOwner`.** El teletransporte, el dash y el salto
+  tienen los tres camino server-side. La propiedad queda en `GameplayAbility` por si
+  escribís una nueva que mueva al dueño de un modo que el servidor no pueda reproducir.
+
+## 3º · Sonido
 
 El mayor salto de calidad percibida por hora invertida. Un juego mudo se lee como
 prototipo aunque todo lo demás esté bien.
@@ -308,15 +407,6 @@ prototipo aunque todo lo demás esté bien.
 Tiene **cola larga**: son 67 habilidades. No las sonorices todas — elegí las ~15 que
 suenan siempre (ataques básicos, pasos, golpe recibido, muerte, entrega del objetivo).
 La música de batalla la está haciendo un amigo: tené los hooks listos para cuando llegue.
-
-## 3º · Cámara espectador
-
-Barata, y es **la herramienta para enseñar el juego**. La querés en octubre, no en
-noviembre: el material se graba, se mira y se vuelve a grabar. Como bonus, es el mejor
-debugger para mirar peleas desde afuera.
-
-Cámara libre, sin UI. Ahora además tiene con qué engancharse: el lobby ya marca quién
-entra como espectador.
 
 ## 4º · Pantalla de inicio y ajustes
 

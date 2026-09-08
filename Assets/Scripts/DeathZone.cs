@@ -27,7 +27,14 @@ public class DeathZone : MonoBehaviour
             // su propia física local también intentaría teletransportar esa
             // copia no-autoritativa, peleando con la posición real que manda
             // el dueño.
-            if (!player.IsOwner) return;
+            // Un BOT no tiene dueño: sin esta rama, caerse al vacío lo dejaba cayendo
+            // para siempre. Su autoridad es el SERVIDOR, así que ahí es donde se lo
+            // rescata — y solo ahí, para no pelear con la posición sincronizada.
+            if (player.IsBot)
+            {
+                if (!player.IsServerInitialized) return;
+            }
+            else if (!player.IsOwner) return;
 
             Debug.Log("[DeathZone] ¡Un jugador cayó al vacío! Regresándolo a la arena...");
 

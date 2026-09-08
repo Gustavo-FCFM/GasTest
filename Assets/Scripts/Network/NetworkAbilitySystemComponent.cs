@@ -1171,7 +1171,17 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     public void ServerStartLeap(GA_LeapAttack ability, float upVelocity, float forwardForce)
     {
         _pendingLeapImpact = ability;
-        if (!HasOwnerConnection()) return;
+
+        // Sin dueño (un BOT) el salto lo simula el servidor sobre el propio bot, y al
+        // aterrizar resuelve el impacto por el mismo camino. Antes se descartaba: los
+        // bárbaros nunca saltaban.
+        if (!HasOwnerConnection())
+        {
+            BotController brain = GetComponent<BotController>();
+            if (brain != null) brain.ServerLeap(transform.forward * forwardForce, upVelocity, ServerApplyLeapImpact);
+            else               _pendingLeapImpact = null;
+            return;
+        }
 
         TargetExecuteLeap(Owner, upVelocity, forwardForce);
     }
@@ -1234,7 +1244,14 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // Resuelve el daño en área del aterrizaje, con la instancia de
     // GA_LeapAttack guardada en ServerStartLeap.
     [ServerRpc]
-    private void ServerResolveLeapImpact()
+    private void ServerResolveLeapImpact() => ServerApplyLeapImpact();
+
+    // El impacto en sí, sin pasar por el ServerRpc de arriba.
+    //
+    // Un ServerRpc lo tiene que invocar el DUEÑO, y un BOT no tiene: llamarlo sobre su
+    // objeto fallaría. Esta versión la usa el salto de un bot, que ya corre en el servidor.
+    [Server]
+    private void ServerApplyLeapImpact()
     {
         _pendingLeapImpact?.ExecuteImpactCheck();
         _pendingLeapImpact = null;

@@ -65,10 +65,6 @@ public class GA_LeapAttack : GameplayAbility, ILeapAbility
     // Valida, cobra costo/cooldown, reproduce la animación y le pide a
     // NetworkAbilitySystemComponent que ejecute el salto en el cliente
     // dueño (ver ServerStartLeap).
-    // Mueve al personaje desde el DUEÑO, así que un bot no la puede ejecutar (ver
-    // GameplayAbility.MovesThroughOwner). El BotController no se la propone.
-    public override bool MovesThroughOwner => true;
-
     public override void Activate()
     {
         if (!IsServer) return;   // ← NUEVO

@@ -55,6 +55,14 @@ public class MercTeamBase : MonoBehaviour
     // hay que tocar para curar y para poner/sacar los tags.
     private readonly HashSet<AbilitySystemComponent> _inside = new HashSet<AbilitySystemComponent>();
 
+    [Header("Sala prohibida")]
+    [Tooltip("Sacar del área a quien no sea de este equipo. La sala segura cura y vuelve " +
+             "intocable a quien está adentro: dejar entrar a un enemigo es regalarle eso.")]
+    public bool EjectEnemies = true;
+
+    [Tooltip("Cuántos metros afuera del borde queda el intruso al ser expulsado.")]
+    public float EjectMargin = 1.5f;
+
     // Buffer reutilizado por el OverlapBox: evita una alocación por chequeo.
     private readonly Collider[] _overlapBuffer = new Collider[32];
 
@@ -111,7 +119,17 @@ public class MercTeamBase : MonoBehaviour
             if (col == null) continue;
 
             AbilitySystemComponent asc = col.GetComponentInParent<AbilitySystemComponent>();
-            if (asc == null || asc.TeamID != TeamID) continue;      // la base solo cuida a los suyos
+            if (asc == null) continue;
+
+            // La sala del equipo es SUYA: el que no es de casa no entra. Se lo saca por la
+            // cara más cercana en vez de dejarlo curarse —o campear— dentro de la base
+            // ajena, que es donde el enemigo es intocable.
+            if (asc.TeamID != TeamID)
+            {
+                if (EjectEnemies) EjectIntruder(asc);
+                continue;
+            }
+
             if (asc.GetComponent<PlayerController>() == null) continue; // los NPCs no se refugian
 
             seen.Add(asc);
@@ -135,6 +153,57 @@ public class MercTeamBase : MonoBehaviour
             if (asc != null) ExitSafeRoom(asc);
         }
     }
+
+    // Saca de la sala a quien no es de este equipo, por la cara MÁS CERCANA del área: es
+    // el camino más corto afuera y el que menos desorienta a quien lo empuja.
+    //
+    // El teletransporte tiene dos caminos porque el transform del jugador es
+    // client-authoritative: a una persona se le PIDE por TargetRpc, y a un bot —que no
+    // tiene dueño— lo mueve el servidor directo.
+    private void EjectIntruder(AbilitySystemComponent asc)
+    {
+        PlayerController pc = asc.GetComponent<PlayerController>();
+        if (pc == null) return;                                  // los NPCs entran, no molestan
+
+        Vector3 exit = ResolveEjectPoint(asc.transform.position);
+
+        // Mirando hacia AFUERA: si lo dejamos mirando adentro, lo primero que hace es
+        // volver a entrar.
+        Vector3 outward = exit - SafeRoomWorldCenter;
+        outward.y = 0f;
+        if (outward.sqrMagnitude < 0.01f) outward = pc.transform.forward;
+
+        if (pc.IsBot)
+        {
+            pc.ServerTeleportBot(exit, outward.normalized);
+            return;
+        }
+
+        NetworkAbilitySystemComponent net = asc.GetComponent<NetworkAbilitySystemComponent>();
+        if (net != null && pc.IsSpawned) net.ServerTeleportOwnerTo(exit, outward.normalized);
+        else                             pc.TeleportTo(exit, outward.normalized);
+    }
+
+    // El punto justo afuera del borde más cercano, en el espacio del área (que puede
+    // estar rotada, por eso se trabaja en coordenadas locales).
+    private Vector3 ResolveEjectPoint(Vector3 from)
+    {
+        Transform t    = SafeRoomCenter != null ? SafeRoomCenter : transform;
+        Vector3 local  = t.InverseTransformPoint(from);
+        Vector3 half   = SafeRoomSize * 0.5f;
+
+        float toX = half.x - Mathf.Abs(local.x);
+        float toZ = half.z - Mathf.Abs(local.z);
+
+        if (toX <= toZ) local.x = SignOrOne(local.x) * (half.x + EjectMargin);
+        else            local.z = SignOrOne(local.z) * (half.z + EjectMargin);
+
+        return t.TransformPoint(local);
+    }
+
+    // Justo en el centro exacto (0) Mathf.Sign devuelve 1, pero dejarlo explícito evita
+    // que un caso de borde mande al intruso a un lado al azar.
+    private static float SignOrOne(float v) => v < 0f ? -1f : 1f;
 
     private void EnterSafeRoom(AbilitySystemComponent asc)
     {
