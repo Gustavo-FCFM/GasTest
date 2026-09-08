@@ -223,6 +223,96 @@ public class NetworkGameManager : NetworkBehaviour
     }
 
     // =========================================================
+    // BOTS
+    // =========================================================
+
+    // Los personajes de los bots, para poder despawnearlos al terminar la partida y
+    // para que el respawn los encuentre (el de los jugadores va indexado por conexión,
+    // y un bot no tiene).
+    private readonly List<PlayerController> _bots = new List<PlayerController>();
+
+    // Crea el personaje de un bot. Es un jugador COMPLETO —mismo prefab, mismo ASC,
+    // mismas habilidades— con dos diferencias:
+    //
+    //  · Se spawnea SIN dueño (ServerManager.Spawn con conexión nula). El servidor
+    //    queda como autoridad, que es lo que deja que el BotController lo mueva y
+    //    active sus habilidades sin pasar por ningún RPC de dueño.
+    //  · Lleva un BotController encima, que es todo el cerebro.
+    //
+    // Para los clientes es un jugador más: lo ven, le pegan, les pega, y aparece en el
+    // marcador. Que es justo lo que hace falta para probar el modo espectador.
+    [Server]
+    public PlayerController ServerSpawnBot(string botName, int teamID, CharacterClassDefinition cls)
+    {
+        if (PlayerPrefab == null)
+        {
+            Debug.LogError("[Bots] No hay PlayerPrefab asignado en el NetworkGameManager.");
+            return null;
+        }
+
+        int team = Mathf.Clamp(teamID, 1, 3);
+        Transform spawnPoint = ResolveSpawnPointForTeam(team) ?? GetSpawnPoint(_totalPlayersEverConnected);
+
+        GameObject botObj = Instantiate(PlayerPrefab, spawnPoint.position, spawnPoint.rotation);
+
+        PlayerController pc = botObj.GetComponent<PlayerController>();
+        if (pc != null) pc.IsBot = true;   // ANTES de spawnear: OnStartClient ya lo consulta
+
+        // Sin conexión = objeto del servidor. No confundir con "sin observadores": los
+        // clientes lo ven igual, simplemente no lo controla ninguno.
+        ServerManager.Spawn(botObj, null);
+
+        NetworkAbilitySystemComponent netASC = botObj.GetComponent<NetworkAbilitySystemComponent>();
+        if (netASC != null)
+        {
+            netASC.AssignTeam(team);
+            netASC.AssignPlayerName(botName);
+        }
+
+        // La clase va DESPUÉS del spawn: equiparla escribe un SyncVar, y antes de
+        // spawnear no hay a quién sincronizar.
+        if (pc != null && cls != null) pc.ServerEquipClassAsBot(cls);
+
+        BotController brain = botObj.GetComponent<BotController>();
+        if (brain == null) brain = botObj.AddComponent<BotController>();
+        brain.ServerInitialize(team);
+
+        if (pc != null) _bots.Add(pc);
+
+        Debug.Log($"[Bots] '{botName}' entró al equipo {team} como {(cls != null ? cls.ClassName : "sin clase")}.");
+        return pc;
+    }
+
+    // Respawn de un bot. Mismo tiempo y mismo punto que el de un jugador, pero el
+    // teletransporte lo escribe el SERVIDOR: sin dueño no hay a quién mandarle el
+    // TargetRpc que usa el respawn normal.
+    [Server]
+    public void RespawnBot(PlayerController bot, float delay = 3f)
+    {
+        if (bot == null) return;
+
+        if (MercenariesGameMode.Instance != null)
+            delay = MercenariesGameMode.Instance.RespawnSeconds;
+
+        StartCoroutine(RespawnBotCoroutine(bot, delay));
+    }
+
+    private System.Collections.IEnumerator RespawnBotCoroutine(PlayerController bot, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (bot == null) yield break;
+
+        NetworkAbilitySystemComponent netASC = bot.GetComponent<NetworkAbilitySystemComponent>();
+        int team = netASC != null ? netASC.NetTeamID : 0;
+
+        Transform spawnPoint = ResolveSpawnPointForTeam(team) ?? GetRandomSpawnPoint();
+        if (spawnPoint != null)
+            bot.ServerTeleportBot(spawnPoint.position, spawnPoint.forward);
+
+        if (netASC != null) netASC.Revive();
+    }
+
+    // =========================================================
     // RESPAWN
     // =========================================================
 

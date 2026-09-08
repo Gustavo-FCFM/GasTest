@@ -52,6 +52,15 @@ public class UI_LobbyPanel : MonoBehaviour
     [Range(0.5f, 2f)]
     public float PanelScale = 1.35f;
 
+    [Tooltip("Tamaño del ícono de clase en cada lugar de equipo. Se recorta al alto de la " +
+             "fila, así que para íconos de verdad más grandes hay que subir también " +
+             "RowHeight (el ícono nunca pasa de RowHeight - 8).")]
+    public float SlotIconSize  = 40f;
+
+    [Tooltip("Tamaño de los íconos en la grilla de elegir clase. El recuadro de la grilla " +
+             "crece solo con ellos.")]
+    public float ClassIconSize = 84f;
+
     [Tooltip("Fondo del panel. La grilla de clases usa este mismo color pero SIN " +
              "transparencia, para que no se lea el panel de atrás mientras elegís.")]
     public Color PanelColor   = new Color(0.09f, 0.09f, 0.11f, 0.97f);
@@ -61,6 +70,18 @@ public class UI_LobbyPanel : MonoBehaviour
     [Tooltip("Color del botón de Start y de Confirmar cuando TODAVÍA no corresponde " +
              "apretarlos. Verde cuando sí.")]
     public Color IdleColor    = new Color(0.17f, 0.24f, 0.40f, 1f);
+
+    [Tooltip("Fondo de una fila OCUPADA: el recuadro detrás del ícono y el nombre. Las " +
+             "filas libres no lo llevan — ahí el fondo lo pone el propio botón de Unirte.")]
+    public Color RowColor     = new Color(0.16f, 0.19f, 0.26f, 1f);
+
+    [Tooltip("Fondo de TU propia fila. Sirve para encontrarte de un vistazo cuando la " +
+             "sala está llena.")]
+    public Color OwnRowColor  = new Color(0.22f, 0.29f, 0.42f, 1f);
+
+    [Tooltip("Color del nombre de los BOTS. Distinto del de un jugador listo a propósito: " +
+             "en una captura tiene que verse de un vistazo quién es persona y quién no.")]
+    public Color BotColor     = new Color(0.72f, 0.66f, 0.95f, 1f);
 
     // --- construidos en runtime ---
     private Canvas          _canvas;
@@ -78,10 +99,18 @@ public class UI_LobbyPanel : MonoBehaviour
     private class Slot
     {
         public RectTransform   Root;
+        public Image           Background;   // el recuadro de la fila; solo se pinta si está ocupada
         public Image           Icon;
         public Button          IconButton;   // solo el TUYO abre el selector de clase
         public Button          JoinButton;
+        public Button          AddBotButton;   // "+" en un lugar libre: solo lo ve el host
+        public Button          RemoveButton;   // "x" sobre un bot: solo lo ve el host
         public TextMeshProUGUI Label;
+
+        // Quién ocupa esta fila AHORA. Se reescribe en cada redibujado, y es lo que deja
+        // que los listeners —registrados una sola vez, al construir— sepan sobre quién
+        // actuar sin volver a suscribirse en cada refresh.
+        public int EntryId;
     }
 
     private readonly List<Slot>[] _teamSlots = new List<Slot>[LobbyManager.TeamCount];
@@ -240,10 +269,51 @@ public class UI_LobbyPanel : MonoBehaviour
         Submit(team, classIndex, spectator: team <= 0);
     }
 
+    // Sobre QUIÉN va a actuar el selector de clase cuando se elija: 0 = yo, negativo = ese
+    // bot. Se decide al abrirlo, no al elegir, porque la fila puede cambiar mientras está
+    // abierto (alguien se conecta y se corren los lugares).
+    private int _pickerTarget;
+
+    // El host mete un bot en un lugar libre. Entra ya listo y con la primera clase de la
+    // lista; cambiársela es tocarle el ícono.
+    private void AddBot(int team)
+    {
+        LobbyManager lobby = LobbyManager.Instance;
+        if (lobby == null || !lobby.IsLobbyReady) return;
+        if (team > 0 && lobby.IsTeamFull(team)) return;
+
+        lobby.ServerAddBot(team, 0);
+    }
+
+    private void RemoveBot(int botId)
+    {
+        LobbyManager lobby = LobbyManager.Instance;
+        if (lobby == null || !lobby.IsLobbyReady || !LobbyManager.IsBot(botId)) return;
+
+        lobby.ServerRemoveBot(botId);
+    }
+
+    private void ShowClassPickerFor(int entryId)
+    {
+        _pickerTarget = LobbyManager.IsBot(entryId) ? entryId : 0;
+        ShowClassPicker(true);
+    }
+
     private void ChooseClass(int classIndex)
     {
         LobbyManager lobby = LobbyManager.Instance;
-        if (lobby == null || !lobby.TryGetLocalEntry(out LobbyEntry me)) return;
+        if (lobby == null || !lobby.IsLobbyReady) return;
+
+        // Elegirle la clase a un bot es otro pedido: el bot no tiene nombre ni equipo que
+        // reenviar, solo cambia su clase.
+        if (LobbyManager.IsBot(_pickerTarget))
+        {
+            lobby.ServerSetBotClass(_pickerTarget, classIndex);
+            ShowClassPicker(false);
+            return;
+        }
+
+        if (!lobby.TryGetLocalEntry(out LobbyEntry me)) return;
 
         Submit(me.Team, classIndex, me.Spectator);
         ShowClassPicker(false);
@@ -415,11 +485,28 @@ public class UI_LobbyPanel : MonoBehaviour
     // de un equipo sin desconectarte).
     private void DrawSlot(Slot slot, LobbyEntry entry, bool occupied, int myId, int team)
     {
-        bool isMine = occupied && entry.ClientId == myId;
+        bool isMine  = occupied && entry.ClientId == myId;
+        bool isHost  = LobbyManager.LocalIsHost;
+        bool isBot   = occupied && LobbyManager.IsBot(entry.ClientId);
+        bool inTeam  = team > 0;
+
+        slot.EntryId = occupied ? entry.ClientId : 0;
+
+        // El recuadro solo se pinta cuando hay alguien: en un lugar libre, el fondo ya lo
+        // pone el botón de Unirte, y dos recuadros encimados se ven sucios.
+        if (slot.Background != null)
+            slot.Background.color = !occupied ? Color.clear
+                                  : isMine    ? OwnRowColor
+                                              : RowColor;
 
         slot.Icon.gameObject.SetActive(occupied);
         slot.Label.gameObject.SetActive(occupied);
         slot.JoinButton.gameObject.SetActive(!occupied);
+
+        // El "+" solo en un lugar LIBRE de equipo, y solo para el host. El "x" solo sobre
+        // un bot, también solo para el host: a un jugador no se lo echa desde acá.
+        slot.AddBotButton.gameObject.SetActive(!occupied && inTeam && isHost);
+        slot.RemoveButton.gameObject.SetActive(isBot && isHost);
 
         if (occupied)
         {
@@ -433,20 +520,26 @@ public class UI_LobbyPanel : MonoBehaviour
             slot.Icon.sprite  = cls != null ? cls.ClassIcon : null;
             slot.Icon.color   = cls != null && cls.ClassIcon != null ? Color.white : SlotColor;
 
-            // Solo TU ícono abre el selector de clase, y solo si estás en un equipo.
-            slot.IconButton.interactable = isMine && team > 0;
+            // Tu ícono lo tocás vos; el de un bot, el host. Nadie toca el de otro jugador.
+            slot.IconButton.interactable = inTeam && (isMine || (isBot && isHost));
 
-            slot.Label.text = isMine && entry.ClassIndex < 0 && team > 0
+            bool needsClass = entry.ClassIndex < 0 && inTeam;
+            slot.Label.text = (isMine || (isBot && isHost)) && needsClass
                             ? $"{entry.PlayerName}  ← elegí clase"
                             : entry.PlayerName;
-            slot.Label.color = entry.Ready ? ReadyColor : PendingColor;
+
+            // Los bots van en otro color aunque estén listos: en una captura conviene ver
+            // de un vistazo quién es persona y quién no.
+            slot.Label.color = isBot   ? BotColor
+                             : entry.Ready ? ReadyColor
+                                           : PendingColor;
             return;
         }
 
         slot.JoinButton.interactable = true;
 
         TextMeshProUGUI joinLabel = slot.JoinButton.GetComponentInChildren<TextMeshProUGUI>();
-        if (joinLabel != null) joinLabel.text = team > 0 ? "Unirte" : "Espectador";
+        if (joinLabel != null) joinLabel.text = inTeam ? "Unirte" : "Espectador";
     }
 
     private List<LobbyEntry> MembersOf(LobbyManager lobby, int team)
@@ -460,7 +553,8 @@ public class UI_LobbyPanel : MonoBehaviour
         return list;
     }
 
-    private CharacterClassDefinition ClassAt(int index)
+    // Pública: la sala la consulta al arrancar para saber con qué clase spawnear cada bot.
+    public CharacterClassDefinition ClassAt(int index)
         => SelectableClasses != null && index >= 0 && index < SelectableClasses.Length
            ? SelectableClasses[index] : null;
 
@@ -574,8 +668,13 @@ public class UI_LobbyPanel : MonoBehaviour
             {
                 int capturedTeam = team;
                 Slot slot = CreateSlot($"T{team}_S{s}", x, headerY - 56f - RowHeight * s);
+                Slot capturedSlot = slot;
+
                 slot.JoinButton.onClick.AddListener(() => JoinTeam(capturedTeam));
-                slot.IconButton.onClick.AddListener(() => ShowClassPicker(true));
+                slot.IconButton.onClick.AddListener(() => ShowClassPickerFor(capturedSlot.EntryId));
+                slot.AddBotButton.onClick.AddListener(() => AddBot(capturedTeam));
+                slot.RemoveButton.onClick.AddListener(() => RemoveBot(capturedSlot.EntryId));
+
                 _teamSlots[t].Add(slot);
             }
         }
@@ -631,14 +730,22 @@ public class UI_LobbyPanel : MonoBehaviour
             _root, $"Slot_{name}", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
             new Vector2(0.5f, 1f), new Vector2(x, y), new Vector2(ColumnWidth - 40f, RowHeight - 8f));
 
+        // El recuadro de la fila. Va PRIMERO para que quede detrás de todo lo demás: el
+        // orden de los hijos es el orden de dibujado en un Canvas.
+        slot.Background = slot.Root.gameObject.AddComponent<Image>();
+        slot.Background.color = RowColor;
+
         // Ícono de clase, a la izquierda. Es un botón: el TUYO abre el selector.
         //
         // El nombre arranca DESPUÉS del ícono más un aire: antes el rect del texto
         // empezaba 4 px adentro del ícono y quedaban pegados.
-        const float iconX    = 14f;
-        const float iconSize = 40f;
-        const float gap      = 12f;
-        float labelX = iconX + iconSize + gap;
+        const float iconX = 14f;
+        const float gap   = 12f;
+
+        // El ícono no puede ser más alto que la fila: si SlotIconSize se pasa, se recorta
+        // (y para agrandarlo de verdad hay que subir RowHeight).
+        float iconSize = Mathf.Clamp(SlotIconSize, 8f, RowHeight - 8f);
+        float labelX   = iconX + iconSize + gap;
 
         RectTransform iconRect = MercUIFactory.CreateRect(
             slot.Root, "Icon", new Vector2(0f, 0.5f), new Vector2(0f, 0.5f),
@@ -653,9 +760,24 @@ public class UI_LobbyPanel : MonoBehaviour
             slot.Root, "Name", "", 18f, PendingColor, TextAlignmentOptions.Left,
             new Vector2(labelX, 0f), new Vector2(ColumnWidth - 40f - labelX - 8f, 32f));
 
+        // El "Unirte" deja libre el borde derecho para el "+" de agregar un bot.
+        const float sideW = 34f;
+
         slot.JoinButton = CreateButton(slot.Root, "Join", "Unirte", SlotColor,
-                                       new Vector2(0.5f, 0.5f), Vector2.zero,
-                                       new Vector2(ColumnWidth - 90f, RowHeight - 14f), out _);
+                                       new Vector2(0f, 0.5f), new Vector2(14f, 0f),
+                                       new Vector2(ColumnWidth - 100f - sideW, RowHeight - 14f), out _);
+
+        // "+" — agregar un bot en este lugar. Solo lo ve el host (ver DrawSlot).
+        slot.AddBotButton = CreateButton(slot.Root, "AddBot", "+", IdleColor,
+                                         new Vector2(1f, 0.5f), new Vector2(-14f, 0f),
+                                         new Vector2(sideW, RowHeight - 14f), out _);
+
+        // "x" — sacar el bot que ocupa este lugar. Mismo sitio que el "+", porque nunca
+        // se ven los dos a la vez: uno es para el lugar vacío y el otro para el ocupado.
+        slot.RemoveButton = CreateButton(slot.Root, "RemoveBot", "x",
+                                         new Color(0.45f, 0.20f, 0.22f, 1f),
+                                         new Vector2(1f, 0.5f), new Vector2(-14f, 0f),
+                                         new Vector2(sideW, RowHeight - 14f), out _);
 
         return slot;
     }
@@ -681,11 +803,15 @@ public class UI_LobbyPanel : MonoBehaviour
     private void BuildClassPicker()
     {
         int count = SelectableClasses != null ? SelectableClasses.Length : 0;
-        float width = Mathf.Max(140f, count * 96f + 32f);
+        // La grilla se dimensiona a partir del ícono: paso = ícono + aire, y el recuadro
+        // deja un margen alrededor. Así subir ClassIconSize agranda todo junto.
+        float iconSize = Mathf.Max(24f, ClassIconSize);
+        float step     = iconSize + 12f;
+        float width    = Mathf.Max(140f, count * step + 32f);
 
         _classPicker = MercUIFactory.CreateRect(
             _root, "ClassPicker", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-            new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(width, 130f));
+            new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(width, iconSize + 46f));
 
         Image bg = _classPicker.gameObject.AddComponent<Image>();
         bg.color = new Color(PanelColor.r, PanelColor.g, PanelColor.b, 1f); // opaco
@@ -705,7 +831,7 @@ public class UI_LobbyPanel : MonoBehaviour
             RectTransform iconRect = MercUIFactory.CreateRect(
                 _classPicker, $"Class_{i}", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
                 new Vector2(0.5f, 0.5f),
-                new Vector2((i - (count - 1) * 0.5f) * 96f, 0f), new Vector2(84f, 84f));
+                new Vector2((i - (count - 1) * 0.5f) * step, 0f), new Vector2(iconSize, iconSize));
 
             Image icon = iconRect.gameObject.AddComponent<Image>();
             icon.sprite = cls != null ? cls.ClassIcon : null;

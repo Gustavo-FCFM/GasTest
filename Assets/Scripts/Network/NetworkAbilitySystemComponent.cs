@@ -1158,10 +1158,21 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // =========================================================
 
     // Guarda la habilidad pendiente y manda el TargetRpc a la conexión dueña.
+    // ¿Hay una conexión dueña a la que mandarle un TargetRpc?
+    //
+    // Los BOTS son objetos del servidor: no tienen dueño. Mandarles un TargetRpc hace que
+    // FishNet avise "Target is not an observer for object Player(Clone)" en cada intento
+    // —y no mueve a nadie—. Las habilidades que dependen de eso ya se filtran antes (ver
+    // GameplayAbility.MovesThroughOwner); esto es la red de seguridad para las que solo
+    // lo usan de adorno, como el retroceso del disparo.
+    private bool HasOwnerConnection() => Owner != null && Owner.IsValid;
+
     [Server]
     public void ServerStartLeap(GA_LeapAttack ability, float upVelocity, float forwardForce)
     {
         _pendingLeapImpact = ability;
+        if (!HasOwnerConnection()) return;
+
         TargetExecuteLeap(Owner, upVelocity, forwardForce);
     }
 
@@ -1249,6 +1260,16 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     [Server]
     public void ServerTeleportOwnerTo(Vector3 position, Vector3 faceDir)
     {
+        // Un BOT no tiene dueño a quien mandarle el TargetRpc, pero el servidor SÍ es su
+        // autoridad sobre el transform: lo mueve directo. Sin esto el Parpadeo del pícaro
+        // se activaba, pagaba el cooldown y no lo movía un centímetro.
+        if (!HasOwnerConnection())
+        {
+            PlayerController bot = GetComponent<PlayerController>();
+            if (bot != null && bot.IsBot) bot.ServerTeleportBot(position, faceDir);
+            return;
+        }
+
         TargetExecuteTeleport(Owner, position, faceDir);
     }
 
@@ -1277,6 +1298,15 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     public void ServerStartDash(Vector3 velocity, float duration, int excludeMask, bool faceVelocity = true,
                                float exitSpeedPercent = 0f, float exitDamping = 3f)
     {
+        // Mismo caso que el teletransporte: sin dueño, el dash lo corre el cerebro del bot
+        // sobre su NavMeshAgent (ver BotController.ServerDash).
+        if (!HasOwnerConnection())
+        {
+            BotController brain = GetComponent<BotController>();
+            if (brain != null) brain.ServerDash(velocity, duration, faceVelocity);
+            return;
+        }
+
         TargetExecuteDash(Owner, velocity, duration, excludeMask, faceVelocity, exitSpeedPercent, exitDamping);
     }
 

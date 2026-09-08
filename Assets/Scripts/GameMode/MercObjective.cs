@@ -95,6 +95,11 @@ public class MercObjective : NetworkBehaviour
     public bool IsCarried      => _netCarrierId.Value >= 0;
     public int  CarrierTeam    => _netCarrierTeam.Value;
 
+    // Quién lo lleva, del lado del SERVIDOR (en los clientes es null: _carrier solo se
+    // llena al asignarlo). Lo usan los bots, que corren server-side, para dos cosas: para
+    // saber si el portador son ellos mismos, y para cazarlo si es de otro equipo.
+    public AbilitySystemComponent ServerCarrier => _carrier;
+
     // Posición para el marcador del HUD: la del portador si lo llevan, si no la del piso.
     public Vector3 WorldPosition
     {

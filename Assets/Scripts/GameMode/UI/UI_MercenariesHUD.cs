@@ -206,6 +206,11 @@ public class UI_MercenariesHUD : MonoBehaviour
         return !lobby.MatchStarted;
     }
 
+    // El ESPECTADOR puede apagar el marcador para grabar limpio (ver SpectatorCamera).
+    // Es un pedido explícito y no un estado del juego, así que gana sobre el cálculo
+    // normal de visibilidad.
+    public static bool ScoreboardHiddenByViewer;
+
     private void Update()
     {
         if (_root == null) return;
@@ -217,7 +222,7 @@ public class UI_MercenariesHUD : MonoBehaviour
         // Y TAMPOCO mientras sigas en la SALA eligiendo: el marcador aparecia apenas se
         // conectaba el objeto de red, o sea encima del menu de clases y del panel de la
         // sala. Se espera a que el jugador local haya confirmado.
-        bool show = gm != null && !IsStillChoosingInLobby();
+        bool show = gm != null && !IsStillChoosingInLobby() && !ScoreboardHiddenByViewer;
         if (_root.gameObject.activeSelf != show) _root.gameObject.SetActive(show);
         if (!show) return;
 

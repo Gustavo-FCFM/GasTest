@@ -10117,6 +10117,60 @@ MonoBehaviour:
     Rotation: {x: 0, y: 0, z: 0, w: 0}
     Scale: {x: 0, y: 0, z: 0}
     IsValid: 0
+--- !u!1 &935484878
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 935484880}
+  - component: {fileID: 935484879}
+  m_Layer: 0
+  m_Name: SpectatorCamera
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &935484879
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 935484878}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 77dbbea2c22a0964f88ab767aaf5620c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MoveSpeed: 16
+  FastMultiplier: 3
+  LookSensitivity: 2.4
+  StartHeight: 26
+  StartDistance: 40
+  FollowOffset: {x: 0, y: 2.4, z: -4.8}
+  FollowLerp: 8
+  FreeCamKey: 102
+  TogglePlayerUIKey: 104
+  ScoreboardKey: 109
+--- !u!4 &935484880
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 935484878}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &937828808
 GameObject:
   m_ObjectHideFlags: 0
@@ -13603,14 +13657,20 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 94ade0794681b0248a3b0176ad1651c6, type: 2}
   - {fileID: 11400000, guid: 390e03f3a9d111e46ba5dc758818e4cb, type: 2}
   - {fileID: 11400000, guid: 9704f66316c658c4d9e4fa5c7aa06d9c, type: 2}
-  PanelSize: {x: 1180, y: 660}
+  PanelSize: {x: 1250, y: 600}
   ColumnWidth: 250
   RowHeight: 56
-  PanelColor: {r: 0.09, g: 0.09, b: 0.11, a: 0.97}
+  PanelScale: 1.35
+  SlotIconSize: 100
+  ClassIconSize: 150
+  PanelColor: {r: 0.09, g: 0.09, b: 0.11, a: 0.39215687}
   SlotColor: {r: 0.2, g: 0.24, b: 0.32, a: 1}
   ReadyColor: {r: 0.55, g: 0.95, b: 0.55, a: 1}
   PendingColor: {r: 0.86, g: 0.88, b: 0.92, a: 1}
   IdleColor: {r: 0.17, g: 0.24, b: 0.4, a: 1}
+  RowColor: {r: 0.16, g: 0.19, b: 0.26, a: 1}
+  OwnRowColor: {r: 0.22, g: 0.29, b: 0.42, a: 1}
+  BotColor: {r: 0.72, g: 0.66, b: 0.95, a: 1}
 --- !u!4 &1292068254
 Transform:
   m_ObjectHideFlags: 0
@@ -18573,7 +18633,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 5788702647801022299, guid: 4ee24ec3c30f6be4fb750c695e91b66e, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 26.74
+      value: 50.19
       objectReference: {fileID: 0}
     - target: {fileID: 5788702647801022299, guid: 4ee24ec3c30f6be4fb750c695e91b66e, type: 3}
       propertyPath: m_LocalPosition.y
@@ -18581,7 +18641,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5788702647801022299, guid: 4ee24ec3c30f6be4fb750c695e91b66e, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 5.91
+      value: 22.6
       objectReference: {fileID: 0}
     - target: {fileID: 5788702647801022299, guid: 4ee24ec3c30f6be4fb750c695e91b66e, type: 3}
       propertyPath: m_LocalRotation.w
@@ -23279,3 +23339,4 @@ SceneRoots:
   - {fileID: 1768053962}
   - {fileID: 1708018624}
   - {fileID: 1292068254}
+  - {fileID: 935484880}

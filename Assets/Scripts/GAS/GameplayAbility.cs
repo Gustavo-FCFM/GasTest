@@ -374,6 +374,20 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // y llamar CommitAbility()/EndAbility() en los momentos correctos.
     public abstract void Activate();
 
+    // ¿Esta habilidad mueve al personaje DESDE EL DUEÑO?
+    //
+    // El transform del jugador es client-authoritative, así que saltos, dashes y
+    // teletransportes los ejecuta la conexión dueña: el servidor le manda un TargetRpc y
+    // el impulso lo aplica el Update() del PlayerController de ese cliente.
+    //
+    // UN BOT NO TIENE DUEÑO. Si activa una de estas, FishNet avisa "Target is not an
+    // observer", el bot paga el cooldown y NO SE MUEVE. Marcarlas acá deja que el
+    // BotController simplemente no las proponga, en vez de tener que enumerar tipos.
+    //
+    // Marcala en true si tu habilidad llama a ServerStartLeap, ServerStartDash,
+    // ServerTeleportOwnerTo, ApplyAbilityVelocity o ApplyDashVelocity.
+    public virtual bool MovesThroughOwner => false;
+
     // Descuenta el costo, aplica el cooldown, y arranca la secuencia
     // visual automática si la habilidad tiene una configurada. Cada
     // Activate() concreto la llama una vez al confirmar que sí se va a
