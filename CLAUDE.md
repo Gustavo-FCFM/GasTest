@@ -24,14 +24,34 @@ la referencia queda en null sin avisar. Buscarlos por COMPONENTE
 (`AssetDatabase.FindAssets("t:Prefab")` + `GetComponent<T>()`), con la ruta solo como
 atajo.
 
-**Para verificar que compila:** Unity en batch mode, con el editor CERRADO (no entran
-dos instancias sobre el mismo proyecto):
+**Para verificar que compila, SIN cerrar el editor.** Unity trae su propio Roslyn, y deja
+en `Library/Bee` el archivo con los argumentos exactos que usa para compilar. Se lo puede
+invocar directo: tarda segundos y no abre una segunda instancia.
+
+```bash
+cd ".../Proyectos Gustavo/GasTest/GasTest"
+D="/c/Program Files/Unity/Hub/Editor/6000.0.59f2/Editor/Data"
+RSP=$(ls -t Library/Bee/artifacts/*.dag/Assembly-CSharp.rsp | head -1)
+sed 's|-out:.*|-out:"Temp/_check.dll"|; s|-refout:.*|-refout:"Temp/_check.ref.dll"|' "$RSP" > /tmp/check.rsp
+"$D/NetCoreRuntime/dotnet.exe" "$D/DotNetSdkRoslyn/csc.dll" "@/tmp/check.rsp" -nologo 2>&1 | grep "error CS"
+```
+
+Tres límites que conviene saber:
+
+- **El `.rsp` lista los archivos fuente uno por uno.** Un `.cs` NUEVO no entra hasta que
+  Unity regenere ese archivo — hay que agregarlo a mano a la copia (`echo '"Assets/..."'
+  >> /tmp/check.rsp`) o compilar con Unity una vez.
+- **No corre el codegen de FishNet** (el ILPostProcess que genera los RPCs), así que un
+  error que solo aparece ahí no lo detecta.
+- Es para `Assembly-CSharp`. Para las herramientas de editor, el `.rsp` equivalente es
+  `Assembly-CSharp-Editor.rsp`.
+
+**Compilar con Unity en batch** sigue siendo la verificación completa, pero necesita el
+editor CERRADO (no entran dos instancias sobre el mismo proyecto):
 
 ```bash
 "C:/Program Files/Unity/Hub/Editor/6000.0.59f2/Editor/Unity.exe" -batchmode -quit -nographics -projectPath "C:/Users/MDyR/Desktop/Proyectos Gustavo/GasTest/GasTest" -logFile compile.log
 ```
-
-Después buscar `error CS` en el log.
 
 ---
 

@@ -129,6 +129,17 @@ public class BotController : MonoBehaviour
              "definitiva.")]
     [Range(0.05f, 0.9f)] public float ExecuteBelowHealth = 0.4f;
 
+    [Tooltip("Por debajo de esta vida se considera que alguien está EN PELIGRO. Es lo que " +
+             "hace que el Paladín deje de pegar y pase a curar, escudar y soltar su " +
+             "definitiva.")]
+    [Range(0.05f, 0.9f)] public float AllyDangerHealth = 0.3f;
+
+    [Tooltip("Vida a partir de la cual el Paladín SOSTIENE a alguien: escudos y curaciones " +
+             "de objetivo. Más alta que AllyDangerHealth a propósito — el Escudo de fe se " +
+             "pone ANTES de que la cosa se ponga fea; la definitiva se guarda para cuando ya " +
+             "lo está.")]
+    [Range(0.1f, 1f)] public float AllySupportHealth = 0.5f;
+
     [Tooltip("Cuántos segundos de combate trabado antes de gastar un buff. Sin esto se los " +
              "gastan caminando, apenas salen de cooldown, y no los tienen cuando importan.")]
     public float BuffAfterSeconds = 1.5f;
@@ -262,6 +273,32 @@ public class BotController : MonoBehaviour
     // el punto de muerte y vuelve caminando desde allá.
     public void OnServerTeleported() => WarpToNavMesh();
 
+    // Corta el salto o el dash que estuviera corriendo y deja todo en un estado sano.
+    //
+    // StopCoroutine mata la rutina EN SU YIELD, o sea a mitad de camino: sin esto, una
+    // segunda habilidad de movimiento la interrumpía con el agente apagado y las banderas
+    // puestas, y nadie las volvía a limpiar.
+    private void CancelMovementRoutines()
+    {
+        if (_dashRoutine != null) { StopCoroutine(_dashRoutine); _dashRoutine = null; }
+        if (_leapRoutine != null) { StopCoroutine(_leapRoutine); _leapRoutine = null; }
+
+        _dashing = false;
+        RestoreAgent();
+    }
+
+    // Deja al agente de vuelta en condiciones de mover al bot. Lo llaman el salto y el
+    // dash al terminar, y el propio Update como red de seguridad: cualquier camino que
+    // apague el agente y no lo encienda deja al bot congelado, y ese fue exactamente el
+    // bug de "de vez en cuando se quedan parados sin hacer nada".
+    private void RestoreAgent()
+    {
+        if (_agent == null) return;
+
+        if (!_agent.enabled) _agent.enabled = true;
+        if (_agent.isOnNavMesh) _agent.isStopped = false;
+    }
+
     // Mueve al bot RESPETANDO las paredes.
     //
     // Mueve al bot RESPETANDO las paredes, con un barrido PROPIO.
@@ -381,7 +418,7 @@ public class BotController : MonoBehaviour
     {
         if (!_ready || duration <= 0f) return;
 
-        if (_dashRoutine != null) StopCoroutine(_dashRoutine);
+        CancelMovementRoutines();
         _dashRoutine = StartCoroutine(DashRoutine(velocity, duration, faceVelocity));
     }
 
@@ -412,6 +449,7 @@ public class BotController : MonoBehaviour
 
         _dashing     = false;
         _dashRoutine = null;
+        RestoreAgent();
         WarpToNavMesh();
     }
 
@@ -466,7 +504,7 @@ public class BotController : MonoBehaviour
     {
         if (!_ready) { onLanded?.Invoke(); return; }
 
-        if (_leapRoutine != null) StopCoroutine(_leapRoutine);
+        CancelMovementRoutines();
         _leapRoutine = StartCoroutine(LeapRoutine(AimLeapVelocity(horizontalVelocity, upVelocity),
                                                   upVelocity, onLanded));
     }
@@ -477,8 +515,12 @@ public class BotController : MonoBehaviour
 
         // El agente se APAGA, no se pausa: un NavMeshAgent encendido pega el transform al
         // suelo en cada frame, y el salto no tendría altura.
-        bool hadAgent = _agent != null && _agent.enabled;
-        if (hadAgent) _agent.enabled = false;
+        // El agente se APAGA, no se pausa: encendido pega el transform al suelo en cada
+        // frame y el salto no tendría altura. Se vuelve a encender SIEMPRE al terminar —
+        // no "si estaba encendido": si un segundo salto interrumpía al primero, la rutina
+        // nueva veía el agente ya apagado, concluía que no había que encenderlo, y el bot
+        // se quedaba parado para siempre.
+        if (_agent != null) _agent.enabled = false;
 
         float gravity  = Mathf.Abs(Physics.gravity.y);
         float vy       = upVelocity;
@@ -512,7 +554,7 @@ public class BotController : MonoBehaviour
             yield return null;
         }
 
-        if (hadAgent) _agent.enabled = true;
+        RestoreAgent();
 
         // Al aterrizar solo se le avisa al agente dónde quedó. NADA de mandarlo a la base:
         // un salto que salió bien termina donde el bot quiso, y devolverlo era peor que el
@@ -541,6 +583,10 @@ public class BotController : MonoBehaviour
             DriveAnimator(Vector3.zero);
             return;
         }
+
+        // Si NO estoy en pleno salto o dash, el agente tiene que estar encendido. Ver
+        // RestoreAgent: es la red que atrapa cualquier camino que lo haya dejado apagado.
+        if (!_dashing) RestoreAgent();
 
         if (_agent != null && _agent.enabled && _agent.isOnNavMesh)
         {
@@ -802,11 +848,26 @@ public class BotController : MonoBehaviour
                 return targetPos + toAlly.normalized * (MeleeRange * 0.85f);
             }
 
+            case EBotRole.Assassin:
+            {
+                // El Pícaro pega POR DETRÁS: su daño a la espalda es mayor (ver
+                // BackstabDamageModifier), así que rodear hasta quedar atrás del objetivo
+                // no es un adorno, es su forma de pelear.
+                if (_chasing) return PositionNear(targetPos, MeleeRange * 0.7f);
+
+                if (!PrimaryReady()) return OrbitPoint(targetPos, MeleeRange * BackOffRangeMult);
+
+                Vector3 behind = targetPos - target.transform.forward * (MeleeRange * 0.75f);
+                return NavMesh.SamplePosition(behind, out NavMeshHit hit, 3f, NavMesh.AllAreas)
+                     ? hit.position
+                     : OrbitPoint(targetPos, MeleeRange * 0.8f);
+            }
+
             default:
             {
-                // Bárbaro y Pícaro: encima cuando pueden pegar, y AFUERA mientras el
-                // ataque está en cooldown. Quedarse plantado comiendo golpes sin poder
-                // responder es lo que los hacía ver como muñecos.
+                // Bárbaro: encima cuando puede pegar, y AFUERA mientras el ataque está en
+                // cooldown. Quedarse plantado comiendo golpes sin poder responder es lo
+                // que los hacía ver como muñecos.
                 // Persiguiendo al portador de la carga NO se rodea ni se espera el
                 // cooldown: se lo intercepta. Bailar alrededor mientras se escapa con la
                 // carga es perder la partida con estilo.
@@ -924,6 +985,11 @@ public class BotController : MonoBehaviour
             // exacto a propósito: si el NPC te está pegando en la cara, seguís con el NPC.
             bool isPlayer = other.GetComponent<PlayerController>() != null;
             float score = isPlayer ? dist - 8f : dist;
+
+            // Y SOBRE EL QUE APOSTÉ va primero: el Pirata le pega más fuerte (ver
+            // GamblePassive), así que ignorarlo es tirar su pasiva a la basura. El
+            // descuento es grande para que gane a cualquier otro a la vista.
+            if (other.HasTag(EGameplayTag.Status_Gambled)) score -= 40f;
 
             if (score >= bestScore) continue;
             bestScore = score;
@@ -1164,18 +1230,72 @@ public class BotController : MonoBehaviour
     {
         bool engaged = dist <= MeleeRange * 1.6f;
 
-        // LA DEFINITIVA (R) se juzga por ROL, no por tipo: cada clase la tiene para algo
-        // distinto y usarla apenas sale de cooldown es tirarla.
+        // CASOS CON NOMBRE PROPIO. Van primero porque su momento no se deduce del tipo: son
+        // habilidades pensadas para una jugada concreta, y tratarlas como "un área más" o
+        // "un buff más" las desperdicia.
+        switch (ability)
+        {
+            // La auto-revivida del Inmortal la dispara la MUERTE (ver
+            // PlayerController.HandlePlayerDeath). Gastarla a mano lo deja muriendo de
+            // verdad la próxima vez.
+            case GA_ImmortalWrath _:
+                return false;
+
+            // El señuelo del Ilusionista: se planta cuando alguien está por pegarle, para
+            // que le peguen a la copia. Antes salía en cualquier momento y la arena se
+            // llenaba de señuelos parados.
+            case GA_ExactCopy _:
+                return _target != null && dist <= MeleeRange * 1.4f;
+
+            // La fiesta de copias rinde con el equipo junto: cada compañero cerca es una
+            // copia más.
+            case GA_CopyParty _:
+                return AlliesNear(transform.position, AoeRadius * 1.6f) >= 2;
+
+            // El cañoneo del Pirata es daño en área: contra dos o más.
+            case GA_CannonBarrage _:
+                return EnemiesNear(_target.transform.position, AoeRadius) >= 2;
+
+            // La marca del Asesino es para REMATAR: un jugador con poca vida en el punto.
+            case GA_MarkedForDeath _:
+                return _target != null
+                    && _target.GetComponent<PlayerController>() != null
+                    && HealthFraction(_target) <= ExecuteBelowHealth;
+
+            // EL ESCUDO se levanta para DEFENDER, no porque sí. Bloquear también cura, así
+            // que es la forma de sostener al equipo sin dejar de estar delante — pero
+            // mientras nadie corre peligro conviene PEGAR, porque sus ataques son los que
+            // curan. Y además hay que tener al enemigo encima: un escudo contra nadie no
+            // hace nada y queda en cooldown.
+            case GA_ShieldBlock _:
+                return SomeoneInDanger() && dist <= MeleeRange * 1.8f;
+
+            // Las de OBJETIVO dicen a quién apuntan, así que la regla sale del asset:
+            // a un ALIADO son curaciones, escudos y protecciones —van cuando alguien está
+            // herido—; a un ENEMIGO son marcas, y van sobre el que estoy peleando.
+            case GA_Target t:
+            {
+                if (t.Targets != GA_Target.ETargetSide.Allies) return _target != null;
+
+                // Un escudo o una curación se ponen ANTES (50 %); la definitiva se guarda
+                // para la emergencia de verdad (30 %).
+                float threshold = slot == EAbilityInput.Action3 ? AllyDangerHealth : AllySupportHealth;
+                return SomeoneBelow(threshold);
+            }
+        }
+
+        // UN ATURDIMIENTO vale contra UNO SOLO: frenar a alguien es tan útil como pegarle,
+        // y guardarlo esperando a que se junten dos es desperdiciarlo. Se detecta por el
+        // efecto que aplica, no por el nombre de la habilidad.
+        if (AppliesStun(ability)) return _target != null;
+
+        // LA DEFINITIVA (R) se juzga por ROL: cada clase la tiene para algo distinto y
+        // usarla apenas sale de cooldown es tirarla.
         if (slot == EAbilityInput.Action3)
         {
-            // LA IRA DEL INMORTAL no se usa a mano NUNCA: es la auto-revivida, y el
-            // PlayerController la dispara solo al morir (ver HandlePlayerDeath). Gastarla
-            // en una pelea cualquiera deja al Inmortal muriendo de verdad la próxima vez.
-            if (ability is GA_ImmortalWrath) return false;
-
             switch (role)
             {
-                case EBotRole.Support:  return HealthFraction(_asc) < 0.5f || AllyInTrouble();
+                case EBotRole.Support:  return SomeoneInDanger();
                 case EBotRole.Assassin: return HealthFraction(_target) <= ExecuteBelowHealth;
                 default:                return EnemiesNear(_target.transform.position, AoeRadius) >= 2;
             }
@@ -1184,14 +1304,13 @@ public class BotController : MonoBehaviour
         switch (Classify(ability))
         {
             case EAbilityKind.Buff:
-                // Trabado en combate, no al aire. Un buff gastado caminando no sirve para
-                // nada y encima queda en cooldown para cuando hace falta.
-                return engaged && Time.time - _engagedSince >= BuffAfterSeconds;
+                return ShouldUseBuff(ability, engaged);
 
             case EAbilityKind.Ranged:
                 // Antes del contacto, o cuando el otro se está yendo: es justo cuando un
-                // ataque a distancia rinde y el cuerpo a cuerpo no llega.
-                return !engaged || _targetFleeing;
+                // ataque a distancia rinde y el cuerpo a cuerpo no llega. Y con poca vida,
+                // siempre — pegar de lejos es lo único que se puede hacer sin morirse.
+                return !engaged || _targetFleeing || HealthFraction(_asc) < 0.4f;
 
             case EAbilityKind.Aoe:
                 // Vale la pena con dos o más juntos; con uno solo, el básico alcanza.
@@ -1204,6 +1323,105 @@ public class BotController : MonoBehaviour
                 return engaged;   // lo cuerpo a cuerpo, en contacto
         }
     }
+
+    // No todos los buffs se usan en el mismo momento, y NO hace falta marcarlos a mano: se
+    // mira lo que el efecto HACE.
+    //
+    //  · Da Status_Invisible  → es un sigilo: se usa ANTES de entrar, para acercarse. Con
+    //    la regla general (trabado en combate) el Asesino no lo usaba nunca, que es
+    //    justamente lo contrario de para qué existe.
+    //  · Sube la vida         → es una curación de emergencia: solo con poca vida.
+    //  · Cualquier otro       → buff de pelea: trabado y después de un momento, para no
+    //    gastarlo caminando apenas sale de cooldown.
+    private bool ShouldUseBuff(GameplayAbility ability, bool engaged)
+    {
+        GameplayEffect effect = ability is GA_SelfBuff buff ? buff.BuffEffect : null;
+
+        if (GrantsTag(effect, EGameplayTag.Status_Invisible))
+            return !engaged && _target != null;
+
+        if (HealsHealth(effect))
+            return HealthFraction(_asc) <= 0.45f;
+
+        // Un buff de pelea se usa cuando HAY pelea: con un enemigo cerca, no despues de
+        // aguantar un rato trabado. El Castigo del Paladin es justo eso — carga el proximo
+        // ataque, asi que llega tarde si espera a estar peleando hace segundo y medio.
+        if (_target != null && Vector3.Distance(transform.position, _target.transform.position) <= MeleeRange * 3f)
+            return true;
+
+        return engaged && Time.time - _engagedSince >= BuffAfterSeconds;
+    }
+
+    // ¿Hay alguien de los míos en problemas? Es lo que hace que el Paladín deje de pegar y
+    // pase a sostener: sus curaciones y escudos no se gastan "por si acaso".
+    private bool SomeoneInDanger() => SomeoneBelow(AllyDangerHealth);
+
+    // ¿Yo o el compañero más cercano estamos por debajo de esta fracción de vida? El
+    // umbral lo pone quien pregunta: sostener empieza antes que la emergencia.
+    private bool SomeoneBelow(float fraction)
+    {
+        if (HealthFraction(_asc) <= fraction) return true;
+
+        AbilitySystemComponent ally = FindNearestAlly();
+        return ally != null && HealthFraction(ally) <= fraction;
+    }
+
+    // ¿Esta habilidad ATURDE? Se mira el efecto que aplica, no el nombre: así la Presencia
+    // conquistadora entra sola, y cualquier aturdimiento nuevo también.
+    private static bool AppliesStun(GameplayAbility ability)
+    {
+        switch (ability)
+        {
+            case GA_InstantAoE aoe: return AnyGrants(aoe.EffectsToApply, EGameplayTag.State_Stunned);
+            case GA_Target t:       return AnyGrants(t.TargetEffects,    EGameplayTag.State_Stunned);
+            default:                return false;
+        }
+    }
+
+    private static bool AnyGrants(List<GameplayEffect> effects, EGameplayTag tag)
+    {
+        if (effects == null) return false;
+
+        foreach (GameplayEffect e in effects)
+            if (GrantsTag(e, tag)) return true;
+
+        return false;
+    }
+
+    private static bool GrantsTag(GameplayEffect effect, EGameplayTag tag)
+        => effect != null && effect.GrantedTags != null && effect.GrantedTags.Contains(tag);
+
+    private static bool HealsHealth(GameplayEffect effect)
+    {
+        if (effect == null || effect.Modifiers == null) return false;
+
+        foreach (Modifier m in effect.Modifiers)
+            if (m != null && m.Attribute == EAttributeType.Health && m.Magnitude > 0f) return true;
+
+        return false;
+    }
+
+    // Cuántos COMPAÑEROS jugadores hay alrededor de un punto. Lo usa la fiesta de copias.
+    private int AlliesNear(Vector3 center, float radius)
+    {
+        int count = Physics.OverlapSphereNonAlloc(
+            center, radius, _hits, CharacterLayer, QueryTriggerInteraction.Ignore);
+
+        int allies = 0;
+        for (int i = 0; i < count; i++)
+        {
+            AbilitySystemComponent other = _hits[i].GetComponentInParent<AbilitySystemComponent>();
+            if (other == null || other == _asc) continue;
+            if (other.HasTag(EGameplayTag.State_Dead)) continue;
+            if (!_asc.IsAllyOf(other, includeSelf: false)) continue;
+            if (other.GetComponent<PlayerController>() == null) continue;
+
+            allies++;
+        }
+
+        return allies;
+    }
+
     // La habilidad de movimiento es la que más cambia de sentido según la clase.
     private bool ShouldUseMovement(GameplayAbility ability, EBotRole role, float dist)
     {
