@@ -1109,7 +1109,10 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
             PlayerController pc = GetComponent<PlayerController>();
             if (pc != null) pc.FinishAttack();
         }
-        // Dueño remoto: se lo avisamos solo a su conexión.
+        // Dueño remoto: se lo avisamos solo a su conexión. Un BOT no tiene ninguna, y esto
+        // corre al terminar CADA habilidad: sin el corte, FishNet avisaba "Target is not an
+        // observer" decenas de veces por partida.
+        if (!HasOwnerConnection()) return;
         TargetFinishAttack(Owner);
     }
 
@@ -1519,7 +1522,12 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     private void HandleMaxLevelReached()
     {
         if (!IsServerInitialized) return;
-        if (!IsOwner) TargetShowSubclassSelection(Owner);
+
+        // El menú de subclases es para una PERSONA. Un bot elige sola (ver
+        // BotController.TryChooseSubclass), y mandarle el aviso a una conexión que no
+        // existe era el grupo de avisos que salía justo cuando los equipos llegaban a
+        // nivel 3.
+        if (!IsOwner && HasOwnerConnection()) TargetShowSubclassSelection(Owner);
     }
 
     [TargetRpc]
