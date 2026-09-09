@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 8 de septiembre de 2026
+# Pendientes — actualizado el 9 de septiembre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -255,44 +255,30 @@ es el único lugar del proyecto donde están juntas además del panel y del Play
 
 # 3. Balance pendiente (decisiones tuyas)
 
-## El daño mágico cambió de raíz
+## El daño mágico — RESUELTO
 
-El tipo de daño ahora lo decide **el atributo del que escala el modificador**:
+El tipo de daño lo decide **el atributo del que escala el modificador**: `Attack` da daño
+físico (paga armadura) y `MagicDamage` da mágico (ignora armadura, vale doble contra
+escudos).
 
-- escala de `Attack` → daño **físico** (paga armadura)
-- escala de `MagicDamage` → daño **mágico** (ignora armadura, vale doble contra escudos)
+Quedó decidido: **el Paladín usa su daño mágico solo en el Smite**, que es la habilidad
+que lo tiene por diseño. El resto de su kit es físico. No hay nada que cambiar.
 
-Antes el `MagicDamage` del atacante se sumaba automáticamente a cada golpe. Estas cinco
-clases **perdieron 8-10 de daño por golpe** y pegan solo su físico hasta que les armes
-habilidades con efectos mágicos:
+## Los rangos del jefe — esperan su habilidad
 
-| Clase | MagicDamage |
-|---|---|
-| `ASDef_Inmortal` | 8 |
-| `ASDef_Paladin` | 8 |
-| `ASDef_OathOfConquestPaladin` | 10 |
-| `ASDef_OathOfDevotionPaladin` | 10 |
-| `ASDef_OathOfVengeancePaladin` | 10 |
+`Net_Boss` tiene `AttackRange: 20` pero `DetectionRadius: 16`: nunca puede usar su alcance
+completo. Y `LeashRadius: 20` es igual al alcance, así que suelta la correa justo en el
+borde desde donde todavía podría pegar.
 
-El Paladín es el que más lo siente. Hay que decidir **qué habilidades suyas son mágicas**
-y ponerles un efecto que escale de `MagicDamage`, como ya hace `GE_SmiteDamage`.
+Los números buenos dependen de qué habilidad termine teniendo, y eso está sin decidir. Lo
+que vale igual: **detección ≥ alcance**, y correa bastante mayor que las dos.
 
-## Los rangos del jefe no calzan
+## Los fantasmas — decidido subirles el daño
 
-`Net_Boss` tiene `AttackRange: 20` pero `DetectionRadius: 16`: **nunca puede usar su
-alcance completo**, te ataca recién cuando ya estás cuatro metros adentro. Y
-`LeashRadius: 20` es igual al alcance, así que suelta la correa justo en el borde desde
-donde todavía podría pegarte.
+Hacen 5 de daño contra 120 de vida: un 4 % por golpe. No presentan amenaza.
 
-Lo que tiene sentido es detección ≥ alcance, y correa bastante mayor que las dos.
-`KeepDistance: 11` parece razonable si el alcance real termina siendo 16-20.
-
-## Los fantasmas siguen siendo sacos de experiencia
-
-Hacen 5 de daño contra 120 de vida: un 4 % por golpe, casi 40 segundos para matarte
-estando quieto. Si querés que se sientan una amenaza, lo que más rinde es el **ataque**
-en `ASDef_WaveEnemy` (probá 12-15), y después la vida (5 es muy poco: cualquier ataque
-los borra).
+Lo que más rinde es el **ataque** en `ASDef_WaveEnemy` (probá 12-15). La vida también es
+muy poca (5): cualquier ataque los borra.
 
 ---
 
@@ -335,19 +321,32 @@ del observado y `M` para el marcador.
 
 ### Lo que falta verificar
 
-Nada de esto se vio corriendo. Es lo primero que hay que hacer al retomar.
+Lo primero al retomar.
 
-- **La cámara espectador entera.**
+- ~~La cámara espectador~~ — PROBADA Y APROBADA.
 - **Que ya no se salgan del mapa.** Ver abajo — es el problema que más vueltas dio.
 - El **dash y el blink** de los pícaros.
 - Los **cuatro slots de habilidad**. Las clases base usan LMB, RMB, Q y Shift; el bot solo
   probaba Q/E/R, así que **nunca** tiraron el hacha ni saltaron ni dashearon. Ahora se
   prueban los cuatro, con el arrojadizo de lejos y el cierre de distancia si está muy lejos.
-- Los **tótems del Chamán** (son de RUEDA: no se activan con Activate, hay que elegir una
-  opción del menú circular — el bot elige al azar).
+- ~~Los tótems del Chamán~~ — ANDAN. Eran de RUEDA (no se activan con Activate, hay que
+  elegir una opción del menú circular). Se les puso un ritmo propio (`SummonInterval`,
+  10 s) porque los usaban sin parar y llenaban el mapa.
 - El **salto del Bárbaro** y la **auto-revivida del Inmortal**.
 - Que **no entren a las salas seguras ajenas**, y que la expulsión no se vea brusca
   (`EjectMargin` en cada `MercTeamBase`).
+
+### El salto: no colisionaban mal, no APUNTABAN
+
+Con los números del Bárbaro —`JumpVelocity 15`, `ForwardForce 15`— el salto vuela 3
+segundos y recorre **46 metros**. La arena tiene 42 de radio: un solo salto la cruzaba
+entera y aterrizaba afuera.
+
+Perseguí eso como si fuera colisión (tres intentos, ver abajo) cuando el problema era
+otro: **un jugador apunta el salto y cae donde quiso**, y el bot solo se impulsaba hacia
+adelante con toda la fuerza. Ahora resuelve el tiro: mide el tiempo de vuelo, apunta al
+objetivo, y recorta a lo que la habilidad permite Y a un punto donde de verdad se pueda
+estar parado. Si no hay ninguno, salta en el lugar.
 
 ### El problema de salirse del mapa
 
@@ -378,6 +377,10 @@ que cerrar es eso, no el bot.
 
 ### Lo que quedó sabido y sin hacer
 
+- **Las clases base solo usan cuatro slots** (LMB, RMB, Q y Shift): E y R están vacíos.
+  Las subclases sí los usan. Si querés que los bots muestren un kit completo desde el
+  nivel 1, ahí falta contenido — son habilidades que hay que diseñar, no código.
+
 - **Las perillas del bot no salen en el inspector.** El componente se agrega en runtime,
   así que los valores son los defaults del código (`BotController.cs`). Si vas a iterar
   mucho el comportamiento, conviene moverlas a un ScriptableObject cableado en el
@@ -388,10 +391,19 @@ que cerrar es eso, no el bot.
   bots la usen con criterio (no toca el balance — es lo que yo haría).
 - **`Entity_PlayerCopy.prefab` usa el avatar VIEJO** (`RPG Tiny Hero Duo/MaleCharacterPBR`).
   Es el único asset del proyecto que quedó atrás. Ver la sección 1.
-- **Las salas seguras ajenas ya están prohibidas.** Quien no es del equipo entra y sale
-  expulsado por la cara más cercana, mirando hacia afuera. Vale para jugadores y bots
-  (a una persona se le pide por TargetRpc; a un bot lo mueve el servidor). Se apaga con
-  `EjectEnemies` en cada `MercTeamBase`.
+- **Las salas seguras ajenas están cerradas con PARED, no solo con expulsión.**
+  `MercSafeRoomBarrier` arma cuatro paredes invisibles alrededor del área. Un collider no
+  se puede filtrar por equipo desde el editor —las capas son globales y los equipos se
+  deciden en runtime—, así que la pared es UNA sola, sólida para todos, y a cada personaje
+  del equipo dueño se le apaga el par con `Physics.IgnoreCollision`. El que no es de casa
+  nunca recibe ese permiso y choca.
+
+  Los BOTS no chocan con ella caminando (un NavMeshAgent navega el NavMesh, no mira
+  colliders): para ellos la regla vive en `BotController.AvoidEnemySafeRooms`. La pared
+  frena a las PERSONAS y a cualquiera que llegue saltando o dasheando.
+
+  Sigue estando además la expulsión (`EjectEnemies` en cada `MercTeamBase`), como red por
+  si alguien igual se cuela.
 - **El `DeathZone` no agarraba a los bots.** Tenía `if (!player.IsOwner) return;` y un bot
   no tiene dueño: caerse al vacío los dejaba cayendo para siempre. Ahora, para un bot, la
   guardia es estar en el servidor.
@@ -407,6 +419,9 @@ prototipo aunque todo lo demás esté bien.
 Tiene **cola larga**: son 67 habilidades. No las sonorices todas — elegí las ~15 que
 suenan siempre (ataques básicos, pasos, golpe recibido, muerte, entrega del objetivo).
 La música de batalla la está haciendo un amigo: tené los hooks listos para cuando llegue.
+
+**Solo se puede hacer en la máquina de casa** — la del trabajo no tiene con qué trabajar
+audio. Si estás en el trabajo, agarrá otra cosa de esta lista.
 
 ## 4º · Pantalla de inicio y ajustes
 

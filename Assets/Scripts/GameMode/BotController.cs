@@ -115,6 +115,24 @@ public class BotController : MonoBehaviour
              "a cuerpo.")]
     public float ApproachAbilityInterval = 0.45f;
 
+    [Tooltip("Mínimo entre dos INVOCACIONES (los tótems del Chamán). Mucho más largo que el " +
+             "resto: el cooldown de la habilidad deja invocar seguido, pero un bot que la " +
+             "usa apenas puede llena el mapa de tótems y no se ve como juega una persona.")]
+    public float SummonInterval = 10f;
+
+    [Header("Criterio")]
+    [Tooltip("Radio con el que se cuenta si hay VARIOS enemigos juntos. Decide si vale la " +
+             "pena un área, un salto encima del grupo, o la definitiva del Bárbaro.")]
+    public float AoeRadius = 5f;
+
+    [Tooltip("Por debajo de esta vida, el Pícaro considera que puede EJECUTAR y suelta su " +
+             "definitiva.")]
+    [Range(0.05f, 0.9f)] public float ExecuteBelowHealth = 0.4f;
+
+    [Tooltip("Cuántos segundos de combate trabado antes de gastar un buff. Sin esto se los " +
+             "gastan caminando, apenas salen de cooldown, y no los tienen cuando importan.")]
+    public float BuffAfterSeconds = 1.5f;
+
     // --- referencias, resueltas en el servidor ---
     private PlayerController              _pc;
     private AbilitySystemComponent        _asc;
@@ -126,6 +144,7 @@ public class BotController : MonoBehaviour
     private float _thinkTimer;
     private float _nextPrimaryAt;
     private float _nextAbilityAt;
+    private float _nextSummonAt;
     private bool  _subclassChosen;
 
     private AbilitySystemComponent _target;
@@ -135,6 +154,16 @@ public class BotController : MonoBehaviour
     private IHoldAbility _held;           // habilidad de MANTENER en curso (el escudo)
     private float _heldUntil;
     private Vector3 _destination;
+
+    private float _engagedSince = -99f;   // desde cuándo estoy trabado en combate
+    private bool  _targetFleeing;         // el objetivo se está alejando
+    private float _lastTargetDistance;
+    private float _lastHealth = -1f;      // para saber si me están curando
+    private int   _lostChecks;            // decisiones seguidas fuera de lugar
+
+    // Cuántas decisiones seguidas hay que estar perdido antes del rescate. A cuatro por
+    // segundo, seis son un segundo y medio: suficiente para descartar un tropiezo.
+    private const int LostChecksBeforeRescue = 6;
 
     private float _strafeSign = 1f;   // hacia qué lado rodea este bot
     private float _strafeFlipAt;      // cuándo cambia de sentido
@@ -180,6 +209,12 @@ public class BotController : MonoBehaviour
 
         // Arrancan escalonados: si los nueve piensan en el mismo frame se nota el tirón.
         _thinkTimer = Random.Range(0f, ThinkInterval);
+
+        // Y las habilidades también, con más margen. Sin esto el equipo entero saltaba EN
+        // EL MISMO INSTANTE al abrirse las puertas: todos tenían todo listo y la misma
+        // regla los disparaba a la vez. Un poco de desfasaje ya los hace ver distintos.
+        _nextAbilityAt = Time.time + Random.Range(0f, 2f);
+        _nextSummonAt  = Time.time + Random.Range(0f, SummonInterval * 0.5f);
         _ready      = true;
     }
 
@@ -248,11 +283,29 @@ public class BotController : MonoBehaviour
         Vector3 dir    = delta / distance;
         Vector3 origin = transform.position + Vector3.up * CollisionProbeHeight;
 
-        if (Physics.SphereCast(origin, CollisionProbeRadius, dir, out RaycastHit hit,
-                               distance + 0.1f, CollisionMask, QueryTriggerInteraction.Ignore))
+        // SphereCastAll y no SphereCast: hay que poder SALTEAR lo que no me frena a mí —la
+        // pared de mi propia sala segura— y quedarme con lo primero que sí. Con un solo
+        // hit, toparse con la pared de casa habría dejado pasar la pared de atrás.
+        RaycastHit[] hits = Physics.SphereCastAll(origin, CollisionProbeRadius, dir,
+                                                  distance + 0.1f, CollisionMask,
+                                                  QueryTriggerInteraction.Ignore);
+
+        float nearest = float.MaxValue;
+        bool  blocked = false;
+
+        foreach (RaycastHit hit in hits)
         {
-            // Queda pegado a lo que chocó, sin meterse adentro.
-            transform.position += dir * Mathf.Max(0f, hit.distance - 0.1f);
+            MercSafeRoomBarrier barrier = hit.collider.GetComponentInParent<MercSafeRoomBarrier>();
+            if (barrier != null && barrier.TeamID == _teamId) continue;   // la de casa no frena
+
+            if (hit.distance >= nearest) continue;
+            nearest = hit.distance;
+            blocked = true;
+        }
+
+        if (blocked)
+        {
+            transform.position += dir * Mathf.Max(0f, nearest - 0.1f);
             return;
         }
 
@@ -359,7 +412,7 @@ public class BotController : MonoBehaviour
 
         _dashing     = false;
         _dashRoutine = null;
-        RecoverIfLost();
+        WarpToNavMesh();
     }
 
     // =========================================================
@@ -372,12 +425,50 @@ public class BotController : MonoBehaviour
     // vuelva a tocar el piso para resolver el impacto. Un bot no usa el CharacterController,
     // así que acá se simula el arco a mano: sube, cae, y al aterrizar avisa para que el
     // servidor resuelva el golpe en el mismo lugar donde cayó.
+    // Calcula con qué velocidad horizontal saltar para CAER DONDE QUIERE.
+    //
+    // Un jugador apunta el salto y cae ahí. Un bot que solo se impulsa hacia adelante con
+    // toda la fuerza de la habilidad recorre, con los números del Bárbaro (subida 15,
+    // empuje 15), unos 46 metros — más que el radio de la arena, que es 42. O sea que un
+    // salto la cruzaba entera y aterrizaba afuera.
+    //
+    // Acá se resuelve el tiro: se mide el tiempo de vuelo, se apunta al objetivo, y se
+    // recorta a lo que la habilidad permite Y a un punto donde de verdad se pueda estar
+    // parado. Si no hay ninguno, se salta en el lugar.
+    private Vector3 AimLeapVelocity(Vector3 abilityVelocity, float upVelocity)
+    {
+        float gravity  = Mathf.Abs(Physics.gravity.y);
+        float flight   = 2f * upVelocity / gravity;
+        float maxSpeed = abilityVelocity.magnitude;
+
+        if (flight < 0.05f || maxSpeed < 0.01f) return abilityVelocity;
+
+        Vector3 landing = _target != null ? _target.transform.position : _destination;
+
+        Vector3 to = landing - transform.position;
+        to.y = 0f;
+        if (to.sqrMagnitude < 0.01f) return Vector3.zero;
+
+        // Ni más lejos que el objetivo, ni más de lo que la habilidad da.
+        float distance = Mathf.Min(to.magnitude, maxSpeed * flight);
+        Vector3 wanted = transform.position + to.normalized * distance;
+
+        // Y que el punto exista: si ahí no hay piso navegable, no se salta hacia allá.
+        if (!NavMesh.SamplePosition(wanted, out NavMeshHit hit, 4f, NavMesh.AllAreas))
+            return Vector3.zero;
+
+        Vector3 corrected = hit.position - transform.position;
+        corrected.y = 0f;
+        return corrected / flight;
+    }
+
     public void ServerLeap(Vector3 horizontalVelocity, float upVelocity, System.Action onLanded)
     {
         if (!_ready) { onLanded?.Invoke(); return; }
 
         if (_leapRoutine != null) StopCoroutine(_leapRoutine);
-        _leapRoutine = StartCoroutine(LeapRoutine(horizontalVelocity, upVelocity, onLanded));
+        _leapRoutine = StartCoroutine(LeapRoutine(AimLeapVelocity(horizontalVelocity, upVelocity),
+                                                  upVelocity, onLanded));
     }
 
     private IEnumerator LeapRoutine(Vector3 horizontalVelocity, float upVelocity, System.Action onLanded)
@@ -394,11 +485,15 @@ public class BotController : MonoBehaviour
         float elapsed  = 0f;
         float startY   = transform.position.y;
 
-        // Dos topes de seguridad. El de TIEMPO por si el arco nunca aterriza; el de
-        // ALTURA porque un bot cayendo sin encontrar piso llegó a 12 m bajo el nivel del
-        // suelo antes de que el tope de tiempo lo cortara.
-        const float maxFlight = 2.5f;
-        const float maxFall   = 12f;
+        // Dos topes de seguridad, y el de tiempo se calcula del arco REAL.
+        //
+        // Estaba fijo en 2.5 s, pero el salto del Bárbaro dura 3.06 (dos veces la velocidad
+        // de subida sobre la gravedad): se cortaba SIEMPRE a mitad de la bajada, con el bot
+        // todavía a varios metros del piso. Ahí corría la red de contención, no encontraba
+        // NavMesh cerca —porque estaba en el aire— y lo mandaba a la base. Los bárbaros
+        // desaparecían en pleno salto sin que nadie los tocara.
+        float maxFlight = 2f * upVelocity / gravity * 1.6f + 0.5f;
+        const float maxFall = 12f;
 
         while (elapsed < maxFlight && transform.position.y > startY - maxFall)
         {
@@ -418,7 +513,11 @@ public class BotController : MonoBehaviour
         }
 
         if (hadAgent) _agent.enabled = true;
-        RecoverIfLost();
+
+        // Al aterrizar solo se le avisa al agente dónde quedó. NADA de mandarlo a la base:
+        // un salto que salió bien termina donde el bot quiso, y devolverlo era peor que el
+        // problema que intentaba resolver.
+        WarpToNavMesh();
 
         _dashing     = false;
         _leapRoutine = null;
@@ -460,7 +559,11 @@ public class BotController : MonoBehaviour
             // Contención, antes de decidir nada: si ya está fuera del mundo, decidir a
             // quién pegarle no sirve de nada. Se saltea en pleno salto o dash, que es
             // cuando estar en el aire —lejos del NavMesh— es legítimo.
-            if (!_dashing && !IsWhereItShouldBe()) RecoverIfLost();
+            // La red de contención, solo para el que se perdió DE VERDAD: hay que estar
+            // fuera de lugar varias decisiones seguidas. Con un chequeo instantáneo, un bot
+            // que pasaba un instante por un borde raro terminaba en su base sin motivo.
+            if (_dashing || IsWhereItShouldBe()) _lostChecks = 0;
+            else if (++_lostChecks >= LostChecksBeforeRescue) { _lostChecks = 0; RecoverIfLost(); }
 
             Think();
         }
@@ -526,6 +629,7 @@ public class BotController : MonoBehaviour
 
         _retreating = EvaluateRetreat();
         _target     = FindBestTarget();
+        TrackCombatContext();
 
         // 1 · El Pícaro herido se va a curar y no se distrae con nada.
         if (_retreating && ResolveRole() == EBotRole.Assassin)
@@ -628,9 +732,43 @@ public class BotController : MonoBehaviour
     {
         float hp = HealthFraction(_asc);
 
+        // Si LO ESTÁN CURANDO, se queda. Antes bajaba al 35 %, decidía volver a la base, y
+        // seguía yendo aunque el Paladín le devolviera la vida en el camino: la decisión
+        // solo se revisaba contra el umbral de vuelta (75 %). Que la vida SUBA ya es la
+        // señal de que no hace falta irse.
+        bool healing = _lastHealth >= 0f && hp > _lastHealth + 0.005f;
+        _lastHealth  = hp;
+
+        if (_retreating && healing && hp > AssassinRetreatBelowHealth) return false;
+
+        // Retirarse y volver tienen umbrales DISTINTOS a propósito: con uno solo, el Pícaro
+        // entraba y salía sin parar bailando alrededor del valor exacto.
         return _retreating ? hp < AssassinReturnAboveHealth
                            : hp <= AssassinRetreatBelowHealth;
     }
+
+    // Actualiza lo que las reglas de habilidad consultan: si estoy trabado en combate desde
+    // hace rato, y si el objetivo se está escapando.
+    private void TrackCombatContext()
+    {
+        if (_target == null)
+        {
+            _engagedSince       = Time.time;   // sin objetivo, el reloj de "trabado" arranca de cero
+            _targetFleeing      = false;
+            _lastTargetDistance = -1f;
+            return;
+        }
+
+        float dist = Vector3.Distance(transform.position, _target.transform.position);
+
+        if (dist > MeleeRange * 1.6f) _engagedSince = Time.time;
+
+        // Se compara contra la medición anterior: si se está alejando, es momento de lo
+        // que llega de lejos.
+        _targetFleeing      = _lastTargetDistance >= 0f && dist > _lastTargetDistance + 0.25f;
+        _lastTargetDistance = dist;
+    }
+
 
     // Dónde se cura: su propia sala segura, que es donde la vida vuelve al máximo. Es la
     // misma regla que para un jugador — el que está herido vuelve a la base.
@@ -967,49 +1105,189 @@ public class BotController : MonoBehaviour
         return d.sqrMagnitude > 0.01f ? d.normalized : transform.forward;
     }
 
-    // En qué orden prueba sus habilidades cada rol.
+    // Qué ES una habilidad, para poder decidir CUÁNDO usarla.
     //
-    // SE PRUEBAN LOS CUATRO SLOTS, y esto importa: las clases base no usan E ni R — su kit
-    // es LMB, RMB, Q y Shift. Antes acá solo se miraban Q/E/R, así que de las cuatro
-    // habilidades de cada clase el bot llegaba únicamente a la Q. Los bárbaros nunca
-    // tiraron el hacha (RMB) ni saltaron (Shift), y los pícaros nunca dispararon dagas ni
-    // dashearon. Las subclases sí usan E y R, por eso siguen en la lista.
-    //
-    // El resto lo filtra el GAS: cooldown, energía y tags. Acá solo se propone un orden.
+    // No hace falta marcar nada a mano en los assets: el TIPO ya lo dice. Las genéricas del
+    // proyecto están partidas justo por comportamiento —GA_SelfBuff, GA_ProjectileShoot,
+    // GA_InstantAoE, GA_Dash— así que alcanza con mirar de cuál hereda.
+    private enum EAbilityKind { Melee, Ranged, Aoe, Buff, Movement }
+
+    private static EAbilityKind Classify(GameplayAbility a)
+    {
+        if (a is GA_SelfBuff || a is GA_TagSwitch || a is GA_ShieldBlock) return EAbilityKind.Buff;
+
+        // El Golpe final del Inmortal no hereda de ninguna genérica —es su propia clase—
+        // pero barre un área por delante: se juzga como área, o sea con varios enemigos
+        // juntos. El Molinete sí hereda de GA_ContinuousAoE y entra solo más abajo.
+        if (a is GA_FinalBlow) return EAbilityKind.Aoe;
+
+        if (a is GA_Dash || a is GA_LeapAttack || a is GA_Blink || a is GA_HeroicInterception)
+            return EAbilityKind.Movement;
+
+        if (a is GA_ProjectileShoot || a is GA_HitscanShot) return EAbilityKind.Ranged;
+
+        if (a is GA_InstantAoE || a is GA_ContinuousAoE || a is GA_ConeAttack || a is GA_LineAttack)
+            return EAbilityKind.Aoe;
+
+        return EAbilityKind.Melee;
+    }
+
+    // Los slots que se revisan en combate, en el orden en que se proponen. El básico va
+    // aparte (ver Fight): ese se usa SIEMPRE que se pueda.
+    private static readonly EAbilityInput[] CombatSlots =
+    {
+        EAbilityInput.Action3,          // la definitiva primero: si corresponde, es la que decide
+        EAbilityInput.Movement,
+        EAbilityInput.SecondaryAttack,
+        EAbilityInput.Action1,
+        EAbilityInput.Action2,
+    };
+
+    // Recorre TODO el kit y usa lo que tenga sentido AHORA. La regla de cada habilidad sale
+    // de dos cosas: qué es (Classify) y qué rol juega este bot.
     private bool TryAbilities(EBotRole role, float dist, Vector3 aim, Vector3 moveDir)
     {
-        bool far     = dist > MeleeRange * 1.6f;
-        bool veryFar = dist > MeleeRange * 2.5f;
-
-        if (role == EBotRole.Support)
+        foreach (EAbilityInput slot in CombatSlots)
         {
-            // El escudo (RMB) cuando ya lo tienen encima: es cuando tapa al compañero.
-            if (!far && Activate(EAbilityInput.SecondaryAttack, aim, moveDir)) return true;
+            GameplayAbility ability = FindAbility(slot);
+            if (ability == null) continue;
 
-            // Y el salto de socorro (Shift) para llegar cuando está lejos.
-            if (veryFar && Activate(EAbilityInput.Movement, aim, moveDir)) return true;
-
-            if (Activate(EAbilityInput.Action1, aim, moveDir)) return true;
-            if (Activate(EAbilityInput.Action2, aim, moveDir)) return true;
-
-            bool trouble = HealthFraction(_asc) < 0.6f || AllyInTrouble();
-            if (trouble && Activate(EAbilityInput.Action3, aim, moveDir)) return true;
-            return false;
+            if (!ShouldUse(ability, slot, role, dist)) continue;
+            if (Activate(slot, aim, moveDir)) return true;
         }
 
-        // Bárbaro y Pícaro. De LEJOS lo que llega de lejos —el arrojadizo (RMB) y el cierre
-        // de distancia (Shift)—; de CERCA, lo que pega fuerte.
-        if (far     && Activate(EAbilityInput.SecondaryAttack, aim, moveDir)) return true;
-        if (veryFar && Activate(EAbilityInput.Movement,        aim, moveDir)) return true;
-
-        if (Activate(EAbilityInput.Action3, aim, moveDir)) return true;
-        if (Activate(EAbilityInput.Action1, aim, moveDir)) return true;
-        if (Activate(EAbilityInput.Action2, aim, moveDir)) return true;
-
-        // Si de cerca no salió nada, el arrojadizo igual: mejor tirar el hacha que quedarse
-        // mirando el cooldown.
-        if (!far && Activate(EAbilityInput.SecondaryAttack, aim, moveDir)) return true;
         return false;
+    }
+
+    // El criterio, habilidad por habilidad. Está escrito como lo diría un jugador.
+    private bool ShouldUse(GameplayAbility ability, EAbilityInput slot, EBotRole role, float dist)
+    {
+        bool engaged = dist <= MeleeRange * 1.6f;
+
+        // LA DEFINITIVA (R) se juzga por ROL, no por tipo: cada clase la tiene para algo
+        // distinto y usarla apenas sale de cooldown es tirarla.
+        if (slot == EAbilityInput.Action3)
+        {
+            // LA IRA DEL INMORTAL no se usa a mano NUNCA: es la auto-revivida, y el
+            // PlayerController la dispara solo al morir (ver HandlePlayerDeath). Gastarla
+            // en una pelea cualquiera deja al Inmortal muriendo de verdad la próxima vez.
+            if (ability is GA_ImmortalWrath) return false;
+
+            switch (role)
+            {
+                case EBotRole.Support:  return HealthFraction(_asc) < 0.5f || AllyInTrouble();
+                case EBotRole.Assassin: return HealthFraction(_target) <= ExecuteBelowHealth;
+                default:                return EnemiesNear(_target.transform.position, AoeRadius) >= 2;
+            }
+        }
+
+        switch (Classify(ability))
+        {
+            case EAbilityKind.Buff:
+                // Trabado en combate, no al aire. Un buff gastado caminando no sirve para
+                // nada y encima queda en cooldown para cuando hace falta.
+                return engaged && Time.time - _engagedSince >= BuffAfterSeconds;
+
+            case EAbilityKind.Ranged:
+                // Antes del contacto, o cuando el otro se está yendo: es justo cuando un
+                // ataque a distancia rinde y el cuerpo a cuerpo no llega.
+                return !engaged || _targetFleeing;
+
+            case EAbilityKind.Aoe:
+                // Vale la pena con dos o más juntos; con uno solo, el básico alcanza.
+                return EnemiesNear(_target.transform.position, AoeRadius) >= 2;
+
+            case EAbilityKind.Movement:
+                return ShouldUseMovement(ability, role, dist);
+
+            default:
+                return engaged;   // lo cuerpo a cuerpo, en contacto
+        }
+    }
+    // La habilidad de movimiento es la que más cambia de sentido según la clase.
+    private bool ShouldUseMovement(GameplayAbility ability, EBotRole role, float dist)
+    {
+        // ¿HAY TECHO? Un salto sube unos 11 metros con los números del Bárbaro. Bajo el
+        // techo de una base, o de cualquier cosa con altura, el bot se estampa contra él y
+        // termina encajado entre el piso y lo de arriba — que es exactamente lo que pasó
+        // cuando el equipo entero saltó al abrirse las puertas.
+        if (ability is GA_LeapAttack leap && !HasHeadroomFor(leap)) return false;
+
+        // Escapar mientras me retiro a curarme, y llegar antes con la carga: eso vale para
+        // cualquiera (lo de la carga lo dispara Fight aparte).
+        if (_retreating) return true;
+
+        switch (role)
+        {
+            case EBotRole.Support:
+            {
+                // La Intervención existe para llegar hasta el compañero en problemas y
+                // ponerse delante. Sin alguien a quien socorrer, no se gasta.
+                AbilitySystemComponent ally = FindNearestAlly();
+                if (ally == null) return false;
+
+                return HealthFraction(ally) < 0.6f
+                    && Vector3.Distance(transform.position, ally.transform.position) > SupportFollowDistance;
+            }
+
+            case EBotRole.Assassin:
+                // Acercarse de golpe para entrar, o rematar al que se escapa.
+                return dist > MeleeRange * 2.5f || _targetFleeing;
+
+            default:
+            {
+                // El salto del Bárbaro es un ataque en área con desplazamiento: se usa para
+                // CAER SOBRE VARIOS, o para entrar cuando el otro está a tiro.
+                //
+                // El tope de distancia importa: sin él, apenas se abrían las puertas TODOS
+                // saltaban a la vez hacia un enemigo que estaba en la otra punta del mapa.
+                float reach = ability is GA_LeapAttack l ? LeapReach(l) : MeleeRange * 6f;
+                if (dist > reach) return false;
+
+                return EnemiesNear(_target.transform.position, AoeRadius) >= 2
+                    || dist > MeleeRange * 3f;
+            }
+        }
+    }
+
+    // Hasta dónde llega ese salto: velocidad de avance por el tiempo que dura en el aire.
+    private static float LeapReach(GA_LeapAttack leap)
+    {
+        float gravity = Mathf.Abs(Physics.gravity.y);
+        return leap.ForwardForce * (2f * leap.JumpVelocity / gravity);
+    }
+
+    // ¿Tiene lugar arriba para el arco completo? Se mide contra la altura máxima real del
+    // salto, no contra un número inventado.
+    private bool HasHeadroomFor(GA_LeapAttack leap)
+    {
+        float gravity = Mathf.Abs(Physics.gravity.y);
+        float apex    = leap.JumpVelocity * leap.JumpVelocity / (2f * gravity);
+
+        return !Physics.Raycast(transform.position + Vector3.up * 0.5f, Vector3.up,
+                                apex, CollisionMask, QueryTriggerInteraction.Ignore);
+    }
+
+
+    // Cuántos enemigos hay alrededor de un punto. Es lo que distingue "vale la pena el área"
+    // de "gastar la definitiva contra un fantasma suelto".
+    private int EnemiesNear(Vector3 center, float radius)
+    {
+        int count = Physics.OverlapSphereNonAlloc(
+            center, radius, _hits, CharacterLayer, QueryTriggerInteraction.Ignore);
+
+        int enemies = 0;
+        for (int i = 0; i < count; i++)
+        {
+            AbilitySystemComponent other = _hits[i].GetComponentInParent<AbilitySystemComponent>();
+            if (other == null || other == _asc) continue;
+            if (other.HasTag(EGameplayTag.State_Dead)) continue;
+            if (_asc.IsAllyOf(other, includeSelf: false)) continue;
+
+            enemies++;
+        }
+
+        return enemies;
     }
 
     // ¿Algún compañero a la vista está en problemas? Es lo que destraba la definitiva del
@@ -1039,8 +1317,13 @@ public class BotController : MonoBehaviour
         // nada, y el cooldown se pagaba igual.
         if (ability is IRadialMenuAbility radial)
         {
+            // Con su propio ritmo, mucho más lento: ver SummonInterval.
+            if (Time.time < _nextSummonAt) return false;
+
             int options = radial.RadialIcons != null ? radial.RadialIcons.Length : 0;
             if (options <= 0) return false;
+
+            _nextSummonAt = Time.time + SummonInterval;
 
             radial.ActivateWithSelection(Random.Range(0, options), GroundAimPoint(aim, radial.MaxRadialRange));
 

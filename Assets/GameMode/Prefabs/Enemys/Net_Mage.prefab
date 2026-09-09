@@ -280,7 +280,7 @@ MonoBehaviour:
   CharacterRoleDefinition: {fileID: 11400000, guid: 0e4feb46db5a7a14dae605de8fe6faac, type: 2}
   CurrentClass: {fileID: 0}
   TeamID: 0
-  MaxLevel: 3
+  MaxLevel: 0
   GrantedAbilities: []
   LastAttacker: {fileID: 0}
 --- !u!195 &3774180664263554038
@@ -337,7 +337,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584128025382236132
+  _initializedTimestamp: -8584126294752612391
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
@@ -464,7 +464,7 @@ MonoBehaviour:
   ExtraAbilities: []
   HitVFX: {fileID: 0}
   ExperienceReward: 25
-  DespawnDelay: 2
+  DespawnDelay: 0.5
   SpeedParameter: Speed
   AttackTrigger: Attack
 --- !u!114 &7612384398322882618

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Duration: 5
   Period: 1
-  StackingPolicy: 0
+  StackingPolicy: 1
   MaxStacks: 0
   OnMaxStacksEffect: {fileID: 0}
   EffectGroup: 14
@@ -31,6 +31,7 @@ MonoBehaviour:
     UseTargetHealthScaling: 0
     TargetHealthMode: 0
     TargetHealthCoefficient: 0
+    MinMagnitude: -1
   IsCrowdControl: 0
   TargetVFX: {fileID: 7455372202216957759, guid: 5357b7f40e1451744886942913efe75f, type: 3}
   TargetVFXOffset: {x: 0, y: 0, z: 0}

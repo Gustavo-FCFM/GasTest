@@ -1116,7 +1116,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584128025382236132
+  _initializedTimestamp: -8584126294752612391
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
@@ -1243,7 +1243,7 @@ MonoBehaviour:
   ExtraAbilities: []
   HitVFX: {fileID: 6823302871133167919, guid: 3138a83bedbd6ad4481ba0b061da2eb6, type: 3}
   ExperienceReward: 15
-  DespawnDelay: 2
+  DespawnDelay: 0.5
   SpeedParameter: Speed
   AttackTrigger: Attack
 --- !u!114 &4176687789195264358
