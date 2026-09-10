@@ -495,6 +495,41 @@ public class LobbyManager : NetworkBehaviour
         ServerSpawnBots();
     }
 
+    // Termina la partida y devuelve a todos a la sala. La llama MercenariesGameMode
+    // cuando se agota la pantalla de fin de partida.
+    //
+    // Deja la sala como estaba antes del Start: sin personajes en el mapa y con el
+    // panel de vuelta en pantalla (el panel se muestra con !MatchStarted). Lo que NO
+    // se pierde es lo elegido — equipo, clase y nombre siguen puestos, así que volver
+    // a jugar es apretar Confirmar y que el host apriete Start.
+    [Server]
+    public void ServerReturnToLobby()
+    {
+        if (!_netStarted.Value) return;
+
+        NetworkGameManager gm = FindFirstObjectByType<NetworkGameManager>();
+        if (gm != null) gm.ServerDespawnAllCharacters();
+
+        _netStarted.Value = false;
+
+        // Los humanos vuelven a "sin confirmar". Entre partida y partida la gente se
+        // cambia de clase, se va o se cuelga: arrancar la siguiente con todos en verde
+        // le sacaría al host la posibilidad de esperar a alguien.
+        //
+        // Los BOTS quedan listos como estaban — no tienen a nadie que los reconfirme, y
+        // si se los quiere sacar es con el botón de su fila.
+        for (int i = 0; i < _entries.Count; i++)
+        {
+            LobbyEntry e = _entries[i];
+            if (IsBot(e.ClientId) || !e.Ready) continue;
+
+            e.Ready     = false;
+            _entries[i] = e;
+        }
+
+        Debug.Log("[Mercenarios] Todos de vuelta a la sala.");
+    }
+
     [Server]
     public void ServerRemove(int clientId)
     {

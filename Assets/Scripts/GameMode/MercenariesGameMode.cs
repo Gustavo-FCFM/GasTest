@@ -429,6 +429,18 @@ public class MercenariesGameMode : NetworkBehaviour
     // jugadores conservan su clase, pero se los reequipa para que vuelvan a nivel 1
     // (el nivel no "baja" solo: reequipar es lo único que recalcula los stats base).
     [Server]
+    // Terminada la partida, TODOS VUELVEN A LA SALA.
+    //
+    // Antes esto reiniciaba en el LUGAR: se ponían los puntajes en cero, se revivía a
+    // cada uno y se lo teletransportaba a su base, reusando los mismos personajes. El
+    // problema es que un personaje arrastra mucho más que vida y posición —efectos
+    // activos, cooldowns, cargas, tags, el Objetivo encima, la cámara del espectador—
+    // y cada cosa que ese reinicio no limpiara reaparecía en la partida siguiente como
+    // un error sin causa visible.
+    //
+    // Volviendo a la sala se despawnea todo y la próxima partida nace de cero, por el
+    // mismo camino que la primera. Es menos código y, sobre todo, un solo camino que
+    // mantener en vez de dos.
     public void ServerRestartMatch()
     {
         for (int i = 0; i < TeamCount; i++)
@@ -442,21 +454,14 @@ public class MercenariesGameMode : NetworkBehaviour
             _netXpNorm[i] = 0f;
         }
 
-        RefreshPlayers();
-        foreach (PlayerController pc in _players)
-        {
-            if (pc == null) continue;
-            AbilitySystemComponent asc = pc.GetComponent<AbilitySystemComponent>();
-            if (asc == null) continue;
+        // Saca a todos del mapa y baja MatchStarted, con lo que el panel de la sala
+        // vuelve solo a la pantalla de cada uno.
+        if (LobbyManager.Instance != null) LobbyManager.Instance.ServerReturnToLobby();
 
-            if (pc.CurrentClassDef != null) pc.EquipCharacterClass(pc.CurrentClassDef, resetProgress: true);
-            asc.Revive();
+        _players.Clear();
 
-            Transform sp = GetTeamSpawnPoint(asc.TeamID);
-            NetworkAbilitySystemComponent netASC = pc.GetComponent<NetworkAbilitySystemComponent>();
-            if (sp != null && netASC != null) netASC.ServerTeleportOwnerTo(sp.position, sp.forward);
-        }
-
+        // La preparación queda armada y CONGELADA: el gate del tick la frena hasta que
+        // el host apriete Start de nuevo (ver el chequeo de MatchStarted más arriba).
         ServerBeginWarmup();
     }
 

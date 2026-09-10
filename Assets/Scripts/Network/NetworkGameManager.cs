@@ -207,6 +207,30 @@ public class NetworkGameManager : NetworkBehaviour
                   $"TeamID={uniqueTeamID}. En partida: {_currentPlayerCount}");
     }
 
+    // Saca del mapa a TODOS los personajes: los de los jugadores y los de los bots.
+    // La usa LobbyManager.ServerReturnToLobby cuando termina una partida.
+    //
+    // POR QUÉ DESPAWNEAR Y NO REUSAR LOS PERSONAJES: reiniciar en el lugar dejaba encima
+    // los efectos, cooldowns, cargas y tags de la partida anterior, y cada cosa que se
+    // olvidara de limpiar reaparecía como un error raro en la siguiente. Naciendo de
+    // cero no hay nada que limpiar — y el spawn ya sabe armar un personaje entero.
+    [Server]
+    public void ServerDespawnAllCharacters()
+    {
+        foreach (var kvp in _playerObjects)
+            if (kvp.Value != null) ServerManager.Despawn(kvp.Value);
+        _playerObjects.Clear();
+
+        foreach (PlayerController bot in _bots)
+            if (bot != null) ServerManager.Despawn(bot.gameObject);
+        _bots.Clear();
+
+        _currentPlayerCount   = 0;
+        _netPlayerCount.Value = 0;
+
+        Debug.Log("[GameManager] Mapa vaciado: todos vuelven a la sala.");
+    }
+
     // Despawnea el jugador de una conexión que se cayó y actualiza el conteo.
     [Server]
     private void HandlePlayerDisconnected(NetworkConnection conn)

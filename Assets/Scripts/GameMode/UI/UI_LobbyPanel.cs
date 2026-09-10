@@ -169,6 +169,11 @@ public class UI_LobbyPanel : MonoBehaviour
             _spawnRequested = false;
         }
 
+        // Vuelta a la sala al terminar una partida: hay que poder volver a PEDIR
+        // personaje cuando el host arranque la siguiente. Sin esto, la bandera se queda
+        // en true de la partida anterior y el segundo Start te deja de espectador.
+        if (lobby != null && !lobby.MatchStarted) _spawnRequested = false;
+
         if (_canvas != null && _visible != show)
         {
             _visible = show;
