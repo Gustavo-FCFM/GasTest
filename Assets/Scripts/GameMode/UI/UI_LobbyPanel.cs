@@ -178,13 +178,20 @@ public class UI_LobbyPanel : MonoBehaviour
         {
             _visible = show;
             _canvas.gameObject.SetActive(show);
-
-            // El cursor tiene que estar libre para escribir y clickear en la sala. Se
-            // pide por UICursor y no a mano: el recuadro de red también lo pide con ESC,
-            // y el último en soltarlo no puede llevarse el de los demás.
-            if (show) UICursor.Request(this);
-            else      UICursor.Release(this);
         }
+
+        // El cursor tiene que estar libre para escribir y clickear en la sala. Se pide
+        // por UICursor y no a mano: el recuadro de red también lo pide con ESC, y el
+        // último en soltarlo no puede llevarse el de los demás.
+        //
+        // Va FUERA del if de visibilidad —o sea, cada frame— a propósito. Antes se
+        // pedía y se soltaba solo en el FLANCO, y ese suelto ocurre cuando arranca la
+        // partida, justo cuando el jugador todavía no existe: Apply() no tenía a quién
+        // avisarle y el pedido quedaba anotado en el aire. Request y Release son
+        // idempotentes (si el conjunto no cambia no hacen nada), así que repetirlos sale
+        // gratis y el estado converge solo en vez de depender de un flanco.
+        if (show) UICursor.Request(this);
+        else      UICursor.Release(this);
 
         if (lobby == null) return;
 

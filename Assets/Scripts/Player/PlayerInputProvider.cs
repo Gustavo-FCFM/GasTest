@@ -134,6 +134,18 @@ public class PlayerInputProvider : MonoBehaviour
 
         _initialized = true;
         Local = this;
+
+        // ADOPTAR EL ESTADO ACTUAL DEL ÁRBITRO, no asumir "modo juego".
+        //
+        // Arriba encendimos el mapa Player a ciegas, pero este jugador puede estar
+        // naciendo con un menú YA abierto (la sala, el recuadro de red con ESC). Y al
+        // revés: UICursor.Apply() no le pudo avisar a nadie mientras este proveedor no
+        // existía, porque solo empuja el modo si Local != null — o sea que todos los
+        // pedidos y sueltas que pasaron ANTES de este instante se perdieron.
+        //
+        // Volver a aplicar acá cierra esa ventana: el jugador recién nacido queda en el
+        // modo que corresponda al conjunto de menús abiertos en este momento.
+        UICursor.Apply();
     }
 
     // Cambia el contexto de input entre JUEGO y MENÚ. En modo UI se apaga el mapa
