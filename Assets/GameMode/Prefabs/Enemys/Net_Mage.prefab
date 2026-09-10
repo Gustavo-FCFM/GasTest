@@ -463,7 +463,7 @@ MonoBehaviour:
   AbilityToUse: {fileID: 11400000, guid: 8d25e6a3a6ab66c4ba62e20f82d7f442, type: 2}
   ExtraAbilities: []
   HitVFX: {fileID: 0}
-  ExperienceReward: 25
+  ExperienceReward: 40
   DespawnDelay: 0.5
   SpeedParameter: Speed
   AttackTrigger: Attack

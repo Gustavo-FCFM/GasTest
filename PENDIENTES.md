@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 9 de septiembre de 2026
+# Pendientes — actualizado el 10 de septiembre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -264,23 +264,33 @@ escudos).
 Quedó decidido: **el Paladín usa su daño mágico solo en el Smite**, que es la habilidad
 que lo tiene por diseño. El resto de su kit es físico. No hay nada que cambiar.
 
-## Los rangos del jefe — esperan su habilidad
+## El jefe — RESUELTO (ya hacía lo que querías)
 
-`Net_Boss` tiene `AttackRange: 20` pero `DetectionRadius: 16`: nunca puede usar su alcance
-completo. Y `LeashRadius: 20` es igual al alcance, así que suelta la correa justo en el
-borde desde donde todavía podría pegar.
+`GA_BossAbility` ya encadena un aura que **buffea y cura** a sus aliados (`GA_BossAura`,
+con `GE_BossBuffs` + `GE_BossHeal`) y después una bola de fuego. Lo que lo rompía era la
+geometría: el aura tiene radio 9 y el jefe peleaba a `KeepDistance: 11` — **fuera de su
+propia aura**. Quedó en 5. Y los rangos se ordenaron: detección 20 (= alcance), correa 28.
 
-Los números buenos dependen de qué habilidad termine teniendo, y eso está sin decidir. Lo
-que vale igual: **detección ≥ alcance**, y correa bastante mayor que las dos.
+Si querés separar más las dos fases, el `DelayAfter` del paso del aura en el
+`GA_ComboSequence` hace que cure, espere, y recién ahí ataque.
 
-## Los fantasmas — decidido subirles el daño
+## Los monstruos — el DPS no tenía carril
 
-Hacen 5 de daño contra 120 de vida: un 4 % por golpe. No presentan amenaza.
+El bárbaro tiene cuatro fuentes de área y el pícaro es todo objetivo único, así que
+contra un campamento el tanque ganaba siempre. Pero el problema de fondo no era de
+habilidades: **un jefe valía 75 y un fantasma 15** — cinco fantasmas eran un jefe, así
+que barrer basura con área era la estrategia dominante para todos.
 
-Lo que más rinde es el **ataque** en `ASDef_WaveEnemy` (probá 12-15). La vida también es
-muy poca (5): cualquier ataque los borra.
+Se le dio un carril a cada uno moviendo experiencia, no habilidades:
 
----
+| | antes | ahora |
+|---|---|---|
+| Fantasma | 15 | **10** |
+| Mago | 25 | **40** |
+| Jefe | 75 | **175** |
+
+Y el fantasma pasó de 23 a **30** de vida, para que matarlo cueste *algo* y el área deje
+de ser gratis. Si con esto el bárbaro sigue dominando, ahí sí es cosa de habilidades.
 
 # 4. Plan hasta noviembre
 

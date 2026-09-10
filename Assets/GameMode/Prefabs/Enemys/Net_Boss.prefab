@@ -805,15 +805,15 @@ MonoBehaviour:
   _componentIndexCache: 2
   _addedNetworkObject: {fileID: 4982296405263267582}
   _networkObjectCache: {fileID: 4982296405263267582}
-  DetectionRadius: 16
-  LeashRadius: 20
+  DetectionRadius: 20
+  LeashRadius: 28
   RetargetInterval: 0.4
   CharacterLayer:
     serializedVersion: 2
     m_Bits: 128
   AttackRange: 20
   AttackCooldown: 10
-  KeepDistance: 11
+  KeepDistance: 5
   TurnSpeed: 10
   AimTolerance: 15
   RequireLineOfSight: 1
@@ -826,7 +826,7 @@ MonoBehaviour:
   AbilityToUse: {fileID: 11400000, guid: 80e8c2b99459134409681a187b325173, type: 2}
   ExtraAbilities: []
   HitVFX: {fileID: 0}
-  ExperienceReward: 75
+  ExperienceReward: 175
   DespawnDelay: 0.5
   SpeedParameter: Speed
   AttackTrigger: Attack
