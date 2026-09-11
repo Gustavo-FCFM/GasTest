@@ -154,7 +154,7 @@ MonoBehaviour:
   _componentIndexCache: 0
   _addedNetworkObject: {fileID: 994776573448183946}
   _networkObjectCache: {fileID: 994776573448183946}
-  SpinBlurMaterial: {fileID: 2100000, guid: eb1f8abc1fa9aa043b8046a60e9ffaa9, type: 2}
+  SpinBlurMaterial: {fileID: 2100000, guid: 22c1ed1b274ae4f43b3fce9c8067dedc, type: 2}
   SpinBlurShutterSpeed: 4
   SpinBlurSamples: 8
   SpinBlurAlpha: 0
@@ -191,7 +191,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584128025382236132
+  _initializedTimestamp: -8584124603952940468
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1

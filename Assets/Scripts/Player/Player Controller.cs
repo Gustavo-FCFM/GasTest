@@ -534,8 +534,14 @@ public class PlayerController : NetworkBehaviour
         if (_input == null || !_input.IsReady) return;
 
         // Menú modal abierto (ej. selección de clase inicial): el jugador no se
-        // mueve ni activa habilidades hasta cerrarlo (elegir una tarjeta).
-        if (_inputLocked) return;
+        // mueve ni activa habilidades hasta cerrarlo (elegir una tarjeta). La
+        // gravedad sí sigue corriendo: si no, abrir el menú en pleno salto lo dejaba
+        // colgado en el aire hasta elegir.
+        if (_inputLocked)
+        {
+            SettleWithoutInput();
+            return;
+        }
 
         // SUBCLASES (acción "Cheat", rebindeada a la tecla V): abre el menú con las
         // subclases de la clase que tenés puesta ahora. Al elegir, conserva el
@@ -589,6 +595,24 @@ public class PlayerController : NetworkBehaviour
     // =========================================================
     // MOVIMIENTO
     // =========================================================
+
+    // Lo único que se mueve con el input bloqueado: la gravedad. Antes Update salía
+    // antes de HandleMovementInput, así que un menú modal abierto en pleno salto
+    // dejaba al personaje SUSPENDIDO en el aire — y un jugador flotando con un menú
+    // abierto no lo podía bajar nadie. Acá cae, se planta, y la animación pasa a
+    // idle. Sin avance horizontal: cualquier inercia de habilidad se corta.
+    private void SettleWithoutInput()
+    {
+        if (characterController == null || !characterController.enabled) return;
+
+        _inertiaVelocity = Vector3.zero;
+
+        if (characterController.isGrounded && verticalVelocity < 0) verticalVelocity = -2f;
+        else                                                        verticalVelocity += gravity * Time.deltaTime;
+
+        characterController.Move(Vector3.up * verticalVelocity * Time.deltaTime);
+        UpdateAnimations();
+    }
 
     // Mueve el CharacterController según el input WASD (o el impulso de
     // una habilidad, si hay uno activo) más gravedad. Es el único lugar

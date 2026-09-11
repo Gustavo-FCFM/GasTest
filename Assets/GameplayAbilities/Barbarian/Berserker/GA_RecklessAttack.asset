@@ -21,21 +21,22 @@ MonoBehaviour:
   UltimateChargeAmount: 0
   ActivationBlockedTags: 
   ActivationRequiredTags: 
+  UsableWhileChanneling: 0
   AnimationClip: {fileID: 0}
   AnimationTriggerName: AttackTrigger
   AnimationID: 99
-  HitFrameEventName: AnimationEvent_HitFrame
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
   VisualsSequence: []
+  MaxCharges: 1
   Sequence:
   - AbilityToCast: {fileID: 11400000, guid: 830101eba8c1e234c9bc8d55c6d4b4d5, type: 2}
-    DelayAfter: 0.8
+    DelayAfter: 0.5
     AnimationClipOverride: {fileID: 0}
     AnimationIDOverride: 0
   - AbilityToCast: {fileID: 11400000, guid: 28ccd4d41e3a4a546b2915b40eef9aa2, type: 2}
-    DelayAfter: 0.8
+    DelayAfter: 0.5
     AnimationClipOverride: {fileID: 0}
     AnimationIDOverride: 0
   - AbilityToCast: {fileID: 11400000, guid: f5b8c13a15cbefd47aa60586da5a1693, type: 2}

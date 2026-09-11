@@ -19,7 +19,8 @@ using UnityEngine.EventSystems;
 // Se elige de tres formas: clic en la tarjeta, teclas 1/2/3… (solo en instancias
 // de teclado, para no cruzar el teclado compartido con la de mando), o control
 // (stick/d-pad para moverse + Submit). Mientras está abierto bloquea el input del
-// jugador y libera el cursor.
+// jugador y libera el cursor — pero la gravedad sigue (el personaje cae y se planta),
+// y recibir daño lo CIERRA sin elegir: abrirlo afuera de la base es bajo tu riesgo.
 //
 // Se ata al jugador DUEÑO local con InitializeMenu(), que llama PlayerController al
 // spawnear la cámara — así cada pantalla maneja la selección de SU jugador.
@@ -45,6 +46,14 @@ public class UI_ClassMenu : MonoBehaviour
              "plantado en medio de una pelea, sin poder moverse hasta elegir.")]
     public bool OpenSubclassesOnMaxLevel = false;
 
+    [Tooltip("Recibir daño con el menú abierto lo cierra sin elegir. Elegir subclase no " +
+             "es un momento de invulnerabilidad: el que lo abre en medio de una pelea se " +
+             "lleva los golpes igual, así que lo sano es que vuelva a su base y lo abra ahí.")]
+    public bool CloseOnDamage = true;
+
+    // Última vida conocida mientras el menú está abierto. Bajar de ahí = daño.
+    private float _lastHealth;
+
     private PlayerController        _player;
     private AbilitySystemComponent  _playerASC;
     private bool _open;
@@ -67,7 +76,11 @@ public class UI_ClassMenu : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (_playerASC != null) _playerASC.OnMaxLevelReached -= OpenSubclassesFromLevelUp;
+        if (_playerASC != null)
+        {
+            _playerASC.OnMaxLevelReached        -= OpenSubclassesFromLevelUp;
+            _playerASC.OnAttributeChangedCallback -= OnPlayerAttributeChanged;
+        }
     }
 
     // La llama PlayerController al spawnear (solo el dueño local).
@@ -107,12 +120,7 @@ public class UI_ClassMenu : MonoBehaviour
     // al menos queda en la consola.
     private void WarnClassChangeBlocked()
     {
-        UI_MatchAnnouncer announcer = FindFirstObjectByType<UI_MatchAnnouncer>();
-        if (announcer != null)
-            announcer.Push("Solo podés cambiar de clase dentro de tu base",
-                           new Color(1f, 0.75f, 0.3f), 26f);
-        else
-            Debug.Log("[UI_ClassMenu] Cambio de clase bloqueado: hay que estar en la sala segura del equipo.");
+        Announce("Solo podés cambiar de clase dentro de tu base", new Color(1f, 0.75f, 0.3f), 26f);
     }
 
     // Tecla C: elegir entre las clases base. Reinicia el progreso a nivel 1.
@@ -150,6 +158,19 @@ public class UI_ClassMenu : MonoBehaviour
         _open = true;
 
         _player.SetInputLocked(true);
+
+        // Vigilar la vida mientras está abierto (ver OnPlayerAttributeChanged).
+        if (_playerASC != null)
+        {
+            _lastHealth = _playerASC.GetAttributeValue(EAttributeType.Health);
+            _playerASC.OnAttributeChangedCallback -= OnPlayerAttributeChanged;
+            _playerASC.OnAttributeChangedCallback += OnPlayerAttributeChanged;
+        }
+
+        // Elegir subclase se puede en cualquier lado, pero afuera de la base es
+        // arriesgado: se avisa, no se bloquea.
+        if (mode == EMode.Subclasses && CloseOnDamage && !CanChangeBaseClassHere())
+            Announce("Estás fuera de tu base: si te pegan, el menú se cierra", new Color(1f, 0.75f, 0.3f), 26f);
 
         // Suelta el cursor y pasa al modo UI (apaga el mapa Player, enciende el UI) para
         // navegar con control sin disparar acciones de juego. Lo hace UICursor, que es el
@@ -278,9 +299,34 @@ public class UI_ClassMenu : MonoBehaviour
         if (MenuContainer != null) MenuContainer.SetActive(false);
         _open = false;
 
+        if (_playerASC != null) _playerASC.OnAttributeChangedCallback -= OnPlayerAttributeChanged;
         if (_player != null) _player.SetInputLocked(false);
 
         UICursor.Release(this);
+    }
+
+    // Llega por cada atributo que cambia, en el dueño (en el host directo desde el ASC;
+    // en un cliente remoto vía el SyncVar de vida, que lo vuelve a escribir en el ASC
+    // local). Solo nos importa la VIDA, y solo cuando BAJA: una curación no cierra nada.
+    private void OnPlayerAttributeChanged(EAttributeType type, float value)
+    {
+        if (!_open || type != EAttributeType.Health) return;
+
+        bool damaged = value < _lastHealth - 0.01f;
+        _lastHealth = value;
+        if (!damaged || !CloseOnDamage) return;
+
+        CloseMenu();
+        Announce("Te pegaron: la elección se canceló. Volvé a tu base y apretá V",
+                 new Color(1f, 0.4f, 0.3f), 26f);
+    }
+
+    // Usa el cartelón del modo si está en la escena; si no, al menos queda en la consola.
+    private void Announce(string text, Color color, float fontSize)
+    {
+        UI_MatchAnnouncer announcer = FindFirstObjectByType<UI_MatchAnnouncer>();
+        if (announcer != null) announcer.Push(text, color, fontSize);
+        else                   Debug.Log("[UI_ClassMenu] " + text);
     }
 
     // Crea un EventSystem si la escena no tiene uno: sin él no funciona NINGÚN

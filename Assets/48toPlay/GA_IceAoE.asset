@@ -9,34 +9,35 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b6bb5562b5ea8394f8a1925c1d716fda, type: 3}
+  m_Script: {fileID: 11500000, guid: ac50c65172ac2b54d9127395b05455b7, type: 3}
   m_Name: GA_IceAoE
   m_EditorClassIdentifier: 
-  AbilityName: New Ability
+  AbilityName: Ice AoE
   AbilityIcon: {fileID: 0}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 0}
+  CooldownDuration: 0
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 0
   ActivationBlockedTags: 
+  ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  AnimationClip: {fileID: 0}
   AnimationTriggerName: AttackTrigger
   AnimationID: 1
-  AbilityRadius: 3
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  HitboxShape: 0
-  HitboxOffsetZ: 1.5
-  HitboxHalfExtents: {x: 1, y: 1, z: 1}
-  ConeAngle: 90
   VisualsSequence: []
-  Radius: 4.5
-  TotalDuration: 1
-  TickInterval: 0
-  FollowOwner: 1
-  VisualPrefab: {fileID: 584207449403360073, guid: b1ae5055f08b8284d9e996465d1d37e3, type: 3}
-  VisualScaleMultiplier: 0.3
+  MaxCharges: 1
+  Targets: 0
+  Radius: 6
+  DeployMode: 0
+  MaxRange: 15
   EffectsToApply:
   - {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   - {fileID: 11400000, guid: 70c9bebbbfba254448fb78d4cf1f9726, type: 2}
-  StartDelay: 0.5
+  VisualPrefab: {fileID: 584207449403360073, guid: b1ae5055f08b8284d9e996465d1d37e3, type: 3}
+  VisualScaleMultiplier: 0.2
+  VisualLifetime: 1
+  StartDelay: 0

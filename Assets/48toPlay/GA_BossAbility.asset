@@ -16,24 +16,26 @@ MonoBehaviour:
   AbilityIcon: {fileID: 21300000, guid: f4e1082d5e4844446b03f3be01feec06, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 0}
+  CooldownDuration: 0
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 0
   ActivationBlockedTags: 
+  ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  AnimationClip: {fileID: 0}
   AnimationTriggerName: AttackTrigger
   AnimationID: 1
-  AbilityRadius: 3
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  HitboxShape: 0
-  HitboxOffsetZ: 1.5
-  HitboxHalfExtents: {x: 1, y: 1, z: 1}
-  ConeAngle: 90
   VisualsSequence: []
+  MaxCharges: 1
   Sequence:
   - AbilityToCast: {fileID: 11400000, guid: 11a9cd014a96d6d4fb0f56ed9789d54b, type: 2}
-    DelayAfter: 3
+    DelayAfter: 5
+    AnimationClipOverride: {fileID: 0}
     AnimationIDOverride: 0
-  - AbilityToCast: {fileID: 11400000, guid: af94aa4ebeffdc248bc2a80f60b01014, type: 2}
-    DelayAfter: 3
+  - AbilityToCast: {fileID: 11400000, guid: 6f6fbb0bc9be7d64089047b09e96c26e, type: 2}
+    DelayAfter: 0
+    AnimationClipOverride: {fileID: 0}
     AnimationIDOverride: 0

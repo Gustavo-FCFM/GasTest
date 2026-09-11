@@ -186,6 +186,20 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
     {
         float timeElapsed = 0f;
 
+        // Un tick de 0 (o negativo) NO es "cada frame": con WaitForSeconds(0) el bucle
+        // avanza un frame por vuelta y timeElapsed nunca crece, así que el área aplicaba
+        // sus efectos cada frame PARA SIEMPRE. Fue lo que hizo que el jefe matara de un
+        // golpe a un Berserker de 260 de vida, y lo que inundaba la red hasta partir los
+        // paquetes (el "unhandled PacketId of 0" de FishNet). Se interpreta como UNA sola
+        // aplicación al empezar, y el área queda el resto de TotalDuration solo de adorno.
+        float tick = TickInterval;
+        if (tick <= 0f)
+        {
+            Debug.LogWarning($"[{name}] TickInterval en {TickInterval}: se aplica una sola vez. " +
+                             "Si querés un golpe único de área usá GA_InstantAoE.");
+            tick = Mathf.Max(TotalDuration, 0.05f);
+        }
+
         // Instantiate() acá solo se vería en el proceso servidor —
         // ServerPlayAbilityVFX lo reproduce en todos los peers (cada uno
         // con su propia copia, que se autodestruye sola tras TotalDuration
@@ -221,8 +235,8 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
                 }
             }
 
-            yield return new WaitForSeconds(TickInterval);
-            timeElapsed += TickInterval;
+            yield return new WaitForSeconds(tick);
+            timeElapsed += tick;
         }
     }
 
