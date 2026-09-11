@@ -132,6 +132,14 @@ public class LobbyManager : NetworkBehaviour
     public override void OnStartServer()
     {
         base.OnStartServer();
+
+        // Un servidor que arranca DE NUEVO en la misma sesión (Desconectar → Iniciar Host)
+        // hereda el estado del anterior: MatchStarted en true y las filas de gente que ya
+        // no está. Con eso la partida "arrancaba" sola, sin sala, y nadie spawneaba. La
+        // sala nace vacía cada vez que levanta el servidor.
+        _netStarted.Value = false;
+        _entries.Clear();
+
         // Al desconectarse alguien hay que sacarlo de la sala, o su fila queda ahí para
         // siempre y el gate de "todos listos" no se cumple nunca porque espera a un
         // fantasma. Es el modo de fallo más molesto de una sala de espera.

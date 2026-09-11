@@ -269,7 +269,16 @@ public class MercenariesGameMode : NetworkBehaviour
             _netLevels.Add(1);
             _netXpNorm.Add(0f);
             _teamLevel[i] = 1;
+            _teamScore[i] = 0;
+            _teamXp[i]    = 0f;
+            _teamWiped[i] = false;
         }
+
+        // Sesión nueva en el mismo Play (Desconectar → Iniciar Host): nada de la partida
+        // anterior puede quedar vivo acá. Los objetos ya los destruyó FishNet al parar.
+        _players.Clear();
+        _activeObjective = null;
+        _netWinner.Value = 0;
 
         ServerValidateSetup();
         ServerBeginWarmup();

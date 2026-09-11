@@ -65,6 +65,14 @@ public class NetworkGameManager : NetworkBehaviour
     public override void OnStartServer()
     {
         base.OnStartServer();
+
+        // Sesión nueva (ver LobbyManager.OnStartServer): los objetos de la anterior ya los
+        // destruyó FishNet al parar; acá se olvidan las referencias y el conteo.
+        _playerObjects.Clear();
+        _bots.Clear();
+        _currentPlayerCount   = 0;
+        _netPlayerCount.Value = 0;
+
         // Evita doble-suscripción si OnStartServer llega a correr más de una vez
         // (p. ej. al reiniciar Play sin Domain Reload) — sin esto, cada conexión
         // dispara HandleClientLoadedStartScenes varias veces y se spawnean jugadores duplicados.

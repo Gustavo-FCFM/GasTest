@@ -46,6 +46,12 @@ Tres límites que conviene saber:
 - Es para `Assembly-CSharp`. Para las herramientas de editor, el `.rsp` equivalente es
   `Assembly-CSharp-Editor.rsp`.
 
+**Los `.cs` del proyecto están en CRLF** (los `.md` y los `.asset` van mezclados: revisar
+con `file`). Un `perl -0pi` con `\n` en el patrón no encuentra nada y no avisa: hay que
+escribir `\r\n` (o `\r?\n`) y meter `\r\n` también en el reemplazo. Y al leer un archivo
+de reemplazo desde perl, `binmode` sin capa `:utf8` — con la capa, el resto del archivo
+sale con las tildes rotas.
+
 **Compilar con Unity en batch** sigue siendo la verificación completa, pero necesita el
 editor CERRADO (no entran dos instancias sobre el mismo proyecto):
 
@@ -63,6 +69,7 @@ editor CERRADO (no entran dos instancias sobre el mismo proyecto):
 | `Assets/Scripts/Network/` | Capa de red: `NetworkAbilitySystemComponent`, `NetworkGameManager`, `ConnectionHUD` y `LobbyManager` (la sala de espera). |
 | `Assets/Scripts/Player/` | `PlayerController` (movimiento, input, animación) y el prefab del jugador. |
 | `Assets/Scripts/UI/` | HUD de clase, menú de clases, y `UICursor` — el único dueño del cursor y del modo de input. |
+| `Assets/Scripts/Settings/` | Menú principal (`UI_MainMenu`, un panel sobre la arena), la cámara que gira con blur (`MenuOrbitCamera`), el panel de Ajustes (`UI_SettingsPanel`) y `GameSettings` (PlayerPrefs). |
 | `Assets/Scripts/GameMode/` | **El modo Mercenarios.** Ver su `LEEME_ModoMercenarios.md`. |
 | `Assets/Attributes/` | Clases jugables (`Class_*.asset`) y sus stats base (`ASDef_*.asset`). |
 | `Assets/GameplayAbilities/` | Los assets de habilidades y efectos, por clase. |
@@ -72,7 +79,8 @@ editor CERRADO (no entran dos instancias sobre el mismo proyecto):
 
 **Escenas:**
 - `Assets/Scenes/Test_Network.unity` — pruebas rápidas de clases y habilidades.
-- `Assets/Scenes/Mercenaries_Gamemode.unity` — **el modo de juego**, la arena 3c3c3.
+- `Assets/Scenes/Mercenaries_Gamemode.unity` — **el modo de juego**, la arena 3c3c3. Es también la
+  pantalla de inicio: el menú principal es un panel sobre la arena, no otra escena.
 
 ---
 
@@ -98,6 +106,11 @@ editor CERRADO (no entran dos instancias sobre el mismo proyecto):
 - **El cursor tiene un solo dueño: `UICursor`.** Ningún menú toca `Cursor.lockState` ni
   `PlayerInputProvider.SetUIMode` por su cuenta — los pide con `UICursor.Request(this)` y
   los suelta con `Release`. Si no, gana el último en cerrarse.
+- **Los managers de escena reinician su sesión en `OnStartServer`.** Al parar el servidor
+  FishNet destruye lo spawneado pero NO toca el estado de los NetworkObjects de escena
+  (`LobbyManager`, `NetworkGameManager`, `MercenariesGameMode`): SyncVars, listas,
+  puntajes. Desconectar → Iniciar Host en el mismo Play es un camino normal (el menú
+  principal lo usa), así que todo estado de partida se limpia al arrancar el servidor.
 
 Los detalles finos del GAS (pipeline de daño, acumulación de efectos, animaciones de
 combo) están en `DesignDocuments/GAS_Arquitectura.docx`.

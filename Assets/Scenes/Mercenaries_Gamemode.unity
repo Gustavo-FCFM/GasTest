@@ -1886,7 +1886,7 @@ MonoBehaviour:
     UnlockMinute: 0
     MaxAlive: 0
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
-  Count: 3
+  Count: 5
   SpawnRadius: 10
   RespawnSeconds: 20
   SpawnInterval: 0.5
@@ -2034,7 +2034,7 @@ MonoBehaviour:
     UnlockMinute: 0
     MaxAlive: 0
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
-  Count: 3
+  Count: 5
   SpawnRadius: 10
   RespawnSeconds: 20
   SpawnInterval: 0.5
@@ -2728,14 +2728,14 @@ MonoBehaviour:
     MaxAlive: 0
   - Type: 1
     Weight: 30
-    UnlockMinute: 1
-    MaxAlive: 0
+    UnlockMinute: 0
+    MaxAlive: 2
   - Type: 4
     Weight: 30
-    UnlockMinute: 5
+    UnlockMinute: 1
     MaxAlive: 1
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
-  Count: 4
+  Count: 5
   SpawnRadius: 3.5
   RespawnSeconds: 20
   SpawnInterval: 0.5
@@ -6446,6 +6446,117 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 667658274}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &668850617
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 668850619}
+  - component: {fileID: 668850618}
+  m_Layer: 0
+  m_Name: UI_SettingsPanel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &668850618
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 668850617}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54d8f8ab82b8f314b8bb73805aa20c2d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PanelWidth: 760
+  FooterHeight: 110
+  RowHeight: 44
+  LabelWidth: 260
+  SectionGap: 18
+  BackdropColor: {r: 0, g: 0, b: 0, a: 0.8}
+  PanelColor: {r: 0.1, g: 0.11, b: 0.13, a: 0.97}
+  RowColor: {r: 1, g: 1, b: 1, a: 0.04}
+  AccentColor: {r: 0.95, g: 0.65, b: 0.2, a: 1}
+  ControlColor: {r: 0.2, g: 0.22, b: 0.26, a: 1}
+  TextColor: {r: 0.92, g: 0.92, b: 0.92, a: 1}
+  DimTextColor: {r: 0.65, g: 0.65, b: 0.65, a: 1}
+--- !u!4 &668850619
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 668850617}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &672745597
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 672745599}
+  - component: {fileID: 672745598}
+  m_Layer: 0
+  m_Name: UI_MainMenu
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &672745598
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 672745597}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ddd5a46b96931742956635da2bb3fc3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Title: MERCENARIES
+  Subtitle: "Demo \xB7 3 contra 3 contra 3"
+  ShowOnStart: 1
+  BackdropColor: {r: 0, g: 0, b: 0, a: 0.35}
+  BandColor: {r: 0, g: 0, b: 0, a: 0.35}
+  ButtonSize: {x: 320, y: 58}
+  ButtonGap: 16
+  ButtonColor: {r: 0.2, g: 0.22, b: 0.26, a: 1}
+  PlayColor: {r: 0.95, g: 0.65, b: 0.2, a: 1}
+  TextColor: {r: 0.94, g: 0.94, b: 0.94, a: 1}
+  DimTextColor: {r: 0.6, g: 0.6, b: 0.6, a: 1}
+--- !u!4 &672745599
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 672745597}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &675589963
 GameObject:
   m_ObjectHideFlags: 0
@@ -7801,14 +7912,14 @@ MonoBehaviour:
     MaxAlive: 0
   - Type: 1
     Weight: 30
-    UnlockMinute: 1
-    MaxAlive: 0
+    UnlockMinute: 0
+    MaxAlive: 2
   - Type: 4
     Weight: 30
-    UnlockMinute: 5
+    UnlockMinute: 1
     MaxAlive: 1
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
-  Count: 4
+  Count: 5
   SpawnRadius: 3.5
   RespawnSeconds: 20
   SpawnInterval: 0.5
@@ -11186,7 +11297,7 @@ MonoBehaviour:
     UnlockMinute: 0
     MaxAlive: 0
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
-  Count: 3
+  Count: 5
   SpawnRadius: 10
   RespawnSeconds: 20
   SpawnInterval: 0.5
@@ -11351,9 +11462,9 @@ MonoBehaviour:
   - Type: 1
     Weight: 50
     UnlockMinute: 0
-    MaxAlive: 0
+    MaxAlive: 2
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
-  Count: 3
+  Count: 4
   SpawnRadius: 5
   RespawnSeconds: 20
   SpawnInterval: 0.5
@@ -11517,14 +11628,14 @@ MonoBehaviour:
     MaxAlive: 0
   - Type: 1
     Weight: 30
-    UnlockMinute: 1
-    MaxAlive: 0
+    UnlockMinute: 0
+    MaxAlive: 2
   - Type: 4
     Weight: 30
-    UnlockMinute: 5
+    UnlockMinute: 1
     MaxAlive: 1
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
-  Count: 4
+  Count: 5
   SpawnRadius: 3.5
   RespawnSeconds: 20
   SpawnInterval: 0.5
@@ -11689,9 +11800,9 @@ MonoBehaviour:
   - Type: 1
     Weight: 50
     UnlockMinute: 0
-    MaxAlive: 0
+    MaxAlive: 2
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
-  Count: 3
+  Count: 4
   SpawnRadius: 5
   RespawnSeconds: 20
   SpawnInterval: 0.5
@@ -13463,9 +13574,9 @@ MonoBehaviour:
   - Type: 1
     Weight: 50
     UnlockMinute: 0
-    MaxAlive: 0
+    MaxAlive: 2
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
-  Count: 3
+  Count: 4
   SpawnRadius: 5
   RespawnSeconds: 20
   SpawnInterval: 0.5
@@ -13759,6 +13870,7 @@ GameObject:
   - component: {fileID: 1315441499}
   - component: {fileID: 1315441498}
   - component: {fileID: 1315441500}
+  - component: {fileID: 1315441501}
   m_Layer: 0
   m_Name: Camara_Lobby
   m_TagString: Untagged
@@ -13876,6 +13988,26 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
+--- !u!114 &1315441501
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1315441496}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d2fde6b9c355c3419e1b47e5b3618f3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Height: 22
+  Radius: 18
+  DegreesPerSecond: 3
+  LookAtOffset: {x: 0, y: 1, z: 0}
+  BlurEnabled: 1
+  BlurFocusDistance: 0.5
+  BlurFocalLength: 120
+  BlurAperture: 1.4
 --- !u!1 &1321812349
 GameObject:
   m_ObjectHideFlags: 0
@@ -21822,7 +21954,7 @@ PrefabInstance:
     - target: {fileID: 1689369883508155111, guid: 6ab0a839c9cfe1049a3d021c98bde0d4, type: 3}
       propertyPath: 'Abilities.Array.data[0]'
       value: 
-      objectReference: {fileID: 11400000, guid: fd24cab436f632c4c9710c0b95196996, type: 2}
+      objectReference: {fileID: 11400000, guid: 6f6fbb0bc9be7d64089047b09e96c26e, type: 2}
     - target: {fileID: 4222018969901891060, guid: 6ab0a839c9cfe1049a3d021c98bde0d4, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -23293,3 +23425,5 @@ SceneRoots:
   - {fileID: 1708018624}
   - {fileID: 1292068254}
   - {fileID: 935484880}
+  - {fileID: 672745599}
+  - {fileID: 668850619}

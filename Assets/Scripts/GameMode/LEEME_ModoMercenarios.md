@@ -170,6 +170,53 @@ void OnDisable() => UICursor.Release(this);
 La rueda de habilidades es la excepción declarada: pide el cursor con
 `blockGameplayInput: false`, porque elige la opción con el movimiento del jugador.
 
+## El menú principal y los Ajustes
+
+El juego arranca mostrando el **menú principal** (Jugar · Ajustes · Salir) **sobre la
+arena misma**: no es otra escena. De fondo se ve el mapa desde la cámara de la sala,
+girando despacio encima de la meseta y con blur. *Jugar* esconde el panel y queda lo de
+siempre: el recuadro de red para hostear o conectarse. Desde ese recuadro (ESC) hay dos
+botones nuevos: **Ajustes** y **Menú principal** — el segundo corta la conexión y vuelve
+a mostrar el panel, sin cargar nada.
+
+**Por qué no es una escena aparte:** el fondo que se quería es la arena de verdad, y
+cargarla dos veces obligaba a pasar el `NetworkManager` de una escena a otra, un camino
+de FishNet sin probar. Así, "volver al menú" es Desconectar + mostrar el panel: el mismo
+camino que Desconectar → Iniciar Host, que ya está probado.
+
+Todo vive en `Scripts/Settings/`:
+
+- **`UI_MainMenu`**: el panel, dibujado por código. `ShowOnStart` apagado si querés
+  probar la arena directo sin pasar por el menú. `IsShowing` lo miran el recuadro de red
+  (para no dibujarse encima) y la cámara (para el blur).
+- **`MenuOrbitCamera`**: va en `Camara_Lobby`. Órbita (`Height`, `Radius`,
+  `DegreesPerSecond`) mientras no hay partida; al arrancar la partida se queda quieta,
+  porque esa cámara la apaga el jugador o la vuela el espectador. El blur es un Depth of
+  Field de URP en un Volume global que se prende solo con el menú a la vista; si el
+  renderer no tiene post-procesado, no hay blur y el resto anda igual.
+- **`GameSettings`** (estático, PlayerPrefs): sensibilidad del mouse (multiplicador sobre
+  la del prefab), invertir Y, volumen general / música / efectos, modo de pantalla,
+  resolución, calidad y VSync. Se aplica solo; `OnChanged` avisa a quien le importe. El
+  volumen general ya va a `AudioListener.volume`; **música y efectos quedan guardados
+  para el sistema de sonido**, que cuando exista lee `MusicVolume` / `SfxVolume`.
+- **`UI_SettingsPanel`**: el panel de ajustes, dibujado por código.
+  `UI_SettingsPanel.GetOrCreate().Open()` desde cualquier lado; si hay uno en la escena
+  (para tocarle colores en el Inspector) lo usa, si no lo crea. ESC lo cierra y guarda.
+
+Lo instala **`Mercenarios ▸ Instalar el menú principal en la arena`** (agrega
+`UI_MainMenu`, `MenuOrbitCamera` en la cámara de la sala y un `UI_SettingsPanel`). Se
+puede correr las veces que haga falta.
+
+Las dos cámaras (`ThirdPersonOrbitCam` y `SpectatorCamera`) multiplican su sensibilidad
+por la de los ajustes y respetan la inversión del eje Y.
+
+**Hostear dos veces en el mismo Play.** Menú principal → Jugar → Iniciar Host, después
+de haber jugado, es un camino normal. Al parar el servidor FishNet destruye lo spawneado
+(personajes, Objetivo, monstruos) pero no toca el estado de los managers de escena, así
+que `LobbyManager`, `NetworkGameManager` y `MercenariesGameMode` **reinician su sesión en
+`OnStartServer`**: sala vacía, `MatchStarted` en false, puntajes y listas a cero. Si
+agregás otro manager de escena con estado de partida, que haga lo mismo.
+
 ## Decorar la arena
 
 El pack (`AssetsExtra/Medieval Cute Series/Prefabs`) tiene justo lo que hace falta:

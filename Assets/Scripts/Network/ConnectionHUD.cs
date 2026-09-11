@@ -56,6 +56,14 @@ public class ConnectionHUD : MonoBehaviour
 
     private void Update()
     {
+        // Con el menú principal a la vista este recuadro no existe: ni se dibuja ni pide
+        // el cursor (lo tiene el menú). Vuelve al apretar Jugar.
+        if (UI_MainMenu.IsShowing)
+        {
+            UICursor.Release(this);
+            return;
+        }
+
         bool connected = Nm != null && (Nm.IsServerStarted || Nm.IsClientStarted);
 
         if (!connected)
@@ -69,7 +77,12 @@ public class ConnectionHUD : MonoBehaviour
             // Al conectarse se guarda solo: si no, se queda encima del panel de la sala,
             // que es justo la esquina donde va la IP.
             if (!_wasConnected) _panelOpen = false;
-            if (Input.GetKeyDown(KeyCode.Escape)) _panelOpen = !_panelOpen;
+
+            // El panel de ajustes también se cierra con ESC: ese ESC no es para nosotros
+            // (ni el frame en que se cerró, si no se abrirían y cerrarían a la vez).
+            bool settingsAteEscape = UI_SettingsPanel.IsAnyOpen ||
+                                     UI_SettingsPanel.LastCloseFrame == Time.frameCount;
+            if (Input.GetKeyDown(KeyCode.Escape) && !settingsAteEscape) _panelOpen = !_panelOpen;
         }
 
         _wasConnected = connected;
@@ -133,6 +146,8 @@ public class ConnectionHUD : MonoBehaviour
 
     private void OnGUI()
     {
+        if (UI_MainMenu.IsShowing) return;
+
         // Escala la UI para que se vea bien en resoluciones altas.
         float scale = Mathf.Max(1f, Screen.height / 720f);
         Matrix4x4 prev = GUI.matrix;
@@ -153,8 +168,11 @@ public class ConnectionHUD : MonoBehaviour
             return;
         }
 
-        float height = serverStarted || clientStarted ? 120f : 260f;
-        GUILayout.BeginArea(new Rect(pad, pad, 280f, height), GUI.skin.box);
+        // El área es alta de sobra y el recuadro (BeginVertical con estilo box) se ajusta
+        // solo a lo que contiene. Con un alto fijo, cada botón nuevo quedaba recortado
+        // por debajo del borde sin ningún aviso.
+        GUILayout.BeginArea(new Rect(pad, pad, 280f, 600f));
+        GUILayout.BeginVertical(GUI.skin.box);
         GUILayout.Label("<b>Red — Prueba de conexión</b>", RichLabel());
 
 
@@ -194,6 +212,19 @@ public class ConnectionHUD : MonoBehaviour
             GUILayout.Label(_status);
         }
 
+        // Ajustes y volver al menú: siempre, conectado o no. Volver corta la conexión
+        // primero y muestra el menú (ver UI_MainMenu.ReturnToMenu). Si el menú no está
+        // instalado en la escena, el botón no aparece.
+        GUILayout.Space(6);
+        GUILayout.BeginHorizontal();
+        if (GUILayout.Button("Ajustes", GUILayout.Height(28)))
+            UI_SettingsPanel.GetOrCreate().Open();
+        if (UI_MainMenu.Instance != null &&
+            GUILayout.Button("Menú principal", GUILayout.Height(28)))
+            UI_MainMenu.ReturnToMenu();
+        GUILayout.EndHorizontal();
+
+        GUILayout.EndVertical();
         GUILayout.EndArea();
         GUI.matrix = prev;
     }

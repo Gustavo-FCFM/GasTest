@@ -206,8 +206,11 @@ public class SpectatorCamera : MonoBehaviour
 
         if (menuOpen || _following != null) return;
 
-        _yaw   += Input.GetAxisRaw("Mouse X") * LookSensitivity;
-        _pitch -= Input.GetAxisRaw("Mouse Y") * LookSensitivity;
+        // Misma sensibilidad e inversión que la cámara del jugador (panel de Ajustes).
+        float sens  = LookSensitivity * GameSettings.MouseSensitivity;
+        float ySign = GameSettings.InvertY ? -1f : 1f;
+        _yaw   += Input.GetAxisRaw("Mouse X") * sens;
+        _pitch -= Input.GetAxisRaw("Mouse Y") * sens * ySign;
         _pitch  = Mathf.Clamp(_pitch, -89f, 89f);
     }
 

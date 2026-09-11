@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 10 de septiembre de 2026
+# Pendientes — actualizado el 11 de septiembre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -43,77 +43,42 @@ Del documento anterior, ya están resueltos:
 
 ---
 
-# 1. Tareas de editor que SIGUEN pendientes
+# 1. Tareas de editor — NO QUEDA NINGUNA
 
-Son siete, y ninguna es urgente.
+Revisadas contigo el 11 de septiembre. Todo lo de la lista anterior está hecho o decidido:
 
-## Molinete del bárbaro — el VFX
+- **Tornado del molinete**: `Red Tornado.prefab` ya tiene `VFX_AreaVisual`
+  (`RadiusAtScaleOne 4`, que con `Radius 4` del Whirlwind da escala 1 — si el tornado se
+  ve más chico o más grande que el área real, ese número es el que se ajusta).
+- **Hacha**: el hijo `WeaponTrail` de `2HandedAxe.prefab` se borró. El blur queda solo en
+  el hacha arrojada (Spin Blur de `PF_ExampleProjectile`).
+- **Rogue, giro del segundo golpe**: abandonado — se queda como está.
+- **`LevelUpNotification` se queda en `None`.** El aviso por equipo que ya existe alcanza.
+- **`GE_Reckless 1/2/3` y `GA_ConeReckless 1` no se renombran.** Son tres efectos
+  distintos del combo, no copias accidentales.
+- Ya hechas antes: el señuelo del Ilusionista tiene el avatar nuevo, y la casilla de
+  `ActionSpeedMult` está marcada (con más velocidad de ataque el swing se ve más rápido).
 
-- [ ] `GA_WhirlwindAttack.VisualPrefab` sigue apuntando al prefab **`Red`** (el círculo
-      rojo de prueba). Va el tornado, con **`VFX_AreaVisual`** en la raíz del prefab y su
-      `RadiusAtScaleOne` medido
+---
 
-Sin `VFX_AreaVisual` el efecto no se escala con el radio real de la habilidad: se ve del
-mismo tamaño aunque el área cambie.
+# 1b. Elegir subclase: en el piso, y se interrumpe si te pegan — HECHO
 
-## Hacha arrojadiza — el blur
+Antes el menú de subclases (tecla V) se abría donde sea y en cualquier estado: si lo
+abrías en pleno salto el personaje quedaba **suspendido en el aire** con el menú abierto,
+porque `Update` salía antes de aplicar la gravedad.
 
-- [ ] Material del spin blur en `PF_ExampleProjectile` →
-      `AssetsExtra/Simple Spin Blur/Materials/Spin Blur Material.mat`
+Lo que quedó (`UI_ClassMenu` + `PlayerController.SettleWithoutInput`):
 
-## Rogue — el giro del segundo golpe
+1. **Con el menú abierto la gravedad sigue**: el personaje cae, se planta y la animación
+   pasa a idle. Sin avance horizontal.
+2. **Recibir daño cierra el menú sin elegir** (`CloseOnDamage`, prendido por defecto).
+   Mira la vida por `OnAttributeChangedCallback`, así funciona igual en el host y en un
+   cliente remoto; una curación no lo cierra. Aviso: *"Te pegaron: la elección se canceló.
+   Volvé a tu base y apretá V"*.
+3. **Abrirlo fuera de la base avisa, no bloquea**: *"Estás fuera de tu base: si te pegan,
+   el menú se cierra"*. La subclase se sigue pudiendo elegir afuera, con ese riesgo.
 
-- [ ] `HumanM@Attack1H01_L` → Animation → **Root Transform Rotation → Offset**
-
-**No lo lleves a cero**: algo de torsión es correcta para una puñalada con la izquierda.
-El combo alterna derecha-izquierda a propósito (las cuatro clases del rogue llevan dos
-dagas). Probá con la mitad de lo que tiene.
-
-## El señuelo del Ilusionista tiene el avatar viejo
-
-- [ ] Cambiar el modelo dentro de `GameplayAbilities/Prefabs/Summons/Entity_PlayerCopy.prefab`
-
-Usa `AssetsExtra/RPG Tiny Hero Duo/Prefab/MaleCharacterPBR`, el avatar anterior al cambio
-a Kevin Iglesias. **Es el único asset del proyecto que quedó atrás** — lo verifiqué contra
-todos los prefabs y escenas.
-
-El script ya asume que el avatar es compartido (su comentario lo dice: *"solo cambian arma
-y animación por clase"*), así que alcanza con cambiar el hijo visual. La raíz no se toca:
-ahí viven el `NetworkObject`, el `NetworkTransform`, el ASC, el collider y el script.
-
-Tres cosas que tienen que sobrevivir al cambio:
-
-1. **`WalkAnimator`** repuntado al `Animator` del modelo nuevo, con el mismo Avatar
-   Humanoid del jugador (si no, el `ClassAnimatorOverride` está hecho para otro esqueleto).
-2. **`Socket_MainHand` y `Socket_OffHand`** con esos nombres EXACTOS, colgando de los
-   huesos de las manos. El script los busca por nombre en toda la jerarquía, no por
-   referencia.
-3. El `Animator` nuevo necesita un float **`Speed`** — es con lo que la copia mezcla
-   caminar e idle.
-
-## Limpieza de nombres
-
-- [ ] Renombrar `GE_Reckless 1`, `GE_Reckless 2`, `GE_Reckless 3` y `GA_ConeReckless 1`
-
-Los cuatro están **en uso**, no son huérfanos. Renombrarlos es seguro: Unity mantiene el
-GUID y las referencias no se rompen. Ese sufijo ya te hizo dudar una vez sobre cuál
-asset estabas editando.
-
-## Recordatorio de subida de nivel *(opcional)*
-
-- [ ] Cablear **`LevelUpNotification`** del `UI_PlayerHUD`, que sigue en `None`
-
-Sirve como recordatorio fijo; el anuncio del centro se desvanece y si estabas peleando
-te lo perdés.
-
-## Speed Multiplier de la animación de acción
-
-- [ ] Los dos `PlaceHolder_Action` tienen `ActionSpeedMult` asignado pero **la casilla
-      desactivada**
-
-No rompe nada (está igual en las dos capas), pero el ritmo de ataque no acelera la
-animación: un personaje con mucha velocidad de ataque pega más seguido pero el swing se
-ve igual de lento.
+Falta probarlo: abrir V en el aire, y que te peguen con el menú abierto.
 
 ---
 
@@ -345,6 +310,10 @@ Lo primero al retomar.
 - El **salto del Bárbaro** y la **auto-revivida del Inmortal**.
 - Que **no entren a las salas seguras ajenas**, y que la expulsión no se vea brusca
   (`EjectMargin` en cada `MercTeamBase`).
+- **El `unhandled PacketId of 0` de FishNet — RESUELTO.** No era de red: `GA_IceAoE` tenía
+  `TickInterval 0` y `GA_ContinuousAoE` lo tomaba como "cada frame, para siempre" (el
+  jefe mataba de un golpe a un Berserker de 260 y la red se partía en `Split`). El asset
+  pasó a `GA_InstantAoE` y el continuo ahora trata un tick en 0 como una sola aplicación.
 
 ### El salto: no colisionaban mal, no APUNTABAN
 
@@ -433,10 +402,42 @@ La música de batalla la está haciendo un amigo: tené los hooks listos para cu
 **Solo se puede hacer en la máquina de casa** — la del trabajo no tiene con qué trabajar
 audio. Si estás en el trabajo, agarrá otra cosa de esta lista.
 
-## 4º · Pantalla de inicio y ajustes
+## 4º · Pantalla de inicio y ajustes — TERMINADO Y PROBADO ✅
 
-Necesaria pero de bajo riesgo: manejo de escenas y un panel de opciones. Se puede dejar
-para el final sin que nada dependa de ella.
+Está en `Scripts/Settings/` (ver el LEEME del modo, sección "El menú principal y los
+Ajustes"). **El menú es un panel sobre la arena, no otra escena**: de fondo se ve el
+mapa desde la cámara de la sala girando encima de la meseta, con blur. Jugar lo
+esconde y queda el recuadro de red de siempre; desde ese recuadro (ESC) están
+**Ajustes** y **Menú principal**. En el menú, ESC abre los Ajustes directo.
+
+Probado: menú → Jugar → hostear → Menú principal → Jugar → hostear otra vez.
+
+Perillas, por si querés tocarlas:
+
+- **La órbita**: en `Camara_Lobby` → `MenuOrbitCamera` (`Height 22`, `Radius 18`,
+  `DegreesPerSecond 3`). Sigue girando en la sala de espera y se queda quieta al
+  arrancar la partida.
+- **El blur**: `BlurEnabled` y sus tres números en el mismo componente. Si no se ve, el
+  renderer de URP no tiene post-procesado (`PC_Renderer` → Post Process Data).
+- **El velo del menú**: `UI_MainMenu.BackdropColor` (transparente para ver el mapa limpio).
+- **Probar la arena sin pasar por el menú**: `UI_MainMenu.ShowOnStart` apagado.
+- **La resolución y el modo de pantalla** solo se ven en una build (en el editor
+  `Screen.SetResolution` no hace nada).
+- **Música y efectos** todavía no suenan: son los ganchos para el 3º
+  (`GameSettings.MusicVolume` / `SfxVolume` + `OnChanged`). El general sí
+  (`AudioListener.volume`).
+
+### Lo que se arregló de paso: hostear dos veces en el mismo Play
+
+Desconectar → Iniciar Host nunca había andado bien; el menú solo lo hizo visible. Al
+parar el servidor, FishNet destruye los personajes y el Objetivo pero **no toca el estado
+de los managers de escena**: `LobbyManager` seguía con `MatchStarted = true` y las filas
+de la sala vieja, y el modo con puntajes y jugadores. Al hostear de nuevo la preparación
+arrancaba sola, sin sala, y nadie spawneaba.
+
+Ahora los tres (`LobbyManager`, `NetworkGameManager`, `MercenariesGameMode`) reinician
+su sesión en `OnStartServer`. **Si agregás un manager de escena con estado de partida,
+que también lo limpie ahí** — está como regla en `CLAUDE.md`.
 
 ## 5º · Conexión — respondida, pero no la haría ahora
 

@@ -140,16 +140,21 @@ public class ThirdPersonOrbitCam : MonoBehaviour
             bool fromGamepad = input.Look.activeControl != null &&
                                input.Look.activeControl.device is Gamepad;
 
+            // Los ajustes del jugador (panel de Ajustes): multiplican la sensibilidad de
+            // arriba —que es la base del prefab— y dan vuelta el eje Y si lo pidió.
+            float userMult = GameSettings.MouseSensitivity;
+            float ySign    = GameSettings.InvertY ? -1f : 1f;
+
             if (fromGamepad)
             {
-                rotY += look.x * GamepadSensitivity * Time.deltaTime;
-                rotX -= look.y * GamepadSensitivity * Time.deltaTime;
+                rotY += look.x * GamepadSensitivity * userMult * Time.deltaTime;
+                rotX -= look.y * GamepadSensitivity * userMult * ySign * Time.deltaTime;
             }
             else
             {
                 // *0.1 para replicar la escala del viejo eje "Mouse X" (sensibilidad 0.1).
-                rotY += look.x * SensitivityX * 0.1f;
-                rotX -= look.y * SensitivityY * 0.1f;
+                rotY += look.x * SensitivityX * userMult * 0.1f;
+                rotX -= look.y * SensitivityY * userMult * ySign * 0.1f;
             }
 
             rotX = Mathf.Clamp(rotX, MinY, MaxY);
