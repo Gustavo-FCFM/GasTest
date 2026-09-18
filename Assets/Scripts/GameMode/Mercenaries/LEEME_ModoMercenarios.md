@@ -3,56 +3,51 @@
 Modo principal **3c3c3 PvEvP**: tres equipos de tres, NPCs por todo el escenario, un
 Objetivo en el centro y **dos entregas para ganar**.
 
-Todo el código vive en `Assets/Scripts/GameMode/`. La arena tiene su **escena propia**
+Todo el código vive en `Assets/Scripts/GameMode/Mercenaries/` (lo que sirve a cualquier modo, un nivel arriba). La arena tiene su **escena propia**
 (`Assets/Scenes/Mercenaries_Gamemode.unity`): `Test_Network.unity` queda intacta para las
 pruebas rápidas de clases.
 
 ---
 
-# 0. Estado actual — 7 de septiembre de 2026
+# 0. Estado actual — 18 de septiembre de 2026
 
-**Lo que ya está y funciona** (todo compila limpio en batch, 0 errores y 0 warnings):
+**Lo que ya está y funciona** (todo compila limpio, 0 errores y 0 warnings propios):
 
 - El modo entero: fases, Objetivo, puntaje, experiencia compartida, wipes, avisos, NPCs en
   red, HUD.
 - **La sala de espera** (`LobbyManager` + `UI_LobbyPanel`): un solo panel con la IP del
   host, el nombre, las tres columnas de equipo, la franja de espectadores, la grilla de
-  clases y el Start del host. Ver la sección 2.
+  clases, el `+` para bots y el Start del host. Ver la sección 2.
+- **Bots** (`BotController`): jugadores de verdad con rol por clase base, que usan el kit
+  completo, van por el Objetivo y respetan las salas seguras. **Cámara de espectador**
+  (`Player/SpectatorCamera`) para mirar la partida sin jugar.
+- **Menú principal y Ajustes**: un panel sobre la arena con la cámara de la sala girando
+  con blur; sensibilidad, volúmenes, pantalla. Volver al menú y volver a hostear en el
+  mismo Play anda (los managers reinician su sesión en `OnStartServer`).
+- **Sonido**: el sistema entero está escrito (sección "El sonido"); faltan los clips.
 - La escena `Mercenaries_Gamemode.unity` **armada, editada a mano y guardada**: arena con
-  colliders convex, las tres bases afuera del muro y acomodadas en simetría, con techo
-  propio. 9 campamentos, 3 rejas (`MercGate`), techo y paredes invisibles
-  (`MercArenaBounds`), NavMesh horneado, HUD y la sala.
-- **Bestiario**: tres enemigos en red en `Prefabs/Enemies/` con sus propios
-  `ASDef_*` ya rebalanceados — fantasma 23 vida / 8 ataque, mago 15/24, jefe 35/50 — más el
-  catálogo (`Resources/MercEnemyCatalog.asset`) y las tablas de aparición por campamento.
-  El jefe usa `GA_BossAbility`, un combo que encadena aura + bola de fuego.
-- **Cámara**: colisión con el escenario (se acerca al chocar), el jugador se deja de dibujar
-  cuando la cámara se le pega (conservando su sombra), y los topes de inclinación abiertos a
-  ±85 para poder apuntar dash hacia arriba y hacia abajo.
+  colliders convex, las tres bases afuera del muro con techo propio y paredes invisibles
+  filtradas por equipo (`MercSafeRoomBarrier`), 9 campamentos, 3 rejas (`MercGate`), techo
+  y paredes de la arena (`MercArenaBounds`), NavMesh horneado, HUD, sala y menú.
+- **Bestiario**: tres enemigos en red en `Prefabs/Enemies/` con sus `ASDef_*` en
+  `Attributes/Enemies/` — fantasma 30 vida / 8 ataque / 10 exp, mago 15/24/40, jefe
+  35/50/175 — más el catálogo (`Resources/MercEnemyCatalog.asset`) y las tablas de
+  aparición por campamento. El jefe usa `GA_BossAbility`: aura que buffea y cura a los
+  suyos, 5 s después un golpe de hielo de área (una sola aplicación).
+- **Cámara**: colisión con el escenario, el jugador se deja de dibujar cuando la cámara se
+  le pega, topes de inclinación ±85, y sensibilidad/inversión desde Ajustes.
 - **Los NPCs son el equipo 4**, no neutrales: pueden buffearse entre ellos y sus AoE ya no
   lastiman a los suyos.
 
-**Lo que sigue, por orden de impacto:**
-
-1. **El jefe lanza el aura para nadie.** `GA_BossAura.Radius` ya está en 9, pero con
-   `KeepDistance = 11` el jefe pelea lejos de su grupo y el aura sale de él mismo. O le
-   bajás la distancia a ~5, o subís el radio a 12-14.
-2. **`AttackRange 20` con `DetectionRadius 16`**: el alcance real es 16, nunca dispara a 20.
-   Igualalos. Y con `LeashRadius 20` te suelta a los 4 m de correa — para un jefe, ~28.
-3. **Probar el balance en el centro.** El jefe pega 50 contra 120 de vida (42 % por golpe) y
-   cada mago hace 16 de daño por segundo. Con dos magos y el jefe activos, la meseta puede
-   volverse intomable — y es el lugar donde tiene que pasar toda la partida. Es lo primero
-   que hay que jugar, antes de seguir puliendo.
-4. Solo 3 de los 9 campamentos tienen magos y jefe; los otros 6 son fantasmas puros. Si no
-   fue a propósito, está el botón *Copiar esta tabla a todos* del inspector del campamento.
-5. **Build Settings**: la escena tiene que quedar **primera** antes de compilar la build que
-   repartís, o tus amigos arrancan en otra.
+**Lo que sigue** está en `PENDIENTES.md` (raíz del repo): probar con bots lo último
+(subclase, paladines, balance de NPCs) y cargar los clips de sonido.
 
 **Las herramientas de armado ya no están.** El menú `Mercenarios` tenía ocho pasos para
 generar prefabs, escena, arena y enemigos; una vez hecho todo eso se borraron
-(`MercSetupTools.cs`, `MercArenaBuilder.cs`, `MercLayoutTools.cs`). Queda un solo ítem:
-`Actualizar los registros de red`. Cómo recuperarlas, y la trampa que tiene hacerlo, está
-en `PENDIENTES.md`.
+(`MercSetupTools.cs`, `MercArenaBuilder.cs`, `MercLayoutTools.cs`). Quedan los ítems de
+mantenimiento: actualizar los registros de red, instalar la cámara de espectador, las
+paredes de las salas, el menú principal y la biblioteca de audio. Cómo recuperar las de
+armado, y la trampa que tiene hacerlo, está en `PENDIENTES.md`.
 
 **Convención de nombres:** todo lo que el generador creaba está en **inglés**
 (`ARENA_MERCENARIES`, `Base_Team1`, `Lane`, `Deck`, `Plateau`, `Mat_ArenaSand`). Lo que
