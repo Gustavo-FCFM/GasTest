@@ -65,23 +65,29 @@ editor CERRADO (no entran dos instancias sobre el mismo proyecto):
 
 ## Mapa del proyecto
 
-Los scripts van por **lo que son**, no por quién los usa:
+La regla, en una línea: **arte en Art, prefabs en Prefabs, datos en Attributes / Effects /
+GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo usa.
 
 | Dónde | Qué |
 |---|---|
-| `Assets/Scripts/GAS/` | El motor de habilidades: ASC, efectos, habilidades base, atributos, tags, registros. |
+| `Assets/Art/` | Modelos, materiales (`Materials/Arena` es la arena), animaciones (los AOC por clase), VFX, e `Icons/` (`Classes/` y `Abilities/` por clase). |
+| `Assets/Audio/` | Los clips: `Sfx/` y `Music/`. La biblioteca que los referencia está en `Resources/AudioLibrary`. |
+| `Assets/Prefabs/` | Todos los prefabs: `Player/` (jugador y su cámara), `Enemies/`, `Objective/`, `Projectiles/`, `Summons/`, `UI/`. |
+| `Assets/Attributes/` | Clases jugables (`Class_*.asset`) y stats (`ASDef_*`), por clase; `Enemies/` y `Summons/` para los NPCs. |
+| `Assets/Effects/` | Los `GE_*`, por tipo (Damage, Buffs, CC, Debuffs, Cooldowns). |
+| `Assets/GameplayAbilities/` | Los `GA_*` por clase, **con sus scripts `GA_*.cs` al lado** — son contenido. `Enemies/` para las de los NPCs. |
+| `Assets/Scripts/GAS/` | El motor de habilidades: ASC, efectos, habilidades base, atributos, tags, registros. `Entities/` son los objetos que las habilidades crean (proyectiles, tótems, barreras). |
 | `Assets/Scripts/Network/` | Conexión y red: `NetworkAbilitySystemComponent`, `NetworkGameManager`, `ConnectionHUD` y `LobbyManager` (la sala de espera). |
 | `Assets/Scripts/Player/` | El jugador y sus cámaras: `PlayerController`, input, animación, `ThirdPersonOrbitCam`, `SpectatorCamera`, `MenuOrbitCamera`. |
 | `Assets/Scripts/UI/` | Toda la UI que no es de un modo: HUD de clase, menú de clases, sala (`UI_LobbyPanel`), menú principal, ajustes, `MercUIFactory`, y `UICursor` — el único dueño del cursor y del modo de input. |
 | `Assets/Scripts/Settings/` | `GameSettings` (PlayerPrefs). |
-| `Assets/Scripts/Audio/` | Sonido: `AudioManager`, `MusicPlayer`, `AudioLibrary` (Resources) y `SfxCue`. |
+| `Assets/Scripts/Audio/` | Sonido: `AudioManager`, `MusicPlayer`, `AudioLibrary` y `SfxCue`. |
 | `Assets/Scripts/GameMode/` | Lo que sirve a CUALQUIER modo: `DeathZone`, `FloatingVisual`, `NPC_Target`. |
 | `Assets/Scripts/GameMode/Mercenaries/` | **El modo Mercenarios**, y solo él: el modo, la arena, bases, objetivo, NPCs, bots y su HUD (`UI/`). Ver su `LEEME_ModoMercenarios.md`. Un modo nuevo (FFA) va en su propia carpeta al lado. |
 | `Assets/Scripts/Editor/` | Todas las herramientas de editor (menú `Mercenarios ▸ …` y el inspector de habilidades). Tiene que llamarse `Editor` para que Unity no las meta en la build. |
-| `Assets/GameplayAbilities/` | Los assets de habilidades y efectos, por clase — **con sus scripts `GA_*.cs` al lado**: son contenido, viven junto a su asset. |
-| `Assets/Attributes/` | Clases jugables (`Class_*.asset`) y sus stats base (`ASDef_*.asset`). |
+| `Assets/Resources/` | Lo que se carga por nombre: los dos registros de red, el catálogo de enemigos, la biblioteca de audio. |
 | `Assets/48toPlay/` | Restos de la game jam: los fantasmas y sus stats. Se reusan como NPCs. |
-| `Assets/AssetsExtra/` | Packs comprados: FishNet, animaciones de Kevin Iglesias, Medieval Cute Series, VFX. |
+| `Assets/AssetsExtra/` | Packs comprados: FishNet, animaciones de Kevin Iglesias, Medieval Cute Series, Vefects, VFX. |
 | `DesignDocuments/` | Diseño en `.docx`: arquitectura del GAS, guía de habilidades, las 8 clases, glosario. |
 
 **Escenas:**

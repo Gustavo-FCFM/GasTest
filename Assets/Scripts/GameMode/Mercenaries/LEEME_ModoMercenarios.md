@@ -22,7 +22,7 @@ pruebas rápidas de clases.
   colliders convex, las tres bases afuera del muro y acomodadas en simetría, con techo
   propio. 9 campamentos, 3 rejas (`MercGate`), techo y paredes invisibles
   (`MercArenaBounds`), NavMesh horneado, HUD y la sala.
-- **Bestiario**: tres enemigos en red en `GameMode/Prefabs/Enemys/` con sus propios
+- **Bestiario**: tres enemigos en red en `Prefabs/Enemies/` con sus propios
   `ASDef_*` ya rebalanceados — fantasma 23 vida / 8 ataque, mago 15/24, jefe 35/50 — más el
   catálogo (`Resources/MercEnemyCatalog.asset`) y las tablas de aparición por campamento.
   El jefe usa `GA_BossAbility`, un combo que encadena aura + bola de fuego.
