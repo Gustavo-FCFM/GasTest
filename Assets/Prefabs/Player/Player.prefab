@@ -860,6 +860,8 @@ MonoBehaviour:
   AirLoopSlotName: PLACEHOLDER_AirLoop
   AirLandSlotName: PLACEHOLDER_AirLand
   LeapStateID: 96
+  HitClipSlotName: PLACEHOLDER_Hit
+  HitTrigger: HitTrigger
   MainHandSocket: {fileID: 7146974001845245483}
   OffHandSocket: {fileID: 8897914063047295575}
   MovementAbility: {fileID: 0}
@@ -956,7 +958,7 @@ MonoBehaviour:
   _teleportThreshold: 1
   <PrefabId>k__BackingField: 17
   <SpawnableCollectionId>k__BackingField: 0
-  <AssetPathHash>k__BackingField: 13623089071726480599
+  <AssetPathHash>k__BackingField: 5306845881338098766
   SceneId: 0
   SerializedTransformProperties:
     Position: {x: 0, y: 0, z: 0}
