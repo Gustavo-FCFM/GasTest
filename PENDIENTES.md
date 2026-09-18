@@ -271,7 +271,7 @@ Código y montaje, los dos. Ver la sección 2.
 No estaban en el plan: salieron de que para probar el modo espectador hacen falta otros
 jugadores, y juntar nueve personas cada vez no es viable.
 
-**Los bots** (`GameMode/BotController.cs`) son jugadores de verdad: mismo prefab, mismo
+**Los bots** (`GameMode/Mercenaries/BotController.cs`) son jugadores de verdad: mismo prefab, mismo
 ASC, mismas habilidades, spawneados sin dueño para que el servidor los maneje. Piden sus
 habilidades por `ServerActivateAbility`, el MISMO punto de entrada que un jugador, así que
 pagan cooldowns, energía y tags igual que todos. Se agregan desde la sala con el `+` de
@@ -289,7 +289,7 @@ Tres roles, deducidos de la clase base (`MainBaseClasses`: 0 Bárbaro, 1 Pícaro
 Rodean en vez de quedarse de frente, y se despegan mientras el ataque básico está en
 cooldown. Al llegar a nivel 3 eligen subclase al azar.
 
-**La cámara espectador** (`GameMode/SpectatorCamera.cs`) se enciende sola cuando tu fila
+**La cámara espectador** (`Player/SpectatorCamera.cs`) se enciende sola cuando tu fila
 de la sala dice Spectator y la partida arrancó. Vuelo libre WASD + Espacio/Ctrl + Shift,
 clic izquierdo/derecho para seguir jugadores, `F` para volver a libre, `H` para el panel
 del observado y `M` para el marcador.
@@ -445,7 +445,7 @@ pega. La reacción de golpe entra en esa misma capa y hereda eso.
 
 ## 4º · Pantalla de inicio y ajustes — TERMINADO Y PROBADO ✅
 
-Está en `Scripts/Settings/` (ver el LEEME del modo, sección "El menú principal y los
+Está en `Scripts/Settings/ y Scripts/UI/` (ver el LEEME del modo, sección "El menú principal y los
 Ajustes"). **El menú es un panel sobre la arena, no otra escena**: de fondo se ve el
 mapa desde la cámara de la sala girando encima de la meseta, con blur. Jugar lo
 esconde y queda el recuadro de red de siempre; desde ese recuadro (ESC) están

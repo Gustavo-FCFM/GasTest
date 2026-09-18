@@ -41,6 +41,8 @@ Tres límites que conviene saber:
 - **El `.rsp` lista los archivos fuente uno por uno.** Un `.cs` NUEVO no entra hasta que
   Unity regenere ese archivo — hay que agregarlo a mano a la copia (`echo '"Assets/..."'
   >> /tmp/check.rsp`) o compilar con Unity una vez.
+  Y **no termina en salto de línea**: hacer `echo` antes de agregar, si no la primera ruta se
+  pega a la línea anterior y ese archivo no compila (sale como "tipo no encontrado").
 - **No corre el codegen de FishNet** (el ILPostProcess que genera los RPCs), así que un
   error que solo aparece ahí no lo detecta.
 - Es para `Assembly-CSharp`. Para las herramientas de editor, el `.rsp` equivalente es
@@ -63,17 +65,21 @@ editor CERRADO (no entran dos instancias sobre el mismo proyecto):
 
 ## Mapa del proyecto
 
+Los scripts van por **lo que son**, no por quién los usa:
+
 | Dónde | Qué |
 |---|---|
-| `Assets/Scripts/GAS/` | El motor de habilidades: ASC, efectos, habilidades, atributos, tags. |
-| `Assets/Scripts/Network/` | Capa de red: `NetworkAbilitySystemComponent`, `NetworkGameManager`, `ConnectionHUD` y `LobbyManager` (la sala de espera). |
-| `Assets/Scripts/Player/` | `PlayerController` (movimiento, input, animación) y el prefab del jugador. |
-| `Assets/Scripts/UI/` | HUD de clase, menú de clases, y `UICursor` — el único dueño del cursor y del modo de input. |
-| `Assets/Scripts/Settings/` | Menú principal (`UI_MainMenu`, un panel sobre la arena), la cámara que gira con blur (`MenuOrbitCamera`), el panel de Ajustes (`UI_SettingsPanel`) y `GameSettings` (PlayerPrefs). |
-| `Assets/Scripts/Audio/` | Sonido: `AudioManager` (pool, avisos de partida, ambiente), `MusicPlayer`, `AudioLibrary` (Resources) y `SfxCue`. Los sonidos de habilidad/efecto van en sus propios assets. |
-| `Assets/Scripts/GameMode/` | **El modo Mercenarios.** Ver su `LEEME_ModoMercenarios.md`. |
+| `Assets/Scripts/GAS/` | El motor de habilidades: ASC, efectos, habilidades base, atributos, tags, registros. |
+| `Assets/Scripts/Network/` | Conexión y red: `NetworkAbilitySystemComponent`, `NetworkGameManager`, `ConnectionHUD` y `LobbyManager` (la sala de espera). |
+| `Assets/Scripts/Player/` | El jugador y sus cámaras: `PlayerController`, input, animación, `ThirdPersonOrbitCam`, `SpectatorCamera`, `MenuOrbitCamera`. |
+| `Assets/Scripts/UI/` | Toda la UI que no es de un modo: HUD de clase, menú de clases, sala (`UI_LobbyPanel`), menú principal, ajustes, `MercUIFactory`, y `UICursor` — el único dueño del cursor y del modo de input. |
+| `Assets/Scripts/Settings/` | `GameSettings` (PlayerPrefs). |
+| `Assets/Scripts/Audio/` | Sonido: `AudioManager`, `MusicPlayer`, `AudioLibrary` (Resources) y `SfxCue`. |
+| `Assets/Scripts/GameMode/` | Lo que sirve a CUALQUIER modo: `DeathZone`, `FloatingVisual`, `NPC_Target`. |
+| `Assets/Scripts/GameMode/Mercenaries/` | **El modo Mercenarios**, y solo él: el modo, la arena, bases, objetivo, NPCs, bots y su HUD (`UI/`). Ver su `LEEME_ModoMercenarios.md`. Un modo nuevo (FFA) va en su propia carpeta al lado. |
+| `Assets/Scripts/Editor/` | Todas las herramientas de editor (menú `Mercenarios ▸ …` y el inspector de habilidades). Tiene que llamarse `Editor` para que Unity no las meta en la build. |
+| `Assets/GameplayAbilities/` | Los assets de habilidades y efectos, por clase — **con sus scripts `GA_*.cs` al lado**: son contenido, viven junto a su asset. |
 | `Assets/Attributes/` | Clases jugables (`Class_*.asset`) y sus stats base (`ASDef_*.asset`). |
-| `Assets/GameplayAbilities/` | Los assets de habilidades y efectos, por clase. |
 | `Assets/48toPlay/` | Restos de la game jam: los fantasmas y sus stats. Se reusan como NPCs. |
 | `Assets/AssetsExtra/` | Packs comprados: FishNet, animaciones de Kevin Iglesias, Medieval Cute Series, VFX. |
 | `DesignDocuments/` | Diseño en `.docx`: arquitectura del GAS, guía de habilidades, las 8 clases, glosario. |
