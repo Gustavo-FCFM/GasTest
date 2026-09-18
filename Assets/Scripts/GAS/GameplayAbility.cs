@@ -89,6 +89,15 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     [Tooltip("Esquema viejo (solo se usa si AnimationClip está vacío). 1=Melee, 2=Proyectil, 3=Salto, 4=Extra")]
     public int AnimationID = 1;
 
+    [Header("Sonido")]
+    [Tooltip("Al LANZAR: suena en el personaje junto con la animación. Lo oyen todos los peers " +
+             "por el mismo camino que la animación. Vacío = silencio.")]
+    public SfxCue CastSound;
+
+    [Tooltip("Al IMPACTAR: suena donde aparece el VFX de impacto (PlayImpactVFX), en todos los " +
+             "peers. Vacío = silencio.")]
+    public SfxCue ImpactSound;
+
     // Nombre del Animation Event que marca el FRAME DE IMPACTO dentro de un clip.
     //
     // Es una CONSTANTE y no un campo del inspector a propósito: el evento tiene que

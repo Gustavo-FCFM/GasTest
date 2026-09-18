@@ -173,6 +173,32 @@ public class PlayerController : NetworkBehaviour
              "ActionClipStateID, HoldStateID (98) y HoldImpactStateID (97).")]
     public int LeapStateID = 96;
 
+    // ---------------------------------------------------------
+    // REACCIÓN DE GOLPE
+    //
+    // Un sacudón corto al recibir daño. Va en la capa UpperBody para que el personaje
+    // siga caminando mientras se sacude (como el ataque). La POSTURA la resuelve el
+    // AnimatorOverrideController de cada clase: en AC_Player la ranura tiene un clip
+    // placeholder, y cada AOC_* lo reemplaza por el CombatDamage de su arma (2 manos,
+    // dos armas, espada y escudo). El golpe recibido CON EL ESCUDO ARRIBA no pasa por
+    // acá: ese es el HoldImpact de la habilidad de bloquear.
+    //
+    // Para activarlo, en AC_Player (capa UpperBody):
+    //   · Un estado con el clip placeholder HitClipSlotName.
+    //   · Parámetro trigger HitTrigger; AnyState → ese estado con el trigger
+    //     (Can Transition To Self apagado); → Empty por Exit Time.
+    // Sin el parámetro en el Animator no pasa nada (ni error): se queda sin reacción.
+    // ---------------------------------------------------------
+    [Header("Reacción de golpe")]
+    [Tooltip("Clip placeholder del estado de reacción de golpe en la capa UpperBody. Cada AOC de " +
+             "clase lo reemplaza por el clip de su postura.")]
+    public string HitClipSlotName = "PLACEHOLDER_Hit";
+
+    [Tooltip("Trigger del Animator que dispara la reacción.")]
+    public string HitTrigger = "HitTrigger";
+
+    private bool _hasHitTrigger;
+
     // Copia en RUNTIME del controller (base + overrides de la clase). Es la que
     // permite intercambiar el clip de la ranura de acción sin tocar los assets.
     private AnimatorOverrideController _runtimeAnimator;
@@ -695,7 +721,10 @@ public class PlayerController : NetworkBehaviour
             // En el piso es un salto normal; en el aire, solo con la caída de pluma
             // activa, y con el impulso más chico del aleteo.
             if (_input.Jump.WasPressedThisFrame() && (characterController.isGrounded || feathered))
+            {
                 verticalVelocity = characterController.isGrounded ? jumpForce : flapForce;
+                if (AudioLibrary.Instance != null) AudioManager.Play(AudioLibrary.Instance.Jump, transform.position);
+            }
         }
 
         verticalVelocity += gravity * (feathered ? featherFallGravityScale : 1f) * Time.deltaTime;
@@ -1730,6 +1759,79 @@ public class PlayerController : NetworkBehaviour
         _airLoopKey = ResolveSlotKey(slots, AirLoopSlotName);
         _airLandKey = ResolveSlotKey(slots, AirLandSlotName);
         _currentAirStart = _currentAirLoop = _currentAirLand = null;
+
+        ResolveHitTrigger();
+        _lastStepPos = transform.position;
+        _spawnedAt   = Time.time;
+    }
+
+    // =========================================================
+    // REACCIÓN DE GOLPE Y PASOS (sonido)
+    // =========================================================
+
+    // Sacudón al recibir daño. La llama NetworkAbilitySystemComponent al ver bajar la
+    // vida sincronizada, así que corre en TODOS los peers (dueño, host y observadores)
+    // sin ningún RPC. El mínimo de daño y el respiro entre reacciones ya los aplicó él.
+    public void PlayHitReaction()
+    {
+        if (characterAnimator == null || !_hasHitTrigger) return;
+        if (ASC != null && ASC.HasTag(EGameplayTag.State_Dead)) return;
+
+        // Con el escudo arriba el golpe tiene su propia animación (HoldImpact).
+        if (!string.IsNullOrEmpty(HoldingParam) && characterAnimator.GetBool(HoldingParam)) return;
+
+        characterAnimator.SetTrigger(HitTrigger);
+    }
+
+    // ¿El Animator tiene el trigger de reacción? Se mira una vez, al armar el controller
+    // en runtime, y no cada golpe.
+    private void ResolveHitTrigger()
+    {
+        _hasHitTrigger = false;
+        if (characterAnimator == null || string.IsNullOrEmpty(HitTrigger)) return;
+
+        foreach (AnimatorControllerParameter p in characterAnimator.parameters)
+            if (p.type == AnimatorControllerParameterType.Trigger && p.name == HitTrigger) { _hasHitTrigger = true; return; }
+    }
+
+    // PASOS por distancia recorrida, no por Animation Events: así suenan igual en las
+    // copias remotas (que se mueven por NetworkTransform, sin pasar por Move()) y no
+    // hay que meter eventos en cada clip de caminar del pack. Y el aterrizaje es el
+    // cambio aire → piso, que también vale para todas las copias.
+    private Vector3 _lastStepPos;
+    private float   _stepAccum;
+    private bool    _wasGrounded = true;
+    private float   _spawnedAt;
+
+    private void TickFootsteps()
+    {
+        AudioLibrary lib = AudioLibrary.Instance;
+        if (lib == null || characterController == null) return;
+
+        Vector3 pos = transform.position;
+
+        // Primer frame (o teletransporte): no acumular un "paso" de 40 metros.
+        Vector3 delta = pos - _lastStepPos;
+        _lastStepPos = pos;
+        if (delta.sqrMagnitude > 9f) { _stepAccum = 0f; return; }
+
+        // Piso: el CharacterController solo sabe si está en el piso cuando lo movió
+        // Move(), o sea solo en el dueño. Un rayo corto vale para todas las copias.
+        bool grounded = Physics.Raycast(pos + Vector3.up * 0.3f, Vector3.down, 0.6f, ~(1 << 7),
+                                        QueryTriggerInteraction.Ignore);
+
+        if (grounded && !_wasGrounded && Time.time - _spawnedAt > 0.5f)
+            AudioManager.Play(lib.Land, pos);
+        _wasGrounded = grounded;
+
+        if (!grounded) { _stepAccum = 0f; return; }
+
+        delta.y = 0f;
+        _stepAccum += delta.magnitude;
+        if (_stepAccum < Mathf.Max(lib.FootstepDistance, 0.3f)) return;
+
+        _stepAccum = 0f;
+        AudioManager.Play(lib.Footsteps, pos);
     }
 
     // Busca en los overrides del controller el clip placeholder que se llame
@@ -1792,6 +1894,10 @@ public class PlayerController : NetworkBehaviour
         // delegan su animación en la variante que realmente se ejecuta. Para todas
         // las demás esto devuelve la misma habilidad. Ver ResolveAnimationSource.
         ability = ability.ResolveAnimationSource() ?? ability;
+
+        // El sonido de lanzar va con la animación: este método corre en el dueño y, vía
+        // ObserversPlayAbilityAnimation, en cada observador — o sea, una vez por pantalla.
+        AudioManager.Play(ability.CastSound, transform.position + Vector3.up);
 
         // SALTO DE HABILIDAD: bucle en el aire + remate al aterrizar, en vez de un
         // clip que se reproduce una vez y termina aunque el personaje siga volando.
@@ -2348,6 +2454,8 @@ public class PlayerController : NetworkBehaviour
     // rotar antes lo pisaría el propio animator en el mismo frame.
     private void LateUpdate()
     {
+        TickFootsteps();
+
         if (Mathf.Approximately(_modelSpinSpeed, 0f) || characterAnimator == null) return;
 
         _modelSpinAngle += _modelSpinSpeed * Time.deltaTime;

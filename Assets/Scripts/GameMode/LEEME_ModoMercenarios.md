@@ -217,6 +217,54 @@ que `LobbyManager`, `NetworkGameManager` y `MercenariesGameMode` **reinician su 
 `OnStartServer`**: sala vacía, `MatchStarted` en false, puntajes y listas a cero. Si
 agregás otro manager de escena con estado de partida, que haga lo mismo.
 
+## El sonido
+
+Todo en `Scripts/Audio/`. Dos ideas que lo explican entero:
+
+**Un solo oído por cliente.** El `AudioListener` de TU cámara: la del jugador cuando
+tenés personaje, la de la sala (`Camara_Lobby`) cuando no. Los otros jugadores no son
+oídos: son fuentes 3D en el mundo, y los escuchás desde tu cámara con atenuación por
+distancia.
+
+**Los sonidos no viajan por la red; viajan los eventos que ya viajaban.** Cada cliente
+pone el sonido al recibir lo mismo que ya recibía para dibujar. Cero RPCs nuevos:
+
+| Qué suena | Dónde se engancha |
+|---|---|
+| Lanzar una habilidad (`GA_*.CastSound`) | Con la animación (`PlayerController.ApplyAbilityAnimation`, dueño + observadores) |
+| Impacto de habilidad (`GA_*.ImpactSound`) | Donde aparece su VFX de impacto (`ServerPlayAbilityVFX` / `ObserversPlayAbilityVFX`) |
+| Efecto con duración aplicado (`GE_*.TargetSound`) | Donde se instancia el `TargetVFX` (`SpawnEffectVfx`) |
+| Golpe recibido, muerte | Al bajar la vida sincronizada (`OnNetHealthChanged`, todos los peers) |
+| Subir de nivel | Al subir el nivel sincronizado, solo en la pantalla del que subió |
+| Pasos, aterrizaje | Por distancia recorrida en el piso (`TickFootsteps`, todas las copias) |
+| Salto | Al apretar saltar (solo el dueño lo oye) |
+| Inicio, Objetivo, aniquilación, fin | `MercenariesGameMode.OnAnnouncement` |
+| Cuenta atrás de la preparación | Un beep por segundo en los últimos `CountdownFrom` |
+| Clics de UI | Los botones del menú, los ajustes y la sala |
+
+Las piezas:
+
+- **`SfxCue`**: lo que se asigna en el Inspector en vez de un clip pelado — uno o
+  varios clips (se elige al azar, sin repetir el último), volumen, variación de tono y
+  distancia máxima. **Vacío = silencio, sin quejas**: el código está completo antes de
+  que exista un solo archivo de audio.
+- **`AudioLibrary`** (`Resources/AudioLibrary.asset`): los sonidos que no son de una
+  habilidad ni de un efecto — pasos, golpes, muerte, avisos, UI, el loop de ambiente y
+  las dos pistas de música. Lo crea `Mercenarios ▸ Crear la biblioteca de audio`, que
+  además le pone el `AudioListener` a la cámara de la sala.
+- **`AudioManager`**: se crea solo al arrancar (nada que poner en la escena). Un pool
+  de AudioSources; `AudioManager.Play(cue, posición)` para 3D, `PlayUI(cue)` para 2D.
+  Todo multiplicado por `GameSettings.SfxVolume`.
+- **`MusicPlayer`**: dos fuentes con fundido cruzado. `BattleMusic` con partida en
+  curso, `MenuMusic` el resto del tiempo. Volumen de `GameSettings.MusicVolume`.
+
+**La reacción de golpe** va con esto: al recibir daño (con un mínimo y un respiro,
+`HurtMinFraction` / `HurtCooldown` en la biblioteca) el personaje se sacude. Es una
+ranura más del Animator, `PLACEHOLDER_Hit` en la capa UpperBody con el trigger
+`HitTrigger`, y **la postura la resuelve el AOC de cada clase** reemplazando ese clip
+por el `CombatDamage` de su arma. Con el escudo arriba no pasa por acá: ese golpe es el
+`HoldImpact` del bloqueo. Sin el trigger en el Animator, no hay reacción y no hay error.
+
 ## Decorar la arena
 
 El pack (`AssetsExtra/Medieval Cute Series/Prefabs`) tiene justo lo que hace falta:

@@ -320,7 +320,41 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // servidor, así que lo ignoramos para no reescribirnos a nosotros mismos).
     private void OnNetHealthChanged(float prev, float next, bool asServer)
     {
-        if (!asServer && _asc != null) _asc.SetCurrentAttributeValue(EAttributeType.Health, next);
+        if (asServer || _asc == null) return;
+
+        _asc.SetCurrentAttributeValue(EAttributeType.Health, next);
+
+        // Sonido y reacción de golpe: acá, y no en el pipeline de daño, porque este
+        // callback corre en TODOS los clientes (en el host también, con asServer=false)
+        // y es el único lugar donde "bajó la vida" llega igual a todos. Nada viaja de más.
+        if (next < prev) ReactToDamage(prev, next);
+    }
+
+    private float _lastHurtAt = -10f;
+
+    // Un golpe recibido: suena (Hurt, o Death si lo mató) y el personaje se sacude
+    // (PlayerController.PlayHitReaction). Con un mínimo de daño y un respiro entre
+    // reacciones, para que una quemadura de 3 por segundo no lo tenga temblando.
+    private void ReactToDamage(float prev, float next)
+    {
+        AudioLibrary lib = AudioLibrary.Instance;
+        Vector3 at = transform.position + Vector3.up;
+
+        if (next <= 0f)
+        {
+            if (lib != null) AudioManager.Play(lib.Death, at);
+            return;
+        }
+
+        float minDamage = lib != null ? Mathf.Max(_netMaxHealth.Value, 1f) * lib.HurtMinFraction : 1f;
+        float cooldown  = lib != null ? lib.HurtCooldown : 0.45f;
+        if (prev - next < minDamage || Time.time - _lastHurtAt < cooldown) return;
+        _lastHurtAt = Time.time;
+
+        if (lib != null) AudioManager.Play(lib.Hurt, at);
+
+        PlayerController pc = GetComponent<PlayerController>();
+        if (pc != null) pc.PlayHitReaction();
     }
     private void OnNetMaxHealthChanged(float prev, float next, bool asServer)
     {
@@ -348,7 +382,13 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     }
     private void OnNetLevelChanged(float prev, float next, bool asServer)
     {
-        if (!asServer && _asc != null) _asc.SetCurrentAttributeValue(EAttributeType.Level, next);
+        if (asServer || _asc == null) return;
+        _asc.SetCurrentAttributeValue(EAttributeType.Level, next);
+
+        // Subir de nivel suena solo en la pantalla del que subió (es SU momento; para
+        // el equipo está el aviso TeamLevelUp).
+        if (next > prev && IsOwner && AudioLibrary.Instance != null)
+            AudioManager.PlayUI(AudioLibrary.Instance.LevelUp);
     }
     private void OnNetExpChanged(float prev, float next, bool asServer)
     {
@@ -676,7 +716,15 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
 
         GameplayEffectRegistry registry = GameplayEffectRegistry.Instance;
         GameplayEffect definition = registry != null ? registry.GetEffect(effectIndex) : null;
-        if (definition == null || definition.TargetVFX == null) return;
+        if (definition == null) return;
+
+        // El sonido va antes que el VFX a propósito: un efecto puede tener sonido sin
+        // tener partícula (un stun que solo suena), y viceversa.
+        AudioManager.Play(definition.TargetSound, transform.position + Vector3.up);
+
+        // Sin partícula igual se anota (con null): si no, cada refresco del efecto
+        // volvería a pasar por acá y el sonido se repetiría. Los Despawn toleran el null.
+        if (definition.TargetVFX == null) { _activeEffectVfx[effectIndex] = null; return; }
 
         Vector3    pos = transform.position + transform.TransformDirection(definition.TargetVFXOffset);
         Quaternion rot = transform.rotation * Quaternion.Euler(definition.TargetVFXRotation);
@@ -1381,6 +1429,7 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
 
         // El servidor reproduce el suyo ya mismo (importa para el host).
         ability.PlayImpactVFX(position);
+        AudioManager.Play(ability.ImpactSound, position);
 
         // Identificamos la habilidad por su índice en GameplayAbilityRegistry
         // (no por slot). Así los observadores la resuelven aunque no tengan la
@@ -1404,7 +1453,10 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         GameplayAbility ability = GameplayAbilityRegistry.Instance?.GetAbility(abilityIndex);
         // PlayImpactVFXFor le presta este ASC como dueño puntual (el template
         // del registro no tiene uno propio; algunos VFX lo necesitan).
-        if (ability != null) ability.PlayImpactVFXFor(_asc, position);
+        if (ability == null) return;
+
+        ability.PlayImpactVFXFor(_asc, position);
+        AudioManager.Play(ability.ImpactSound, position);
     }
 
     // Muestra/oculta el arma en mano de este personaje en TODOS los peers.

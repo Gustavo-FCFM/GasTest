@@ -370,6 +370,7 @@ public class UI_SettingsPanel : MonoBehaviour
 
         Button button = rect.gameObject.AddComponent<Button>();
         button.targetGraphic = bg;
+        button.onClick.AddListener(AudioManager.Click);
 
         ColorBlock colors = button.colors;
         colors.highlightedColor = Color.Lerp(color, Color.white, 0.25f);

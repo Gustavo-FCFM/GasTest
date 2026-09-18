@@ -876,6 +876,7 @@ public class UI_LobbyPanel : MonoBehaviour
 
         Button button = rect.gameObject.AddComponent<Button>();
         button.targetGraphic = bg;
+        button.onClick.AddListener(AudioManager.Click);
 
         labelText = MercUIFactory.CreateText(rect, "Text", label, 18f, Color.white,
                                              TextAlignmentOptions.Center,

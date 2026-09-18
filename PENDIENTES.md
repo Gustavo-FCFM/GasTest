@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 11 de septiembre de 2026
+# Pendientes — actualizado el 18 de septiembre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -390,17 +390,58 @@ que cerrar es eso, no el bot.
   tienen los tres camino server-side. La propiedad queda en `GameplayAbility` por si
   escribís una nueva que mueva al dueño de un modo que el servidor no pueda reproducir.
 
-## 3º · Sonido
+## 3º · Sonido — CÓDIGO TERMINADO, faltan los clips
 
 El mayor salto de calidad percibida por hora invertida. Un juego mudo se lee como
 prototipo aunque todo lo demás esté bien.
 
-Tiene **cola larga**: son 67 habilidades. No las sonorices todas — elegí las ~15 que
-suenan siempre (ataques básicos, pasos, golpe recibido, muerte, entrega del objetivo).
-La música de batalla la está haciendo un amigo: tené los hooks listos para cuando llegue.
+Todo el sistema está escrito y compila **sin un solo archivo de audio**: cada sonido es
+un `SfxCue` que, vacío, es silencio. Ver el LEEME del modo, sección "El sonido". Lo que
+queda es de **la máquina de casa** (la del trabajo no tiene con qué trabajar audio):
 
-**Solo se puede hacer en la máquina de casa** — la del trabajo no tiene con qué trabajar
-audio. Si estás en el trabajo, agarrá otra cosa de esta lista.
+1. **`Mercenarios ▸ Crear la biblioteca de audio`** con la arena abierta: crea
+   `Resources/AudioLibrary.asset` y le pone el `AudioListener` a `Camara_Lobby` (sin
+   eso el menú y la sala no suenan).
+2. **Descargar y cargar**, por prioridad. Formato: WAV mono 44.1 kHz para los efectos
+   cortos (mono es obligatorio para que el 3D funcione), OGG para música y loops.
+   Fuentes: Sonniss GDC bundles, Kenney (CC0), freesound.org con filtro CC0, y en el
+   Asset Store "RPG Essentials Sound Effects" / "Free Casual Game SFX".
+   - **Lo que suena siempre** (en `AudioLibrary`): pasos ×3–4, salto, aterrizaje, golpe
+     recibido ×2, muerte, subir de nivel, clic de UI.
+   - **Habilidades por familia** (en cada `GA_*`: `CastSound` al lanzar, `ImpactSound`
+     al impactar): whoosh liviano (dagas) y pesado (hacha/martillo), espada, fuego,
+     hielo, sagrado, sombra, salto/caída, dash, molinete, cañón, tótem, "poof" mágico.
+     No hace falta una por habilidad: ~10 familias cubren las 77.
+   - **Efectos con duración** (en cada `GE_*`: `TargetSound`): quemadura, stun,
+     escudo, sigilo.
+   - **Partida** (en `AudioLibrary`): inicio, cuenta atrás, Objetivo aparece / tomado /
+     cae / entregado, aniquilación, nivel de equipo, victoria, derrota. Un loop de
+     viento para el ambiente.
+   - **Música**: `MenuMusic` y `BattleMusic`. La de batalla la está haciendo un amigo:
+     cuando llegue, se arrastra y listo.
+3. Jugar con bots y ajustar volúmenes por cue (`Volume` en cada `SfxCue`) y las
+   distancias (`MaxDistance`: un paso 20 m, un grito 40, una explosión 60).
+
+### La reacción de golpe (animación) — falta el Animator
+
+El código ya dispara `HitTrigger` al recibir daño (con mínimo y respiro:
+`HurtMinFraction` / `HurtCooldown` en la biblioteca). Falta que el Animator tenga el
+estado; sin él no hay reacción y no hay error. En `AC_Player`, capa **UpperBody** (para
+que siga caminando mientras se sacude, igual que el ataque):
+
+- [ ] Un estado nuevo con un clip placeholder llamado **`PLACEHOLDER_Hit`** (cualquier
+      clip corto renombrado; es solo la ranura).
+- [ ] Parámetro **trigger `HitTrigger`**. Transición **AnyState → PLACEHOLDER_Hit** con
+      ese trigger, *Can Transition To Self* apagado. **PLACEHOLDER_Hit → Empty** por Exit
+      Time.
+- [ ] En cada **AOC de clase**, reemplazar `PLACEHOLDER_Hit` por el clip de su postura.
+      Del pack: `HumanM@CombatDamage01` / `02` (genéricos, sirven para dos manos, dos
+      armas y espada). El golpe **con el escudo arriba** ya existe aparte: es el
+      `HoldImpact` del bloqueo (`HumanM@BlockShield01 - Hit`), no hay que tocarlo.
+
+Sobre la **máscara superior al caminar**: ya está. La capa UpperBody tiene su máscara y
+peso 1, y ahí van los ataques y los mantenidos — por eso el personaje camina mientras
+pega. La reacción de golpe entra en esa misma capa y hereda eso.
 
 ## 4º · Pantalla de inicio y ajustes — TERMINADO Y PROBADO ✅
 

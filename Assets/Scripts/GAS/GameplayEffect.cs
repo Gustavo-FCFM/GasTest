@@ -131,6 +131,12 @@ public class GameplayEffect : ScriptableObject
     [Tooltip("Escala del VFX. En CERO usa la escala del prefab tal cual.")]
     public Vector3 TargetVFXScale;
 
+    [Header("Sonido en el Objetivo")]
+    [Tooltip("Suena en el personaje cuando el efecto se le aplica (solo efectos CON duración: " +
+             "quemadura, stun, escudo...). El daño instantáneo tiene su propio sonido de golpe " +
+             "recibido en AudioLibrary. Vacío = silencio.")]
+    public SfxCue TargetSound;
+
     [Header("Tags")]
     // Tags que se le agregan al objetivo mientras el efecto está activo
     // (ej: Stunned) y se le quitan al terminar. El primer tag de esta

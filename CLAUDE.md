@@ -70,6 +70,7 @@ editor CERRADO (no entran dos instancias sobre el mismo proyecto):
 | `Assets/Scripts/Player/` | `PlayerController` (movimiento, input, animación) y el prefab del jugador. |
 | `Assets/Scripts/UI/` | HUD de clase, menú de clases, y `UICursor` — el único dueño del cursor y del modo de input. |
 | `Assets/Scripts/Settings/` | Menú principal (`UI_MainMenu`, un panel sobre la arena), la cámara que gira con blur (`MenuOrbitCamera`), el panel de Ajustes (`UI_SettingsPanel`) y `GameSettings` (PlayerPrefs). |
+| `Assets/Scripts/Audio/` | Sonido: `AudioManager` (pool, avisos de partida, ambiente), `MusicPlayer`, `AudioLibrary` (Resources) y `SfxCue`. Los sonidos de habilidad/efecto van en sus propios assets. |
 | `Assets/Scripts/GameMode/` | **El modo Mercenarios.** Ver su `LEEME_ModoMercenarios.md`. |
 | `Assets/Attributes/` | Clases jugables (`Class_*.asset`) y sus stats base (`ASDef_*.asset`). |
 | `Assets/GameplayAbilities/` | Los assets de habilidades y efectos, por clase. |
