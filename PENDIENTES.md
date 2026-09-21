@@ -221,6 +221,43 @@ es el único lugar del proyecto donde están juntas además del panel y del Play
 
 # 3. Balance pendiente (decisiones tuyas)
 
+## Armadura y ritmo de ataque — CARGADO (21 de septiembre), falta jugarlo
+
+El sistema de números es D&D con una variable más: el **tiempo**. Cada clase se define por
+tres números —dado, intervalo y clase de armadura— y todo lo demás se deriva:
+
+- **Vida** = dado × 10; por nivel, (dado/2 + 1) × 10.
+- **Golpe** = dado (el ataque sube +1 por nivel, como la competencia).
+- **Armadura** = CA − 10, y mitiga `Def / (Def + 10)` **del daño físico** (la magia la
+  ignora: es el contrapeso natural de las clases blindadas). Antes era una resta fija,
+  que con golpes de 6 no convivía.
+- **Intervalo** = la palanca que D&D no tiene: DPS = golpe ÷ intervalo.
+
+| | Vida | Golpe | Cada | DPS | CA → Def | Mitigación | Vida efectiva |
+|---|---|---|---|---|---|---|---|
+| Bárbaro | 120 | 12 | 1.2 s | 10 | 15 → 5 | 33 % | 180 |
+| Pícaro | 80 | 7 | 0.7 s | 10 | 13 → 3 | 23 % | 104 |
+| Paladín | 100 | 8 | 1.0 s | 8 | 18 → 8 | 44 % | 179 |
+
+Las subclases llevan sus valores de **nivel 3** en su `ASDef` (vida = base + 2 niveles,
+golpe = base + 2) porque al evolucionar se conserva el nivel y no se vuelve a aplicar el
+crecimiento. Las que tienen un golpe propio a propósito se dejaron: Berserker 7 a 0.5 s,
+Conquista a 1.2 s, Venganza a 0.8 s.
+
+**El benchmark para balancear**: `TTK = vida efectiva del rival ÷ mi DPS`. Con básicos,
+dos iguales tardan ~18 s; el bárbaro o el pícaro matan a un pícaro en ~10. Las
+habilidades son las que acortan eso. Si se siente lento, la palanca es `ArmorConstant`
+(AbilitySystemComponent), no los dados.
+
+Pendiente de decidir jugando:
+- Los NPCs no tienen armadura y ahora pegan un 23–44 % menos *de facto* a los jugadores.
+  Si el centro se siente blando, subirles el ataque ~30 % (fantasma 12 → 16, jefe 50 → 65;
+  el mago es mágico, no hace falta).
+- Con +70 de vida y +1 de golpe por nivel, los duelos a nivel 3 duran casi el doble que a
+  nivel 1. Si eso se siente esponjoso: golpe +3/+2/+2 por nivel en vez de +1.
+- La cura del paladín escala con su golpe: si "cura poco" se vuelve "no sirve", la salida
+  es un componente fijo por golpe, no subirle el dado.
+
 ## El daño mágico — RESUELTO
 
 El tipo de daño lo decide **el atributo del que escala el modificador**: `Attack` da daño

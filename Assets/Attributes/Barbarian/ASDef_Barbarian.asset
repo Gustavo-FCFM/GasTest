@@ -13,12 +13,14 @@ MonoBehaviour:
   m_Name: ASDef_Barbarian
   m_EditorClassIdentifier: 
   InitialAttributes:
+  - Attribute: 7
+    BaseValue: 5
   - Attribute: 1
     BaseValue: 120
   - Attribute: 9
     BaseValue: 6
   - Attribute: 10
-    BaseValue: 0.8
+    BaseValue: 1.2
   - Attribute: 8
     BaseValue: 12
   - Attribute: 12

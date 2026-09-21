@@ -984,11 +984,19 @@ public class AbilitySystemComponent : MonoBehaviour
     // cambio solo recorta el FÍSICO: el daño mágico la ignora, igual que ya penetra
     // el escudo — es lo que hace que subir defensa no vuelva a nadie inmune a magia.
     //
-    // Ojo de balance: la defensa se descuenta POR GOLPE, así que castiga mucho más a
-    // los ataques rápidos y a los ticks de veneno que a un golpe único y grande.
-    // Daño mínimo que deja pasar la DEFENSA: si la resta fija dejaría el golpe en 0
-    // (o menos), igual entra 1. Evita que acumular defensa vuelva a alguien
-    // literalmente inmune a un ataque, sin tocar el valor fijo en sí.
+    // LA ARMADURA ES UN PORCENTAJE, no una resta: mitigación = Def / (Def + ArmorConstant).
+    // Antes era una resta fija por golpe, y con los golpes chicos de este juego eso no
+    // convive: Def 5 le comía el 83 % a la daga de 6 del pícaro y el 10 % al golpe de
+    // 50 del jefe. El porcentaje trata igual a la daga y al jefe, nunca llega a la
+    // inmunidad, y cada punto vale menos que el anterior (seguro de apilar con buffs).
+    //
+    // Def viene de la clase de armadura de D&D menos 10: pícaro 3 (23 %), bárbaro 5
+    // (33 %), paladín 8 (44 %). ArmorConstant es "cuánta armadura hace falta para
+    // reducir el daño a la mitad": bajarla hace que la armadura valga más.
+    private const float ArmorConstant = 10f;
+
+    // Daño mínimo que deja pasar la armadura: un golpe físico que conecta nunca hace
+    // menos de 1.
     private const float MinDamageAfterDefense = 1f;
 
     private void ApplyDefenses(ref float physicalDamage, ref float magicDamage)
@@ -1011,15 +1019,16 @@ public class AbilitySystemComponent : MonoBehaviour
         physicalDamage = Mathf.Floor(physicalDamage);
         magicDamage    = Mathf.Floor(magicDamage);
 
-        // Defensa: reducción FIJA al físico. Si la resta dejaría el golpe en 0 o menos,
-        // igual entra 1 de daño: un ataque que conecta nunca debería no hacer NADA, y
-        // así acumular defensa no vuelve a nadie inmune a los ataques chicos.
-        //
-        // El piso solo aplica a golpes que traían daño físico: si el ataque era puro
-        // daño mágico (physicalDamage 0), no se inventa daño de la nada.
+        // Armadura: porcentaje sobre el físico (ver ArmorConstant). Se redondea hacia
+        // abajo otra vez para que el indicador siga mostrando enteros, con piso de 1: un
+        // golpe que conecta nunca hace NADA. El piso solo aplica a golpes que traían daño
+        // físico: si el ataque era puro mágico (physicalDamage 0), no se inventa daño.
         float defense = GetAttributeValue(EAttributeType.Def);
         if (defense > 0f && physicalDamage > 0f)
-            physicalDamage = Mathf.Max(MinDamageAfterDefense, physicalDamage - defense);
+        {
+            float mitigation = defense / (defense + ArmorConstant);
+            physicalDamage = Mathf.Max(MinDamageAfterDefense, Mathf.Floor(physicalDamage * (1f - mitigation)));
+        }
     }
 
     // Suma/resta los modificadores Add/Multiply de un efecto CON duración

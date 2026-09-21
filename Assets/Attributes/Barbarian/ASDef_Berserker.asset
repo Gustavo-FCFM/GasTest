@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: ASDef_Berserker
   m_EditorClassIdentifier: 
   InitialAttributes:
+  - Attribute: 7
+    BaseValue: 5
   - Attribute: 1
     BaseValue: 260
   - Attribute: 9

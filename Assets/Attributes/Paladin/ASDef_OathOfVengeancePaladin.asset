@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: ASDef_OathOfVengeancePaladin
   m_EditorClassIdentifier: 
   InitialAttributes:
+  - Attribute: 7
+    BaseValue: 8
   - Attribute: 1
     BaseValue: 220
   - Attribute: 8

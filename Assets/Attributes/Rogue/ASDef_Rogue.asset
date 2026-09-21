@@ -13,16 +13,18 @@ MonoBehaviour:
   m_Name: ASDef_Rogue
   m_EditorClassIdentifier: 
   InitialAttributes:
+  - Attribute: 7
+    BaseValue: 3
   - Attribute: 1
     BaseValue: 80
   - Attribute: 2
     BaseValue: 80
   - Attribute: 8
-    BaseValue: 6
+    BaseValue: 7
   - Attribute: 9
     BaseValue: 6.5
   - Attribute: 10
-    BaseValue: 1
+    BaseValue: 0.7
   - Attribute: 13
     BaseValue: 0
   - Attribute: 14
