@@ -1266,10 +1266,9 @@ public class AbilitySystemComponent : MonoBehaviour
     // Saca el tag de muerte y restaura la vida al máximo. La llama
     // NetworkGameManager al respawnear a un jugador.
     //
-    // resetAbilities: el respawn normal devuelve las habilidades listas (cooldown a
-    // cero, cargas llenas, menos la R). Una auto-revivida como la del Inmortal pasa
-    // false: es la propia definitiva la que lo levanta, no un respawn, y no tiene por
-    // qué regalarle el kit entero.
+    // resetAbilities: devuelve las habilidades listas (cooldown a cero, cargas llenas,
+    // menos la R). Es true también para la auto-revivida del Inmortal: revive para
+    // seguir pegando, y con el kit en cooldown no tendría con qué.
     public void Revive(bool resetAbilities = true)
     {
         // Olvidar quién nos mató la vida anterior: si después caemos a una

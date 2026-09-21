@@ -476,8 +476,8 @@ hace falta.
   `ApplyClassPassive`, que las anota para que la limpieza las salte.
 - **Al revivir** (`ASC.Revive`) todas las habilidades vuelven listas: cooldown a cero y
   cargas llenas — **menos la R**, que conserva lo suyo (`GameplayAbility.IsUltimate`, lo
-  marca PlayerController al equipar). La auto-revivida del Inmortal pasa
-  `resetAbilities: false`: es su propia R la que lo levanta, no un respawn.
+  marca PlayerController al equipar). La auto-revivida del Inmortal llama
+  `Revive()` igual que un respawn: revive para seguir pegando, con el kit fresco.
 
 Para probar: morir con un buff y un veneno encima (los dos desaparecen del cadáver), y
 reaparecer con Q/E/Shift en cooldown → tienen que estar listas; la R, no.

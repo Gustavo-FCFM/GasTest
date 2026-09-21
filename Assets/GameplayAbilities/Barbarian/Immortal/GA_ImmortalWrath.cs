@@ -50,7 +50,7 @@ public class GA_ImmortalWrath : GameplayAbility
 
         if (OwnerASC != null)
         {
-            OwnerASC.Revive(resetAbilities: false);   // es la R levantándote, no un respawn
+            OwnerASC.Revive();   // con el kit fresco: revivir para seguir pegando, no para huir
             OwnerASC.SetCurrentAttributeValue(EAttributeType.Health, 1f);
 
             if (ImmortalBuffEffect != null)
