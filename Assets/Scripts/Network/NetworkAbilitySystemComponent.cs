@@ -244,6 +244,11 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     {
         base.OnStartClient();
 
+        // Punto de partida para la reacción de golpe: la vida con la que llegó el objeto
+        // (al que entra tarde no le llega un OnChange por el valor inicial).
+        _healthSeen     = true;
+        _lastSeenHealth = _netHealth.Value;
+
         _netHealth.OnChange    += OnNetHealthChanged;
         _netMaxHealth.OnChange += OnNetMaxHealthChanged;
         _netMana.OnChange      += OnNetManaChanged;
@@ -320,16 +325,28 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // servidor, así que lo ignoramos para no reescribirnos a nosotros mismos).
     private void OnNetHealthChanged(float prev, float next, bool asServer)
     {
-        if (asServer || _asc == null) return;
+        if (_asc == null) return;
 
-        _asc.SetCurrentAttributeValue(EAttributeType.Health, next);
+        if (!asServer) _asc.SetCurrentAttributeValue(EAttributeType.Health, next);
 
         // Sonido y reacción de golpe: acá, y no en el pipeline de daño, porque este
-        // callback corre en TODOS los clientes (en el host también, con asServer=false)
-        // y es el único lugar donde "bajó la vida" llega igual a todos. Nada viaja de más.
-        if (next < prev) ReactToDamage(prev, next);
+        // callback corre en TODOS los peers y es el único lugar donde "bajó la vida"
+        // llega igual a todos. Nada viaja de más.
+        //
+        // La vida anterior la llevamos NOSOTROS (_lastSeenHealth), no confiamos en
+        // 'prev': en el host el callback llega dos veces (servidor y cliente) y en la
+        // segunda 'prev' ya puede ser igual a 'next' — la reacción se perdía en la mitad
+        // de los golpes. Con la vida anterior propia, la primera llamada reacciona y la
+        // segunda ve que no cambió nada.
+        if (!_healthSeen) { _healthSeen = true; _lastSeenHealth = next; return; }
+
+        float before = _lastSeenHealth;
+        _lastSeenHealth = next;
+        if (next < before) ReactToDamage(before, next);
     }
 
+    private bool  _healthSeen;
+    private float _lastSeenHealth;
     private float _lastHurtAt = -10f;
 
     // Un golpe recibido: suena (Hurt, o Death si lo mató) y el personaje se sacude
@@ -1528,7 +1545,16 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     {
         if (!IsServerInitialized) return;
         AwardKillExperience();
-        ObserversHandleDeath();
+
+        // De dónde vino el golpe que mató: del atacante hacia acá. Es lo que el ragdoll
+        // usa para salir despedido. Sin atacante conocido, cae hacia atrás.
+        Vector3 hitDir = _asc.LastAttacker != null
+            ? (transform.position - _asc.LastAttacker.transform.position)
+            : -transform.forward;
+        hitDir.y = 0f;
+        hitDir = hitDir.sqrMagnitude > 0.001f ? hitDir.normalized : -transform.forward;
+
+        ObserversHandleDeath(hitDir);
     }
 
     // Le da EXP al jugador que consiguió esta baja. El ASC dejó anotado quién pegó
@@ -1597,15 +1623,21 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     }
 
     [ObserversRpc]
-    private void ObserversHandleDeath()
+    private void ObserversHandleDeath(Vector3 hitDirection)
     {
-        SafeSetTrigger(GetComponentInChildren<Animator>(), "Death");
+        // Jugadores y bots: ragdoll o animación de muerte (ver PlayerController.PlayDeath).
+        // El resto (NPCs) sigue con el trigger opcional de siempre.
+        PlayerController pc = GetComponent<PlayerController>();
+        if (pc != null) pc.PlayDeath(hitDirection);
+        else            SafeSetTrigger(GetComponentInChildren<Animator>(), "Death");
     }
 
     [ObserversRpc]
     private void ObserversHandleRevive()
     {
-        SafeSetTrigger(GetComponentInChildren<Animator>(), "Revive");
+        PlayerController pc = GetComponent<PlayerController>();
+        if (pc != null) pc.PlayRevive();
+        else            SafeSetTrigger(GetComponentInChildren<Animator>(), "Revive");
     }
 
     // Dispara un trigger del Animator solo si ese parámetro existe. Muerte y

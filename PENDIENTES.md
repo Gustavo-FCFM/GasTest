@@ -424,26 +424,50 @@ queda es de **la máquina de casa** (la del trabajo no tiene con qué trabajar a
 3. Jugar con bots y ajustar volúmenes por cue (`Volume` en cada `SfxCue`) y las
    distancias (`MaxDistance`: un paso 20 m, un grito 40, una explosión 60).
 
-### La reacción de golpe (animación) — falta el Animator
+### La reacción de golpe (animación) — el Animator YA está, se ajusta
 
-El código ya dispara `HitTrigger` al recibir daño (con mínimo y respiro:
-`HurtMinFraction` / `HurtCooldown` en la biblioteca). Falta que el Animator tenga el
-estado; sin él no hay reacción y no hay error. En `AC_Player`, capa **UpperBody** (para
-que siga caminando mientras se sacude, igual que el ataque):
+El código dispara `HitTrigger` al recibir daño. Se veía "de vez en cuando" por dos
+cosas, las dos arregladas/ajustables:
 
-- [ ] Un estado nuevo con un clip placeholder llamado **`PLACEHOLDER_Hit`** (cualquier
-      clip corto renombrado; es solo la ranura).
-- [ ] Parámetro **trigger `HitTrigger`**. Transición **AnyState → PLACEHOLDER_Hit** con
-      ese trigger, *Can Transition To Self* apagado. **PLACEHOLDER_Hit → Empty** por Exit
-      Time.
-- [ ] En cada **AOC de clase**, reemplazar `PLACEHOLDER_Hit` por el clip de su postura.
-      Del pack: `HumanM@CombatDamage01` / `02` (genéricos, sirven para dos manos, dos
-      armas y espada). El golpe **con el escudo arriba** ya existe aparte: es el
-      `HoldImpact` del bloqueo (`HumanM@BlockShield01 - Hit`), no hay que tocarlo.
+1. **Código**: en el host el callback de vida llega dos veces y en la segunda `prev` ya
+   era igual a `next`; se perdía la mitad de los golpes. Ahora la vida anterior la lleva
+   el propio NetworkASC (`_lastSeenHealth`) y reacciona una vez por bajada, siempre.
+2. **Animator**: con *Can Transition To Self* apagado, los golpes que llegan mientras el
+   clip de reacción todavía corre (~1 s) se ignoran. Ponelo **encendido** y bajá el
+   *Exit Time* de la salida a ~0.6: el respiro real ya lo pone el código (`HurtCooldown`
+   0.45 s en la biblioteca), así que no se va a trabar en el primer frame.
 
-Sobre la **máscara superior al caminar**: ya está. La capa UpperBody tiene su máscara y
-peso 1, y ahí van los ataques y los mantenidos — por eso el personaje camina mientras
-pega. La reacción de golpe entra en esa misma capa y hereda eso.
+### Aturdido y muerte — falta el Animator (y el ragdoll, opcional)
+
+El código ya está: `IsStunned` se alimenta del tag en todas las copias, e `IsDead` lo
+pone la muerte replicada (con la dirección del golpe). En `AC_Player`, capa **Base**:
+
+- [ ] Dos **bools**: `IsStunned` e `IsDead`.
+- [ ] Estado **`PLACEHOLDER_Stun`** con un clip placeholder de ese nombre (duplicar
+      cualquier `PLACEHOLDER_*.anim`). AnyState → Stun con `IsStunned == true` (sin Exit
+      Time, *Can Transition To Self* apagado); Stun → Movement con `IsStunned == false`.
+      En cada AOC: `PLACEHOLDER_Stun` → `HumanM@Stun01`, y en el import de ese FBX
+      marcá **Loop Time**: tiene que durar lo que dure el stun.
+- [ ] Estado **`PLACEHOLDER_Death`** con su clip placeholder. AnyState → Death con
+      `IsDead == true` (sin Exit Time, *Can Transition To Self* apagado); Death → Movement
+      con `IsDead == false`. Los clips NO se ponen en el AOC: van en el prefab del jugador,
+      `PlayerController → Death Clips`, arrastrá los seis (`CombatDeath01–04`, `Death01–02`)
+      y se elige uno al azar por muerte. Sin Loop Time (se queda en el último frame).
+
+**Ragdoll** (`Player/RagdollController.cs`), en vez de la animación de muerte — si el
+prefab lo tiene armado, gana; si no, la animación queda de respaldo:
+
+- [ ] En el prefab del jugador, seleccionar el modelo (`HumanDummy_M`) y
+      **GameObject ▸ 3D Object ▸ Ragdoll…**: arrastrar los huesos (Pelvis = Hips, Left/Right
+      Hips = UpperLeg, Knee = LowerLeg, Arm = UpperArm, Elbow = LowerArm, Middle Spine =
+      Spine1, Head). Total Mass 70. Create.
+- [ ] `Add Component ▸ RagdollController` en la **raíz** del prefab (junto a
+      PlayerController). Perillas: `ImpulseForce` (450) y `UpwardBias` (0.35).
+
+Qué mirar: el cuerpo sale despedido **en dirección contraria a quien lo mató**, no choca
+con la propia cápsula (se apaga mientras está suelto), los ataques no le pegan al cadáver
+(capa 2), y al revivir vuelve entero. Cada peer simula su muñeco; no es determinista y no
+hace falta.
 
 ## 4º · Pantalla de inicio y ajustes — TERMINADO Y PROBADO ✅
 

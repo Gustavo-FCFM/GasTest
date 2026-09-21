@@ -199,6 +199,41 @@ public class PlayerController : NetworkBehaviour
 
     private bool _hasHitTrigger;
 
+    // ---------------------------------------------------------
+    // MUERTE Y ATURDIMIENTO
+    //
+    // Dos bools del Animator, IsDead e IsStunned, para dos estados de la capa Base:
+    //   · PLACEHOLDER_Death: AnyState → Death con IsDead == true (sin Exit Time, Can
+    //     Transition To Self apagado); Death → Movement con IsDead == false. El clip se
+    //     elige al azar de DeathClips y se mete en la ranura al morir, así hay variedad
+    //     sin un estado por muerte.
+    //   · PLACEHOLDER_Stun: AnyState → Stun con IsStunned == true; Stun → Movement con
+    //     IsStunned == false. El clip (Stun01 del pack) tiene que estar en BUCLE (Loop
+    //     Time en el import): dura lo que dure el tag State_Stunned.
+    //
+    // Si el prefab tiene un RagdollController armado, la muerte NO usa la animación:
+    // suelta el cuerpo y lo empuja en la dirección del golpe. La animación queda de
+    // respaldo para el prefab sin ragdoll.
+    // ---------------------------------------------------------
+    [Header("Muerte y aturdimiento")]
+    [Tooltip("Clip placeholder del estado de muerte (capa Base). Al morir se reemplaza por uno " +
+             "de DeathClips al azar.")]
+    public string DeathClipSlotName = "PLACEHOLDER_Death";
+
+    [Tooltip("Animaciones de muerte posibles. Se elige una al azar por muerte.")]
+    public AnimationClip[] DeathClips;
+
+    [Tooltip("Bool del Animator que lleva al estado de muerte.")]
+    public string DeadParam = "IsDead";
+
+    [Tooltip("Bool del Animator que lleva al bucle de aturdido. Se alimenta del tag State_Stunned " +
+             "en todas las copias.")]
+    public string StunnedParam = "IsStunned";
+
+    private string _deathSlotKey;
+    private bool   _hasDeadParam, _hasStunnedParam;
+    private RagdollController _ragdoll;
+
     // Copia en RUNTIME del controller (base + overrides de la clase). Es la que
     // permite intercambiar el clip de la ranura de acción sin tocar los assets.
     private AnimatorOverrideController _runtimeAnimator;
@@ -1760,9 +1795,64 @@ public class PlayerController : NetworkBehaviour
         _airLandKey = ResolveSlotKey(slots, AirLandSlotName);
         _currentAirStart = _currentAirLoop = _currentAirLand = null;
 
+        _deathSlotKey = ResolveSlotKey(slots, DeathClipSlotName);
         ResolveHitTrigger();
         _lastStepPos = transform.position;
         _spawnedAt   = Time.time;
+    }
+
+    // =========================================================
+    // MUERTE Y ATURDIMIENTO (animación / ragdoll)
+    // =========================================================
+
+    // La llama NetworkAbilitySystemComponent en todos los peers al morir, con la
+    // dirección del golpe que mató (del atacante hacia acá). Ragdoll si hay; si no, la
+    // animación.
+    public void PlayDeath(Vector3 hitDirection)
+    {
+        if (_ragdoll == null) _ragdoll = GetComponent<RagdollController>();
+
+        if (_ragdoll != null && _ragdoll.IsReady)
+        {
+            _ragdoll.Activate(hitDirection);
+            return;
+        }
+
+        if (characterAnimator == null) return;
+
+        if (!string.IsNullOrEmpty(_deathSlotKey) && DeathClips != null && DeathClips.Length > 0)
+        {
+            AnimationClip clip = DeathClips[Random.Range(0, DeathClips.Length)];
+            if (clip != null && _runtimeAnimator != null) _runtimeAnimator[_deathSlotKey] = clip;
+        }
+
+        if (_hasDeadParam) characterAnimator.SetBool(DeadParam, true);
+    }
+
+    public void PlayRevive()
+    {
+        if (_ragdoll != null && _ragdoll.IsActive) _ragdoll.Deactivate();
+        if (characterAnimator != null && _hasDeadParam) characterAnimator.SetBool(DeadParam, false);
+    }
+
+    // El aturdido se lee del tag en cada copia: los tags viajan sincronizados, así que
+    // no hace falta ningún RPC para que todos vean el bucle.
+    private void TickStunAnimation()
+    {
+        if (!_hasStunnedParam || characterAnimator == null || ASC == null) return;
+
+        bool stunned = ASC.HasTag(EGameplayTag.State_Stunned) && !ASC.HasTag(EGameplayTag.State_Dead);
+        if (characterAnimator.GetBool(StunnedParam) != stunned) characterAnimator.SetBool(StunnedParam, stunned);
+    }
+
+    // ¿El Animator tiene un parámetro con ese nombre y tipo? Se mira una vez, al armar
+    // el controller en runtime, y no cada golpe.
+    private bool HasAnimatorParam(string name, AnimatorControllerParameterType type)
+    {
+        if (characterAnimator == null || string.IsNullOrEmpty(name)) return false;
+        foreach (AnimatorControllerParameter p in characterAnimator.parameters)
+            if (p.type == type && p.name == name) return true;
+        return false;
     }
 
     // =========================================================
@@ -1787,11 +1877,10 @@ public class PlayerController : NetworkBehaviour
     // en runtime, y no cada golpe.
     private void ResolveHitTrigger()
     {
-        _hasHitTrigger = false;
-        if (characterAnimator == null || string.IsNullOrEmpty(HitTrigger)) return;
-
-        foreach (AnimatorControllerParameter p in characterAnimator.parameters)
-            if (p.type == AnimatorControllerParameterType.Trigger && p.name == HitTrigger) { _hasHitTrigger = true; return; }
+        _hasHitTrigger   = HasAnimatorParam(HitTrigger,   AnimatorControllerParameterType.Trigger);
+        _hasDeadParam    = HasAnimatorParam(DeadParam,    AnimatorControllerParameterType.Bool);
+        _hasStunnedParam = HasAnimatorParam(StunnedParam, AnimatorControllerParameterType.Bool);
+        _ragdoll         = GetComponent<RagdollController>();
     }
 
     // PASOS por distancia recorrida, no por Animation Events: así suenan igual en las
@@ -2455,6 +2544,7 @@ public class PlayerController : NetworkBehaviour
     private void LateUpdate()
     {
         TickFootsteps();
+        TickStunAnimation();
 
         if (Mathf.Approximately(_modelSpinSpeed, 0f) || characterAnimator == null) return;
 
