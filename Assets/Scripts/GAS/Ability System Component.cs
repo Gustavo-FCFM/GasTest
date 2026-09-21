@@ -754,6 +754,33 @@ public class AbilitySystemComponent : MonoBehaviour
                 RemoveActiveEffect(ActiveEffects[i]);
     }
 
+    // Quita buffs Y debuffs, y deja lo que no es "estado de combate": los Hidden (los
+    // cooldowns de las habilidades) y las pasivas de la clase. Es lo que se limpia al
+    // morir: un muerto no conserva ni el veneno ni el Frenesí.
+    public void RemoveAllBuffsAndDebuffs()
+    {
+        for (int i = ActiveEffects.Count - 1; i >= 0; i--)
+        {
+            ActiveGameplayEffect e = ActiveEffects[i];
+            if (e.Definition.EffectType == GameplayEffect.EEffectType.Hidden) continue;
+            if (_classPassives.Contains(e.Definition)) continue;
+            RemoveActiveEffect(e);
+        }
+    }
+
+    // Las pasivas de la clase son efectos activos como cualquier otro (así se ven en
+    // la barra), pero NO son estado de combate: sobreviven a la muerte. Se anotan acá
+    // al aplicarlas (PlayerController.ApplyClassPassives) y se olvidan al cambiar de
+    // clase (RemoveAllActiveEffects).
+    private readonly HashSet<GameplayEffect> _classPassives = new HashSet<GameplayEffect>();
+
+    public void ApplyClassPassive(GameplayEffect passive)
+    {
+        if (passive == null) return;
+        _classPassives.Add(passive);
+        ApplyGameplayEffect(passive, this);
+    }
+
     // Termina la invisibilidad de este personaje quitando los efectos que la
     // otorgan. Lo dispara ExecuteInstantEffect al atacar o al recibir daño, y
     // también lo puede llamar una habilidad a mano.
@@ -1121,6 +1148,7 @@ public class AbilitySystemComponent : MonoBehaviour
     {
         for (int i = ActiveEffects.Count - 1; i >= 0; i--)
             RemoveActiveEffect(ActiveEffects[i]);
+        _classPassives.Clear();
     }
 
     // Cura al atacante (sourceASC) un porcentaje del daño infligido, según
@@ -1226,24 +1254,39 @@ public class AbilitySystemComponent : MonoBehaviour
     // La dispara SetCurrentAttributeValue cuando la Vida llega a 0.
     private void Die()
     {
+        // Un muerto se lleva sus buffs y sus debuffs al morir, no al revivir: así el
+        // cadáver no sigue quemándose ni brillando, y el que reaparece nace limpio.
+        // Los cooldowns (Hidden) y las pasivas de la clase se quedan.
+        RemoveAllBuffsAndDebuffs();
+
         AddTag(EGameplayTag.State_Dead);
         OnDeath?.Invoke();
     }
 
     // Saca el tag de muerte y restaura la vida al máximo. La llama
     // NetworkGameManager al respawnear a un jugador.
-    public void Revive()
+    //
+    // resetAbilities: el respawn normal devuelve las habilidades listas (cooldown a
+    // cero, cargas llenas, menos la R). Una auto-revivida como la del Inmortal pasa
+    // false: es la propia definitiva la que lo levanta, no un respawn, y no tiene por
+    // qué regalarle el kit entero.
+    public void Revive(bool resetAbilities = true)
     {
         // Olvidar quién nos mató la vida anterior: si después caemos a una
         // DeathZone o morimos por otra vía, no queremos darle la baja a alguien
         // que nos pegó hace rato.
         LastAttacker = null;
 
-        // Empezar la vida nueva limpio: sin esto reaparecías con TODO lo que
-        // tenías al morir, y un veneno/Heridas todavía activo te podía volver a
-        // matar apenas spawneabas. Solo se van los DEBUFFS (EffectType.Debuff):
-        // los buffs propios y los cooldowns de tus habilidades se conservan.
-        RemoveAllDebuffs();
+        // Por si algo se aplicó entre la muerte y el respawn (un veneno que llegó
+        // tarde): la limpieza principal ya la hizo Die().
+        RemoveAllBuffsAndDebuffs();
+
+        // Las habilidades vuelven listas: cooldown a cero y cargas llenas — menos la
+        // definitiva (R), que conserva lo suyo. La marca de cuál es la R la puso
+        // PlayerController al equipar (GameplayAbility.IsUltimate).
+        if (resetAbilities)
+            foreach (GameplayAbility ability in GrantedAbilities)
+                if (ability != null && !ability.IsUltimate) ability.ResetForRespawn();
 
         RemoveTag(EGameplayTag.State_Dead);
         if (Attributes.ContainsKey(EAttributeType.MaxHealth))

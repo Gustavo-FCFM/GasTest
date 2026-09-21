@@ -469,6 +469,19 @@ con la propia cápsula (se apaga mientras está suelto), los ataques no le pegan
 (capa 2), y al revivir vuelve entero. Cada peer simula su muñeco; no es determinista y no
 hace falta.
 
+### Morir limpia; revivir devuelve el kit — HECHO, falta probar
+
+- **Al morir** (`ASC.Die`) se van todos los buffs y debuffs. Se quedan los cooldowns
+  (efectos Hidden) y **las pasivas de la clase** — ahora se aplican con
+  `ApplyClassPassive`, que las anota para que la limpieza las salte.
+- **Al revivir** (`ASC.Revive`) todas las habilidades vuelven listas: cooldown a cero y
+  cargas llenas — **menos la R**, que conserva lo suyo (`GameplayAbility.IsUltimate`, lo
+  marca PlayerController al equipar). La auto-revivida del Inmortal pasa
+  `resetAbilities: false`: es su propia R la que lo levanta, no un respawn.
+
+Para probar: morir con un buff y un veneno encima (los dos desaparecen del cadáver), y
+reaparecer con Q/E/Shift en cooldown → tienen que estar listas; la R, no.
+
 ## 4º · Pantalla de inicio y ajustes — TERMINADO Y PROBADO ✅
 
 Está en `Scripts/Settings/ y Scripts/UI/` (ver el LEEME del modo, sección "El menú principal y los

@@ -1434,7 +1434,7 @@ public class PlayerController : NetworkBehaviour
                 case EAbilityInput.SecondaryAttack: AimAbility           = inst; break;
                 case EAbilityInput.Action1:         AbilityQ             = inst; break;
                 case EAbilityInput.Action2:         AbilityE             = inst; break;
-                case EAbilityInput.Action3:         AbilityR             = inst; break;
+                case EAbilityInput.Action3:         AbilityR             = inst; inst.IsUltimate = true; break;
                 case EAbilityInput.Movement:        MovementAbility      = inst; break;
             }
         }
@@ -1503,8 +1503,10 @@ public class PlayerController : NetworkBehaviour
     private void ApplyClassPassives(CharacterClassDefinition cls)
     {
         if (cls.PassiveEffects == null) return;
+        // ApplyClassPassive y no ApplyGameplayEffect: las deja anotadas como pasivas de
+        // clase, que es lo que las salva de la limpieza de buffs al morir.
         foreach (var passive in cls.PassiveEffects)
-            if (passive != null) ASC.ApplyGameplayEffect(passive, ASC);
+            if (passive != null) ASC.ApplyClassPassive(passive);
     }
 
     // Destruye los comportamientos de código de la clase anterior e instancia los

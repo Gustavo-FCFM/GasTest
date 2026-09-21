@@ -573,6 +573,24 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         _recharging = false;
     }
 
+    // Deja la habilidad como recién otorgada: cargas llenas y cooldown en cero. La
+    // llama el ASC al revivir, para todas menos la definitiva (ver IsUltimate). La
+    // recarga en curso, si la hay, se corta sola: RechargeRoutine ve las cargas llenas
+    // en su próxima vuelta y termina.
+    public void ResetForRespawn()
+    {
+        if (UsesCharges)
+        {
+            _charges = MaxCharges;
+            ReportCharges();
+        }
+        ClearCooldownTag();
+    }
+
+    // True en la instancia que ocupa el slot de la DEFINITIVA (R). La marca
+    // PlayerController al equipar; el respawn la usa para no resetearle el cooldown.
+    [System.NonSerialized] public bool IsUltimate;
+
     // Apaga el sistema de cargas en ESTA instancia. La usan los combos y el TagSwitch
     // al clonar un paso/variante: ese clon es solo la ejecución, su ciclo de vida
     // (costo, cooldown y por lo tanto también las cargas) es del padre. Sin esto, un
