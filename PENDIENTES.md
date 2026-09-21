@@ -69,8 +69,9 @@ porque `Update` salía antes de aplicar la gravedad.
 
 Lo que quedó (`UI_ClassMenu` + `PlayerController.SettleWithoutInput`):
 
-1. **Con el menú abierto la gravedad sigue**: el personaje cae, se planta y la animación
-   pasa a idle. Sin avance horizontal.
+1. **El menú solo se abre con los pies en el piso** ("Aterrizá primero" si estás en el
+   aire). Elegir en el aire cambiaba el Animator a mitad del salto y la animación quedaba
+   trabada. Y si igual queda abierto sin input, la gravedad sigue (`SettleWithoutInput`).
 2. **Recibir daño cierra el menú sin elegir** (`CloseOnDamage`, prendido por defecto).
    Mira la vida por `OnAttributeChangedCallback`, así funciona igual en el host y en un
    cliente remoto; una curación no lo cierra. Aviso: *"Te pegaron: la elección se canceló.
@@ -78,7 +79,7 @@ Lo que quedó (`UI_ClassMenu` + `PlayerController.SettleWithoutInput`):
 3. **Abrirlo fuera de la base avisa, no bloquea**: *"Estás fuera de tu base: si te pegan,
    el menú se cierra"*. La subclase se sigue pudiendo elegir afuera, con ese riesgo.
 
-Falta probarlo: abrir V en el aire, y que te peguen con el menú abierto.
+Probado.
 
 ---
 
@@ -299,7 +300,8 @@ del observado y `M` para el marcador.
 Lo primero al retomar.
 
 - ~~La cámara espectador~~ — PROBADA Y APROBADA.
-- **Que ya no se salgan del mapa.** Ver abajo — es el problema que más vueltas dio.
+- ~~Que ya no se salgan del mapa~~ — PROBADO (21 de septiembre), junto con los paladines
+  y el balance de NPCs.
 - El **dash y el blink** de los pícaros.
 - Los **cuatro slots de habilidad**. Las clases base usan LMB, RMB, Q y Shift; el bot solo
   probaba Q/E/R, así que **nunca** tiraron el hacha ni saltaron ni dashearon. Ahora se

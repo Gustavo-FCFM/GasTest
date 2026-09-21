@@ -19,8 +19,8 @@ using UnityEngine.EventSystems;
 // Se elige de tres formas: clic en la tarjeta, teclas 1/2/3… (solo en instancias
 // de teclado, para no cruzar el teclado compartido con la de mando), o control
 // (stick/d-pad para moverse + Submit). Mientras está abierto bloquea el input del
-// jugador y libera el cursor — pero la gravedad sigue (el personaje cae y se planta),
-// y recibir daño lo CIERRA sin elegir: abrirlo afuera de la base es bajo tu riesgo.
+// jugador y libera el cursor. Solo se abre con los pies en el piso, y recibir daño lo
+// CIERRA sin elegir: abrirlo afuera de la base es bajo tu riesgo.
 //
 // Se ata al jugador DUEÑO local con InitializeMenu(), que llama PlayerController al
 // spawnear la cámara — así cada pantalla maneja la selección de SU jugador.
@@ -146,6 +146,15 @@ public class UI_ClassMenu : MonoBehaviour
         if (mode == EMode.BaseClasses && !CanChangeBaseClassHere())
         {
             WarnClassChangeBlocked();
+            return;
+        }
+
+        // Solo con los pies en el piso. Elegir en el aire cambiaba el Animator a mitad de
+        // un salto y la animación quedaba trabada; dejarlo caer con el menú abierto
+        // también se veía feo. Así que el menú directamente no se abre hasta aterrizar.
+        if (!_player.IsGrounded)
+        {
+            Announce("Aterrizá primero", new Color(1f, 0.75f, 0.3f), 24f);
             return;
         }
 
