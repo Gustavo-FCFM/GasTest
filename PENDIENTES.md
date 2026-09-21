@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 18 de septiembre de 2026
+# Pendientes — actualizado el 22 de septiembre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -221,7 +221,7 @@ es el único lugar del proyecto donde están juntas además del panel y del Play
 
 # 3. Balance pendiente (decisiones tuyas)
 
-## Armadura y ritmo de ataque — CARGADO (21 de septiembre), falta jugarlo
+## Armadura y ritmo de ataque — CARGADO Y PROBADO (21 de septiembre)
 
 El sistema de números es D&D con una variable más: el **tiempo**. Cada clase se define por
 tres números —dado, intervalo y clase de armadura— y todo lo demás se deriva:
@@ -461,63 +461,33 @@ queda es de **la máquina de casa** (la del trabajo no tiene con qué trabajar a
 3. Jugar con bots y ajustar volúmenes por cue (`Volume` en cada `SfxCue`) y las
    distancias (`MaxDistance`: un paso 20 m, un grito 40, una explosión 60).
 
-### La reacción de golpe (animación) — el Animator YA está, se ajusta
+### Reacción de golpe, aturdido, muerte y ragdoll — HECHOS Y PROBADOS ✅
 
-El código dispara `HitTrigger` al recibir daño. Se veía "de vez en cuando" por dos
-cosas, las dos arregladas/ajustables:
+Todo instalado en el Animator y en el prefab del jugador (22 de septiembre):
 
-1. **Código**: en el host el callback de vida llega dos veces y en la segunda `prev` ya
-   era igual a `next`; se perdía la mitad de los golpes. Ahora la vida anterior la lleva
-   el propio NetworkASC (`_lastSeenHealth`) y reacciona una vez por bajada, siempre.
-2. **Animator**: con *Can Transition To Self* apagado, los golpes que llegan mientras el
-   clip de reacción todavía corre (~1 s) se ignoran. Ponelo **encendido** y bajá el
-   *Exit Time* de la salida a ~0.6: el respiro real ya lo pone el código (`HurtCooldown`
-   0.45 s en la biblioteca), así que no se va a trabar en el primer frame.
+- **Reacción de golpe**: `HitTrigger` → `PLACEHOLDER_Hit` en la capa UpperBody; cada AOC
+  pone el `CombatDamage` de su postura. Los estados con etiqueta **`Loop`** (escudo
+  arriba, vuelo del salto, aturdido, molinete) no se cortan por un golpe — lo decide el
+  código, no el Animator (`HitBlockedByStateTag`).
+- **Aturdido**: bool `IsStunned` leído del tag en todas las copias → `PLACEHOLDER_Stun`
+  en bucle.
+- **Muerte con ragdoll**: el prefab tiene el Ragdoll Wizard corrido y `RagdollController`
+  en la raíz. El cuerpo sale despedido en dirección contraria a quien lo mató, y **la
+  cámara lo sigue** mientras cae (`CameraFollowsRagdoll` en el PlayerController, apagable).
+  La animación de muerte (`IsDead` + `PLACEHOLDER_Death` con un clip al azar de
+  `DeathClips`) queda de respaldo para un prefab sin ragdoll.
+- **Morir limpia buffs y debuffs; revivir devuelve el kit** (cooldown a cero, cargas
+  llenas) menos la R. El Inmortal también lo recibe al levantarse con su definitiva.
 
-### Aturdido y muerte — falta el Animator (y el ragdoll, opcional)
+### Sensación del ataque básico — HECHO Y PROBADO ✅
 
-El código ya está: `IsStunned` se alimenta del tag en todas las copias, e `IsDead` lo
-pone la muerte replicada (con la dirección del golpe). En `AC_Player`, capa **Base**:
-
-- [ ] Dos **bools**: `IsStunned` e `IsDead`.
-- [ ] Estado **`PLACEHOLDER_Stun`** con un clip placeholder de ese nombre (duplicar
-      cualquier `PLACEHOLDER_*.anim`). AnyState → Stun con `IsStunned == true` (sin Exit
-      Time, *Can Transition To Self* apagado); Stun → Movement con `IsStunned == false`.
-      En cada AOC: `PLACEHOLDER_Stun` → `HumanM@Stun01`, y en el import de ese FBX
-      marcá **Loop Time**: tiene que durar lo que dure el stun.
-- [ ] Estado **`PLACEHOLDER_Death`** con su clip placeholder. AnyState → Death con
-      `IsDead == true` (sin Exit Time, *Can Transition To Self* apagado); Death → Movement
-      con `IsDead == false`. Los clips NO se ponen en el AOC: van en el prefab del jugador,
-      `PlayerController → Death Clips`, arrastrá los seis (`CombatDeath01–04`, `Death01–02`)
-      y se elige uno al azar por muerte. Sin Loop Time (se queda en el último frame).
-
-**Ragdoll** (`Player/RagdollController.cs`), en vez de la animación de muerte — si el
-prefab lo tiene armado, gana; si no, la animación queda de respaldo:
-
-- [ ] En el prefab del jugador, seleccionar el modelo (`HumanDummy_M`) y
-      **GameObject ▸ 3D Object ▸ Ragdoll…**: arrastrar los huesos (Pelvis = Hips, Left/Right
-      Hips = UpperLeg, Knee = LowerLeg, Arm = UpperArm, Elbow = LowerArm, Middle Spine =
-      Spine1, Head). Total Mass 70. Create.
-- [ ] `Add Component ▸ RagdollController` en la **raíz** del prefab (junto a
-      PlayerController). Perillas: `ImpulseForce` (450) y `UpwardBias` (0.35).
-
-Qué mirar: el cuerpo sale despedido **en dirección contraria a quien lo mató**, no choca
-con la propia cápsula (se apaga mientras está suelto), los ataques no le pegan al cadáver
-(capa 2), y al revivir vuelve entero. Cada peer simula su muñeco; no es determinista y no
-hace falta.
-
-### Morir limpia; revivir devuelve el kit — HECHO, falta probar
-
-- **Al morir** (`ASC.Die`) se van todos los buffs y debuffs. Se quedan los cooldowns
-  (efectos Hidden) y **las pasivas de la clase** — ahora se aplican con
-  `ApplyClassPassive`, que las anota para que la limpieza las salte.
-- **Al revivir** (`ASC.Revive`) todas las habilidades vuelven listas: cooldown a cero y
-  cargas llenas — **menos la R**, que conserva lo suyo (`GameplayAbility.IsUltimate`, lo
-  marca PlayerController al equipar). La auto-revivida del Inmortal llama
-  `Revive()` igual que un respawn: revive para seguir pegando, con el kit fresco.
-
-Para probar: morir con un buff y un veneno encima (los dos desaparecen del cadáver), y
-reaparecer con Q/E/Shift en cooldown → tienen que estar listas; la R, no.
+- **Sostenido**: con el LMB o el gatillo apretado, el ataque principal se repite solo
+  cada vez que vuelve a estar disponible (`AutoRepeatPrimaryAttack`, apagable).
+- **Cancelable**: cualquier otra habilidad corta el básico a mitad del swing. Lo que ya
+  pegó, pegó; los `HitFrame` que faltaban no salen; el cooldown ya pagado no se
+  devuelve (no hay animation cancel gratis). Solo el slot `PrimaryAttack` es
+  interrumpible (`IsInterruptible` + `CancelSerial` en el ASC). Un enemigo recibe un
+  solo golpe por swing aunque el clip tenga varios eventos.
 
 ## 4º · Pantalla de inicio y ajustes — TERMINADO Y PROBADO ✅
 

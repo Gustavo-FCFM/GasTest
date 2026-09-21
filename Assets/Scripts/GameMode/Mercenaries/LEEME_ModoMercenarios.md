@@ -9,7 +9,7 @@ pruebas rápidas de clases.
 
 ---
 
-# 0. Estado actual — 18 de septiembre de 2026
+# 0. Estado actual — 22 de septiembre de 2026
 
 **Lo que ya está y funciona** (todo compila limpio, 0 errores y 0 warnings propios):
 
@@ -25,6 +25,13 @@ pruebas rápidas de clases.
   con blur; sensibilidad, volúmenes, pantalla. Volver al menú y volver a hostear en el
   mismo Play anda (los managers reinician su sesión en `OnStartServer`).
 - **Sonido**: el sistema entero está escrito (sección "El sonido"); faltan los clips.
+- **Sensación del personaje**: reacción de golpe (que no corta los bucles), aturdido en
+  bucle, muerte con ragdoll y la cámara siguiendo el cuerpo, ataque básico sostenido con
+  el botón apretado y cancelable con cualquier otra habilidad. Morir limpia buffs y
+  debuffs; revivir devuelve el kit menos la R.
+- **Balance**: armadura en porcentaje (CA de D&D − 10, `Def/(Def+10)`, solo físico) y el
+  intervalo de ataque como palanca: bárbaro 12 cada 1.2 s, pícaro 7 cada 0.7 s, paladín
+  8 cada 1.0 s. La tabla y el benchmark del TTK están en `PENDIENTES.md`.
 - La escena `Mercenaries_Gamemode.unity` **armada, editada a mano y guardada**: arena con
   colliders convex, las tres bases afuera del muro con techo propio y paredes invisibles
   filtradas por equipo (`MercSafeRoomBarrier`), 9 campamentos, 3 rejas (`MercGate`), techo
