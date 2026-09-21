@@ -235,9 +235,14 @@ public class PlayerController : NetworkBehaviour
              "en todas las copias.")]
     public string StunnedParam = "IsStunned";
 
+    [Tooltip("Con ragdoll: la cámara sigue al cuerpo mientras cae, en vez de quedarse mirando el " +
+             "punto donde murió. Apagalo para probar la otra sensación.")]
+    public bool CameraFollowsRagdoll = true;
+
     private string _deathSlotKey;
     private bool   _hasDeadParam, _hasStunnedParam;
     private RagdollController _ragdoll;
+    private ThirdPersonOrbitCam _orbitCam;
 
     // Copia en RUNTIME del controller (base + overrides de la clase). Es la que
     // permite intercambiar el clip de la ranura de acción sin tocar los assets.
@@ -511,6 +516,7 @@ public class PlayerController : NetworkBehaviour
                 GameObject camObj = Instantiate(CameraPrefab);
                 _ownerCamera = camObj;
                 ThirdPersonOrbitCam cam = camObj.GetComponent<ThirdPersonOrbitCam>();
+                _orbitCam = cam;
                 if (cam != null)
                 {
                     cam.Target = this.transform;
@@ -1869,6 +1875,9 @@ public class PlayerController : NetworkBehaviour
         if (_ragdoll != null && _ragdoll.IsReady)
         {
             _ragdoll.Activate(hitDirection);
+
+            // Solo el dueño tiene cámara propia; los demás ven el muñeco desde la suya.
+            if (CameraFollowsRagdoll && _orbitCam != null) _orbitCam.FollowOverride = _ragdoll.Hips;
             return;
         }
 
@@ -1885,6 +1894,7 @@ public class PlayerController : NetworkBehaviour
 
     public void PlayRevive()
     {
+        if (_orbitCam != null) _orbitCam.FollowOverride = null;
         if (_ragdoll != null && _ragdoll.IsActive) _ragdoll.Deactivate();
         if (characterAnimator != null && _hasDeadParam) characterAnimator.SetBool(DeadParam, false);
     }

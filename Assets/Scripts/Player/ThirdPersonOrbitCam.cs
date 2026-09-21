@@ -32,6 +32,17 @@ public class ThirdPersonOrbitCam : MonoBehaviour
     [Header("Objetivo")]
     public Transform Target; // Tu Player
 
+    // Punto que la cámara sigue EN VEZ del jugador mientras esté puesto: la cadera del
+    // ragdoll al morir (PlayerController.PlayDeath lo pone y PlayRevive lo saca). Se
+    // sigue sin PivotOffset —la cadera ya está a la altura correcta— y con un suavizado
+    // propio, porque un muñeco que rebota es más nervioso que un jugador caminando.
+    [HideInInspector] public Transform FollowOverride;
+
+    [Tooltip("Suavizado del seguimiento al ragdoll (segundos hasta alcanzarlo). 0 = pegado.")]
+    public float FollowOverrideSmooth = 0.15f;
+    private Vector3 _followVelocity;
+    private Vector3 _lastFocus;
+
     [Header("Configuración de Hombro")]
     // (0, 1.5, 0) es la altura de la cabeza/pivote
     public Vector3 PivotOffset = new Vector3(0, 1.5f, 0);
@@ -165,6 +176,14 @@ public class ThirdPersonOrbitCam : MonoBehaviour
 
         // 3. Calcular Posición, respetando las paredes
         Vector3 focusPoint = Target.position + PivotOffset;
+        if (FollowOverride != null)
+        {
+            Vector3 wanted = FollowOverride.position + Vector3.up * 0.4f;
+            focusPoint = FollowOverrideSmooth > 0f
+                ? Vector3.SmoothDamp(_lastFocus, wanted, ref _followVelocity, FollowOverrideSmooth)
+                : wanted;
+        }
+        _lastFocus = focusPoint;
 
         // El offset del hombro se descompone en DIRECCIÓN y DISTANCIA: la dirección se
         // mantiene siempre (para no perder la vista sobre el hombro) y lo único que se

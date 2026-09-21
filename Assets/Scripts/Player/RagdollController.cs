@@ -40,6 +40,9 @@ public class RagdollController : MonoBehaviour
     public bool IsActive { get; private set; }
     public bool IsReady  => _bodies.Count > 0;
 
+    // La cadera: lo que la cámara sigue si PlayerController.CameraFollowsRagdoll está activo.
+    public Transform Hips => _hips != null ? _hips.transform : null;
+
     private readonly List<Rigidbody> _bodies    = new List<Rigidbody>();
     private readonly List<Collider>  _colliders = new List<Collider>();
     private readonly List<int>       _layers    = new List<int>();
