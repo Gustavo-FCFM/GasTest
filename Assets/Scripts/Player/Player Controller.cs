@@ -962,6 +962,7 @@ public class PlayerController : NetworkBehaviour
         }
 
         CheckAbilityButton(_input.PrimaryAttack,   PrimaryAttackAbility, EAbilityInput.PrimaryAttack);
+        TickAutoRepeatPrimaryAttack();
         CheckAbilityButton(_input.Secondary,       AimAbility,           EAbilityInput.SecondaryAttack);
     }
 
@@ -969,6 +970,34 @@ public class PlayerController : NetworkBehaviour
     // habilidad. Al presionar la activa; al soltar cierra el menú radial (o la
     // habilidad de zona) si esta la tenía abierta. WasPressedThisFrame /
     // WasReleasedThisFrame son el equivalente del viejo GetButtonDown/GetButtonUp.
+    // ATAQUE BÁSICO SOSTENIDO: con el botón (o el gatillo) apretado, cada vez que el
+    // ataque principal vuelve a estar disponible se dispara solo, sin tener que soltar
+    // y volver a apretar. Con control, apretar el gatillo por cada golpe cansa; con
+    // mouse es cómodo igual. Solo para el LMB, y solo para un ataque "normal": las
+    // habilidades de rueda, de mantener o de zona tienen su propio ciclo con el botón.
+    [Header("Ataque básico")]
+    [Tooltip("Mantener apretado el ataque principal lo repite solo cada vez que vuelve a estar disponible.")]
+    public bool AutoRepeatPrimaryAttack = true;
+
+    // Pequeño respiro entre disparos automáticos: si el servidor rechazara uno, esto
+    // evita reintentar cada frame.
+    private float _nextAutoRepeatAt;
+
+    private void TickAutoRepeatPrimaryAttack()
+    {
+        if (!AutoRepeatPrimaryAttack || PrimaryAttackAbility == null || _input.PrimaryAttack == null) return;
+        if (!_input.PrimaryAttack.IsPressed() || _input.PrimaryAttack.WasPressedThisFrame()) return;
+        if (isAttacking || IsAimingAbility || Time.time < _nextAutoRepeatAt) return;
+
+        GameplayAbility ability = PrimaryAttackAbility;
+        if (ability is IRadialMenuAbility || ability is IHoldAbility) return;
+        if (ability is IGroundTargetAbility ground && ground.UsesGroundTarget) return;
+        if (!ability.CanActivate()) return;
+
+        _nextAutoRepeatAt = Time.time + 0.1f;
+        ProcessAbilityPress(ability, EAbilityInput.PrimaryAttack);
+    }
+
     private void CheckAbilityButton(UnityEngine.InputSystem.InputAction action, GameplayAbility ability, EAbilityInput slot)
     {
         if (ability == null || action == null) return;
