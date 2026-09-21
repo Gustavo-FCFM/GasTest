@@ -31,9 +31,15 @@ MonoBehaviour:
     UseTargetHealthScaling: 0
     TargetHealthMode: 0
     TargetHealthCoefficient: 0
+    MinMagnitude: 0
   IsCrowdControl: 0
   TargetVFX: {fileID: 1289543790355709915, guid: c6668211477cafc45bfcd6e05f995f28, type: 3}
-  TargetVFXOffset: {x: 0, y: -1, z: 0}
+  TargetVFXOffset: {x: 0, y: 0, z: 0}
   TargetVFXRotation: {x: 0, y: 0, z: 0}
   TargetVFXScale: {x: 0, y: 0, z: 0}
+  TargetSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
   GrantedTags: 2f000000

@@ -197,6 +197,11 @@ public class PlayerController : NetworkBehaviour
     [Tooltip("Trigger del Animator que dispara la reacción.")]
     public string HitTrigger = "HitTrigger";
 
+    [Tooltip("Los estados del Animator con esta etiqueta (Tag, en el Inspector del estado) NO se " +
+             "interrumpen con la reacción de golpe: bucles como mantener el escudo, el molinete, " +
+             "el vuelo del salto o el aturdido. Se mira en todas las capas.")]
+    public string HitBlockedByStateTag = "Loop";
+
     private bool _hasHitTrigger;
 
     // ---------------------------------------------------------
@@ -1872,7 +1877,27 @@ public class PlayerController : NetworkBehaviour
         // Con el escudo arriba el golpe tiene su propia animación (HoldImpact).
         if (!string.IsNullOrEmpty(HoldingParam) && characterAnimator.GetBool(HoldingParam)) return;
 
+        // Un bucle en curso (etiqueta "Loop" en el estado) no se corta por un golpe: el
+        // molinete sigue girando, el salto sigue volando. Se decide ACÁ y no en el
+        // Animator, porque un trigger que no se consume queda armado y dispararía la
+        // reacción tarde, al terminar el bucle.
+        if (IsInStateWithTag(HitBlockedByStateTag)) return;
+
         characterAnimator.SetTrigger(HitTrigger);
+    }
+
+    // ¿Alguna capa del Animator está (o está entrando) en un estado con esa etiqueta?
+    private bool IsInStateWithTag(string tag)
+    {
+        if (characterAnimator == null || string.IsNullOrEmpty(tag)) return false;
+
+        for (int layer = 0; layer < characterAnimator.layerCount; layer++)
+        {
+            if (characterAnimator.GetCurrentAnimatorStateInfo(layer).IsTag(tag)) return true;
+            if (characterAnimator.IsInTransition(layer) &&
+                characterAnimator.GetNextAnimatorStateInfo(layer).IsTag(tag)) return true;
+        }
+        return false;
     }
 
     // ¿El Animator tiene el trigger de reacción? Se mira una vez, al armar el controller
