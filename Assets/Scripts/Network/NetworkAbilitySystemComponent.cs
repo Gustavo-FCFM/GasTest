@@ -862,6 +862,10 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
             return;
         }
 
+        // Otra habilidad corta el ataque básico en curso (si lo hay): el swing a medias
+        // no pega y su combo no sigue. Ver GameplayAbility.IsInterruptible.
+        if (inputSlot != EAbilityInput.PrimaryAttack) _asc.CancelInterruptibleAbilities();
+
         ability.Activate();
 
         // Una habilidad de MANTENER no anima con un clip one-shot sino con un estado

@@ -940,7 +940,14 @@ public class PlayerController : NetworkBehaviour
     private void HandleAbilityInput()
     {
         if (ASC.HasTag(EGameplayTag.State_Silenced)) return;
-        if (isAttacking && !IsAimingAbility) return;
+
+        // Ocupado con una habilidad: nada más entra… salvo que lo que corre sea el
+        // ATAQUE BÁSICO, que cualquier otra habilidad puede cortar (un pícaro a mitad
+        // del swing que se escapa con el dash). En ese caso se leen los demás botones y
+        // solo se saltea el básico, que ya está corriendo. El corte real lo hace el
+        // servidor al activar la nueva (ver GameplayAbility.IsInterruptible).
+        bool busy = isAttacking && !IsAimingAbility;
+        if (busy && !_attackInterruptible) return;
 
         CheckAbilityButton(_input.MovementAbility, MovementAbility,      EAbilityInput.Movement);
         CheckAbilityButton(_input.Ability1,        AbilityQ,             EAbilityInput.Action1);
@@ -961,10 +968,15 @@ public class PlayerController : NetworkBehaviour
             CheckAbilityButton(_input.Ability3, AbilityR, EAbilityInput.Action3);
         }
 
+        CheckAbilityButton(_input.Secondary,       AimAbility,           EAbilityInput.SecondaryAttack);
+
+        if (busy) return;   // el básico no se interrumpe a sí mismo
         CheckAbilityButton(_input.PrimaryAttack,   PrimaryAttackAbility, EAbilityInput.PrimaryAttack);
         TickAutoRepeatPrimaryAttack();
-        CheckAbilityButton(_input.Secondary,       AimAbility,           EAbilityInput.SecondaryAttack);
     }
+
+    // True mientras lo que corre es el ataque básico (y por lo tanto se puede cortar).
+    private bool _attackInterruptible;
 
     // Detecta presionar/soltar la ACCIÓN (Input System) asignada a una
     // habilidad. Al presionar la activa; al soltar cierra el menú radial (o la
@@ -1028,6 +1040,10 @@ public class PlayerController : NetworkBehaviour
         // la que está en curso — pero las demás presiones se descartan acá.
         if (IsHoldingAbility) return;
 
+        // Lo que arranca ahora no es (todavía) un básico interrumpible: la rueda, el
+        // mantenido y la zona nunca lo son, y el camino normal lo vuelve a decidir abajo.
+        _attackInterruptible = false;
+
         if (ability is IRadialMenuAbility radial)
         {
             if (!ability.CanActivate()) return;
@@ -1076,6 +1092,7 @@ public class PlayerController : NetworkBehaviour
             {
                 isAttacking = true;
                 _attackStartTime = Time.time;
+                _attackInterruptible = slot == EAbilityInput.PrimaryAttack && ability.IsInterruptible;
                 // Predicción local SOLO en un cliente remoto (no host). El
                 // ObserversRpc del servidor se salta al dueño (asume que ya la
                 // disparó acá), así que sin esta predicción el dueño remoto
@@ -1288,6 +1305,7 @@ public class PlayerController : NetworkBehaviour
     public void FinishAttack()
     {
         isAttacking = false;
+        _attackInterruptible = false;
 
         if (_holdAbility == null) return;
         _holdAbility = null;
@@ -1464,7 +1482,7 @@ public class PlayerController : NetworkBehaviour
             GameplayAbility inst = ASC.GrantAbility(assignment.Ability);
             switch (assignment.InputSlot)
             {
-                case EAbilityInput.PrimaryAttack:   PrimaryAttackAbility = inst; break;
+                case EAbilityInput.PrimaryAttack:   PrimaryAttackAbility = inst; inst.IsInterruptible = true; break;
                 case EAbilityInput.SecondaryAttack: AimAbility           = inst; break;
                 case EAbilityInput.Action1:         AbilityQ             = inst; break;
                 case EAbilityInput.Action2:         AbilityE             = inst; break;

@@ -95,6 +95,10 @@ public class GA_LineAttack : GameplayAbility
         // impacto, esto se convierte solo en una estocada de varios tiempos.
         yield return HitTimingRoutine(PerformDamage);
 
+        // Interrumpido por otra habilidad (ver GameplayAbility.IsInterruptible): ni golpe
+        // ni EndAbility — el fin lo manda la habilidad que lo cortó.
+        if (WasCancelled) yield break;
+
         yield return new WaitForSeconds(0.5f / speedMultiplier);
 
         EndAbility();

@@ -190,8 +190,28 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // A 'onHit' se le pasa un conjunto COMPARTIDO de ya golpeados: un swing con
     // varios frames de impacto (un barrido escalonado) le pega UNA sola vez a cada
     // enemigo, aunque siga dentro del área en el siguiente test.
+    // ---------------------------------------------------------
+    // INTERRUPCIÓN DEL ATAQUE BÁSICO
+    //
+    // El ataque principal se puede cortar con otra habilidad (un pícaro a mitad del
+    // swing que se escapa con el dash). Solo las instancias marcadas IsInterruptible (la
+    // del slot PrimaryAttack, y los pasos de combo que clona) miran el contador de
+    // cancelación del ASC: cuando otra habilidad activa lo incrementa
+    // (AbilitySystemComponent.CancelInterruptibleAbilities), el timing en curso se corta
+    // sin pegar y sin llamar EndAbility — el "fin" lo va a mandar la habilidad nueva.
+    // El cooldown ya pagado NO se devuelve: cancelar tiene ese costo.
+    // ---------------------------------------------------------
+    [System.NonSerialized] public bool IsInterruptible;
+
+    // True si el último HitTimingRoutine se cortó por una interrupción. Quien lo llame
+    // tiene que mirarlo y salir sin EndAbility (ver GA_ConeAttack).
+    [System.NonSerialized] protected bool WasCancelled;
+
     protected IEnumerator HitTimingRoutine(System.Action<HashSet<AbilitySystemComponent>> onHit)
     {
+        WasCancelled = false;
+        int cancelSerial = OwnerASC != null ? OwnerASC.CancelSerial : 0;
+
         // La MISMA velocidad a la que se reproduce el clip: si el swing se comprime
         // para entrar en el ritmo de ataque, el golpe se adelanta en igual proporción.
         float speedMultiplier = ResolveAnimationSpeed();
@@ -223,6 +243,13 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
             float wait = (time - elapsed) / speedMultiplier;
             if (wait > 0f) yield return new WaitForSeconds(wait);
             elapsed = time;
+
+            if (IsInterruptible && OwnerASC != null && OwnerASC.CancelSerial != cancelSerial)
+            {
+                WasCancelled = true;
+                yield break;
+            }
+
             onHit?.Invoke(alreadyHit);
         }
     }

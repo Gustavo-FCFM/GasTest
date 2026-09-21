@@ -1249,6 +1249,12 @@ public class AbilitySystemComponent : MonoBehaviour
     // clase nueva, para no arrastrar habilidades de la anterior).
     public void ClearGrantedAbilities() => GrantedAbilities.Clear();
 
+    // Contador de cancelación del ataque básico (ver GameplayAbility.IsInterruptible).
+    // Cada incremento corta el timing de golpe de las habilidades interrumpibles que
+    // estén corriendo; las que arrancan después capturan el valor nuevo y no se enteran.
+    public int CancelSerial { get; private set; }
+    public void CancelInterruptibleAbilities() => CancelSerial++;
+
     // Punto único para que una GameplayAbility (ScriptableObject, sin
     // MonoBehaviour propio) arranque una corutina usando este componente
     // como dueño.

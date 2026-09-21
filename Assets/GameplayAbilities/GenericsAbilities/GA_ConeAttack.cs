@@ -93,6 +93,10 @@ public class GA_ConeAttack : GameplayAbility
         // impacto, esto se convierte solo en un barrido escalonado.
         yield return HitTimingRoutine(PerformDetectionAndDamage);
 
+        // Interrumpido por otra habilidad (ver GameplayAbility.IsInterruptible): ni golpe
+        // ni EndAbility — el fin lo manda la habilidad que lo cortó.
+        if (WasCancelled) yield break;
+
         yield return new WaitForSeconds(0.5f / speedMultiplier);
 
         EndAbility();

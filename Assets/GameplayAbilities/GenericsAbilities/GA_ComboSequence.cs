@@ -107,6 +107,11 @@ public class GA_ComboSequence : GameplayAbility
     {
         if (Sequence == null) { EndAbility(); yield break; }
 
+        // Para cortar el combo entero si otra habilidad lo interrumpe (ver
+        // GameplayAbility.IsInterruptible): cada paso ya se corta solo; esto evita
+        // que arranque el siguiente.
+        int cancelSerial = OwnerASC != null ? OwnerASC.CancelSerial : 0;
+
         // Ritmo del combo: si es el ataque básico, toda la secuencia (clips y delays)
         // se comprime para entrar en un ciclo de ataque y acelera con los buffs.
         float speed = ResolveSequenceSpeed(Sequence, UseAttackSpeedAsCooldown, ResolveCooldownDuration());
@@ -133,6 +138,8 @@ public class GA_ComboSequence : GameplayAbility
                 stepInstance.CostEffect     = null;
                 stepInstance.DisableCharges();
 
+                stepInstance.IsInterruptible = IsInterruptible; // el paso se corta con el combo
+
                 if (step.AnimationClipOverride != null)
                     stepInstance.AnimationClip = step.AnimationClipOverride;
                 if (step.AnimationIDOverride > 0)
@@ -153,6 +160,8 @@ public class GA_ComboSequence : GameplayAbility
 
             if (step.DelayAfter > 0)
                 yield return new WaitForSeconds(step.DelayAfter / speed);
+
+            if (IsInterruptible && OwnerASC != null && OwnerASC.CancelSerial != cancelSerial) yield break;
         }
 
         EndAbility();
