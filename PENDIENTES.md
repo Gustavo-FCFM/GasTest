@@ -483,6 +483,29 @@ Todo instalado en el Animator y en el prefab del jugador (22 de septiembre):
 - **Morir limpia buffs y debuffs; revivir devuelve el kit** (cooldown a cero, cargas
   llenas) menos la R. El Inmortal también lo recibe al levantarse con su definitiva.
 
+### Inclinar el torso hacia la mira — CÓDIGO LISTO, falta el Animator y el componente
+
+`Player/UpperBodyAim.cs`: mirando al cielo el personaje se arquea hacia atrás, mirando
+al piso se encorva. El yaw no se toca (de eso ya se encarga `FaceCameraForward`).
+
+**Cómo viaja por la red sin un RPC nuevo**: el ángulo se guarda en un parámetro FLOAT
+del Animator y el `NetworkAnimator` del prefab ya sincroniza los floats con suavizado.
+El parámetro no lo usa ningún estado ni transición: es solo el vehículo. Y se aplica en
+`LateUpdate`, encima de la pose que haya animado el Animator, así funciona igual
+corriendo, atacando o con el escudo arriba.
+
+Para activarlo:
+
+- [ ] En `AC_Player`, parámetro **Float** llamado **`AimPitch`**. No hace falta ninguna
+      transición ni estado: solo tiene que existir.
+- [ ] En el prefab del jugador, `Add Component ▸ UpperBodyAim` en la **raíz**. Los huesos
+      los encuentra solo del avatar humanoide (Spine, Chest, UpperChest, Head).
+
+Perillas: `Weights` (cuánto del ángulo lleva cada hueso — repartido se ve natural, todo
+en uno se ve quebrado), `MaxUp` 50° / `MaxDown` 40°, y `Smooth` 0.08 s.
+
+No se aplica con el personaje muerto ni aturdido.
+
 ### Sensación del ataque básico — HECHO Y PROBADO ✅
 
 - **Sostenido**: con el LMB o el gatillo apretado, el ataque principal se repite solo
