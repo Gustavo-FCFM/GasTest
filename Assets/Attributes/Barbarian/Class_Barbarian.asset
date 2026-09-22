@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ClassName: Barbarian
   ClassIcon: {fileID: 21300000, guid: 150ec0fe7eb33a744879df340d60234b, type: 3}
-  Description: Barbaro ataca!
+  Description: Aguanta y pega fuerte. Tira el hacha de lejos, entra de un salto y con Furia se cura con cada golpe. El que abre la pelea.
   BaseAttributes: {fileID: 11400000, guid: 018a6225b1f822143aa86c2bcaef873f, type: 2}
   Abilities:
   - InputSlot: 1

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ClassName: Paladin
   ClassIcon: {fileID: 21300000, guid: c100be65aadeec04f96406f06b4aa65b, type: 3}
-  Description: Justice, order and SMITES
+  Description: El muro. Pega menos y aguanta más. Bloquea con el escudo, castiga con daño mágico y se lanza a cubrir a un aliado en problemas.
   BaseAttributes: {fileID: 11400000, guid: a8df6c05dad20b646b05806d130250b7, type: 2}
   Abilities:
   - InputSlot: 1

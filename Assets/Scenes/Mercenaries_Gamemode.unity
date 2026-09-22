@@ -20754,7 +20754,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   HostAddress: 127.0.0.1
   Port: 7770
-  HostOnlyInEditor: 1
+  HostOnlyInEditor: 0
 --- !u!4 &1809147887
 Transform:
   m_ObjectHideFlags: 0
