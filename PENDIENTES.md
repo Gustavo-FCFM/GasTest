@@ -225,7 +225,7 @@ No hay nada que rescatar del prefab: las tres clases que guardaba
 
 # 3. Balance pendiente (decisiones tuyas)
 
-## Botiquines del mapa — CÓDIGO LISTO, falta instalarlos y jugarlos
+## Botiquines del mapa — PUESTOS, falta acomodarlos y jugarlos
 
 Los de Overwatch / Marvel Rivals: una cruz verde que flota, te da **75 de vida** al
 pasarle por encima y desaparece 20 segundos, con un disco en el piso que se llena como
@@ -245,11 +245,11 @@ Para instalarlos:
       anillo alrededor de la meseta y tres más afuera, sobre los carriles. Cada uno se
       apoya en el piso con un rayo y se corrige al NavMesh; los que caen en una sala
       segura se saltean.
-- [ ] **Volver a correr el mismo ítem del menú** (23 de septiembre). La primera vez
-      aparecía un solo botiquín: crear nueve NetworkObject de un saque por código dejó a
-      ocho con `SceneId 0`, y para FishNet un NetworkObject sin SceneId no es un objeto de
-      escena — no se spawnea. Ahora la herramienta se lo asigna a todos (y correrla de
-      nuevo es justamente el arreglo, no un error).
+- [x] **Volver a correr el mismo ítem del menú** (23 de septiembre): ya aparecen los
+      nueve. La primera vez salía uno solo porque crear nueve NetworkObject de un saque
+      por código dejó a ocho con `SceneId 0`, y para FishNet un NetworkObject sin SceneId
+      no es un objeto de escena — no se spawnea. Ahora la herramienta se lo asigna a
+      todos, y volver a correrla sobre una escena que ya los tiene los repara.
 - [ ] **Moverlos a mano.** Son un punto de partida: el buen sitio para un botiquín se
       descubre jugando (detrás de una cobertura, en el desvío de un carril), no
       calculando ángulos.

@@ -124,6 +124,13 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   (`LobbyManager`, `NetworkGameManager`, `MercenariesGameMode`): SyncVars, listas,
   puntajes. Desconectar → Iniciar Host en el mismo Play es un camino normal (el menú
   principal lo usa), así que todo estado de partida se limpia al arrancar el servidor.
+- **Un NetworkObject de escena creado por código necesita que le asignen su `SceneId`.**
+  FishNet se lo da al validar cada objeto de a uno en el editor; creando varios de un
+  saque en una herramienta quedan en `SceneId 0`, y para FishNet eso no es un objeto de
+  escena: no se spawnea (pasó con los botiquines, aparecía uno solo). Al terminar de
+  crearlos hay que llamar `NetworkObject.CreateSceneId(Scene, force, out changed)` por
+  reflexión — es lo mismo que corre *Tools ▸ Fish-Networking ▸ Utility ▸ Reserialize
+  NetworkObjects*. Ejemplo en `Editor/MercHealthPackSetup.AssignSceneIds`.
 
 Los detalles finos del GAS (pipeline de daño, acumulación de efectos, animaciones de
 combo) están en `DesignDocuments/GAS_Arquitectura.docx`.
