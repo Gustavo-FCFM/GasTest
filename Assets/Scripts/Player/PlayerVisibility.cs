@@ -150,11 +150,7 @@ public class PlayerVisibility : MonoBehaviour
 
             Material[] copies = new Material[originals.Length];
             for (int i = 0; i < originals.Length; i++)
-            {
-                if (originals[i] == null) continue;
-                copies[i] = new Material(originals[i]);
-                MakeTransparent(copies[i], GhostAlpha);
-            }
+                if (originals[i] != null) copies[i] = BuildGhostMaterial(originals[i]);
 
             _ghosted.Add(new GhostedRenderer
             {
@@ -169,6 +165,50 @@ public class PlayerVisibility : MonoBehaviour
             // se ve mal: la sombra es del modelo entero, opaca.
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         }
+    }
+
+    // La copia fantasma de un material, SIEMPRE sobre el shader Lit de URP.
+    //
+    // POR QUÉ SE CAMBIA EL SHADER Y NO SE TOCA EL ORIGINAL: porque no todos saben ser
+    // transparentes. El cuerpo del personaje usa un material del pack de Kevin Iglesias
+    // con un shader HEREDADO de Unity (no el de URP): no tiene _BaseColor ni _Surface, y
+    // bajarle el alfa a su _Color no hace absolutamente nada. Por eso en la primera
+    // versión solo se volvían fantasma las armas —esas sí traen materiales de URP— y el
+    // cuerpo se quedaba opaco.
+    //
+    // Pasando la copia a URP/Lit el resultado es el mismo para cualquier material de
+    // origen, venga del pack que venga. Se le lleva la textura y el color, que es lo que
+    // hace reconocible al personaje; el resto (normales, brillos) no se extraña con el
+    // modelo al 35%.
+    private Material BuildGhostMaterial(Material source)
+    {
+        Shader lit = Shader.Find("Universal Render Pipeline/Lit");
+
+        // Sin ese shader a mano (no debería pasar en este proyecto, pero una build puede
+        // dejarlo afuera si nada lo usa), se hace lo que se pueda con el original.
+        if (lit == null)
+        {
+            Material fallback = new Material(source);
+            MakeTransparent(fallback, GhostAlpha);
+            return fallback;
+        }
+
+        Material ghost = new Material(lit);
+
+        Texture tex = null;
+        if      (source.HasProperty("_BaseMap")) tex = source.GetTexture("_BaseMap");
+        else if (source.HasProperty("_MainTex")) tex = source.GetTexture("_MainTex");
+        if (tex != null) ghost.SetTexture("_BaseMap", tex);
+
+        Color tint = Color.white;
+        if      (source.HasProperty("_BaseColor")) tint = source.GetColor("_BaseColor");
+        else if (source.HasProperty("_Color"))     tint = source.GetColor("_Color");
+
+        tint.a = GhostAlpha;
+        ghost.SetColor("_BaseColor", tint);
+
+        MakeTransparent(ghost, GhostAlpha);
+        return ghost;
     }
 
     // Pasa un material de URP a transparente. No alcanza con bajarle el alfa al color:
@@ -189,9 +229,13 @@ public class PlayerVisibility : MonoBehaviour
         SetIfPresent(mat, "_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
         SetIfPresent(mat, "_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
 
-        mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+        mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");   // URP
+        mat.EnableKeyword("_ALPHABLEND_ON");              // shaders heredados de Unity
         mat.DisableKeyword("_ALPHATEST_ON");
         mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+
+        // El "Rendering Mode" de los shaders viejos. 3 = Transparent.
+        SetIfPresent(mat, "_Mode", 3f);
 
         mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
 

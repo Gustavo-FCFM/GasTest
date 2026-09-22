@@ -1074,6 +1074,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b8a557ae84378ab4b8b920bec03c4592, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  GhostAlpha: 0.3
+  GhostForAllies: 0
 --- !u!114 &1298740202973777526
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1148,6 +1150,8 @@ MonoBehaviour:
   MaxUp: 50
   MaxDown: 40
   Smooth: 0.08
+  SendRate: 15
+  MinDeltaToSend: 0.75
 --- !u!1001 &7943474111240307568
 PrefabInstance:
   m_ObjectHideFlags: 0

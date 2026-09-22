@@ -809,6 +809,12 @@ equipo sepa de un vistazo que el enemigo no te ve, y vale la pena probarlo.
 Solo se vuelven fantasma las MALLAS. Las partículas y las estelas quedan como están:
 sus materiales son de efecto y convertirlos a transparente los rompe.
 
+**El material fantasma se arma sobre URP/Lit**, no sobre el original. El cuerpo del
+personaje usa un material del pack de Kevin Iglesias con un shader HEREDADO de Unity: no
+tiene `_BaseColor` ni `_Surface`, y bajarle el alfa no hace nada. En la primera versión
+eso hacía que solo las armas se volvieran fantasma. Copiando la textura y el color sobre
+URP/Lit funciona igual venga del pack que venga.
+
 - [ ] Probarlo con el Asesino, y de paso que al salir de invisible el modelo vuelva
       exactamente como estaba (incluida la sombra).
 
