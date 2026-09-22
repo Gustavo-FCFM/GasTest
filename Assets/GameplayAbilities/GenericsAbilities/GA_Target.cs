@@ -130,6 +130,10 @@ public class GA_Target : GameplayAbility
     // La búsqueda excluye al lanzador a propósito, aunque después pueda caer sobre él:
     // si se incluyera, apuntar al vacío te elegiría a vos mismo por ser el más
     // "centrado", y nunca alcanzarías al aliado que tenés un poco al costado.
+    // Sin objetivo, el dueño no anticipa la animación: el servidor va a descartar la
+    // activación igual y el gesto quedaría en el vacío.
+    public override bool CanPredictActivation() => ResolveTarget() != null;
+
     private AbilitySystemComponent ResolveTarget()
     {
         ETargetAffiliation side = Targets == ETargetSide.Enemies

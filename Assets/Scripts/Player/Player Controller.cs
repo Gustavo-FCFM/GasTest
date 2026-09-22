@@ -1116,7 +1116,11 @@ public class PlayerController : NetworkBehaviour
                 // SetTrigger se dispararía DOS veces sobre el mismo Animator; el
                 // segundo trigger queda buffeado y reproduce el ataque una
                 // SEGUNDA vez solo, sin haber presionado nada.
-                if (!IsServerInitialized)
+                //
+                // Y solo si la habilidad dice que tiene sentido: el Golpe mortal del
+                // Pícaro sin nadie a tiro no hace nada, así que anticipar su animación
+                // sería hacer el gesto en el vacío (ver CanPredictActivation).
+                if (!IsServerInitialized && ability.CanPredictActivation())
                     PlayAnimation(ability);
                 RequestAbility(slot);
             }

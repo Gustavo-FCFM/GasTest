@@ -866,12 +866,24 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         // no pega y su combo no sigue. Ver GameplayAbility.IsInterruptible.
         if (inputSlot != EAbilityInput.PrimaryAttack) _asc.CancelInterruptibleAbilities();
 
+        ability.CommittedThisActivation = false;
         ability.Activate();
 
         // Una habilidad de MANTENER no anima con un clip one-shot sino con un estado
         // sostenido: su Activate() ya mandó ServerBroadcastHoldAnimation. Mandar acá
         // además el clip suelto pisaría ese estado apenas se levanta.
         if (ability is IHoldAbility) return;
+
+        // Un combo manda la animación de CADA paso por su cuenta. La del padre llegaría
+        // justo después de la del primer paso y la pisaría: en la pantalla de los demás
+        // el primer golpe no se veía, solo el segundo.
+        if (ability.BroadcastsOwnAnimation) return;
+
+        // La habilidad se plantó sola: entró, vio que no había nada que hacer y salió
+        // sin comprometer costo ni cooldown (el Golpe mortal del Pícaro sin nadie a
+        // tiro es el caso típico). Entonces tampoco se anima — animar algo que no pasó
+        // le miente al que está mirando, y encima delata la posición del que falló.
+        if (!ability.CommittedThisActivation) return;
 
         // De qué habilidad sale la animación: normalmente ella misma, pero las
         // envoltorio (ataque que cambia según un tag) delegan en su variante — y hay

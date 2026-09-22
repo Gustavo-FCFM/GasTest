@@ -339,6 +339,26 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // Se puede resolver en el dueño porque los tags se sincronizan.
     public virtual GameplayAbility ResolveAnimationSource() => this;
 
+    // ¿Vale la pena que el dueño ANTICIPE la animación, antes de que el servidor
+    // conteste? Por defecto sí. Las de objetivo único dicen que no cuando no hay nadie
+    // a tiro: el servidor va a descartar la activación igual, y anticiparla hace que el
+    // personaje haga el gesto en el vacío. Se resuelve en el dueño sin problema — la
+    // búsqueda es física y tags, las dos cosas están de su lado.
+    public virtual bool CanPredictActivation() => true;
+
+    // True si esta habilidad se encarga ELLA de replicar su animación a los
+    // observadores, y por lo tanto el servidor no tiene que mandar la suya encima.
+    // La usa un combo: cada paso manda la propia (ver GA_ComboSequence). Sin esto, la
+    // animación del combo padre llegaba justo después de la del primer paso y la
+    // pisaba — en la pantalla de los demás el primer golpe no se veía, solo el segundo.
+    public virtual bool BroadcastsOwnAnimation => false;
+
+    // True si ESTA activación llegó a CommitAbility, o sea si de verdad se ejecutó.
+    // Una habilidad que se planta sola —el Golpe mortal del Pícaro sin nadie a tiro—
+    // sale de Activate() sin haber comprometido nada, y entonces tampoco tiene que
+    // animarse: la reinicia ServerActivateAbility antes de cada Activate().
+    [System.NonSerialized] public bool CommittedThisActivation;
+
     // Para no repetir el aviso de "CooldownEffect sin tag" en cada activación.
     [System.NonSerialized] private bool _warnedNoCooldownTag;
 
@@ -431,6 +451,8 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     protected void CommitAbility()
     {
         if (OwnerASC == null) return;
+
+        CommittedThisActivation = true;
 
         // Gasta una carga y arranca la recarga. Con MaxCharges <= 1 no hace nada:
         // la habilidad se comporta como siempre (cooldown en cada uso).

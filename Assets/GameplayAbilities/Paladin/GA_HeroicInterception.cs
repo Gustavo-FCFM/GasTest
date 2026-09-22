@@ -133,6 +133,10 @@ public class GA_HeroicInterception : GameplayAbility
     // Se excluye a uno mismo a propósito: interceptarte a vos mismo no significa nada
     // (IsAllyOf con includeSelf daría true y el Paladín podría "saltar" a su propio
     // frente, gastando una carga por nada).
+    // Sin aliado, el dueño no anticipa la animación: el servidor va a descartar la
+    // activación igual y el gesto quedaría en el vacío.
+    public override bool CanPredictActivation() => FindAlly() != null;
+
     private AbilitySystemComponent FindAlly()
         => FindBestTargetInAim(MaxRange, SelectionAngle, ETargetAffiliation.Allies,
                                includeSelf: false, allowDead: AllowDeadTargets);

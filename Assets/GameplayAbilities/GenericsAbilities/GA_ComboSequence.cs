@@ -90,6 +90,11 @@ public class GA_ComboSequence : GameplayAbility
 
     // Valida, cobra costo/cooldown, y arranca la corutina que ejecuta
     // los pasos del combo uno por uno.
+    // Cada paso replica su propia animación (ver RunComboRoutine), así que el servidor
+    // NO tiene que mandar además la del combo padre: llegaba un frame después de la del
+    // primer paso y la pisaba, y en la pantalla de los demás el primer golpe no se veía.
+    public override bool BroadcastsOwnAnimation => true;
+
     public override void Activate()
     {
         if (!IsServer) return;

@@ -545,7 +545,7 @@ en uno se ve quebrado), `MaxUp` 50° / `MaxDown` 40°, `Smooth` 0.08 s, y `SendR
 
 No se aplica con el personaje muerto ni aturdido.
 
-### El NetworkAnimator estaba inerte y la locomoción no viajaba — ARREGLADO, falta probarlo
+### El NetworkAnimator estaba inerte y la locomoción no viajaba — ARREGLADO Y PROBADO ✅
 
 Confirmado con dos ventanas el 22 de septiembre: los demás jugadores **se deslizaban en
 idle** en vez de caminar. Las animaciones de habilidad, golpe, stun y muerte sí se veían
@@ -576,10 +576,38 @@ ajenas, así que los ataques de los demás se veían siempre a velocidad 1, igno
 buffs. Eso no necesita red —el atributo ya está sincronizado— y ahora cada copia lo lee
 de su propio ASC.
 
-- [ ] Probarlo con dos ventanas: que el otro camine, corra, salte y caiga bien. Y con un
-      bot, que es el otro camino (ahí manda el servidor, no un dueño).
+- [x] Probado con dos ventanas: ahora caminan bien.
 - [ ] Si querés, sacar el `NetworkAnimator` del prefab del jugador: no lo usa nadie y ya
       nos costó un día. Dejarlo tampoco hace daño — está inerte.
+
+### Dos animaciones que mentían, las dos por la misma línea — ARREGLADO, falta probarlo
+
+Salieron de probar el Pícaro entre dos ventanas:
+
+1. **El primer golpe del combo no se veía en la pantalla del otro**, solo el segundo.
+2. **El Golpe mortal (Q) hacía su animación apuntando a la nada**, sin hacer nada.
+
+Las dos venían de que `ServerActivateAbility` mandaba la animación de la habilidad a
+los observadores **siempre**, pasara lo que pasara dentro de `Activate()`:
+
+- En un combo, cada paso ya manda la suya. La del padre llegaba un frame después de la
+  del primer paso y la pisaba. Ahora un combo dice `BroadcastsOwnAnimation` y el
+  servidor no manda nada encima.
+- El Golpe mortal sin nadie a tiro sale de `Activate()` sin comprometer cooldown ni
+  costo — pero igual se mandaba la animación. Ahora toda habilidad marca
+  `CommittedThisActivation` al comprometerse, y sin eso no se anima: animar algo que no
+  pasó le miente al que mira y encima delata la posición del que falló.
+
+Y del lado del DUEÑO había una segunda fuente, aparte: el cliente remoto **anticipa** la
+animación al apretar, antes de que el servidor conteste. Ahora pregunta primero
+(`CanPredictActivation`), y las de objetivo único contestan que no cuando no hay nadie a
+tiro. Quedaron cubiertas las cuatro: Golpe mortal, Intercepción heroica, las de
+`GA_Target` y Enemigo jurado (esa ya lo hacía por su `CanActivate`).
+
+- [ ] Probar el combo del Pícaro entre dos ventanas: que se vean los dos golpes.
+- [ ] Probar la Q del Pícaro apuntando a la nada: no tiene que animar nada, ni en tu
+      pantalla ni en la del otro. Y apuntando a alguien, igual que siempre.
+- [ ] De paso, la Intercepción heroica del Paladín sin aliado a la vista.
 
 ### Sensación del ataque básico — HECHO Y PROBADO ✅
 

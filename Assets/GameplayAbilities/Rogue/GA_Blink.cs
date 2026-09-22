@@ -100,6 +100,11 @@ public class GA_Blink : GameplayAbility
     private AbilitySystemComponent FindTarget()
         => FindBestTargetInAim(MaxRange, SelectionAngle, ETargetAffiliation.Enemies);
 
+    // Sin nadie a tiro, el dueño no anticipa nada: el servidor va a descartar la
+    // activación igual (Activate() sale sin comprometer cooldown ni costo), y hacer el
+    // gesto en el vacío se ve como si la habilidad se hubiera gastado.
+    public override bool CanPredictActivation() => FindTarget() != null;
+
     // Instancia ImpactVFX en el punto de impacto. La llama cada peer con su
     // propia copia (ver NetworkAbilitySystemComponent.ServerPlayAbilityVFX).
     public override void PlayImpactVFX(Vector3 position)
