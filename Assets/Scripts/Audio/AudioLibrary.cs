@@ -41,6 +41,10 @@ public class AudioLibrary : ScriptableObject
     public SfxCue Death;
     public SfxCue LevelUp;
 
+    [Tooltip("Recoger un botiquín del mapa. Se asigna en cada HealthPack (o acá, si se quiere " +
+             "uno solo para todos: el componente lo copia si el suyo está vacío).")]
+    public SfxCue HealthPack;
+
     [Header("Partida")]
     public SfxCue MatchStarted;
     public SfxCue ObjectiveSpawned;

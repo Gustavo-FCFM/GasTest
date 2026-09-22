@@ -225,6 +225,40 @@ No hay nada que rescatar del prefab: las tres clases que guardaba
 
 # 3. Balance pendiente (decisiones tuyas)
 
+## Botiquines del mapa — CÓDIGO LISTO, falta instalarlos y jugarlos
+
+Los de Overwatch / Marvel Rivals: una cruz verde que flota, te da **75 de vida** al
+pasarle por encima y desaparece 20 segundos, con un disco en el piso que se llena como
+una gráfica de pastel mientras vuelve. Existen para que un tanque o un DPS se recuperen
+sin caminar hasta la base, y para dar puntos del mapa por los que vale la pena pelear.
+
+`GameMode/HealthPack.cs` y `HealthPackVisual.cs` (en `GameMode/`, no en `Mercenaries/`:
+no saben nada de equipos ni de objetivo, sirven a cualquier modo).
+
+**Por la red viaja un solo número**: el tick en que vuelve a estar listo. De ahí sale
+todo lo demás en cada cliente —si mostrar la cruz o la cuenta regresiva— sin más
+tráfico. El servidor es el único que cura.
+
+Para instalarlos:
+
+- [ ] **`Mercenarios ▸ Instalar botiquines`** con la arena abierta. Pone 9: seis en un
+      anillo alrededor de la meseta y tres más afuera, sobre los carriles. Cada uno se
+      apoya en el piso con un rayo y se corrige al NavMesh; los que caen en una sala
+      segura se saltean.
+- [ ] **Moverlos a mano.** Son un punto de partida: el buen sitio para un botiquín se
+      descubre jugando (detrás de una cobertura, en el desvío de un carril), no
+      calculando ángulos.
+
+Perillas por botiquín: `HealAmount` (75), `RespawnSeconds` (20), `PickupRadius` (1.6),
+`OnlyIfHurt`, `Tint`, y `CrossVisual` si querés un modelo en vez de la cruz de barras
+que se arma por código. El sonido sale de `AudioLibrary.HealthPack` salvo que el
+botiquín traiga el suyo.
+
+Qué mirar al probar: que 75 sea la cantidad justa (un tercio de un tanque, casi toda la
+vida de un pícaro), y que 20 segundos no los vuelva un chorro infinito de vida en la
+pelea del centro. Si el centro se vuelve inmortal, lo primero que subiría es el
+respawn, no lo que curan.
+
 ## Armadura y ritmo de ataque — CARGADO Y PROBADO (21 de septiembre)
 
 El sistema de números es D&D con una variable más: el **tiempo**. Cada clase se define por
