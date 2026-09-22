@@ -787,7 +787,7 @@ restaurarlo (ver la sección 2) o armar el segundo mapa a mano.
 
 ---
 
-### Los tiros de cerca salían torcidos — ARREGLADO, falta probarlo
+### Los tiros de cerca salían torcidos — ARREGLADO Y PROBADO ✅
 
 Lanzando el hacha o disparando a algo que tenías pegado, el proyectil no salía de
 frente: se iba al costado o para arriba, con un ángulo raro.
@@ -814,8 +814,7 @@ que el propio personaje.
 Ese segundo arreglo es de `GetAimPoint`, así que vale para TODO lo que use la mira:
 girar el cuerpo, las áreas en el piso, el dash, las de objetivo único.
 
-- [ ] Probar el hacha del Bárbaro a quemarropa, y a media distancia para confirmar que de
-      lejos no cambió nada.
+- [x] Probado: los tiros salen derechos.
 - [ ] La pistola del Pirata (usa el mismo arreglo) y las dagas del Pícaro.
 - [ ] Con un compañero parado justo detrás tuyo, apuntar y lanzar. Ese era el caso del
       tiro que salía para atrás.
