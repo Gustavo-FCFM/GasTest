@@ -42,10 +42,16 @@ public static class MercHealthPackSetup
             return;
         }
 
-        if (Object.FindFirstObjectByType<HealthPack>(FindObjectsInactive.Include) != null)
+        // Si ya hay botiquines no se ponen más, pero igual se les arregla el SceneId
+        // (ver AssignSceneIds): correr esto dos veces es el arreglo, no un error.
+        bool alreadyThere = Object.FindFirstObjectByType<HealthPack>(FindObjectsInactive.Include) != null;
+        if (alreadyThere)
         {
-            Debug.Log("[Botiquines] Ya hay botiquines en la escena. Si querés rehacerlos, borrá el " +
-                      "objeto 'HealthPacks' y volvé a correr esto.");
+            AssignSceneIds(scene);
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+            Debug.Log("[Botiquines] Ya había botiquines: no se agregaron más, y se les revisó el " +
+                      "identificador de red. Para rehacerlos, borrá el objeto 'HealthPacks' y volvé a correr esto.");
             return;
         }
 
@@ -63,11 +69,49 @@ public static class MercHealthPackSetup
         // de adentro (y con las tres bases, que están cada 120°).
         placed += PlaceRing(parent, center, arenaRadius * OuterRadius, OuterCount, 60f);
 
+        // Sin esto solo aparece UNO en la partida: ver AssignSceneIds.
+        AssignSceneIds(scene);
+
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
 
         Debug.Log($"[Botiquines] {placed} botiquines puestos y escena guardada. Movelos a mano donde " +
                   "tengan sentido: el buen sitio se descubre jugando.");
+    }
+
+    // Le da a cada NetworkObject de la escena su identificador de escena (SceneId).
+    //
+    // POR QUÉ HACE FALTA: FishNet se lo asigna a un NetworkObject cuando el editor lo
+    // valida uno por uno. Creando nueve de un saque por código, ocho quedaron con
+    // SceneId 0 — y un NetworkObject sin SceneId no es un objeto de escena para FishNet:
+    // no se spawnea, así que en la partida aparecía UN solo botiquín.
+    //
+    // El método que lo arregla es interno de FishNet (el mismo que corre su ventana
+    // Tools ▸ Fish-Networking ▸ Utility ▸ Reserialize NetworkObjects), así que se lo
+    // llama por reflexión. Si algún día cambia de nombre, esto avisa y el arreglo
+    // manual es abrir esa ventana.
+    private static void AssignSceneIds(Scene scene)
+    {
+        System.Reflection.MethodInfo method = typeof(NetworkObject).GetMethod(
+            "CreateSceneId",
+            System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic,
+            null,
+            new[] { typeof(Scene), typeof(bool), typeof(int).MakeByRefType() },
+            null);
+
+        if (method == null)
+        {
+            Debug.LogWarning("[Botiquines] No encontré el método de FishNet que asigna los SceneId. " +
+                             "Corré a mano Tools ▸ Fish-Networking ▸ Utility ▸ Reserialize NetworkObjects, " +
+                             "o solo aparecerá un botiquín en la partida.");
+            return;
+        }
+
+        object[] args = { scene, false, 0 };
+        method.Invoke(null, args);
+        int changed = (int)args[2];
+
+        if (changed > 0) Debug.Log($"[Botiquines] {changed} objetos de red recibieron su identificador de escena.");
     }
 
     private static int PlaceRing(Transform parent, Vector3 center, float radius, int count, float offsetDegrees)

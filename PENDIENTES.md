@@ -241,10 +241,15 @@ tráfico. El servidor es el único que cura.
 
 Para instalarlos:
 
-- [ ] **`Mercenarios ▸ Instalar botiquines`** con la arena abierta. Pone 9: seis en un
+- [x] **`Mercenarios ▸ Instalar botiquines`** con la arena abierta. Pone 9: seis en un
       anillo alrededor de la meseta y tres más afuera, sobre los carriles. Cada uno se
       apoya en el piso con un rayo y se corrige al NavMesh; los que caen en una sala
       segura se saltean.
+- [ ] **Volver a correr el mismo ítem del menú** (23 de septiembre). La primera vez
+      aparecía un solo botiquín: crear nueve NetworkObject de un saque por código dejó a
+      ocho con `SceneId 0`, y para FishNet un NetworkObject sin SceneId no es un objeto de
+      escena — no se spawnea. Ahora la herramienta se lo asigna a todos (y correrla de
+      nuevo es justamente el arreglo, no un error).
 - [ ] **Moverlos a mano.** Son un punto de partida: el buen sitio para un botiquín se
       descubre jugando (detrás de una cobertura, en el desvío de un carril), no
       calculando ángulos.
