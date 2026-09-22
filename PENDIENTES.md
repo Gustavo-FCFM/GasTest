@@ -620,7 +620,7 @@ Ahora los tres (`LobbyManager`, `NetworkGameManager`, `MercenariesGameMode`) rei
 su sesión en `OnStartServer`. **Si agregás un manager de escena con estado de partida,
 que también lo limpie ahí** — está como regla en `CLAUDE.md`.
 
-### Los botones que se muestran siguen al control elegido — LISTO, falta probarlo
+### Los botones que se muestran siguen al control elegido — HECHO Y PROBADO ✅
 
 En Ajustes, arriba de todo: **Controles ▸ ¿Qué estás usando?** con *Teclado y mouse*,
 *Control de Xbox* y *Control de PlayStation*. Lo que se elija ahí decide cada botón que
@@ -641,8 +641,6 @@ apoyás la mano en el teclado sin querer.
 Todo sale de **una sola tabla**, `UI/InputGlyphs.cs`. Si cambiás un binding en
 `InputSystem_Actions`, ese archivo es el único que hay que tocar.
 
-- [ ] Probarlo: cambiar el esquema con el HUD en pantalla (las etiquetas se reescriben
-      solas, sin cerrar el panel) y subir de nivel para ver el aviso.
 
 **Los símbolos de PlayStation van como texto** (`TRI`, `CIR`, `X`) y no como △ ○ ✕: la
 fuente TMP del proyecto no los tiene y saldrían como cuadraditos, el mismo problema que
