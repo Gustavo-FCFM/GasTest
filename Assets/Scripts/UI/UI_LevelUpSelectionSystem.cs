@@ -107,11 +107,16 @@ public class LevelUpSelectionSystem : MonoBehaviour
     {
         if (optionsText == null || _subs == null) return;
 
+        // El número entre corchetes es la TECLA que elige esa subclase. Con un control
+        // no hay tecla, así que no se muestra: ahí se navega y se confirma.
+        bool showNumbers = InputGlyphs.ShowKeyboardHints;
+
         string text = "¡NIVEL MÁXIMO!\n";
         for (int i = 0; i < _subs.Count; i++)
         {
             string marker = (i == _selectedIndex) ? "> " : "   ";
-            text += $"{marker}[{i + 1}] {_subs[i].ClassName}\n";
+            text += showNumbers ? $"{marker}[{i + 1}] {_subs[i].ClassName}\n"
+                                : $"{marker}{_subs[i].ClassName}\n";
         }
         optionsText.text = text;
     }

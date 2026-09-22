@@ -113,15 +113,16 @@ public class UI_MatchAnnouncer : MonoBehaviour
                 // El nivel de los OTROS equipos ya se ve en el marcador; no lo gritamos.
                 if (team != MercUIFactory.LocalTeam()) return "";
 
-                // Al llegar al tope se agrega la tecla: es el unico momento en que el
+                // Al llegar al tope se agrega el boton: es el unico momento en que el
                 // jugador PUEDE hacer algo con el nivel, y si no se lo decimos acá no se
                 // entera — el menu ya no se abre solo, justamente para no plantarlo en
-                // medio de una pelea.
+                // medio de una pelea. Cuál botón nombrar lo decide InputGlyphs, según lo
+                // que el jugador haya elegido en Ajustes.
                 int maxLevel = MercenariesGameMode.Instance != null
                     ? MercenariesGameMode.Instance.MaxTeamLevel : 0;
 
                 return (maxLevel > 0 && extra >= maxLevel)
-                    ? $"¡TU EQUIPO SUBIÓ A NIVEL {extra}! — Presiona V para elegir una Subclase"
+                    ? $"¡TU EQUIPO SUBIÓ A NIVEL {extra}! — Presiona {InputGlyphs.Subclass} para elegir una Subclase"
                     : $"¡TU EQUIPO SUBIÓ A NIVEL {extra}!";
 
             case EMatchAnnouncement.MatchEnded:

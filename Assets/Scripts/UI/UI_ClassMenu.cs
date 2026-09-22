@@ -326,7 +326,7 @@ public class UI_ClassMenu : MonoBehaviour
         if (!damaged || !CloseOnDamage) return;
 
         CloseMenu();
-        Announce("Te pegaron: la elección se canceló. Volvé a tu base y apretá V",
+        Announce($"Te pegaron: la elección se canceló. Volvé a tu base y apretá {InputGlyphs.Subclass}",
                  new Color(1f, 0.4f, 0.3f), 26f);
     }
 

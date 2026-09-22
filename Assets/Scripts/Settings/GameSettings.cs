@@ -16,6 +16,8 @@ using UnityEngine;
 //     quedan guardados para el sistema de sonido (3º del plan): cuando exista, lee
 //     MusicVolume / SfxVolume y se suscribe a OnChanged.
 //   · Pantalla completa, resolución, calidad y VSync se aplican solos en Apply().
+//   · InputScheme lo lee InputGlyphs, y de ahí sale cada botón que se dibuja en
+//     pantalla (el HUD de habilidades, los avisos de subclase).
 //
 // QUIÉN LOS ESCRIBE: UI_SettingsPanel, y nadie más. Cada cambio se aplica al momento
 // (para verlo mientras movés el slider) y se guarda al cerrar el panel.
@@ -34,6 +36,10 @@ public static class GameSettings
     public static float MasterVolume { get { Load(); return _masterVolume; } set => Set(ref _masterVolume, Mathf.Clamp01(value)); }
     public static float MusicVolume  { get { Load(); return _musicVolume; }  set => Set(ref _musicVolume,  Mathf.Clamp01(value)); }
     public static float SfxVolume    { get { Load(); return _sfxVolume; }    set => Set(ref _sfxVolume,    Mathf.Clamp01(value)); }
+
+    // Qué está usando el jugador: decide los botones que se DIBUJAN (Q / RB / R1), no
+    // los que se escuchan. Ver InputGlyphs.
+    public static EInputScheme InputScheme { get { Load(); return _inputScheme; } set => Set(ref _inputScheme, value); }
 
     public static FullScreenMode ScreenMode { get { Load(); return _screenMode; } set => Set(ref _screenMode, value); }
 
@@ -66,6 +72,7 @@ public static class GameSettings
     private static int  _resolutionIndex = -1;
     private static int  _qualityLevel = -1;
     private static bool _vsync = true;
+    private static EInputScheme _inputScheme = EInputScheme.KeyboardMouse;
 
     // Se llama solo la primera vez que alguien pregunta algo. Idempotente.
     public static void Load()
@@ -82,6 +89,7 @@ public static class GameSettings
         _resolutionIndex  = PlayerPrefs.GetInt  (KeyPrefix + "Resolution", -1);
         _qualityLevel     = PlayerPrefs.GetInt  (KeyPrefix + "Quality", QualitySettings.GetQualityLevel());
         _vsync            = PlayerPrefs.GetInt  (KeyPrefix + "VSync", QualitySettings.vSyncCount > 0 ? 1 : 0) == 1;
+        _inputScheme      = (EInputScheme)PlayerPrefs.GetInt(KeyPrefix + "InputScheme", (int)EInputScheme.KeyboardMouse);
 
         Apply();
     }
@@ -97,6 +105,7 @@ public static class GameSettings
         PlayerPrefs.SetInt  (KeyPrefix + "Resolution", _resolutionIndex);
         PlayerPrefs.SetInt  (KeyPrefix + "Quality", _qualityLevel);
         PlayerPrefs.SetInt  (KeyPrefix + "VSync", _vsync ? 1 : 0);
+        PlayerPrefs.SetInt  (KeyPrefix + "InputScheme", (int)_inputScheme);
         PlayerPrefs.Save();
     }
 
@@ -112,6 +121,7 @@ public static class GameSettings
         _resolutionIndex  = -1;
         _qualityLevel     = QualitySettings.names.Length - 1;
         _vsync            = true;
+        _inputScheme      = EInputScheme.KeyboardMouse;
 
         Apply();
         OnChanged?.Invoke();

@@ -35,8 +35,9 @@ public class UI_UltimateSlot : MonoBehaviour
         ownerNetASC = netAsc;
         slotInput = slot;
 
-        // Etiqueta de la tecla (mismo mapeo que UI_AbilitySlot; para la ultimate = "R").
-        if (keyText != null) keyText.text = UI_AbilitySlot.GetKeyLabel(slot);
+        // Etiqueta del botón (mismo mapeo que UI_AbilitySlot; para la ultimate, "R" con
+        // teclado, "Y" con Xbox, "TRI" con PlayStation).
+        RefreshKeyLabel();
 
         if (assignedAbility != null)
         {
@@ -91,4 +92,14 @@ public class UI_UltimateSlot : MonoBehaviour
             if(readyEffects) readyEffects.SetActive(true);
         }
     }
+
+    private void RefreshKeyLabel()
+    {
+        if (keyText != null) keyText.text = UI_AbilitySlot.GetKeyLabel(slotInput);
+    }
+
+    // Igual que en UI_AbilitySlot: cambiar de esquema en Ajustes reescribe la etiqueta
+    // al instante, sin esperar a que el slot se vuelva a armar.
+    private void OnEnable()  { GameSettings.OnChanged += RefreshKeyLabel; RefreshKeyLabel(); }
+    private void OnDisable() { GameSettings.OnChanged -= RefreshKeyLabel; }
 }

@@ -79,8 +79,8 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
 | `Assets/Scripts/GAS/` | El motor de habilidades: ASC, efectos, habilidades base, atributos, tags, registros. `Entities/` son los objetos que las habilidades crean (proyectiles, tótems, barreras). |
 | `Assets/Scripts/Network/` | Conexión y red: `NetworkAbilitySystemComponent`, `NetworkGameManager`, `ConnectionHUD` y `LobbyManager` (la sala de espera). |
 | `Assets/Scripts/Player/` | El jugador y sus cámaras: `PlayerController`, input, animación, `RagdollController`, `UpperBodyAim`, `ThirdPersonOrbitCam`, `SpectatorCamera`, `MenuOrbitCamera`. |
-| `Assets/Scripts/UI/` | Toda la UI que no es de un modo: HUD de clase, menú de clases, sala (`UI_LobbyPanel`), menú principal, ajustes, `MercUIFactory`, y `UICursor` — el único dueño del cursor y del modo de input. |
-| `Assets/Scripts/Settings/` | `GameSettings` (PlayerPrefs). |
+| `Assets/Scripts/UI/` | Toda la UI que no es de un modo: HUD de clase, menú de clases, sala (`UI_LobbyPanel`), menú principal, ajustes, `MercUIFactory`, `InputGlyphs` (la ÚNICA tabla de qué botón se dibuja: Q / RB / R1) y `UICursor` — el único dueño del cursor y del modo de input. |
+| `Assets/Scripts/Settings/` | `GameSettings` (PlayerPrefs), incluido qué control eligió el jugador. |
 | `Assets/Scripts/Audio/` | Sonido: `AudioManager`, `MusicPlayer`, `AudioLibrary` y `SfxCue`. |
 | `Assets/Scripts/GameMode/` | Lo que sirve a CUALQUIER modo: `DeathZone`, `FloatingVisual`, `NPC_Target`, `HealthPack`. |
 | `Assets/Scripts/GameMode/Mercenaries/` | **El modo Mercenarios**, y solo él: el modo, la arena, bases, objetivo, NPCs, bots y su HUD (`UI/`). Ver su `LEEME_ModoMercenarios.md`. Un modo nuevo (FFA) va en su propia carpeta al lado. |

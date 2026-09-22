@@ -196,11 +196,18 @@ Todo vive en `Scripts/Settings/`:
   porque esa cámara la apaga el jugador o la vuela el espectador. El blur es un Depth of
   Field de URP en un Volume global que se prende solo con el menú a la vista; si el
   renderer no tiene post-procesado, no hay blur y el resto anda igual.
-- **`GameSettings`** (estático, PlayerPrefs): sensibilidad del mouse (multiplicador sobre
-  la del prefab), invertir Y, volumen general / música / efectos, modo de pantalla,
-  resolución, calidad y VSync. Se aplica solo; `OnChanged` avisa a quien le importe. El
-  volumen general ya va a `AudioListener.volume`; **música y efectos quedan guardados
-  para el sistema de sonido**, que cuando exista lee `MusicVolume` / `SfxVolume`.
+- **`GameSettings`** (estático, PlayerPrefs): qué control usa el jugador, sensibilidad
+  del mouse (multiplicador sobre la del prefab), invertir Y, volumen general / música /
+  efectos, modo de pantalla, resolución, calidad y VSync. Se aplica solo; `OnChanged`
+  avisa a quien le importe. El volumen general ya va a `AudioListener.volume`; **música
+  y efectos quedan guardados para el sistema de sonido**, que cuando exista lee
+  `MusicVolume` / `SfxVolume`.
+- **`InputGlyphs`** (en `Scripts/UI/`): la respuesta a *"¿Qué estás usando?"* decide cada
+  botón que el juego DIBUJA — los slots del HUD (`Q` / `RB` / `R1`), el aviso de elegir
+  subclase, y si se muestran o no los números `[1] [2] [3]` de las tarjetas (son ayuda
+  de teclado: con control se esconden). **No cambia ningún binding**: el juego sigue
+  escuchando teclado y control a la vez. Es una sola tabla; si cambiás un binding en
+  `InputSystem_Actions`, ese archivo es el único que hay que tocar.
 - **`UI_SettingsPanel`**: el panel de ajustes, dibujado por código.
   `UI_SettingsPanel.GetOrCreate().Open()` desde cualquier lado; si hay uno en la escena
   (para tocarle colores en el Inspector) lo usa, si no lo crea. ESC lo cierra y guarda.

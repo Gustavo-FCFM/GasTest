@@ -620,6 +620,36 @@ Ahora los tres (`LobbyManager`, `NetworkGameManager`, `MercenariesGameMode`) rei
 su sesión en `OnStartServer`. **Si agregás un manager de escena con estado de partida,
 que también lo limpie ahí** — está como regla en `CLAUDE.md`.
 
+### Los botones que se muestran siguen al control elegido — LISTO, falta probarlo
+
+En Ajustes, arriba de todo: **Controles ▸ ¿Qué estás usando?** con *Teclado y mouse*,
+*Control de Xbox* y *Control de PlayStation*. Lo que se elija ahí decide cada botón que
+el juego **dibuja**:
+
+- Los slots del HUD (`Q E R Shift LMB RMB` → `RB LB Y B RT LT` → `R1 L1 TRI CIR R2 L2`).
+- El aviso de subir de nivel: "Presiona **V** / **VIEW** / **CREATE** para elegir una
+  Subclase", y el de "te pegaron, volvé a tu base y apretá …".
+- Los números `[1] [2] [3]` de las tarjetas de clase y de la lista de subclases: son una
+  ayuda de teclado, así que con control **se esconden** (ahí se elige con el stick y el
+  botón de confirmar).
+
+**No cambia ningún binding.** El juego sigue escuchando teclado Y control a la vez, como
+siempre: si ponés "Xbox" y agarrás el teclado, la Q funciona igual, solo que el HUD dice
+RB. Es a propósito — adivinar el dispositivo cada frame hace parpadear el HUD cuando
+apoyás la mano en el teclado sin querer.
+
+Todo sale de **una sola tabla**, `UI/InputGlyphs.cs`. Si cambiás un binding en
+`InputSystem_Actions`, ese archivo es el único que hay que tocar.
+
+- [ ] Probarlo: cambiar el esquema con el HUD en pantalla (las etiquetas se reescriben
+      solas, sin cerrar el panel) y subir de nivel para ver el aviso.
+
+**Los símbolos de PlayStation van como texto** (`TRI`, `CIR`, `X`) y no como △ ○ ✕: la
+fuente TMP del proyecto no los tiene y saldrían como cuadraditos, el mismo problema que
+tuvimos con las flechas ◀ ▶. Si algún día querés los botones dibujados de verdad, se
+hace un *sprite asset* de TMP y se cambia solo esa tabla (TMP los mete en línea con
+`<sprite name="...">`): el resto del juego lo hereda.
+
 ## Paquetes: qué se sacó y qué queda
 
 Se sacaron del `manifest.json` (22 de septiembre): **Vivox** (el error HTTP 400 al dar

@@ -36,16 +36,24 @@ public class UI_ClassCard : MonoBehaviour, ISelectHandler, IDeselectHandler, IPo
         if (ClassIconImage != null) ClassIconImage.sprite = classDef.ClassIcon;
         if (DescriptionText != null) DescriptionText.text = classDef.Description;
 
-        // El número: si hay un NumberText dedicado va ahí (nombre queda limpio);
-        // si no, se antepone al nombre para que igual se vea.
+        // El número es una ayuda DE TECLADO: el 1/2/3 que elige esta tarjeta. Con un
+        // control no hay tecla que mostrar —ahí se elige moviendo el stick y
+        // confirmando— así que se esconde en vez de mentir. Lo decide InputGlyphs
+        // según lo que el jugador eligió en Ajustes.
+        bool showNumber = InputGlyphs.ShowKeyboardHints;
+
+        // Si hay un NumberText dedicado va ahí (el nombre queda limpio); si no, se
+        // antepone al nombre para que igual se vea.
         if (NumberText != null)
         {
-            NumberText.text = number.ToString();
+            NumberText.text = showNumber ? number.ToString() : "";
+            NumberText.gameObject.SetActive(showNumber);
             if (ClassNameText != null) ClassNameText.text = classDef.ClassName;
         }
         else if (ClassNameText != null)
         {
-            ClassNameText.text = $"[{number}]  {classDef.ClassName}";
+            ClassNameText.text = showNumber ? $"[{number}]  {classDef.ClassName}"
+                                            : classDef.ClassName;
         }
     }
 

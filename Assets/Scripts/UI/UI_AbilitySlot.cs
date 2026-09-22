@@ -52,8 +52,9 @@ public class UI_AbilitySlot : MonoBehaviour
             iconImage.enabled = false;
         }
 
-        // Etiqueta de la tecla según el slot (Q, E, Shift, LMB...).
-        if (keyText != null) keyText.text = GetKeyLabel(slot);
+        // Etiqueta del botón según el slot y según lo que el jugador haya elegido en
+        // Ajustes (Q / RB / R1).
+        RefreshKeyLabel();
 
         // Solo tratamos el slot como "con cargas" si la habilidad tiene más de 1
         // (una sola carga = cooldown normal, no mostramos número).
@@ -114,21 +115,18 @@ public class UI_AbilitySlot : MonoBehaviour
         chargesText.text = charges.ToString();
     }
 
-    // Etiqueta de tecla/botón según el slot, alineada con los botones que revisa
-    // PlayerController.HandleAbilityInput (Fire1/Fire2/Action1-3/Fire3). Si
-    // cambiás los bindings en el Input Manager, ajustá estos textos. Público y
-    // estático para que UI_UltimateSlot use el mismo mapeo (una sola fuente).
-    public static string GetKeyLabel(EAbilityInput slot)
+    // Etiqueta de tecla/botón según el slot. La tabla vive en InputGlyphs, que la
+    // resuelve según lo que el jugador eligió en Ajustes. Sigue siendo pública y
+    // estática para que UI_UltimateSlot use el mismo mapeo (una sola fuente).
+    public static string GetKeyLabel(EAbilityInput slot) => InputGlyphs.For(slot);
+
+    private void RefreshKeyLabel()
     {
-        switch (slot)
-        {
-            case EAbilityInput.PrimaryAttack:   return "LMB";
-            case EAbilityInput.SecondaryAttack: return "RMB";
-            case EAbilityInput.Action1:         return "Q";
-            case EAbilityInput.Action2:         return "E";
-            case EAbilityInput.Action3:         return "R";
-            case EAbilityInput.Movement:        return "Shift";
-            default:                            return "";
-        }
+        if (keyText != null) keyText.text = GetKeyLabel(slotInput);
     }
+
+    // Si cambian el esquema de control con el HUD ya armado, las etiquetas se
+    // reescriben solas en vez de quedarse viejas hasta el próximo cambio de clase.
+    private void OnEnable()  { GameSettings.OnChanged += RefreshKeyLabel; RefreshKeyLabel(); }
+    private void OnDisable() { GameSettings.OnChanged -= RefreshKeyLabel; }
 }

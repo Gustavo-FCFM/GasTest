@@ -153,6 +153,15 @@ public class UI_SettingsPanel : MonoBehaviour
 
         float y = -90f;
 
+        // ---- Controles ----
+        // Primero de todo a propósito: es la pregunta que decide qué botones se ven en
+        // el resto del juego, y conviene que sea lo primero que alguien ajuste.
+        Section(ref y, "Controles");
+        CyclerRow(ref y, "¿Qué estás usando?", InputSchemes.Length,
+                  () => Array.IndexOf(InputSchemes, GameSettings.InputScheme),
+                  i => GameSettings.InputScheme = InputSchemes[i],
+                  i => InputGlyphs.SchemeName(InputSchemes[i]));
+
         // ---- Cámara ----
         Section(ref y, "Cámara");
         SliderRow(ref y, "Sensibilidad del mouse",
@@ -208,6 +217,9 @@ public class UI_SettingsPanel : MonoBehaviour
 
         _canvas.gameObject.SetActive(false);
     }
+
+    private static readonly EInputScheme[] InputSchemes =
+        { EInputScheme.KeyboardMouse, EInputScheme.Xbox, EInputScheme.PlayStation };
 
     private static readonly FullScreenMode[] ScreenModes =
         { FullScreenMode.ExclusiveFullScreen, FullScreenMode.FullScreenWindow, FullScreenMode.Windowed };
