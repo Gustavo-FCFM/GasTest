@@ -17,6 +17,10 @@ using FishNet.Managing;
 // así que las builds que les pasás a tus amigos SOLO pueden ser cliente:
 // nadie más puede hostear.
 //
+// SALVO tu propia copia: la MISMA build abierta con "Mercenaries.exe -host" muestra el
+// botón (ver LaunchedAsHost). Sirve para hostear una prueba grande sin el editor
+// encima, y sin repartir una build que cualquiera pueda hostear.
+//
 // IMPORTANTE (para que te lleguen desde internet):
 //   - Misma red/LAN: poné tu IP local (ej: 192.168.x.x) en HostAddress.
 //   - Por internet: tus amigos necesitan tu IP PÚBLICA y vos abrir/redirigir
@@ -37,6 +41,41 @@ public class ConnectionHUD : MonoBehaviour
     [Tooltip("Si está activo, el botón 'Iniciar Host' SOLO aparece dentro del editor de Unity. " +
              "Las builds de tus amigos solo verán el botón de Cliente → solo vos podés ser host.")]
     public bool HostOnlyInEditor = true;
+
+    // ¿Esta build se abrió con el argumento -host?
+    //
+    // PARA QUÉ: para poder hostear desde una BUILD sin aflojarle el candado a todos. La
+    // build que repartís sigue siendo solo-cliente —nadie más ve el botón— y tu copia,
+    // la misma build, la abrís con:
+    //
+    //     Mercenaries.exe -host
+    //
+    // (un acceso directo con el argumento al final del destino alcanza). Así no hace
+    // falta compilar dos builds distintas ni acordarse de destildar nada.
+    //
+    // Se calcula UNA vez: OnGUI corre varias veces por frame y GetCommandLineArgs
+    // aloca un array en cada llamada.
+    private static bool? _launchedAsHost;
+
+    private static bool LaunchedAsHost
+    {
+        get
+        {
+            if (_launchedAsHost.HasValue) return _launchedAsHost.Value;
+
+            bool found = false;
+            string[] args = System.Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (!string.Equals(args[i], "-host", System.StringComparison.OrdinalIgnoreCase)) continue;
+                found = true;
+                break;
+            }
+
+            _launchedAsHost = found;
+            return found;
+        }
+    }
 
     // Texto editable en pantalla (arranca con los valores del inspector).
     private string _addressField;
@@ -185,8 +224,9 @@ public class ConnectionHUD : MonoBehaviour
             _portField = GUILayout.TextField(_portField);
             GUILayout.Space(6);
 
-            // Botón de Host: solo en el editor (salvo que desactives HostOnlyInEditor).
-            bool canHost = !HostOnlyInEditor || Application.isEditor;
+            // Botón de Host: solo en el editor (salvo que desactives HostOnlyInEditor),
+            // o en una build abierta con el argumento -host (ver LaunchedAsHost).
+            bool canHost = !HostOnlyInEditor || Application.isEditor || LaunchedAsHost;
             if (canHost && GUILayout.Button("Iniciar Host (solo yo)", GUILayout.Height(32)))
                 StartHost();
 

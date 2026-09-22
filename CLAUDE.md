@@ -148,8 +148,9 @@ combo) están en `DesignDocuments/GAS_Arquitectura.docx`.
 ## Conexión para jugar con amigos
 
 Túnel UDP de **playit.gg** al puerto **7770** — sin VPN y sin abrir puertos en el router.
-El botón de Host solo aparece dentro del editor (ver `ConnectionHUD.HostOnlyInEditor`),
-así que las builds que se reparten solo pueden ser cliente.
+El botón de Host solo aparece dentro del editor (ver `ConnectionHUD.HostOnlyInEditor`)
+**o en una build abierta con el argumento `-host`** — así una sola build sirve para
+repartir (solo-cliente) y para hostear una prueba grande sin el editor encima.
 
 ---
 

@@ -118,6 +118,38 @@ primero se quedaba dando vueltas por el mapa mientras los demás elegían.
 
 Con `MinPlayersToStart: 1` lo podés probar solo.
 
+## La prueba de 9 jugadores (jueves) — quién hostea
+
+**Hostear desde una build ya se puede**, y sin repartir una build que cualquiera pueda
+hostear: la MISMA build abierta con el argumento `-host` muestra el botón.
+
+```
+Mercenaries.exe -host
+```
+
+(Un acceso directo con ` -host` pegado al final del destino alcanza.) Para todos los
+demás, esa build sigue siendo solo-cliente: el botón no existe. Antes el candado era
+`ConnectionHUD.HostOnlyInEditor`, que solo dejaba hostear dentro del editor.
+
+**De espectador no ocupás lugar.** En la sala, "Espectador" es una fila aparte: no cuenta
+para el cupo de los equipos, no frena el arranque y **no te spawnea personaje** (el
+personaje nace recién al confirmar equipo y clase). Así que 9 jugadores son 3c3c3 exactos
+y vos mirás desde afuera. El botón de **Start lo aprieta el host**, o sea vos, aunque
+seas espectador.
+
+Los controles de la cámara de espectador están en `SpectatorCamera`: WASD para moverse,
+Espacio sube, Ctrl baja, Shift para ir rápido, clic izquierdo/derecho para saltar de
+jugador en jugador, **F** vuelve a la cámara libre, **H** muestra el nombre y la vida de
+quien mirás, **M** el marcador.
+
+- [ ] **Ensayarlo antes del jueves**, aunque sea con dos máquinas: nunca hosteamos desde
+      una build. El código del host es el mismo, pero es la primera vez que corre sin
+      editor, y no es el día de averiguarlo.
+- [ ] Acordate de la IP: los que se conectan necesitan tu dirección de playit.gg
+      (puerto 7770 UDP), no `127.0.0.1`.
+- [ ] Mirá el rendimiento: esa máquina va a llevar el servidor, tu cliente de
+      espectador y la grabación al mismo tiempo.
+
 ## ESC y el recuadro de red
 
 El recuadro de conexión se **minimiza solo** al conectarse (si no, se queda encima de la
