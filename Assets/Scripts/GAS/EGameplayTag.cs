@@ -57,7 +57,7 @@ public enum EGameplayTag
     Passive_Backstab,  // OBSOLETO: el backstab ahora es BackstabDamageModifier (pasiva por prefab). No borrar (corre índices).
 
     // --- ASESINO ---
-    Status_Invisible,        // Invisible para los ENEMIGOS (ver PlayerVisibility)
+    Status_Invisible,        // Invisible para los ENEMIGOS; vos te ves fantasma (ver PlayerVisibility)
     Status_GuaranteedCrit,   // El próximo golpe es crítico sí o sí; se CONSUME al usarlo (ver ResolveOutgoingDamage)
     Passive_FirstStrikeCrit, // OBSOLETO: el crítico mejorado ahora es FirstStrikeCritModifier (pasiva por prefab). No borrar (corre índices).
 

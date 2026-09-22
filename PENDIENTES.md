@@ -787,6 +787,31 @@ restaurarlo (ver la sección 2) o armar el segundo mapa a mano.
 
 ---
 
+### Invisible ahora se NOTA en tu propia pantalla — falta probarlo
+
+Estando invisible (Emboscada sombría del Asesino) tu modelo se ve **fantasma**: pasa a
+semitransparente y deja de proyectar sombra. El ícono del buff en el HUD se pierde en
+medio de una pelea; el propio cuerpo no.
+
+Quién ve qué, todo en `Player/PlayerVisibility.cs` y sin nada nuevo por la red — el tag
+ya viaja, y cada pantalla decide sola según la afiliación:
+
+| Quién mira | Qué ve |
+|---|---|
+| Un enemigo | Nada (Renderers apagados, como siempre) |
+| Vos mismo | Fantasma |
+| Un aliado | Normal, o fantasma si prendés `GhostForAllies` |
+
+Perillas en el prefab del Player: `GhostAlpha` (0.35) y `GhostForAllies` (apagado). Lo
+de los aliados lo dejé apagado porque pediste que se vea para vos; prenderlo hace que tu
+equipo sepa de un vistazo que el enemigo no te ve, y vale la pena probarlo.
+
+Solo se vuelven fantasma las MALLAS. Las partículas y las estelas quedan como están:
+sus materiales son de efecto y convertirlos a transparente los rompe.
+
+- [ ] Probarlo con el Asesino, y de paso que al salir de invisible el modelo vuelva
+      exactamente como estaba (incluida la sombra).
+
 # 5. Animaciones que siguen viéndose raras
 
 No las dejes ahí. En la sesión de septiembre perseguimos cuatro causas distintas y al
