@@ -119,6 +119,14 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
 - **El cursor tiene un solo dueño: `UICursor`.** Ningún menú toca `Cursor.lockState` ni
   `PlayerInputProvider.SetUIMode` por su cuenta — los pide con `UICursor.Request(this)` y
   los suelta con `Release`. Si no, gana el último en cerrarse.
+- **El `NetworkAnimator` del prefab del jugador está INERTE: nada de animación viaja
+  por él.** Su campo Animator quedó vacío y el Animator vive en un hijo (el modelo), así
+  que el `GetComponent` con el que FishNet intenta resolverlo no lo encuentra y el
+  componente se apaga solo, sin warning (lo tiene comentado). **Toda** la animación se
+  manda a mano: las de habilidad, golpe, stun y muerte por las RPC del `NetworkASC`, y
+  caminar/saltar/caer más el `AimPitch` por las RPC de `PlayerController`. Un parámetro
+  nuevo del Animator que tenga que verse en las otras pantallas hay que mandarlo; no
+  alcanza con escribirlo.
 - **Los managers de escena reinician su sesión en `OnStartServer`.** Al parar el servidor
   FishNet destruye lo spawneado pero NO toca el estado de los NetworkObjects de escena
   (`LobbyManager`, `NetworkGameManager`, `MercenariesGameMode`): SyncVars, listas,

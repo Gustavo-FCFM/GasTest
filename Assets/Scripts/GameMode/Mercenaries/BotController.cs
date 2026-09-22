@@ -1101,18 +1101,23 @@ public class BotController : MonoBehaviour
 
     // El Animator del jugador lo maneja su dueño (PlayerController.UpdateAnimations, que
     // arranca con IsOwner). Un bot no tiene dueño, así que sus parámetros los escribe
-    // acá el servidor — y viajan a los clientes por el NetworkAnimator del prefab.
+    // acá el servidor — y de acá viajan a los clientes por BroadcastLocomotion, igual
+    // que los de un jugador (ver "LOCOMOCIÓN EN RED" en PlayerController).
     private void DriveAnimator(Vector3 velocity)
     {
         if (_anim == null) return;
 
         Vector3 flat = new Vector3(velocity.x, 0f, velocity.z);
-        _anim.SetFloat("Speed", flat.magnitude, 0.1f, Time.deltaTime);
+        float speed = flat.magnitude;
+        _anim.SetFloat("Speed", speed, 0.1f, Time.deltaTime);
 
         float max = Mathf.Max(0.1f, ResolveMoveSpeed());
         Vector3 local = transform.InverseTransformDirection(flat) / max;
         _anim.SetFloat("MoveX", local.x, 0.1f, Time.deltaTime);
         _anim.SetFloat("MoveY", local.z, 0.1f, Time.deltaTime);
+
+        // Un bot camina por NavMesh: nunca salta ni cae, así que esos dos van en cero.
+        if (_pc != null) _pc.BroadcastLocomotion(speed, local.x, local.z, false, 0f);
     }
 
     // =========================================================

@@ -536,7 +536,7 @@ igual corriendo, atacando o con el escudo arriba.
 
 **Cómo viaja por la red** (cambió): el dueño manda el ángulo por un RPC no confiable a
 ~15 por segundo (un byte), y los demás lo suavizan. El plan era que viajara gratis en el
-parámetro del Animator, por el `NetworkAnimator` del prefab — **no se puede**: ver abajo.
+parámetro del Animator, por el `NetworkAnimator` del prefab — **está inerte**: ver abajo.
 El parámetro `AimPitch` se sigue escribiendo igual, pero solo para poder mirar el valor
 en la ventana del Animator mientras se prueba.
 
@@ -545,33 +545,41 @@ en uno se ve quebrado), `MaxUp` 50° / `MaxDown` 40°, `Smooth` 0.08 s, y `SendR
 
 No se aplica con el personaje muerto ni aturdido.
 
-### El NetworkAnimator del jugador está INERTE — hay que revisarlo
+### El NetworkAnimator estaba inerte y la locomoción no viajaba — ARREGLADO, falta probarlo
 
-Buscando por dónde mandar el `AimPitch` apareció esto: el `NetworkAnimator` del prefab
-del jugador tiene su campo **Animator vacío**, y el Animator del personaje vive en un
-hijo (el modelo). FishNet, cuando el campo está vacío, prueba con un `GetComponent` en
-**su propio** GameObject: no lo encuentra, se da por vencido y no sincroniza nada — sin
-un solo warning, porque lo tiene comentado en su código.
+Confirmado con dos ventanas el 22 de septiembre: los demás jugadores **se deslizaban en
+idle** en vez de caminar. Las animaciones de habilidad, golpe, stun y muerte sí se veían
+—esas van por las RPC del `NetworkASC`—, pero caminar, correr, saltar y caer no.
 
-Lo más probable es que la referencia se haya perdido al cambiar el modelo del personaje,
-igual que le pasó al `WalkAnimator` del clon del ilusionista.
+La causa: el `NetworkAnimator` del prefab tiene su campo **Animator vacío**, y el
+Animator del personaje vive en un hijo (el modelo). FishNet, con el campo vacío, prueba
+un `GetComponent` en **su propio** GameObject, no lo encuentra y se da por vencido — sin
+un solo warning, porque lo tiene comentado en su código. Y `UpdateAnimations` corre solo
+en el dueño, así que nadie más escribía esos parámetros. Lo más probable es que la
+referencia se haya perdido al cambiar el modelo, igual que el `WalkAnimator` del clon del
+ilusionista.
 
-Qué implica, si es lo que parece: **la locomoción de los demás jugadores no se
-sincroniza**. `UpdateAnimations` corre solo en el dueño, así que en tu pantalla los otros
-se deslizarían en idle en vez de caminar. Las animaciones de habilidades, golpe, stun y
-muerte sí se ven, porque esas van por las RPC del `NetworkASC`.
+**Cómo quedó**: los cinco parámetros de caminar (`Speed`, `MoveX`, `MoveY`, `IsJumping`,
+`VerticalSpeed`) los manda ahora quien manda sobre el personaje —el dueño si es un
+jugador, el servidor si es un bot— por RPC no confiable a 15 por segundo, y solo cuando
+cambian: parado no gasta un paquete. El resto los recibe y los aplica con el mismo
+suavizado que usa el dueño.
 
-- [ ] **Confirmarlo**: dos ventanas, caminar con una y mirar a ese personaje desde la
-      otra. ¿Mueve las piernas?
-- [ ] Si no las mueve: arrastrar el Animator del modelo al campo **Animator** del
-      `NetworkAnimator`, y llenar **`IgnoredParameters`** con los que YA viajan por RPC,
-      para que no se manden dos veces: `AttackTrigger`, `HoldTrigger`,
-      `HoldImpactTrigger`, `HitTrigger`, `ActionID`, `ActionSpeedMult`,
-      `AttackSpeedMult`, `IsHolding`, `IsStunned`, `IsDead`, `AimPitch`. Quedan
-      sincronizados solo los de caminar: `Speed`, `MoveX`, `MoveY`, `IsJumping`,
-      `VerticalSpeed`.
-- [ ] Probar después el combo y el golpe: si alguna animación se dispara dos veces en la
-      copia remota, sobra un parámetro en la lista de ignorados.
+**Por qué no revivimos el NetworkAnimator**, que es literalmente para esto: asignarle el
+Animator prende de golpe la sincronización de TODOS los parámetros, encima de las RPC
+que ya mandan las animaciones de habilidad, golpe, stun y muerte — habría que ir
+marcando a mano cuáles ignorar, y cada parámetro nuevo sería una trampa nueva. Mandar
+cinco floats nosotros es más barato y no toca nada de lo que ya funciona.
+
+**De paso**: la velocidad de ataque (`AttackSpeedMult`) tampoco se aplicaba en las copias
+ajenas, así que los ataques de los demás se veían siempre a velocidad 1, ignorando sus
+buffs. Eso no necesita red —el atributo ya está sincronizado— y ahora cada copia lo lee
+de su propio ASC.
+
+- [ ] Probarlo con dos ventanas: que el otro camine, corra, salte y caiga bien. Y con un
+      bot, que es el otro camino (ahí manda el servidor, no un dueño).
+- [ ] Si querés, sacar el `NetworkAnimator` del prefab del jugador: no lo usa nadie y ya
+      nos costó un día. Dejarlo tampoco hace daño — está inerte.
 
 ### Sensación del ataque básico — HECHO Y PROBADO ✅
 

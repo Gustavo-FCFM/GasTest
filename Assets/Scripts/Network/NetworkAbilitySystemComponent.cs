@@ -889,9 +889,11 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
                                       animSource.ResolveAnimationSpeed());
     }
 
-    // El NetworkAnimator del prefab NO sincroniza los SetTrigger de forma
-    // confiable (los triggers se consumen antes de que pueda muestrearlos —
-    // solo replica floats/bools como Speed/IsJumping, o sea la locomoción).
+    // Las animaciones de este juego NO viajan por el NetworkAnimator del prefab: ese
+    // componente está inerte (su campo Animator quedó vacío y el Animator vive en un
+    // hijo, así que no lo encuentra). Hasta la locomoción se manda a mano — ver
+    // "LOCOMOCIÓN EN RED" en PlayerController. Y los SetTrigger no los sincronizaría
+    // igual ni estando vivo: se consumen antes de que pueda muestrearlos.
     // Por eso la animación de ataque se propaga a los observadores con este
     // ObserversRpc explícito. Al dueño se la salteamos: él ya la disparó por
     // predicción (cliente remoto) o vía Activate() (host). Setea el Animator

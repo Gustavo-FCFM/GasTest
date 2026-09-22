@@ -601,6 +601,10 @@ public class PlayerController : NetworkBehaviour
 
     void Update()
     {
+        // Lo primero, porque corre en las copias que NO son del dueño: son las únicas
+        // que reciben la locomoción en vez de calcularla (ver "LOCOMOCIÓN EN RED").
+        if (!DrivesOwnAnimator) TickRemoteAnimations();
+
         if (!IsOwner) return;
 
         // El input del dueño todavía no está listo (se habilita en OnStartClient).
@@ -1789,6 +1793,116 @@ public class PlayerController : NetworkBehaviour
         float spd = ASC.GetAttributeValue(EAttributeType.AtkSpeed);
         if (spd > 0)
             characterAnimator.SetFloat("AttackSpeedMult", 1f / spd);
+
+        // Y que lo vean los demás (ver "LOCOMOCIÓN EN RED").
+        BroadcastLocomotion(speed, localVel.x, localVel.z, airborne,
+                            _dashActive ? _dashVelocity.y : verticalVelocity);
+    }
+
+    // =========================================================
+    // LOCOMOCIÓN EN RED
+    //
+    // Caminar, correr, saltar y caer: los parámetros del Animator que los dibujan
+    // (Speed, MoveX, MoveY, IsJumping, VerticalSpeed) los escribe UN SOLO peer —
+    // UpdateAnimations en el dueño, BotController en el servidor si es un bot— y desde
+    // acá viajan al resto.
+    //
+    // POR QUÉ NO LO HACE EL NetworkAnimator, que es para esto: el del prefab tiene su
+    // campo Animator VACÍO y el Animator está en un hijo (el modelo), así que su
+    // GetComponent no lo encuentra y el componente queda INERTE. Sin un solo warning:
+    // FishNet lo tiene comentado. Probado el 22 de septiembre de 2026 con dos ventanas —
+    // los demás jugadores se deslizaban en idle en vez de caminar.
+    //
+    // Se podría reflotar asignándole el Animator a mano, pero eso prende de golpe la
+    // sincronización de TODOS los parámetros, encima de las RPC del NetworkASC que ya
+    // mandan las animaciones de habilidad, golpe, stun y muerte. Mandar los cinco de
+    // caminar nosotros es más barato y no toca nada de lo que ya funciona.
+    //
+    // Canal NO CONFIABLE a 15 por segundo, y solo cuando cambia algo: parado no gasta un
+    // paquete, y uno perdido lo corrige el siguiente.
+    // =========================================================
+
+    // ¿Esta copia escribe su propio Animator, o lo recibe? El dueño manda en un jugador;
+    // en un bot (que se spawnea sin dueño) manda el servidor. IsBot solo es true en el
+    // servidor —es [NonSerialized] y lo pone ServerSpawnBot—, así que en un cliente esto
+    // da false para todos menos para el personaje propio, que es justo lo que queremos.
+    private bool DrivesOwnAnimator => IsOwner || (IsServerInitialized && IsBot);
+
+    private const float LocomotionSendRate = 15f;
+
+    private float _nextLocomotionSend;
+    private bool  _locomotionSent;
+    private float _sentSpeed, _sentMoveX, _sentMoveY, _sentVertical;
+    private bool  _sentJumping;
+
+    private float _netSpeed, _netMoveX, _netMoveY, _netVertical;
+    private bool  _netJumping;
+
+    public void BroadcastLocomotion(float speed, float moveX, float moveY, bool jumping, float verticalSpeed)
+    {
+        if (!IsSpawned || !DrivesOwnAnimator) return;
+        if (Time.time < _nextLocomotionSend) return;
+
+        // Nada que contar: quieto y en el piso no se manda nada.
+        bool changed = !_locomotionSent
+                    || jumping != _sentJumping
+                    || Mathf.Abs(speed    - _sentSpeed)    > 0.05f
+                    || Mathf.Abs(moveX    - _sentMoveX)    > 0.02f
+                    || Mathf.Abs(moveY    - _sentMoveY)    > 0.02f
+                    || Mathf.Abs(verticalSpeed - _sentVertical) > 0.25f;
+        if (!changed) return;
+
+        if (IsOwner) ServerSetLocomotion(speed, moveX, moveY, jumping, verticalSpeed, Channel.Unreliable);
+        else         ObserversSetLocomotion(speed, moveX, moveY, jumping, verticalSpeed, Channel.Unreliable);
+
+        _sentSpeed = speed; _sentMoveX = moveX; _sentMoveY = moveY;
+        _sentJumping = jumping; _sentVertical = verticalSpeed;
+        _locomotionSent = true;
+        _nextLocomotionSend = Time.time + 1f / LocomotionSendRate;
+    }
+
+    [ServerRpc]
+    private void ServerSetLocomotion(float speed, float moveX, float moveY, bool jumping, float verticalSpeed,
+                                     Channel channel = Channel.Unreliable)
+    {
+        StoreLocomotion(speed, moveX, moveY, jumping, verticalSpeed);
+        ObserversSetLocomotion(speed, moveX, moveY, jumping, verticalSpeed, Channel.Unreliable);
+    }
+
+    // Al dueño se lo salteamos: su Animator ya lo escribe él mismo.
+    [ObserversRpc(ExcludeOwner = true)]
+    private void ObserversSetLocomotion(float speed, float moveX, float moveY, bool jumping, float verticalSpeed,
+                                        Channel channel = Channel.Unreliable)
+    {
+        StoreLocomotion(speed, moveX, moveY, jumping, verticalSpeed);
+    }
+
+    private void StoreLocomotion(float speed, float moveX, float moveY, bool jumping, float verticalSpeed)
+    {
+        _netSpeed = speed; _netMoveX = moveX; _netMoveY = moveY;
+        _netJumping = jumping; _netVertical = verticalSpeed;
+    }
+
+    // En las copias que NO escriben su Animator, lleva los valores recibidos al Animator
+    // cada frame. El suavizado es el mismo que usa el dueño (SetFloat con damping), así
+    // que el blend tree se mueve igual de suave y tapa el escalón entre paquetes.
+    private void TickRemoteAnimations()
+    {
+        if (characterAnimator == null || !characterAnimator.enabled) return;
+
+        characterAnimator.SetFloat("Speed", _netSpeed, 0.1f, Time.deltaTime);
+        characterAnimator.SetFloat("MoveX", _netMoveX, 0.1f, Time.deltaTime);
+        characterAnimator.SetFloat("MoveY", _netMoveY, 0.1f, Time.deltaTime);
+        characterAnimator.SetBool("IsJumping", _netJumping);
+
+        if (!string.IsNullOrEmpty(VerticalSpeedParam))
+            characterAnimator.SetFloat(VerticalSpeedParam, _netVertical);
+
+        // La velocidad de ataque NO viaja acá: el atributo ya está sincronizado por el
+        // NetworkASC, así que cada copia lo lee de su propio ASC. Sin esto, los ataques
+        // de los demás se veían siempre a velocidad 1, ignorando sus buffs.
+        float spd = ASC != null ? ASC.GetAttributeValue(EAttributeType.AtkSpeed) : 0f;
+        if (spd > 0f) characterAnimator.SetFloat("AttackSpeedMult", 1f / spd);
     }
 
     // =========================================================
