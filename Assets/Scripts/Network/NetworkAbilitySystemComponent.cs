@@ -805,8 +805,9 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // observadores. El dueño ya la disparó por predicción (o, en el host, vía
     // Activate()); ObserversPlayAbilityAnimation la reproduce en los demás.
     [ServerRpc]
-    public void ServerRequestActivateAbility(EAbilityInput inputSlot, Vector3 aimPoint, Vector3 moveDir)
-        => ServerActivateAbility(inputSlot, aimPoint, moveDir);
+    public void ServerRequestActivateAbility(EAbilityInput inputSlot, Vector3 aimPoint, Vector3 moveDir,
+                                             Vector3 aimOrigin)
+        => ServerActivateAbility(inputSlot, aimPoint, moveDir, aimOrigin);
 
     // Valida y ejecuta la habilidad de un slot con autoridad de servidor, y
     // replica su animación a los observadores. Separado del ServerRpc de arriba
@@ -815,7 +816,8 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // el [ServerRpc] de dueño —que el servidor NO puede invocar sobre un cliente
     // remoto (fallaría por RequireOwnership) y dejaba al Inmortal remoto tirado—.
     [Server]
-    public void ServerActivateAbility(EAbilityInput inputSlot, Vector3 aimPoint, Vector3 moveDir = default)
+    public void ServerActivateAbility(EAbilityInput inputSlot, Vector3 aimPoint, Vector3 moveDir = default,
+                                      Vector3 aimOrigin = default)
     {
         if (_asc == null) return;
 
@@ -853,6 +855,11 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
             // direccional del dash). Igual que NetworkAimPoint: el servidor no
             // puede leer el input del dueño, así que este la envía con el pedido.
             pc.NetworkMoveDirection = moveDir;
+
+            // Desde dónde miraba. Cero = no vino (una activación server-side, ej. la
+            // auto-revivida del Inmortal); ahí se deja el último que haya, que es mejor
+            // que un punto en el origen del mundo.
+            if (aimOrigin != Vector3.zero) pc.NetworkAimOrigin = aimOrigin;
         }
 
         if (!ability.CanActivate())

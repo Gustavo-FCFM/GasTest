@@ -380,6 +380,16 @@ public class PlayerController : NetworkBehaviour
     // propia, así que GetAimPoint() cae a este valor cuando IsOwner es falso.
     [HideInInspector] public Vector3 NetworkAimPoint;
 
+    // DESDE DÓNDE mira: la posición de la cámara del dueño al activar. Va junto con
+    // NetworkAimPoint porque el punto solo no alcanza para saber a quién está apuntando.
+    //
+    // POR QUÉ: la cámara está detrás y al hombro del personaje, así que la línea
+    // cámara→retícula y la línea personaje→retícula son distintas, y cuanto más cerca
+    // está el objetivo, más se abren entre sí. Eligiendo con la segunda, apuntar a un
+    // enemigo del fondo te elegía al que tenías pegado. Con el origen a mano se puede
+    // medir contra el rayo de verdad, que es lo que el jugador ve en la retícula.
+    [HideInInspector] public Vector3 NetworkAimOrigin;
+
     // Dirección de movimiento (WASD/stick en espacio de mundo, plano horizontal)
     // que el dueño tenía al activar la última habilidad. La usa la esquiva
     // direccional del dash. Igual que NetworkAimPoint: el servidor no tiene input
@@ -1258,6 +1268,11 @@ public class PlayerController : NetworkBehaviour
             // sí es la cámara correcta, y lo mandamos junto con el input.
             Vector3 aimPoint = GetAimPoint();
 
+            // Y DESDE DÓNDE la mira: sin el origen, el servidor no puede reconstruir el
+            // rayo de la retícula y tiene que conformarse con la línea desde los pies
+            // del personaje, que a corta distancia apunta a otro lado (ver GetAimOrigin).
+            Vector3 aimOrigin = GetAimOrigin();
+
             // Dirección de movimiento actual (WASD/stick en mundo) para la esquiva
             // direccional del dash. El servidor no la puede leer, así que viaja con
             // el pedido (ver GetMoveDirection).
@@ -1270,7 +1285,7 @@ public class PlayerController : NetworkBehaviour
             // el daño. Rotando acá, la rotación correcta es la que se sincroniza.
             RotateToAim(aimPoint);
 
-            NetASC.ServerRequestActivateAbility(slot, aimPoint, moveDir);
+            NetASC.ServerRequestActivateAbility(slot, aimPoint, moveDir, aimOrigin);
         }
         else
             ActivateAbilityBySlot(slot); // Fallback singleplayer
@@ -2686,6 +2701,31 @@ public class PlayerController : NetworkBehaviour
         }
         return bestPoint;
     }
+
+    // Desde dónde sale el rayo de la mira: la cámara del dueño. En el servidor y en los
+    // observadores no hay cámara que valga, así que se usa el que el dueño mandó con el
+    // pedido. Mismo patrón que GetAimPoint.
+    public Vector3 GetAimOrigin()
+    {
+        if (IsOwner)
+        {
+            Camera cam = MainCamera;
+            if (cam != null) return cam.transform.position;
+        }
+        else if (NetworkAimOrigin != Vector3.zero)
+        {
+            return NetworkAimOrigin;
+        }
+
+        // Sin origen recibido —un BOT, que no tiene cámara ni manda pedidos, o una
+        // activación server-side— se usan los ojos del personaje. Es lo más parecido a
+        // una cámara que tiene, y sin este corte el origen sería el (0,0,0) del mundo y
+        // la selección apuntaría a cualquier lado.
+        return transform.position + Vector3.up * EyeHeight;
+    }
+
+    // Altura aproximada de los ojos sobre el transform (que está en los pies).
+    private const float EyeHeight = 1.6f;
 
     // Dirección de movimiento del dueño (WASD/stick) en espacio de mundo, plano
     // horizontal y normalizada; Vector3.zero si está quieto. En el dueño se lee

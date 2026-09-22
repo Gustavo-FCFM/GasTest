@@ -787,6 +787,48 @@ restaurarlo (ver la sección 2) o armar el segundo mapa a mano.
 
 ---
 
+### Apuntar a un objetivo elegía al más cercano — ARREGLADO, falta probarlo
+
+Con el Golpe mortal (Q del Pícaro), apuntando a un enemigo del fondo entre otros dos,
+siempre agarraba al que tenías más cerca aunque no estuviera en la retícula.
+
+**Cómo elige** (`GameplayAbility.FindBestTargetInAim`, la misma para Golpe mortal,
+Intercepción heroica, Enemigo jurado y las de `GA_Target`): junta a todos los candidatos
+dentro del alcance, descarta a los que están fuera de un cono, y de los que quedan se
+queda con **el más centrado en la mira**. Nunca fue "el más cercano" a propósito.
+
+**Por qué salía el más cercano igual**, dos errores que se sumaban:
+
+1. **El ángulo se medía desde los PIES del personaje**, no desde la cámara. La cámara
+   está detrás y al hombro, así que la línea cámara→retícula y la línea
+   personaje→retícula son distintas, y cuanto más cerca está el objetivo más se abren.
+   A corta distancia esa diferencia se comía el cono entero.
+2. **El punto de mira se pedía con el alcance de la habilidad** (10 metros). Pero el rayo
+   sale de la cámara, que ya está unos 5 metros detrás: llegaba apenas más allá del
+   personaje y, si no chocaba con nada, devolvía un punto casi encima de él. La
+   dirección salía de ahí y era ruleta.
+
+**Cómo quedó**: el ángulo se mide **desde la cámara, sobre su propio rayo** — o sea,
+contra lo que el jugador ve en la retícula — y el punto se pide a 200 metros para que la
+dirección sea estable. El alcance se sigue midiendo desde el personaje, que es lo
+correcto. Y se apunta al **torso** del candidato y no a sus pies, que desde una cámara
+que mira un poco hacia abajo quedan lejos de la retícula.
+
+Para que el servidor resuelva con el mismo rayo que vio el dueño, ahora viaja también el
+ORIGEN de la mira con el pedido de activación (`NetworkAimOrigin`), no solo el punto. Un
+bot, que no tiene cámara, usa los ojos de su propio personaje.
+
+- [ ] Probar el Golpe mortal con tres enemigos juntos, apuntando al del fondo.
+- [ ] De paso las otras cuatro que usan la misma selección, sobre todo **Enemigo jurado**
+      (20 metros de alcance, el más largo).
+- [ ] Si ahora se siente DEMASIADO exacto —cuesta agarrar a alguien en movimiento—, el
+      `SelectionAngle` de cada asset es la perilla: 25° en el Golpe mortal, 30° en el
+      resto. Ese número ahora significa de verdad "grados desde la retícula".
+
+**Lo que NO hace**: comprobar que haya línea de visión. Apuntando a un enemigo detrás de
+una pared, si entra en el cono, lo va a elegir igual — y el Golpe mortal te teletransporta
+ahí. Si aparece en la prueba del jueves, se arregla con un raycast.
+
 ### Invisible se NOTA en tu propia pantalla — HECHO Y PROBADO ✅
 
 Estando invisible (Emboscada sombría del Asesino) tu modelo se ve **fantasma**: pasa a

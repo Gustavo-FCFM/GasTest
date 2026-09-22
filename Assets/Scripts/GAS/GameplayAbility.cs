@@ -858,11 +858,32 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         if (OwnerASC == null) return null;
 
         PlayerController pc = OwnerASC.GetComponent<PlayerController>();
-        Vector3 origin   = OwnerASC.transform.position;
-        Vector3 aimPoint = pc != null ? pc.GetAimPoint(maxRange)
+        Vector3 origin = OwnerASC.transform.position;
+
+        // EL RAYO DE LA RETÍCULA, no la línea desde los pies del personaje.
+        //
+        // Antes se medía el ángulo desde el PERSONAJE hasta cada candidato, contra la
+        // dirección personaje→punto de mira. Pero la cámara está detrás y al hombro:
+        // esas dos líneas no son la misma, y cuanto más cerca está el objetivo más se
+        // abren. El resultado era que apuntar a un enemigo del fondo elegía al que
+        // tenías pegado — "siempre el más cercano", aunque no estuviera en la retícula.
+        //
+        // Midiendo desde la CÁMARA a lo largo de su rayo, "el más centrado" quiere decir
+        // lo que el jugador ve. El alcance se sigue midiendo desde el personaje (el
+        // OverlapSphere de abajo), que es lo correcto para una habilidad.
+        //
+        // El origen viaja con el pedido de activación (PlayerController.NetworkAimOrigin),
+        // así que el servidor resuelve con el mismo rayo que vio el dueño.
+        Vector3 aimOrigin = pc != null ? pc.GetAimOrigin() : origin + Vector3.up * 1.6f;
+
+        // El punto de mira se pide LEJOS a propósito. Con el alcance de la habilidad, un
+        // rayo de 12 metros desde una cámara que ya está 5 detrás del personaje se queda
+        // corto, y si no choca contra nada devuelve un punto casi encima del jugador:
+        // la dirección salía de ahí y era pura ruleta.
+        Vector3 aimPoint = pc != null ? pc.GetAimPoint(AimRayLength)
                                       : origin + OwnerASC.transform.forward * maxRange;
 
-        Vector3 aimDir = aimPoint - origin; aimDir.y = 0;
+        Vector3 aimDir = aimPoint - aimOrigin;
         if (aimDir.sqrMagnitude < 0.0001f) aimDir = OwnerASC.transform.forward;
         aimDir.Normalize();
 
@@ -883,7 +904,10 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
                 : IsEnemy(asc);
             if (!valid) continue;
 
-            Vector3 toTarget = asc.transform.position - origin; toTarget.y = 0;
+            // Se apunta al TORSO, no a los pies: el transform de un personaje está en el
+            // suelo, y desde una cámara que mira un poco hacia abajo los pies de alguien
+            // cercano quedan bastante más lejos de la retícula que su cuerpo.
+            Vector3 toTarget = asc.transform.position + Vector3.up * TargetCenterHeight - aimOrigin;
             if (toTarget.sqrMagnitude < 0.0001f) continue;
 
             float align = Vector3.Dot(aimDir, toTarget.normalized);
@@ -891,6 +915,15 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         }
         return best;
     }
+
+    // Largo del rayo con el que se resuelve la DIRECCIÓN de la mira. No limita el
+    // alcance de nada: solo sirve para que el punto quede lo bastante lejos como para
+    // que la dirección sea estable.
+    private const float AimRayLength = 200f;
+
+    // A qué altura del transform está el centro de un personaje. Los modelos del
+    // proyecto tienen el pivote en los pies y miden algo menos de dos metros.
+    private const float TargetCenterHeight = 1f;
 
     // =========================================================
     // VFX
