@@ -700,6 +700,13 @@ Hay dos momentos y significan cosas distintas:
 El arma vuelve a la mano al instante en los dos casos, también en la pantalla del que
 canceló (su predicción se corta con `CancelWeaponHide`).
 
+**El permiso se mira en DOS lados**, y por eso la primera versión no funcionaba: el
+servidor corta la habilidad, pero antes el CLIENTE tiene que dejar leer el botón de la
+habilidad nueva mientras hay una corriendo (`_attackInterruptible` en
+`HandleAbilityInput`). Eso último solo se activaba para el slot del ataque principal, así
+que el pedido no salía nunca del cliente y marcar o desmarcar la casilla daba igual. Si
+agregás otra habilidad interrumpible y "no pasa nada", mirá ahí primero.
+
 - [ ] Probar la finta: tirar el hacha y cortar con el salto antes de que suelte.
 - [ ] Probar el encadenado: tirar y meter el dash apenas sale el proyectil.
 - [ ] Que el arma no se quede escondida ni aparezca dos veces en ninguno de los dos.

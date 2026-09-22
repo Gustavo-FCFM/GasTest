@@ -962,11 +962,11 @@ public class PlayerController : NetworkBehaviour
     {
         if (ASC.HasTag(EGameplayTag.State_Silenced)) return;
 
-        // Ocupado con una habilidad: nada más entra… salvo que lo que corre sea el
-        // ATAQUE BÁSICO, que cualquier otra habilidad puede cortar (un pícaro a mitad
-        // del swing que se escapa con el dash). En ese caso se leen los demás botones y
-        // solo se saltea el básico, que ya está corriendo. El corte real lo hace el
-        // servidor al activar la nueva (ver GameplayAbility.IsInterruptible).
+        // Ocupado con una habilidad: nada más entra… salvo que la que corre sea
+        // INTERRUMPIBLE (el ataque básico siempre; los lanzamientos si su asset lo
+        // marca). En ese caso se leen los demás botones y solo se saltea el ataque
+        // principal, para que el básico no se corte a sí mismo. El corte real lo hace
+        // el servidor al activar la nueva (ver GameplayAbility.IsInterruptible).
         bool busy = isAttacking && !IsAimingAbility;
         if (busy && !_attackInterruptible) return;
 
@@ -1119,7 +1119,12 @@ public class PlayerController : NetworkBehaviour
 
                 isAttacking = true;
                 _attackStartTime = Time.time;
-                _attackInterruptible = slot == EAbilityInput.PrimaryAttack && ability.IsInterruptible;
+                // Lo decide la HABILIDAD, no el slot. Cuando esto miraba además que
+                // fuera el slot del ataque principal, un lanzamiento marcado como
+                // interrumpible igual bloqueaba el input mientras corría: el pedido de
+                // la habilidad nueva no salía nunca del cliente, así que no había nada
+                // que cancelar y marcar o desmarcar la casilla daba exactamente lo mismo.
+                _attackInterruptible = ability.IsInterruptible;
                 // Predicción local SOLO en un cliente remoto (no host). El
                 // ObserversRpc del servidor se salta al dueño (asume que ya la
                 // disparó acá), así que sin esta predicción el dueño remoto
