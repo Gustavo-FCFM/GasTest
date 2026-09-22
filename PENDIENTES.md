@@ -787,7 +787,7 @@ restaurarlo (ver la sección 2) o armar el segundo mapa a mano.
 
 ---
 
-### Invisible ahora se NOTA en tu propia pantalla — falta probarlo
+### Invisible se NOTA en tu propia pantalla — HECHO Y PROBADO ✅
 
 Estando invisible (Emboscada sombría del Asesino) tu modelo se ve **fantasma**: pasa a
 semitransparente y deja de proyectar sombra. El ícono del buff en el HUD se pierde en
@@ -815,8 +815,9 @@ tiene `_BaseColor` ni `_Surface`, y bajarle el alfa no hace nada. En la primera 
 eso hacía que solo las armas se volvieran fantasma. Copiando la textura y el color sobre
 URP/Lit funciona igual venga del pack que venga.
 
-- [ ] Probarlo con el Asesino, y de paso que al salir de invisible el modelo vuelva
-      exactamente como estaba (incluida la sombra).
+- [x] Probado con el Asesino: el personaje entero se ve fantasma.
+- [ ] Perillas por si querés afinarlo jugando: `GhostAlpha` (0.35) y `GhostForAllies`
+      (apagado). Prenderlo hace que tu equipo sepa de un vistazo que el enemigo no te ve.
 
 # 5. Animaciones que siguen viéndose raras
 
