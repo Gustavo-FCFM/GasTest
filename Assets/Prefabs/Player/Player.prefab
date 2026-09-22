@@ -751,6 +751,7 @@ GameObject:
   - component: {fileID: 1298740202973777526}
   - component: {fileID: 252880015692499658}
   - component: {fileID: 145499432366287317}
+  - component: {fileID: -3768350438021358956}
   m_Layer: 7
   m_Name: Player
   m_TagString: Untagged
@@ -863,6 +864,7 @@ MonoBehaviour:
   LeapStateID: 96
   HitClipSlotName: PLACEHOLDER_Hit
   HitTrigger: HitTrigger
+  HitBlockedByStateTag: Loop
   DeathClipSlotName: PLACEHOLDER_Death
   DeathClips:
   - {fileID: 3094330708855449807, guid: 3efbd3b8cb129e64598937492de2b27d, type: 3}
@@ -871,6 +873,7 @@ MonoBehaviour:
   - {fileID: 3094330708855449807, guid: 70a2be000e872274bb16f883fdf75040, type: 3}
   DeadParam: IsDead
   StunnedParam: IsStunned
+  CameraFollowsRagdoll: 1
   MainHandSocket: {fileID: 7146974001845245483}
   OffHandSocket: {fileID: 8897914063047295575}
   MovementAbility: {fileID: 0}
@@ -888,6 +891,7 @@ MonoBehaviour:
   NetworkAimPoint: {x: 0, y: 0, z: 0}
   NetworkMoveDirection: {x: 0, y: 0, z: 0}
   isRadialMenuOpen: 0
+  AutoRepeatPrimaryAttack: 1
 --- !u!143 &7812325225803870869
 CharacterController:
   m_ObjectHideFlags: 0
@@ -946,7 +950,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584128025382236132
+  _initializedTimestamp: -8584115137463354811
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
@@ -965,7 +969,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 17
+  <PrefabId>k__BackingField: 7
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 5306845881338098766
   SceneId: 0
@@ -1121,6 +1125,29 @@ MonoBehaviour:
   ImpulseForce: 450
   UpwardBias: 0.35
   RagdollLayer: 2
+--- !u!114 &-3768350438021358956
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9207976713266068147}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2188d689f5d2404abbbe48b3f7cb39f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Target: {fileID: 0}
+  PitchParam: AimPitch
+  Bones: []
+  Weights:
+  - 0.3
+  - 0.35
+  - 0.2
+  - 0.15
+  MaxUp: 50
+  MaxDown: 40
+  Smooth: 0.08
 --- !u!1001 &7943474111240307568
 PrefabInstance:
   m_ObjectHideFlags: 0

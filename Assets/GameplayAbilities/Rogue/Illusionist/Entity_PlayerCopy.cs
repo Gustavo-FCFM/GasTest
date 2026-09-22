@@ -80,6 +80,14 @@ public class Entity_PlayerCopy : NetworkBehaviour
     // de clase). Corre en cada peer cuando el índice ya llegó y hay jugador local para
     // resolver la clase — se reintenta desde Update hasta lograrlo (una sola vez). El
     // avatar es compartido, así que solo cambian arma y animación por clase.
+    // El Animator del modelo. Se resuelve solo si la ranura quedó vacía: el prefab del
+    // señuelo ya se quedó una vez sin animación de caminar por eso, y el arreglo no puede
+    // depender de acordarse de arrastrarlo cada vez que se cambia el modelo.
+    private void Awake()
+    {
+        if (WalkAnimator == null) WalkAnimator = GetComponentInChildren<Animator>();
+    }
+
     private void TryApplyVisuals()
     {
         if (_visualsApplied) return;
