@@ -80,6 +80,15 @@ public class AbilitySystemComponent : MonoBehaviour
     public void NotifyDealtDamage(AbilitySystemComponent victim, float damageDealt)
         => OnDealtDamage?.Invoke(victim, damageDealt);
 
+    // Le avisa a la capa de red que hubo un golpe, para que cada uno vea lo suyo: el que
+    // pegó, la X en su retícula; el que recibió, el arco rojo del lado del golpe. Si no
+    // hay red (una escena de pruebas suelta) no pasa nada y el juego sigue igual.
+    private void ReportCombatFeedback(AbilitySystemComponent attacker)
+    {
+        NetworkAbilitySystemComponent netAsc = GetComponent<NetworkAbilitySystemComponent>();
+        if (netAsc != null) netAsc.ServerReportDamage(attacker);
+    }
+
     // Se dispara cuando ESTE personaje RECIBE un golpe de daño directo (el
     // parámetro es el atacante). Mismo criterio que OnDealtDamage: solo golpes
     // directos (no ticks de DoT), server-side. Lo usa la Copia exacta del
@@ -961,6 +970,11 @@ public class AbilitySystemComponent : MonoBehaviour
                 sourceASC.BreakInvisibility();       // el atacante se delata al golpear
                 sourceASC.NotifyDealtDamage(this, damageToHealth); // pasivas "al golpear" (Cuchillas ilusorias, Aura del Paladín)
                 NotifyTookDamage(sourceASC);         // reacciones "al ser golpeado" (ej. Copia exacta)
+
+                // Lo que VEN los dos: la X en la retícula del que pegó y el arco rojo en
+                // la pantalla del que recibió. Acá es el único lugar donde se sabe todo
+                // junto —quién, a quién y cuánto entró de verdad— así que de acá sale.
+                if (damageToHealth > 0f) ReportCombatFeedback(sourceASC);
             }
         }
     }

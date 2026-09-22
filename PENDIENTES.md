@@ -950,6 +950,46 @@ URP/Lit funciona igual venga del pack que venga.
 - [ ] Perillas por si querés afinarlo jugando: `GhostAlpha` (0.35) y `GhostForAllies`
       (apagado). Prenderlo hace que tu equipo sepa de un vistazo que el enemigo no te ve.
 
+### Respuesta visual del combate — LISTO, falta probarlo
+
+Tres avisos, sin nada que cablear: `UI/UI_CombatFeedback.cs` se dibuja solo y quien lo
+necesita lo pide con `UI_CombatFeedback.Get()`.
+
+**1. La X de golpe.** Cada vez que le pegás a algo —NPC o personaje— aparece una X roja
+en la retícula y se apaga. La opacidad es **la vida que le FALTA al golpeado**: le pegás
+a alguien entero y la X apenas se insinúa; lo dejás al 10% y sale casi sólida. De un
+vistazo sabés si le estás haciendo cosquillas o si está por caer.
+
+Con una salvedad sobre lo que pediste: le puse un **piso de opacidad** (`HitMinAlpha`,
+0.25). Al pie de la letra, pegarle a alguien con la vida llena daría un 10% de opacidad,
+que en pantalla y en movimiento no se ve — y entonces la X fallaría justo en lo que
+tiene que hacer, que es confirmarte que el golpe entró. Ponelo en 0 si lo querés literal.
+
+**2. La calavera.** Solo al matar a un PERSONAJE (jugador o bot), no a un monstruo del
+mapa: si cada bicho tirara calavera, dejaría de significar algo. Aparece a plena
+opacidad y se apaga rápido. Se dibuja por código; si le asignás un sprite en `KillIcon`,
+usa ese.
+
+**3. El arco de daño recibido.** Un círculo grande alrededor de la mira, siempre
+invisible, que se enciende del lado por donde vino el golpe: arriba si te pegaron de
+frente, abajo si fue por la espalda, y los costados en su ángulo real. El ángulo se mide
+contra **hacia dónde estás mirando**, no contra el cuerpo — lo que tenés que corregir es
+la cámara.
+
+Sin esto, morir por la espalda se siente injusto: no llegabas a enterarte de que te
+estaban pegando.
+
+**Todo va por TargetRpc a cada dueño**, no por ObserversRpc: es información privada de
+cada jugador, y mandarla a todos gastaría red y le contaría a los demás que alguien está
+peleando. Los ticks de veneno no disparan nada, para no llenar la pantalla.
+
+- [ ] Probar la X contra un monstruo, gastándole la vida de a poco: tiene que ir
+      poniéndose más sólida.
+- [ ] Probar la calavera matando a un bot, y que NO salga al matar un monstruo.
+- [ ] Probar el arco con un bot pegándote de frente y por la espalda.
+- [ ] Mirar si el círculo (`DamageRingRadius`, 190) queda donde molesta o donde se ve.
+      Es la perilla que más se va a querer tocar.
+
 # 5. Animaciones que siguen viéndose raras
 
 No las dejes ahí. En la sesión de septiembre perseguimos cuatro causas distintas y al

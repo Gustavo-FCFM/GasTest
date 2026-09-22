@@ -1266,6 +1266,68 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // lo usan de adorno, como el retroceso del disparo.
     private bool HasOwnerConnection() => Owner != null && Owner.IsValid;
 
+    // =========================================================
+    // RESPUESTA VISUAL DEL COMBATE
+    //
+    // Un golpe le tiene que decir algo a los DOS, y cosas distintas:
+    //
+    //   · al que pegó   → la X en su retícula, más opaca cuanto menos vida le quedó al
+    //                     otro, y la calavera si lo mató
+    //   · al que recibió→ el arco rojo del lado por donde vino el golpe
+    //
+    // Va por TargetRpc a cada dueño y no por ObserversRpc: esto es información PRIVADA
+    // de cada jugador. Mandarla a todos gastaría red y le contaría a los demás que
+    // alguien está peleando.
+    //
+    // Lo llama el ASC desde el final de su pipeline de daño, que es el único punto donde
+    // se sabe todo junto (ver AbilitySystemComponent.ReportCombatFeedback).
+    // =========================================================
+
+    // ESTE componente es el del que RECIBIÓ el golpe.
+    [Server]
+    public void ServerReportDamage(AbilitySystemComponent attacker)
+    {
+        if (_asc == null || attacker == null) return;
+
+        // --- lo que ve el que PEGÓ ---
+        NetworkAbilitySystemComponent attackerNet = attacker.GetComponent<NetworkAbilitySystemComponent>();
+        if (attackerNet != null && attackerNet.HasOwnerConnection())
+        {
+            float max    = _asc.GetAttributeValue(EAttributeType.MaxHealth);
+            float health = _asc.GetAttributeValue(EAttributeType.Health);
+            float fraction = max > 0f ? Mathf.Clamp01(health / max) : 0f;
+
+            // Una baja solo cuenta si cayó un PERSONAJE (jugador o bot). Los monstruos
+            // del mapa se matan de a montones: si cada uno tirara calavera, dejaría de
+            // significar algo.
+            bool killedCharacter = _asc.HasTag(EGameplayTag.State_Dead)
+                                && GetComponent<PlayerController>() != null;
+
+            attackerNet.TargetDamageDealt(attackerNet.Owner, fraction, killedCharacter);
+        }
+
+        // --- lo que ve el que RECIBIÓ ---
+        if (HasOwnerConnection())
+            TargetDamageTaken(Owner, attacker.transform.position);
+    }
+
+    [TargetRpc]
+    private void TargetDamageDealt(NetworkConnection conn, float victimHealthFraction, bool killedCharacter)
+    {
+        UI_CombatFeedback feedback = UI_CombatFeedback.Get();
+        if (feedback == null) return;
+
+        feedback.ShowHit(victimHealthFraction);
+        if (killedCharacter) feedback.ShowKill();
+    }
+
+    [TargetRpc]
+    private void TargetDamageTaken(NetworkConnection conn, Vector3 attackerPosition)
+    {
+        UI_CombatFeedback feedback = UI_CombatFeedback.Get();
+        if (feedback != null) feedback.ShowDamageFrom(attackerPosition, transform);
+    }
+
     [Server]
     public void ServerStartLeap(GA_LeapAttack ability, float upVelocity, float forwardForce)
     {
