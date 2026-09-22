@@ -200,8 +200,17 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // (AbilitySystemComponent.CancelInterruptibleAbilities), el timing en curso se corta
     // sin pegar y sin llamar EndAbility — el "fin" lo va a mandar la habilidad nueva.
     // El cooldown ya pagado NO se devuelve: cancelar tiene ese costo.
+    //
+    // SE PUEDE MARCAR EN EL ASSET. El slot PrimaryAttack lo recibe siempre (lo fuerza
+    // EquipCharacterClass) y sus pasos de combo lo heredan; cualquier otra habilidad que
+    // quiera poder cortarse lo pide acá. Los lanzamientos (hacha, dagas) lo usan para
+    // que se pueda cancelar el tiro antes de soltar, o encadenar otra cosa apenas soltó
+    // sin esperar el remate de la animación.
     // ---------------------------------------------------------
-    [System.NonSerialized] public bool IsInterruptible;
+    [Tooltip("Otra habilidad puede CORTAR esta a mitad de camino. Lo que ya pegó (o ya " +
+             "salió) queda; lo que faltaba no pasa, y el cooldown ya pagado NO se " +
+             "devuelve. El ataque principal lo trae puesto de fábrica.")]
+    public bool IsInterruptible;
 
     // True si el último HitTimingRoutine se cortó por una interrupción. Quien lo llame
     // tiene que mirarlo y salir sin EndAbility (ver GA_ConeAttack).

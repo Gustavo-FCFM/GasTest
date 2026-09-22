@@ -142,11 +142,31 @@ public class GA_ProjectileShoot : GameplayAbility
 
     // Espera SpawnDelay (ajustado por velocidad de ataque), suelta el
     // proyectil, espera el remate de la animación, y termina.
+    // SE PUEDE CORTAR A MITAD, si el asset trae IsInterruptible. Hay dos momentos y
+    // significan cosas distintas:
+    //
+    //   · ANTES de soltar  → el proyectil no sale. El cooldown ya pagado no se devuelve:
+    //     cancelaste, y cancelar cuesta. Es la finta.
+    //   · DESPUÉS de soltar → el proyectil ya está en el aire y se queda. Lo único que
+    //     se saltea es el remate de la animación, así se puede encadenar otra habilidad
+    //     de inmediato en vez de esperar a que el brazo vuelva.
+    //
+    // En los dos casos se sale SIN EndAbility: el "fin" lo manda la habilidad nueva, que
+    // es la que pasa a mandar (ver GameplayAbility.IsInterruptible).
     private IEnumerator ShootSequence()
     {
         ResolveThrowTiming(out float releaseDelay, out float backswing);
 
+        int cancelSerial = OwnerASC != null ? OwnerASC.CancelSerial : 0;
+
         if (releaseDelay > 0f) yield return new WaitForSeconds(releaseDelay);
+
+        if (Cancelled(cancelSerial))
+        {
+            // Nunca se escondió el arma (eso pasa al soltar), así que no hay nada que
+            // devolver: solo no sale el proyectil.
+            yield break;
+        }
 
         SpawnProjectile();
 
@@ -154,12 +174,29 @@ public class GA_ProjectileShoot : GameplayAbility
         // el proyectil (ver HideWeaponWhileFlying).
         if (HideWeaponWhileFlying) SetOwnerWeaponVisible(false);
 
-        if (backswing > 0f) yield return new WaitForSeconds(backswing);
+        // El remate se espera de a pedacitos para poder mirar la cancelación en el
+        // medio. Con un solo WaitForSeconds habría que aguantar el remate entero aunque
+        // el jugador ya hubiera apretado otra cosa, que es justo lo que queremos evitar.
+        float waited = 0f;
+        while (waited < backswing)
+        {
+            yield return null;
+            waited += Time.deltaTime;
+
+            if (!Cancelled(cancelSerial)) continue;
+
+            // El arma vuelve YA a la mano: la rutina que la devolvía no va a terminar.
+            if (HideWeaponWhileFlying) SetOwnerWeaponVisible(true);
+            yield break;
+        }
 
         if (HideWeaponWhileFlying) SetOwnerWeaponVisible(true);
 
         EndAbility();
     }
+
+    private bool Cancelled(int cancelSerial)
+        => IsInterruptible && OwnerASC != null && OwnerASC.CancelSerial != cancelSerial;
 
     // El dueño hace la MISMA cuenta de su lado y esconde el arma cuando su propia
     // animacion suelta, sin esperar el aviso del servidor — que le llega dos viajes

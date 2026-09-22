@@ -1111,6 +1111,12 @@ public class PlayerController : NetworkBehaviour
         {
             if (ability.CanActivate())
             {
+                // Arrancar otra habilidad corta la anterior (ver IsInterruptible). El
+                // servidor lo resuelve por su lado; acá se corta lo que el dueño había
+                // anticipado, que si no se queda esperando un final que ya no llega.
+                // Mismo criterio que el servidor: el ataque principal no corta nada.
+                if (slot != EAbilityInput.PrimaryAttack) CancelWeaponHide();
+
                 isAttacking = true;
                 _attackStartTime = Time.time;
                 _attackInterruptible = slot == EAbilityInput.PrimaryAttack && ability.IsInterruptible;
@@ -2970,6 +2976,19 @@ public class PlayerController : NetworkBehaviour
     {
         if (_weaponHideRoutine != null) StopCoroutine(_weaponHideRoutine);
         _weaponHideRoutine = StartCoroutine(WeaponHideRoutine(hideAt, showAt));
+    }
+
+    // Corta la anticipación y devuelve el arma a la mano ya mismo. La llama el dueño al
+    // arrancar otra habilidad: si cortó el lanzamiento ANTES de soltar, el arma nunca
+    // tenía que esconderse; si lo cortó DESPUÉS, tiene que volver ahora y no cuando
+    // terminaba un remate que ya no va a correr.
+    public void CancelWeaponHide()
+    {
+        if (_weaponHideRoutine == null) return;
+
+        StopCoroutine(_weaponHideRoutine);
+        _weaponHideRoutine = null;
+        SetMainWeaponVisible(true);
     }
 
     private System.Collections.IEnumerator WeaponHideRoutine(float hideAt, float showAt)

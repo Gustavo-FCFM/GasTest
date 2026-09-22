@@ -680,9 +680,36 @@ proyectil suyo, solo visual, y el de red lo releve al llegar.
   cada vez que vuelve a estar disponible (`AutoRepeatPrimaryAttack`, apagable).
 - **Cancelable**: cualquier otra habilidad corta el básico a mitad del swing. Lo que ya
   pegó, pegó; los `HitFrame` que faltaban no salen; el cooldown ya pagado no se
-  devuelve (no hay animation cancel gratis). Solo el slot `PrimaryAttack` es
-  interrumpible (`IsInterruptible` + `CancelSerial` en el ASC). Un enemigo recibe un
-  solo golpe por swing aunque el clip tenga varios eventos.
+  devuelve (no hay animation cancel gratis). Un enemigo recibe un solo golpe por swing
+  aunque el clip tenga varios eventos.
+
+### Los lanzamientos también se cancelan — LISTO, falta probarlo
+
+Mismo mecanismo (`IsInterruptible` + `CancelSerial`), ahora marcable **en el asset** en
+vez de solo en el slot `PrimaryAttack`. Ya está puesto en el hacha del Bárbaro y en las
+dagas del Pícaro, el Asesino y el Ilusionista.
+
+Hay dos momentos y significan cosas distintas:
+
+- **Antes de soltar** → el proyectil no sale. Es la finta. El cooldown ya pagado no se
+  devuelve: cancelar cuesta, igual que en el básico.
+- **Después de soltar** → el proyectil ya está en el aire y se queda. Lo único que se
+  saltea es el remate de la animación, que es lo que hoy te obliga a esperar. Ahí está
+  la ganancia de ritmo: tirás y encadenás sin que el brazo termine de volver.
+
+El arma vuelve a la mano al instante en los dos casos, también en la pantalla del que
+canceló (su predicción se corta con `CancelWeaponHide`).
+
+- [ ] Probar la finta: tirar el hacha y cortar con el salto antes de que suelte.
+- [ ] Probar el encadenado: tirar y meter el dash apenas sale el proyectil.
+- [ ] Que el arma no se quede escondida ni aparezca dos veces en ninguno de los dos.
+- [ ] Decidir si el **rayo del Paladín** (`GA_SmiteBeam` y el de Conquista) también
+      debería cancelarse. Es marcar la casilla en esos dos assets, pero cambia cómo se
+      siente la clase y esa es tu decisión, no mía.
+
+**El ataque principal sigue sin cortar nada**: apretar LMB no cancela un lanzamiento.
+Se dejó así porque si el básico cancelara, también cancelaría su propio combo. Si
+jugando lo extrañás, es una línea en `ServerActivateAbility`.
 
 ## 4º · Pantalla de inicio y ajustes — TERMINADO Y PROBADO ✅
 
