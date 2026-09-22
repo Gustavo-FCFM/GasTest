@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 22 de septiembre de 2026
+# Pendientes — actualizado el 24 de septiembre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -992,8 +992,8 @@ La X son **cuatro puntas con un hueco en el medio**, no una equis maciza: el hue
 ver la retícula justo cuando más la estás mirando. `HitMarkLength` alarga las puntas,
 `HitMarkGap` agranda el hueco, `HitMarkThickness` las engrosa.
 
-- [ ] Probar la X contra un monstruo, gastándole la vida de a poco: tiene que ir
-      poniéndose más sólida.
+- [x] La X ya se ve bien de tamaño. Falta mirar, jugando, si la opacidad según la vida
+      del golpeado se lee (que vaya poniéndose más sólida a medida que baja).
 - [ ] Probar la calavera matando a un bot, y que NO salga al matar un monstruo.
 - [ ] Probar el arco con un bot pegándote de frente y por la espalda.
 - [ ] Mirar si el círculo (`DamageRingRadius`, 190) queda donde molesta o donde se ve.
