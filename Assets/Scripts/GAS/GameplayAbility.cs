@@ -339,6 +339,17 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // Se puede resolver en el dueño porque los tags se sincronizan.
     public virtual GameplayAbility ResolveAnimationSource() => this;
 
+    // Lo que el DUEÑO puede anticipar de los visuales, además de la animación: se llama
+    // en el cliente dueño al apretar, junto con la predicción (ver
+    // PlayerController.HandleAbilityInput). Por defecto no hace nada.
+    //
+    // Existe por el hacha: el servidor la esconde de la mano recién cuando su propia
+    // cuenta llega al frame de soltar, y ese aviso vuelve al dueño DOS viajes después
+    // de que él ya vio su animación lanzarla. En el host no se nota (viaje cero), pero
+    // un cliente conectado veía el hacha todavía en la mano mientras el proyectil ya
+    // salía: dos hachas al mismo tiempo.
+    public virtual void PredictOwnerVisuals(PlayerController pc) { }
+
     // ¿Vale la pena que el dueño ANTICIPE la animación, antes de que el servidor
     // conteste? Por defecto sí. Las de objetivo único dicen que no cuando no hay nadie
     // a tiro: el servidor va a descartar la activación igual, y anticiparla hace que el

@@ -604,10 +604,40 @@ animación al apretar, antes de que el servidor conteste. Ahora pregunta primero
 tiro. Quedaron cubiertas las cuatro: Golpe mortal, Intercepción heroica, las de
 `GA_Target` y Enemigo jurado (esa ya lo hacía por su `CanActivate`).
 
-- [ ] Probar el combo del Pícaro entre dos ventanas: que se vean los dos golpes.
+- [x] El combo del Pícaro entre dos ventanas: se ven los dos golpes.
 - [ ] Probar la Q del Pícaro apuntando a la nada: no tiene que animar nada, ni en tu
       pantalla ni en la del otro. Y apuntando a alguien, igual que siempre.
 - [ ] De paso, la Intercepción heroica del Paladín sin aliado a la vista.
+
+### El hacha quedaba en la mano mientras el proyectil ya volaba — ARREGLADO, falta probarlo
+
+**Solo le pasaba a los que se CONECTAN**, no al host, y esa es toda la pista.
+
+El arma se esconde de la mano en el frame exacto en que la animación la suelta — eso lo
+decide el servidor con su propia cuenta. Pero el dueño REMOTO anticipa su animación al
+apretar, antes de que el servidor se entere. Entonces: él ve el lanzamiento, el pedido
+viaja, el servidor cuenta hasta el frame de soltar, y el aviso de "escondé el hacha"
+vuelve **dos viajes tarde**. En el medio, el hacha seguía en la mano mientras el
+proyectil ya estaba en el aire: dos hachas al mismo tiempo. En el host no se ve nunca,
+porque ahí el viaje es cero.
+
+**Cómo quedó**: el dueño hace la misma cuenta de su lado y esconde el arma en su propio
+frame de soltar (`PredictWeaponHide`), con los mismos números que usa el servidor
+(`GA_ProjectileShoot.ResolveThrowTiming`, que ahora lo calcula una sola vez para las dos
+puntas). Y el aviso del servidor ya no se le manda al dueño, para que no se peleen.
+
+La rutina del dueño **siempre** devuelve el arma a la mano, aunque el servidor rechace
+la habilidad: no hay forma de quedarse sin arma.
+
+- [ ] Probar el hacha del Bárbaro desde un cliente conectado (no el host): que salga de
+      la mano en el mismo frame en que la animación la lanza.
+- [ ] Lo mismo con las dagas del Pícaro, el Asesino y el Ilusionista (`HideWeaponWhileFlying`).
+
+Queda una diferencia que NO se arregla así: el proyectil en sí sigue apareciendo dos
+viajes después de tu animación, porque lo spawnea el servidor. Con el arma ya escondida
+no se nota (ves salir el hacha y el proyectil aparece un pelo más adelante), pero si con
+mucha latencia sigue molestando, el paso siguiente sería que el dueño dibuje un
+proyectil suyo, solo visual, y el de red lo releve al llegar.
 
 ### Sensación del ataque básico — HECHO Y PROBADO ✅
 

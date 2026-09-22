@@ -1121,7 +1121,11 @@ public class PlayerController : NetworkBehaviour
                 // Pícaro sin nadie a tiro no hace nada, así que anticipar su animación
                 // sería hacer el gesto en el vacío (ver CanPredictActivation).
                 if (!IsServerInitialized && ability.CanPredictActivation())
+                {
                     PlayAnimation(ability);
+                    // Y lo que acompaña a la animación: el hacha que sale de la mano.
+                    ability.PredictOwnerVisuals(this);
+                }
                 RequestAbility(slot);
             }
         }
@@ -2857,6 +2861,39 @@ public class PlayerController : NetworkBehaviour
     //
     // Se apagan Renderer y no el GameObject a propósito: desactivarlo también apagaría
     // el hijo WeaponTrail y perdería el estado que manejan los AnimationEvents.
+    // El DUEÑO esconde y devuelve el arma con su propio reloj, arrancado al apretar.
+    //
+    // POR QUÉ NO ALCANZA CON EL AVISO DEL SERVIDOR: el servidor esconde el arma cuando
+    // SU cuenta llega al frame de soltar, y ese aviso vuelve al dueño dos viajes
+    // después de que él ya vio su animación lanzarla. En el host se ve perfecto (viaje
+    // cero), pero un cliente conectado veía el hacha todavía en la mano mientras el
+    // proyectil ya salía — dos hachas al mismo tiempo. Acá la escondemos en el frame
+    // en que el dueño la ve salir.
+    //
+    // Los tiempos los calcula la habilidad con los mismos datos que el servidor (ver
+    // GA_ProjectileShoot.ResolveThrowTiming), así que las dos puntas coinciden. Y la
+    // rutina siempre devuelve el arma, aunque el servidor rechace la habilidad: no hay
+    // forma de quedarse sin arma en la mano.
+    private Coroutine _weaponHideRoutine;
+
+    public void PredictWeaponHide(float hideAt, float showAt)
+    {
+        if (_weaponHideRoutine != null) StopCoroutine(_weaponHideRoutine);
+        _weaponHideRoutine = StartCoroutine(WeaponHideRoutine(hideAt, showAt));
+    }
+
+    private System.Collections.IEnumerator WeaponHideRoutine(float hideAt, float showAt)
+    {
+        if (hideAt > 0f) yield return new WaitForSeconds(hideAt);
+        SetMainWeaponVisible(false);
+
+        float rest = showAt - hideAt;
+        if (rest > 0f) yield return new WaitForSeconds(rest);
+        SetMainWeaponVisible(true);
+
+        _weaponHideRoutine = null;
+    }
+
     public void SetMainWeaponVisible(bool visible)
     {
         if (currentMainWeapon == null) return;

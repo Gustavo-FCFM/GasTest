@@ -136,8 +136,41 @@ public class GA_ProjectileShoot : GameplayAbility
     // proyectil, espera el remate de la animación, y termina.
     private IEnumerator ShootSequence()
     {
+        ResolveThrowTiming(out float releaseDelay, out float backswing);
+
+        if (releaseDelay > 0f) yield return new WaitForSeconds(releaseDelay);
+
+        SpawnProjectile();
+
+        // El arma real desaparece justo al soltar: de ahi en mas lo unico que vuela es
+        // el proyectil (ver HideWeaponWhileFlying).
+        if (HideWeaponWhileFlying) SetOwnerWeaponVisible(false);
+
+        if (backswing > 0f) yield return new WaitForSeconds(backswing);
+
+        if (HideWeaponWhileFlying) SetOwnerWeaponVisible(true);
+
+        EndAbility();
+    }
+
+    // El dueño hace la MISMA cuenta de su lado y esconde el arma cuando su propia
+    // animacion suelta, sin esperar el aviso del servidor — que le llega dos viajes
+    // tarde y le dejaba el hacha en la mano mientras el proyectil ya volaba.
+    public override void PredictOwnerVisuals(PlayerController pc)
+    {
+        if (pc == null || !HideWeaponWhileFlying) return;
+
+        ResolveThrowTiming(out float releaseDelay, out float backswing);
+        pc.PredictWeaponHide(releaseDelay, releaseDelay + backswing);
+    }
+
+    // Cuando sale el proyectil (releaseDelay) y cuanto dura el remate hasta devolver el
+    // arma a la mano (backswing). Lo calculan por igual el servidor y el dueño: los dos
+    // datos salen del asset y del ritmo de ataque, que estan de los dos lados.
+    private void ResolveThrowTiming(out float releaseDelay, out float backswing)
+    {
         float speedMultiplier = 1f;
-        float atkSpeedStat = OwnerASC.GetAttributeValue(EAttributeType.AtkSpeed);
+        float atkSpeedStat = OwnerASC != null ? OwnerASC.GetAttributeValue(EAttributeType.AtkSpeed) : 0f;
         if (atkSpeedStat > 0) speedMultiplier = 1f / atkSpeedStat;
 
         // EL MOMENTO DE SOLTAR SALE DEL PROPIO CLIP, no de un numero a mano.
@@ -160,20 +193,12 @@ public class GA_ProjectileShoot : GameplayAbility
         float animSpeed = ResolveAnimationSpeed();
         if (animSpeed <= 0f) animSpeed = 1f;
 
-        float releaseDelay = releaseTimes.Count > 0
+        releaseDelay = releaseTimes.Count > 0
             ? releaseTimes[0] / animSpeed
             : SpawnDelay / speedMultiplier;
 
-        if (releaseDelay > 0f) yield return new WaitForSeconds(releaseDelay);
-
-        SpawnProjectile();
-
-        // El arma real desaparece justo al soltar: de ahi en mas lo unico que vuela es
-        // el proyectil (ver HideWeaponWhileFlying).
-        if (HideWeaponWhileFlying) SetOwnerWeaponVisible(false);
-
         float backswingTime = 0.5f;
-        float backswing     = backswingTime / speedMultiplier;
+        backswing = backswingTime / speedMultiplier;
 
         // Con el arma escondida hay que esperar a que el CLIP TERMINE antes de
         // devolverla. El hueso de prop se va con el lanzamiento y regresa solo a la
@@ -186,12 +211,6 @@ public class GA_ProjectileShoot : GameplayAbility
         // disparos (magos, etc.) conservan el remate de siempre.
         if (HideWeaponWhileFlying && AnimationClip != null)
             backswing = Mathf.Max(backswing, (AnimationClip.length / animSpeed) - releaseDelay);
-
-        if (backswing > 0f) yield return new WaitForSeconds(backswing);
-
-        if (HideWeaponWhileFlying) SetOwnerWeaponVisible(true);
-
-        EndAbility();
     }
 
     // Instancia el proyectil, lo spawnea en red, lo inicializa con los

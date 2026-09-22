@@ -1507,7 +1507,10 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         ObserversSetWeaponVisible(visible);
     }
 
-    [ObserversRpc]
+    // Al dueño se lo salteamos: él lo anticipa con su propio reloj, en el frame en que
+    // SU animación suelta el arma (ver PlayerController.PredictWeaponHide). Este aviso
+    // le llegaría dos viajes tarde y se pelearía con esa predicción.
+    [ObserversRpc(ExcludeOwner = true)]
     private void ObserversSetWeaponVisible(bool visible)
     {
         // El servidor ya lo aplicó en ServerSetWeaponVisible() de arriba.
