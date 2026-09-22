@@ -21,9 +21,20 @@ MonoBehaviour:
   UltimateChargeAmount: 1
   ActivationBlockedTags: 0100000003000000
   ActivationRequiredTags: 
+  UsableWhileChanneling: 0
   AnimationClip: {fileID: 3094330708855449807, guid: 18afe56f6fdf0b0478209f4b1512c8cc, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 1
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
@@ -34,8 +45,10 @@ MonoBehaviour:
     RotationOffset: {x: 0, y: 0, z: 0}
     Scale: {x: 0, y: 0, z: 0}
     AttachToOwner: 0
-    DestroyTime: 0.2
+    DestroyTime: 0.5
     EndWithTag: 0
+    EndWhenAttributeDepleted: 0
+    DepletedAttribute: 0
   MaxCharges: 1
   Targets: 0
   Radius: 6

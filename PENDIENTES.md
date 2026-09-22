@@ -522,28 +522,56 @@ Todo instalado en el Animator y en el prefab del jugador (22 de septiembre):
 - **Morir limpia buffs y debuffs; revivir devuelve el kit** (cooldown a cero, cargas
   llenas) menos la R. El Inmortal también lo recibe al levantarse con su definitiva.
 
-### Inclinar el torso hacia la mira — CÓDIGO LISTO, falta el Animator y el componente
+### Inclinar el torso hacia la mira — LISTO, falta probarlo entre dos ventanas
 
 `Player/UpperBodyAim.cs`: mirando al cielo el personaje se arquea hacia atrás, mirando
-al piso se encorva. El yaw no se toca (de eso ya se encarga `FaceCameraForward`).
+al piso se encorva. El yaw no se toca (de eso ya se encarga `FaceCameraForward`). Se
+aplica en `LateUpdate`, encima de la pose que haya animado el Animator, así funciona
+igual corriendo, atacando o con el escudo arriba.
 
-**Cómo viaja por la red sin un RPC nuevo**: el ángulo se guarda en un parámetro FLOAT
-del Animator y el `NetworkAnimator` del prefab ya sincroniza los floats con suavizado.
-El parámetro no lo usa ningún estado ni transición: es solo el vehículo. Y se aplica en
-`LateUpdate`, encima de la pose que haya animado el Animator, así funciona igual
-corriendo, atacando o con el escudo arriba.
+- [x] En `AC_Player`, parámetro **Float** llamado **`AimPitch`**.
+- [x] En el prefab del jugador, `UpperBodyAim` en la **raíz**.
+- [ ] **Probarlo con dos ventanas**: que el OTRO personaje también se incline al apuntar
+      arriba o abajo, no solo el propio.
 
-Para activarlo:
-
-- [ ] En `AC_Player`, parámetro **Float** llamado **`AimPitch`**. No hace falta ninguna
-      transición ni estado: solo tiene que existir.
-- [ ] En el prefab del jugador, `Add Component ▸ UpperBodyAim` en la **raíz**. Los huesos
-      los encuentra solo del avatar humanoide (Spine, Chest, UpperChest, Head).
+**Cómo viaja por la red** (cambió): el dueño manda el ángulo por un RPC no confiable a
+~15 por segundo (un byte), y los demás lo suavizan. El plan era que viajara gratis en el
+parámetro del Animator, por el `NetworkAnimator` del prefab — **no se puede**: ver abajo.
+El parámetro `AimPitch` se sigue escribiendo igual, pero solo para poder mirar el valor
+en la ventana del Animator mientras se prueba.
 
 Perillas: `Weights` (cuánto del ángulo lleva cada hueso — repartido se ve natural, todo
-en uno se ve quebrado), `MaxUp` 50° / `MaxDown` 40°, y `Smooth` 0.08 s.
+en uno se ve quebrado), `MaxUp` 50° / `MaxDown` 40°, `Smooth` 0.08 s, y `SendRate` 15.
 
 No se aplica con el personaje muerto ni aturdido.
+
+### El NetworkAnimator del jugador está INERTE — hay que revisarlo
+
+Buscando por dónde mandar el `AimPitch` apareció esto: el `NetworkAnimator` del prefab
+del jugador tiene su campo **Animator vacío**, y el Animator del personaje vive en un
+hijo (el modelo). FishNet, cuando el campo está vacío, prueba con un `GetComponent` en
+**su propio** GameObject: no lo encuentra, se da por vencido y no sincroniza nada — sin
+un solo warning, porque lo tiene comentado en su código.
+
+Lo más probable es que la referencia se haya perdido al cambiar el modelo del personaje,
+igual que le pasó al `WalkAnimator` del clon del ilusionista.
+
+Qué implica, si es lo que parece: **la locomoción de los demás jugadores no se
+sincroniza**. `UpdateAnimations` corre solo en el dueño, así que en tu pantalla los otros
+se deslizarían en idle en vez de caminar. Las animaciones de habilidades, golpe, stun y
+muerte sí se ven, porque esas van por las RPC del `NetworkASC`.
+
+- [ ] **Confirmarlo**: dos ventanas, caminar con una y mirar a ese personaje desde la
+      otra. ¿Mueve las piernas?
+- [ ] Si no las mueve: arrastrar el Animator del modelo al campo **Animator** del
+      `NetworkAnimator`, y llenar **`IgnoredParameters`** con los que YA viajan por RPC,
+      para que no se manden dos veces: `AttackTrigger`, `HoldTrigger`,
+      `HoldImpactTrigger`, `HitTrigger`, `ActionID`, `ActionSpeedMult`,
+      `AttackSpeedMult`, `IsHolding`, `IsStunned`, `IsDead`, `AimPitch`. Quedan
+      sincronizados solo los de caminar: `Speed`, `MoveX`, `MoveY`, `IsJumping`,
+      `VerticalSpeed`.
+- [ ] Probar después el combo y el golpe: si alguna animación se dispara dos veces en la
+      copia remota, sobra un parámetro en la lista de ignorados.
 
 ### Sensación del ataque básico — HECHO Y PROBADO ✅
 

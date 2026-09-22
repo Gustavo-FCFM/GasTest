@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using FishNet.Transporting;
 
 // ============================================================
 // PlayerController
@@ -1788,6 +1789,49 @@ public class PlayerController : NetworkBehaviour
         float spd = ASC.GetAttributeValue(EAttributeType.AtkSpeed);
         if (spd > 0)
             characterAnimator.SetFloat("AttackSpeedMult", 1f / spd);
+    }
+
+    // =========================================================
+    // INCLINACIÓN DEL TORSO (AimPitch)
+    //
+    // El ángulo lo calcula UpperBodyAim en el DUEÑO (es el único que sabe hacia
+    // dónde mira su cámara) y acá solo lo transportamos: dueño → servidor →
+    // observadores.
+    //
+    // POR QUÉ NO VIAJA POR EL NetworkAnimator, como decía el plan original: el
+    // NetworkAnimator del prefab tiene su campo Animator VACÍO y el Animator vive en
+    // un hijo (el modelo), así que su GetComponent no lo encuentra y el componente
+    // queda inerte — sin un solo warning, porque FishNet lo tiene comentado. Antes de
+    // apoyarse en él habría que asignarlo a mano, y eso prendería la sincronización
+    // de TODOS los parámetros de golpe, encima de las RPCs que ya los mandan.
+    //
+    // Va por canal NO CONFIABLE y a ~15 por segundo: es un valor que se reemplaza
+    // solo, un paquete perdido lo arregla el siguiente. Un byte alcanza — el ángulo
+    // está topeado a ±50°.
+    // =========================================================
+
+    // Último ángulo recibido, en grados. Lo leen las copias que NO son del dueño.
+    public float NetworkAimPitch { get; private set; }
+
+    public void SendAimPitch(float degrees)
+    {
+        if (!IsOwner) return;
+        ServerSetAimPitch((sbyte)Mathf.Clamp(Mathf.RoundToInt(degrees), -127, 127), Channel.Unreliable);
+    }
+
+    [ServerRpc]
+    private void ServerSetAimPitch(sbyte pitch, Channel channel = Channel.Unreliable)
+    {
+        NetworkAimPitch = pitch;          // la copia del servidor también lo dibuja
+        ObserversSetAimPitch(pitch, Channel.Unreliable);
+    }
+
+    // Al dueño se lo salteamos: él ya tiene el valor de primera mano, sin el retardo
+    // de la ida y vuelta.
+    [ObserversRpc(ExcludeOwner = true)]
+    private void ObserversSetAimPitch(sbyte pitch, Channel channel = Channel.Unreliable)
+    {
+        NetworkAimPitch = pitch;
     }
 
     // (Re)arma la copia de runtime del Animator: parte del controller BASE y le
