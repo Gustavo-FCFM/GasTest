@@ -81,7 +81,8 @@ public class GA_ProjectileShoot : GameplayAbility
         if (!IsServer) return;   // ← NUEVO
         if (!CanActivate()) return;
 
-        CommitAbility();
+        // OJO: acá NO se cobra. El cooldown empieza cuando el hacha SALE de la mano, no
+        // cuando arranca la animación — ver ShootSequence.
 
         if (OwnerASC != null)
         {
@@ -164,9 +165,27 @@ public class GA_ProjectileShoot : GameplayAbility
         if (Cancelled(cancelSerial))
         {
             // Nunca se escondió el arma (eso pasa al soltar), así que no hay nada que
-            // devolver: solo no sale el proyectil.
+            // devolver: solo no sale el proyectil. Y tampoco se cobra nada — la finta
+            // sale gratis en cooldown, ver abajo por qué eso no se puede abusar.
             yield break;
         }
+
+        // EL COOLDOWN EMPIEZA ACÁ, no al apretar el botón.
+        //
+        // Cortar el lanzamiento antes de tiempo te dejaba igual sin habilidad por varios
+        // segundos: pagabas el precio de un hacha que nunca salió. Cobrando al soltar, lo
+        // que se paga es el hacha, no la intención.
+        //
+        // POR QUÉ NO SE PUEDE ABUSAR: para cancelar hay que activar OTRA habilidad, y esa
+        // tiene su propio costo. No existe un botón de "cancelar" suelto. Y repetir el
+        // botón del lanzamiento no reinicia nada, porque una habilidad no se corta a sí
+        // misma (ver PlayerController.CheckAbilityButton). Lo peor que se puede hacer es
+        // amagar gastando el cooldown de otra cosa, que es un mal negocio.
+        //
+        // EFECTO EN EL BALANCE: entre dos hachas ahora pasa (tiempo de soltar + cooldown)
+        // en vez de solo el cooldown. Son unos 0,7 s más en el hacha del Bárbaro. Si se
+        // siente lenta, se baja su CooldownDuration.
+        CommitAbility();
 
         SpawnProjectile();
 

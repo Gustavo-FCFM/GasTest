@@ -991,10 +991,8 @@ public class PlayerController : NetworkBehaviour
 
         CheckAbilityButton(_input.Secondary,       AimAbility,           EAbilityInput.SecondaryAttack);
 
-        // El básico también corta: si lo que corre es un lanzamiento interrumpible, se
-        // lee igual. Lo único que no puede cortar es a SÍ MISMO — si no, apretar LMB
-        // durante su propio combo mataría el combo en vez de encadenarlo.
-        if (busy && _runningSlot == EAbilityInput.PrimaryAttack) return;
+        // El básico también corta un lanzamiento. Que no se corte a sí mismo lo resuelve
+        // CheckAbilityButton, que ya saltea el botón de lo que está corriendo.
         CheckAbilityButton(_input.PrimaryAttack,   PrimaryAttackAbility, EAbilityInput.PrimaryAttack);
         TickAutoRepeatPrimaryAttack();
     }
@@ -1042,6 +1040,13 @@ public class PlayerController : NetworkBehaviour
     private void CheckAbilityButton(UnityEngine.InputSystem.InputAction action, GameplayAbility ability, EAbilityInput slot)
     {
         if (ability == null || action == null) return;
+
+        // UNA HABILIDAD NO SE CORTA A SÍ MISMA. Interrumpible quiere decir "otra la
+        // puede cortar", no "se reinicia sola". Sin esto, apretar dos veces el botón del
+        // hacha reiniciaría el lanzamiento cada vez y el hacha no saldría nunca — y con
+        // el cooldown empezando al soltar (ver GA_ProjectileShoot) ni siquiera habría un
+        // cooldown que lo frenara.
+        if (isAttacking && !IsAimingAbility && _runningSlot == slot) return;
 
         if (action.WasPressedThisFrame())
         {

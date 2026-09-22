@@ -708,14 +708,30 @@ que el pedido no salía nunca del cliente y marcar o desmarcar la casilla daba i
 agregás otra habilidad interrumpible y "no pasa nada", mirá ahí primero.
 
 - [x] Probado: se puede interrumpir el lanzamiento.
-- [ ] Probar que el BÁSICO corta un lanzamiento (tirar el hacha y apretar LMB), y que NO
-      corta su propio combo (apretar LMB durante el combo lo tiene que encadenar, no
-      matarlo).
+- [x] Probado: el básico corta un lanzamiento y el combo se sigue encadenando.
 - [ ] Probar el encadenado: tirar y meter el dash apenas sale el proyectil.
 - [ ] Que el arma no se quede escondida ni aparezca dos veces en ninguno de los dos.
+- [ ] **El cooldown ahora empieza al SOLTAR**, no al apretar (ver abajo). Probar que
+      fintar no deja la habilidad en cooldown, y que mantener o repetir el botón del
+      hacha NO reinicia el lanzamiento.
 - [ ] Decidir si el **rayo del Paladín** (`GA_SmiteBeam` y el de Conquista) también
       debería cancelarse. Es marcar la casilla en esos dos assets, pero cambia cómo se
       siente la clase y esa es tu decisión, no mía.
+
+**El cooldown de un lanzamiento empieza al SOLTAR**, no al apretar el botón. Fintar
+dejaba la habilidad en cooldown varios segundos por un hacha que nunca salió: se pagaba
+la intención, no el hacha. Ahora se paga lo que salió.
+
+No se puede abusar, y el motivo es estructural: **para cancelar hay que activar OTRA
+habilidad**, y esa tiene su propio costo. No existe un botón de "cancelar" suelto. Y
+repetir el botón del lanzamiento no reinicia nada, porque una habilidad no se corta a sí
+misma (`CheckAbilityButton`). Lo peor que se puede hacer es amagar gastando el cooldown
+de otra cosa, que es mal negocio.
+
+Efecto en el balance, que conviene mirar jugando: entre dos hachas ahora pasa (tiempo de
+soltar + cooldown) en vez de solo el cooldown — unos 0,7 s más en el hacha del Bárbaro.
+Si se siente lenta, se baja su `CooldownDuration`. Y el ícono del HUD se queda encendido
+durante el envión, que es lo correcto: todavía no gastaste nada.
 
 **El ataque básico TAMBIÉN corta** (desde el 24 de septiembre): apretar LMB con un
 lanzamiento en curso lo cancela y empieza el swing. Lo único que no puede cortar es a sí
