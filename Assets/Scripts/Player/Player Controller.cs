@@ -2689,10 +2689,23 @@ public class PlayerController : NetworkBehaviour
         float   bestDist  = float.MaxValue;
         Vector3 bestPoint = ray.GetPoint(maxRange);
 
+        // NADA DE LO QUE ESTÉ ENTRE LA CÁMARA Y VOS CUENTA.
+        //
+        // La cámara va varios metros atrás, así que el rayo atraviesa todo ese tramo
+        // antes de llegar al personaje. Un compañero parado justo detrás tuyo —cosa de
+        // todos los partidos en un 3c3c3— o una pared contra la que la cámara se apoya
+        // daban un punto de mira DETRÁS del jugador: el personaje giraba al revés y lo
+        // que lanzabas salía para atrás o de costado.
+        //
+        // El corte es la distancia a la que queda el propio personaje sobre el rayo.
+        float ignoreCloserThan = Vector3.Dot(transform.position + Vector3.up * EyeHeight - ray.origin,
+                                             ray.direction);
+
         foreach (var h in hits)
         {
             if (!h.collider.isTrigger
                 && h.collider.transform.root != transform.root
+                && h.distance >= ignoreCloserThan
                 && h.distance < bestDist)
             {
                 bestDist  = h.distance;
@@ -2700,6 +2713,43 @@ public class PlayerController : NetworkBehaviour
             }
         }
         return bestPoint;
+    }
+
+    // Hacia dónde lanzar algo que sale de 'muzzle' (la mano, el cañón) para que vaya a
+    // donde apunta la retícula.
+    //
+    // NO ES (puntoDeMira - muzzle) A SECAS, y ese era el problema de los lanzamientos de
+    // cerca: la retícula sale de la cámara, que está atrás y al hombro, mientras que el
+    // proyectil nace en la mano. Las dos líneas convergen bien de lejos, pero cuanto más
+    // cerca está el objetivo más se abren — a dos metros, apuntar al pecho de alguien
+    // hacía salir el hacha veinte grados al costado. Se veía torcido aunque pegara.
+    //
+    // El arreglo es el de siempre en un juego en tercera persona: no se apunta al punto
+    // crudo sino a un punto sobre el MISMO rayo pero a una distancia mínima. Así la
+    // dirección desde la mano queda casi paralela al rayo de la retícula, que es lo que
+    // el jugador espera ver, y el proyectil igual pasa por donde apuntó.
+    public Vector3 GetLaunchDirection(Vector3 muzzle, float minConvergeDistance = 4f)
+    {
+        Vector3 aimOrigin = GetAimOrigin();
+        Vector3 aimPoint  = GetAimPoint();
+
+        Vector3 rayDir = aimPoint - aimOrigin;
+        if (rayDir.sqrMagnitude < 0.0001f) return transform.forward;
+        rayDir.Normalize();
+
+        // La distancia que importa es la que hay del PUNTO A LA MANO, no a la cámara: la
+        // cámara está cinco metros atrás, así que un enemigo pegado al personaje ya
+        // estaría "lejos" para ella y no se corregiría nada.
+        //
+        // Si el punto quedó más cerca que el mínimo, se lo empuja por el mismo rayo
+        // hasta esa distancia. El proyectil sigue yendo por la línea de la retícula, y
+        // como el objetivo está SOBRE esa línea, le pega igual.
+        float toMuzzle = Vector3.Distance(aimPoint, muzzle);
+        if (toMuzzle < minConvergeDistance)
+            aimPoint += rayDir * (minConvergeDistance - toMuzzle);
+
+        Vector3 dir = aimPoint - muzzle;
+        return dir.sqrMagnitude > 0.0001f ? dir.normalized : transform.forward;
     }
 
     // Desde dónde sale el rayo de la mira: la cámara del dueño. En el servidor y en los

@@ -63,6 +63,14 @@ public class GA_ProjectileShoot : GameplayAbility
     // salga (para sincronizar con la animación de disparo).
     public float SpawnDelay = 0.4f;
 
+    [Tooltip("Distancia mínima a la que se considera que la retícula y el proyectil se " +
+             "juntan. La retícula sale de la cámara y el proyectil de la mano: apuntando " +
+             "a algo muy cerca, esas dos líneas se abren y el tiro sale visiblemente " +
+             "torcido. Con esto se apunta a un punto del MISMO rayo pero a esta " +
+             "distancia, así el tiro sale derecho y igual pasa por donde apuntaste. " +
+             "Subirlo endereza más el tiro de cerca; bajarlo lo hace más literal.")]
+    public float MinConvergeDistance = 4f;
+
     [Header("Visuales")]
     public GameObject ImpactVFX;
 
@@ -235,8 +243,9 @@ public class GA_ProjectileShoot : GameplayAbility
 
         if (pc != null)
         {
-            Vector3 targetPoint = pc.GetAimPoint(100f);
-            launchDirection = (targetPoint - spawnPos).normalized;
+            // La dirección la resuelve el PlayerController: no es (mira - mano) a secas,
+            // porque de cerca eso sale torcido (ver GetLaunchDirection).
+            launchDirection = pc.GetLaunchDirection(spawnPos, MinConvergeDistance);
             spawnRot        = Quaternion.LookRotation(launchDirection);
         }
         else

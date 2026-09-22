@@ -41,6 +41,12 @@ public class GA_HitscanShot : GameplayAbility
     [Tooltip("Altura del cañón sobre el pivote del personaje (desde dónde sale el rayo).")]
     public float MuzzleHeight = 1.4f;
 
+    [Tooltip("Distancia mínima a la que se considera que la retícula y el disparo se " +
+             "juntan. La retícula sale de la cámara y el tiro del arma: apuntando a algo " +
+             "muy cerca, esas dos líneas se abren y el disparo sale visiblemente torcido. " +
+             "Con esto se apunta a un punto del MISMO rayo pero a esta distancia.")]
+    public float MinConvergeDistance = 4f;
+
     [Tooltip("Capas que FRENAN el disparo (paredes/entorno).")]
     public LayerMask WallLayer;
 
@@ -92,11 +98,12 @@ public class GA_HitscanShot : GameplayAbility
 
         // Dirección 3D hacia la retícula (incluye el ángulo vertical: es lo que
         // permite el impulso hacia arriba al disparar al piso).
-        Vector3 aimPoint = pc != null ? pc.GetAimPoint(MaxRange)
-                                      : origin + OwnerASC.transform.forward * MaxRange;
-        Vector3 dir = aimPoint - origin;
-        if (dir.sqrMagnitude < 0.0001f) dir = OwnerASC.transform.forward;
-        dir.Normalize();
+        //
+        // Sale del PlayerController y no de (mira - origen) a secas: la retícula sale de
+        // la cámara y el tiro del arma, y de cerca esas dos líneas se abren lo bastante
+        // como para que el disparo se vea torcido. Ver GetLaunchDirection.
+        Vector3 dir = pc != null ? pc.GetLaunchDirection(origin, MinConvergeDistance)
+                                 : OwnerASC.transform.forward;
 
         ResolveShot(origin, dir, pc, netAsc);
 

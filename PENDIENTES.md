@@ -787,6 +787,42 @@ restaurarlo (ver la sección 2) o armar el segundo mapa a mano.
 
 ---
 
+### Los tiros de cerca salían torcidos — ARREGLADO, falta probarlo
+
+Lanzando el hacha o disparando a algo que tenías pegado, el proyectil no salía de
+frente: se iba al costado o para arriba, con un ángulo raro.
+
+**Dos causas distintas, las dos arregladas:**
+
+**1. La retícula sale de la CÁMARA y el proyectil de la MANO.** La cámara va atrás y al
+hombro; el arma, adelante y al centro. Esas dos líneas convergen bien de lejos, pero
+cuanto más cerca está el objetivo, más se abren — a dos metros, apuntarle al pecho a
+alguien hacía salir el hacha unos veinte grados al costado. Pegaba, pero se veía mal.
+
+Ahora no se apunta al punto crudo sino a un punto del **mismo rayo** pero a una
+distancia mínima de la mano (`MinConvergeDistance`, 4 m). La dirección queda casi
+paralela a la retícula, que es lo que el jugador espera ver, y como el objetivo está
+sobre esa misma línea, le pega igual. Es el arreglo de siempre en tercera persona.
+
+**2. El rayo de la mira chocaba con lo que hubiera ENTRE la cámara y vos.** La cámara va
+varios metros atrás, así que el rayo atraviesa todo ese tramo primero. Un compañero
+parado detrás tuyo —cosa de todos los partidos en un 3c3c3— o una pared contra la que la
+cámara se apoya daban un punto de mira **detrás** del jugador: el personaje giraba al
+revés y lo que lanzabas salía para atrás. Ahora se descarta todo lo que esté más cerca
+que el propio personaje.
+
+Ese segundo arreglo es de `GetAimPoint`, así que vale para TODO lo que use la mira:
+girar el cuerpo, las áreas en el piso, el dash, las de objetivo único.
+
+- [ ] Probar el hacha del Bárbaro a quemarropa, y a media distancia para confirmar que de
+      lejos no cambió nada.
+- [ ] La pistola del Pirata (usa el mismo arreglo) y las dagas del Pícaro.
+- [ ] Con un compañero parado justo detrás tuyo, apuntar y lanzar. Ese era el caso del
+      tiro que salía para atrás.
+- [ ] Si de cerca ahora se siente que el tiro "no obedece" (pasa al lado del que tenías
+      pegado), bajá `MinConvergeDistance` en el asset. Más alto = más derecho; más bajo =
+      más literal.
+
 ### Apuntar a un objetivo elegía al más cercano — ARREGLADO Y PROBADO ✅
 
 Con el Golpe mortal (Q del Pícaro), apuntando a un enemigo del fondo entre otros dos,
