@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ClassName: Rogue
   ClassIcon: {fileID: 21300000, guid: ae73fb56930f65d44858247c10d1c277, type: 3}
-  Description: Frágil y rapidísimo. Ataca al doble de veces, aparece detrás del enemigo con Golpe mortal y por la espalda pega el doble. Lo matan de dos golpes.
+  Description: Fragile and blindingly fast. Attacks twice as often, appears behind his target with Blink, and hits double from the back. Two hits and he is gone.
   BaseAttributes: {fileID: 11400000, guid: 0224f296ec403d44e8b335c6d0a0029a, type: 2}
   Abilities:
   - InputSlot: 1

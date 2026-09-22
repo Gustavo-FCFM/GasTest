@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using FishNet;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 // ============================================================
@@ -61,6 +62,16 @@ public class UI_LobbyPanel : MonoBehaviour
              "crece solo con ellos.")]
     public float ClassIconSize = 84f;
 
+    [Tooltip("Alto de la línea con el NOMBRE de la clase (la que está bajo el mouse).")]
+    public float NameHeight        = 30f;
+
+    [Tooltip("Alto del bloque de DESCRIPCIÓN de la clase seleccionada. Si tus textos se " +
+             "cortan, subilo.")]
+    public float DescriptionHeight = 72f;
+
+    [Tooltip("Alto que se reserva abajo para el botón Confirm del selector.")]
+    public float ConfirmHeight     = 56f;
+
     [Tooltip("Fondo del panel. La grilla de clases usa este mismo color pero SIN " +
              "transparencia, para que no se lea el panel de atrás mientras elegís.")]
     public Color PanelColor   = new Color(0.09f, 0.09f, 0.11f, 0.97f);
@@ -93,6 +104,14 @@ public class UI_LobbyPanel : MonoBehaviour
     private Button          _confirmButton;
     private TextMeshProUGUI _confirmLabel;
     private RectTransform   _classPicker;
+
+    // El selector de clase: los íconos (para resaltar el elegido), el nombre de la que
+    // está debajo del mouse, la descripción de la SELECCIONADA, y su botón de confirmar.
+    private Image[]         _classIcons;
+    private TextMeshProUGUI _classNameLabel;
+    private TextMeshProUGUI _classDescLabel;
+    private Button          _pickerConfirm;
+    private int             _pickerSelection = -1;
     private TextMeshProUGUI _statusText;
 
     // Un lugar de equipo dibujado: su fondo, su ícono de clase y su etiqueta.
@@ -810,8 +829,18 @@ public class UI_LobbyPanel : MonoBehaviour
         _confirmButton.onClick.AddListener(ToggleReady);
     }
 
-    // La grilla de clases: SOLO íconos, y con fondo opaco a propósito — con el panel
-    // traslúcido de atrás visible, elegir clase era un ruido visual.
+    // La grilla de clases: íconos arriba, y debajo el nombre y la descripción de la que
+    // estás mirando. Fondo opaco a propósito — con el panel traslúcido de atrás visible,
+    // elegir clase era un ruido visual.
+    //
+    // ELEGIR NO ES CONFIRMAR. Tocar un ícono solo la SELECCIONA: se resalta y aparece su
+    // descripción, y recién el botón Confirm la aplica. Antes el primer clic ya te
+    // cambiaba de clase, así que no había forma de leer qué hacía cada una sin quedarte
+    // con ella.
+    //
+    // El nombre sigue al MOUSE (pasar por encima alcanza, sin tocar nada) y la
+    // descripción sigue a la SELECCIÓN. Así se puede recorrer los íconos leyendo nombres
+    // sin perder la descripción de la que estás por elegir.
     private void BuildClassPicker()
     {
         int count = SelectableClasses != null ? SelectableClasses.Length : 0;
@@ -819,11 +848,12 @@ public class UI_LobbyPanel : MonoBehaviour
         // deja un margen alrededor. Así subir ClassIconSize agranda todo junto.
         float iconSize = Mathf.Max(24f, ClassIconSize);
         float step     = iconSize + 12f;
-        float width    = Mathf.Max(140f, count * step + 32f);
+        float width    = Mathf.Max(360f, count * step + 32f);
+        float height   = iconSize + 46f + NameHeight + DescriptionHeight + ConfirmHeight;
 
         _classPicker = MercUIFactory.CreateRect(
             _root, "ClassPicker", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-            new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(width, iconSize + 46f));
+            new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(width, height));
 
         Image bg = _classPicker.gameObject.AddComponent<Image>();
         bg.color = new Color(PanelColor.r, PanelColor.g, PanelColor.b, 1f); // opaco
@@ -835,6 +865,11 @@ public class UI_LobbyPanel : MonoBehaviour
         close.transition    = Selectable.Transition.None;
         close.onClick.AddListener(() => ShowClassPicker(false));
 
+        // Los íconos van arriba del todo, dejando abajo el espacio del texto y el botón.
+        float iconsY = (height - iconSize) * 0.5f - 16f;
+
+        _classIcons = new Image[count];
+
         for (int i = 0; i < count; i++)
         {
             int captured = i;
@@ -843,23 +878,114 @@ public class UI_LobbyPanel : MonoBehaviour
             RectTransform iconRect = MercUIFactory.CreateRect(
                 _classPicker, $"Class_{i}", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
                 new Vector2(0.5f, 0.5f),
-                new Vector2((i - (count - 1) * 0.5f) * step, 0f), new Vector2(iconSize, iconSize));
+                new Vector2((i - (count - 1) * 0.5f) * step, iconsY), new Vector2(iconSize, iconSize));
 
             Image icon = iconRect.gameObject.AddComponent<Image>();
             icon.sprite = cls != null ? cls.ClassIcon : null;
             icon.preserveAspect = true;
+            _classIcons[i] = icon;
 
             Button b = iconRect.gameObject.AddComponent<Button>();
             b.targetGraphic = icon;
-            b.onClick.AddListener(() => ChooseClass(captured));
+            b.onClick.AddListener(() => SelectClassInPicker(captured));
+
+            // Pasar el mouse por encima muestra el nombre, sin elegir nada. Se arma con
+            // un EventTrigger y no con un Button aparte porque el Button ya está usado
+            // para seleccionar y su "highlight" no avisa cuál se está mirando.
+            EventTrigger trigger = iconRect.gameObject.AddComponent<EventTrigger>();
+            AddTriggerEntry(trigger, EventTriggerType.PointerEnter, () => ShowClassName(captured));
+            AddTriggerEntry(trigger, EventTriggerType.PointerExit,  () => ShowClassName(_pickerSelection));
         }
+
+        Vector2 mid = new Vector2(0.5f, 0.5f);
+
+        float nameY = iconsY - iconSize * 0.5f - NameHeight * 0.5f - 6f;
+        _classNameLabel = MercUIFactory.CreateText(
+            _classPicker, "ClassName", "", 22f, Color.white, TextAlignmentOptions.Center,
+            new Vector2(0f, nameY), new Vector2(width - 32f, NameHeight), mid, mid, mid);
+        _classNameLabel.fontStyle = FontStyles.Bold;
+
+        float descY = nameY - NameHeight * 0.5f - DescriptionHeight * 0.5f;
+        _classDescLabel = MercUIFactory.CreateText(
+            _classPicker, "ClassDescription", "", 15f, new Color(0.78f, 0.80f, 0.85f, 1f),
+            TextAlignmentOptions.Top, new Vector2(0f, descY),
+            new Vector2(width - 40f, DescriptionHeight), mid, mid, mid);
+
+        _pickerConfirm = CreateButton(_classPicker, "ConfirmClass", "Confirm", SlotColor,
+                                      new Vector2(0.5f, 0f), new Vector2(0f, 14f),
+                                      new Vector2(200f, ConfirmHeight - 10f), out _);
+        _pickerConfirm.onClick.AddListener(ConfirmClassSelection);
 
         _classPicker.gameObject.SetActive(false);
     }
 
+    private static void AddTriggerEntry(EventTrigger trigger, EventTriggerType type, System.Action action)
+    {
+        EventTrigger.Entry entry = new EventTrigger.Entry { eventID = type };
+        entry.callback.AddListener(_ => action());
+        trigger.triggers.Add(entry);
+    }
+
+    // Solo mira: escribe el nombre de esa clase (o lo limpia con índice inválido).
+    private void ShowClassName(int index)
+    {
+        CharacterClassDefinition cls = ClassAt(index);
+        if (_classNameLabel != null) _classNameLabel.text = cls != null ? cls.ClassName : "";
+    }
+
+    // Selecciona sin aplicar: resalta el ícono y muestra su descripción.
+    private void SelectClassInPicker(int index)
+    {
+        _pickerSelection = index;
+        ShowClassName(index);
+
+        CharacterClassDefinition cls = ClassAt(index);
+        if (_classDescLabel != null) _classDescLabel.text = cls != null ? cls.Description : "";
+
+        // El resaltado es el propio ícono, más brillante. Los demás quedan apagados, así
+        // se ve de un vistazo cuál está elegida.
+        if (_classIcons != null)
+            for (int i = 0; i < _classIcons.Length; i++)
+                if (_classIcons[i] != null)
+                    _classIcons[i].color = i == index ? Color.white : new Color(0.5f, 0.5f, 0.5f, 1f);
+
+        if (_pickerConfirm != null) _pickerConfirm.interactable = cls != null;
+    }
+
+    // Recién acá se aplica de verdad.
+    private void ConfirmClassSelection()
+    {
+        if (ClassAt(_pickerSelection) == null) return;
+        ChooseClass(_pickerSelection);
+    }
+
     private void ShowClassPicker(bool show)
     {
-        if (_classPicker != null) _classPicker.gameObject.SetActive(show);
+        if (_classPicker == null) return;
+
+        // Al abrirlo, arrancar en la clase que ya tenés puesta: así el selector muestra
+        // de entrada qué elegiste y se puede confirmar sin volver a tocar el ícono.
+        if (show)
+        {
+            int current = -1;
+            LobbyManager lobby = LobbyManager.Instance;
+            if (lobby != null && !LobbyManager.IsBot(_pickerTarget)
+                && lobby.TryGetLocalEntry(out LobbyEntry me)) current = me.ClassIndex;
+
+            if (ClassAt(current) != null) SelectClassInPicker(current);
+            else
+            {
+                _pickerSelection = -1;
+                ShowClassName(-1);
+                if (_classDescLabel != null) _classDescLabel.text = "";
+                if (_pickerConfirm != null) _pickerConfirm.interactable = false;
+                if (_classIcons != null)
+                    foreach (Image icon in _classIcons)
+                        if (icon != null) icon.color = Color.white;
+            }
+        }
+
+        _classPicker.gameObject.SetActive(show);
     }
 
     // MercUIFactory no tiene botones (el HUD del modo no los necesitaba), así que se

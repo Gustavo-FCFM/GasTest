@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ClassName: Shaman
   ClassIcon: {fileID: 21300000, guid: 1dd62a67146a3094f9f34b2d9aa78b51, type: 3}
-  Description: Bárbaro que pelea acompañado. Planta un tótem que ataca con él y desata una furia elemental en el área. El que sostiene una posición.
+  Description: A barbarian who never fights alone. Plants a totem that attacks alongside him and unleashes elemental fury over an area. The one who holds ground.
   BaseAttributes: {fileID: 11400000, guid: 06d50662e88e07440acd6ca1d40486dd, type: 2}
   Abilities:
   - InputSlot: 1

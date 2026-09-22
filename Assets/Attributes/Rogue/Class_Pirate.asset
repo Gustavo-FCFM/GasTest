@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ClassName: Pirate
   ClassIcon: {fileID: 21300000, guid: f8781bcf6ee31544c93d046f2471bd70, type: 3}
-  Description: Pícaro a distancia. Pistola en vez de daga, comida para curarse y una lluvia de cañonazos. El único pícaro que pelea de lejos.
+  Description: The ranged rogue. A pistol instead of a dagger, food to heal, and a rain of cannon fire. The only rogue who fights from a distance.
   BaseAttributes: {fileID: 11400000, guid: 4568fbd577293b241b798a4ed81d6af7, type: 2}
   Abilities:
   - InputSlot: 1

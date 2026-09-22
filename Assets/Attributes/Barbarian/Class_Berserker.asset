@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ClassName: Berserker
   ClassIcon: {fileID: 21300000, guid: 3a3a94c5d846c634f8d0e8369d21714f, type: 3}
-  Description: Bárbaro de golpes rápidos. Ataca al doble de velocidad y cada golpe pega menos. Torbellino para pelear rodeado. Cuanto más larga la pelea, mejor le va.
+  Description: A barbarian of fast strikes. Attacks twice as often and each hit lands softer. Whirlwind is for fighting surrounded. The longer the fight, the better he does.
   BaseAttributes: {fileID: 11400000, guid: 5f2d453bdca4bc847bc79581b5e6b791, type: 2}
   Abilities:
   - InputSlot: 1

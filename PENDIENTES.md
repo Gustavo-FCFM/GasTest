@@ -105,9 +105,12 @@ El panel aparece **solo con conexión**: antes de iniciar el host o de conectart
 1. Entrás y quedás de **espectador** automáticamente, sin tocar nada.
 2. Escribís tu nombre arriba (Enter para confirmarlo).
 3. Tocás **Unirte** en un lugar libre de un equipo.
-4. Tocás **tu propio ícono** para abrir la grilla de clases (el fondo la cierra sin
-   elegir).
-5. **Confirmar** te pone en verde. Volver a tocarlo te apaga.
+4. Tocás **tu propio ícono** para abrir el selector de clases. Ahí, **pasar el mouse**
+   por un ícono muestra su NOMBRE y **tocarlo** la selecciona y muestra su DESCRIPCIÓN
+   — tocar NO la aplica: eso lo hace el botón **Confirm** de abajo. El fondo cierra el
+   selector sin elegir nada.
+5. **Confirmar** (el del panel, no el del selector) te pone en verde. Volver a tocarlo
+   te apaga.
 6. El **host** aprieta **Start** cuando quiera — el botón solo lo ve él, se pone verde
    cuando todos están listos, y la línea de estado le dice cuántos faltan.
 
