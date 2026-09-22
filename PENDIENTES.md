@@ -983,6 +983,15 @@ estaban pegando.
 cada jugador, y mandarla a todos gastaría red y le contaría a los demás que alguien está
 peleando. Los ticks de veneno no disparan nada, para no llenar la pantalla.
 
+**Para tocarle las medidas desde el Inspector**: creá un GameObject vacío en la escena de
+la arena y agregale el componente `UI_CombatFeedback`. `Get()` usa el de la escena si hay
+uno, y recién si no hay lo crea. Con el componente puesto, cambiar las medidas **mientras
+jugás** las aplica al momento — no hay que salir y volver a entrar.
+
+La X son **cuatro puntas con un hueco en el medio**, no una equis maciza: el hueco deja
+ver la retícula justo cuando más la estás mirando. `HitMarkLength` alarga las puntas,
+`HitMarkGap` agranda el hueco, `HitMarkThickness` las engrosa.
+
 - [ ] Probar la X contra un monstruo, gastándole la vida de a poco: tiene que ir
       poniéndose más sólida.
 - [ ] Probar la calavera matando a un bot, y que NO salga al matar un monstruo.

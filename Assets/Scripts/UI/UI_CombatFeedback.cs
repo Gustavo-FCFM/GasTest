@@ -35,11 +35,15 @@ public class UI_CombatFeedback : MonoBehaviour
     // =========================================================
 
     [Header("X de golpe")]
-    [Tooltip("Largo de cada barra de la X, en píxeles de la maqueta.")]
-    public float HitMarkSize = 26f;
+    [Tooltip("Largo de cada PUNTA de la X. Es la perilla para agrandarla o achicarla.")]
+    public float HitMarkLength = 26f;
 
-    [Tooltip("Grosor de cada barra de la X.")]
-    public float HitMarkThickness = 4f;
+    [Tooltip("Hueco en el centro: a qué distancia del medio arrancan las puntas. Sin " +
+             "hueco la X tapa la retícula justo cuando estás apuntando.")]
+    public float HitMarkGap = 9f;
+
+    [Tooltip("Grosor de cada punta.")]
+    public float HitMarkThickness = 5f;
 
     [Tooltip("Cuánto tarda en apagarse la X.")]
     public float HitFadeSeconds = 0.45f;
@@ -107,8 +111,9 @@ public class UI_CombatFeedback : MonoBehaviour
     private Canvas        _canvas;
     private RectTransform _root;
 
-    private CanvasGroup _hitGroup;
-    private CanvasGroup _killGroup;
+    private CanvasGroup     _hitGroup;
+    private RectTransform[] _hitArms;
+    private CanvasGroup     _killGroup;
     private Image[]     _ringSegments;
 
     private float _hitAlpha, _hitFrom;
@@ -241,8 +246,14 @@ public class UI_CombatFeedback : MonoBehaviour
         BuildDamageRing(mid);
     }
 
-    // La X: dos barras cruzadas. No hace falta un sprite — con el blanco de 1x1 y dos
-    // rotaciones alcanza, y así no hay un asset más que mantener.
+    // La X: CUATRO puntas con un hueco en el medio, no dos barras cruzadas enteras.
+    //
+    // POR QUÉ CON HUECO: la X vive encima de la retícula, y una equis maciza tapa
+    // justamente el punto al que estás apuntando en el momento en que más lo mirás.
+    // Con el hueco se lee igual de bien —el ojo completa la forma— y la mira queda
+    // libre. Es como la hacen los juegos de disparos.
+    //
+    // No hace falta ningún sprite: con el blanco de 1x1 y cuatro rotaciones alcanza.
     private void BuildHitMark(Vector2 mid)
     {
         RectTransform holder = MercUIFactory.CreateRect(_root, "HitMark", mid, mid, mid,
@@ -252,18 +263,53 @@ public class UI_CombatFeedback : MonoBehaviour
         _hitGroup.blocksRaycasts = false;
         _hitGroup.interactable   = false;
 
-        MakeBar(holder, "Slash",    45f);
-        MakeBar(holder, "Backslash", -45f);
+        _hitArms = new RectTransform[4];
+        for (int i = 0; i < 4; i++)
+            _hitArms[i] = MakeArm(holder, $"Arm_{i}", 45f + i * 90f);
+
+        ApplyHitMarkLayout();
     }
 
-    private void MakeBar(Transform parent, string name, float degrees)
+    private RectTransform MakeArm(Transform parent, string name, float degrees)
     {
         Vector2 mid = new Vector2(0.5f, 0.5f);
-        Image bar = MercUIFactory.CreateImage(parent, name, HitColor, Vector2.zero,
-                                              new Vector2(HitMarkSize, HitMarkThickness),
-                                              mid, mid, mid);
-        bar.rectTransform.localRotation = Quaternion.Euler(0f, 0f, degrees);
+        Image arm = MercUIFactory.CreateImage(parent, name, HitColor, Vector2.zero,
+                                              Vector2.one, mid, mid, mid);
+        return arm.rectTransform;
     }
+
+    // Coloca las cuatro puntas según las medidas de ahora. Aparte para poder retocarlo
+    // en vivo desde el Inspector mientras se juega (ver OnValidate).
+    private void ApplyHitMarkLayout()
+    {
+        if (_hitArms == null) return;
+
+        for (int i = 0; i < _hitArms.Length; i++)
+        {
+            if (_hitArms[i] == null) continue;
+
+            float degrees = 45f + i * 90f;
+            float radians = degrees * Mathf.Deg2Rad;
+
+            // Cada punta se corre del centro lo que dure el hueco más media punta: así
+            // crece hacia afuera y el hueco del medio no cambia al alargarlas.
+            float distance = HitMarkGap + HitMarkLength * 0.5f;
+
+            _hitArms[i].sizeDelta        = new Vector2(HitMarkLength, HitMarkThickness);
+            _hitArms[i].anchoredPosition = new Vector2(Mathf.Cos(radians), Mathf.Sin(radians)) * distance;
+            _hitArms[i].localRotation    = Quaternion.Euler(0f, 0f, degrees);
+        }
+    }
+
+#if UNITY_EDITOR
+    // Tocar las medidas en el Inspector mientras corre el juego las aplica al momento.
+    // Sin esto habría que salir y volver a entrar para ver si el tamaño quedó bien, que
+    // es la peor forma de ajustar algo que se juzga de un vistazo.
+    private void OnValidate()
+    {
+        if (Application.isPlaying) ApplyHitMarkLayout();
+    }
+#endif
 
     // La calavera. Si hay sprite asignado se usa ese; si no, se dibuja una a la que le
     // alcanza para leerse a este tamaño: cabeza, dos ojos y la mandíbula.
