@@ -212,10 +212,14 @@ Las medidas del panel están todas en el inspector del componente: `PanelSize`,
 `ColumnWidth`, `RowHeight` y los cinco colores. Y no tiene scroll: con nueve jugadores
 las columnas de tres entran justas.
 
-`UI_LobbyMenu.cs` y su prefab ya no los usa nadie: eran la lista de clases que leía el
-generador de la arena, y ese generador se borró. Se pueden borrar los dos — pero antes
-copiá las tres clases (`Class_Barbarian`, `Class_Rogue`, `Class_Paladin`) del prefab, que
-es el único lugar del proyecto donde están juntas además del panel y del Player.
+`UI_LobbyMenu.cs` y su prefab **siguen en uso en `Test_Network.unity`**: son lo único
+con lo que se entra a la partida en esa escena (no tiene `LobbyManager` ni
+`UI_LobbyPanel`, solo el `NetworkGameManager`). Se borran el día que se jubile esa
+escena, o cuando se la modernice con la sala nueva.
+
+No hay nada que rescatar del prefab: las tres clases que guardaba
+(`Class_Barbarian`, `Class_Rogue`, `Class_Paladin`) ya están idénticas en el
+`UI_LobbyPanel` de la escena del modo.
 
 ---
 
@@ -525,6 +529,21 @@ arrancaba sola, sin sala, y nadie spawneaba.
 Ahora los tres (`LobbyManager`, `NetworkGameManager`, `MercenariesGameMode`) reinician
 su sesión en `OnStartServer`. **Si agregás un manager de escena con estado de partida,
 que también lo limpie ahí** — está como regla en `CLAUDE.md`.
+
+## Paquetes: qué se sacó y qué queda
+
+Se sacaron del `manifest.json` (22 de septiembre): **Vivox** (el error HTTP 400 al dar
+Play, chat de voz que nunca se usó), **Multiplayer Center** y su **quickstart** (el
+asistente de recomendaciones que dejó `UserChoices.choices`). Ninguna línea del proyecto
+los usaba.
+
+**El Multiplayer Play Mode se queda**: es el que abre las ventanas extra del editor para
+probar de a varios, y su única dependencia dura es newtonsoft-json.
+
+Quedan dos que tampoco usa nadie pero no molestan: `multiplayer.widgets` (es el que
+regenera la carpeta `Assets/Multiplayer Widgets` cada vez que se la borra) y
+`services.multiplayer`, del que depende. Si la carpeta reaparece y estorba, se sacan los
+dos juntos.
 
 ## 5º · Conexión — respondida, pero no la haría ahora
 
