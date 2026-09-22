@@ -787,7 +787,7 @@ restaurarlo (ver la sección 2) o armar el segundo mapa a mano.
 
 ---
 
-### Apuntar a un objetivo elegía al más cercano — ARREGLADO, falta probarlo
+### Apuntar a un objetivo elegía al más cercano — ARREGLADO Y PROBADO ✅
 
 Con el Golpe mortal (Q del Pícaro), apuntando a un enemigo del fondo entre otros dos,
 siempre agarraba al que tenías más cerca aunque no estuviera en la retícula.
@@ -818,7 +818,7 @@ Para que el servidor resuelva con el mismo rayo que vio el dueño, ahora viaja t
 ORIGEN de la mira con el pedido de activación (`NetworkAimOrigin`), no solo el punto. Un
 bot, que no tiene cámara, usa los ojos de su propio personaje.
 
-- [ ] Probar el Golpe mortal con tres enemigos juntos, apuntando al del fondo.
+- [x] Probado con el Golpe mortal: ahora agarra al de la retícula.
 - [ ] De paso las otras cuatro que usan la misma selección, sobre todo **Enemigo jurado**
       (20 metros de alcance, el más largo).
 - [ ] Si ahora se siente DEMASIADO exacto —cuesta agarrar a alguien en movimiento—, el
