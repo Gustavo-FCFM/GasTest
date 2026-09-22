@@ -707,16 +707,20 @@ habilidad nueva mientras hay una corriendo (`_attackInterruptible` en
 que el pedido no salía nunca del cliente y marcar o desmarcar la casilla daba igual. Si
 agregás otra habilidad interrumpible y "no pasa nada", mirá ahí primero.
 
-- [ ] Probar la finta: tirar el hacha y cortar con el salto antes de que suelte.
+- [x] Probado: se puede interrumpir el lanzamiento.
+- [ ] Probar que el BÁSICO corta un lanzamiento (tirar el hacha y apretar LMB), y que NO
+      corta su propio combo (apretar LMB durante el combo lo tiene que encadenar, no
+      matarlo).
 - [ ] Probar el encadenado: tirar y meter el dash apenas sale el proyectil.
 - [ ] Que el arma no se quede escondida ni aparezca dos veces en ninguno de los dos.
 - [ ] Decidir si el **rayo del Paladín** (`GA_SmiteBeam` y el de Conquista) también
       debería cancelarse. Es marcar la casilla en esos dos assets, pero cambia cómo se
       siente la clase y esa es tu decisión, no mía.
 
-**El ataque principal sigue sin cortar nada**: apretar LMB no cancela un lanzamiento.
-Se dejó así porque si el básico cancelara, también cancelaría su propio combo. Si
-jugando lo extrañás, es una línea en `ServerActivateAbility`.
+**El ataque básico TAMBIÉN corta** (desde el 24 de septiembre): apretar LMB con un
+lanzamiento en curso lo cancela y empieza el swing. Lo único que no puede cortar es a sí
+mismo — el cliente no deja ni leer el botón mientras corre su propio combo, que si no
+apretar LMB lo mataría en vez de encadenarlo (`_runningSlot` en `HandleAbilityInput`).
 
 ## 4º · Pantalla de inicio y ajustes — TERMINADO Y PROBADO ✅
 

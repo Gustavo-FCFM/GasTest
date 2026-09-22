@@ -991,13 +991,21 @@ public class PlayerController : NetworkBehaviour
 
         CheckAbilityButton(_input.Secondary,       AimAbility,           EAbilityInput.SecondaryAttack);
 
-        if (busy) return;   // el básico no se interrumpe a sí mismo
+        // El básico también corta: si lo que corre es un lanzamiento interrumpible, se
+        // lee igual. Lo único que no puede cortar es a SÍ MISMO — si no, apretar LMB
+        // durante su propio combo mataría el combo en vez de encadenarlo.
+        if (busy && _runningSlot == EAbilityInput.PrimaryAttack) return;
         CheckAbilityButton(_input.PrimaryAttack,   PrimaryAttackAbility, EAbilityInput.PrimaryAttack);
         TickAutoRepeatPrimaryAttack();
     }
 
-    // True mientras lo que corre es el ataque básico (y por lo tanto se puede cortar).
+    // True mientras lo que corre se puede cortar (el ataque básico siempre; un
+    // lanzamiento si su asset lo marca).
     private bool _attackInterruptible;
+
+    // QUÉ es lo que está corriendo. Hace falta para una sola cosa: dejar que el ataque
+    // básico corte a otra habilidad sin cortarse a sí mismo.
+    private EAbilityInput _runningSlot = EAbilityInput.None;
 
     // Detecta presionar/soltar la ACCIÓN (Input System) asignada a una
     // habilidad. Al presionar la activa; al soltar cierra el menú radial (o la
@@ -1064,6 +1072,7 @@ public class PlayerController : NetworkBehaviour
         // Lo que arranca ahora no es (todavía) un básico interrumpible: la rueda, el
         // mantenido y la zona nunca lo son, y el camino normal lo vuelve a decidir abajo.
         _attackInterruptible = false;
+        _runningSlot         = slot;
 
         if (ability is IRadialMenuAbility radial)
         {
@@ -1125,6 +1134,7 @@ public class PlayerController : NetworkBehaviour
                 // la habilidad nueva no salía nunca del cliente, así que no había nada
                 // que cancelar y marcar o desmarcar la casilla daba exactamente lo mismo.
                 _attackInterruptible = ability.IsInterruptible;
+                _runningSlot         = slot;
                 // Predicción local SOLO en un cliente remoto (no host). El
                 // ObserversRpc del servidor se salta al dueño (asume que ya la
                 // disparó acá), así que sin esta predicción el dueño remoto
@@ -1351,6 +1361,7 @@ public class PlayerController : NetworkBehaviour
     {
         isAttacking = false;
         _attackInterruptible = false;
+        _runningSlot         = EAbilityInput.None;
 
         if (_holdAbility == null) return;
         _holdAbility = null;

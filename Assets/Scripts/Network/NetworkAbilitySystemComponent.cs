@@ -869,9 +869,15 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
             return;
         }
 
-        // Otra habilidad corta el ataque básico en curso (si lo hay): el swing a medias
-        // no pega y su combo no sigue. Ver GameplayAbility.IsInterruptible.
-        if (inputSlot != EAbilityInput.PrimaryAttack) _asc.CancelInterruptibleAbilities();
+        // Empezar CUALQUIER habilidad corta las interrumpibles que estén corriendo: el
+        // swing a medias no pega, el lanzamiento a medias no sale. Ver
+        // GameplayAbility.IsInterruptible.
+        //
+        // El ataque básico también corta, y no se corta a sí mismo porque el cliente no
+        // deja ni leer el botón mientras corre su propio combo (ver
+        // PlayerController.HandleAbilityInput). Y aunque llegara igual, el combo nuevo
+        // captura el contador DESPUÉS de este incremento: moriría el viejo, no él.
+        _asc.CancelInterruptibleAbilities();
 
         ability.CommittedThisActivation = false;
         ability.Activate();
