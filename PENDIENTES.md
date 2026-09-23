@@ -260,7 +260,7 @@ No hay nada que rescatar del prefab: las tres clases que guardaba
 
 # 3. Balance pendiente (decisiones tuyas)
 
-## Carga de la definitiva por rol — LISTO, falta probarlo
+## Carga de la definitiva por rol — PROBADO ✅ (falta ajustar números)
 
 Antes, la definitiva cargaba solo con los golpes (1 s por golpe de los 180 del cooldown)
 y con el tiempo: tardaba demasiado. Ahora además carga por **hacer el rol** de la clase:
@@ -291,7 +291,7 @@ monstruos.
 **Para probar rápido**: `StartSubclassWithFullUltimate` en el PlayerController hace que
 la subclase arranque con la definitiva lista. Apagarlo para jugar en serio.
 
-- [ ] Tanque: dejarse pegar por monstruos y mirar cómo sube la definitiva.
+- [x] Probado: la carga por rol funciona.
 - [ ] Soporte: curar a un aliado herido (sube) y a uno lleno (no sube).
 - [ ] Daño: matar a un bot (sube 20 s de golpe) y a un monstruo (no sube).
 - [ ] Elegir subclase: la definitiva tiene que arrancar vacía.
