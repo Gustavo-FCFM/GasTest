@@ -889,9 +889,15 @@ MonoBehaviour:
   featherFallMaxSpeed: 6
   aimTurnSpeed: 20
   NetworkAimPoint: {x: 0, y: 0, z: 0}
+  NetworkAimOrigin: {x: 0, y: 0, z: 0}
   NetworkMoveDirection: {x: 0, y: 0, z: 0}
   isRadialMenuOpen: 0
   AutoRepeatPrimaryAttack: 1
+  StartSubclassWithFullUltimate: 0
+  UltimateKeptOnClassChange: 0.5
+  TankChargePerDamage: 0.15
+  DamageChargePerKill: 30
+  SupportChargePerHeal: 0.2
 --- !u!143 &7812325225803870869
 CharacterController:
   m_ObjectHideFlags: 0

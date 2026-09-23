@@ -9,7 +9,7 @@ pruebas rápidas de clases.
 
 ---
 
-# 0. Estado actual — 22 de septiembre de 2026
+# 0. Estado actual — 23 de septiembre de 2026
 
 **Lo que ya está y funciona** (todo compila limpio, 0 errores y 0 warnings propios):
 
@@ -29,8 +29,16 @@ pruebas rápidas de clases.
   bucle, muerte con ragdoll y la cámara siguiendo el cuerpo, ataque básico sostenido con
   el botón apretado y cancelable con cualquier otra habilidad. Morir limpia buffs y
   debuffs; revivir devuelve el kit menos la R.
+- **Combate que se entiende**: una X en la retícula al pegar (más sólida cuanto menos vida
+  le queda al otro), calavera al matar un personaje, arco rojo del lado del que te pega; el
+  invisible se ve fantasma en su propia pantalla; apuntar elige al de la retícula (se mide
+  desde la cámara) y los tiros salen derechos de cerca; los lanzamientos se pueden cortar
+  y cobran el cooldown al soltar.
+- **La definitiva** arranca en 0 al elegir subclase y carga más rápido haciendo el rol
+  (tanque aguantando, daño matando, soporte curando). Ver "La definitiva: arranca en 0
+  y carga por rol".
 - **Balance**: armadura en porcentaje (CA de D&D − 10, `Def/(Def+10)`, solo físico) y el
-  intervalo de ataque como palanca: bárbaro 12 cada 1.2 s, pícaro 7 cada 0.7 s, paladín
+  intervalo de ataque como palanca: bárbaro 12 cada 1.2 s, pícaro 7 cada 0.75 s, paladín
   8 cada 1.0 s. La tabla y el benchmark del TTK están en `PENDIENTES.md`.
 - La escena `Mercenaries_Gamemode.unity` **armada, editada a mano y guardada**: arena con
   colliders convex, las tres bases afuera del muro con techo propio y paredes invisibles
@@ -127,7 +135,7 @@ de servidor que valida nombre repetido y cupo por equipo, maneja el "listo", sac
 se desconecta y guarda el arranque del host en un `SyncVar`. Vive en el mismo
 `NetworkObject` que el `NetworkGameManager` y el modo.
 
-`UI_LobbyPanel` (en `GameMode/UI/`) es todo lo que se ve, **dibujado por código**: no hay
+`UI_LobbyPanel` (en `Scripts/UI/`) es todo lo que se ve, **dibujado por código**: no hay
 prefab que armar ni referencias que cablear, solo el componente y su lista de clases
 elegibles.
 
@@ -136,7 +144,9 @@ El flujo:
 1. Entrás y quedás de **espectador** automáticamente.
 2. Escribís tu nombre arriba (Enter para confirmarlo).
 3. **Unirte** en un lugar libre de un equipo.
-4. Tocás **tu propio ícono** para abrir la grilla de clases (el fondo la cierra sin elegir).
+4. Tocás **tu propio ícono** para abrir el selector de clases: pasar el mouse por un
+   ícono muestra el nombre, tocarlo muestra la descripción, y **Confirm** la aplica (el
+   fondo cierra sin elegir).
 5. **Confirmar** te pone en verde. Volver a tocarlo te apaga.
 6. El **host** aprieta **Start** cuando quiera. Solo él ve el botón; se pone verde cuando
    están todos listos, y la línea de estado le dice cuántos faltan.
@@ -580,6 +590,25 @@ no en el modo.
 
 El `MaxExp` que aparece en `StatGrowthPerLevel` ya no hace nada: con la bolsa compartida, la
 experiencia que se muestra la escribe el modo de juego cada medio segundo.
+
+### La definitiva: arranca en 0 y carga por rol
+
+Al llegar al nivel 3 y elegir subclase, la definitiva **arranca vacía** (180 s de
+cooldown, `GE_Cooldown_Ultimate`) y se llena por tres vías: cada golpe que conecta, el
+tiempo, y **hacer el rol** de la clase (campo `Role` de cada subclase):
+
+| Rol | Carga al… | Perilla (PlayerController del prefab `Player`) | Hoy |
+|---|---|---|---|
+| Tanque | aguantar daño de un enemigo | `TankChargePerDamage` | 0.15 s por punto |
+| Daño | matar a un jugador o bot enemigo | `DamageChargePerKill` | 30 s por baja |
+| Soporte | curar a un aliado (no a sí mismo) | `SupportChargePerHeal` | 0.2 s por punto |
+
+Si alguien **cambia de clase a mitad de partida**, conserva la mitad de su carga para la
+próxima subclase (`UltimateKeptOnClassChange`, 0.5): así no se carga la definitiva con una
+clase para gastarla con otra.
+
+Para probar clases rápido, `StartSubclassWithFullUltimate` hace que la subclase arranque
+con la definitiva lista.
 
 ## Los fantasmas
 

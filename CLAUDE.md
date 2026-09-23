@@ -139,6 +139,16 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   crearlos hay que llamar `NetworkObject.CreateSceneId(Scene, force, out changed)` por
   reflexión — es lo mismo que corre *Tools ▸ Fish-Networking ▸ Utility ▸ Reserialize
   NetworkObjects*. Ejemplo en `Editor/MercHealthPackSetup.AssignSceneIds`.
+- **Una habilidad interrumpible se decide en DOS lados.** El servidor la corta al activar
+  otra (`CancelSerial`), pero antes el cliente tiene que dejar leer el botón nuevo mientras
+  hay una corriendo (`_attackInterruptible` / `_runningSlot` en
+  `PlayerController.HandleAbilityInput`). Arreglar un solo lado hace que marcar
+  `IsInterruptible` no cambie nada.
+- **La definitiva carga por rol** (`EClassRole` en cada clase; ver
+  `PlayerController` → "CARGA DE LA DEFINITIVA"). El daño aguantado y la curación se
+  detectan solos en el pipeline de efectos del ASC; **una curación que escribe la vida
+  directo** (como el aura del Paladín) tiene que avisar con `NotifyHealedAlly`, o el
+  soporte no carga con ella.
 
 Los detalles finos del GAS (pipeline de daño, acumulación de efectos, animaciones de
 combo) están en `DesignDocuments/GAS_Arquitectura.docx`.

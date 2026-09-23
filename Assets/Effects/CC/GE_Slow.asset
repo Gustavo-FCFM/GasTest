@@ -24,7 +24,7 @@ MonoBehaviour:
   Modifiers:
   - Attribute: 9
     Type: 1
-    Magnitude: 0.2
+    Magnitude: 0.3
     UseAttributeScaling: 0
     SourceAttribute: 0
     AttributeCoefficient: 0
@@ -37,4 +37,9 @@ MonoBehaviour:
   TargetVFXOffset: {x: 0, y: 0, z: 0}
   TargetVFXRotation: {x: 0, y: 0, z: 0}
   TargetVFXScale: {x: 0, y: 0, z: 0}
+  TargetSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
   GrantedTags: 0f000000

@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 24 de septiembre de 2026
+# Pendientes — actualizado el 23 de septiembre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -267,9 +267,9 @@ y con el tiempo: tardaba demasiado. Ahora además carga por **hacer el rol** de 
 
 | Rol | Carga al… | Perilla (en el PlayerController del prefab) |
 |---|---|---|
-| Tanque (Bárbaro y sus subclases) | aguantar daño de un enemigo | `TankChargePerDamage` = 0.1 s por punto |
-| Daño (Pícaro y sus subclases) | matar a un personaje enemigo (jugador o bot) | `DamageChargePerKill` = 20 s por baja |
-| Soporte (Paladín y sus subclases) | curar a un aliado | `SupportChargePerHeal` = 0.15 s por punto |
+| Tanque (Bárbaro y sus subclases) | aguantar daño de un enemigo | `TankChargePerDamage` = 0.15 s por punto |
+| Daño (Pícaro y sus subclases) | matar a un personaje enemigo (jugador o bot) | `DamageChargePerKill` = 30 s por baja |
+| Soporte (Paladín y sus subclases) | curar a un aliado | `SupportChargePerHeal` = 0.2 s por punto |
 
 El rol es un campo nuevo de la clase, **`Role`** en el `CharacterClassDefinition`. Ya lo
 cargué en las 9 subclases; las 3 clases base quedan en `None` (no tienen definitiva, así
@@ -293,7 +293,7 @@ la subclase arranque con la definitiva lista. Apagarlo para jugar en serio.
 
 - [x] Probado: la carga por rol funciona.
 - [ ] Soporte: curar a un aliado herido (sube) y a uno lleno (no sube).
-- [ ] Daño: matar a un bot (sube 20 s de golpe) y a un monstruo (no sube).
+- [ ] Daño: matar a un bot (sube 30 s de golpe) y a un monstruo (no sube).
 - [ ] Elegir subclase: la definitiva tiene que arrancar vacía.
 - [ ] Cargar un poco, volver a la base, cambiar de clase y elegir otra subclase: tiene
       que arrancar con la mitad.
@@ -357,7 +357,7 @@ tres números —dado, intervalo y clase de armadura— y todo lo demás se deri
 | | Vida | Golpe | Cada | DPS | CA → Def | Mitigación | Vida efectiva |
 |---|---|---|---|---|---|---|---|
 | Bárbaro | 120 | 12 | 1.2 s | 10 | 15 → 5 | 33 % | 180 |
-| Pícaro | 80 | 7 | 0.7 s | 10 | 13 → 3 | 23 % | 104 |
+| Pícaro | 80 | 7 | 0.75 s | 9.3 | 13 → 3 | 23 % | 104 |
 | Paladín | 100 | 8 | 1.0 s | 8 | 18 → 8 | 44 % | 179 |
 
 Las subclases llevan sus valores de **nivel 3** en su `ASDef` (vida = base + 2 niveles,
@@ -776,7 +776,7 @@ soltar + cooldown) en vez de solo el cooldown — unos 0,7 s más en el hacha de
 Si se siente lenta, se baja su `CooldownDuration`. Y el ícono del HUD se queda encendido
 durante el envión, que es lo correcto: todavía no gastaste nada.
 
-**El ataque básico TAMBIÉN corta** (desde el 24 de septiembre): apretar LMB con un
+**El ataque básico TAMBIÉN corta** (desde el 23 de septiembre): apretar LMB con un
 lanzamiento en curso lo cancela y empieza el swing. Lo único que no puede cortar es a sí
 mismo — el cliente no deja ni leer el botón mientras corre su propio combo, que si no
 apretar LMB lo mataría en vez de encadenarlo (`_runningSlot` en `HandleAbilityInput`).
