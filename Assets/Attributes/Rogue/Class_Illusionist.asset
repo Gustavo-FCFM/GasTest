@@ -15,6 +15,7 @@ MonoBehaviour:
   ClassName: Illusionist
   ClassIcon: {fileID: 21300000, guid: ebb0861afeabc5446b5b1150acbdd804, type: 3}
   Description: The trickster rogue. Sends a copy of you to fight and his ultimate floods the area with them. Wins by confusing, not by hitting.
+  Role: 2
   BaseAttributes: {fileID: 11400000, guid: ad90278268b53f54cbc8bab17cc2a8ce, type: 2}
   Abilities:
   - InputSlot: 1

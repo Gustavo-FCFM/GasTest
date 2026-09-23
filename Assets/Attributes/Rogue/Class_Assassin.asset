@@ -15,6 +15,7 @@ MonoBehaviour:
   ClassName: Assassin
   ClassIcon: {fileID: 21300000, guid: 445b3487b3a229844be688e53b283941, type: 3}
   Description: The pure rogue. Hides to ambush and marks a target to finish it. Hunts whoever got separated; head on and in plain sight, he loses.
+  Role: 2
   BaseAttributes: {fileID: 11400000, guid: d4bdb499162328d498ae70ec392a2dc7, type: 2}
   Abilities:
   - InputSlot: 1

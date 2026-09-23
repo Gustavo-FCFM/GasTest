@@ -15,6 +15,7 @@ MonoBehaviour:
   ClassName: Oath Of Conquest
   ClassIcon: {fileID: 21300000, guid: 3d668b3feb2ee524b9dee68f59e4c7b5, type: 3}
   Description: The aggressive paladin. His presence stuns everyone around him and his ultimate makes him nearly unstoppable. Goes in first and breaks the formation.
+  Role: 3
   BaseAttributes: {fileID: 11400000, guid: 49d87f366d01d224286f17fe6265c30a, type: 2}
   Abilities:
   - InputSlot: 1

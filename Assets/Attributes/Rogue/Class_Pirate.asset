@@ -15,6 +15,7 @@ MonoBehaviour:
   ClassName: Pirate
   ClassIcon: {fileID: 21300000, guid: f8781bcf6ee31544c93d046f2471bd70, type: 3}
   Description: The ranged rogue. A pistol instead of a dagger, food to heal, and a rain of cannon fire. The only rogue who fights from a distance.
+  Role: 2
   BaseAttributes: {fileID: 11400000, guid: 4568fbd577293b241b798a4ed81d6af7, type: 2}
   Abilities:
   - InputSlot: 1

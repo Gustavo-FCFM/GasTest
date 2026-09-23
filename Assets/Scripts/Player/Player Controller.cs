@@ -506,7 +506,16 @@ public class PlayerController : NetworkBehaviour
         // Equipamos la clase a TODOS (dueños y clones) para que la visual
         // esté bien en todos lados.
         if (CurrentClassDef != null) EquipCharacterClass(CurrentClassDef);
-        if (ASC != null) ASC.OnDeath += HandlePlayerDeath;
+        if (ASC != null)
+        {
+            ASC.OnDeath += HandlePlayerDeath;
+
+            // Carga de la definitiva por rol. Los dos eventos solo se disparan en el
+            // servidor (ahí corre el pipeline de daño), así que en las demás copias
+            // quedan suscriptos sin hacer nada.
+            ASC.OnDamageEndured += OnDamageEnduredForRole;
+            ASC.OnHealedAlly    += OnHealedAllyForRole;
+        }
 
         // Cosas exclusivas del dueño local
         if (base.IsOwner)
@@ -1391,6 +1400,11 @@ public class PlayerController : NetworkBehaviour
         // vía RPC desde el cliente dueño, duplicando el respawn.
         if (!IsServerInitialized) return;
 
+        // Una baja de personaje carga la definitiva de quien la hizo, si su rol es el
+        // de Daño. LastAttacker todavía está: se borra recién al revivir.
+        PlayerController killer = ASC.LastAttacker != null ? ASC.LastAttacker.GetComponent<PlayerController>() : null;
+        if (killer != null && killer != this) killer.NotifyKilledCharacter();
+
         if (AbilityR is GA_ImmortalWrath && AbilityR.CanActivate())
         {
             // Activación DIRECTA server-side: HandlePlayerDeath ya corre en el
@@ -1500,6 +1514,126 @@ public class PlayerController : NetworkBehaviour
         if (bot != null) bot.OnServerTeleported();
     }
 
+    // =========================================================
+    // CARGA DE LA DEFINITIVA
+    //
+    // Todas las definitivas comparten un cooldown (GE_Cooldown_Ultimate, 180 s) y
+    // "cargar" es adelantarlo. Tres fuentes:
+    //
+    //   1. Cada golpe que conecta: UltimateChargeAmount de cada habilidad (lo de
+    //      siempre, ver GameplayAbility.ChargeUltimate).
+    //   2. HACER EL ROL de la clase (ver EClassRole): el tanque carga aguantando, el
+    //      de daño matando personajes, el soporte curando aliados. Es el incentivo
+    //      para jugar lo que la clase es, y lo que hace que la definitiva llegue a
+    //      tiempo: con solo los golpes, tardaba demasiado.
+    //   3. El tiempo, que corre solo.
+    //
+    // Y dos reglas al cambiar de clase:
+    //
+    //   · Una subclase ARRANCA EN 0. Antes arrancaba llena, porque equipar una clase
+    //     borra todos los efectos —el cooldown de la definitiva incluido— y sin
+    //     cooldown puesto la definitiva está lista.
+    //   · Cambiar de clase a mitad de partida CONSERVA LA MITAD de la carga que se
+    //     tenía, y esa mitad es con la que arranca la próxima subclase. Sin esto se
+    //     podía cargar la definitiva con una clase y gastarla con otra; con el
+    //     reinicio a 0 a secas, cambiar de clase castigaba de más.
+    //
+    // Todo del lado del servidor: los efectos (y por lo tanto el cooldown) solo
+    // existen ahí. El HUD de cada jugador lo recibe por la resincronización de
+    // cooldowns del NetworkASC, sin nada nuevo por la red.
+    // =========================================================
+
+    [Header("Carga de la definitiva")]
+    [Tooltip("PRUEBAS: al elegir subclase, la definitiva arranca LISTA en vez de en 0. " +
+             "Para probar clases rápido; apagado en una partida de verdad.")]
+    public bool StartSubclassWithFullUltimate = false;
+
+    [Tooltip("Qué parte de la carga se conserva al cambiar de clase a mitad de partida. " +
+             "0.5 = la mitad. Existe para que no se pueda cargar la definitiva con una " +
+             "clase y gastarla con otra.")]
+    [Range(0f, 1f)]
+    public float UltimateKeptOnClassChange = 0.5f;
+
+    [Tooltip("TANQUE: segundos de definitiva por cada punto de daño que aguanta de un " +
+             "enemigo (después de las defensas, antes del escudo). Con 0.1, aguantar " +
+             "100 de daño adelanta 10 s de los 180.")]
+    public float TankChargePerDamage = 0.1f;
+
+    [Tooltip("DAÑO: segundos de definitiva por cada personaje enemigo que mata (jugador " +
+             "o bot; los monstruos no cuentan).")]
+    public float DamageChargePerKill = 20f;
+
+    [Tooltip("SOPORTE: segundos de definitiva por cada punto de vida que le cura a un " +
+             "ALIADO. No cuenta curarse a sí mismo ni lo que se pasa de la vida máxima. " +
+             "Con 0.15, curar 100 adelanta 15 s.")]
+    public float SupportChargePerHeal = 0.15f;
+
+    // Carga guardada al dejar una clase con definitiva, para la próxima subclase.
+    // -1 = no hay nada guardado (la próxima subclase arranca en 0).
+    private float _carriedUltimateCharge = -1f;
+
+    // Decide con cuánta definitiva sale la clase recién equipada. La llama
+    // EquipCharacterClass, del lado del servidor, con lo que tenía la clase anterior.
+    private void ResolveUltimateCharge(bool hadUltimate, float previousCharge)
+    {
+        // Se deja una clase con definitiva: se guarda la parte que se conserva. Si la
+        // anterior no tenía (una clase base), no hay nada nuevo que guardar y lo que
+        // estuviera guardado sigue ahí — cambiar de base a base no recorta dos veces.
+        if (hadUltimate)
+            _carriedUltimateCharge = previousCharge * UltimateKeptOnClassChange;
+
+        // La nueva no tiene definitiva (una clase base): nada que poner.
+        if (AbilityR == null) return;
+
+        float start;
+        if (StartSubclassWithFullUltimate) start = 1f;
+        else if (_carriedUltimateCharge >= 0f) start = _carriedUltimateCharge;
+        else start = 0f;
+
+        _carriedUltimateCharge = -1f;
+        SetUltimateCharge(start);
+    }
+
+    // Deja la definitiva con una carga exacta, de 0 (recién usada) a 1 (lista).
+    // Pone el cooldown entero y le descuenta la parte ya cargada: así la barra del HUD
+    // muestra el total real de 180 s y no un cooldown más corto.
+    private void SetUltimateCharge(float charge)
+    {
+        if (AbilityR == null || AbilityR.CooldownEffect == null) return;
+
+        ASC.RemoveEffectsWithTag(EGameplayTag.Ability_Cooldown_Ultimate);
+
+        charge = Mathf.Clamp01(charge);
+        if (charge >= 1f) return;   // lista: sin cooldown puesto
+
+        float total = AbilityR.CooldownDurationSeconds;
+        if (total <= 0f) return;
+
+        ASC.ApplyGameplayEffect(AbilityR.CooldownEffect, AbilityR, total);
+        ASC.ReduceCooldownByTag(EGameplayTag.Ability_Cooldown_Ultimate, total * charge);
+    }
+
+    // --- La carga por hacer el rol ---
+
+    private void OnDamageEnduredForRole(float damage)
+        => ChargeUltimateForRole(EClassRole.Tank, damage * TankChargePerDamage);
+
+    private void OnHealedAllyForRole(AbilitySystemComponent ally, float healed)
+        => ChargeUltimateForRole(EClassRole.Support, healed * SupportChargePerHeal);
+
+    // La llama la VÍCTIMA al morir (HandlePlayerDeath), sobre quien la mató.
+    public void NotifyKilledCharacter()
+        => ChargeUltimateForRole(EClassRole.Damage, DamageChargePerKill);
+
+    private void ChargeUltimateForRole(EClassRole role, float seconds)
+    {
+        if (seconds <= 0f || ASC == null) return;
+        if (IsSpawned && !IsServerInitialized) return;
+        if (CurrentClassDef == null || CurrentClassDef.Role != role) return;
+
+        ASC.ReduceCooldownByTag(EGameplayTag.Ability_Cooldown_Ultimate, seconds);
+    }
+
     // Cambia la clase del personaje: limpia estado anterior, actualiza
     // visuales/armas, otorga las nuevas habilidades por slot, recarga
     // atributos base, y (si sos el dueño) sincroniza el cambio por red y
@@ -1516,6 +1650,13 @@ public class PlayerController : NetworkBehaviour
         // punto de descartarse, y una habilidad de mantener que se va sin cerrarse
         // deja su corutina viva y al jugador trabado. Ver EndActiveHolds.
         EndActiveHolds();
+
+        // Cuánta definitiva tenía la clase que se va, leída ANTES de que la línea de
+        // abajo borre todos los efectos — el cooldown de la definitiva incluido. Ver
+        // "CARGA DE LA DEFINITIVA".
+        bool  serverSide     = !IsSpawned || IsServerInitialized;
+        bool  hadUltimate    = AbilityR != null;
+        float previousCharge = serverSide && hadUltimate ? ASC.GetUltimateCharge() : 0f;
 
         ASC.RemoveAllActiveEffects();
         CurrentClassDef  = newClass;
@@ -1563,8 +1704,11 @@ public class PlayerController : NetworkBehaviour
         // y solo en el lado autoritativo: el servidor los aplica y sus tags/stats
         // se sincronizan a los clientes por los canales normales del NetworkASC. En
         // una escena sin red (IsSpawned=false) se aplican localmente.
-        if (!IsSpawned || IsServerInitialized)
+        if (serverSide)
+        {
             ApplyClassPassives(newClass);
+            ResolveUltimateCharge(hadUltimate, previousCharge);
+        }
 
         if (IsOwner)
         {

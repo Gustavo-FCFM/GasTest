@@ -260,6 +260,49 @@ No hay nada que rescatar del prefab: las tres clases que guardaba
 
 # 3. Balance pendiente (decisiones tuyas)
 
+## Carga de la definitiva por rol — LISTO, falta probarlo
+
+Antes, la definitiva cargaba solo con los golpes (1 s por golpe de los 180 del cooldown)
+y con el tiempo: tardaba demasiado. Ahora además carga por **hacer el rol** de la clase:
+
+| Rol | Carga al… | Perilla (en el PlayerController del prefab) |
+|---|---|---|
+| Tanque (Bárbaro y sus subclases) | aguantar daño de un enemigo | `TankChargePerDamage` = 0.1 s por punto |
+| Daño (Pícaro y sus subclases) | matar a un personaje enemigo (jugador o bot) | `DamageChargePerKill` = 20 s por baja |
+| Soporte (Paladín y sus subclases) | curar a un aliado | `SupportChargePerHeal` = 0.15 s por punto |
+
+El rol es un campo nuevo de la clase, **`Role`** en el `CharacterClassDefinition`. Ya lo
+cargué en las 9 subclases; las 3 clases base quedan en `None` (no tienen definitiva, así
+que no cargan nada). Al crear una clase nueva, elegirle el rol ahí.
+
+Lo que **no** cuenta, a propósito: curarse a uno mismo, curar de más a alguien que ya
+estaba lleno, el daño de una zona del mapa, la vida de un botiquín o de la base, y matar
+monstruos.
+
+**Dos reglas nuevas al cambiar de clase:**
+
+- **La subclase arranca en 0.** Antes arrancaba llena sin querer: equipar una clase
+  borra todos los efectos, el cooldown de la definitiva incluido, y sin cooldown puesto
+  la definitiva está lista.
+- **Cambiar de clase a mitad de partida conserva la MITAD** de la carga que tenías, y
+  con esa mitad arranca la próxima subclase. Así no se puede cargar la definitiva con
+  una clase y gastarla con otra. La perilla es `UltimateKeptOnClassChange` (0.5).
+
+**Para probar rápido**: `StartSubclassWithFullUltimate` en el PlayerController hace que
+la subclase arranque con la definitiva lista. Apagarlo para jugar en serio.
+
+- [ ] Tanque: dejarse pegar por monstruos y mirar cómo sube la definitiva.
+- [ ] Soporte: curar a un aliado herido (sube) y a uno lleno (no sube).
+- [ ] Daño: matar a un bot (sube 20 s de golpe) y a un monstruo (no sube).
+- [ ] Elegir subclase: la definitiva tiene que arrancar vacía.
+- [ ] Cargar un poco, volver a la base, cambiar de clase y elegir otra subclase: tiene
+      que arrancar con la mitad.
+- [ ] Ajustar los tres números jugando. Son una primera apuesta, no algo medido.
+
+Un detalle que queda afuera: las bajas que hace una **invocación** (las copias del
+Ilusionista, los tótems) no le cuentan a su dueño, porque el que pegó para el juego es
+la invocación. Si se nota, se arregla anotando al dueño como atacante.
+
 ## Botiquines del mapa — PUESTOS, falta acomodarlos y jugarlos
 
 Los de Overwatch / Marvel Rivals: una cruz verde que flota, te da **75 de vida** al

@@ -96,6 +96,37 @@ public class AbilitySystemComponent : MonoBehaviour
     public event Action<AbilitySystemComponent> OnTookDamage;
     public void NotifyTookDamage(AbilitySystemComponent attacker) => OnTookDamage?.Invoke(attacker);
 
+    // --- Lo que carga la definitiva según el ROL (ver EClassRole) ---
+    //
+    // A diferencia de los dos de arriba, estos SÍ cuentan los ticks periódicos:
+    // aguantar un veneno enemigo también es aguantar, y un aura que cura también es
+    // curar. Server-side, igual que todo el pipeline.
+
+    // ESTE personaje aguantó daño de alguien más. La cantidad es lo que pasó el
+    // bloqueo y las defensas, ANTES del escudo: para un tanque, que el escudo frene
+    // un golpe también es aguantarlo.
+    public event Action<float> OnDamageEndured;
+
+    // ESTE personaje le curó vida a un ALIADO (nunca a sí mismo). La cantidad es la
+    // vida que de verdad subió: lo que sobraba por encima de la máxima no cuenta, así
+    // que curar a alguien lleno no carga nada.
+    public event Action<AbilitySystemComponent, float> OnHealedAlly;
+    public void NotifyHealedAlly(AbilitySystemComponent ally, float healed) => OnHealedAlly?.Invoke(ally, healed);
+
+    // Cuánta carga tiene la definitiva: 0 = recién usada, con el cooldown entero por
+    // delante; 1 = lista. Todas las definitivas comparten el tag de cooldown
+    // Ability_Cooldown_Ultimate, así que se lee de ahí. Sin cooldown puesto, está lista.
+    public float GetUltimateCharge()
+    {
+        foreach (var e in ActiveEffects)
+        {
+            if (e.IsExpired || e.TotalDuration <= 0f) continue;
+            if (!e.Definition.GrantedTags.Contains(EGameplayTag.Ability_Cooldown_Ultimate)) continue;
+            return Mathf.Clamp01(1f - e.DurationRemaining / e.TotalDuration);
+        }
+        return 1f;
+    }
+
     // =========================================================
     // ALMACENAMIENTO INTERNO
     // =========================================================
@@ -841,6 +872,10 @@ public class AbilitySystemComponent : MonoBehaviour
         // (Aura de protección del Paladín).
         float damageToHealth = 0f;
 
+        // Para la carga de la definitiva por rol (ver OnDamageEndured / OnHealedAlly).
+        float damageEndured = 0f;
+        float healthHealed  = 0f;
+
         foreach (var mod in effect.Modifiers)
         {
             if (!Attributes.ContainsKey(mod.Attribute)) continue;
@@ -902,6 +937,7 @@ public class AbilitySystemComponent : MonoBehaviour
 
                 float currentShield      = GetAttributeValue(EAttributeType.Shield);
                 float damageBeforeShield = physicalDamage + magicDamage;
+                damageEndured           += damageBeforeShield;
 
                 if (currentShield > 0)
                 {
@@ -949,9 +985,26 @@ public class AbilitySystemComponent : MonoBehaviour
                 damageToHealth     += physicalDamage + magicDamage;
             }
 
+            float healthBefore = GetAttributeValue(EAttributeType.Health);
+
             float newValue = CalculateModifiedValue(Attributes[mod.Attribute].CurrentValue, mod, calculatedMagnitude);
             SetCurrentAttributeValue(mod.Attribute, newValue);
             HandleLifeSteal(mod, calculatedMagnitude, sourceASC);
+
+            // Curación EFECTIVA: se mide la vida antes y después, así lo que se pasaba
+            // de la máxima (y se descartó) no cuenta como curado.
+            if (mod.Attribute == EAttributeType.Health && calculatedMagnitude > 0f)
+                healthHealed += Mathf.Max(0f, GetAttributeValue(EAttributeType.Health) - healthBefore);
+        }
+
+        // Carga de la definitiva por ROL. Va aparte del bloque de abajo porque ese
+        // saltea los ticks periódicos, y acá sí cuentan. Solo si el efecto vino de
+        // OTRO personaje: el daño de una zona del mapa, la vida que te da un botiquín
+        // o tu propio robo de vida no son hacer tu rol.
+        if (sourceASC != null && !ReferenceEquals(sourceASC, this))
+        {
+            if (damageEndured > 0f) OnDamageEndured?.Invoke(damageEndured);
+            if (healthHealed > 0f && !sourceASC.IsEnemyOf(this)) sourceASC.NotifyHealedAlly(this, healthHealed);
         }
 
         // Rotura de invisibilidad: un golpe de daño delata tanto a quien lo RECIBE

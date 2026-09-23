@@ -244,7 +244,13 @@ public class PaladinAuraPassive : MonoBehaviour
             float max     = ally.GetAttributeValue(EAttributeType.MaxHealth);
             if (max <= 0f) continue;
 
+            float healed = Mathf.Min(current + amount, max) - current;
             ally.SetCurrentAttributeValue(EAttributeType.Health, Mathf.Min(current + amount, max));
+
+            // Cuenta para la carga de la definitiva del soporte (ver EClassRole). Hay que
+            // avisarlo a mano porque esta curación no pasa por el pipeline de efectos,
+            // que es donde se detecta sola. A uno mismo no cuenta.
+            if (healed > 0f && !ReferenceEquals(ally, _asc)) _asc.NotifyHealedAlly(ally, healed);
 
             if (HealExtraEffects != null)
                 foreach (var effect in HealExtraEffects)

@@ -15,6 +15,7 @@ MonoBehaviour:
   ClassName: Oath Of Vengeance
   ClassIcon: {fileID: 21300000, guid: d412d87adf9614e44bc1af5f14b8341b, type: 3}
   Description: The hunting paladin. Marks one enemy and goes after them. Swings faster than his brothers of the order and does not let go until it is over.
+  Role: 3
   BaseAttributes: {fileID: 11400000, guid: a72a788970521214fa2df6a045aaaf2a, type: 2}
   Abilities:
   - InputSlot: 1

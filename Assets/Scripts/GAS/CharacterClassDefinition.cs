@@ -26,6 +26,11 @@ public class CharacterClassDefinition : ScriptableObject
     public Sprite ClassIcon;
     [TextArea] public string Description;
 
+    [Tooltip("El rol en el equipo. Decide qué le carga la definitiva además de sus golpes: " +
+             "Tank al aguantar daño, Damage al matar a un personaje enemigo, Support al " +
+             "curar a un aliado. None para las clases BASE, que todavía no tienen definitiva.")]
+    public EClassRole Role = EClassRole.None;
+
     [Header("Stats Base (Nivel 1)")]
     // Vida/maná/etc. iniciales de esta clase.
     public AttributeSetDefinition BaseAttributes;

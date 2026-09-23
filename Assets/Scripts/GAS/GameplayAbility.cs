@@ -706,6 +706,10 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         return CooldownEffect != null ? CooldownEffect.Duration : 0f;
     }
 
+    // La misma duración, para quien la necesita desde afuera: el PlayerController la
+    // usa para poner la definitiva en un porcentaje exacto al cambiar de clase.
+    public float CooldownDurationSeconds => ResolveCooldownDuration();
+
     // Adelanta el cooldown de la ultimate del dueño en UltimateChargeAmount.
     // Cada habilidad que "carga" la ultimate la llama al conectar un golpe.
     protected void ChargeUltimate()
