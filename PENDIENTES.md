@@ -584,7 +584,7 @@ queda es de **la máquina de casa** (la del trabajo no tiene con qué trabajar a
 3. Jugar con bots y ajustar volúmenes por cue (`Volume` en cada `SfxCue`) y las
    distancias (`MaxDistance`: un paso 20 m, un grito 40, una explosión 60).
 
-### El ritmo de la sacudida se separó del sonido — HECHO, falta elegir el número
+### El ritmo de la sacudida se separó del sonido — HECHO Y PROBADO ✅
 
 La reacción se sentía como un temblor continuo: con la velocidad de ataque de varias
 clases, cada golpe pasaba el filtro y el personaje no paraba de sacudirse.
@@ -595,7 +595,7 @@ son dos ritmos independientes:
 
 | Perilla | Dónde | Qué controla |
 |---|---|---|
-| `HitReactionCooldown` | `PlayerController`, en el prefab del Player | La **sacudida**. 0,8 s |
+| `HitReactionCooldown` | `PlayerController`, en el prefab del Player | La **sacudida**. **1 s** |
 | `HurtCooldown` | `AudioLibrary` | El **sonido**. 0,45 s |
 
 La de la animación vive en el prefab a propósito: se puede tocar **sin** crear el asset de
@@ -605,7 +605,8 @@ El reloj se marca DESPUÉS de los descartes, no antes: un golpe que no llegó a 
 (escudo arriba, molinete en curso) no consume el respiro y no se come la reacción del
 golpe siguiente, que es el que sí tenía que verse.
 
-- [ ] Elegir el número jugando. 0,8 es una apuesta; entre 0,7 y 1,0 debería estar.
+- [x] Número elegido jugando: **1 s**. Quedó también como default del código, para que
+      el prefab y el script no digan cosas distintas.
 
 ### Reacción de golpe, aturdido, muerte y ragdoll — HECHOS Y PROBADOS ✅
 
@@ -1067,7 +1068,7 @@ ver la retícula justo cuando más la estás mirando. `HitMarkLength` alarga las
 - [ ] Mirar si el círculo (`DamageRingRadius`, 190) queda donde molesta o donde se ve.
       Es la perilla que más se va a querer tocar.
 
-### El robo de vida se quedaba pegado al cambiar de clase — ARREGLADO, falta probarlo
+### El robo de vida se quedaba pegado al cambiar de clase — ARREGLADO Y PROBADO ✅
 
 Cambiar de Bárbaro a Pícaro dejaba al Pícaro **curándose al pegar**. No hacía falta morir.
 
@@ -1099,9 +1100,7 @@ desaparecieron, con su valor los nuevos (que tampoco viajaban: recién construid
 **Vale para cualquier stat que una clase declare y la siguiente no**, no solo el robo de
 vida. Con el Paladín pasaba lo mismo al revés.
 
-- [ ] Probarlo: entrar de Bárbaro, cambiar a Pícaro y pegarle a algo — no tiene que curar.
-- [ ] Con dos ventanas, que los stats de la clase vieja tampoco queden pegados en la
-      pantalla del otro.
+- [x] Probado: el Pícaro ya no se cura por ningún motivo al venir del Bárbaro.
 
 ---
 

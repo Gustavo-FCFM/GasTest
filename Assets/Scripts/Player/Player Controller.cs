@@ -203,7 +203,7 @@ public class PlayerController : NetworkBehaviour
              "velocidad de ataque de varias clases, cada golpe pasaba ese filtro y el personaje " +
              "quedaba temblando sin parar. El sonido en cada golpe se lee bien; la sacudida no.\n\n" +
              "En 0 reacciona a todos los golpes que le lleguen.")]
-    public float HitReactionCooldown = 0.8f;
+    public float HitReactionCooldown = 1f;
 
     [Tooltip("Los estados del Animator con esta etiqueta (Tag, en el Inspector del estado) NO se " +
              "interrumpen con la reacción de golpe: bucles como mantener el escudo, el molinete, " +
