@@ -1136,8 +1136,8 @@ balance van aparte, y con el Bárbaro tomaron sus semanas). Referencia del histo
 Paladín con sus 3 subclases tardó ~12 días (11–22 de agosto); el Pícaro ~3.5 semanas,
 con arreglos de red mezclados.
 
-**Las 5: 13 a 15 semanas → enero de 2027.** A la demo de noviembre le quedan ~7: no
-caben todas.
+**Las 5: 13 a 15 semanas → enero de 2027.** A la demo del showcase (diciembre) le quedan
+~10: no caben todas.
 
 Ordenadas de menos a más difícil:
 
@@ -1169,7 +1169,8 @@ Qué se reusa, en corto:
 
 - Las dos más baratas.
 - Tanque y Soporte quedan completos (2 clases cada uno): nadie repite forzosamente ahí.
-- Dejan 2–3 semanas de colchón para pulir antes de noviembre.
+- Con la demo en diciembre, caben también el mapa del foso (sección 7, 1–2 semanas) y
+  unas 3–4 semanas de pulido visual.
 - Daño sigue siendo solo Pícaro; si quieres variedad, el siguiente es el Explorador.
 
 **Alternativa:** solo los **kits base** de varias clases (~3–5 días cada uno, porque lo
@@ -1177,3 +1178,75 @@ nuevo vive casi todo en las subclases). Contra: al llegar a nivel 3 no hay qué 
 
 - [ ] Decidir: Clérigo + Guerrero completos, o kits base de varias
 - [ ] Antes del Mago: definir la extra de Filo danzante y el vuelo libre
+
+---
+
+# 7. El mapa se siente chico — entrega con espera y mapa del foso
+
+**El diagnóstico (24 de septiembre).** Las bases están a 47 m del centro; cargando se va
+a 4.5 m/s, o sea ~10 s caminando. Pero el salto del Bárbaro (`JumpVelocity 15`,
+`ForwardForce 15`, gravedad 9.8) vuela ~3 s a 15 m/s: **~45 m en papel, casi todo el
+viaje de un salto**. El Pícaro suma 2 dashes de 6 m y el Blink. Y la bolsa solo bloquea la
+R, no el Shift. Por eso agrandar el mapa sin tocar las reglas no alcanza.
+
+## Entregar toma 3 segundos — HECHO, falta probar
+
+Inspirado en el cobro de The Finals. `MercObjective.DeliverSeconds` (3 s; 0 = entrega
+instantánea como antes): hay que quedarse en la zona de entrega. **Salir de la zona o
+recibir daño de otro personaje reinicia la cuenta.** El daño es el mismo que carga la
+definitiva del tanque (`OnDamageEndured`): lo que frena un escudo cuenta y corta la
+entrega; lo que se bloquea del todo con el escudo direccional, no.
+
+Todos ven "ENTREGANDO 1.8s" y una barra del color del equipo bajo el marcador del
+Objetivo; tu equipo ve "ENTREGANDO" en el marcador de la entrega.
+
+- [x] Probado con bots: anota a los 3 s y el golpe reinicia (24 de septiembre)
+- [ ] Salir de la zona a mitad: la barra vuelve a 0
+- [ ] Un veneno/herida encima: cada tick reinicia (¿se siente justo o frustrante?)
+- [ ] En un cliente la barra avanza suave, no a saltos
+- [ ] En la prueba de 9: ¿los rivales llegan a cortarla? ¿3 s es poco o mucho?
+
+## Con la bolsa no se entra a la base propia — HECHO, falta probar
+
+Si no, bastaba esconderse en la sala (donde eres intocable) con la bolsa hasta que se
+acabe el reloj. Tres capas:
+- **La pared** (`MercSafeRoomBarrier`): al de casa que carga la bolsa se le quita el
+  permiso de atravesarla, y lo recupera al soltarla o entregarla.
+- **La base** (`MercTeamBase.EjectObjectiveCarrier`, prendido): si igual se mete, lo
+  saca por la cara más cercana, como a un enemigo. Es la regla de verdad, del servidor.
+- **Los bots** (`AvoidEnemySafeRooms`): con la bolsa no ponen rumbo a su sala, así un
+  Pícaro herido no queda rebotando en la puerta.
+
+- [ ] Con la bolsa, caminar hacia la puerta de tu sala: la pared te frena
+- [ ] Soltar la bolsa (R) en la puerta: puedes volver a entrar
+- [ ] Agarrarla estando parado junto a la puerta desde adentro: te saca afuera
+- [ ] Un Pícaro bot herido con la bolsa: va a entregar en vez de irse a curar
+
+**Si aun así se siente rápido**, la otra regla que quedó en la mesa: cargar la bolsa
+bloquea la habilidad de movimiento (como ya bloquea la R), o usarla te hace soltar la
+bolsa.
+
+## El mapa del foso — para la demo de diciembre
+
+El bosquejo que te gustó, para después:
+
+- **Tamaño:** bases a ~80 m (hoy 47) y arena de ~63 m de radio (hoy 43): 2.1× el área.
+  Cargando, ~18–25 s de vuelta según la ruta.
+- **El Objetivo en un foso a −6 m** en vez de en la meseta: quien lo agarra tiene que
+  salir mientras le disparan desde arriba.
+- **Rampas del foso hacia las torres, no hacia las bases**: ninguna ruta es recta.
+- **3 torres a +8 m entre las bases**, con los campamentos de NPCs, unidas por **puentes
+  que pasan justo encima de la ruta directa de cada equipo**.
+- **3 rutas de vuelta por equipo:** suelo (abierta, media), alta (torres y pasarelas,
+  rápida y expuesta) y túnel (cubierto, casi directo, con techo: no se puede saltar).
+- Se arma **un sector de 120° y se rota 3 veces**, como la decoración.
+
+Lo que cuesta o hay que cuidar:
+- [ ] NavMesh con niveles: NavMesh Links para bordes y saltos; los bots ya batallaban
+      saltando
+- [ ] Subir `MercArenaBounds.CeilingHeight` (20 m): el salto del Bárbaro sube ~11.5 m, y
+      desde una torre de +8 m llega a ~19.5 m
+- [ ] Túneles anchos: la cámara en tercera persona sufre en lo estrecho
+- [ ] Mover bases, campamentos, botiquines y plataformas de entrega
+- [ ] Greybox con cubos y probar con bots ANTES de decorar
+- Estimación: 1–2 semanas de editor. Compite con Clérigo + Guerrero (sección 6).

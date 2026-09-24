@@ -147,6 +147,11 @@ public class MercSafeRoomBarrier : MonoBehaviour
 
     // Le apaga la colisión con la pared a todo personaje de ESTE equipo que esté cerca.
     // Al que no es de casa no se le toca nada: para él la pared es sólida.
+    //
+    // Excepción: el de casa que carga el Objetivo pierde el permiso mientras lo lleve
+    // (y lo recupera al soltarlo o entregarlo). La base igual lo expulsa desde el
+    // servidor; esto es para que la pared lo frene ANTES, en vez de dejarlo entrar y
+    // teletransportarlo afuera. El tag llega a todas las máquinas por los NetTags.
     private void RefreshPermissions()
     {
         if (_walls.Count == 0 || _base == null) return;
@@ -158,14 +163,19 @@ public class MercSafeRoomBarrier : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             Collider col = _buffer[i];
-            if (col == null || _allowed.Contains(col)) continue;
+            if (col == null) continue;
 
             AbilitySystemComponent asc = col.GetComponentInParent<AbilitySystemComponent>();
             if (asc == null || asc.TeamID != _base.TeamID) continue;
 
-            _allowed.Add(col);
+            bool mayPass = !asc.HasTag(EGameplayTag.Status_Carrying_Objective);
+            if (mayPass == _allowed.Contains(col)) continue;
+
+            if (mayPass) _allowed.Add(col);
+            else         _allowed.Remove(col);
+
             foreach (Collider wall in _walls)
-                if (wall != null) Physics.IgnoreCollision(wall, col, true);
+                if (wall != null) Physics.IgnoreCollision(wall, col, mayPass);
         }
 
         // Los colliders destruidos (jugadores que se fueron) se sacan del registro: si no,

@@ -22,7 +22,9 @@ using UnityEngine;
 // hace falta que la sala tenga un Rigidbody.
 //
 // La sala segura de un equipo NO protege a los enemigos que entren: ahí adentro son
-// carne, que es justamente lo que desalienta acampar en la base ajena.
+// carne, que es justamente lo que desalienta acampar en la base ajena. Y tampoco deja
+// entrar al de casa que cargue el Objetivo: con la bolsa se entrega AFUERA, no se
+// esconde adentro.
 // ============================================================
 public class MercTeamBase : MonoBehaviour
 {
@@ -59,6 +61,10 @@ public class MercTeamBase : MonoBehaviour
     [Tooltip("Sacar del área a quien no sea de este equipo. La sala segura cura y vuelve " +
              "intocable a quien está adentro: dejar entrar a un enemigo es regalarle eso.")]
     public bool EjectEnemies = true;
+
+    [Tooltip("Sacar también a quien sea de ESTE equipo pero cargue el Objetivo. Si pudiera " +
+             "meterse con la bolsa a la sala, donde es intocable, la partida no terminaría nunca.")]
+    public bool EjectObjectiveCarrier = true;
 
     [Tooltip("Cuántos metros afuera del borde queda el intruso al ser expulsado.")]
     public float EjectMargin = 1.5f;
@@ -127,6 +133,14 @@ public class MercTeamBase : MonoBehaviour
             if (asc.TeamID != TeamID)
             {
                 if (EjectEnemies) EjectIntruder(asc);
+                continue;
+            }
+
+            // El de casa CON la bolsa tampoco entra: adentro sería intocable y podría
+            // quedarse ahí con el Objetivo hasta que se acabe el reloj.
+            if (EjectObjectiveCarrier && asc.HasTag(EGameplayTag.Status_Carrying_Objective))
+            {
+                EjectIntruder(asc);
                 continue;
             }
 

@@ -16,6 +16,9 @@ using UnityEngine;
 //     a SOLTAR el Objetivo (ver PlayerController.HandleAbilityInput, que consulta el
 //     tag Status_Carrying_Objective).
 //   · Si el portador muere, el Objetivo se le cae ahí mismo.
+//   · Entregar NO es instantáneo: hay que quedarse DeliverSeconds dentro de la zona
+//     de entrega de tu base. Salir de la zona o recibir daño de otro reinicia la
+//     cuenta — es la última oportunidad de los rivales para cortarla.
 //   · Recién puede volver a levantarse pasados unos segundos de haber caído — así el
 //     que lo suelta no lo vuelve a agarrar en el mismo frame.
 //
@@ -53,6 +56,11 @@ public class MercObjective : NetworkBehaviour
              "con la ralentización de arriba y el tag Status_Carrying_Objective.")]
     public GameplayEffect CarryEffect;
 
+    [Header("Entrega")]
+    [Tooltip("Segundos que hay que quedarse en la zona de entrega para anotar. Salir de la " +
+             "zona o recibir daño de otro personaje reinicia la cuenta. 0 = entrega instantánea.")]
+    public float DeliverSeconds = 3f;
+
     [Header("Presentación")]
     [Tooltip("Altura del flotado cuando está en el piso.")]
     public float BobHeight = 0.25f;
@@ -73,6 +81,10 @@ public class MercObjective : NetworkBehaviour
     // Dónde está apoyado cuando nadie lo lleva.
     private readonly SyncVar<Vector3> _netGroundPos = new SyncVar<Vector3>(Vector3.zero);
 
+    // Cuánto va de la entrega, de 0 a 1 (0 = no está entregando). Viaja al ritmo del
+    // tick del servidor; el HUD lo suaviza.
+    private readonly SyncVar<float> _netDeliveryProgress = new SyncVar<float>(0f);
+
     // =========================================================
     // ESTADO SOLO-SERVIDOR
     // =========================================================
@@ -83,6 +95,8 @@ public class MercObjective : NetworkBehaviour
     private float _tickTimer;
     private Vector3 _lastCarrierPos;
     private GameplayEffect _runtimeCarryEffect;
+    private float _deliveryElapsed;
+    private bool  _damagedSinceLastTick;
 
     // Resolución del portador en el cliente (cacheada por ObjectId).
     private Transform _carrierTransformCache;
@@ -94,6 +108,8 @@ public class MercObjective : NetworkBehaviour
 
     public bool IsCarried      => _netCarrierId.Value >= 0;
     public int  CarrierTeam    => _netCarrierTeam.Value;
+    public float DeliveryProgress => _netDeliveryProgress.Value;
+    public bool  IsDelivering     => _netDeliveryProgress.Value > 0f;
 
     // Quién lo lleva, del lado del SERVIDOR (en los clientes es null: _carrier solo se
     // llena al asignarlo). Lo usan los bots, que corren server-side, para dos cosas: para
@@ -122,6 +138,7 @@ public class MercObjective : NetworkBehaviour
     private void OnDestroy()
     {
         if (Instance == this) Instance = null;
+        if (_carrier != null) _carrier.OnDamageEndured -= OnCarrierDamaged;
         if (_runtimeCarryEffect != null) Destroy(_runtimeCarryEffect);
     }
 
@@ -148,16 +165,17 @@ public class MercObjective : NetworkBehaviour
     {
         _tickTimer += Time.deltaTime;
         if (_tickTimer < 0.15f) return;
+        float dt = _tickTimer;
         _tickTimer = 0f;
 
         if (_gm == null) _gm = MercenariesGameMode.Instance;
 
-        if (_carrier != null) TickCarried();
+        if (_carrier != null) TickCarried(dt);
         else                  TickOnGround();
     }
 
     [Server]
-    private void TickCarried()
+    private void TickCarried(float dt)
     {
         // El portador dejó de existir o cayó: la bolsa se le cae donde estaba.
         if (_carrier == null || _carrier.HasTag(EGameplayTag.State_Dead))
@@ -176,14 +194,42 @@ public class MercObjective : NetworkBehaviour
 
         _lastCarrierPos = _carrier.transform.position;
 
-        // ¿Llegó a la entrega de SU equipo?
+        // ¿Está en la entrega de SU equipo? Hay que aguantar ahí DeliverSeconds.
         int carrierTeam = _carrier.TeamID;
         MercTeamBase teamBase = _gm != null ? _gm.GetBase(carrierTeam) : null;
-        if (teamBase != null && teamBase.IsInDeliveryZone(_carrier.transform.position))
+        bool inZone = teamBase != null && teamBase.IsInDeliveryZone(_carrier.transform.position);
+
+        bool damaged = _damagedSinceLastTick;
+        _damagedSinceLastTick = false;
+
+        if (!inZone || damaged)
+        {
+            SetDeliveryElapsed(0f);
+            return;
+        }
+
+        SetDeliveryElapsed(_deliveryElapsed + dt);
+        if (_deliveryElapsed >= DeliverSeconds)
         {
             ServerReleaseCarrier();
             _gm.ServerScoreObjective(carrierTeam);
         }
+    }
+
+    [Server]
+    private void SetDeliveryElapsed(float seconds)
+    {
+        _deliveryElapsed = seconds;
+        float progress = DeliverSeconds > 0f ? Mathf.Clamp01(seconds / DeliverSeconds) : 0f;
+        if (!Mathf.Approximately(_netDeliveryProgress.Value, progress))
+            _netDeliveryProgress.Value = progress;
+    }
+
+    // Cualquier daño de otro personaje (lo que pasó el bloqueo y las defensas; lo que
+    // frena un escudo también cuenta) corta la entrega en el próximo tick.
+    private void OnCarrierDamaged(float amount)
+    {
+        _damagedSinceLastTick = true;
     }
 
     [Server]
@@ -233,6 +279,9 @@ public class MercObjective : NetworkBehaviour
         if (nob == null) return;
 
         _carrier = asc;
+        _carrier.OnDamageEndured += OnCarrierDamaged;
+        _damagedSinceLastTick = false;
+        SetDeliveryElapsed(0f);
         _lastCarrierPos       = asc.transform.position;
         _netCarrierId.Value   = nob.ObjectId;
         _netCarrierTeam.Value = asc.TeamID;
@@ -248,9 +297,13 @@ public class MercObjective : NetworkBehaviour
     public void ServerReleaseCarrier()
     {
         if (_carrier != null)
+        {
+            _carrier.OnDamageEndured -= OnCarrierDamaged;
             _carrier.RemoveEffectsByDefinition(ResolveCarryEffect());
+        }
 
         _carrier = null;
+        SetDeliveryElapsed(0f);
         _netCarrierId.Value   = -1;
         _netCarrierTeam.Value = 0;
     }

@@ -27,17 +27,27 @@ public class UI_ObjectiveMarker : MonoBehaviour
     [Tooltip("Margen contra el borde de la pantalla cuando el marcador queda fuera de cámara.")]
     public float EdgePadding = 60f;
 
-    // Un marcador dibujado: rombo + flecha de borde + texto de distancia.
+    [Tooltip("Ancho de la barra de entrega que aparece bajo el marcador del Objetivo.")]
+    public float DeliveryBarWidth = 90f;
+
+    // Un marcador dibujado: rombo + flecha de borde + texto de distancia, y la barra
+    // de entrega (solo la usa el del Objetivo).
     private class Marker
     {
         public RectTransform Root;
         public Image Diamond;
         public TextMeshProUGUI Label;
+        public Image BarBack;
+        public Image BarFill;
     }
 
     private Canvas _canvas;
     private Marker _objectiveMarker;
     private Marker _deliveryMarker;
+
+    // Progreso de entrega que se dibuja. El servidor lo manda a saltos (su tick es de
+    // 0.15 s), así que acá avanza suave a la velocidad real y se corrige con cada dato.
+    private float _shownDelivery;
 
     private void Start()
     {
@@ -84,6 +94,14 @@ public class UI_ObjectiveMarker : MonoBehaviour
         marker.Label.fontStyle = FontStyles.Bold;
         MercUIFactory.AddShadow(marker.Label);
 
+        marker.BarBack = MercUIFactory.CreateImage(marker.Root, "BarraEntrega", new Color(0f, 0f, 0f, 0.55f),
+            anchoredPos: new Vector2(0f, -MarkerSize - 16f), size: new Vector2(DeliveryBarWidth, 6f),
+            anchorMin: new Vector2(0.5f, 0.5f), anchorMax: new Vector2(0.5f, 0.5f),
+            pivot: new Vector2(0.5f, 0.5f));
+        marker.BarFill = MercUIFactory.CreateImage(marker.BarBack.transform, "Relleno", Color.white,
+            anchoredPos: Vector2.zero, size: new Vector2(0f, 6f));
+        marker.BarBack.gameObject.SetActive(false);
+
         marker.Root.gameObject.SetActive(false);
         return marker;
     }
@@ -115,6 +133,8 @@ public class UI_ObjectiveMarker : MonoBehaviour
         string  prefix;
         Color   color;
 
+        UpdateShownDelivery(objective);
+
         if (objective != null)
         {
             worldPos = objective.WorldPosition;
@@ -123,6 +143,14 @@ public class UI_ObjectiveMarker : MonoBehaviour
             {
                 color  = gm.GetTeamColor(objective.CarrierTeam);
                 prefix = objective.CarrierTeam == MercUIFactory.LocalTeam() ? "OBJETIVO (aliado)" : "OBJETIVO";
+
+                // Entregando: lo ven TODOS, que es la gracia — los rivales tienen hasta
+                // que se llene la barra para cortarla con un golpe.
+                if (_shownDelivery > 0f)
+                {
+                    float remaining = (1f - _shownDelivery) * objective.DeliverSeconds;
+                    prefix = $"ENTREGANDO {remaining:0.0}s";
+                }
             }
             else
             {
@@ -145,6 +173,36 @@ public class UI_ObjectiveMarker : MonoBehaviour
         }
 
         Place(_objectiveMarker, worldPos, cam, color, prefix);
+        UpdateDeliveryBar(_objectiveMarker, color);
+    }
+
+    private void UpdateShownDelivery(MercObjective objective)
+    {
+        float target = objective != null && objective.IsCarried ? objective.DeliveryProgress : 0f;
+        float rate   = 1f / Mathf.Max(0.1f, objective != null ? objective.DeliverSeconds : 1f);
+
+        // Bajó de golpe: la entrega se cortó (salió de la zona o le pegaron).
+        if (target <= 0f || target < _shownDelivery - rate * 0.3f)
+        {
+            _shownDelivery = target;
+            return;
+        }
+
+        // Nunca por detrás del último dato, ni más de un tick por delante.
+        _shownDelivery = Mathf.Clamp(_shownDelivery + rate * Time.deltaTime,
+                                     target, Mathf.Min(1f, target + rate * 0.15f));
+    }
+
+    private void UpdateDeliveryBar(Marker marker, Color color)
+    {
+        if (marker == null || marker.BarBack == null) return;
+
+        bool show = _shownDelivery > 0f && marker.Root.gameObject.activeSelf;
+        if (marker.BarBack.gameObject.activeSelf != show) marker.BarBack.gameObject.SetActive(show);
+        if (!show) return;
+
+        marker.BarFill.color = color;
+        marker.BarFill.rectTransform.sizeDelta = new Vector2(DeliveryBarWidth * _shownDelivery, 6f);
     }
 
     // La entrega propia solo se marca cuando tu equipo lleva el Objetivo: el resto del
@@ -163,7 +221,8 @@ public class UI_ObjectiveMarker : MonoBehaviour
         MercTeamBase teamBase = gm.GetBase(localTeam);
         if (teamBase == null) { Hide(_deliveryMarker); return; }
 
-        Place(_deliveryMarker, teamBase.DeliveryWorldPoint, cam, gm.GetTeamColor(localTeam), "ENTREGAR");
+        Place(_deliveryMarker, teamBase.DeliveryWorldPoint, cam, gm.GetTeamColor(localTeam),
+              _shownDelivery > 0f ? "ENTREGANDO" : "ENTREGAR");
     }
 
     // Coloca un marcador en la pantalla a partir de un punto del mundo. Si el punto

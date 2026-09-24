@@ -677,8 +677,11 @@ public class BotController : MonoBehaviour
         _target     = FindBestTarget();
         TrackCombatContext();
 
-        // 1 · El Pícaro herido se va a curar y no se distrae con nada.
-        if (_retreating && ResolveRole() == EBotRole.Assassin)
+        // 1 · El Pícaro herido se va a curar y no se distrae con nada. Salvo que lleve el
+        //     Objetivo: con la bolsa no puede entrar a su sala, y la entrega queda en el
+        //     mismo camino, así que primero entrega.
+        bool carryingObjective = _asc != null && _asc.HasTag(EGameplayTag.Status_Carrying_Objective);
+        if (_retreating && ResolveRole() == EBotRole.Assassin && !carryingObjective)
         {
             _destination = ResolveHealSpot(gm);
             _target      = null;
@@ -917,14 +920,19 @@ public class BotController : MonoBehaviour
     // Ahí adentro el enemigo es intocable y se cura, así que entrar no sirve de nada — y
     // desde que las bases expulsan intrusos, un bot que insista queda rebotando contra el
     // borde. Mejor que se plante justo afuera y espere a que salga.
+    //
+    // Con el Objetivo encima, la sala PROPIA también está prohibida (la base expulsa al
+    // portador): un Pícaro herido que se vaya a curar ahí quedaría rebotando en la puerta.
     private Vector3 AvoidEnemySafeRooms(Vector3 destination)
     {
         MercenariesGameMode gm = MercenariesGameMode.Instance;
         if (gm == null) return destination;
 
+        bool carrying = _asc != null && _asc.HasTag(EGameplayTag.Status_Carrying_Objective);
+
         for (int team = 1; team <= MercenariesGameMode.TeamCount; team++)
         {
-            if (team == _teamId) continue;
+            if (team == _teamId && !carrying) continue;
 
             MercTeamBase b = gm.GetBase(team);
             if (b == null || !b.IsInsideSafeRoom(destination)) continue;

@@ -89,7 +89,9 @@ composición: la sala segura es el **único lugar donde se puede cambiar de clas
 - Se levanta **con solo acercarse**. Quien lo lleva se mueve un 25 % más lento y **pierde
   la definitiva**: ese botón pasa a soltar el Objetivo.
 - Hay que llevarlo a la **plataforma de entrega de tu base**, que está justo afuera de la
-  puerta de tu sala segura.
+  puerta de tu sala segura, y **quedarse ahí 3 segundos** (`MercObjective.DeliverSeconds`).
+  Salir de la zona o recibir daño de otro reinicia la cuenta. Todos ven "ENTREGANDO" con
+  una barra en el marcador del Objetivo: es la última oportunidad de los rivales.
 - Cada entrega = 1 punto. **Con 2 puntos se gana** y la partida termina (y se reinicia
   sola a los 15 s, cómodo para una demo con gente mirando).
 - Después de cada entrega, el siguiente Objetivo aparece a los 30 s.
@@ -98,7 +100,10 @@ composición: la sala segura es el **único lugar donde se puede cambiar de clas
 
 **La sala segura.** Adentro, y solo si es la de TU equipo: la vida se te topea al máximo,
 **no te pueden hacer daño**, y podés cambiar de clase. No protege a los enemigos que
-entren: en la base ajena sos carne.
+entren: en la base ajena sos carne. **Con el Objetivo encima no puedes entrar ni a la
+tuya**: la pared te frena y, si igual te metes, la base te saca por la puerta
+(`MercTeamBase.EjectObjectiveCarrier`). Si no, bastaría esconderse adentro con la bolsa
+hasta que se acabe el reloj.
 
 **Los NPCs.** Fantasmas repartidos en campamentos, sobre todo alrededor del centro.
 Detectan poco (9 m) y vuelven a su puesto si te alejás; están para dar experiencia y para
