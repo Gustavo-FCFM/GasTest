@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 23 de septiembre de 2026
+# Pendientes — actualizado el 24 de septiembre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -1126,3 +1126,54 @@ no era el tag de la cámara. `UI_WorldHealthbar` cacheaba `Camera.main` y solo l
 resolver si era `null` — pero al spawnear, `PlayerController` **apaga** la cámara del
 lobby, y un componente apagado no es `null`. Se quedaban orientándose hacia una cámara
 desactivada para siempre. Ahora usa el mismo criterio que `PlayerController.MainCamera`.
+
+---
+
+# 6. Las clases que faltan — plan y estimación (24 de septiembre)
+
+Estimación al ritmo que llevamos, **solo código y configuración** (animaciones, VFX y
+balance van aparte, y con el Bárbaro tomaron sus semanas). Referencia del historial: el
+Paladín con sus 3 subclases tardó ~12 días (11–22 de agosto); el Pícaro ~3.5 semanas,
+con arreglos de red mezclados.
+
+**Las 5: 13 a 15 semanas → enero de 2027.** A la demo de noviembre le quedan ~7: no
+caben todas.
+
+Ordenadas de menos a más difícil:
+
+| # | Clase | Rol | Estimación | Lo nuevo que pide (lo demás se reusa) |
+|---|---|---|---|---|
+| 1 | Clérigo | Soporte | 1.5–2 sem | Resurrección (cuerpo de aliado, se mete con el respawn), revelar invisibles, desarmar |
+| 2 | Guerrero | Tanque | 2–2.5 sem | Parry (ventana exacta en el servidor, con lag), devolver proyectiles, desarmar, arma según postura |
+| 3 | Explorador | Daño | ~3 sem | Mascota con IA en red, ver a través de paredes (solo tu equipo), repeler, zoom del arco, "menos curación recibida" |
+| 4 | Monje | Daño | 3–3.5 sem | Ki (variantes "con Ki" en casi todo el kit), 4 orbes, aliento mantenido, daño→curación, repeler, cadena de Muerte silenciosa. Muchas animaciones de puños |
+| 5 | Mago | Daño | 4+ sem | ~12 hechizos, vuelo libre en red, interacciones entre hechizos, lanzar desde el aliado. **Bloqueado:** extra de Filo danzante SIN DEFINIR |
+
+Qué se reusa, en corto:
+- **Clérigo:** estela de Castigo divino, elegir aliado de la Intercepción,
+  `Status_Immortal`, `ContinuousAoE`, cono, `State_Silenced`.
+- **Guerrero:** `GA_ShieldBlock`, `GA_Dash`, `GA_TagSwitch`, `LeapAbility`, marcas
+  del Enemigo jurado, `ChargedAbility`, `Status_Unstoppable`.
+- **Explorador:** `ChargedAbility`, `LeapAbility`, Cañones del Pirata,
+  `RadialMenuAbility`, `EClassRole` para Presa.
+
+## Sistemas compartidos — hacerlos una vez
+
+- [ ] **Desarmar** — Guerrero (Maestro de batalla), Clérigo (Zona de verdad)
+- [ ] **Repeler** — Monje (Patada del viento), Explorador (trampa explosiva)
+- [ ] **Revelar invisibles** — Clérigo (Faro de esperanza), Explorador (Búho)
+- [ ] **Vuelo libre** — Mago, quizá Muerte silenciosa del Shinobi
+- [ ] **Mascota con IA en red** — Explorador; sirve para futuros summons
+
+## Para la demo: Clérigo + Guerrero (~4–4.5 semanas)
+
+- Las dos más baratas.
+- Tanque y Soporte quedan completos (2 clases cada uno): nadie repite forzosamente ahí.
+- Dejan 2–3 semanas de colchón para pulir antes de noviembre.
+- Daño sigue siendo solo Pícaro; si quieres variedad, el siguiente es el Explorador.
+
+**Alternativa:** solo los **kits base** de varias clases (~3–5 días cada uno, porque lo
+nuevo vive casi todo en las subclases). Contra: al llegar a nivel 3 no hay qué elegir.
+
+- [ ] Decidir: Clérigo + Guerrero completos, o kits base de varias
+- [ ] Antes del Mago: definir la extra de Filo danzante y el vuelo libre
