@@ -1250,3 +1250,62 @@ Lo que cuesta o hay que cuidar:
 - [ ] Mover bases, campamentos, botiquines y plataformas de entrega
 - [ ] Greybox con cubos y probar con bots ANTES de decorar
 - Estimación: 1–2 semanas de editor. Compite con Clérigo + Guerrero (sección 6).
+
+## El Cementerio de los Tres Panteones — el mapa para la demo (bosquejo del 24 de sept.)
+
+Es el mapa del foso de arriba, con tema de cementerio, pasillos y pasadizos. **Este es el
+plan**; lo de arriba queda como el origen de la idea.
+
+**Las zonas, del centro hacia afuera:**
+- **Capilla y cripta.** El Objetivo aparece **en la cripta, a −6 m**, bajo la capilla. En
+  la nave de la capilla va **el jefe**: el centro es la pelea grande. Las escaleras de la
+  cripta salen hacia las **torres**, no hacia las bases.
+- **Explanada.** Anillo abierto alrededor de la capilla, con tumbas grandes de cobertura.
+  El único lugar con vistas largas.
+- **Laberinto de nichos.** Muros de gavetas de 4 m (estilo panteón mexicano). Por sector:
+  una **avenida** central ancha, cortada por una fuente para que no sea una línea de tiro;
+  **dos pasillos laterales** que serpentean hasta las torres; y **dos mausoleos con
+  pasadizo** (entras por un lado, sales al pasillo de al lado) para flanquear.
+- **Techos de los nichos (+4 m).** Se suben por escalones de lápidas: ruta alta y expuesta.
+- **Torres campanario (+8 m)** entre cada par de panteones: **magos** arriba y **campos de
+  tumbas con fantasmas** alrededor.
+- **Catacumbas (−6 m).** Túneles de la cripta al pie de cada torre (escalera por dentro).
+  Con techo: **el Bárbaro no puede saltar ahí**.
+- **La fosa.** Hoyo al costado del atrio de cada panteón (no adentro: que nadie se caiga
+  entregando) que cae a una rama de la catacumba hacia la cripta. **Solo de bajada**: tu
+  equipo llega rápido a la cripta, pero no sirve para volver con la bolsa.
+- **Panteón y atrio.** El panteón es la sala segura (14×14, una puerta). El atrio de
+  entrega, afuera, tiene **dos entradas** y algún techo bajo cerca, para que los rivales
+  tengan varios ángulos para cortar los 3 s.
+
+**Rutas de vuelta con la bolsa (por equipo):** a pie (capilla → explanada → avenida:
+directa y expuesta), por los techos (túnel → torre → techos → atrio: te ven todos) y por
+catacumbas (túnel → torre → pasillo lateral → atrio: cubierta un tramo, la más larga).
+Todas **20–25 s cargando**, más los 3 s de entrega (hoy ~10 s).
+
+| Elemento | Medida | Por qué |
+|---|---|---|
+| Centro → panteón | ~75 m | 20–25 s cargando |
+| Radio del muro del cementerio | ~60 m | 2× el área de hoy |
+| Pasillos | 5–6 m de ancho | Cámara en tercera persona + dos peleando |
+| Avenida | ~8 m | Que no la tape un solo jugador |
+| Muros de nichos | 4 m | Tapan la vista; el salto los pasa (sube ~11.5 m) |
+| Catacumbas | ≥ 4.5 m de alto, 5 m de ancho | Que la cámara no se meta en el techo |
+| Torres | +8 m, escalera por dentro | Altura para los magos y para quien la tome |
+| Techo de la arena | 20 → ~25 m | Desde una torre el salto llega a ~19.5 m |
+| Vistas más largas | ~30–35 m | Las 3 clases de hoy son casi todas cuerpo a cuerpo |
+
+**Tema que además guía:** toque de Día de Muertos. **Caminos de pétalos de cempasúchil**
+marcando las rutas a cada atrio (como guían a las almas a casa), velas como luz, y las
+campanas sonando cuando aparece el Objetivo (cuando haya sonido).
+
+**Cómo construirlo:**
+- [ ] Greybox de UN sector con cubos (panteón, atrio, laberinto, media torre, tramo de
+      catacumba), hacerlo prefab y rotarlo 3 veces
+- [ ] NavMesh: rampas y escalones de lápidas, nada de escaleras de mano (no hay trepar)
+- [ ] La fosa con un **NavMesh Link con Bidirectional apagado** (los bots solo bajan)
+- [ ] Subir `MercArenaBounds.CeilingHeight` a ~25 m
+- [ ] Mover spawns, campamentos (fantasmas en tumbas, magos en torres, jefe en la
+      capilla), botiquines y el `ObjectiveSpawnPoint` a la cripta
+- [ ] Probar con bots cuánto tardan en volver por cada ruta, y jugarlo, ANTES de decorar
+- [ ] Decoración al final: nichos, cruces, velas, pétalos
