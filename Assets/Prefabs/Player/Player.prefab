@@ -864,6 +864,7 @@ MonoBehaviour:
   LeapStateID: 96
   HitClipSlotName: PLACEHOLDER_Hit
   HitTrigger: HitTrigger
+  HitReactionCooldown: 1
   HitBlockedByStateTag: Loop
   DeathClipSlotName: PLACEHOLDER_Death
   DeathClips:

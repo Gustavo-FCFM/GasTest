@@ -198,6 +198,13 @@ public class PlayerController : NetworkBehaviour
     [Tooltip("Trigger del Animator que dispara la reacción.")]
     public string HitTrigger = "HitTrigger";
 
+    [Tooltip("Segundos mínimos entre dos ANIMACIONES de reacción de golpe. Es aparte del " +
+             "respiro del SONIDO (AudioLibrary.HurtCooldown, 0.45 s) a propósito: con la " +
+             "velocidad de ataque de varias clases, cada golpe pasaba ese filtro y el personaje " +
+             "quedaba temblando sin parar. El sonido en cada golpe se lee bien; la sacudida no.\n\n" +
+             "En 0 reacciona a todos los golpes que le lleguen.")]
+    public float HitReactionCooldown = 0.8f;
+
     [Tooltip("Los estados del Animator con esta etiqueta (Tag, en el Inspector del estado) NO se " +
              "interrumpen con la reacción de golpe: bucles como mantener el escudo, el molinete, " +
              "el vuelo del salto o el aturdido. Se mira en todas las capas.")]
@@ -2277,10 +2284,16 @@ public class PlayerController : NetworkBehaviour
 
     // Sacudón al recibir daño. La llama NetworkAbilitySystemComponent al ver bajar la
     // vida sincronizada, así que corre en TODOS los peers (dueño, host y observadores)
-    // sin ningún RPC. El mínimo de daño y el respiro entre reacciones ya los aplicó él.
+    // sin ningún RPC. El mínimo de DAÑO ya lo aplicó él.
+    //
+    // El respiro entre animaciones se aplica ACÁ y no allá porque es cosa de la
+    // animación, no del audio: allá el mismo número gobernaba las dos, y subirlo para
+    // que el personaje dejara de temblar también espaciaba el "ay" de cada golpe.
     public void PlayHitReaction()
     {
         if (characterAnimator == null || !_hasHitTrigger) return;
+
+        if (HitReactionCooldown > 0f && Time.time - _lastHitReactionAt < HitReactionCooldown) return;
         if (ASC != null && ASC.HasTag(EGameplayTag.State_Dead)) return;
 
         // Con el escudo arriba el golpe tiene su propia animación (HoldImpact).
@@ -2292,8 +2305,15 @@ public class PlayerController : NetworkBehaviour
         // reacción tarde, al terminar el bucle.
         if (IsInStateWithTag(HitBlockedByStateTag)) return;
 
+        // El reloj se marca RECIÉN acá, después de todos los descartes: si se marcara
+        // arriba, un golpe que no llegó a animarse (con el escudo arriba, en pleno
+        // molinete) igual consumiría el respiro y se comería la reacción siguiente.
+        _lastHitReactionAt = Time.time;
         characterAnimator.SetTrigger(HitTrigger);
     }
+
+    // Cuándo se reprodujo la última reacción de golpe (ver HitReactionCooldown).
+    private float _lastHitReactionAt = -10f;
 
     // ¿Alguna capa del Animator está (o está entrando) en un estado con esa etiqueta?
     private bool IsInStateWithTag(string tag)

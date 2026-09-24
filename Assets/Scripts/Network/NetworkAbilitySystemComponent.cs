@@ -352,6 +352,10 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // Un golpe recibido: suena (Hurt, o Death si lo mató) y el personaje se sacude
     // (PlayerController.PlayHitReaction). Con un mínimo de daño y un respiro entre
     // reacciones, para que una quemadura de 3 por segundo no lo tenga temblando.
+    //
+    // HurtCooldown es el respiro del SONIDO. La ANIMACIÓN tiene el suyo aparte, en
+    // PlayerController.HitReactionCooldown: son ritmos distintos, porque el "ay" en cada
+    // golpe se lee bien y la sacudida en cada golpe se ve como un temblor.
     private void ReactToDamage(float prev, float next)
     {
         AudioLibrary lib = AudioLibrary.Instance;
