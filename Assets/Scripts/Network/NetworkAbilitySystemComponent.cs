@@ -478,9 +478,24 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // En los clientes, aplica al ASC local cada stat derivado que cambió en
     // el servidor (ver NetStats). Así la UI (MaxHealth), el movimiento
     // (MovSpeed) y las animaciones (AtkSpeed) del jugador reflejan sus buffs.
+    // El guard de IsServerInitialized es el MISMO que el de OnNetTagsChanged, y por el
+    // mismo motivo. En un HOST el ASC es UNO SOLO: servidor y cliente comparten objeto.
+    // Sin ese chequeo, la copia cliente del callback vuelve a ESCRIBIR en el ASC
+    // autoritativo un valor que el servidor ya cambió, y como SetCurrentAttributeValue
+    // CREA el atributo si no existe, resucita atributos que el servidor acababa de
+    // borrar.
+    //
+    // El caso real: los AttributeSet del Bárbaro y sus subclases traen LifeSteal 0.3 como
+    // stat BASE. Al cambiar de clase, InitializeAttributes vacía el diccionario y el
+    // Pícaro queda sin robo de vida — pero el eco de NetStats se lo volvía a meter con el
+    // 0.3 del Bárbaro, y como el daño se resuelve en el servidor, el Pícaro seguía
+    // curándose al pegar. No hacía falta morir: bastaba con cambiar de clase.
+    //
+    // No se pierde nada salteándolo: en el host el servidor ya escribió ese valor en el
+    // ASC de primera mano, y este callback solo repetía lo que él mismo acababa de mandar.
     private void OnNetStatChanged(SyncDictionaryOperation op, EAttributeType key, float value, bool asServer)
     {
-        if (asServer || _asc == null) return;
+        if (asServer || IsServerInitialized || _asc == null) return;
 
         if (op == SyncDictionaryOperation.Add || op == SyncDictionaryOperation.Set)
             _asc.SetCurrentAttributeValue(key, value);

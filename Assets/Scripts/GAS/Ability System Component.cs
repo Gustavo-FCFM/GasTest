@@ -243,6 +243,11 @@ public class AbilitySystemComponent : MonoBehaviour
         bool hadProgress = keepProgress && Attributes.ContainsKey(EAttributeType.Level);
         if (hadProgress) { savedLevel = GetAttributeValue(EAttributeType.Level); savedExp = GetAttributeValue(EAttributeType.Exp); }
 
+        // Qué atributos TENÍA antes de vaciar. Hace falta para avisar de los que
+        // DESAPARECEN al cambiar de clase — ver el bloque de avisos del final.
+        _clearedAttributeKeys.Clear();
+        foreach (var pair in Attributes) _clearedAttributeKeys.Add(pair.Key);
+
         Attributes.Clear();
 
         // Primero TODO lo que el set define explícitamente.
@@ -270,27 +275,38 @@ public class AbilitySystemComponent : MonoBehaviour
             Attributes[EAttributeType.Exp].CurrentValue   = savedExp;
         }
 
-        // Avisar de los valores recién cargados para que la capa de red los sincronice.
+        // Avisar de TODO para que la capa de red lo sincronice: acá los atributos se
+        // escriben DIRECTO en el diccionario (no por SetCurrentAttributeValue), así que
+        // nadie disparó OnAttributeChangedCallback.
         //
-        // Acá los atributos se escriben DIRECTO en el diccionario (no por
-        // SetCurrentAttributeValue), así que no dispararon OnAttributeChangedCallback.
-        // Para los stats derivados no importa —RecalculateAllAttributes los notifica—,
-        // pero los POOLS (Vida, Maná, Energía) están excluidos de ese recálculo: su
-        // SyncVar quedaba en 0 hasta el primer golpe o curación, y por eso los demás
-        // jugadores veían la barra de vida VACÍA de alguien que estaba a full.
-        NotifyAttribute(EAttributeType.Health);
-        NotifyAttribute(EAttributeType.MaxHealth);
-        NotifyAttribute(EAttributeType.Mana);
-        NotifyAttribute(EAttributeType.MaxMana);
-        NotifyAttribute(EAttributeType.Energy);
+        // Antes se avisaban SOLO los pools (Vida, Maná, Energía), y eso dejaba dos
+        // agujeros al cambiar de clase, porque NetStats únicamente se ESCRIBE: no tiene
+        // forma de decir "este atributo ya no existe".
+        //
+        //   · Un stat que la clase NUEVA no declara se quedaba con el valor de la
+        //     VIEJA. El caso real: el AttributeSet del Berserker trae LifeSteal 0.3
+        //     como stat BASE (no es un buff), así que pasar de Berserker a Pícaro
+        //     dejaba al Pícaro robando vida — el servidor ya no lo tenía, pero el valor
+        //     seguía vivo en NetStats y volvía al ASC en la próxima resincronización.
+        //   · Un stat que la clase nueva SÍ declara tampoco viajaba: recién construido,
+        //     su CurrentValue ya es el correcto, así que RecalculateAllAttributes no ve
+        //     ningún cambio y no notifica nada.
+        //
+        // Los que desaparecieron se avisan en CERO, que es lo que GetAttributeValue
+        // devuelve para un atributo ausente: así el valor sincronizado dice lo mismo
+        // que el del servidor.
+        foreach (EAttributeType gone in _clearedAttributeKeys)
+            if (!Attributes.ContainsKey(gone))
+                OnAttributeChangedCallback?.Invoke(gone, 0f);
+
+        foreach (var pair in Attributes)
+            OnAttributeChangedCallback?.Invoke(pair.Key, pair.Value.CurrentValue);
     }
 
-    // Dispara el callback de cambio de un atributo con su valor actual (si existe).
-    private void NotifyAttribute(EAttributeType type)
-    {
-        if (Attributes.ContainsKey(type))
-            OnAttributeChangedCallback?.Invoke(type, Attributes[type].CurrentValue);
-    }
+    // Atributos que tenía el personaje justo antes del último InitializeAttributes.
+    // Es un campo y no una variable local para no reservar una lista en cada cambio
+    // de clase; solo lo usa ese método.
+    private readonly List<EAttributeType> _clearedAttributeKeys = new List<EAttributeType>();
 
     // Lee el valor actual de un atributo (0 si el personaje no lo tiene).
     public float GetAttributeValue(EAttributeType type)

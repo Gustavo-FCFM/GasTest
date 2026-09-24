@@ -17,8 +17,8 @@ MonoBehaviour:
   StackingPolicy: 0
   MaxStacks: 0
   OnMaxStacksEffect: {fileID: 0}
-  EffectGroup: 20
-  Priority: 1
+  EffectGroup: 0
+  Priority: 0
   Icon: {fileID: 21300000, guid: 0a6b533789e6f664a901f55cd4a2be08, type: 3}
   EffectType: 0
   Modifiers:
@@ -87,4 +87,9 @@ MonoBehaviour:
   TargetVFXOffset: {x: 0, y: 0, z: 0}
   TargetVFXRotation: {x: 0, y: 0, z: 0}
   TargetVFXScale: {x: 0, y: 0, z: 0}
+  TargetSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
   GrantedTags: 14000000
