@@ -1206,7 +1206,7 @@ Objetivo; tu equipo ve "ENTREGANDO" en el marcador de la entrega.
 - [ ] En un cliente la barra avanza suave, no a saltos
 - [ ] En la prueba de 9: ¿los rivales llegan a cortarla? ¿3 s es poco o mucho?
 
-## Con la bolsa no se entra a la base propia — HECHO, falta probar
+## Con la bolsa no se entra a la base propia — PROBADO ✅
 
 Si no, bastaba esconderse en la sala (donde eres intocable) con la bolsa hasta que se
 acabe el reloj. Tres capas:
@@ -1217,10 +1217,10 @@ acabe el reloj. Tres capas:
 - **Los bots** (`AvoidEnemySafeRooms`): con la bolsa no ponen rumbo a su sala, así un
   Pícaro herido no queda rebotando en la puerta.
 
-- [ ] Con la bolsa, caminar hacia la puerta de tu sala: la pared te frena
-- [ ] Soltar la bolsa (R) en la puerta: puedes volver a entrar
-- [ ] Agarrarla estando parado junto a la puerta desde adentro: te saca afuera
-- [ ] Un Pícaro bot herido con la bolsa: va a entregar en vez de irse a curar
+- [x] Con la bolsa, caminar hacia la puerta de tu sala: la pared te frena
+- [x] Soltar la bolsa (R) en la puerta: puedes volver a entrar
+- [x] Agarrarla estando parado junto a la puerta desde adentro: te saca afuera
+- [x] Un Pícaro bot herido con la bolsa: va a entregar en vez de irse a curar
 
 **Si aun así se siente rápido**, la otra regla que quedó en la mesa: cargar la bolsa
 bloquea la habilidad de movimiento (como ya bloquea la R), o usarla te hace soltar la
