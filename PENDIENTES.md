@@ -938,8 +938,8 @@ Ese segundo arreglo es de `GetAimPoint`, así que vale para TODO lo que use la m
 girar el cuerpo, las áreas en el piso, el dash, las de objetivo único.
 
 - [x] Probado: los tiros salen derechos.
-- [ ] La pistola del Pirata (usa el mismo arreglo) y las dagas del Pícaro.
-- [ ] Con un compañero parado justo detrás tuyo, apuntar y lanzar. Ese era el caso del
+- [x] La pistola del Pirata (usa el mismo arreglo) y las dagas del Pícaro.
+- [x] Con un compañero parado justo detrás tuyo, apuntar y lanzar. Ese era el caso del
       tiro que salía para atrás.
 - [ ] Si de cerca ahora se siente que el tiro "no obedece" (pasa al lado del que tenías
       pegado), bajá `MinConvergeDistance` en el asset. Más alto = más derecho; más bajo =
@@ -977,8 +977,8 @@ ORIGEN de la mira con el pedido de activación (`NetworkAimOrigin`), no solo el 
 bot, que no tiene cámara, usa los ojos de su propio personaje.
 
 - [x] Probado con el Golpe mortal: ahora agarra al de la retícula.
-- [ ] De paso las otras cuatro que usan la misma selección, sobre todo **Enemigo jurado**
-      (20 metros de alcance, el más largo).
+- [x] Enemigo jurado e Intercepción heroica probados
+      (el de 20 metros de alcance, el más largo, era el que más preocupaba).
 - [ ] Si ahora se siente DEMASIADO exacto —cuesta agarrar a alguien en movimiento—, el
       `SelectionAngle` de cada asset es la perilla: 25° en el Golpe mortal, 30° en el
       resto. Ese número ahora significa de verdad "grados desde la retícula".
