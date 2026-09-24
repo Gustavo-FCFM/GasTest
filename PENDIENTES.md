@@ -260,7 +260,7 @@ No hay nada que rescatar del prefab: las tres clases que guardaba
 
 # 3. Balance pendiente (decisiones tuyas)
 
-## Carga de la definitiva por rol — PROBADO ✅ (falta ajustar números)
+## Carga de la definitiva por rol — PROBADO ✅
 
 Antes, la definitiva cargaba solo con los golpes (1 s por golpe de los 180 del cooldown)
 y con el tiempo: tardaba demasiado. Ahora además carga por **hacer el rol** de la clase:
@@ -292,12 +292,14 @@ monstruos.
 la subclase arranque con la definitiva lista. Apagarlo para jugar en serio.
 
 - [x] Probado: la carga por rol funciona.
-- [ ] Soporte: curar a un aliado herido (sube) y a uno lleno (no sube).
-- [ ] Daño: matar a un bot (sube 30 s de golpe) y a un monstruo (no sube).
-- [ ] Elegir subclase: la definitiva tiene que arrancar vacía.
-- [ ] Cargar un poco, volver a la base, cambiar de clase y elegir otra subclase: tiene
+- [x] Soporte: curar a un aliado herido (sube) y a uno lleno (no sube).
+- [x] Daño: matar a un bot (sube 30 s de golpe) y a un monstruo (no sube).
+- [x] Elegir subclase: la definitiva tiene que arrancar vacía.
+- [x] Cargar un poco, volver a la base, cambiar de clase y elegir otra subclase: tiene
       que arrancar con la mitad.
-- [ ] Ajustar los tres números jugando. Son una primera apuesta, no algo medido.
+- Los tres números quedaron como estaban. Si en una partida larga la definitiva se
+  siente lenta o regalada, son `TankChargePerDamage`, `DamageChargePerKill` y
+  `SupportChargePerHeal` en el `PlayerController` del prefab.
 
 Un detalle que queda afuera: las bajas que hace una **invocación** (las copias del
 Ilusionista, los tótems) no le cuentan a su dueño, porque el que pegó para el juego es
@@ -582,6 +584,29 @@ queda es de **la máquina de casa** (la del trabajo no tiene con qué trabajar a
 3. Jugar con bots y ajustar volúmenes por cue (`Volume` en cada `SfxCue`) y las
    distancias (`MaxDistance`: un paso 20 m, un grito 40, una explosión 60).
 
+### El ritmo de la sacudida se separó del sonido — HECHO, falta elegir el número
+
+La reacción se sentía como un temblor continuo: con la velocidad de ataque de varias
+clases, cada golpe pasaba el filtro y el personaje no paraba de sacudirse.
+
+El respiro estaba en `AudioLibrary.HurtCooldown` (0,45 s) y gobernaba **las dos cosas**,
+así que subirlo para que dejara de temblar también espaciaba el "ay" de cada golpe. Ahora
+son dos ritmos independientes:
+
+| Perilla | Dónde | Qué controla |
+|---|---|---|
+| `HitReactionCooldown` | `PlayerController`, en el prefab del Player | La **sacudida**. 0,8 s |
+| `HurtCooldown` | `AudioLibrary` | El **sonido**. 0,45 s |
+
+La de la animación vive en el prefab a propósito: se puede tocar **sin** crear el asset de
+audio, que todavía no existe. En 0 reacciona a todos los golpes.
+
+El reloj se marca DESPUÉS de los descartes, no antes: un golpe que no llegó a animarse
+(escudo arriba, molinete en curso) no consume el respiro y no se come la reacción del
+golpe siguiente, que es el que sí tenía que verse.
+
+- [ ] Elegir el número jugando. 0,8 es una apuesta; entre 0,7 y 1,0 debería estar.
+
 ### Reacción de golpe, aturdido, muerte y ragdoll — HECHOS Y PROBADOS ✅
 
 Todo instalado en el Animator y en el prefab del jugador (22 de septiembre):
@@ -600,7 +625,7 @@ Todo instalado en el Animator y en el prefab del jugador (22 de septiembre):
 - **Morir limpia buffs y debuffs; revivir devuelve el kit** (cooldown a cero, cargas
   llenas) menos la R. El Inmortal también lo recibe al levantarse con su definitiva.
 
-### Inclinar el torso hacia la mira — LISTO, falta probarlo entre dos ventanas
+### Inclinar el torso hacia la mira — PROBADO ✅ (se inclina en las dos ventanas)
 
 `Player/UpperBodyAim.cs`: mirando al cielo el personaje se arquea hacia atrás, mirando
 al piso se encorva. El yaw no se toca (de eso ya se encarga `FaceCameraForward`). Se
@@ -609,7 +634,7 @@ igual corriendo, atacando o con el escudo arriba.
 
 - [x] En `AC_Player`, parámetro **Float** llamado **`AimPitch`**.
 - [x] En el prefab del jugador, `UpperBodyAim` en la **raíz**.
-- [ ] **Probarlo con dos ventanas**: que el OTRO personaje también se incline al apuntar
+- [x] **Probarlo con dos ventanas**: que el OTRO personaje también se incline al apuntar
       arriba o abajo, no solo el propio.
 
 **Cómo viaja por la red** (cambió): el dueño manda el ángulo por un RPC no confiable a
@@ -658,7 +683,7 @@ de su propio ASC.
 - [ ] Si querés, sacar el `NetworkAnimator` del prefab del jugador: no lo usa nadie y ya
       nos costó un día. Dejarlo tampoco hace daño — está inerte.
 
-### Dos animaciones que mentían, las dos por la misma línea — ARREGLADO, falta probarlo
+### Dos animaciones que mentían, las dos por la misma línea — PROBADO ✅
 
 Salieron de probar el Pícaro entre dos ventanas:
 
@@ -683,11 +708,11 @@ tiro. Quedaron cubiertas las cuatro: Golpe mortal, Intercepción heroica, las de
 `GA_Target` y Enemigo jurado (esa ya lo hacía por su `CanActivate`).
 
 - [x] El combo del Pícaro entre dos ventanas: se ven los dos golpes.
-- [ ] Probar la Q del Pícaro apuntando a la nada: no tiene que animar nada, ni en tu
+- [x] Probar la Q del Pícaro apuntando a la nada: no tiene que animar nada, ni en tu
       pantalla ni en la del otro. Y apuntando a alguien, igual que siempre.
-- [ ] De paso, la Intercepción heroica del Paladín sin aliado a la vista.
+- [x] De paso, la Intercepción heroica del Paladín sin aliado a la vista.
 
-### El hacha quedaba en la mano mientras el proyectil ya volaba — ARREGLADO, falta probarlo
+### El hacha quedaba en la mano mientras el proyectil ya volaba — PROBADO ✅
 
 **Solo le pasaba a los que se CONECTAN**, no al host, y esa es toda la pista.
 
@@ -707,9 +732,9 @@ puntas). Y el aviso del servidor ya no se le manda al dueño, para que no se pel
 La rutina del dueño **siempre** devuelve el arma a la mano, aunque el servidor rechace
 la habilidad: no hay forma de quedarse sin arma.
 
-- [ ] Probar el hacha del Bárbaro desde un cliente conectado (no el host): que salga de
+- [x] Probar el hacha del Bárbaro desde un cliente conectado (no el host): que salga de
       la mano en el mismo frame en que la animación la lanza.
-- [ ] Lo mismo con las dagas del Pícaro, el Asesino y el Ilusionista (`HideWeaponWhileFlying`).
+- [x] Lo mismo con las dagas del Pícaro, el Asesino y el Ilusionista (`HideWeaponWhileFlying`).
 
 Queda una diferencia que NO se arregla así: el proyectil en sí sigue apareciendo dos
 viajes después de tu animación, porque lo spawnea el servidor. Con el arma ya escondida
@@ -726,7 +751,7 @@ proyectil suyo, solo visual, y el de red lo releve al llegar.
   devuelve (no hay animation cancel gratis). Un enemigo recibe un solo golpe por swing
   aunque el clip tenga varios eventos.
 
-### Los lanzamientos también se cancelan — LISTO, falta probarlo
+### Los lanzamientos también se cancelan — PROBADO ✅
 
 Mismo mecanismo (`IsInterruptible` + `CancelSerial`), ahora marcable **en el asset** en
 vez de solo en el slot `PrimaryAttack`. Ya está puesto en el hacha del Bárbaro y en las
@@ -752,8 +777,8 @@ agregás otra habilidad interrumpible y "no pasa nada", mirá ahí primero.
 
 - [x] Probado: se puede interrumpir el lanzamiento.
 - [x] Probado: el básico corta un lanzamiento y el combo se sigue encadenando.
-- [ ] Probar el encadenado: tirar y meter el dash apenas sale el proyectil.
-- [ ] Que el arma no se quede escondida ni aparezca dos veces en ninguno de los dos.
+- [x] Probar el encadenado: tirar y meter el dash apenas sale el proyectil.
+- [x] Que el arma no se quede escondida ni aparezca dos veces en ninguno de los dos.
 - [ ] **El cooldown ahora empieza al SOLTAR**, no al apretar (ver abajo). Probar que
       fintar no deja la habilidad en cooldown, y que mantener o repetir el botón del
       hacha NO reinicia el lanzamiento.
@@ -993,7 +1018,7 @@ URP/Lit funciona igual venga del pack que venga.
 - [ ] Perillas por si querés afinarlo jugando: `GhostAlpha` (0.35) y `GhostForAllies`
       (apagado). Prenderlo hace que tu equipo sepa de un vistazo que el enemigo no te ve.
 
-### Respuesta visual del combate — LISTO, falta probarlo
+### Respuesta visual del combate — PROBADO ✅
 
 Tres avisos, sin nada que cablear: `UI/UI_CombatFeedback.cs` se dibuja solo y quien lo
 necesita lo pide con `UI_CombatFeedback.Get()`.
@@ -1037,10 +1062,48 @@ ver la retícula justo cuando más la estás mirando. `HitMarkLength` alarga las
 
 - [x] La X ya se ve bien de tamaño. Falta mirar, jugando, si la opacidad según la vida
       del golpeado se lee (que vaya poniéndose más sólida a medida que baja).
-- [ ] Probar la calavera matando a un bot, y que NO salga al matar un monstruo.
-- [ ] Probar el arco con un bot pegándote de frente y por la espalda.
+- [x] Probar la calavera matando a un bot, y que NO salga al matar un monstruo.
+- [x] Probar el arco con un bot pegándote de frente y por la espalda.
 - [ ] Mirar si el círculo (`DamageRingRadius`, 190) queda donde molesta o donde se ve.
       Es la perilla que más se va a querer tocar.
+
+### El robo de vida se quedaba pegado al cambiar de clase — ARREGLADO, falta probarlo
+
+Cambiar de Bárbaro a Pícaro dejaba al Pícaro **curándose al pegar**. No hacía falta morir.
+
+Los `AttributeSet` del Bárbaro y sus tres subclases traen `LifeSteal 0.3` como stat **base
+de la clase** (no es un buff, por eso no lo limpiaba ni morir ni `RemoveAllActiveEffects`).
+
+En un **host el ASC es UNO SOLO**: servidor y cliente comparten objeto. Y
+`OnNetStatChanged` no tenía el guard que sí tiene su gemelo `OnNetTagsChanged`:
+
+```csharp
+// TAGS
+if (asServer || IsServerInitialized || _asc == null) return;
+// STATS  ← le faltaba
+if (asServer || _asc == null) return;
+```
+
+Sin ese chequeo, la copia **cliente** del callback vuelve a escribir en el ASC autoritativo
+un valor que el servidor ya cambió — y como `SetCurrentAttributeValue` **crea** el atributo
+si no existe, resucitaba atributos recién borrados. `InitializeAttributes` vaciaba bien el
+diccionario; el eco de `NetStats` le volvía a meter el 0.3 del Bárbaro, y como el daño se
+resuelve en el servidor, el Pícaro seguía robando vida.
+
+La otra mitad era de los **clientes remotos**: `NetStats` solo se ESCRIBE, no sabe decir
+"este atributo ya no existe", así que las otras pantallas se quedaban con los stats de la
+clase vieja. `InitializeAttributes` ahora avisa de todo al reconstruir — en cero los que
+desaparecieron, con su valor los nuevos (que tampoco viajaban: recién construidos su
+`CurrentValue` ya es el correcto y `RecalculateAllAttributes` no veía ningún cambio).
+
+**Vale para cualquier stat que una clase declare y la siguiente no**, no solo el robo de
+vida. Con el Paladín pasaba lo mismo al revés.
+
+- [ ] Probarlo: entrar de Bárbaro, cambiar a Pícaro y pegarle a algo — no tiene que curar.
+- [ ] Con dos ventanas, que los stats de la clase vieja tampoco queden pegados en la
+      pantalla del otro.
+
+---
 
 # 5. Animaciones que siguen viéndose raras
 
