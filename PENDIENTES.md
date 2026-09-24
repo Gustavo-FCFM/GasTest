@@ -780,7 +780,7 @@ agregás otra habilidad interrumpible y "no pasa nada", mirá ahí primero.
 - [x] Probado: el básico corta un lanzamiento y el combo se sigue encadenando.
 - [x] Probar el encadenado: tirar y meter el dash apenas sale el proyectil.
 - [x] Que el arma no se quede escondida ni aparezca dos veces en ninguno de los dos.
-- [ ] **El cooldown ahora empieza al SOLTAR**, no al apretar (ver abajo). Probar que
+- [x] **El cooldown ahora empieza al SOLTAR**, no al apretar (ver abajo). Probar que
       fintar no deja la habilidad en cooldown, y que mantener o repetir el botón del
       hacha NO reinicia el lanzamiento.
 - [ ] Decidir si el **rayo del Paladín** (`GA_SmiteBeam` y el de Conquista) también
