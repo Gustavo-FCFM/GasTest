@@ -35,6 +35,11 @@ public class UI_SettingsPanel : MonoBehaviour
     public float   LabelWidth  = 260f;
     public float   SectionGap  = 18f;
 
+    [Header("Secciones")]
+    [Tooltip("Mostrar la sección de sonido. Apagada mientras el juego no tenga clips: " +
+             "tres barras que no cambian nada confunden. Prenderla cuando lleguen los sonidos.")]
+    public bool ShowSoundSection = false;
+
     [Header("Colores")]
     public Color BackdropColor = new Color(0f, 0f, 0f, 0.8f);
     public Color PanelColor    = new Color(0.10f, 0.11f, 0.13f, 0.97f);
@@ -145,7 +150,7 @@ public class UI_SettingsPanel : MonoBehaviour
         _root = panel.gameObject;
 
         Vector2 top = new Vector2(0.5f, 1f);
-        TextMeshProUGUI title = MercUIFactory.CreateText(_root.transform, "Title", "AJUSTES", 34f, TextColor,
+        TextMeshProUGUI title = MercUIFactory.CreateText(_root.transform, "Title", "SETTINGS", 34f, TextColor,
                                                          TextAlignmentOptions.Center,
                                                          new Vector2(0f, -36f), new Vector2(PanelWidth, 44f),
                                                          top, top, top);
@@ -156,44 +161,49 @@ public class UI_SettingsPanel : MonoBehaviour
         // ---- Controles ----
         // Primero de todo a propósito: es la pregunta que decide qué botones se ven en
         // el resto del juego, y conviene que sea lo primero que alguien ajuste.
-        Section(ref y, "Controles");
-        CyclerRow(ref y, "¿Qué estás usando?", InputSchemes.Length,
+        Section(ref y, "Controls");
+        CyclerRow(ref y, "What are you playing with?", InputSchemes.Length,
                   () => Array.IndexOf(InputSchemes, GameSettings.InputScheme),
                   i => GameSettings.InputScheme = InputSchemes[i],
                   i => InputGlyphs.SchemeName(InputSchemes[i]));
 
         // ---- Cámara ----
-        Section(ref y, "Cámara");
-        SliderRow(ref y, "Sensibilidad del mouse",
+        Section(ref y, "Camera");
+        SliderRow(ref y, "Mouse sensitivity",
                   GameSettings.MinSensitivity, GameSettings.MaxSensitivity,
                   () => GameSettings.MouseSensitivity, v => GameSettings.MouseSensitivity = v,
                   v => $"{v:0.0}×", first: true);
-        ToggleRow(ref y, "Invertir eje Y", () => GameSettings.InvertY, v => GameSettings.InvertY = v);
+        ToggleRow(ref y, "Invert Y axis", () => GameSettings.InvertY, v => GameSettings.InvertY = v);
 
         // ---- Sonido ----
-        Section(ref y, "Sonido");
-        SliderRow(ref y, "Volumen general", 0f, 1f,
-                  () => GameSettings.MasterVolume, v => GameSettings.MasterVolume = v, Percent);
-        SliderRow(ref y, "Música", 0f, 1f,
-                  () => GameSettings.MusicVolume, v => GameSettings.MusicVolume = v, Percent);
-        SliderRow(ref y, "Efectos", 0f, 1f,
-                  () => GameSettings.SfxVolume, v => GameSettings.SfxVolume = v, Percent);
+        // Oculto mientras no haya clips (ver ShowSoundSection): tres barras que no hacen
+        // nada confunden más de lo que ayudan.
+        if (ShowSoundSection)
+        {
+            Section(ref y, "Sound");
+            SliderRow(ref y, "Master volume", 0f, 1f,
+                      () => GameSettings.MasterVolume, v => GameSettings.MasterVolume = v, Percent);
+            SliderRow(ref y, "Music", 0f, 1f,
+                      () => GameSettings.MusicVolume, v => GameSettings.MusicVolume = v, Percent);
+            SliderRow(ref y, "Effects", 0f, 1f,
+                      () => GameSettings.SfxVolume, v => GameSettings.SfxVolume = v, Percent);
+        }
 
         // ---- Pantalla ----
-        Section(ref y, "Pantalla");
-        CyclerRow(ref y, "Modo", ScreenModeNames.Length,
+        Section(ref y, "Display");
+        CyclerRow(ref y, "Mode", ScreenModeNames.Length,
                   () => Array.IndexOf(ScreenModes, GameSettings.ScreenMode),
                   i => GameSettings.ScreenMode = ScreenModes[i],
                   i => ScreenModeNames[i]);
-        CyclerRow(ref y, "Resolución", GameSettings.Resolutions.Length,
+        CyclerRow(ref y, "Resolution", GameSettings.Resolutions.Length,
                   () => GameSettings.ResolutionIndex < 0 ? GameSettings.CurrentResolutionIndex() : GameSettings.ResolutionIndex,
                   i => GameSettings.ResolutionIndex = i,
                   i => $"{GameSettings.Resolutions[i].width} × {GameSettings.Resolutions[i].height}");
-        CyclerRow(ref y, "Calidad", QualitySettings.names.Length,
+        CyclerRow(ref y, "Quality", QualitySettings.names.Length,
                   () => GameSettings.QualityLevel,
                   i => GameSettings.QualityLevel = i,
                   i => QualitySettings.names[i]);
-        ToggleRow(ref y, "Sincronía vertical (VSync)", () => GameSettings.VSync, v => GameSettings.VSync = v);
+        ToggleRow(ref y, "Vertical sync (VSync)", () => GameSettings.VSync, v => GameSettings.VSync = v);
 
         // El alto lo dicta el contenido: las filas de arriba más el pie con los botones.
         // Con un alto fijo, agregar una fila corría los botones encima de las últimas.
@@ -201,16 +211,16 @@ public class UI_SettingsPanel : MonoBehaviour
 
         // ---- Botones ----
         Vector2 bottom = new Vector2(0.5f, 0f);
-        Button reset = MakeButton(_root.transform, "Reset", "Restablecer", ControlColor,
+        Button reset = MakeButton(_root.transform, "Reset", "Reset", ControlColor,
                                   bottom, new Vector2(-110f, 36f), new Vector2(190f, 44f));
         reset.onClick.AddListener(() => { GameSettings.ResetToDefaults(); RefreshAll(); });
 
-        Button close = MakeButton(_root.transform, "Close", "Cerrar", AccentColor,
+        Button close = MakeButton(_root.transform, "Close", "Close", AccentColor,
                                   bottom, new Vector2(110f, 36f), new Vector2(190f, 44f));
         close.onClick.AddListener(Close);
 
         TextMeshProUGUI hint = MercUIFactory.CreateText(_root.transform, "Hint",
-                                                        "ESC también cierra · los cambios se aplican al momento",
+                                                        "ESC also closes · changes apply immediately",
                                                         15f, DimTextColor, TextAlignmentOptions.Center,
                                                         new Vector2(0f, 8f), new Vector2(PanelWidth, 20f),
                                                         bottom, bottom, bottom);
@@ -224,7 +234,7 @@ public class UI_SettingsPanel : MonoBehaviour
     private static readonly FullScreenMode[] ScreenModes =
         { FullScreenMode.ExclusiveFullScreen, FullScreenMode.FullScreenWindow, FullScreenMode.Windowed };
     private static readonly string[] ScreenModeNames =
-        { "Pantalla completa", "Ventana sin bordes", "Ventana" };
+        { "Fullscreen", "Borderless window", "Windowed" };
 
     private static string Percent(float v) => $"{Mathf.RoundToInt(v * 100f)} %";
 

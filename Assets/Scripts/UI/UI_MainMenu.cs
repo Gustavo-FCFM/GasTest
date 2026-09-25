@@ -26,7 +26,9 @@ public class UI_MainMenu : MonoBehaviour
 {
     [Header("Textos")]
     public string Title    = "MERCENARIES";
-    public string Subtitle = "Demo · 3 contra 3 contra 3";
+    // Se llama SubtitleText (no Subtitle) para que la escena no conserve el texto
+    // viejo en español que tenía guardado con el nombre anterior.
+    public string SubtitleText = "Demo · 3 vs 3 vs 3";
 
     [Header("Comportamiento")]
     [Tooltip("Mostrar el menú apenas arranca la escena. Apagalo para probar la arena directo.")]
@@ -160,21 +162,21 @@ public class UI_MainMenu : MonoBehaviour
         title.characterSpacing = 12f;
         MercUIFactory.AddShadow(title, 3f);
 
-        MercUIFactory.CreateText(root, "Subtitle", Subtitle, 24f, DimTextColor,
+        MercUIFactory.CreateText(root, "Subtitle", SubtitleText, 24f, DimTextColor,
                                  TextAlignmentOptions.Center,
                                  new Vector2(0f, 128f), new Vector2(900f, 34f),
                                  center, center, center);
 
         float y = 10f;
-        _playButton = MakeButton(root, "Play", "Jugar", PlayColor, new Vector2(0f, y));
+        _playButton = MakeButton(root, "Play", "Play", PlayColor, new Vector2(0f, y));
         _playButton.onClick.AddListener(Hide);
 
         y -= ButtonSize.y + ButtonGap;
-        Button settings = MakeButton(root, "Settings", "Ajustes", ButtonColor, new Vector2(0f, y));
+        Button settings = MakeButton(root, "Settings", "Settings", ButtonColor, new Vector2(0f, y));
         settings.onClick.AddListener(() => UI_SettingsPanel.GetOrCreate().Open());
 
         y -= ButtonSize.y + ButtonGap;
-        Button quit = MakeButton(root, "Quit", "Salir", ButtonColor, new Vector2(0f, y));
+        Button quit = MakeButton(root, "Quit", "Quit", ButtonColor, new Vector2(0f, y));
         quit.onClick.AddListener(Quit);
 
         Vector2 corner = new Vector2(1f, 0f);

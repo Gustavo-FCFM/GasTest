@@ -397,7 +397,7 @@ public class UI_LobbyPanel : MonoBehaviour
         if (_ipText != null)
         {
             if (_hud == null) _hud = FindFirstObjectByType<ConnectionHUD>();
-            _ipText.text = $"IP del Host: {(_hud != null ? _hud.HostAddress : "—")}";
+            _ipText.text = $"Host IP: {(_hud != null ? _hud.HostAddress : "—")}";
         }
 
         // --- equipos ---
@@ -442,7 +442,7 @@ public class UI_LobbyPanel : MonoBehaviour
             Image bg = _confirmButton.GetComponent<Image>();
             if (bg != null) bg.color = me.Ready ? ReadyColor : IdleColor;
             if (_confirmLabel != null)
-                _confirmLabel.text = me.Ready ? "Listo" : "Confirmar";
+                _confirmLabel.text = me.Ready ? "Ready" : "Confirm";
         }
 
         if (_startButton != null)
@@ -476,21 +476,21 @@ public class UI_LobbyPanel : MonoBehaviour
 
             if (players == 0)
             {
-                text  = "No hay nadie en un equipo todavía.";
+                text  = "Nobody has joined a team yet.";
                 color = PendingColor;
             }
             else if (ready >= players)
             {
                 text  = LobbyManager.LocalIsHost
-                      ? $"Los {players} están listos — podés arrancar."
-                      : $"Los {players} están listos — esperando al host.";
+                      ? $"All {players} are ready — you can start."
+                      : $"All {players} are ready — waiting for the host.";
                 color = ReadyColor;
             }
             else
             {
                 int missing = players - ready;
-                text  = missing == 1 ? $"Falta 1 de {players} por confirmar."
-                                     : $"Faltan {missing} de {players} por confirmar.";
+                text  = missing == 1 ? $"1 of {players} still has to confirm."
+                                     : $"{missing} of {players} still have to confirm.";
                 color = PendingColor;
             }
 
@@ -498,12 +498,12 @@ public class UI_LobbyPanel : MonoBehaviour
             // texto del panel, y sirve mas como instruccion que como marcador.
             if (inTeam && !canReady)
             {
-                text  = "Tocá tu recuadro para elegir clase.";
+                text  = "Click your slot to choose a class.";
                 color = PendingColor;
             }
             else if (me.Spectator || me.Team <= 0)
             {
-                text += "   (sos espectador — toca Unirte para jugar)";
+                text += "   (you are spectating — click Join to play)";
             }
 
             _statusText.text  = text;
@@ -556,7 +556,7 @@ public class UI_LobbyPanel : MonoBehaviour
 
             bool needsClass = entry.ClassIndex < 0 && inTeam;
             slot.Label.text = (isMine || (isBot && isHost)) && needsClass
-                            ? $"{entry.PlayerName}  ← elegí clase"
+                            ? $"{entry.PlayerName}  ← choose a class"
                             : entry.PlayerName;
 
             // Los bots van en otro color aunque estén listos: en una captura conviene ver
@@ -570,7 +570,7 @@ public class UI_LobbyPanel : MonoBehaviour
         slot.JoinButton.interactable = true;
 
         TextMeshProUGUI joinLabel = slot.JoinButton.GetComponentInChildren<TextMeshProUGUI>();
-        if (joinLabel != null) joinLabel.text = inTeam ? "Unirte" : "Espectador";
+        if (joinLabel != null) joinLabel.text = inTeam ? "Join" : "Spectate";
     }
 
     private List<LobbyEntry> MembersOf(LobbyManager lobby, int team)
@@ -592,7 +592,7 @@ public class UI_LobbyPanel : MonoBehaviour
     private string CurrentName()
     {
         string n = _nameInput != null ? _nameInput.text : null;
-        return string.IsNullOrWhiteSpace(n) ? "Jugador" : n.Trim();
+        return string.IsNullOrWhiteSpace(n) ? "Player" : n.Trim();
     }
 
     // =========================================================
@@ -628,7 +628,7 @@ public class UI_LobbyPanel : MonoBehaviour
 
     private void BuildHeader()
     {
-        _ipText = MercUIFactory.CreateText(_root, "IP", "IP del Host: —", 24f, Color.white,
+        _ipText = MercUIFactory.CreateText(_root, "IP", "Host IP: —", 24f, Color.white,
                                            TextAlignmentOptions.Center,
                                            new Vector2(0f, -40f), new Vector2(600f, 40f),
                                            new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
@@ -674,7 +674,7 @@ public class UI_LobbyPanel : MonoBehaviour
 
         _nameInput = inputRect.gameObject.AddComponent<TMP_InputField>();
         _nameInput.textComponent = text;
-        _nameInput.text          = "Jugador";
+        _nameInput.text          = "Player";
         _nameInput.characterLimit = 16;
 
         // Al TERMINAR de escribir, no en cada tecla: si no, cada letra sería un pedido
@@ -692,7 +692,7 @@ public class UI_LobbyPanel : MonoBehaviour
             int team = t + 1;
             float x = startX + ColumnWidth * t;
 
-            CreateColumnHeader($"Equipo {team}", MercUIFactory.TeamColor(team), x, headerY);
+            CreateColumnHeader($"Team {team}", MercUIFactory.TeamColor(team), x, headerY);
 
             _teamSlots[t] = new List<Slot>();
             for (int s = 0; s < MaxPerTeam; s++)
@@ -711,7 +711,7 @@ public class UI_LobbyPanel : MonoBehaviour
         }
 
         float specX = startX + ColumnWidth * LobbyManager.TeamCount;
-        CreateColumnHeader("Espectadores", new Color(0.55f, 0.57f, 0.62f, 1f), specX, headerY);
+        CreateColumnHeader("Spectators", new Color(0.55f, 0.57f, 0.62f, 1f), specX, headerY);
 
         for (int s = 0; s < MinSpectatorRows; s++)
             AddSpectatorRow(specX, headerY - 56f - RowHeight * s);
@@ -794,7 +794,7 @@ public class UI_LobbyPanel : MonoBehaviour
         // El "Unirte" deja libre el borde derecho para el "+" de agregar un bot.
         const float sideW = 34f;
 
-        slot.JoinButton = CreateButton(slot.Root, "Join", "Unirte", SlotColor,
+        slot.JoinButton = CreateButton(slot.Root, "Join", "Join", SlotColor,
                                        new Vector2(0f, 0.5f), new Vector2(14f, 0f),
                                        new Vector2(ColumnWidth - 100f - sideW, RowHeight - 14f), out _);
 
@@ -823,7 +823,7 @@ public class UI_LobbyPanel : MonoBehaviour
                                                new Vector2(0.5f, 0f), new Vector2(0.5f, 0f),
                                                new Vector2(0.5f, 0f));
 
-        _confirmButton = CreateButton(_root, "ConfirmButton", "Confirmar", IdleColor,
+        _confirmButton = CreateButton(_root, "ConfirmButton", "Confirm", IdleColor,
                                       new Vector2(0.5f, 0f), new Vector2(0f, 46f),
                                       new Vector2(180f, 46f), out _confirmLabel);
         _confirmButton.onClick.AddListener(ToggleReady);

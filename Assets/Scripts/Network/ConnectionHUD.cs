@@ -11,7 +11,7 @@ using FishNet.Managing;
 //
 // FLUJO DE PRUEBA:
 //   - TÚ (host): abrís la escena en el editor y presionás "Iniciar Host".
-//   - TUS AMIGOS (build): presionan "Conectarse (Cliente)" y entran a tu editor.
+//   - TUS AMIGOS (build): presionan "Connect (Client)" y entran a tu editor.
 //
 // El botón de Host solo aparece en el editor de Unity (ver HostOnlyInEditor),
 // así que las builds que les pasás a tus amigos SOLO pueden ser cliente:
@@ -142,7 +142,7 @@ public class ConnectionHUD : MonoBehaviour
 
     private void StartHost()
     {
-        if (Nm == null) { _status = "No hay NetworkManager en la escena."; return; }
+        if (Nm == null) { _status = "There is no NetworkManager in the scene."; return; }
 
         ushort port = ParsePort();
         Nm.TransportManager.Transport.SetPort(port);
@@ -150,18 +150,18 @@ public class ConnectionHUD : MonoBehaviour
         // Servidor + cliente local (host): el cliente se conecta a sí mismo.
         Nm.ServerManager.StartConnection();
         Nm.ClientManager.StartConnection("127.0.0.1", port);
-        _status = "Host iniciado. Esperando a tus amigos...";
+        _status = "Host started. Waiting for your friends...";
     }
 
     private void StartClient()
     {
-        if (Nm == null) { _status = "No hay NetworkManager en la escena."; return; }
+        if (Nm == null) { _status = "There is no NetworkManager in the scene."; return; }
 
         ushort port    = ParsePort();
         string address = string.IsNullOrWhiteSpace(_addressField) ? "127.0.0.1" : _addressField.Trim();
 
         Nm.ClientManager.StartConnection(address, port);
-        _status = $"Conectando a {address}:{port}...";
+        _status = $"Connecting to {address}:{port}...";
     }
 
     private void Disconnect()
@@ -169,7 +169,7 @@ public class ConnectionHUD : MonoBehaviour
         if (Nm == null) return;
         if (Nm.IsServerStarted) Nm.ServerManager.StopConnection(true);
         if (Nm.IsClientStarted) Nm.ClientManager.StopConnection();
-        _status = "Desconectado.";
+        _status = "Disconnected.";
     }
 
     private ushort ParsePort()
@@ -212,34 +212,34 @@ public class ConnectionHUD : MonoBehaviour
         // por debajo del borde sin ningún aviso.
         GUILayout.BeginArea(new Rect(pad, pad, 280f, 600f));
         GUILayout.BeginVertical(GUI.skin.box);
-        GUILayout.Label("<b>Red — Prueba de conexión</b>", RichLabel());
+        GUILayout.Label("<b>Network — Connection</b>", RichLabel());
 
 
         if (!serverStarted && !clientStarted)
         {
             GUILayout.Space(4);
-            GUILayout.Label("IP del host:");
+            GUILayout.Label("Host IP:");
             _addressField = GUILayout.TextField(_addressField);
-            GUILayout.Label("Puerto:");
+            GUILayout.Label("Port:");
             _portField = GUILayout.TextField(_portField);
             GUILayout.Space(6);
 
             // Botón de Host: solo en el editor (salvo que desactives HostOnlyInEditor),
             // o en una build abierta con el argumento -host (ver LaunchedAsHost).
             bool canHost = !HostOnlyInEditor || Application.isEditor || LaunchedAsHost;
-            if (canHost && GUILayout.Button("Iniciar Host (solo yo)", GUILayout.Height(32)))
+            if (canHost && GUILayout.Button("Start Host (me only)", GUILayout.Height(32)))
                 StartHost();
 
-            if (GUILayout.Button("Conectarse (Cliente)", GUILayout.Height(32)))
+            if (GUILayout.Button("Connect (Client)", GUILayout.Height(32)))
                 StartClient();
         }
         else
         {
             string rol = serverStarted && clientStarted ? "HOST"
-                       : serverStarted ? "SERVIDOR" : "CLIENTE";
-            GUILayout.Label($"Estado: <b>{rol}</b>", RichLabel());
+                       : serverStarted ? "SERVER" : "CLIENT";
+            GUILayout.Label($"Status: <b>{rol}</b>", RichLabel());
             GUILayout.Space(6);
-            if (GUILayout.Button("Desconectar", GUILayout.Height(32)))
+            if (GUILayout.Button("Disconnect", GUILayout.Height(32)))
                 Disconnect();
 
             GUILayout.Space(2);
@@ -257,10 +257,10 @@ public class ConnectionHUD : MonoBehaviour
         // instalado en la escena, el botón no aparece.
         GUILayout.Space(6);
         GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Ajustes", GUILayout.Height(28)))
+        if (GUILayout.Button("Settings", GUILayout.Height(28)))
             UI_SettingsPanel.GetOrCreate().Open();
         if (UI_MainMenu.Instance != null &&
-            GUILayout.Button("Menú principal", GUILayout.Height(28)))
+            GUILayout.Button("Main menu", GUILayout.Height(28)))
             UI_MainMenu.ReturnToMenu();
         GUILayout.EndHorizontal();
 

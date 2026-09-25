@@ -422,7 +422,7 @@ public class LobbyManager : NetworkBehaviour
     {
         if (sender == null) return;
 
-        playerName = string.IsNullOrWhiteSpace(playerName) ? "Jugador" : playerName.Trim();
+        playerName = string.IsNullOrWhiteSpace(playerName) ? "Player" : playerName.Trim();
 
         if (IsNameTaken(playerName, sender.ClientId))
         {

@@ -38,7 +38,7 @@ public class UI_LobbyMenu : MonoBehaviour
     [Tooltip("Campo donde el jugador escribe su nombre.")]
     public TMPro.TMP_InputField NameInput;
     [Tooltip("Nombre por defecto si lo deja vacío.")]
-    public string DefaultName = "Jugador";
+    public string DefaultName = "Player";
 
     [Header("Equipo")]
     [Tooltip("Botones de equipo, EN ORDEN: el primero es el equipo 1, el segundo el 2, etc.")]
@@ -128,10 +128,10 @@ public class UI_LobbyMenu : MonoBehaviour
         switch (reason)
         {
             case ELobbyRejection.NameTaken:
-                ShowWarning("Ese nombre ya está en uso. Elegí otro.");
+                ShowWarning("That name is already taken. Choose another one.");
                 break;
             case ELobbyRejection.TeamFull:
-                ShowWarning("Ese equipo está lleno.");
+                ShowWarning("That team is full.");
                 break;
         }
     }
@@ -214,7 +214,7 @@ public class UI_LobbyMenu : MonoBehaviour
         {
             ConnectionHUD hud = FindFirstObjectByType<ConnectionHUD>();
             string ip = hud != null ? hud.HostAddress : "—";
-            HostAddressText.text = $"IP del Host: {ip}";
+            HostAddressText.text = $"Host IP: {ip}";
         }
 
         // Nos anotamos ya, sin haber elegido nada: los demás tienen que VER que estás
@@ -403,7 +403,7 @@ public class UI_LobbyMenu : MonoBehaviour
         }
 
         if (WarningText != null)
-            WarningText.text = nameTaken ? "Ese nombre ya está en uso. Elegí otro." : string.Empty;
+            WarningText.text = nameTaken ? "That name is already taken. Choose another one." : string.Empty;
 
         bool ready = hasName && chosen && !nameTaken;
 

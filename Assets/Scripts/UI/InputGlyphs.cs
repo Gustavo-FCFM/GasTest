@@ -43,9 +43,9 @@ public static class InputGlyphs
     {
         switch (scheme)
         {
-            case EInputScheme.Xbox:        return "Control de Xbox";
-            case EInputScheme.PlayStation: return "Control de PlayStation";
-            default:                       return "Teclado y mouse";
+            case EInputScheme.Xbox:        return "Xbox controller";
+            case EInputScheme.PlayStation: return "PlayStation controller";
+            default:                       return "Keyboard and mouse";
         }
     }
 
@@ -121,7 +121,7 @@ public static class InputGlyphs
             switch (Scheme)
             {
                 case EInputScheme.Xbox:
-                case EInputScheme.PlayStation: return "CRUCETA ARRIBA";   // dpad/up
+                case EInputScheme.PlayStation: return "D-PAD UP";   // dpad/up
                 default:                       return "C";
             }
         }
@@ -136,7 +136,7 @@ public static class InputGlyphs
             {
                 case EInputScheme.Xbox:        return "A";   // buttonSouth
                 case EInputScheme.PlayStation: return "X";   // Cruz
-                default:                       return "Espacio";
+                default:                       return "Space";
             }
         }
     }
@@ -150,7 +150,7 @@ public static class InputGlyphs
             {
                 case EInputScheme.Xbox:        return "A";
                 case EInputScheme.PlayStation: return "X";
-                default:                       return "Clic";
+                default:                       return "Click";
             }
         }
     }

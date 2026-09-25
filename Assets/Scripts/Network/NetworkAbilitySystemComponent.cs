@@ -813,7 +813,7 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     [Server]
     public void AssignPlayerName(string playerName)
     {
-        _netPlayerName.Value = string.IsNullOrWhiteSpace(playerName) ? "Jugador" : playerName.Trim();
+        _netPlayerName.Value = string.IsNullOrWhiteSpace(playerName) ? "Player" : playerName.Trim();
     }
 
     // =========================================================

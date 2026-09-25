@@ -1425,7 +1425,7 @@ perillas aparecen en el Inspector durante Play):
 - `UI_PlayerHUD`: las habilidades se esconden mientras estás muerto.
 
 Además, **todo lo que se ve dentro de la partida pasó a inglés** (regla en `CLAUDE.md`).
-Los menús de fuera (inicio, ajustes, sala) siguen en español.
+Después también pasaron a inglés los menús (inicio, ajustes, red, sala), y la sección de sonido de Ajustes quedó oculta hasta que haya clips (`UI_SettingsPanel.ShowSoundSection`).
 
 La lista original:
 
