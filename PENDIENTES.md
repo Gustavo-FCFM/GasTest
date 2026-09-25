@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 24 de septiembre de 2026
+# Pendientes — actualizado el 25 de septiembre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -16,6 +16,66 @@ git fetch origin && git checkout main && git reset --hard origin/main
 
 Con **fetch + reset**, no con `pull` — la máquina de casa tuvo historia divergente en
 julio y un pull normal recrea ese merge conflictivo. Ver `CLAUDE.md`.
+
+---
+
+# ★ HOY EN LA NOCHE: la prueba de 9 jugadores (viernes 25 de septiembre)
+
+Es una **prueba, no la demo** (la demo es la del showcase, en diciembre): lo que vale
+de esta noche es lo que la gente diga y lo que se vea en la grabación.
+
+## Antes de que lleguen
+
+- [ ] **Build nueva desde `main`** (`3e83c30` o más nuevo): trae la entrega de 3 s y la
+      regla de que con la bolsa no se entra a la base. Ya revisado en el prefab:
+      `StartSubclassWithFullUltimate` apagado (la definitiva arranca en 0) y la carga
+      por rol en 0.15 / 30 / 0.2.
+- [ ] **Ensayar el host con `-host`**, si todavía no lo hiciste: 10 minutos con una
+      segunda máquina (o una segunda copia de la build conectándose a `127.0.0.1`).
+      Nunca hosteamos desde una build; que no sea la primera vez con 8 personas
+      esperando. Detalles abajo, en la sección 2.
+- [ ] **playit.gg corriendo** y la dirección + puerto (7770 UDP) listos para pegar.
+- [ ] **Rendimiento del host**: servidor + tu espectador + la grabación en la misma
+      máquina. Si el host tartamudea, tartamudean todos: si hace falta, baja la calidad
+      de la grabación antes que otra cosa.
+- [ ] Bots: con 9 personas no hacen falta. Si falta alguien, llena ese lugar con uno.
+
+**Las reglas en 30 segundos**, para pegar en el grupo antes de empezar:
+
+> Somos 3 equipos de 3. Gana quien entregue 2 veces la caja dorada que aparece en el
+> centro. Se levanta con solo acercarte; cargándola vas más lento y la R la suelta.
+> Para entregar llévala a la plataforma de afuera de tu base y **quédate 3 segundos**:
+> si te pegan o te sales, vuelve a empezar. Con la caja no puedes entrar a tu base. Al
+> llegar a nivel 3 eliges subclase con la V (mejor en tu base). La clase solo se cambia
+> dentro de tu base.
+
+## Qué observar durante las partidas
+
+Son las perillas y dudas que quedaron abiertas y que solo se contestan jugando:
+
+- [ ] **La entrega de 3 s**: ¿los rivales llegan a cortarla? ¿3 s es poco o mucho?
+      ¿Una herida o un veneno encima reiniciándola se siente justo o frustrante?
+- [ ] **El mapa**: con la entrega de 3 s, ¿se sigue sintiendo chico? Si sí, la regla
+      siguiente es que cargar la bolsa bloquee el Shift (sección 7).
+- [ ] **La definitiva por rol**: ¿llega a tiempo para usarla en la partida? ¿Qué rol la
+      carga demasiado rápido o demasiado lento?
+- [ ] **La retroalimentación del combate**: la X, la calavera y el círculo de daño
+      (`DamageRingRadius` 190). ¿Se entienden? ¿El círculo molesta?
+- [ ] **El Asesino invisible** (`GhostAlpha` 0.35): ¿el que lo usa entiende que es
+      invisible?
+- [ ] **Apuntar al objetivo** (Blink, Enemigo jurado, Intercepción): ¿demasiado exacto
+      contra alguien que se mueve?
+- [ ] **Botiquines**: ¿se usan? ¿están donde pasa la gente?
+- [ ] **La red con 9**: animaciones de los demás (ataques, lanzamientos, torso), lag,
+      desconexiones, y los FPS del host.
+- [ ] **Balance**: qué clase o subclase dominó, cuál no eligió nadie, qué se sintió
+      injusto.
+
+## Después
+
+- [ ] Anotar lo que dijeron **esa misma noche**, mientras está fresco (aunque sea en
+      desorden), y guardar la grabación. En la siguiente sesión lo ordenamos y decidimos
+      qué entra antes de la demo.
 
 ---
 
@@ -121,7 +181,7 @@ primero se quedaba dando vueltas por el mapa mientras los demás elegían.
 
 Con `MinPlayersToStart: 1` lo podés probar solo.
 
-## La prueba de 9 jugadores (jueves) — quién hostea
+## La prueba de 9 jugadores (viernes 25, en la noche) — quién hostea
 
 **Hostear desde una build ya se puede**, y sin repartir una build que cualquiera pueda
 hostear: la MISMA build abierta con el argumento `-host` muestra el botón.
@@ -145,7 +205,7 @@ Espacio sube, Ctrl baja, Shift para ir rápido, clic izquierdo/derecho para salt
 jugador en jugador, **F** vuelve a la cámara libre, **H** muestra el nombre y la vida de
 quien mirás, **M** el marcador.
 
-- [ ] **Ensayarlo antes del jueves**, aunque sea con dos máquinas: nunca hosteamos desde
+- [ ] **Ensayarlo antes de la prueba**, aunque sea con dos máquinas: nunca hosteamos desde
       una build. El código del host es el mismo, pero es la primera vez que corre sin
       editor, y no es el día de averiguarlo.
 - [ ] Acordate de la IP: los que se conectan necesitan tu dirección de playit.gg
