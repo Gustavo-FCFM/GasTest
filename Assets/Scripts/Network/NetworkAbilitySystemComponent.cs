@@ -284,6 +284,8 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         // solo manda cuando el bool cambia (no hay tráfico si no se mueve).
         _netFirstStrikeReady.Value = _asc.IsFirstStrikeReady;
 
+        FlushPendingHealNumber();
+
         _cooldownSyncTimer += Time.deltaTime;
         if (_cooldownSyncTimer < CooldownSyncInterval) return;
         _cooldownSyncTimer = 0f;
@@ -1304,7 +1306,7 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
 
     // ESTE componente es el del que RECIBIÓ el golpe.
     [Server]
-    public void ServerReportDamage(AbilitySystemComponent attacker)
+    public void ServerReportDamage(AbilitySystemComponent attacker, bool critical = false)
     {
         if (_asc == null || attacker == null) return;
 
@@ -1322,7 +1324,7 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
             bool killedCharacter = _asc.HasTag(EGameplayTag.State_Dead)
                                 && GetComponent<PlayerController>() != null;
 
-            attackerNet.TargetDamageDealt(attackerNet.Owner, fraction, killedCharacter);
+            attackerNet.TargetDamageDealt(attackerNet.Owner, fraction, killedCharacter, critical);
         }
 
         // --- lo que ve el que RECIBIÓ ---
@@ -1331,13 +1333,89 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     }
 
     [TargetRpc]
-    private void TargetDamageDealt(NetworkConnection conn, float victimHealthFraction, bool killedCharacter)
+    private void TargetDamageDealt(NetworkConnection conn, float victimHealthFraction, bool killedCharacter, bool critical)
     {
         UI_CombatFeedback feedback = UI_CombatFeedback.Get();
         if (feedback == null) return;
 
-        feedback.ShowHit(victimHealthFraction);
+        feedback.ShowHit(victimHealthFraction, critical);
         if (killedCharacter) feedback.ShowKill();
+    }
+
+    // =========================================================
+    // NÚMEROS FLOTANTES (daño y curación)
+    //
+    // El número sale sobre el que RECIBE: rojo el daño, amarillo el crítico, verde
+    // la curación. Lo ven TODOS (ObserversRpc), porque lo que dice —a quién le están
+    // pegando y cuánto, a quién están curando— sirve tanto al que juega como al que
+    // mira. Va por el canal no confiable: es decoración, y si se pierde uno no pasa
+    // nada.
+    //
+    // Las CURACIONES se juntan: el aura del Paladín cura a todo el equipo en cada golpe,
+    // el robo de vida cura en cada golpe, y un número por cada una llenaría la pantalla
+    // de verde. Se suman durante HealNumberBatchSeconds y sale un solo número.
+    // =========================================================
+
+    [Tooltip("Cada cuánto se juntan las curaciones de este personaje en un solo número verde.")]
+    public float HealNumberBatchSeconds = 0.35f;
+
+    private float _pendingHeal;
+    private float _pendingHealFlushAt;
+
+    [Server]
+    public void ServerShowCombatNumber(float amount, ECombatNumber kind)
+    {
+        if (amount <= 0f) return;
+
+        if (kind == ECombatNumber.Heal)
+        {
+            if (_pendingHeal <= 0f) _pendingHealFlushAt = Time.time + HealNumberBatchSeconds;
+            _pendingHeal += amount;
+            return;
+        }
+
+        SendCombatNumber(amount, kind);
+    }
+
+    private void FlushPendingHealNumber()
+    {
+        if (_pendingHeal <= 0f || Time.time < _pendingHealFlushAt) return;
+
+        SendCombatNumber(_pendingHeal, ECombatNumber.Heal);
+        _pendingHeal = 0f;
+    }
+
+    private void SendCombatNumber(float amount, ECombatNumber kind)
+    {
+        // Menos de medio punto no se muestra: un "0" o un "1" que no fue nada confunde.
+        int rounded = Mathf.RoundToInt(amount);
+        if (rounded <= 0) return;
+
+        ObserversCombatNumber((ushort)Mathf.Min(rounded, ushort.MaxValue), (byte)kind);
+    }
+
+    [ObserversRpc]
+    private void ObserversCombatNumber(ushort amount, byte kind,
+                                       FishNet.Transporting.Channel channel = FishNet.Transporting.Channel.Unreliable)
+    {
+        if (_asc == null) return;
+
+        // Un enemigo invisible no puede delatarse por los números que le salen encima.
+        if (_asc.HasTag(EGameplayTag.Status_Invisible))
+        {
+            PlayerController local = PlayerController.LocalPlayer;
+            AbilitySystemComponent localAsc = local != null ? local.GetComponent<AbilitySystemComponent>() : null;
+            if (localAsc == null || localAsc.IsEnemyOf(_asc)) return;
+        }
+
+        // Justo encima de la barra de vida si la tiene (así no la tapa), si no sobre la
+        // cabeza.
+        UI_WorldHealthbar bar = GetComponent<UI_WorldHealthbar>();
+        Vector3 anchor = bar != null && bar.BarRoot != null
+            ? bar.BarRoot.position + Vector3.up * 0.35f
+            : transform.position + Vector3.up * 2.2f;
+
+        UI_DamageNumbers.Get().Spawn(anchor, amount, (ECombatNumber)kind);
     }
 
     [TargetRpc]

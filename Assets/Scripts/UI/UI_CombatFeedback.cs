@@ -55,6 +55,14 @@ public class UI_CombatFeedback : MonoBehaviour
 
     public Color HitColor = new Color(0.95f, 0.15f, 0.15f, 1f);
 
+    [Tooltip("Color de la X cuando el golpe fue CRÍTICO (el mismo amarillo del número).")]
+    public Color HitCriticalColor = new Color(1f, 0.85f, 0.1f, 1f);
+
+    [Tooltip("Opacidad mínima de la X de crítico: un crítico siempre se tiene que notar, " +
+             "aunque el golpeado tenga la vida llena.")]
+    [Range(0f, 1f)]
+    public float HitCriticalMinAlpha = 0.85f;
+
     [Header("Calavera de baja")]
     [Tooltip("Tamaño de la calavera.")]
     public float KillMarkSize = 46f;
@@ -139,14 +147,23 @@ public class UI_CombatFeedback : MonoBehaviour
 
     // Pegaste. 'victimHealthFraction' es la vida que le QUEDA al golpeado, de 0 a 1:
     // cuanto más baja, más opaca la X.
-    public void ShowHit(float victimHealthFraction)
+    // critical: el golpe fue crítico → la X sale amarilla y bien visible.
+    public void ShowHit(float victimHealthFraction, bool critical = false)
     {
         float health = Mathf.Clamp01(victimHealthFraction);
 
         // La opacidad es lo que le falta de vida, con un piso para que un golpe a
         // alguien entero igual se note.
-        _hitFrom  = Mathf.Max(HitMinAlpha, 1f - health);
+        _hitFrom  = Mathf.Max(critical ? HitCriticalMinAlpha : HitMinAlpha, 1f - health);
         _hitAlpha = _hitFrom;
+
+        if (_hitArms == null) return;
+        Color color = critical ? HitCriticalColor : HitColor;
+        foreach (RectTransform arm in _hitArms)
+        {
+            Image image = arm != null ? arm.GetComponent<Image>() : null;
+            if (image != null) image.color = color;
+        }
     }
 
     // Mataste a un personaje.

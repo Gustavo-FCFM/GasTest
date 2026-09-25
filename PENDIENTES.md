@@ -1397,8 +1397,8 @@ se puede hacer barato, de más a menos valor para el showcase:
 **Baratas (1–2 h):**
 - [x] **Registro de bajas** en la esquina ("*Gus* [hacha] *Pedro*", con colores de
       equipo). Probablemente el que más aporta al showcase: quien solo mira entiende.
-- [ ] **Números de daño flotantes**: blancos normales, amarillos y grandes los críticos,
+- [x] **Números de daño flotantes**: rojos normales, amarillos y grandes los críticos,
       verdes las curaciones (el Paladín es el que menos retroalimentación tiene hoy).
       Ampliar `ServerReportDamage` con cantidad, posición y crítico.
-- [ ] **X de crítico distinta** (amarilla): casi gratis con los números, viaja el mismo
+- [x] **X de crítico distinta** (amarilla): casi gratis con los números, viaja el mismo
       dato.

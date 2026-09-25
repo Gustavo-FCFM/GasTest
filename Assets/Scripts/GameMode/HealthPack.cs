@@ -141,6 +141,7 @@ public class HealthPack : NetworkBehaviour
         if (OnlyIfHurt && health >= max - 0.01f) return;
 
         asc.SetCurrentAttributeValue(EAttributeType.Health, Mathf.Min(health + HealAmount, max));
+        asc.ShowCombatNumber(Mathf.Min(health + HealAmount, max) - health, ECombatNumber.Heal);
 
         uint delay = TimeManager != null ? TimeManager.TimeToTicks(RespawnSeconds) : 0;
         _netReadyTick.Value = (TimeManager != null ? TimeManager.Tick : 0) + delay;

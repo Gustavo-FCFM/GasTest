@@ -152,7 +152,9 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   `PlayerController` → "CARGA DE LA DEFINITIVA"). El daño aguantado y la curación se
   detectan solos en el pipeline de efectos del ASC; **una curación que escribe la vida
   directo** (como el aura del Paladín) tiene que avisar con `NotifyHealedAlly`, o el
-  soporte no carga con ella.
+  soporte no carga con ella — y con `ASC.ShowCombatNumber(curado, ECombatNumber.Heal)`,
+  o no sale su número verde. Lo que pasa por `ExecuteInstantEffect` avisa las dos
+  cosas solo.
 
 Los detalles finos del GAS (pipeline de daño, acumulación de efectos, animaciones de
 combo) están en `DesignDocuments/GAS_Arquitectura.docx`.

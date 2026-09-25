@@ -83,10 +83,22 @@ public class AbilitySystemComponent : MonoBehaviour
     // Le avisa a la capa de red que hubo un golpe, para que cada uno vea lo suyo: el que
     // pegó, la X en su retícula; el que recibió, el arco rojo del lado del golpe. Si no
     // hay red (una escena de pruebas suelta) no pasa nada y el juego sigue igual.
-    private void ReportCombatFeedback(AbilitySystemComponent attacker)
+    private void ReportCombatFeedback(AbilitySystemComponent attacker, bool critical)
     {
         NetworkAbilitySystemComponent netAsc = GetComponent<NetworkAbilitySystemComponent>();
-        if (netAsc != null) netAsc.ServerReportDamage(attacker);
+        if (netAsc != null) netAsc.ServerReportDamage(attacker, critical);
+    }
+
+    // El número flotante sobre ESTE personaje: rojo si le pegaron, amarillo si fue
+    // crítico, verde si lo curaron (ver NetworkAbilitySystemComponent → NÚMEROS
+    // FLOTANTES). Server-side. Las curaciones que escriben la vida DIRECTO, sin pasar
+    // por un efecto (el aura del Paladín, los botiquines), tienen que llamarlo ellas
+    // con lo que curaron de verdad; lo que pasa por ExecuteInstantEffect ya lo avisa solo.
+    public void ShowCombatNumber(float amount, ECombatNumber kind)
+    {
+        if (amount <= 0f) return;
+        NetworkAbilitySystemComponent netAsc = GetComponent<NetworkAbilitySystemComponent>();
+        if (netAsc != null) netAsc.ServerShowCombatNumber(amount, kind);
     }
 
     // Se dispara cuando ESTE personaje RECIBE un golpe de daño directo (el
@@ -892,6 +904,10 @@ public class AbilitySystemComponent : MonoBehaviour
         float damageEndured = 0f;
         float healthHealed  = 0f;
 
+        // Si algún golpe de este efecto fue crítico: el número sale amarillo y la X del
+        // que pegó también.
+        bool anyCritical = false;
+
         foreach (var mod in effect.Modifiers)
         {
             if (!Attributes.ContainsKey(mod.Attribute)) continue;
@@ -903,7 +919,13 @@ public class AbilitySystemComponent : MonoBehaviour
             // registra su IDamageModifier en el ASC de su dueño; acá recorremos esa
             // lista y resolvemos el crítico. Solo aplica a daño directo a la vida.
             if (sourceASC != null && mod.Attribute == EAttributeType.Health && calculatedMagnitude < 0)
-                calculatedMagnitude = sourceASC.ResolveOutgoingDamage(this, calculatedMagnitude, isPeriodicTick);
+            {
+                calculatedMagnitude = sourceASC.ResolveOutgoingDamage(this, calculatedMagnitude, isPeriodicTick,
+                                                                      out bool critical);
+                // Un crítico que no entra (inmunidad) no se festeja: se anota al ver
+                // que el golpe pasó, más abajo.
+                if (critical && !HasTag(EGameplayTag.Status_Immunity)) anyCritical = true;
+            }
 
             if (mod.Attribute == EAttributeType.Health && calculatedMagnitude < 0)
             {
@@ -994,8 +1016,11 @@ public class AbilitySystemComponent : MonoBehaviour
                 // aunque al tag le quede duración.
                 float absorbedByShield = damageBeforeShield - (physicalDamage + magicDamage);
                 if (absorbedByShield > 0f && HasTag(EGameplayTag.Status_HealShield))
-                    SetCurrentAttributeValue(EAttributeType.Health,
-                                             GetAttributeValue(EAttributeType.Health) + absorbedByShield);
+                {
+                    float before = GetAttributeValue(EAttributeType.Health);
+                    SetCurrentAttributeValue(EAttributeType.Health, before + absorbedByShield);
+                    healthHealed += Mathf.Max(0f, GetAttributeValue(EAttributeType.Health) - before);
+                }
 
                 calculatedMagnitude = -(physicalDamage + magicDamage);
                 damageToHealth     += physicalDamage + magicDamage;
@@ -1023,6 +1048,19 @@ public class AbilitySystemComponent : MonoBehaviour
             if (healthHealed > 0f && !sourceASC.IsEnemyOf(this)) sourceASC.NotifyHealedAlly(this, healthHealed);
         }
 
+        // Los números flotantes, sobre este personaje. El daño es lo que pasó bloqueo y
+        // defensas (lo que frenó un escudo también cuenta: se lo pegaron igual); la
+        // curación, lo que subió la vida de verdad.
+        if (damageEndured > 0f)
+        {
+            ECombatNumber kind = anyCritical   ? ECombatNumber.CriticalDamage
+                               : isPeriodicTick ? ECombatNumber.DamageOverTime
+                                                : ECombatNumber.Damage;
+            ShowCombatNumber(damageEndured, kind);
+        }
+        if (healthHealed > 0f) ShowCombatNumber(healthHealed, ECombatNumber.Heal);
+        // (el escudo de la Conquista que cura lo que frena ya sumó arriba en healthHealed)
+
         // Rotura de invisibilidad: un golpe de daño delata tanto a quien lo RECIBE
         // (this) como a quien lo REPARTE (sourceASC).
         //
@@ -1043,7 +1081,7 @@ public class AbilitySystemComponent : MonoBehaviour
                 // Lo que VEN los dos: la X en la retícula del que pegó y el arco rojo en
                 // la pantalla del que recibió. Acá es el único lugar donde se sabe todo
                 // junto —quién, a quién y cuánto entró de verdad— así que de acá sale.
-                if (damageToHealth > 0f) ReportCombatFeedback(sourceASC);
+                if (damageToHealth > 0f) ReportCombatFeedback(sourceASC, anyCritical);
             }
         }
     }
@@ -1254,6 +1292,10 @@ public class AbilitySystemComponent : MonoBehaviour
         float cur  = sourceASC.GetAttributeValue(EAttributeType.Health);
         float max  = sourceASC.GetAttributeValue(EAttributeType.MaxHealth);
         sourceASC.SetCurrentAttributeValue(EAttributeType.Health, Mathf.Clamp(cur + heal, 0, max));
+
+        // Número verde sobre el que se curó (se junta con los demás golpes del momento,
+        // ver ServerShowCombatNumber).
+        sourceASC.ShowCombatNumber(Mathf.Clamp(cur + heal, 0, max) - cur, ECombatNumber.Heal);
     }
 
     // =========================================================
@@ -1525,6 +1567,12 @@ public class AbilitySystemComponent : MonoBehaviour
     //   2) "Crítico mejorado" (otro x2): capa aparte que SÍ se acumula con la
     //      anterior (espalda + mejorado = x4 → 24).
     public float ResolveOutgoingDamage(AbilitySystemComponent target, float magnitude, bool isPeriodicTick)
+        => ResolveOutgoingDamage(target, magnitude, isPeriodicTick, out _);
+
+    // Igual, pero además dice si el golpe salió CRÍTICO (cualquiera de las dos capas):
+    // lo usan el número amarillo y la X de crítico.
+    public float ResolveOutgoingDamage(AbilitySystemComponent target, float magnitude, bool isPeriodicTick,
+                                       out bool critical)
     {
         DamageContext ctx = new DamageContext
         {
@@ -1561,6 +1609,7 @@ public class AbilitySystemComponent : MonoBehaviour
             if (ctx.IsImprovedCrit) magnitude *= critDamage;
         }
 
+        critical = isCrit || ctx.IsImprovedCrit;
         return magnitude;
     }
 

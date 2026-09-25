@@ -252,6 +252,9 @@ public class PaladinAuraPassive : MonoBehaviour
             // que es donde se detecta sola. A uno mismo no cuenta.
             if (healed > 0f && !ReferenceEquals(ally, _asc)) _asc.NotifyHealedAlly(ally, healed);
 
+            // Y el número verde sobre el curado, por el mismo motivo.
+            ally.ShowCombatNumber(healed, ECombatNumber.Heal);
+
             if (HealExtraEffects != null)
                 foreach (var effect in HealExtraEffects)
                     if (effect != null) ally.ApplyGameplayEffect(effect, _asc);
