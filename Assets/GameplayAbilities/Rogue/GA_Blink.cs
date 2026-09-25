@@ -67,8 +67,11 @@ public class GA_Blink : GameplayAbility
         NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
 
         // El teletransporte se ejecuta en el proceso dueño (CC client-authoritative).
-        if (netAsc != null) netAsc.ServerTeleportOwnerTo(behind, faceDir);
-        else if (pc != null) pc.TeleportTo(behind, faceDir); // fallback sin red
+        // Con la cámara girada hacia el objetivo: si no, el Pícaro aparece a su
+        // espalda pero sigue mirando hacia donde miraba antes, y no le puede seguir
+        // pegando.
+        if (netAsc != null) netAsc.ServerTeleportOwnerTo(behind, faceDir, turnCamera: true);
+        else if (pc != null) pc.TeleportTo(behind, faceDir, turnCamera: true); // fallback sin red
 
         if (pc != null) pc.PlayAnimation(this);
 

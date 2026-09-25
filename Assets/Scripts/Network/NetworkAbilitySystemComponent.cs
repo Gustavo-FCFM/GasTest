@@ -1453,9 +1453,10 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // =========================================================
 
     // El servidor le pide al dueño que se teletransporte a 'position' mirando
-    // hacia 'faceDir'.
+    // hacia 'faceDir'. turnCamera: girar también la cámara del dueño (ver
+    // PlayerController.TeleportTo) — el Blink lo usa para quedar de cara al enemigo.
     [Server]
-    public void ServerTeleportOwnerTo(Vector3 position, Vector3 faceDir)
+    public void ServerTeleportOwnerTo(Vector3 position, Vector3 faceDir, bool turnCamera = false)
     {
         // Un BOT no tiene dueño a quien mandarle el TargetRpc, pero el servidor SÍ es su
         // autoridad sobre el transform: lo mueve directo. Sin esto el Parpadeo del pícaro
@@ -1467,14 +1468,14 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
             return;
         }
 
-        TargetExecuteTeleport(Owner, position, faceDir);
+        TargetExecuteTeleport(Owner, position, faceDir, turnCamera);
     }
 
     [TargetRpc]
-    private void TargetExecuteTeleport(NetworkConnection conn, Vector3 position, Vector3 faceDir)
+    private void TargetExecuteTeleport(NetworkConnection conn, Vector3 position, Vector3 faceDir, bool turnCamera)
     {
         PlayerController pc = GetComponent<PlayerController>();
-        if (pc != null) pc.TeleportTo(position, faceDir);
+        if (pc != null) pc.TeleportTo(position, faceDir, turnCamera);
     }
 
     // =========================================================

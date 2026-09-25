@@ -58,7 +58,18 @@ public class Entity_Totem : NetworkBehaviour
         if (ASC != null)
         {
             ASC.OnDeath += HandleTotemDestruction;
-            ASC.TeamID = MyTeamID;
+
+            // El equipo solo lo conoce el servidor (MyTeamID lo asigna quien lo
+            // spawnea). En un cliente vale 0, y escribirlo pisaría el equipo que ya
+            // llegó por red. Con NetworkASC, AssignTeam lo manda a todos: sin eso, en
+            // los clientes el tótem sería neutral — su barra de vida no sabría si
+            // pintarse de aliado o de enemigo.
+            if (IsServerInitialized)
+            {
+                NetworkAbilitySystemComponent netAsc = GetComponent<NetworkAbilitySystemComponent>();
+                if (netAsc != null) netAsc.AssignTeam(MyTeamID);
+                else                ASC.TeamID = MyTeamID;
+            }
         }
 
         // Puramente visual: cada copia (servidor Y cada cliente, una vez que
@@ -115,6 +126,10 @@ public class Entity_Totem : NetworkBehaviour
         foreach (Collider hit in hits)
         {
             AbilitySystemComponent targetASC = hit.GetComponentInParent<AbilitySystemComponent>();
+
+            // Los tótems no se dan el aura entre ellos (ni a sí mismos): con collider
+            // en la capa de personajes, el OverlapSphere también los encuentra.
+            if (targetASC != null && targetASC.GetComponent<Entity_Totem>() != null) continue;
 
             if (targetASC != null && !targetASC.HasTag(EGameplayTag.State_Dead))
             {

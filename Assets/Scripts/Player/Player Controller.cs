@@ -946,7 +946,10 @@ public class PlayerController : NetworkBehaviour
     // que el propio CC lo bloquee, y orienta al personaje hacia faceDir. Debe
     // correr en el proceso DUEÑO (el CC es client-authoritative) — lo dispara
     // NetworkAbilitySystemComponent.TargetExecuteTeleport.
-    public void TeleportTo(Vector3 position, Vector3 faceDir)
+    // turnCamera: girar también la cámara hacia faceDir. Sin eso el cuerpo gira pero
+    // la cámara no, y como el personaje sigue a la cámara, termina mirando hacia donde
+    // miraba antes del teletransporte.
+    public void TeleportTo(Vector3 position, Vector3 faceDir, bool turnCamera = false)
     {
         characterController.enabled = false;
         transform.position          = position;
@@ -956,6 +959,8 @@ public class PlayerController : NetworkBehaviour
         faceDir.y = 0;
         if (faceDir.sqrMagnitude > 0.0001f)
             transform.rotation = Quaternion.LookRotation(faceDir.normalized);
+
+        if (turnCamera && _orbitCam != null) _orbitCam.FaceDirection(faceDir);
     }
 
     // Excluye (o restaura) capas de colisión del CharacterController. Lo usa el

@@ -209,6 +209,17 @@ public class ThirdPersonOrbitCam : MonoBehaviour
         UpdateTargetVisibility();
     }
 
+    // Gira la cámara (solo el yaw; la inclinación queda como estaba) para que mire
+    // hacia 'direction'. En tercera persona el personaje sigue a la cámara, así que
+    // girar solo el cuerpo no alcanza: al frame siguiente vuelve a mirar hacia donde
+    // apuntaba la cámara. La usa el Blink del Pícaro para quedar de cara al enemigo.
+    public void FaceDirection(Vector3 direction)
+    {
+        direction.y = 0f;
+        if (direction.sqrMagnitude < 0.0001f) return;
+        rotY = Quaternion.LookRotation(direction).eulerAngles.y;
+    }
+
     // =========================================================
     // COLISIÓN
     // =========================================================
