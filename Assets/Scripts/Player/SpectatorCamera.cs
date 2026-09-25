@@ -366,8 +366,8 @@ public class SpectatorCamera : MonoBehaviour
         if (_hintText != null)
         {
             _hintText.text = _following != null
-                ? $"Clic: cambiar de jugador · {FreeCamKey}: cámara libre · {TogglePlayerUIKey}: datos · {ScoreboardKey}: marcador"
-                : $"WASD + Espacio/Ctrl · Shift: rápido · Clic: seguir a un jugador · {ScoreboardKey}: marcador";
+                ? $"Click: switch player · {FreeCamKey}: free camera · {TogglePlayerUIKey}: info · {ScoreboardKey}: scoreboard"
+                : $"WASD + Space/Ctrl · Shift: fast · Click: follow a player · {ScoreboardKey}: scoreboard";
         }
 
         bool showPanel = _showPlayerUI && _following != null;

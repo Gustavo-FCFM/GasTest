@@ -67,6 +67,14 @@ public class MercObjective : NetworkBehaviour
     public float BobSpeed  = 2f;
     public float SpinSpeed = 45f;
 
+    [Header("Columna de luz mientras se entrega")]
+    [Tooltip("Alto de la columna. Alta a propósito: se tiene que ver desde todo el mapa.")]
+    public float BeaconHeight = 40f;
+    [Tooltip("Radio de la columna.")]
+    public float BeaconRadius = 1.6f;
+    [Tooltip("Opacidad con la entrega casi terminada (arranca más tenue y se va encendiendo).")]
+    [Range(0f, 1f)] public float BeaconAlpha = 0.4f;
+
     // =========================================================
     // ESTADO SINCRONIZADO
     // =========================================================
@@ -139,6 +147,8 @@ public class MercObjective : NetworkBehaviour
     {
         if (Instance == this) Instance = null;
         if (_carrier != null) _carrier.OnDamageEndured -= OnCarrierDamaged;
+        if (_beacon != null) Destroy(_beacon);
+        if (_beaconMaterial != null) Destroy(_beaconMaterial);
         if (_runtimeCarryEffect != null) Destroy(_runtimeCarryEffect);
     }
 
@@ -154,6 +164,7 @@ public class MercObjective : NetworkBehaviour
     {
         if (IsServerInitialized) ServerTick();
         UpdateVisual();
+        UpdateDeliveryBeacon();
     }
 
     // =========================================================
@@ -389,6 +400,63 @@ public class MercObjective : NetworkBehaviour
         basePos.y += Mathf.Sin(Time.time * BobSpeed) * BobHeight;
         transform.position = basePos;
         transform.Rotate(Vector3.up, SpinSpeed * Time.deltaTime, Space.World);
+    }
+
+    // Columna de luz del color del equipo sobre la plataforma mientras alguien entrega.
+    // La ven TODOS y desde lejos: es el aviso de "corran, están cobrando", y para quien
+    // mira (espectador, gente en el showcase) es lo que dice dónde está la jugada. Se va
+    // encendiendo con el progreso y late un poco.
+    private GameObject _beacon;
+    private Material   _beaconMaterial;
+
+    private void UpdateDeliveryBeacon()
+    {
+        bool show = IsCarried && DeliveryProgress > 0f;
+        MercenariesGameMode gm = show ? MercenariesGameMode.Instance : null;
+        MercTeamBase teamBase  = gm != null ? gm.GetBase(CarrierTeam) : null;
+
+        if (teamBase == null)
+        {
+            if (_beacon != null && _beacon.activeSelf) _beacon.SetActive(false);
+            return;
+        }
+
+        if (_beacon == null && !BuildBeacon()) return;
+
+        // El cilindro de Unity mide 2 de alto con el origen en el medio.
+        _beacon.transform.position   = teamBase.DeliveryWorldPoint + Vector3.up * (BeaconHeight * 0.5f);
+        _beacon.transform.localScale = new Vector3(BeaconRadius * 2f, BeaconHeight * 0.5f, BeaconRadius * 2f);
+
+        float pulse = 0.85f + 0.15f * Mathf.Sin(Time.time * 8f);
+        Color c = gm.GetTeamColor(CarrierTeam);
+        c.a = BeaconAlpha * Mathf.Lerp(0.45f, 1f, DeliveryProgress) * pulse;
+        _beaconMaterial.color = c;
+
+        if (!_beacon.activeSelf) _beacon.SetActive(true);
+    }
+
+    // Un cilindro sin collider (no puede estorbar ni tapar tiros) con un material
+    // transparente sin luz. Sprites/Default viene siempre incluido en la build y se
+    // dibuja de los dos lados, que es lo que hace que se vea como una columna de luz.
+    private bool BuildBeacon()
+    {
+        Shader shader = Shader.Find("Sprites/Default");
+        if (shader == null) shader = Shader.Find("Universal Render Pipeline/Unlit");
+        if (shader == null) return false;
+
+        _beacon = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        _beacon.name = "DeliveryBeacon";
+        _beacon.layer = 2;   // Ignore Raycast, por las dudas
+        DestroyImmediate(_beacon.GetComponent<Collider>());
+
+        _beaconMaterial = new Material(shader);
+        MeshRenderer renderer = _beacon.GetComponent<MeshRenderer>();
+        renderer.sharedMaterial    = _beaconMaterial;
+        renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        renderer.receiveShadows    = false;
+
+        _beacon.SetActive(false);
+        return true;
     }
 
     // Resuelve el transform del portador a partir del ObjectId sincronizado. Se cachea

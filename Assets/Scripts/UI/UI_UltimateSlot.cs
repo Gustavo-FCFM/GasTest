@@ -21,10 +21,24 @@ public class UI_UltimateSlot : MonoBehaviour
     [Tooltip("Texto con la tecla/botón de la ultimate (R). Se rellena solo según el slot. Opcional.")]
     public TextMeshProUGUI keyText;        // Etiqueta de la tecla asignada
 
+    [Header("Lista para usar")]
+    [Tooltip("Cuánto crece el ícono al latir con la definitiva cargada. 0.08 = un 8 %.")]
+    public float ReadyPulseScale = 0.08f;
+    [Tooltip("Latidos por segundo con la definitiva cargada.")]
+    public float ReadyPulseSpeed = 1.5f;
+    public Color ReadyToastColor = new Color(1f, 0.82f, 0.25f, 1f);
+
     private GameplayAbility assignedAbility;
     private AbilitySystemComponent ownerASC;
     private NetworkAbilitySystemComponent ownerNetASC;
     private EAbilityInput slotInput;
+
+    // Para avisar SOLO al pasar de cargando a lista (no cada frame, ni al armar el slot
+    // con la definitiva ya llena).
+    private bool    _readyKnown;
+    private bool    _wasReady;
+    private Vector3 _baseScale = Vector3.one;
+    private bool    _baseScaleKnown;
 
     // Asocia este slot a la ultimate del personaje. Si no tiene ultimate
     // asignada todavía (ej: nivel bajo), se oculta el GameObject entero.
@@ -34,6 +48,10 @@ public class UI_UltimateSlot : MonoBehaviour
         ownerASC = asc;
         ownerNetASC = netAsc;
         slotInput = slot;
+        _readyKnown = false;
+
+        if (!_baseScaleKnown) { _baseScale = transform.localScale; _baseScaleKnown = true; }
+        transform.localScale = _baseScale;
 
         // Etiqueta del botón (mismo mapeo que UI_AbilitySlot; para la ultimate, "R" con
         // teclado, "Y" con Xbox, "TRI" con PlayStation).
@@ -83,6 +101,7 @@ public class UI_UltimateSlot : MonoBehaviour
             if(iconFill) iconFill.fillAmount = chargePercent;
             if(percentageText) percentageText.text = $"{chargePercent * 100:F0}%";
             if(readyEffects) readyEffects.SetActive(false);
+            UpdateReadyState(false);
         }
         else
         {
@@ -90,7 +109,29 @@ public class UI_UltimateSlot : MonoBehaviour
             if(iconFill) iconFill.fillAmount = 1f;
             if(percentageText) percentageText.text = "READY";
             if(readyEffects) readyEffects.SetActive(true);
+            UpdateReadyState(true);
         }
+    }
+
+    // Lista: el ícono late, y al momento de cargarse sale un aviso bajo la mira. Con la
+    // carga por rol la definitiva llega sin que uno la esté mirando, y es fácil olvidar
+    // que ya está.
+    private void UpdateReadyState(bool ready)
+    {
+        if (!_baseScaleKnown) { _baseScale = transform.localScale; _baseScaleKnown = true; }
+
+        // El primer frame solo anota el estado: armar el slot con la definitiva ya llena
+        // (el modo de prueba) no es "se acaba de cargar".
+        if (_readyKnown && ready && !_wasReady)
+        {
+            string key = UI_AbilitySlot.GetKeyLabel(slotInput);
+            UI_ScreenFeedback.Get().ShowToast($"ULTIMATE READY!  [{key}]", ReadyToastColor);
+        }
+        _readyKnown = true;
+        _wasReady   = ready;
+
+        float pulse = ready ? 1f + ReadyPulseScale * (0.5f + 0.5f * Mathf.Sin(Time.time * ReadyPulseSpeed * Mathf.PI * 2f)) : 1f;
+        transform.localScale = _baseScale * pulse;
     }
 
     private void RefreshKeyLabel()

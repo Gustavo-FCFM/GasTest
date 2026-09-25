@@ -124,7 +124,7 @@ public class UI_MercenariesHUD : MonoBehaviour
         MercUIFactory.AddShadow(row.Label);
 
         // Nivel del equipo (sale de la bolsa compartida de experiencia).
-        row.Level = MercUIFactory.CreateText(rowRect, "Nivel", "Nv. 1", 16f,
+        row.Level = MercUIFactory.CreateText(rowRect, "Nivel", "Lv. 1", 16f,
             new Color(1f, 1f, 1f, 0.9f), TextAlignmentOptions.Left,
             anchoredPos: new Vector2(142f, 4f), size: new Vector2(60f, 20f));
         MercUIFactory.AddShadow(row.Level);
@@ -235,7 +235,7 @@ public class UI_MercenariesHUD : MonoBehaviour
         {
             if (row == null) continue;
 
-            row.Level.text = $"Nv. {gm.GetLevel(row.Team)}";
+            row.Level.text = $"Lv. {gm.GetLevel(row.Team)}";
             row.XpFill.fillAmount = gm.GetXpNormalized(row.Team);
 
             int score = gm.GetScore(row.Team);
@@ -245,7 +245,7 @@ public class UI_MercenariesHUD : MonoBehaviour
             // La fila del equipo propio se resalta para encontrarse rápido.
             row.Background.color = (row.Team == localTeam) ? LocalTeamBackground : PanelBackground;
             row.Label.text = row.Team == localTeam
-                ? $"{MercenariesGameMode.TeamName(row.Team)} (VOS)"
+                ? $"{MercenariesGameMode.TeamName(row.Team)} (YOU)"
                 : MercenariesGameMode.TeamName(row.Team);
         }
     }
@@ -255,7 +255,7 @@ public class UI_MercenariesHUD : MonoBehaviour
         switch (gm.State)
         {
             case EMatchState.Warmup:
-                _clockText.text  = $"PREPARACIÓN  {MercUIFactory.FormatTime(gm.PhaseTimeRemaining)}";
+                _clockText.text  = $"GET READY  {MercUIFactory.FormatTime(gm.PhaseTimeRemaining)}";
                 _clockText.color = new Color(1f, 0.9f, 0.4f);
                 break;
 
@@ -267,8 +267,8 @@ public class UI_MercenariesHUD : MonoBehaviour
             case EMatchState.Ended:
                 int winner = gm.WinnerTeam;
                 _clockText.text = winner > 0
-                    ? $"GANA {MercenariesGameMode.TeamName(winner)}"
-                    : "EMPATE";
+                    ? $"{MercenariesGameMode.TeamName(winner)} WINS"
+                    : "DRAW";
                 _clockText.color = winner > 0 ? gm.GetTeamColor(winner) : Color.white;
                 break;
         }
@@ -282,7 +282,7 @@ public class UI_MercenariesHUD : MonoBehaviour
         if (gm.State != EMatchState.Playing)
         {
             _objectiveText.text = gm.State == EMatchState.Warmup
-                ? "Elegí tu clase en la base. No se puede cambiar afuera."
+                ? "Choose your class in your base. It can't be changed outside."
                 : "";
             _objectiveText.color = new Color(1f, 1f, 1f, 0.8f);
             return;
@@ -293,21 +293,21 @@ public class UI_MercenariesHUD : MonoBehaviour
         if (objective != null && objective.IsCarried)
         {
             int team = objective.CarrierTeam;
-            _objectiveText.text  = $"OBJETIVO · lo lleva {MercenariesGameMode.TeamName(team)}";
+            _objectiveText.text  = $"OBJECTIVE · carried by {MercenariesGameMode.TeamName(team)}";
             _objectiveText.color = gm.GetTeamColor(team);
             return;
         }
 
         if (objective != null)
         {
-            _objectiveText.text  = "OBJETIVO · en el mapa";
+            _objectiveText.text  = "OBJECTIVE · on the map";
             _objectiveText.color = new Color(1f, 0.92f, 0.55f);
             return;
         }
 
         float eta = gm.ObjectiveEta;
         _objectiveText.text  = eta > 0f
-            ? $"Próximo Objetivo en {MercUIFactory.FormatTime(eta)}"
+            ? $"Next Objective in {MercUIFactory.FormatTime(eta)}"
             : "";
         _objectiveText.color = new Color(1f, 1f, 1f, 0.75f);
     }

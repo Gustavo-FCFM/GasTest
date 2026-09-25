@@ -10,8 +10,12 @@ Gustavo Pedraza. Todo el código está comentado en español.
 
 **Los nombres van en INGLÉS.** Prefabs, GameObjects, materiales, escenas, carpetas,
 clases y campos: `Objective_GoldBag`, `Base_Team1`, `Mat_ArenaSand`, `SpawnPoint_1`.
-Los **comentarios, los `Debug.Log`, los textos de UI y los menús de editor siguen en
-español** — el proyecto entero está así.
+Los **comentarios, los `Debug.Log` y los menús de editor siguen en español** — el
+proyecto entero está así. **Lo que el jugador ve DENTRO de la partida va en INGLÉS**
+(desde el 25 de septiembre de 2026, pedido de Gustavo): avisos del anunciador, marcador
+de partida, marcadores del Objetivo, pantalla de muerte, registro de bajas, avisos
+cortos, nombres y descripciones de clases. Los menús fuera de partida (inicio, ajustes,
+sala de espera) todavía están en español.
 
 **El trabajo dentro del editor de Unity lo hace Gustavo.** Armar escenas, crear y
 configurar prefabs, cablear referencias en el Inspector, acomodar geometría: eso es

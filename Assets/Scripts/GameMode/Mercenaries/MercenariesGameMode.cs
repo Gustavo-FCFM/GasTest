@@ -218,7 +218,7 @@ public class MercenariesGameMode : NetworkBehaviour
     }
 
     // Nombre visible de un equipo. Un solo lugar para cambiarlo.
-    public static string TeamName(int team) => $"EQUIPO {team}";
+    public static string TeamName(int team) => $"TEAM {team}";
 
     public static bool IsValidTeam(int team) => team >= 1 && team <= TeamCount;
 

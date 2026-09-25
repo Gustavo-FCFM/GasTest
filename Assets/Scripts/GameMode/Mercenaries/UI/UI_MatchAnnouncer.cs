@@ -85,29 +85,29 @@ public class UI_MatchAnnouncer : MonoBehaviour
         switch (type)
         {
             case EMatchAnnouncement.MatchStarted:
-                return "¡QUE EMPIECE LA CACERÍA!";
+                return "LET THE HUNT BEGIN!";
 
             case EMatchAnnouncement.ObjectiveSpawned:
-                return "¡EL OBJETIVO APARECIÓ EN EL CENTRO!";
+                return "THE OBJECTIVE HAS APPEARED IN THE CENTER!";
 
             case EMatchAnnouncement.ObjectiveTaken:
                 return team == MercUIFactory.LocalTeam()
-                    ? "¡TU EQUIPO LEVANTÓ EL OBJETIVO!"
-                    : $"{teamName} levantó el Objetivo";
+                    ? "YOUR TEAM HAS THE OBJECTIVE!"
+                    : $"{teamName} picked up the Objective";
 
             case EMatchAnnouncement.ObjectiveDropped:
-                return $"{teamName} soltó el Objetivo";
+                return $"{teamName} dropped the Objective";
 
             case EMatchAnnouncement.ObjectiveDelivered:
-                return $"¡{teamName} ENTREGÓ EL OBJETIVO!  ({extra}/{ResolvePointsToWin()})";
+                return $"{teamName} DELIVERED THE OBJECTIVE!  ({extra}/{ResolvePointsToWin()})";
 
             case EMatchAnnouncement.ObjectiveReturning:
-                return extra > 0 ? $"Próximo Objetivo en {extra}s" : "";
+                return extra > 0 ? $"Next Objective in {extra}s" : "";
 
             case EMatchAnnouncement.TeamWiped:
                 return team == MercUIFactory.LocalTeam()
-                    ? "¡TU EQUIPO FUE ANIQUILADO!"
-                    : $"¡{teamName} FUE ANIQUILADO!";
+                    ? "YOUR TEAM WAS WIPED OUT!"
+                    : $"{teamName} WAS WIPED OUT!";
 
             case EMatchAnnouncement.TeamLevelUp:
                 // El nivel de los OTROS equipos ya se ve en el marcador; no lo gritamos.
@@ -122,11 +122,11 @@ public class UI_MatchAnnouncer : MonoBehaviour
                     ? MercenariesGameMode.Instance.MaxTeamLevel : 0;
 
                 return (maxLevel > 0 && extra >= maxLevel)
-                    ? $"¡TU EQUIPO SUBIÓ A NIVEL {extra}! — Presiona {InputGlyphs.Subclass} para elegir una Subclase"
-                    : $"¡TU EQUIPO SUBIÓ A NIVEL {extra}!";
+                    ? $"YOUR TEAM REACHED LEVEL {extra}! — Press {InputGlyphs.Subclass} to choose a Subclass"
+                    : $"YOUR TEAM REACHED LEVEL {extra}!";
 
             case EMatchAnnouncement.MatchEnded:
-                return team > 0 ? $"GANA {teamName}" : "EMPATE";
+                return team > 0 ? $"{teamName} WINS" : "DRAW";
         }
         return "";
     }

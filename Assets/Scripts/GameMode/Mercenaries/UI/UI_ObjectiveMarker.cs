@@ -142,20 +142,20 @@ public class UI_ObjectiveMarker : MonoBehaviour
             if (objective.IsCarried)
             {
                 color  = gm.GetTeamColor(objective.CarrierTeam);
-                prefix = objective.CarrierTeam == MercUIFactory.LocalTeam() ? "OBJETIVO (aliado)" : "OBJETIVO";
+                prefix = objective.CarrierTeam == MercUIFactory.LocalTeam() ? "OBJECTIVE (ally)" : "OBJECTIVE";
 
                 // Entregando: lo ven TODOS, que es la gracia — los rivales tienen hasta
                 // que se llene la barra para cortarla con un golpe.
                 if (_shownDelivery > 0f)
                 {
                     float remaining = (1f - _shownDelivery) * objective.DeliverSeconds;
-                    prefix = $"ENTREGANDO {remaining:0.0}s";
+                    prefix = $"DELIVERING {remaining:0.0}s";
                 }
             }
             else
             {
                 color  = ObjectiveColor;
-                prefix = "OBJETIVO";
+                prefix = "OBJECTIVE";
             }
         }
         else if (gm.ObjectiveSpawnPoint != null && gm.State != EMatchState.Ended)
@@ -164,7 +164,7 @@ public class UI_ObjectiveMarker : MonoBehaviour
             worldPos = gm.ObjectiveSpawnPoint.position;
             color    = new Color(ObjectiveColor.r, ObjectiveColor.g, ObjectiveColor.b, 0.55f);
             float eta = gm.ObjectiveEta;
-            prefix   = eta > 0f ? $"OBJETIVO EN {MercUIFactory.FormatTime(eta)}" : "OBJETIVO";
+            prefix   = eta > 0f ? $"OBJECTIVE IN {MercUIFactory.FormatTime(eta)}" : "OBJECTIVE";
         }
         else
         {
@@ -222,7 +222,7 @@ public class UI_ObjectiveMarker : MonoBehaviour
         if (teamBase == null) { Hide(_deliveryMarker); return; }
 
         Place(_deliveryMarker, teamBase.DeliveryWorldPoint, cam, gm.GetTeamColor(localTeam),
-              _shownDelivery > 0f ? "ENTREGANDO" : "ENTREGAR");
+              _shownDelivery > 0f ? "DELIVERING" : "DELIVER");
     }
 
     // Coloca un marcador en la pantalla a partir de un punto del mundo. Si el punto

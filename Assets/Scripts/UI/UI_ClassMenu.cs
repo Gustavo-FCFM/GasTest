@@ -120,7 +120,7 @@ public class UI_ClassMenu : MonoBehaviour
     // al menos queda en la consola.
     private void WarnClassChangeBlocked()
     {
-        Announce("Solo podés cambiar de clase dentro de tu base", new Color(1f, 0.75f, 0.3f), 26f);
+        Announce("You can only change class inside your base", new Color(1f, 0.75f, 0.3f), 26f);
     }
 
     // Tecla C: elegir entre las clases base. Reinicia el progreso a nivel 1.
@@ -154,7 +154,7 @@ public class UI_ClassMenu : MonoBehaviour
         // también se veía feo. Así que el menú directamente no se abre hasta aterrizar.
         if (!_player.IsGrounded)
         {
-            Announce("Aterrizá primero", new Color(1f, 0.75f, 0.3f), 24f);
+            Announce("Land first", new Color(1f, 0.75f, 0.3f), 24f);
             return;
         }
 
@@ -179,7 +179,7 @@ public class UI_ClassMenu : MonoBehaviour
         // Elegir subclase se puede en cualquier lado, pero afuera de la base es
         // arriesgado: se avisa, no se bloquea.
         if (mode == EMode.Subclasses && CloseOnDamage && !CanChangeBaseClassHere())
-            Announce("Estás fuera de tu base: si te pegan, el menú se cierra", new Color(1f, 0.75f, 0.3f), 26f);
+            Announce("You're outside your base: if you get hit, the menu closes", new Color(1f, 0.75f, 0.3f), 26f);
 
         // Suelta el cursor y pasa al modo UI (apaga el mapa Player, enciende el UI) para
         // navegar con control sin disparar acciones de juego. Lo hace UICursor, que es el
@@ -326,7 +326,7 @@ public class UI_ClassMenu : MonoBehaviour
         if (!damaged || !CloseOnDamage) return;
 
         CloseMenu();
-        Announce($"Te pegaron: la elección se canceló. Volvé a tu base y apretá {InputGlyphs.Subclass}",
+        Announce($"You got hit: the choice was cancelled. Go back to your base and press {InputGlyphs.Subclass}",
                  new Color(1f, 0.4f, 0.3f), 26f);
     }
 

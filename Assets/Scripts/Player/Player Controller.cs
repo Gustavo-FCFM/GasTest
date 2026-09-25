@@ -1417,7 +1417,10 @@ public class PlayerController : NetworkBehaviour
         PlayerController killer = ASC.LastAttacker != null ? ASC.LastAttacker.GetComponent<PlayerController>() : null;
         if (killer != null && killer != this) killer.NotifyKilledCharacter();
 
-        if (AbilityR is GA_ImmortalWrath && AbilityR.CanActivate())
+        bool revivesNow = AbilityR is GA_ImmortalWrath && AbilityR.CanActivate();
+        ServerAnnounceDeath(showDeathScreen: !revivesNow);
+
+        if (revivesNow)
         {
             // Activación DIRECTA server-side: HandlePlayerDeath ya corre en el
             // servidor. NO usamos RequestAbility porque ese va por el [ServerRpc]
@@ -1429,6 +1432,84 @@ public class PlayerController : NetworkBehaviour
             return;
         }
         ServerRequestRespawn();
+    }
+
+    // =========================================================
+    // AVISOS DE UNA MUERTE: registro de bajas y pantalla de muerte
+    //
+    // Solo el servidor sabe quién dio el golpe final (ASC.LastAttacker), así que él
+    // arma los textos y los manda: a TODOS la línea del registro de bajas, y al que
+    // murió su pantalla con la cuenta regresiva. Va con nombres y colores ya resueltos
+    // para que el cliente no tenga que buscar a nadie.
+    // =========================================================
+
+    [Server]
+    private void ServerAnnounceDeath(bool showDeathScreen)
+    {
+        AbilitySystemComponent killerAsc = ASC.LastAttacker;
+        if (ReferenceEquals(killerAsc, ASC)) killerAsc = null;   // matarse solo no tiene autor
+
+        string killerName = DescribeCharacter(killerAsc, out string killerClass, out int killerTeam, out int killerId);
+        string victimName = DescribeCharacter(ASC, out string victimClass, out int victimTeam, out int victimId);
+
+        ObserversKillFeed(killerName, killerClass, killerTeam, killerId,
+                          victimName, victimClass, victimTeam, victimId);
+
+        // Un bot no tiene pantalla; a una persona se le avisa por su conexión.
+        if (!showDeathScreen || IsBot || Owner == null || !Owner.IsValid) return;
+
+        float respawn = MercenariesGameMode.Instance != null ? MercenariesGameMode.Instance.RespawnSeconds : 3f;
+        TargetShowDeath(Owner, killerName, killerClass, killerTeam, respawn);
+    }
+
+    // Nombre, clase y equipo para mostrar. Un jugador o bot da su nombre y su clase; un
+    // NPC da qué es ("un Fantasma"); sin nadie, texto vacío. objectId sirve para que cada
+    // pantalla sepa si la baja la involucra (-1 si no es un personaje).
+    private static string DescribeCharacter(AbilitySystemComponent asc, out string className,
+                                            out int team, out int objectId)
+    {
+        className = "";
+        team      = 0;
+        objectId  = -1;
+        if (asc == null) return "";
+
+        team = asc.TeamID;
+
+        PlayerController pc = asc.GetComponent<PlayerController>();
+        if (pc != null)
+        {
+            objectId  = pc.ObjectId;
+            className = pc.CurrentClassDef != null ? pc.CurrentClassDef.ClassName : "";
+
+            NetworkAbilitySystemComponent net = asc.GetComponent<NetworkAbilitySystemComponent>();
+            string name = net != null ? net.PlayerName : "";
+            return string.IsNullOrEmpty(name) ? pc.gameObject.name : name;
+        }
+
+        // NPCs: no guardan su tipo, pero sus prefabs se llaman por lo que son.
+        string go = asc.gameObject.name;
+        if (go.Contains("Boss"))  return "the Boss";
+        if (go.Contains("Mage"))  return "a Mage";
+        if (go.Contains("Totem")) return "a Totem";
+        return "a Ghost";
+    }
+
+    [ObserversRpc]
+    private void ObserversKillFeed(string killerName, string killerClass, int killerTeam, int killerId,
+                                   string victimName, string victimClass, int victimTeam, int victimId)
+    {
+        int localId = LocalPlayer != null ? LocalPlayer.ObjectId : -2;
+        bool involvesLocal = localId == killerId || localId == victimId;
+
+        UI_KillFeed.Get().AddKill(killerName, killerClass, killerTeam,
+                                  victimName, victimClass, victimTeam, involvesLocal);
+    }
+
+    [TargetRpc]
+    private void TargetShowDeath(FishNet.Connection.NetworkConnection conn, string killerName,
+                                 string killerClass, int killerTeam, float respawnSeconds)
+    {
+        UI_ScreenFeedback.Get().ShowDeath(killerName, killerClass, killerTeam, respawnSeconds);
     }
 
     // Pide el respawn al NetworkGameManager de la escena (o hace un

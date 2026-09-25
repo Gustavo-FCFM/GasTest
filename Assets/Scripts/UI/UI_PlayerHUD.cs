@@ -133,6 +133,37 @@ public class UI_PlayerHUD : MonoBehaviour
         UpdateManaUI();
         UpdateEnergyUI();
         UpdateFirstStrikeIndicator();
+        UpdateAbilitiesWhileDead();
+    }
+
+    // Muerto, las habilidades no sirven para nada y tapan la pantalla de muerte (quién
+    // te eliminó y cuánto falta, ver UI_ScreenFeedback): se esconden hasta reaparecer.
+    // Con CanvasGroup y no con SetActive, porque cada slot ya se prende y apaga solo
+    // según tenga habilidad asignada (la E y la R antes de la subclase).
+    private CanvasGroup[] _abilityGroups;
+    private bool _abilitiesHidden;
+
+    void UpdateAbilitiesWhileDead()
+    {
+        bool hide = asc.HasTag(EGameplayTag.State_Dead) ||
+                    (netAsc != null ? netAsc.NetHealth : asc.GetAttributeValue(EAttributeType.Health)) <= 0f;
+        if (hide == _abilitiesHidden) return;
+        _abilitiesHidden = hide;
+
+        if (_abilityGroups == null)
+        {
+            Component[] slots = { slotShift, slotQ, slotE, slotLMB, slotRMB, UltimateSlot };
+            _abilityGroups = new CanvasGroup[slots.Length];
+            for (int i = 0; i < slots.Length; i++)
+            {
+                if (slots[i] == null) continue;
+                CanvasGroup g = slots[i].GetComponent<CanvasGroup>();
+                _abilityGroups[i] = g != null ? g : slots[i].gameObject.AddComponent<CanvasGroup>();
+            }
+        }
+
+        foreach (CanvasGroup g in _abilityGroups)
+            if (g != null) g.alpha = hide ? 0f : 1f;
     }
 
     // Prende/apaga el indicador de "Crítico mejorado listo". El estado real vive
