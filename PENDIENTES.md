@@ -26,8 +26,10 @@ de esta noche es lo que la gente diga y lo que se vea en la grabación.
 
 ## Antes de que lleguen
 
-- [ ] **Build nueva desde `main`** (`3e83c30` o más nuevo): trae la entrega de 3 s y la
-      regla de que con la bolsa no se entra a la base. Ya revisado en el prefab:
+- [ ] **Build nueva desde `main`** (`96f5dd7` o más nuevo). Trae todo lo del 24 y 25:
+      la entrega de 3 s, la bolsa que no entra a la base, los tótems rompibles con barra
+      de vida, el Blink que gira la cámara, y toda la retroalimentación visual nueva
+      (sección 8) con los textos de la partida en inglés. Ya revisado en el prefab:
       `StartSubclassWithFullUltimate` apagado (la definitiva arranca en 0) y la carga
       por rol en 0.15 / 30 / 0.2.
 - [ ] **Ensayar el host con `-host`**, si todavía no lo hiciste: 10 minutos con una
@@ -74,6 +76,12 @@ Son las perillas y dudas que quedaron abiertas y que solo se contestan jugando:
       (roja para los rivales, verde para los aliados) y se pueden romper. Romper uno da
       15 de experiencia al equipo. Los de la definitiva son indestructibles
       (inmunidad real: su barra se queda llena). El equipo del tótem viaja por la red.
+- [ ] **La retroalimentación nueva con 9** (sección 8, probada solo de a pocos):
+      ¿los números de daño se leen o ensucian la pelea grande? ¿El registro de bajas
+      tapa algo? ¿La viñeta roja molesta? ¿La pantalla de muerte dice lo que hace falta?
+      ¿Alguien no entendió algún aviso por estar en inglés?
+- [ ] **El Chamán**: con tus valores nuevos del Tigre (0.9 normal, 0.8 potenciado),
+      ¿sigue matando demasiado rápido con Enfurecer? (ver sección 3, velocidad de ataque)
 - [ ] **Balance**: qué clase o subclase dominó, cuál no eligió nadie, qué se sintió
       injusto.
 
@@ -325,6 +333,27 @@ No hay nada que rescatar del prefab: las tres clases que guardaba
 ---
 
 # 3. Balance pendiente (decisiones tuyas)
+
+## Velocidad de ataque: los bonos se SUMAN — decidir después de la prueba
+
+`AtkSpeed` son **segundos entre ataques** (menos = más rápido), con un piso de **0.2 s**
+(5 ataques por segundo) en `AbilitySystemComponent`. El problema: los multiplicadores
+**se suman**, no se multiplican (valor = base × (1 + suma de los −%)). Dos bonos de −50 %
+dan cero y siempre caen en el tope:
+
+| Chamán (base 1.2 s) | Cuenta | Resultado |
+|---|---|---|
+| Solo Enfurecer (×0.5) | 1 − 0.5 | 0.6 s, el doble |
+| Enfurecer + Tigre potenciado **antes** (×0.5) | 1 − 0.5 − 0.5 = 0 | **0.2 s, el tope: 6×** |
+| Enfurecer + Tigre potenciado **ahora** (×0.8) | 1 − 0.5 − 0.2 = 0.3 | 0.36 s, 3.3× |
+
+Con tus valores (Tigre 0.9 / 0.8) ya no llega al tope, pero cualquier combinación futura
+de bonos de velocidad puede volver a hacerlo.
+
+- [ ] Decidir: que los multiplicadores de `AtkSpeed` **se multipliquen** (0.5 × 0.5 =
+      0.25 → 0.3 s con los valores originales). Es un cambio en el núcleo de atributos:
+      hacerlo con calma, no el día de una prueba. Mirar también al Berserker (base 0.5 s,
+      con Enfurecer 0.25 s).
 
 ## Carga de la definitiva por rol — PROBADO ✅
 
@@ -1378,11 +1407,25 @@ campanas sonando cuando aparece el Objetivo (cuando haya sonido).
 
 ---
 
-# 8. Más retroalimentación visual (25 de septiembre)
+# 8. Más retroalimentación visual — LAS 7 HECHAS Y PROBADAS ✅ (25 de septiembre)
 
-Ya existen: la X del golpe, la calavera, el círculo de daño, los nameplates con buffs, el
-anunciador de partida y el crítico en el pipeline de daño (`ctx.IsCrit`). Lo que NO hay y
-se puede hacer barato, de más a menos valor para el showcase:
+Hechas el mismo día, probadas de a pocos (falta verlas con 9: ver "Qué observar" arriba).
+Dónde vive cada una, por si hay que ajustarla (todas se arman solas, sin cablear, y sus
+perillas aparecen en el Inspector durante Play):
+
+- `UI_ScreenFeedback`: viñeta de poca vida, pantalla de muerte, avisos cortos.
+- `UI_KillFeed`: registro de bajas. Lo alimenta `PlayerController.ServerAnnounceDeath`.
+- `UI_UltimateSlot`: el latido y el aviso de la definitiva lista.
+- `MercObjective` → "Columna de luz": la columna de la entrega (`Sprites/Default`).
+- `UI_DamageNumbers`: los números. Los manda `NetworkASC.ServerShowCombatNumber`; las
+  curaciones se juntan cada `HealNumberBatchSeconds` (0.35 s).
+- `UI_CombatFeedback.HitCriticalColor`: la X amarilla.
+- `UI_PlayerHUD`: las habilidades se esconden mientras estás muerto.
+
+Además, **todo lo que se ve dentro de la partida pasó a inglés** (regla en `CLAUDE.md`).
+Los menús de fuera (inicio, ajustes, sala) siguen en español.
+
+La lista original:
 
 **Muy baratas (< 1 h cada una):**
 - [x] **Viñeta roja con poca vida**: el borde de la pantalla late en rojo por debajo de
