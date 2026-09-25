@@ -56,7 +56,9 @@ de esta noche es lo que la gente diga y lo que se vea en la grabación.
 Son las perillas y dudas que quedaron abiertas y que solo se contestan jugando:
 
 - [ ] **La entrega de 3 s**: ¿los rivales llegan a cortarla? ¿3 s es poco o mucho?
-      ¿Una herida o un veneno encima reiniciándola se siente justo o frustrante?
+      ¿Una herida o un veneno encima reiniciándola se siente justo o frustrante? De
+      paso: salir de la zona a mitad vuelve la barra a 0, y en un cliente la barra
+      avanza suave, no a saltos.
 - [ ] **El mapa**: con la entrega de 3 s, ¿se sigue sintiendo chico? Si sí, la regla
       siguiente es que cargar la bolsa bloquee el Shift (sección 7).
 - [ ] **La definitiva por rol**: ¿llega a tiempo para usarla en la partida? ¿Qué rol la
@@ -219,13 +221,8 @@ Espacio sube, Ctrl baja, Shift para ir rápido, clic izquierdo/derecho para salt
 jugador en jugador, **F** vuelve a la cámara libre, **H** muestra el nombre y la vida de
 quien mirás, **M** el marcador.
 
-- [ ] **Ensayarlo antes de la prueba**, aunque sea con dos máquinas: nunca hosteamos desde
-      una build. El código del host es el mismo, pero es la primera vez que corre sin
-      editor, y no es el día de averiguarlo.
-- [ ] Acordate de la IP: los que se conectan necesitan tu dirección de playit.gg
-      (puerto 7770 UDP), no `127.0.0.1`.
-- [ ] Mirá el rendimiento: esa máquina va a llevar el servidor, tu cliente de
-      espectador y la grabación al mismo tiempo.
+Lo que falta hacer antes (ensayar el host, la IP de playit.gg, el rendimiento) está
+arriba, en **★ HOY EN LA NOCHE → Antes de que lleguen**.
 
 ## ESC y el recuadro de red
 
@@ -348,12 +345,26 @@ dan cero y siempre caen en el tope:
 | Enfurecer + Tigre potenciado **ahora** (×0.8) | 1 − 0.5 − 0.2 = 0.3 | 0.36 s, 3.3× |
 
 Con tus valores (Tigre 0.9 / 0.8) ya no llega al tope, pero cualquier combinación futura
-de bonos de velocidad puede volver a hacerlo.
+de bonos de velocidad puede volver a hacerlo. **Y no es solo la velocidad de ataque**: la
+velocidad de movimiento tiene la misma trampa. Cargar la bolsa (×0.75) + `GE_Slow`
+(×0.3) da 1 − 0.25 − 0.7 = 0.05: el portador ralentizado queda casi congelado (con
+multiplicación sería 0.225).
 
-- [ ] Decidir: que los multiplicadores de `AtkSpeed` **se multipliquen** (0.5 × 0.5 =
-      0.25 → 0.3 s con los valores originales). Es un cambio en el núcleo de atributos:
-      hacerlo con calma, no el día de una prueba. Mirar también al Berserker (base 0.5 s,
-      con Enfurecer 0.25 s).
+**Por qué se suman hoy:** `ApplyEffectModifiers` va acumulando en cada atributo
+`MultiplicativeModifier += (magnitud − 1)` al aplicar un efecto, y lo resta al quitarlo.
+Sumar es fácil de deshacer; multiplicar habría que deshacerlo dividiendo, y un ×0 (un
+efecto que anule algo) rompería la división.
+
+**Cómo se resolvería:** guardar la LISTA de multiplicadores activos de cada atributo
+(se agrega al aplicar el efecto, se saca al quitarlo) y que `RecalculateAllAttributes`
+use el producto de la lista. Es exacto, se deshace solo y no divide por nada. El piso de
+0.2 s se queda como red de seguridad. Unos 30 minutos de código más la prueba.
+
+- [ ] Decidir: que los multiplicadores **se multipliquen** (0.5 × 0.5 = 0.25 → 0.3 s con
+      los valores originales). Recomendado para TODOS los atributos (la bolsa + la
+      ralentización lo piden igual), no solo la velocidad de ataque. Es un cambio en el
+      núcleo: hacerlo con calma, no el día de una prueba. Mirar también al Berserker
+      (base 0.5 s, con Enfurecer 0.25 s, que con multiplicación queda igual).
 
 ## Carga de la definitiva por rol — PROBADO ✅
 
@@ -425,9 +436,7 @@ Para instalarlos:
       por código dejó a ocho con `SceneId 0`, y para FishNet un NetworkObject sin SceneId
       no es un objeto de escena — no se spawnea. Ahora la herramienta se lo asigna a
       todos, y volver a correrla sobre una escena que ya los tiene los repara.
-- [ ] **Moverlos a mano.** Son un punto de partida: el buen sitio para un botiquín se
-      descubre jugando (detrás de una cobertura, en el desvío de un carril), no
-      calculando ángulos.
+- [x] **Decidido (25 de septiembre): se quedan donde están.** Te gustó cómo quedaron.
 
 Perillas por botiquín: `HealAmount` (75), `RespawnSeconds` (20), `PickupRadius` (1.6),
 `OnlyIfHurt`, `Tint`, y `CrossVisual` si querés un modelo en vez de la cruz de barras
@@ -878,9 +887,8 @@ agregás otra habilidad interrumpible y "no pasa nada", mirá ahí primero.
 - [x] **El cooldown ahora empieza al SOLTAR**, no al apretar (ver abajo). Probar que
       fintar no deja la habilidad en cooldown, y que mantener o repetir el botón del
       hacha NO reinicia el lanzamiento.
-- [ ] Decidir si el **rayo del Paladín** (`GA_SmiteBeam` y el de Conquista) también
-      debería cancelarse. Es marcar la casilla en esos dos assets, pero cambia cómo se
-      siente la clase y esa es tu decisión, no mía.
+- [x] **Decidido (25 de septiembre): el rayo del Paladín NO se interrumpe.** Castigo
+      divino funciona como un switch del siguiente ataque; cortarlo no tiene sentido.
 
 **El cooldown de un lanzamiento empieza al SOLTAR**, no al apretar el botón. Fintar
 dejaba la habilidad en cooldown varios segundos por un hacha que nunca salió: se pagaba
@@ -1111,8 +1119,8 @@ eso hacía que solo las armas se volvieran fantasma. Copiando la textura y el co
 URP/Lit funciona igual venga del pack que venga.
 
 - [x] Probado con el Asesino: el personaje entero se ve fantasma.
-- [ ] Perillas por si querés afinarlo jugando: `GhostAlpha` (0.35) y `GhostForAllies`
-      (apagado). Prenderlo hace que tu equipo sepa de un vistazo que el enemigo no te ve.
+- [x] **Decidido (25 de septiembre): `GhostAlpha` se queda en 0.35.** `GhostForAllies`
+      sigue apagado; prenderlo haría que tu equipo sepa de un vistazo que el enemigo no te ve.
 
 ### Respuesta visual del combate — PROBADO ✅
 
@@ -1284,7 +1292,7 @@ a 4.5 m/s, o sea ~10 s caminando. Pero el salto del Bárbaro (`JumpVelocity 15`,
 viaje de un salto**. El Pícaro suma 2 dashes de 6 m y el Blink. Y la bolsa solo bloquea la
 R, no el Shift. Por eso agrandar el mapa sin tocar las reglas no alcanza.
 
-## Entregar toma 3 segundos — HECHO, falta probar
+## Entregar toma 3 segundos — HECHO Y PROBADO CON BOTS ✅
 
 Inspirado en el cobro de The Finals. `MercObjective.DeliverSeconds` (3 s; 0 = entrega
 instantánea como antes): hay que quedarse en la zona de entrega. **Salir de la zona o
@@ -1296,10 +1304,8 @@ Todos ven "ENTREGANDO 1.8s" y una barra del color del equipo bajo el marcador de
 Objetivo; tu equipo ve "ENTREGANDO" en el marcador de la entrega.
 
 - [x] Probado con bots: anota a los 3 s y el golpe reinicia (24 de septiembre)
-- [ ] Salir de la zona a mitad: la barra vuelve a 0
-- [ ] Un veneno/herida encima: cada tick reinicia (¿se siente justo o frustrante?)
-- [ ] En un cliente la barra avanza suave, no a saltos
-- [ ] En la prueba de 9: ¿los rivales llegan a cortarla? ¿3 s es poco o mucho?
+
+Lo que falta ver ya es con gente: está en **★ HOY EN LA NOCHE → Qué observar**.
 
 ## Con la bolsa no se entra a la base propia — PROBADO ✅
 
