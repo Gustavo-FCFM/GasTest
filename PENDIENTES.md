@@ -1375,3 +1375,30 @@ campanas sonando cuando aparece el Objetivo (cuando haya sonido).
       capilla), botiquines y el `ObjectiveSpawnPoint` a la cripta
 - [ ] Probar con bots cuánto tardan en volver por cada ruta, y jugarlo, ANTES de decorar
 - [ ] Decoración al final: nichos, cruces, velas, pétalos
+
+---
+
+# 8. Más retroalimentación visual (25 de septiembre)
+
+Ya existen: la X del golpe, la calavera, el círculo de daño, los nameplates con buffs, el
+anunciador de partida y el crítico en el pipeline de daño (`ctx.IsCrit`). Lo que NO hay y
+se puede hacer barato, de más a menos valor para el showcase:
+
+**Muy baratas (< 1 h cada una):**
+- [ ] **Viñeta roja con poca vida**: el borde de la pantalla late en rojo por debajo de
+      ~30 %. Solo lee tu vida local, sin red.
+- [ ] **Pantalla de muerte + cuenta regresiva**: "Te eliminó *Nombre* (Rogue) ·
+      Reapareces en 3…". El asesino ya se conoce en el servidor (`LastAttacker`).
+- [ ] **La definitiva lista late**: la ranura de la R pulsa y brilla al estar cargada, y
+      un "¡Definitiva lista!" corto. `UI_UltimateSlot` ya sabe cuándo está lista.
+- [ ] **Columna de luz en la entrega**: del color del equipo, visible desde todo el mapa,
+      mientras alguien entrega. Usa el progreso que ya viaja por red.
+
+**Baratas (1–2 h):**
+- [ ] **Registro de bajas** en la esquina ("*Gus* [hacha] *Pedro*", con colores de
+      equipo). Probablemente el que más aporta al showcase: quien solo mira entiende.
+- [ ] **Números de daño flotantes**: blancos normales, amarillos y grandes los críticos,
+      verdes las curaciones (el Paladín es el que menos retroalimentación tiene hoy).
+      Ampliar `ServerReportDamage` con cantidad, posición y crítico.
+- [ ] **X de crítico distinta** (amarilla): casi gratis con los números, viaja el mismo
+      dato.
