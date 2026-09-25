@@ -95,9 +95,17 @@ public class GA_ElementalFury : GameplayAbility
                 totemScript.CreatorASC = OwnerASC;
             }
 
+            // Indestructibles, como pide el diseño. Status_Immunity es la inmunidad
+            // REAL (el daño ni entra, la barra se queda llena); Status_Immortal solo
+            // impide bajar de 1 de vida, y con eso la barra caía a casi nada y el tótem
+            // se veía roto sin romperse. Se dejan los dos: el segundo es la red por si
+            // algún daño llegara a saltearse la inmunidad.
             AbilitySystemComponent totemASC = totemObj.GetComponent<AbilitySystemComponent>();
             if (totemASC != null)
+            {
+                totemASC.AddTag(EGameplayTag.Status_Immunity);
                 totemASC.AddTag(EGameplayTag.Status_Immortal);
+            }
 
             // Instantiate() normal solo crea el tótem en el servidor — sin
             // esto, es invisible para cualquier cliente que no sea el host.

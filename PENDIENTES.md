@@ -72,8 +72,8 @@ Son las perillas y dudas que quedaron abiertas y que solo se contestan jugando:
       enemigo y le puedes seguir pegando. ¿Marea o se siente bien?
 - [ ] **Tótems del Chamán** (nuevo, sin probar): ahora tienen collider y barra de vida
       (roja para los rivales, verde para los aliados) y se pueden romper. Romper uno da
-      15 de experiencia al equipo, y los de la definitiva también se rompen (el diseño
-      dice indestructibles: decidir). El equipo del tótem ahora viaja por la red.
+      15 de experiencia al equipo. Los de la definitiva son indestructibles
+      (inmunidad real: su barra se queda llena). El equipo del tótem viaja por la red.
 - [ ] **Balance**: qué clase o subclase dominó, cuál no eligió nadie, qué se sintió
       injusto.
 
