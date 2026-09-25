@@ -26,10 +26,12 @@ de esta noche es lo que la gente diga y lo que se vea en la grabación.
 
 ## Antes de que lleguen
 
-- [ ] **Build nueva desde `main`** (`96f5dd7` o más nuevo). Trae todo lo del 24 y 25:
+- [ ] **Build nueva desde `main`** (`2f636b3` o más nuevo). Trae todo lo del 24 y 25:
       la entrega de 3 s, la bolsa que no entra a la base, los tótems rompibles con barra
-      de vida, el Blink que gira la cámara, y toda la retroalimentación visual nueva
-      (sección 8) con los textos de la partida en inglés. Ya revisado en el prefab:
+      de vida, el Blink que gira la cámara, toda la retroalimentación visual nueva
+      (sección 8) con los textos de la partida en inglés, los multiplicadores que ahora
+      se multiplican (tope de ataque 0.3 s, sección 3) y la limpieza del proyecto
+      (sección 9). Ya revisado en el prefab:
       `StartSubclassWithFullUltimate` apagado (la definitiva arranca en 0) y la carga
       por rol en 0.15 / 30 / 0.2.
 - [ ] **Ensayar el host con `-host`**, si todavía no lo hiciste: 10 minutos con una
