@@ -123,14 +123,18 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
 - **El cursor tiene un solo dueño: `UICursor`.** Ningún menú toca `Cursor.lockState` ni
   `PlayerInputProvider.SetUIMode` por su cuenta — los pide con `UICursor.Request(this)` y
   los suelta con `Release`. Si no, gana el último en cerrarse.
-- **El `NetworkAnimator` del prefab del jugador está INERTE: nada de animación viaja
-  por él.** Su campo Animator quedó vacío y el Animator vive en un hijo (el modelo), así
-  que el `GetComponent` con el que FishNet intenta resolverlo no lo encuentra y el
-  componente se apaga solo, sin warning (lo tiene comentado). **Toda** la animación se
-  manda a mano: las de habilidad, golpe, stun y muerte por las RPC del `NetworkASC`, y
-  caminar/saltar/caer más el `AimPitch` por las RPC de `PlayerController`. Un parámetro
-  nuevo del Animator que tenga que verse en las otras pantallas hay que mandarlo; no
-  alcanza con escribirlo.
+- **La animación NO viaja por un `NetworkAnimator`: el jugador no tiene uno.** El que
+  tenía estaba inerte (su campo Animator vacío y el Animator en un hijo, así que FishNet
+  no lo encontraba y se apagaba solo, sin warning) y se quitó el 25 de septiembre de
+  2026. **No volver a ponerlo** "para arreglar" algo: chocaría con lo que ya se manda.
+  **Toda** la animación se manda a mano: las de habilidad, golpe, stun y muerte por las
+  RPC del `NetworkASC`, y caminar/saltar/caer más el `AimPitch` por las RPC de
+  `PlayerController`. Un parámetro nuevo del Animator que tenga que verse en las otras
+  pantallas hay que mandarlo; no alcanza con escribirlo.
+- **Los modificadores `Multiply` se MULTIPLICAN entre sí** (×0.5 y ×0.5 = ×0.25):
+  `AttributeValue` guarda la lista y rehace el producto. Hasta el 25 de septiembre de
+  2026 se sumaban (×0.5 + ×0.5 = ×0). La velocidad de ataque tiene un tope de
+  `MinAttackInterval` = 0.3 s entre ataques.
 - **Los managers de escena reinician su sesión en `OnStartServer`.** Al parar el servidor
   FishNet destruye lo spawneado pero NO toca el estado de los NetworkObjects de escena
   (`LobbyManager`, `NetworkGameManager`, `MercenariesGameMode`): SyncVars, listas,

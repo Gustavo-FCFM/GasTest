@@ -1521,14 +1521,6 @@ public class BotController : MonoBehaviour
         return enemies;
     }
 
-    // ¿Algún compañero a la vista está en problemas? Es lo que destraba la definitiva del
-    // Paladín: guardarla para cuando de verdad hace falta.
-    private bool AllyInTrouble()
-    {
-        AbilitySystemComponent ally = FindNearestAlly();
-        return ally != null && HealthFraction(ally) < 0.6f;
-    }
-
     // Pide una habilidad por el MISMO camino que un jugador de verdad: el servidor valida
     // cooldown, costo y tags, y replica la animación a todos. Si el slot está vacío o la
     // habilidad no se puede usar, no pasa nada.

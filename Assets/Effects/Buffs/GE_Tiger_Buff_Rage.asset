@@ -24,7 +24,7 @@ MonoBehaviour:
   Modifiers:
   - Attribute: 10
     Type: 1
-    Magnitude: 0.9
+    Magnitude: 0.8
     UseAttributeScaling: 0
     SourceAttribute: 0
     AttributeCoefficient: 0

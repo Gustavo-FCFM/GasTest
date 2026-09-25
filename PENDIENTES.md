@@ -82,8 +82,9 @@ Son las perillas y dudas que quedaron abiertas y que solo se contestan jugando:
       ¿los números de daño se leen o ensucian la pelea grande? ¿El registro de bajas
       tapa algo? ¿La viñeta roja molesta? ¿La pantalla de muerte dice lo que hace falta?
       ¿Alguien no entendió algún aviso por estar en inglés?
-- [ ] **El Chamán**: con tus valores nuevos del Tigre (0.9 normal, 0.8 potenciado),
-      ¿sigue matando demasiado rápido con Enfurecer? (ver sección 3, velocidad de ataque)
+- [ ] **El Chamán y la velocidad de ataque**: los bonos ahora se multiplican y el tope es
+      0.3 s. ¿El Chamán con Enfurecer + Tigre se siente bien, o quedó lento? ¿El
+      Berserker sigue rápido? (ver sección 3, velocidad de ataque)
 - [ ] **Balance**: qué clase o subclase dominó, cuál no eligió nadie, qué se sintió
       injusto.
 
@@ -331,40 +332,33 @@ No hay nada que rescatar del prefab: las tres clases que guardaba
 
 # 3. Balance pendiente (decisiones tuyas)
 
-## Velocidad de ataque: los bonos se SUMAN — decidir después de la prueba
+## Velocidad de ataque: los bonos ahora se MULTIPLICAN — HECHO Y PROBADO ✅ (25 sept.)
 
-`AtkSpeed` son **segundos entre ataques** (menos = más rápido), con un piso de **0.2 s**
-(5 ataques por segundo) en `AbilitySystemComponent`. El problema: los multiplicadores
-**se suman**, no se multiplican (valor = base × (1 + suma de los −%)). Dos bonos de −50 %
-dan cero y siempre caen en el tope:
+`AtkSpeed` son **segundos entre ataques** (menos = más rápido). Antes los multiplicadores
+se **sumaban** (valor = base × (1 + suma de los −%)): dos bonos de −50 % daban cero y
+siempre caían en el tope, y la bolsa (×0.75) + `GE_Slow` (×0.3) dejaba al portador casi
+quieto (×0.05).
 
-| Chamán (base 1.2 s) | Cuenta | Resultado |
-|---|---|---|
-| Solo Enfurecer (×0.5) | 1 − 0.5 | 0.6 s, el doble |
-| Enfurecer + Tigre potenciado **antes** (×0.5) | 1 − 0.5 − 0.5 = 0 | **0.2 s, el tope: 6×** |
-| Enfurecer + Tigre potenciado **ahora** (×0.8) | 1 − 0.5 − 0.2 = 0.3 | 0.36 s, 3.3× |
+**Ahora se multiplican** (`AttributeValue.Multipliers`: la lista de multiplicadores
+activos, se agrega al aplicar el efecto, se saca al quitarlo, y el valor usa el
+producto). Vale para TODOS los atributos. Y el tope subió de 0.2 s a **0.3 s**
+(`AbilitySystemComponent.MinAttackInterval`, 3.3 ataques por segundo).
 
-Con tus valores (Tigre 0.9 / 0.8) ya no llega al tope, pero cualquier combinación futura
-de bonos de velocidad puede volver a hacerlo. **Y no es solo la velocidad de ataque**: la
-velocidad de movimiento tiene la misma trampa. Cargar la bolsa (×0.75) + `GE_Slow`
-(×0.3) da 1 − 0.25 − 0.7 = 0.05: el portador ralentizado queda casi congelado (con
-multiplicación sería 0.225).
+| Base | Con | Antes (sumando) | Ahora (multiplicando, tope 0.3) |
+|---|---|---|---|
+| Chamán 1.2 s | Enfurecer (×0.5) | 0.6 s | 0.6 s |
+| Chamán 1.2 s | Enfurecer + Tigre normal (×0.9) | 0.48 s | 0.54 s |
+| Chamán 1.2 s | Enfurecer + Tigre potenciado (tu ×0.8) | 0.36 s | 0.48 s |
+| Chamán 1.2 s | Enfurecer + Tigre potenciado (el ×0.5 original) | 0.2 s (tope viejo) | 0.3 s (justo el tope) |
+| Berserker 0.5 s | Enfurecer (×0.5) | 0.25 s | **0.3 s** (el tope lo frena un poco) |
 
-**Por qué se suman hoy:** `ApplyEffectModifiers` va acumulando en cada atributo
-`MultiplicativeModifier += (magnitud − 1)` al aplicar un efecto, y lo resta al quitarlo.
-Sumar es fácil de deshacer; multiplicar habría que deshacerlo dividiendo, y un ×0 (un
-efecto que anule algo) rompería la división.
+Portador de la bolsa (×0.75) con `GE_Slow` (×0.3): antes ×0.05, ahora ×0.225.
 
-**Cómo se resolvería:** guardar la LISTA de multiplicadores activos de cada atributo
-(se agrega al aplicar el efecto, se saca al quitarlo) y que `RecalculateAllAttributes`
-use el producto de la lista. Es exacto, se deshace solo y no divide por nada. El piso de
-0.2 s se queda como red de seguridad. Unos 30 minutos de código más la prueba.
-
-- [ ] Decidir: que los multiplicadores **se multipliquen** (0.5 × 0.5 = 0.25 → 0.3 s con
-      los valores originales). Recomendado para TODOS los atributos (la bolsa + la
-      ralentización lo piden igual), no solo la velocidad de ataque. Es un cambio en el
-      núcleo: hacerlo con calma, no el día de una prueba. Mirar también al Berserker
-      (base 0.5 s, con Enfurecer 0.25 s, que con multiplicación queda igual).
+- [x] Probar: el Chamán con Enfurecer + Tigre ya no ataca al tope, el Berserker sigue
+      sintiéndose rápido con 0.3 s, y un portador ralentizado todavía se mueve.
+- [ ] Decidir los valores del Tigre: tu 0.9 / 0.8 era para frenar la suma. Multiplicando,
+      el potenciado deja al Chamán en 0.48 s; si se siente lento, volver al 0.8 / 0.5
+      original (0.3 s, justo el tope).
 
 ## Carga de la definitiva por rol — PROBADO ✅
 
@@ -785,8 +779,8 @@ buffs. Eso no necesita red —el atributo ya está sincronizado— y ahora cada 
 de su propio ASC.
 
 - [x] Probado con dos ventanas: ahora caminan bien.
-- [ ] Si querés, sacar el `NetworkAnimator` del prefab del jugador: no lo usa nadie y ya
-      nos costó un día. Dejarlo tampoco hace daño — está inerte.
+- [x] **Se quitó el `NetworkAnimator` del prefab del jugador** (25 de septiembre, con la
+      herramienta de limpieza). No volver a ponerlo: ver `CLAUDE.md`.
 
 ### Dos animaciones que mentían, las dos por la misma línea — PROBADO ✅
 
@@ -1451,3 +1445,45 @@ La lista original:
       Ampliar `ServerReportDamage` con cantidad, posición y crítico.
 - [x] **X de crítico distinta** (amarilla): casi gratis con los números, viaja el mismo
       dato.
+
+---
+
+# 9. Depuración del código y los prefabs (25 de septiembre)
+
+**Qué se revisó:** los 134 scripts del proyecto (referencias en prefabs, escenas y
+assets, y en el código), todos los componentes de los prefabs y de la escena del modo
+(scripts rotos, desactivados o repetidos), y los métodos y tipos que nadie usa.
+
+**Resultado: el proyecto está limpio.** Ningún script de juego sin usar, ningún
+componente roto ni desactivado en los prefabs, ningún tipo huérfano.
+
+**Lo que se quitó:**
+- Código: `ASC.GetCooldownRemainingNormalized` (su comentario decía que lo usaban las
+  ranuras del HUD; ya no) y `BotController.AllyInTrouble` (la lógica de la definitiva
+  del Paladín bot ya usa `AllyDangerHealth`).
+- Con la herramienta de un solo uso `Mercenarios ▸ Limpieza del 25 de septiembre`:
+  - [x] Corrida y borrada (25 de septiembre).
+  - El `NetworkAnimator` inerte del prefab del jugador.
+  - `SampleScene` (la de ejemplo de Unity, con scripts rotos; ya estaba fuera de la build).
+  - `TextMesh Pro/Examples & Extras` (~6 MB de ejemplos que nada usa).
+  - `Assets/FishNet`: carpetas vacías, restos de los `.csproj` borrados.
+  - El prefab de `AbilityPreview` pasa de `Scripts/Editor` a `Prefabs/Tools`.
+
+**Lo que se dejó a propósito:**
+- Las herramientas del menú `Mercenarios ▸` (paredes, espectador, menú principal,
+  botiquines, audio, registros): son de mantenimiento, y van a hacer falta para montar
+  el mapa del cementerio.
+- El `Rigidbody` cinemático de la raíz del jugador: sirve para los triggers, y el
+  ragdoll ya lo excluye.
+- `ASC.GetTagCount`: nadie lo usa hoy, pero es el accesor natural de los tags con
+  conteo.
+- `Test_Network.unity`: la escena de pruebas de clases.
+
+**Para juntar más adelante** (no urgente, ninguno es un error):
+- Los cuatro overlays que se arman solos (`UI_CombatFeedback`, `UI_ScreenFeedback`,
+  `UI_KillFeed`, `UI_DamageNumbers`) repiten el mismo `Get()`/`Awake` de singleton:
+  podrían heredar de una base común.
+- Varios scripts resuelven la cámara con el mismo cuidado ("una cámara apagada no es
+  null"): podrían usar todos `PlayerController.MainCamera`.
+- Los packs de `AssetsExtra` traen escenas y materiales de demostración (por ejemplo,
+  las demos de Kevin Iglesias). Son de los packs, así que no los toqué.

@@ -428,6 +428,10 @@ public class AbilitySystemComponent : MonoBehaviour
                type == EAttributeType.Shield;
     }
 
+    // El tope de velocidad de ataque: nunca menos de esto entre ataque y ataque, por
+    // más bonos que se apilen. 0.3 s = 3.3 ataques por segundo.
+    public const float MinAttackInterval = 0.3f;
+
     private void RecalculateAllAttributes()
     {
         foreach (var pair in Attributes)
@@ -443,7 +447,7 @@ public class AbilitySystemComponent : MonoBehaviour
             // (menor = más rápido), así que un mínimo limita la velocidad MÁXIMA
             // por más buffs que se apilen (ej. rage + tótem del tigre). Evita
             // que el personaje quede atacando absurdamente rápido.
-            if (type == EAttributeType.AtkSpeed) newValue = Mathf.Max(newValue, 0.2f);
+            if (type == EAttributeType.AtkSpeed) newValue = Mathf.Max(newValue, MinAttackInterval);
 
             if (newValue == attr.CurrentValue) continue;
 
@@ -1189,7 +1193,11 @@ public class AbilitySystemComponent : MonoBehaviour
             if (mod.Type == Modifier.EModificationType.Add)
                 attr.AdditiveModifier += mod.Magnitude * sign;
             else if (mod.Type == Modifier.EModificationType.Multiply)
-                attr.MultiplicativeModifier += (mod.Magnitude - 1f) * sign;
+            {
+                // Los multiplicadores se MULTIPLICAN entre sí (ver AttributeValue.Multipliers).
+                if (apply) attr.AddMultiplier(mod.Magnitude);
+                else       attr.RemoveMultiplier(mod.Magnitude);
+            }
         }
         RecalculateAllAttributes();
     }
@@ -1301,16 +1309,6 @@ public class AbilitySystemComponent : MonoBehaviour
     // =========================================================
     // COOLDOWNS
     // =========================================================
-
-    // Fracción (0 a 1) de cooldown restante para el efecto que tenga este
-    // tag entre sus GrantedTags. La usan UI_AbilitySlot y UI_UltimateSlot.
-    public float GetCooldownRemainingNormalized(EGameplayTag tag)
-    {
-        foreach (var e in ActiveEffects)
-            if (e.Definition.GrantedTags.Contains(tag) && e.Definition.Duration > 0)
-                return e.DurationRemaining / e.TotalDuration;
-        return 0f;
-    }
 
     // Busca si el CooldownEffect de una habilidad está actualmente activo
     // y, si es así, cuánto falta y cuánto duraba en total.

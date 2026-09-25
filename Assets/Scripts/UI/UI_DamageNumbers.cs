@@ -44,11 +44,16 @@ public class UI_DamageNumbers : MonoBehaviour
     public float DamageOverTimeFontSize = 21f;
 
     [Header("Movimiento")]
+    [Tooltip("A qué altura nacen, como fracción entre los pies (0) y la barra de vida (1). " +
+             "0.6 = a la altura del pecho, que es donde uno apunta casi siempre.")]
+    [Range(0f, 1.2f)] public float HeightFraction = 0.6f;
+
     [Tooltip("Cuánto dura cada número en pantalla, en segundos.")]
     public float Lifetime = 0.9f;
 
-    [Tooltip("Cuánto sube en el mundo mientras dura, en metros.")]
-    public float RiseMeters = 1.1f;
+    [Tooltip("Cuánto sube en el mundo mientras dura, en metros. Poco: que no se vaya de " +
+             "la vista si estás apuntando al pecho.")]
+    public float RiseMeters = 0.6f;
 
     [Tooltip("Desvío al azar a los costados al nacer, en metros: varios golpes seguidos " +
              "no salen uno encima del otro.")]
@@ -116,7 +121,12 @@ public class UI_DamageNumbers : MonoBehaviour
     // LO QUE SE LE PIDE DESDE AFUERA
     // =========================================================
 
-    // Un número nuevo en 'worldPosition' (arriba del personaje que lo recibió).
+    // Un número nuevo sobre un personaje: 'feet' son sus pies y 'top' la altura de su
+    // barra de vida; nace a HeightFraction entre los dos.
+    public void Spawn(Vector3 feet, Vector3 top, int amount, ECombatNumber kind)
+        => Spawn(Vector3.Lerp(feet, top, HeightFraction), amount, kind);
+
+    // Un número nuevo en 'worldPosition'.
     public void Spawn(Vector3 worldPosition, int amount, ECombatNumber kind)
     {
         Camera cam = ResolveCamera();
@@ -126,7 +136,7 @@ public class UI_DamageNumbers : MonoBehaviour
         Popup p = TakePopup();
 
         Vector2 jitter = Random.insideUnitCircle * Jitter;
-        p.World  = worldPosition + new Vector3(jitter.x, Random.Range(0f, 0.25f), jitter.y);
+        p.World  = worldPosition + new Vector3(jitter.x, Random.Range(-0.1f, 0.15f), jitter.y);
         p.BornAt = Time.time;
         p.Active = true;
 

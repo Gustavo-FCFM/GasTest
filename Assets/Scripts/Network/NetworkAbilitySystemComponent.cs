@@ -1408,14 +1408,16 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
             if (localAsc == null || localAsc.IsEnemyOf(_asc)) return;
         }
 
-        // Justo encima de la barra de vida si la tiene (así no la tapa), si no sobre la
-        // cabeza.
+        // Dónde salen: entre los pies y la barra de vida (ver UI_DamageNumbers.HeightFraction),
+        // así caen a la altura del pecho —donde uno apunta— en un personaje de cualquier
+        // tamaño: el jefe es más alto, y su barra también.
         UI_WorldHealthbar bar = GetComponent<UI_WorldHealthbar>();
-        Vector3 anchor = bar != null && bar.BarRoot != null
-            ? bar.BarRoot.position + Vector3.up * 0.35f
-            : transform.position + Vector3.up * 2.2f;
+        Vector3 feet = transform.position;
+        Vector3 top  = bar != null && bar.BarRoot != null
+            ? bar.BarRoot.position
+            : feet + Vector3.up * 2.2f;
 
-        UI_DamageNumbers.Get().Spawn(anchor, amount, (ECombatNumber)kind);
+        UI_DamageNumbers.Get().Spawn(feet, top, amount, (ECombatNumber)kind);
     }
 
     [TargetRpc]
