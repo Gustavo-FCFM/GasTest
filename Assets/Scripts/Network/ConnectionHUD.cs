@@ -242,6 +242,18 @@ public class ConnectionHUD : MonoBehaviour
             if (GUILayout.Button("Disconnect", GUILayout.Height(32)))
                 Disconnect();
 
+            // DESATASCARSE. Vive acá y no en el HUD del juego a propósito: este recuadro
+            // se dibuja con IMGUI y se abre con ESC leído por el input VIEJO, así que
+            // sigue siendo alcanzable cuando el mapa de input del jugador está apagado
+            // —que es uno de los estados de los que hay que poder salir—.
+            GUILayout.Space(2);
+            if (PlayerController.LocalPlayer != null &&
+                GUILayout.Button("Unstuck (can't move?)", GUILayout.Height(28)))
+            {
+                PlayerController.LocalPlayer.RequestUnstuck();
+                _status = "Unstuck requested.";
+            }
+
             GUILayout.Space(2);
             GUILayout.Label("<i>ESC oculta este recuadro</i>", RichLabel());
         }

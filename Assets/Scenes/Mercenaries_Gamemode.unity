@@ -730,6 +730,7 @@ MonoBehaviour:
   - {fileID: 485961453}
   - {fileID: 1112209517}
   EjectEnemies: 1
+  EjectObjectiveCarrier: 1
   EjectMargin: 1.5
 --- !u!114 &76961467
 MonoBehaviour:
@@ -1145,6 +1146,7 @@ MonoBehaviour:
   - {fileID: 137106114}
   - {fileID: 1974835141}
   EjectEnemies: 1
+  EjectObjectiveCarrier: 1
   EjectMargin: 1.5
 --- !u!114 &107418850
 MonoBehaviour:
@@ -4628,6 +4630,7 @@ MonoBehaviour:
   - {fileID: 132681379}
   - {fileID: 993328443}
   EjectEnemies: 1
+  EjectObjectiveCarrier: 1
   EjectMargin: 1.5
 --- !u!114 &424731772
 MonoBehaviour:
@@ -7326,6 +7329,7 @@ MonoBehaviour:
   RowHeight: 44
   LabelWidth: 260
   SectionGap: 18
+  ShowSoundSection: 0
   BackdropColor: {r: 0, g: 0, b: 0, a: 0.8}
   PanelColor: {r: 0.1, g: 0.11, b: 0.13, a: 0.97}
   RowColor: {r: 1, g: 1, b: 1, a: 0.04}
@@ -7378,7 +7382,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Title: MERCENARIES
-  Subtitle: "Demo \xB7 3 contra 3 contra 3"
+  SubtitleText: "Demo \xB7 3 vs 3 vs 3"
   ShowOnStart: 1
   BackdropColor: {r: 0, g: 0, b: 0, a: 0.35}
   BandColor: {r: 0, g: 0, b: 0, a: 0.35}
@@ -13780,6 +13784,7 @@ MonoBehaviour:
   MarkerSize: 26
   ObjectiveColor: {r: 1, g: 0.82, b: 0.25, a: 1}
   EdgePadding: 60
+  DeliveryBarWidth: 90
 --- !u!114 &1201425525
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14574,6 +14579,9 @@ MonoBehaviour:
   PanelScale: 1.35
   SlotIconSize: 100
   ClassIconSize: 150
+  NameHeight: 30
+  DescriptionHeight: 72
+  ConfirmHeight: 56
   PanelColor: {r: 0.09, g: 0.09, b: 0.11, a: 0.39215687}
   SlotColor: {r: 0.2, g: 0.24, b: 0.32, a: 1}
   ReadyColor: {r: 0.55, g: 0.95, b: 0.55, a: 1}
@@ -20752,8 +20760,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1b2c3d4e5f6708192a3b4c5d6e7f809, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  HostAddress: 127.0.0.1
-  Port: 7770
+  HostAddress: ssh-buried.tun.ply.gg
+  Port: 60625
   HostOnlyInEditor: 0
 --- !u!4 &1809147887
 Transform:

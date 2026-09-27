@@ -51,6 +51,13 @@ public class GA_ShieldBlock : GameplayAbility, IHoldAbility
     [Tooltip("Tiempo máximo que se puede sostener, en segundos. 0 = sin límite (lo limita la energía).")]
     public float MaxHoldTime = 0f;
 
+    [Tooltip("RED DE SEGURIDAD del servidor, en segundos. Solo actúa cuando MaxHoldTime es 0 " +
+             "(sin tope). Un mantenido cuyo único final es el aviso de SOLTAR se queda arriba " +
+             "para siempre si ese aviso no llega — y ahí el dueño puede atacar de nuevo mientras " +
+             "el servidor sigue creyendo que tiene el escudo puesto. Llegar a este tope no es " +
+             "normal: se avisa por consola con el nombre de quien lo tenía.")]
+    public float HoldSafetyTimeout = 20f;
+
     [Header("Animación de Mantener")]
     [Tooltip("Clip de SOSTENER el escudo, EN BUCLE (el personaje ya lo tiene levantado). Es el " +
              "único obligatorio: con solo este y un estado en el Animator, la habilidad ya se ve bien.")]
@@ -218,7 +225,22 @@ public class GA_ShieldBlock : GameplayAbility, IHoldAbility
             if (OwnerASC.GetAttributeValue(EAttributeType.Energy) <= 0f) break;
 
             elapsed += Time.deltaTime;
-            if (MaxHoldTime > 0f && elapsed >= MaxHoldTime) break;
+
+            if (MaxHoldTime > 0f)
+            {
+                if (elapsed >= MaxHoldTime) break;
+            }
+            else if (HoldSafetyTimeout > 0f && elapsed >= HoldSafetyTimeout)
+            {
+                // Llegar acá SIEMPRE es un síntoma, no un final legítimo: el aviso de
+                // soltar nunca llegó. Se corta igual —un escudo eterno rompe la partida—
+                // pero queda anotado para poder encontrar el camino que se lo comió.
+                Debug.LogWarning($"[{AbilityName}] Se cortó por la red de seguridad " +
+                                 $"({HoldSafetyTimeout:F0} s) en '{OwnerASC.name}': el aviso de " +
+                                 $"soltar nunca llegó. Si esto se repite, el problema está en el " +
+                                 $"camino del RELEASE, no acá.");
+                break;
+            }
 
             yield return null;
         }

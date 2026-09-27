@@ -225,18 +225,38 @@ public class NetworkGameManager : NetworkBehaviour
     [Server]
     public void ServerDespawnAllCharacters()
     {
-        foreach (var kvp in _playerObjects)
-            if (kvp.Value != null) ServerManager.Despawn(kvp.Value);
+        // Nuestro propio registro primero, para que los conteos queden en cero aunque
+        // el barrido de abajo no encuentre alguno.
         _playerObjects.Clear();
-
-        foreach (PlayerController bot in _bots)
-            if (bot != null) ServerManager.Despawn(bot.gameObject);
         _bots.Clear();
-
         _currentPlayerCount   = 0;
         _netPlayerCount.Value = 0;
 
-        Debug.Log("[GameManager] Mapa vaciado: todos vuelven a la sala.");
+        // Y después TODO lo que se haya spawneado durante la partida, sea de quien sea:
+        // jugadores, bots, monstruos (jefes incluidos), tótems, señuelos, proyectiles y
+        // el Objetivo.
+        //
+        // POR QUÉ BARRER LA LISTA DE FISHNET Y NO LLEVAR UNA NUESTRA: una entidad nueva
+        // —la mascota del Explorador, el próximo summon— se limpia sola sin que nadie se
+        // acuerde de anotarla acá. Lo contrario ya nos pasó: la vuelta a la sala solo
+        // despawneaba personajes, así que los tótems de la partida anterior seguían en
+        // el mapa y los monstruos vivos también (por eso "aparecían" jefes en el minuto
+        // 0 de la siguiente: no eran nuevos, eran los de antes).
+        //
+        // Se respetan los objetos de ESCENA: ahí viven los managers, las bases, las
+        // rejas y los botiquines, que no se spawnean por partida.
+        List<NetworkObject> doomed = new List<NetworkObject>();
+        foreach (var kvp in ServerManager.Objects.Spawned)
+        {
+            NetworkObject nob = kvp.Value;
+            if (nob != null && !nob.IsSceneObject) doomed.Add(nob);
+        }
+
+        // En dos pasos: despawnear modifica el diccionario que estábamos recorriendo.
+        foreach (NetworkObject nob in doomed)
+            if (nob != null && nob.IsSpawned) ServerManager.Despawn(nob);
+
+        Debug.Log($"[GameManager] Mapa vaciado: {doomed.Count} entidades fuera. Todos a la sala.");
     }
 
     // Despawnea el jugador de una conexión que se cayó y actualiza el conteo.

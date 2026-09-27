@@ -54,6 +54,24 @@ public static class UICursor
 
     // Se puede llamar suelto para reafirmar el estado — lo hace el jugador al spawnear,
     // que antes fijaba el cursor a mano y pisaba lo que hubiera abierto.
+    // Quién tiene pedido el cursor y quién bloquea el input, en texto. Solo para
+    // diagnosticar: lo escribe el botón de Unstuck, que es cuando importa saberlo.
+    public static string DescribeHolders()
+    {
+        _cursorHolders.RemoveWhere(o => o == null);
+        _inputBlockers.RemoveWhere(o => o == null);
+
+        if (_cursorHolders.Count == 0 && _inputBlockers.Count == 0) return "libre (nadie lo pide)";
+
+        System.Text.StringBuilder sb = new System.Text.StringBuilder();
+        sb.Append("cursor=[");
+        foreach (Object o in _cursorHolders) sb.Append(o.name).Append(' ');
+        sb.Append("] inputBloqueado=[");
+        foreach (Object o in _inputBlockers) sb.Append(o.name).Append(' ');
+        sb.Append(']');
+        return sb.ToString();
+    }
+
     public static void Apply()
     {
         // Un menú destruido no puede soltar nada: se lo saca acá. El == de Unity da true

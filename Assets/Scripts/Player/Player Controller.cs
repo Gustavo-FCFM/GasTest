@@ -2365,6 +2365,110 @@ public class PlayerController : NetworkBehaviour
     }
 
     // =========================================================
+    // DESATASCARSE
+    //
+    // Arreglo de emergencia para el jugador que quedó sin control: no se mueve, no
+    // ataca, o quedó atrapado en la geometría. Lo dispara el botón "Unstuck" del
+    // recuadro de red, que se abre con ESC — y ese ESC se lee con el input VIEJO
+    // (Input.GetKeyDown en ConnectionHUD), así que llega aunque el mapa de input del
+    // jugador esté apagado. Que es, justamente, uno de los estados de los que hay que
+    // poder salir.
+    //
+    // Va de lo barato a lo caro: primero lo LOCAL (el modo de input y el estado de
+    // combate, que es la causa que ya encontramos una vez), y después le pide al
+    // SERVIDOR que lo destrabe y lo devuelva a su base.
+    //
+    // Además DEJA DICHO qué encontró trabado. Mientras no sepamos por qué pasa, cada
+    // uso del botón es una pista: si el log dice siempre lo mismo, ahí está la causa.
+    // =========================================================
+
+    public void RequestUnstuck()
+    {
+        // 1) Cursor y modo de input, según los menús que de verdad estén abiertos.
+        //    Apply() además limpia los que quedaron registrados y ya fueron destruidos.
+        UICursor.Apply();
+
+        // 2) Estado local de combate: si isAttacking quedó pegado, ninguna habilidad
+        //    vuelve a entrar.
+        FinishAttack();
+
+        Debug.Log($"[Unstuck] Pedido local. Cursor/input: {UICursor.DescribeHolders()}");
+
+        // 3) Y la verdad, que es del servidor.
+        if (IsSpawned) ServerUnstuck();
+    }
+
+    [ServerRpc]
+    private void ServerUnstuck()
+    {
+        List<string> found = new List<string>();
+
+        // Un mantenido que quedó abierto es el escudo eterno: el dueño puede atacar de
+        // nuevo mientras el servidor sigue creyendo que lo tiene puesto.
+        if (ASC != null)
+        {
+            foreach (GameplayAbility granted in ASC.GrantedAbilities)
+            {
+                if (granted is IHoldAbility hold && hold.IsHolding)
+                {
+                    hold.EndHold();
+                    found.Add($"mantenido abierto ({granted.AbilityName})");
+                }
+            }
+
+            // Tags de control pegados: el efecto que los daba ya no está, pero el tag sí.
+            EGameplayTag[] stuckTags =
+            {
+                EGameplayTag.State_Stunned, EGameplayTag.State_Rooted, EGameplayTag.State_Silenced,
+            };
+
+            foreach (EGameplayTag tag in stuckTags)
+            {
+                if (!ASC.HasTag(tag)) continue;
+                ASC.RemoveEffectsWithTag(tag);
+                ASC.RemoveTag(tag);
+                found.Add(tag.ToString());
+            }
+        }
+
+        if (isAttacking)
+        {
+            FinishAttack();
+            found.Add("isAttacking trabado");
+        }
+
+        // Y de vuelta a su base. Resuelve el caso que ninguna limpieza de estado
+        // arregla: quedarse encajado en la geometría.
+        Transform spawn = MercenariesGameMode.Instance != null && ASC != null
+            ? MercenariesGameMode.Instance.GetTeamSpawnPoint(ASC.TeamID)
+            : null;
+
+        NetworkAbilitySystemComponent netASC = GetComponent<NetworkAbilitySystemComponent>();
+        if (spawn != null && netASC != null)
+        {
+            netASC.ServerTeleportOwnerTo(spawn.position, spawn.forward);
+            found.Add("devuelto a su base");
+        }
+
+        Debug.LogWarning($"[Unstuck] '{name}': " +
+                         (found.Count > 0 ? string.Join(" · ", found)
+                                          : "no se encontró nada trabado del lado del servidor"));
+
+        TargetUnstuckDone(Owner);
+    }
+
+    // El dueño rehace su estado local DESPUÉS del teletransporte, no antes: si no, el
+    // propio movimiento del jugador vuelve a pisar la posición que acaba de poner el
+    // servidor (el transform es client-authoritative).
+    [TargetRpc]
+    private void TargetUnstuckDone(FishNet.Connection.NetworkConnection conn)
+    {
+        FinishAttack();
+        UICursor.Apply();
+        if (_input != null) _input.InitializeForOwner();
+    }
+
+    // =========================================================
     // REACCIÓN DE GOLPE Y PASOS (sonido)
     // =========================================================
 

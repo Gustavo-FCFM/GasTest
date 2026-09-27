@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -22,6 +23,7 @@ public class HealthPackVisual : MonoBehaviour
     private Image     _fill;       // el disco de la cuenta regresiva
     private Image     _ring;       // el borde del disco, siempre visible
     private GameObject _crossRoot;
+    private Transform  _label;     // el "+75 HP" que dice qué es esto
 
     private float _phase;
 
@@ -46,6 +48,13 @@ public class HealthPackVisual : MonoBehaviour
             MakeBar(_cross, "Vertical",   new Vector3(0.22f, 0.7f,  0.22f), pack.Tint);
             MakeBar(_cross, "Horizontal", new Vector3(0.7f,  0.22f, 0.22f), pack.Tint);
         }
+
+        // --- la etiqueta ---
+        //
+        // Sin esto el botiquín es "un piso verde": en la prueba de 9 nadie supo qué
+        // era, ni siquiera quienes lo levantaron. Un cartel con la cantidad lo explica
+        // solo, y de paso se lee desde lejos, que es cuando decidís si vale el desvío.
+        _label = MakeLabel(_cross, $"+{pack.HealAmount:F0} HP", pack.Tint).transform;
 
         // --- el disco del piso ---
         GameObject canvasGo = new GameObject("Disc", typeof(Canvas), typeof(CanvasScaler));
@@ -84,7 +93,68 @@ public class HealthPackVisual : MonoBehaviour
             _cross.localRotation = Quaternion.Euler(0f, _phase * 45f, 0f);
         }
 
+        // La etiqueta mira SIEMPRE a la cámara de quien juega, y se mantiene derecha
+        // aunque la cruz gire: un cartel que rota con ella sería ilegible la mitad del
+        // tiempo.
+        if (_label != null && _label.gameObject.activeInHierarchy)
+        {
+            Camera cam = ResolveCamera();
+            if (cam != null)
+            {
+                _label.rotation = Quaternion.LookRotation(_label.position - cam.transform.position);
+                _label.localPosition = Vector3.up * 0.55f;
+            }
+        }
+
         if (_fill != null) _fill.fillAmount = ready ? 1f : recharge;
+    }
+
+    // La cámara de quien mira. Se re-resuelve si la que teníamos quedó APAGADA, no
+    // solo si murió: al spawnear, el jugador apaga la cámara del lobby, y un componente
+    // apagado NO es == null. Con el chequeo de null a secas, el cartel se quedaría
+    // mirando para siempre a una cámara desactivada — el mismo error que tuvimos con
+    // los nameplates.
+    private Camera _cam;
+
+    private Camera ResolveCamera()
+    {
+        if (_cam == null || !_cam.isActiveAndEnabled) _cam = Camera.main;
+        return _cam;
+    }
+
+    // Cartel world-space con la cantidad. Cuelga de la cruz, así se prende y se apaga
+    // con ella sin que nadie lo recuerde.
+    private static GameObject MakeLabel(Transform parent, string text, Color color)
+    {
+        GameObject canvasGo = new GameObject("Label", typeof(Canvas));
+        canvasGo.transform.SetParent(parent, false);
+
+        Canvas canvas = canvasGo.GetComponent<Canvas>();
+        canvas.renderMode = RenderMode.WorldSpace;
+
+        RectTransform rect = canvasGo.GetComponent<RectTransform>();
+        rect.sizeDelta  = new Vector2(220f, 70f);
+        rect.localScale = Vector3.one * 0.006f;
+
+        GameObject textGo = new GameObject("Text", typeof(RectTransform));
+        textGo.transform.SetParent(canvasGo.transform, false);
+
+        RectTransform textRect = textGo.GetComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = Vector2.zero;
+        textRect.offsetMax = Vector2.zero;
+
+        TextMeshProUGUI label = textGo.AddComponent<TextMeshProUGUI>();
+        label.text                 = text;
+        label.fontSize             = 48f;
+        label.alignment            = TextAlignmentOptions.Center;
+        label.color                = color;
+        label.fontStyle            = FontStyles.Bold;
+        label.raycastTarget        = false;
+        label.enableWordWrapping   = false;
+
+        return canvasGo;
     }
 
     // =========================================================

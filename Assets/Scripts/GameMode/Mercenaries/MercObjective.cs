@@ -106,6 +106,14 @@ public class MercObjective : NetworkBehaviour
     private float _deliveryElapsed;
     private bool  _damagedSinceLastTick;
 
+    // Vida del portador en el tick anterior. Es el SEGUNDO detector de daño, y hace
+    // falta: OnDamageEndured solo se dispara cuando el golpe vino de OTRO PERSONAJE
+    // (`sourceASC != null` en ExecuteInstantEffect), así que el daño del mapa, de una
+    // zona o de cualquier fuente sin ASC no cancelaba la entrega. Mirar la vida los
+    // atrapa a todos. Los dos se complementan: el evento además atrapa lo que frenó un
+    // escudo, que no baja la vida.
+    private float _carrierHealthLastTick;
+
     // Resolución del portador en el cliente (cacheada por ObjectId).
     private Transform _carrierTransformCache;
     private int _carrierTransformCacheId = -1;
@@ -210,7 +218,13 @@ public class MercObjective : NetworkBehaviour
         MercTeamBase teamBase = _gm != null ? _gm.GetBase(carrierTeam) : null;
         bool inZone = teamBase != null && teamBase.IsInDeliveryZone(_carrier.transform.position);
 
-        bool damaged = _damagedSinceLastTick;
+        // Los dos detectores, en OR: el evento (que incluye lo absorbido por el escudo)
+        // y la vida bajando (que incluye el daño sin atacante).
+        float carrierHealth = _carrier.GetAttributeValue(EAttributeType.Health);
+        bool  healthDropped = carrierHealth < _carrierHealthLastTick - 0.01f;
+        _carrierHealthLastTick = carrierHealth;
+
+        bool damaged = _damagedSinceLastTick || healthDropped;
         _damagedSinceLastTick = false;
 
         if (!inZone || damaged)
@@ -291,7 +305,8 @@ public class MercObjective : NetworkBehaviour
 
         _carrier = asc;
         _carrier.OnDamageEndured += OnCarrierDamaged;
-        _damagedSinceLastTick = false;
+        _damagedSinceLastTick  = false;
+        _carrierHealthLastTick = _carrier.GetAttributeValue(EAttributeType.Health);
         SetDeliveryElapsed(0f);
         _lastCarrierPos       = asc.transform.position;
         _netCarrierId.Value   = nob.ObjectId;
