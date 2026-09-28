@@ -9,7 +9,39 @@ pruebas rápidas de clases.
 
 ---
 
-# 0. Estado actual — 23 de septiembre de 2026
+# 0. Estado actual — 28 de septiembre de 2026
+
+**Lo nuevo desde la prueba de 9 (24–28 de septiembre):**
+
+- **La entrega toma 3 s** parado en la plataforma (`MercObjective.DeliverSeconds`); salir de
+  la zona o recibir daño reinicia la cuenta (se detecta por el aviso de daño Y por la vida
+  bajando, sin contar el recorte al máximo cuando se acaba un bono de vida). **Con la bolsa
+  no se entra a la base propia**: la pared frena y la base expulsa
+  (`MercTeamBase.EjectObjectiveCarrier`).
+- **Retroalimentación visual**, todo armado solo por código: viñeta roja con poca vida,
+  pantalla de muerte con quién te eliminó y cuenta regresiva (las habilidades se ocultan
+  mientras estás muerto), registro de bajas arriba a la derecha, la R late y avisa al
+  cargarse, columna de luz del color del equipo mientras alguien entrega, números de daño
+  a la altura del pecho (rojo, amarillo el crítico, verde la curación, chico el daño con
+  el tiempo) y la X de la mira amarilla en los críticos. Detalle en `PENDIENTES.md`,
+  sección 8.
+- **Todo lo que ve el jugador está en inglés**: avisos, marcadores, menús, ajustes, recuadro
+  de red y sala. La sección de sonido de Ajustes está oculta hasta que haya clips
+  (`UI_SettingsPanel.ShowSoundSection`).
+- **Entre partidas se barre todo lo spawneado** que no sea de escena (jugadores, bots,
+  monstruos, tótems, proyectiles, Objetivo): los jefes y tótems de la partida anterior ya
+  no sobreviven.
+- **Seguro de la preparación**: quien sale de la planta de su sala durante la preparación
+  vuelve a su punto de aparición (`MercenariesGameMode.WarmupEscapeMargin`).
+- **Botón Unstuck** en el recuadro de red (ESC): con 5 s quieto, sin daño en 5 s, sin
+  control legítimo encima y 60 s de cooldown, te da un personaje NUEVO del prefab en tu
+  base con tu clase y tu carga de definitiva, y deja en consola qué encontró trabado.
+- **Tótems del Chamán** con collider y barra de vida (100 de vida, se pueden romper); los
+  de la definitiva son inmunes. **Botiquines** con cartel "+75 HP".
+- **Velocidad de ataque**: los bonos se multiplican (ya no se suman) y el tope es 0.3 s
+  entre ataques.
+
+**Lo de antes (hasta el 23 de septiembre):**
 
 **Lo que ya está y funciona** (todo compila limpio, 0 errores y 0 warnings propios):
 
@@ -762,6 +794,9 @@ vacío media partida.
 | Cuánto te frena llevarlo | `CarrySlowPercent` | 25 % |
 | Dónde se ve mientras lo cargás | `CarryOffset` | 2,1 m sobre la cabeza |
 | Radio de la entrega | cada `MercTeamBase` → `DeliveryRadius` | 3,5 m |
+| Cuánto hay que quedarse para entregar | `MercObjective.DeliverSeconds` (0 = al instante) | 3 s |
+| Columna de luz mientras se entrega | `BeaconHeight` / `BeaconRadius` / `BeaconAlpha` | 40 m / 1,6 m / 0,4 |
+| El portador no entra a su sala | cada `MercTeamBase` → `EjectObjectiveCarrier` | prendido |
 
 ## Escenario y reglas de la arena
 
@@ -809,6 +844,13 @@ máquina mira ese estado y mueve su propia reja — cero tráfico y cero desincr
 Sin modo de juego en la escena la reja se queda abierta, así una escena de pruebas nunca te
 deja encerrado.
 
+**La reja frena al que camina, no a un teletransporte.** Por eso hay un segundo seguro:
+durante la preparación, dos veces por segundo, quien esté fuera de la planta de su sala
+(con `WarmupEscapeMargin`, 1,5 m, de margen) vuelve a su punto de aparición
+(`MercenariesGameMode.ServerKeepPlayersInBase`). Salió de la Intercepción heroica sobre un
+aliado pegado a los barrotes, pero tapa cualquier habilidad que mueva. Solo mira la planta:
+saltar adentro de la sala no cuenta como salir.
+
 ---
 
 # 5. Dónde se toca cada regla
@@ -854,13 +896,14 @@ los índices de los assets ya guardados):
   vuelta al centro; hoy solo pelean. Es un agregado chico sobre `MercEnemyAI`.
 - **Marcadores de compañeros** (los rombitos con el nombre de cada aliado, como en las
   capturas de referencia): el marcador del Objetivo ya sirve de molde.
-- **Sin sonido**: los avisos son solo texto. Es lo que sigue en el plan de `PENDIENTES.md`.
-- **Sin cámara espectador.** La sala ya marca quién entra como espectador, pero todavía no
-  hay nada que mirar con: se quedan con la cámara de la escena.
+- **Sin sonido**: el sistema está escrito, faltan los clips (la sección de sonido de
+  Ajustes está oculta hasta entonces).
 - **Sin pantalla de fin de partida**: hoy el resultado sale en el reloj del marcador y en
   el cartel del centro, y a los 15 s arranca otra.
-- **La sala no tiene scroll**: con nueve jugadores las columnas de tres entran justas.
+- **Quedarse sin control al spawnear**: pasó en la prueba de 9 y todavía no se reproduce.
+  El botón Unstuck lo resuelve y deja en consola qué encontró trabado: juntar esos logs.
 
-Dos que estaban acá y ya se resolvieron: **encerrar a los equipos en la preparación** (lo
-hace `MercGate`, sección 4 ter) y **los enemigos a distancia** (el mago y el jefe usan
-habilidades; el jefe encadena aura + bola de fuego con `GA_BossAbility`).
+Ya resueltos, que estaban acá: **encerrar a los equipos en la preparación** (`MercGate` +
+el seguro de la sección 4 ter), **los enemigos a distancia** (el mago y el jefe usan
+habilidades; el jefe encadena aura + bola de fuego con `GA_BossAbility`), **la cámara de
+espectador** (`Player/SpectatorCamera`) y **el scroll de la sala**.

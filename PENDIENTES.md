@@ -43,7 +43,23 @@ rm -rf "Assets/FishNet" "Assets/FishNet.meta" "Assets/TextMesh Pro/Examples & Ex
 
 ---
 
-# ★ Después de la prueba de 9 (arreglos del 26 y 28 de septiembre)
+# ★ QUÉ SIGUE (rumbo al showcase de diciembre, ~9 semanas)
+
+En orden de lo que más mueve la demo:
+
+1. **Clases nuevas.** Decidir entre **Clérigo + Guerrero completos** (~4–4.5 semanas;
+   completan Soporte y Tanque, las dos más baratas) o **kits base de varias** (~3–5 días
+   cada una, sin subclases). Detalle y estimación en la sección 6.
+2. **El mapa del cementerio** (sección 7): el greybox de un sector es trabajo de editor
+   tuyo, 1–2 semanas. Se puede hacer en paralelo con las clases.
+3. **Sonido**: el sistema está; faltan los clips (y volver a prender la sección de
+   sonido de Ajustes).
+4. **Animaciones que se ven raras** (sección 5).
+5. **Quedarse sin control al spawnear**: juntar los logs `[Unstuck]` cuando pase.
+
+---
+
+# Después de la prueba de 9 — arreglos del 26 y 28 de septiembre, TODO PROBADO ✅
 
 **Lo que arreglaste en casa (commit `d8f0fe4`):** jefes y tótems que sobrevivían de una
 partida a la siguiente (ahora la vuelta a la sala barre todo lo que no es de escena), el
@@ -102,12 +118,15 @@ la dirección queda a la vista.
 
 # La prueba de 9 jugadores (viernes 25 de septiembre) — HECHA
 
+Lo que salió de la prueba está arriba, en "Después de la prueba de 9". Los puntos de
+"Qué observar" que nadie comentó siguen abiertos para la próxima prueba con gente.
+
 Es una **prueba, no la demo** (la demo es la del showcase, en diciembre): lo que vale
 de esta noche es lo que la gente diga y lo que se vea en la grabación.
 
 ## Antes de que lleguen
 
-- [ ] **Build nueva desde `main`** (`2f636b3` o más nuevo). Trae todo lo del 24 y 25:
+- [x] **Build nueva desde `main`** (`2f636b3` o más nuevo). Trae todo lo del 24 y 25:
       la entrega de 3 s, la bolsa que no entra a la base, los tótems rompibles con barra
       de vida, el Blink que gira la cámara, toda la retroalimentación visual nueva
       (sección 8) con los textos de la partida en inglés, los multiplicadores que ahora
@@ -115,15 +134,15 @@ de esta noche es lo que la gente diga y lo que se vea en la grabación.
       (sección 9). Ya revisado en el prefab:
       `StartSubclassWithFullUltimate` apagado (la definitiva arranca en 0) y la carga
       por rol en 0.15 / 30 / 0.2.
-- [ ] **Ensayar el host con `-host`**, si todavía no lo hiciste: 10 minutos con una
+- [x] **Ensayar el host con `-host`**, si todavía no lo hiciste: 10 minutos con una
       segunda máquina (o una segunda copia de la build conectándose a `127.0.0.1`).
       Nunca hosteamos desde una build; que no sea la primera vez con 8 personas
       esperando. Detalles abajo, en la sección 2.
-- [ ] **playit.gg corriendo** y la dirección + puerto (7770 UDP) listos para pegar.
-- [ ] **Rendimiento del host**: servidor + tu espectador + la grabación en la misma
+- [x] **playit.gg corriendo** y la dirección + puerto (7770 UDP) listos para pegar.
+- [x] **Rendimiento del host**: servidor + tu espectador + la grabación en la misma
       máquina. Si el host tartamudea, tartamudean todos: si hace falta, baja la calidad
       de la grabación antes que otra cosa.
-- [ ] Bots: con 9 personas no hacen falta. Si falta alguien, llena ese lugar con uno.
+- [x] Bots: con 9 personas no hacen falta. Si falta alguien, llena ese lugar con uno.
 
 **Las reglas en 30 segundos**, para pegar en el grupo antes de empezar:
 
@@ -173,7 +192,7 @@ Son las perillas y dudas que quedaron abiertas y que solo se contestan jugando:
 
 ## Después
 
-- [ ] Anotar lo que dijeron **esa misma noche**, mientras está fresco (aunque sea en
+- [x] Anotar lo que dijeron **esa misma noche**, mientras está fresco (aunque sea en
       desorden), y guardar la grabación. En la siguiente sesión lo ordenamos y decidimos
       qué entra antes de la demo.
 
