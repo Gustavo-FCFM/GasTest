@@ -1619,6 +1619,17 @@ public class BotController : MonoBehaviour
     {
         if (RoleOverride != EBotRole.Auto) return RoleOverride;
 
+        // Por el ROL de la clase (EClassRole), que es lo que dice el diseño: "el rol lo
+        // fija la clase". Antes se deducía de la POSICIÓN en MainBaseClasses (0 Bárbaro,
+        // 1 Pícaro, 2 Paladín), y una clase nueva al final —el Clérigo— caía en Bruiser.
+        switch (ResolveClassRole())
+        {
+            case EClassRole.Tank:    return EBotRole.Bruiser;
+            case EClassRole.Damage:  return EBotRole.Assassin;
+            case EClassRole.Support: return EBotRole.Support;
+        }
+
+        // Sin rol declarado (una clase base vieja sin subclases con rol): el orden de siempre.
         switch (ResolveBaseClassIndex())
         {
             case 0:  return EBotRole.Bruiser;
@@ -1626,6 +1637,21 @@ public class BotController : MonoBehaviour
             case 2:  return EBotRole.Support;
             default: return EBotRole.Bruiser;
         }
+    }
+
+    // El rol de la clase actual; si es una clase base sin rol propio (el Bárbaro, el
+    // Pícaro y el Paladín solo lo tienen en sus subclases), el de su primera subclase.
+    private EClassRole ResolveClassRole()
+    {
+        CharacterClassDefinition cls = _pc != null ? _pc.CurrentClassDef : null;
+        if (cls == null) return EClassRole.None;
+        if (cls.Role != EClassRole.None) return cls.Role;
+
+        if (cls.AvailableSubclasses != null)
+            foreach (CharacterClassDefinition sub in cls.AvailableSubclasses)
+                if (sub != null && sub.Role != EClassRole.None) return sub.Role;
+
+        return EClassRole.None;
     }
 
     private int ResolveBaseClassIndex()

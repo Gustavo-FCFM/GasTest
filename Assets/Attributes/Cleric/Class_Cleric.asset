@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 749805704a6088741af34d91f0891ced, type: 3}
+  m_Name: Class_Cleric
+  m_EditorClassIdentifier: 
+  ClassName: Cleric
+  ClassIcon: {fileID: 0}
+  Description: The healer who fights from range. His light burns enemies and mends
+    allies in its path, and everyone he heals takes less damage for a while.
+  Role: 3
+  BaseAttributes: {fileID: 11400000, guid: 1e1aedd4892e5f04fb91643e280fd884, type: 2}
+  Abilities:
+  - InputSlot: 1
+    Ability: {fileID: 11400000, guid: a722fef8255f8494fbdb4145b1b64d58, type: 2}
+  - InputSlot: 2
+    Ability: {fileID: 11400000, guid: 1febd8429db62574d9dbfa40eeedc1c0, type: 2}
+  - InputSlot: 3
+    Ability: {fileID: 11400000, guid: c599de90196b787438b3bbb420159046, type: 2}
+  - InputSlot: 6
+    Ability: {fileID: 11400000, guid: 6f7b2fa117308d647a0c7472e470bf7f, type: 2}
+  PassiveBehaviorsPrefab: {fileID: 481456162507743029, guid: 8e1122b8b95a4504992667c3b2cc3251, type: 3}
+  PassiveEffects: []
+  StatGrowthPerLevel:
+  - Attribute: 2
+    AmountPerLevel: 50
+  - Attribute: 8
+    AmountPerLevel: 1
+  - Attribute: 17
+    AmountPerLevel: 1
+  - Attribute: 14
+    AmountPerLevel: 100
+  - Attribute: 6
+    AmountPerLevel: 50
+  AvailableSubclasses: []
+  ClassAnimatorOverride: {fileID: 22100000, guid: 75ec53281b263d24dbe5fee5e2ab9c9e, type: 2}
+  MainHandWeaponPrefab: {fileID: 0}
+  OffHandWeaponPrefab: {fileID: 0}
+  MainHandRotationOffset: {x: 0, y: 0, z: 0}
+  MainHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandPositionOffset: {x: 0, y: 0, z: 0}

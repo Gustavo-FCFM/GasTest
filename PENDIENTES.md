@@ -47,9 +47,33 @@ rm -rf "Assets/FishNet" "Assets/FishNet.meta" "Assets/TextMesh Pro/Examples & Ex
 
 En orden de lo que más mueve la demo:
 
-1. **Clases nuevas.** Decidir entre **Clérigo + Guerrero completos** (~4–4.5 semanas;
-   completan Soporte y Tanque, las dos más baratas) o **kits base de varias** (~3–5 días
-   cada una, sin subclases). Detalle y estimación en la sección 6.
+1. **Clases nuevas — DECIDIDO (28 de septiembre): Clérigo + Guerrero completos**, en ese
+   orden. Detalle y estimación en la sección 6.
+
+   **Clérigo — kit base: CÓDIGO HECHO, falta correr la herramienta y probar.**
+
+   | Ranura | Habilidad | Pieza |
+   |---|---|---|
+   | Pasiva | Bendición: los aliados que cura reciben +15 % de resistencia 4 s | `ClericBlessingPassive` (nueva) |
+   | Clic izq. | Arco de luz: atraviesa; 1.0× daño mágico a enemigos, 0.8× curación a aliados | `GA_ProjectileShoot` |
+   | Clic der. | Curación al aliado de la mira (o a uno mismo), 2.5×, 4 cargas de 3 s | `GA_Target` |
+   | Q | Luz guía: rayo rápido que atraviesa, 2.0× y +20 % de daño recibido 4 s | `GA_ProjectileShoot` |
+   | Shift | Destello: estilo Misty Step, la mira es la guía. Mirando un piso, ahí; mirando una pared o una plataforma por abajo, al piso de ENCIMA (o si no, al de abajo); mirando al aire, al piso más cercano bajo ese punto. Caminando de lado o hacia atrás, en esa dirección lo más lejos posible, mirando al frente. Siempre sobre piso; no cruza paredes invisibles, rejas ni muros | `GA_Teleport` (nueva, con `DirectionalTeleport`) |
+
+   Estadísticas de partida: 90 vida, 4 defensa, 10 daño mágico, 0.9 s entre ataques.
+   El bot ahora elige su rol por `EClassRole` (el Clérigo juega de Support).
+
+   - [x] Correr `Mercenarios ▸ Crear el Clérigo (kit base, una sola vez)` con la arena
+         abierta: crea todo, lo agrega al jugador y a la sala, y actualiza los registros.
+         Después borrar `Assets/Scripts/Editor/MercClericSetup.cs`. (Corrida y borrada el 28.)
+   - [ ] En el editor: el arma (bastón y libro) en `Class_Cleric`, su Animator Override
+         propio (arranca con el del Paladín), los íconos de la clase y las habilidades, y
+         el `FlashVFX` del Destello.
+   - [ ] Probar: el arco daña y cura a su paso; la curación apunta al aliado de la mira y
+         sin nadie te cura a ti; la Luz guía deja el debuff; el Destello no atraviesa
+         paredes ni rejas y no te deja encajado; la Bendición aparece en el aliado curado.
+   - [ ] Después: las tres subclases (Vida, Luz, Orden), con Resurrección y Revelar
+         invisibles como sistemas nuevos.
 2. **El mapa del cementerio** (sección 7): el greybox de un sector es trabajo de editor
    tuyo, 1–2 semanas. Se puede hacer en paralelo con las clases.
 3. **Sonido**: el sistema está; faltan los clips (y volver a prender la sección de
