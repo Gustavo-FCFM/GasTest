@@ -50,28 +50,44 @@ En orden de lo que más mueve la demo:
 1. **Clases nuevas — DECIDIDO (28 de septiembre): Clérigo + Guerrero completos**, en ese
    orden. Detalle y estimación en la sección 6.
 
-   **Clérigo — kit base: CÓDIGO HECHO, falta correr la herramienta y probar.**
+   **Clérigo — kit base: HECHO Y PROBADO ✅ (28 de septiembre, commit `2786174`).**
+   Números como los dejaste en el editor:
 
    | Ranura | Habilidad | Pieza |
    |---|---|---|
-   | Pasiva | Bendición: los aliados que cura reciben +15 % de resistencia 4 s | `ClericBlessingPassive` (nueva) |
-   | Clic izq. | Arco de luz: atraviesa; 1.0× daño mágico a enemigos, 0.8× curación a aliados | `GA_ProjectileShoot` |
-   | Clic der. | Curación al aliado de la mira (o a uno mismo), 2.5×, 4 cargas de 3 s | `GA_Target` |
-   | Q | Luz guía: rayo rápido que atraviesa, 2.0× y +20 % de daño recibido 4 s | `GA_ProjectileShoot` |
+   | Pasiva | Bendición: los aliados que cura reciben +10 % de resistencia 5 s | `ClericBlessingPassive` (nueva) |
+   | Clic izq. | Arco de luz: atraviesa; 1.0× daño mágico a enemigos (`GE_Class_Magic_Damage`), 2.0× curación a aliados (`GE_SmiteHealing`); vuela hasta chocar (`LifeTime` 0) | `GA_ProjectileShoot` |
+   | Clic der. | Curación al aliado de la mira (o a uno mismo), 2.0× (`GE_SmiteHealing`), 4 cargas de 3 s | `GA_Target` |
+   | Q | Luz guía: rayo muy rápido (100) que atraviesa, 2.0× y +20 % de daño recibido 4 s | `GA_ProjectileShoot` |
    | Shift | Destello: estilo Misty Step, la mira es la guía. Mirando un piso, ahí; mirando una pared o una plataforma por abajo, al piso de ENCIMA (o si no, al de abajo); mirando al aire, al piso más cercano bajo ese punto. Caminando de lado o hacia atrás, en esa dirección lo más lejos posible, mirando al frente. Siempre sobre piso; no cruza paredes invisibles, rejas ni muros | `GA_Teleport` (nueva, con `DirectionalTeleport`) |
 
-   Estadísticas de partida: 90 vida, 4 defensa, 10 daño mágico, 0.9 s entre ataques.
-   El bot ahora elige su rol por `EClassRole` (el Clérigo juega de Support).
+   Estadísticas de partida: 80 vida, 4 defensa, 6 ataque, 8 daño mágico, 0.9 s entre
+   ataques. El bot elige su rol por `EClassRole` (el Clérigo juega de Support). Ya tiene
+   íconos, `AOC_Cleric` y el bastón (`Quarterstaff 1`) en la mano derecha.
 
-   - [x] Correr `Mercenarios ▸ Crear el Clérigo (kit base, una sola vez)` con la arena
-         abierta: crea todo, lo agrega al jugador y a la sala, y actualiza los registros.
-         Después borrar `Assets/Scripts/Editor/MercClericSetup.cs`. (Corrida y borrada el 28.)
-   - [ ] En el editor: el arma (bastón y libro) en `Class_Cleric`, su Animator Override
-         propio (arranca con el del Paladín), los íconos de la clase y las habilidades, y
-         el `FlashVFX` del Destello.
-   - [ ] Probar: el arco daña y cura a su paso; la curación apunta al aliado de la mira y
-         sin nadie te cura a ti; la Luz guía deja el debuff; el Destello no atraviesa
-         paredes ni rejas y no te deja encajado; la Bendición aparece en el aliado curado.
+   ⚠ **`GE_SmiteHealing` ahora escala con daño mágico** (antes con ataque) y lo comparte
+   el Castigo divino del Paladín (`GA_SmiteBeam` y `GA_SmiteBeamConquest`). Hoy da igual
+   porque el Paladín tiene 8 y 8, pero si algún día sube uno solo de los dos, la curación
+   de su rayo cambia con él. Si querés separarlos: duplicar el GE para el Clérigo.
+
+   **El libro en la mano izquierda — CÓDIGO HECHO, falta cablear y probar.** Campo nuevo
+   `Off Hand Pose` en cada clase: una pose fija del brazo izquierdo que va en la capa
+   `OffHandPose` de `AC_Player` (última capa, máscara `Human Arm Left Mask`). El libro se
+   queda en su lugar mientras el bastón ataca, se suelta al morir sin ragdoll, y las
+   copias del Ilusionista también lo sostienen. La herramienta ya se corrió (la capa y
+   `PLACEHOLDER_OffHandPose` están) y se borró, pero `Class_Cleric` quedó con los dos
+   campos vacíos:
+
+   - [ ] En `Class_Cleric`: `Off Hand Pose` = el clip `HumanM@ObjectBook01_L` (adentro del
+         .fbx, en Kevin Iglesias ▸ Human Animations ▸ Animations ▸ Masked Poses) y
+         `Off Hand Weapon Prefab` = `Book`.
+   - [ ] Acomodar el libro con `Off Hand Rotation / Position Offset` (el socket de la
+         izquierda viene girado 180°: empezar con 180 en Z).
+   - [ ] Probar en red: el otro jugador también ve el libro sostenido.
+   - [ ] `Human_MageBook.prefab` quedó suelto en la raíz de `Assets/`: salió de la carpeta
+         del demo de Kevin (`Human Spellcasting Animations/Prefabs`), que es lo único que lo
+         usa. Devolverlo ahí (tu `Book` no depende de él).
+   - [ ] El `FlashVFX` del Destello.
    - [ ] Después: las tres subclases (Vida, Luz, Orden), con Resurrección y Revelar
          invisibles como sistemas nuevos.
 2. **El mapa del cementerio** (sección 7): el greybox de un sector es trabajo de editor
@@ -1399,7 +1415,8 @@ Qué se reusa, en corto:
 **Alternativa:** solo los **kits base** de varias clases (~3–5 días cada uno, porque lo
 nuevo vive casi todo en las subclases). Contra: al llegar a nivel 3 no hay qué elegir.
 
-- [ ] Decidir: Clérigo + Guerrero completos, o kits base de varias
+- [x] Decidir: Clérigo + Guerrero completos (28 de septiembre). Clérigo: kit base hecho;
+      siguen sus subclases, después el Guerrero.
 - [ ] Antes del Mago: definir la extra de Filo danzante y el vuelo libre
 
 ---
