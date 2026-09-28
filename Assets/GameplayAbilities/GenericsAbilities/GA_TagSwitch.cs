@@ -94,6 +94,15 @@ public class GA_TagSwitch : GameplayAbility
         // con la velocidad de ataque, la versión cargada tiene que acelerarse igual.
         instance.AnimationSpeedOverride = AnimationSpeedOverride;
 
+        // Y hereda si se puede CORTAR. El slot del ataque principal marca como
+        // interrumpible al SWITCH (ver EquipCharacterClass), pero quien pega es la
+        // variante clonada, que nacía sin la marca: su golpe no miraba el contador de
+        // cancelación y pegaba aunque otra habilidad lo hubiera cortado. Con el Paladín
+        // eso era clic izquierdo + clic derecho: el martillo pegaba igual y el escudo
+        // quedaba arriba — golpear y bloquear a la vez. El cooldown ya pagado no se
+        // devuelve: cancelar tiene ese costo, como en cualquier otro básico.
+        instance.IsInterruptible = IsInterruptible;
+
         instance.Activate();
 
         // El fin de la habilidad lo maneja la VARIANTE (su propio EndAbility, que

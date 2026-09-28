@@ -293,14 +293,19 @@ public class UI_ClassMenu : MonoBehaviour
     {
         if (!_open || _player == null || selectedClass == null) return;
 
-        _player.EquipCharacterClass(selectedClass, resetProgress: _mode == EMode.BaseClasses);
+        // Se cierra ANTES de equipar. Equipar reinicia la vida con el máximo de la clase
+        // nueva, y con el menú todavía abierto el vigilante de daño (ver
+        // OnPlayerAttributeChanged) veía esa bajada como un golpe: cerraba "por daño" y
+        // mostraba "You got hit" justo al elegir.
+        bool resetProgress = _mode == EMode.BaseClasses;
+        CloseMenu();
+
+        _player.EquipCharacterClass(selectedClass, resetProgress: resetProgress);
 
         // Se apaga el aviso de "podés evolucionar" del HUD: ya evolucionaste. Nadie lo
         // apagaba, asi que una vez encendido se quedaba puesto el resto de la partida.
         UI_PlayerHUD hud = FindFirstObjectByType<UI_PlayerHUD>();
         if (hud != null) hud.HideLevelUpNotification();
-
-        CloseMenu();
     }
 
     private void CloseMenu()
@@ -321,7 +326,13 @@ public class UI_ClassMenu : MonoBehaviour
     {
         if (!_open || type != EAttributeType.Health) return;
 
-        bool damaged = value < _lastHealth - 0.01f;
+        // Un bono de vida máxima que se acaba recorta la vida al nuevo máximo: baja sin
+        // que nadie pegue. Se reconoce porque queda justo EN el máximo (igual que en la
+        // entrega del Objetivo); un golpe de verdad la deja por debajo.
+        float max = _playerASC != null ? _playerASC.GetAttributeValue(EAttributeType.MaxHealth) : 0f;
+        bool clampedToMax = max > 0f && value >= max - 0.01f;
+
+        bool damaged = value < _lastHealth - 0.01f && !clampedToMax;
         _lastHealth = value;
         if (!damaged || !CloseOnDamage) return;
 

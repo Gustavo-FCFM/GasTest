@@ -362,7 +362,7 @@ public class MercenariesGameMode : NetworkBehaviour
         switch (State)
         {
             case EMatchState.Warmup:
-                if (slowTick) { PublishPhaseTime(); RefreshPlayers(); }
+                if (slowTick) { PublishPhaseTime(); RefreshPlayers(); ServerKeepPlayersInBase(); }
                 if (_phaseTimer <= 0f) ServerStartMatch();
                 break;
 
@@ -778,6 +778,48 @@ public class MercenariesGameMode : NetworkBehaviour
     {
         _players.Clear();
         _players.AddRange(FindObjectsByType<PlayerController>(FindObjectsSortMode.None));
+    }
+
+    // SEGURO DE LA PREPARACIÓN: nadie sale de su base antes de tiempo. Las rejas frenan
+    // a quien camina, pero no a un teletransporte: la Intercepción heroica del Paladín
+    // sobre un aliado pegado a los barrotes lo dejaba del otro lado. En vez de tapar cada
+    // habilidad que mueve (y las que vengan), se mira el resultado: quien esté fuera de
+    // la planta de su sala durante la preparación vuelve a su punto de aparición.
+    [Tooltip("Cuánto (en metros) puede pasarse alguien del borde de su sala durante la " +
+             "preparación antes de que lo devuelvan adentro.")]
+    public float WarmupEscapeMargin = 1.5f;
+
+    [Server]
+    private void ServerKeepPlayersInBase()
+    {
+        foreach (PlayerController pc in _players)
+        {
+            if (pc == null) continue;
+
+            AbilitySystemComponent asc = pc.GetComponent<AbilitySystemComponent>();
+            if (asc == null || asc.HasTag(EGameplayTag.State_Dead)) continue;
+
+            MercTeamBase home = GetBase(asc.TeamID);
+            if (home == null || home.IsInsideSafeRoomFootprint(pc.transform.position, WarmupEscapeMargin))
+                continue;
+
+            Transform spawn = home.GetSpawnPoint();
+            if (spawn == null) continue;
+
+            // El transform es del dueño: a una persona se le pide por TargetRpc; a un bot,
+            // que no tiene dueño, lo mueve el servidor.
+            if (pc.IsBot)
+            {
+                pc.ServerTeleportBot(spawn.position, spawn.forward);
+            }
+            else
+            {
+                NetworkAbilitySystemComponent net = pc.GetComponent<NetworkAbilitySystemComponent>();
+                if (net != null) net.ServerTeleportOwnerTo(spawn.position, spawn.forward);
+            }
+
+            Debug.Log($"[Mercenarios] '{pc.name}' salió de su base durante la preparación: de vuelta adentro.");
+        }
     }
 
     // Cuántos jugadores de un equipo están vivos ahora mismo.

@@ -220,8 +220,15 @@ public class MercObjective : NetworkBehaviour
 
         // Los dos detectores, en OR: el evento (que incluye lo absorbido por el escudo)
         // y la vida bajando (que incluye el daño sin atacante).
+        //
+        // Menos un falso positivo: cuando se le acaba un bono de VIDA MÁXIMA (Enfurecer,
+        // el tótem del Oso), la vida se recorta al nuevo máximo y "baja" sin que nadie le
+        // pegue. Eso se reconoce porque queda justo EN el máximo; un golpe de verdad la
+        // deja por debajo.
         float carrierHealth = _carrier.GetAttributeValue(EAttributeType.Health);
-        bool  healthDropped = carrierHealth < _carrierHealthLastTick - 0.01f;
+        float carrierMax    = _carrier.GetAttributeValue(EAttributeType.MaxHealth);
+        bool  clampedToMax  = carrierMax > 0f && carrierHealth >= carrierMax - 0.01f;
+        bool  healthDropped = carrierHealth < _carrierHealthLastTick - 0.01f && !clampedToMax;
         _carrierHealthLastTick = carrierHealth;
 
         bool damaged = _damagedSinceLastTick || healthDropped;

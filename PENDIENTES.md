@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 25 de septiembre de 2026
+# Pendientes — actualizado el 28 de septiembre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -19,7 +19,88 @@ julio y un pull normal recrea ese merge conflictivo. Ver `CLAUDE.md`.
 
 ---
 
-# ★ HOY EN LA NOCHE: la prueba de 9 jugadores (viernes 25 de septiembre)
+# ★ EN LA MÁQUINA DE CASA: borrar dos carpetas viejas (una sola vez)
+
+**Para Claude, si lee esto en la máquina de casa: hazlo tú antes de cualquier otra
+cosa, con Unity CERRADO, y confírmaselo a Gustavo.**
+
+El 25 de septiembre se borraron del proyecto `Assets/FishNet` (carpetas vacías, restos
+del FishNet viejo antes de moverlo a `AssetsExtra`) y los ejemplos de TextMesh Pro. Pero
+en la máquina de casa **las carpetas siguen existiendo**: el `reset --hard` no borra una
+carpeta que tiene archivos ignorados adentro (ahí quedaron `.csproj` y `.sln` viejos).
+Unity las vio, les creó `.meta`, y se colaron en el commit `d8f0fe4` del 26.
+
+Ya se sacaron del repo otra vez y ahora el `.gitignore` las ignora, así que no se van a
+volver a colar. Pero hay que borrarlas del disco para que Unity deje de verlas:
+
+```bash
+cd ".../Proyectos Gustavo/GasTest/GasTest"
+git fetch origin && git reset --hard origin/main
+rm -rf "Assets/FishNet" "Assets/FishNet.meta" "Assets/TextMesh Pro/Examples & Extras" "Assets/TextMesh Pro/Examples & Extras.meta"
+```
+
+- [ ] Hecho en la máquina de casa (el trabajo ya lo hizo esta máquina el 28).
+
+---
+
+# ★ Después de la prueba de 9 (arreglos del 26 y 28 de septiembre)
+
+**Lo que arreglaste en casa (commit `d8f0fe4`):** jefes y tótems que sobrevivían de una
+partida a la siguiente (ahora la vuelta a la sala barre todo lo que no es de escena), el
+escudo eterno del Paladín (red de seguridad de 20 s con aviso en consola), la entrega que
+no se cancelaba con daño sin atacante (segundo detector mirando la vida), el botón
+**Unstuck** del recuadro de red, y el cartel "+75 HP" del botiquín.
+
+**Lo que se corrigió encima (28 de septiembre):**
+- **Unstuck ya no es un atajo.** Antes te mandaba a la base cuando quisieras (con la bolsa
+  quedabas junto a la entrega) y te quitaba un aturdido de verdad. Ahora el servidor solo
+  lo acepta si llevas **5 s quieto**, **nadie te pegó en 5 s**, no tienes un control
+  **legítimo** encima, no estás muerto y pasó su **cooldown de 60 s**. Y en vez de
+  arreglar el personaje trabado, te da **uno nuevo del prefab**, en tu base, con tu clase
+  y tu carga de definitiva. Si llevabas la bolsa, se cae donde estabas. Antes de
+  reemplazarte deja en la consola qué encontró trabado (mantenidos abiertos, tags de
+  control pegados sin efecto, `isAttacking`) — cada uso es una pista para el bug de
+  quedarse sin control al spawnear.
+- **La entrega ya no se cancela sola** cuando al portador se le acaba un bono de vida
+  máxima (la vida se recorta al nuevo máximo y "bajaba" sin que nadie le pegue).
+
+- **El "escudo eterno" era esto:** subir el escudo corta el básico que venía corriendo, y
+  el aviso de "terminó" de ese básico le borraba el escudo al DUEÑO (no decía cuál
+  habilidad terminó). El clic izquierdo sostenido volvía a pegar con el escudo arriba en
+  el servidor, y al soltar el clic derecho ya no se avisaba nada. Ahora los avisos de fin
+  dicen cuál habilidad terminó (`FinishAttack(GameplayAbility)`), y el servidor rechaza
+  cualquier activación mientras haya un mantenido arriba. La red de 20 s de
+  `GA_ShieldBlock` se queda como segunda red.
+- **El menú de clases ya no dice "You got hit" al elegir:** equipar reiniciaba la vida con
+  el máximo nuevo mientras el menú seguía abierto y lo tomaba como golpe. Ahora cierra
+  antes de equipar, y también ignora el recorte al máximo.
+- **Seguro de la preparación:** quien quede fuera de la planta de su sala (con 1.5 m de
+  margen, `WarmupEscapeMargin`) vuelve a su punto de aparición. Tapaba la Intercepción
+  heroica sobre un aliado pegado a los barrotes, y cualquier otro teletransporte futuro.
+
+- [x] Unstuck: probado, funciona (28 de septiembre).
+- [x] La entrega no se cancela al cambiar la vida máxima (28 de septiembre).
+- [x] Paladín con los dos clics a la vez, el menú de clases sin "You got hit" y el seguro
+      de la preparación: probados (28 de septiembre).
+- **Clic izquierdo + clic derecho enseguida seguía pegando:** el ataque principal del
+  Paladín es un switch (`GA_TagSwitch`) que clona el martillo o el golpe con Castigo, y
+  la copia nacía SIN la marca de interrumpible: el escudo la cortaba pero el golpe
+  llegaba igual. Ahora la variante hereda `IsInterruptible` del switch (como ya heredaba
+  la velocidad de ataque). Cortado antes del evento de impacto del clip, no pega; el
+  cooldown ya pagado no se devuelve.
+- [x] Paladín: clic izquierdo e inmediatamente clic derecho → no pega, sube el escudo.
+      Con Castigo divino cargado, lo mismo (la estela tampoco sale).
+- [ ] Cuando alguien se atasque de verdad: guardar el `[Unstuck]` de la consola (host y
+      cliente) y traerlo a la siguiente sesión.
+
+**Pendiente de decidir:** la escena trae por defecto tu dirección de playit.gg
+(`ssh-buried.tun.ply.gg:60625`). Cómodo para tus amigos, pero para probar en tu PC con dos
+ventanas hay que escribir `127.0.0.1` / `7770` a mano, y si el repo de GitHub es público
+la dirección queda a la vista.
+
+---
+
+# La prueba de 9 jugadores (viernes 25 de septiembre) — HECHA
 
 Es una **prueba, no la demo** (la demo es la del showcase, en diciembre): lo que vale
 de esta noche es lo que la gente diga y lo que se vea en la grabación.

@@ -684,10 +684,12 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         // siempre (no puede volver a atacar, ni girar al moverse).
         // Por eso también avisamos por red al dueño.
         PlayerController pc = OwnerASC?.GetComponent<PlayerController>();
-        if (pc != null) pc.FinishAttack();
+        // Con CUÁL terminó: si el dueño está manteniendo el escudo, que termine otra
+        // habilidad (el básico que el escudo cortó) no lo baja. Ver FinishAttack.
+        if (pc != null) pc.FinishAttack(this);
 
         NetworkAbilitySystemComponent netASC = OwnerASC?.GetComponent<NetworkAbilitySystemComponent>();
-        if (netASC != null) netASC.ServerNotifyAbilityEnded();
+        if (netASC != null) netASC.ServerNotifyAbilityEnded(this);
     }
 
     // Resuelve la duración del cooldown en segundos, con prioridad:

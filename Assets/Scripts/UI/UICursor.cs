@@ -52,8 +52,6 @@ public static class UICursor
         if (changed) Apply();
     }
 
-    // Se puede llamar suelto para reafirmar el estado — lo hace el jugador al spawnear,
-    // que antes fijaba el cursor a mano y pisaba lo que hubiera abierto.
     // Quién tiene pedido el cursor y quién bloquea el input, en texto. Solo para
     // diagnosticar: lo escribe el botón de Unstuck, que es cuando importa saberlo.
     public static string DescribeHolders()
@@ -72,6 +70,8 @@ public static class UICursor
         return sb.ToString();
     }
 
+    // Se puede llamar suelto para reafirmar el estado — lo hace el jugador al spawnear,
+    // que antes fijaba el cursor a mano y pisaba lo que hubiera abierto.
     public static void Apply()
     {
         // Un menú destruido no puede soltar nada: se lo saca acá. El == de Unity da true

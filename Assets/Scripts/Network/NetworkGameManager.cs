@@ -215,6 +215,35 @@ public class NetworkGameManager : NetworkBehaviour
                   $"TeamID={uniqueTeamID}. En partida: {_currentPlayerCount}");
     }
 
+    // Reemplaza el personaje de un jugador por uno NUEVO del prefab, en su base, con el
+    // mismo nombre y equipo. Lo usa el desatascarse (PlayerController → DESATASCARSE):
+    // un personaje recién creado no arrastra nada del estado trabado del anterior. La
+    // clase la pone quien llama (el dueño la equipa al nacer). Devuelve el nuevo, o null.
+    [Server]
+    public PlayerController ServerRespawnFresh(PlayerController old)
+    {
+        if (old == null || old.IsBot) return null;
+
+        NetworkConnection conn = old.Owner;
+        if (conn == null || !conn.IsValid) return null;
+
+        NetworkAbilitySystemComponent oldNet = old.GetComponent<NetworkAbilitySystemComponent>();
+        string playerName = oldNet != null ? oldNet.PlayerName : "Player";
+        int    team       = oldNet != null ? oldNet.NetTeamID  : 1;
+
+        // Se saca del registro ANTES de despawnear, y se descuenta: SpawnPlayerFor lo
+        // vuelve a sumar. Así el conteo de la partida no cambia.
+        _playerObjects.Remove(conn);
+        _currentPlayerCount = Mathf.Max(0, _currentPlayerCount - 1);
+
+        ServerManager.Despawn(old.gameObject);
+        SpawnPlayerFor(conn, playerName, team);
+
+        return _playerObjects.TryGetValue(conn, out GameObject obj) && obj != null
+            ? obj.GetComponent<PlayerController>()
+            : null;
+    }
+
     // Saca del mapa a TODOS los personajes: los de los jugadores y los de los bots.
     // La usa LobbyManager.ServerReturnToLobby cuando termina una partida.
     //

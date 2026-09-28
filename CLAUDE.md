@@ -179,6 +179,10 @@ repartir (solo-cliente) y para hostear una prueba grande sin el editor encima.
 Repo: `.../Proyectos Gustavo/GasTest/GasTest` (la carpeta INTERNA; la de afuera no es el
 repo). Remoto: `https://github.com/Gustavo-FCFM/GasTest.git`, rama `main`.
 
+**Al empezar a trabajar en una máquina, mirar arriba de `PENDIENTES.md`:** si hay una
+sección "★ EN LA MÁQUINA DE CASA" (u otra máquina) con casillas sin marcar, son acciones
+de una sola vez para esa máquina. Hacerlas primero y confirmarlas.
+
 Al cambiar de máquina, sincronizar con **fetch + reset**, no con `pull`:
 
 ```bash

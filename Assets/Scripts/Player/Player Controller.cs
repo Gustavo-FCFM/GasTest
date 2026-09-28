@@ -409,6 +409,10 @@ public class PlayerController : NetworkBehaviour
     // asset porque FishNet no serializa referencias a ScriptableObjects.
     private readonly SyncVar<int> _netClassIndex = new SyncVar<int>(-1);
 
+    // Clase con la que tiene que nacer este personaje cuando lo creó el DESATASCARSE
+    // (ver esa sección): el dueño la equipa al recibirla. -1 = nació normal, por la sala.
+    private readonly SyncVar<int> _netRespawnClassIndex = new SyncVar<int>(-1);
+
     [HideInInspector] public bool isRadialMenuOpen = false;
     private GameplayAbility currentRadialAbility;
 
@@ -502,6 +506,7 @@ public class PlayerController : NetworkBehaviour
         // suscribir (solo estaba el -= en OnStopClient), por eso los demás
         // jugadores nunca veían el cambio de arma del otro al evolucionar.
         _netClassIndex.OnChange += OnNetClassIndexChanged;
+        _netRespawnClassIndex.OnChange += OnNetRespawnClassIndexChanged;
 
         // Seguro anti-errores: si el clon nace sin clase, forzamos la
         // primera clase disponible.
@@ -528,6 +533,9 @@ public class PlayerController : NetworkBehaviour
         if (base.IsOwner)
         {
             LocalPlayer = this;
+
+            // Si este personaje lo creó el desatascarse, nace con la clase de antes.
+            TryEquipRespawnClass();
 
             // Habilitar el input del Input System nuevo solo para el dueño local.
             if (_input != null) _input.InitializeForOwner();
@@ -595,6 +603,7 @@ public class PlayerController : NetworkBehaviour
     {
         base.OnStopClient();
         _netClassIndex.OnChange -= OnNetClassIndexChanged;
+        _netRespawnClassIndex.OnChange -= OnNetRespawnClassIndexChanged;
         if (ASC != null) ASC.OnDeath -= HandlePlayerDeath;
         if (LocalPlayer == this) LocalPlayer = null;
         if (base.IsOwner && _input != null) _input.ShutdownOwner();
@@ -630,6 +639,10 @@ public class PlayerController : NetworkBehaviour
         // Lo primero, porque corre en las copias que NO son del dueño: son las únicas
         // que reciben la locomoción en vez de calcularla (ver "LOCOMOCIÓN EN RED").
         if (!DrivesOwnAnimator) TickRemoteAnimations();
+
+        // El servidor anota hace cuánto que este personaje no se mueve: el desatascarse
+        // solo se acepta si llevas un rato quieto (ver esa sección).
+        if (IsServerInitialized) TrackStillness();
 
         if (!IsOwner) return;
 
@@ -1383,6 +1396,35 @@ public class PlayerController : NetworkBehaviour
     // cuenta (quedarse sin energía, morir). Sin esto el escudo se quedaba "pegado"
     // en el cliente: la animación de mantener seguía y soltar el botón mandaba un
     // fin de algo que ya no existía.
+    // Fin de UNA habilidad concreta (los avisos del servidor dicen cuál). Si hay un
+    // mantenido arriba (el escudo) y lo que terminó es OTRA habilidad, no se toca nada:
+    // lo que está corriendo es el mantenido.
+    //
+    // POR QUÉ: subir el escudo corta el básico que venía corriendo, y ese básico avisa
+    // que terminó. Con el FinishAttack() de siempre, ese aviso borraba _holdAbility: el
+    // dueño creía haber bajado el escudo, el clic izquierdo sostenido volvía a pegar, y
+    // al soltar el clic derecho ya no se le avisaba a nadie — el servidor dejaba el
+    // escudo arriba para siempre. Era el "atacar con el escudo puesto" y el "escudo
+    // eterno" de la prueba de 9.
+    //
+    // 'ended' null = no se sabe cuál (habilidad fuera del registro): con un mantenido
+    // arriba, también se lo respeta; al soltar el botón se baja igual.
+    public void FinishAttack(GameplayAbility ended)
+    {
+        if (_holdAbility != null && !SameAbility(ended, _holdAbility)) return;
+        FinishAttack();
+    }
+
+    private static bool SameAbility(GameplayAbility a, GameplayAbility b)
+    {
+        if (a == null || b == null) return false;
+        GameplayAbility ka = a.SourceTemplate != null ? a.SourceTemplate : a;
+        GameplayAbility kb = b.SourceTemplate != null ? b.SourceTemplate : b;
+        return ka == kb;
+    }
+
+    // Fin de TODO: libera el ataque y baja cualquier mantenido. Para los que cortan desde
+    // afuera (el watchdog, la muerte, los menús, el desatascarse).
     public void FinishAttack()
     {
         isAttacking = false;
@@ -1709,7 +1751,10 @@ public class PlayerController : NetworkBehaviour
     // --- La carga por hacer el rol ---
 
     private void OnDamageEnduredForRole(float damage)
-        => ChargeUltimateForRole(EClassRole.Tank, damage * TankChargePerDamage);
+    {
+        _lastDamagedAt = Time.time;   // para el desatascarse: no se usa en combate
+        ChargeUltimateForRole(EClassRole.Tank, damage * TankChargePerDamage);
+    }
 
     private void OnHealedAllyForRole(AbilitySystemComponent ally, float healed)
         => ChargeUltimateForRole(EClassRole.Support, healed * SupportChargePerHeal);
@@ -2374,98 +2419,185 @@ public class PlayerController : NetworkBehaviour
     // jugador esté apagado. Que es, justamente, uno de los estados de los que hay que
     // poder salir.
     //
-    // Va de lo barato a lo caro: primero lo LOCAL (el modo de input y el estado de
-    // combate, que es la causa que ya encontramos una vez), y después le pide al
-    // SERVIDOR que lo destrabe y lo devuelva a su base.
+    // QUÉ HACE: no intenta arreglar el personaje trabado — le da uno NUEVO, recién
+    // salido del prefab, en su base, con la misma clase. Mientras no sepamos qué es lo
+    // que se traba, cualquier arreglo "en el lugar" es adivinar; un personaje nuevo no
+    // arrastra nada de lo anterior (input, tags, mantenidos, estado de combate).
     //
-    // Además DEJA DICHO qué encontró trabado. Mientras no sepamos por qué pasa, cada
-    // uso del botón es una pista: si el log dice siempre lo mismo, ahí está la causa.
+    // Y ANTES DE REEMPLAZARLO, DEJA DICHO QUÉ ENCONTRÓ TRABADO (en la consola del host y
+    // en la del que lo pidió). Cada uso es una pista: si el log dice siempre lo mismo,
+    // ahí está la causa.
+    //
+    // CONDICIONES (las valida el servidor): un botón que te manda a tu base con la vida
+    // llena y sin estados es un atajo si se puede usar en cualquier momento — con la bolsa
+    // quedabas al lado de la entrega, y aturdido quedabas libre. Por eso solo se acepta si:
+    //   · llevas UnstuckStillSeconds quieto (el atascado real no se está moviendo),
+    //   · no te pegaron en los últimos UnstuckCombatLockSeconds,
+    //   · no tienes un control LEGÍTIMO encima (un aturdido de verdad espera a que se
+    //     le pase; un tag pegado SIN efecto que lo dé sí es el bug, y no frena),
+    //   · no estás muerto,
+    //   · pasó el cooldown (UnstuckCooldownSeconds, por jugador).
+    // Si llevabas la bolsa, se te cae donde estabas (el Objetivo ve que su portador
+    // desapareció y la suelta ahí).
     // =========================================================
+
+    [Header("Desatascarse (botón Unstuck del recuadro de red)")]
+    [Tooltip("Segundos que hay que llevar quieto para que el servidor acepte el pedido.")]
+    public float UnstuckStillSeconds = 5f;
+    [Tooltip("Cuánto te puedes mover (en metros) y seguir contando como quieto.")]
+    public float UnstuckStillRadius = 0.75f;
+    [Tooltip("Si te pegaron hace menos que esto, no se puede usar: no es un escape de peleas.")]
+    public float UnstuckCombatLockSeconds = 5f;
+    [Tooltip("Cada cuánto lo puede usar un mismo jugador.")]
+    public float UnstuckCooldownSeconds = 60f;
+
+    // Cooldown por CONEXIÓN y no por personaje: el personaje se reemplaza al usarlo.
+    private static readonly Dictionary<int, float> _unstuckReadyAt = new Dictionary<int, float>();
+
+    private Vector3 _stillAnchor = new Vector3(float.MaxValue, 0f, 0f);
+    private float   _stillSince;
+    private float   _lastDamagedAt = -999f;
+
+    // Solo servidor: dónde "se quedó" el personaje y desde cuándo.
+    private void TrackStillness()
+    {
+        Vector3 p = transform.position;
+        if ((p - _stillAnchor).sqrMagnitude > UnstuckStillRadius * UnstuckStillRadius)
+        {
+            _stillAnchor = p;
+            _stillSince  = Time.time;
+        }
+    }
 
     public void RequestUnstuck()
     {
-        // 1) Cursor y modo de input, según los menús que de verdad estén abiertos.
-        //    Apply() además limpia los que quedaron registrados y ya fueron destruidos.
+        // Lo local, que es barato y no le da ventaja a nadie: el modo de input según los
+        // menús que de verdad estén abiertos (Apply limpia los ya destruidos) y el
+        // estado de combate local.
         UICursor.Apply();
-
-        // 2) Estado local de combate: si isAttacking quedó pegado, ninguna habilidad
-        //    vuelve a entrar.
         FinishAttack();
 
-        Debug.Log($"[Unstuck] Pedido local. Cursor/input: {UICursor.DescribeHolders()}");
+        Debug.Log($"[Unstuck] Pedido local. Cursor/input: {UICursor.DescribeHolders()} · " +
+                  $"input listo: {(_input != null && _input.IsReady)} · bloqueado: {_inputLocked}");
 
-        // 3) Y la verdad, que es del servidor.
+        // Y la decisión, que es del servidor.
         if (IsSpawned) ServerUnstuck();
     }
 
     [ServerRpc]
     private void ServerUnstuck()
     {
-        List<string> found = new List<string>();
+        string rejection = UnstuckRejection();
+        if (rejection != null)
+        {
+            TargetUnstuckRejected(Owner, rejection);
+            return;
+        }
 
-        // Un mantenido que quedó abierto es el escudo eterno: el dueño puede atacar de
-        // nuevo mientras el servidor sigue creyendo que lo tiene puesto.
+        // --- 1) Diagnóstico: qué estaba trabado (sin tocarlo: el reemplazo lo arregla) ---
+        List<string> found = new List<string>();
         if (ASC != null)
         {
             foreach (GameplayAbility granted in ASC.GrantedAbilities)
-            {
                 if (granted is IHoldAbility hold && hold.IsHolding)
-                {
-                    hold.EndHold();
                     found.Add($"mantenido abierto ({granted.AbilityName})");
-                }
-            }
 
-            // Tags de control pegados: el efecto que los daba ya no está, pero el tag sí.
-            EGameplayTag[] stuckTags =
-            {
-                EGameplayTag.State_Stunned, EGameplayTag.State_Rooted, EGameplayTag.State_Silenced,
-            };
-
-            foreach (EGameplayTag tag in stuckTags)
-            {
-                if (!ASC.HasTag(tag)) continue;
-                ASC.RemoveEffectsWithTag(tag);
-                ASC.RemoveTag(tag);
-                found.Add(tag.ToString());
-            }
+            foreach (EGameplayTag tag in ControlTags)
+                if (ASC.HasTag(tag) && !HasEffectGranting(tag))
+                    found.Add($"{tag} pegado sin efecto");
         }
+        if (isAttacking) found.Add("isAttacking trabado en el servidor");
 
-        if (isAttacking)
-        {
-            FinishAttack();
-            found.Add("isAttacking trabado");
-        }
-
-        // Y de vuelta a su base. Resuelve el caso que ninguna limpieza de estado
-        // arregla: quedarse encajado en la geometría.
-        Transform spawn = MercenariesGameMode.Instance != null && ASC != null
-            ? MercenariesGameMode.Instance.GetTeamSpawnPoint(ASC.TeamID)
-            : null;
-
-        NetworkAbilitySystemComponent netASC = GetComponent<NetworkAbilitySystemComponent>();
-        if (spawn != null && netASC != null)
-        {
-            netASC.ServerTeleportOwnerTo(spawn.position, spawn.forward);
-            found.Add("devuelto a su base");
-        }
-
-        Debug.LogWarning($"[Unstuck] '{name}': " +
+        Debug.LogWarning($"[Unstuck] '{name}' pidió desatascarse. Encontrado: " +
                          (found.Count > 0 ? string.Join(" · ", found)
-                                          : "no se encontró nada trabado del lado del servidor"));
+                                          : "nada trabado del lado del servidor (mirar el log del cliente)"));
 
-        TargetUnstuckDone(Owner);
+        // --- 2) Personaje nuevo, misma clase ---
+        int   classIndex = VisualClassIndex;
+        float ultCharge  = ASC != null && AbilityR != null ? ASC.GetUltimateCharge() : -1f;
+
+        _unstuckReadyAt[Owner.ClientId] = Time.time + UnstuckCooldownSeconds;
+
+        NetworkGameManager gm = FindFirstObjectByType<NetworkGameManager>();
+        PlayerController fresh = gm != null ? gm.ServerRespawnFresh(this) : null;
+        if (fresh == null)
+        {
+            Debug.LogWarning("[Unstuck] No se pudo crear el personaje nuevo (¿sin NetworkGameManager?).");
+            return;
+        }
+
+        // La definitiva se conserva entera: desatascarse no es cambiar de clase.
+        if (ultCharge >= 0f) fresh._carriedUltimateCharge = ultCharge;
+        if (classIndex >= 0) fresh._netRespawnClassIndex.Value = classIndex;
     }
 
-    // El dueño rehace su estado local DESPUÉS del teletransporte, no antes: si no, el
-    // propio movimiento del jugador vuelve a pisar la posición que acaba de poner el
-    // servidor (el transform es client-authoritative).
-    [TargetRpc]
-    private void TargetUnstuckDone(FishNet.Connection.NetworkConnection conn)
+    private static readonly EGameplayTag[] ControlTags =
     {
-        FinishAttack();
-        UICursor.Apply();
-        if (_input != null) _input.InitializeForOwner();
+        EGameplayTag.State_Stunned, EGameplayTag.State_Rooted, EGameplayTag.State_Silenced,
+    };
+
+    // Motivo para NO aceptar el pedido (en inglés: lo lee el jugador), o null si se acepta.
+    [Server]
+    private string UnstuckRejection()
+    {
+        if (ASC == null || Owner == null || !Owner.IsValid) return "Can't do that right now.";
+        if (ASC.HasTag(EGameplayTag.State_Dead)) return "You can't use Unstuck while dead.";
+
+        if (_unstuckReadyAt.TryGetValue(Owner.ClientId, out float readyAt) && Time.time < readyAt)
+            return $"Unstuck is on cooldown ({Mathf.CeilToInt(readyAt - Time.time)} s).";
+
+        if (Time.time - _lastDamagedAt < UnstuckCombatLockSeconds)
+            return "You can't use Unstuck in combat.";
+
+        foreach (EGameplayTag tag in ControlTags)
+            if (ASC.HasTag(tag) && HasEffectGranting(tag))
+                return "Wait until the effect on you wears off.";
+
+        float still = Time.time - _stillSince;
+        if (still < UnstuckStillSeconds)
+            return $"Stand still for {UnstuckStillSeconds:0} s first ({Mathf.CeilToInt(UnstuckStillSeconds - still)} s left).";
+
+        return null;
+    }
+
+    // ¿Hay un efecto ACTIVO que otorgue este tag? Si sí, el control es legítimo; si el
+    // tag está y ningún efecto lo da, quedó pegado (el bug).
+    private bool HasEffectGranting(EGameplayTag tag)
+    {
+        foreach (ActiveGameplayEffect e in ASC.GetActiveEffects())
+            if (e != null && e.Definition != null && e.Definition.GrantedTags != null &&
+                e.Definition.GrantedTags.Contains(tag))
+                return true;
+        return false;
+    }
+
+    [TargetRpc]
+    private void TargetUnstuckRejected(FishNet.Connection.NetworkConnection conn, string reason)
+    {
+        UI_ScreenFeedback.Get().ShowToast(reason, new Color(1f, 0.75f, 0.3f, 1f));
+        Debug.Log($"[Unstuck] Rechazado: {reason}");
+    }
+
+    // El personaje nuevo del desatascarse equipa la clase del anterior apenas le llega.
+    private bool _respawnClassEquipped;
+
+    private void OnNetRespawnClassIndexChanged(int prev, int next, bool asServer)
+    {
+        if (!asServer) TryEquipRespawnClass();
+    }
+
+    private void TryEquipRespawnClass()
+    {
+        if (!IsOwner || _respawnClassEquipped) return;
+
+        int idx = _netRespawnClassIndex.Value;
+        if (idx < 0) return;
+
+        CharacterClassDefinition def = GetClassByIndex(idx);
+        if (def == null) return;
+
+        _respawnClassEquipped = true;
+        EquipCharacterClass(def);
     }
 
     // =========================================================

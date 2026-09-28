@@ -886,7 +886,17 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         if (!ability.CanActivate())
         {
             Debug.Log($"[Server] Habilidad {ability.AbilityName} bloqueada.");
-            NotifyOwnerAbilityRejected();
+            NotifyOwnerAbilityRejected(ability);
+            return;
+        }
+
+        // CON UN MANTENIDO ARRIBA (el escudo) NO ENTRA NINGUNA OTRA. El cliente ya no deja
+        // apretar nada mientras mantiene, pero si su estado se desincroniza (pasó: creía
+        // haber bajado el escudo), acá está la verdad: sin este corte, un Paladín podía
+        // atacar con el clic izquierdo y tener el escudo arriba a la vez, para siempre.
+        if (IsAnotherHoldActive(ability))
+        {
+            NotifyOwnerAbilityRejected(ability);
             return;
         }
 
@@ -1206,10 +1216,30 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // se queda trabado en "atacando" para siempre).
     // =========================================================
 
+    // Todos los avisos de fin llevan CUÁL habilidad terminó (su índice en el registro).
+    // Hace falta por el escudo: mientras se mantiene, puede terminar OTRA habilidad (el
+    // básico que el escudo cortó al subir), y un aviso sin nombre le hacía creer al dueño
+    // que el escudo se había bajado. Ver PlayerController.FinishAttack(GameplayAbility).
     [Server]
-    public void ServerNotifyAbilityEnded()
+    public void ServerNotifyAbilityEnded(GameplayAbility ability = null)
     {
-        ObserversFinishAttack();
+        ObserversFinishAttack(RegistryIndex(ability));
+    }
+
+    private static int RegistryIndex(GameplayAbility ability)
+        => ability != null && GameplayAbilityRegistry.Instance != null
+            ? GameplayAbilityRegistry.Instance.GetIndex(ability) : -1;
+
+    private static GameplayAbility RegistryAbility(int index)
+        => GameplayAbilityRegistry.Instance != null ? GameplayAbilityRegistry.Instance.GetAbility(index) : null;
+
+    // ¿Hay un mantenido (el escudo) arriba que NO sea 'requested'?
+    private bool IsAnotherHoldActive(GameplayAbility requested)
+    {
+        foreach (GameplayAbility granted in _asc.GrantedAbilities)
+            if (granted is IHoldAbility hold && hold.IsHolding && granted != requested)
+                return true;
+        return false;
     }
 
     // El servidor rechazó una activación (no encontró la habilidad, o estaba
@@ -1217,41 +1247,41 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // así que hay que destrabarlo YA — si no, queda bloqueado sin poder usar
     // ninguna habilidad hasta que salte el watchdog de PlayerController.
     [Server]
-    private void NotifyOwnerAbilityRejected()
+    private void NotifyOwnerAbilityRejected(GameplayAbility ability = null)
     {
         // Host: el dueño es este mismo proceso; reseteamos directo (el
         // TargetRpc de abajo se saltea solo con el guard de IsServerInitialized).
         if (IsOwner)
         {
             PlayerController pc = GetComponent<PlayerController>();
-            if (pc != null) pc.FinishAttack();
+            if (pc != null) pc.FinishAttack(ability);
         }
         // Dueño remoto: se lo avisamos solo a su conexión. Un BOT no tiene ninguna, y esto
         // corre al terminar CADA habilidad: sin el corte, FishNet avisaba "Target is not an
         // observer" decenas de veces por partida.
         if (!HasOwnerConnection()) return;
-        TargetFinishAttack(Owner);
+        TargetFinishAttack(Owner, RegistryIndex(ability));
     }
 
     [TargetRpc]
-    private void TargetFinishAttack(NetworkConnection conn)
+    private void TargetFinishAttack(NetworkConnection conn, int abilityIndex)
     {
         // En el host, el dueño ya se reseteó en NotifyOwnerAbilityRejected.
         if (IsServerInitialized) return;
 
         PlayerController pc = GetComponent<PlayerController>();
-        if (pc != null) pc.FinishAttack();
+        if (pc != null) pc.FinishAttack(RegistryAbility(abilityIndex));
     }
 
     [ObserversRpc]
-    private void ObserversFinishAttack()
+    private void ObserversFinishAttack(int abilityIndex)
     {
         // El host ya se resetea directo en GameplayAbility.EndAbility()
         // (server == dueño ahí); esto es sobre todo para el dueño remoto.
         if (IsServerInitialized) return;
 
         PlayerController pc = GetComponent<PlayerController>();
-        if (pc != null) pc.FinishAttack();
+        if (pc != null) pc.FinishAttack(RegistryAbility(abilityIndex));
     }
 
     // =========================================================

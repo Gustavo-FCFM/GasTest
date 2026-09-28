@@ -265,6 +265,18 @@ public class MercTeamBase : MonoBehaviour
         return Mathf.Abs(local.x) <= half.x && Mathf.Abs(local.y) <= half.y && Mathf.Abs(local.z) <= half.z;
     }
 
+    // Como IsInsideSafeRoom, pero solo mirando la PLANTA (sin la altura) y con margen. Lo
+    // usa el seguro de la preparación (MercenariesGameMode.ServerKeepPlayersInBase): ahí
+    // lo que importa es no haber salido por la puerta, y saltar adentro de la sala no
+    // debe contar como "salir".
+    public bool IsInsideSafeRoomFootprint(Vector3 worldPos, float margin = 0f)
+    {
+        Quaternion rot = SafeRoomCenter != null ? SafeRoomCenter.rotation : transform.rotation;
+        Vector3 local  = Quaternion.Inverse(rot) * (worldPos - SafeRoomWorldCenter);
+        Vector3 half   = SafeRoomSize * 0.5f;
+        return Mathf.Abs(local.x) <= half.x + margin && Mathf.Abs(local.z) <= half.z + margin;
+    }
+
     // Punto de aparición siguiente (round-robin, para no encimar a los tres jugadores).
     public Transform GetSpawnPoint()
     {
