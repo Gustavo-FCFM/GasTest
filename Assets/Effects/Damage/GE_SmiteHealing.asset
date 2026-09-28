@@ -26,9 +26,20 @@ MonoBehaviour:
     Type: 0
     Magnitude: 0
     UseAttributeScaling: 1
-    SourceAttribute: 8
+    SourceAttribute: 17
     AttributeCoefficient: 2
     UseTargetHealthScaling: 0
     TargetHealthMode: 0
     TargetHealthCoefficient: 0
+    MinMagnitude: 0
+  IsCrowdControl: 0
+  TargetVFX: {fileID: 0}
+  TargetVFXOffset: {x: 0, y: 0, z: 0}
+  TargetVFXRotation: {x: 0, y: 0, z: 0}
+  TargetVFXScale: {x: 0, y: 0, z: 0}
+  TargetSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
   GrantedTags: 

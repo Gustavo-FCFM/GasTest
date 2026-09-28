@@ -13,16 +13,16 @@ MonoBehaviour:
   m_Name: GA_ClericLightArc
   m_EditorClassIdentifier: 
   AbilityName: Light Arc
-  AbilityIcon: {fileID: 0}
+  AbilityIcon: {fileID: 21300000, guid: 099ce49f838495c4597cd1684135b082, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 45327044be4f41c4d8f5289bc6f9b3be, type: 2}
   CooldownDuration: 0
   UseAttackSpeedAsCooldown: 1
   UltimateChargeAmount: 1
-  ActivationBlockedTags: 
+  ActivationBlockedTags: 01000000
   ActivationRequiredTags: 
   UsableWhileChanneling: 0
-  AnimationClip: {fileID: 3094330708855449807, guid: c2160d1a58a158543817a3f1c504dc91, type: 3}
+  AnimationClip: {fileID: 3094330708855449807, guid: 2c2c84ffdf3b64f4195f0b9a4931e399, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 1
   CastSound:
@@ -44,14 +44,14 @@ MonoBehaviour:
   ProjectilePrefab: {fileID: 406129108226925510, guid: 29b7325ea45914c4bb7592ed1cdc376b, type: 3}
   LaunchForce: 20
   SpawnOffset: {x: 0.3, y: 1.3, z: 0.6}
-  AddSpin: 0
+  AddSpin: 1
   HideWeaponWhileFlying: 0
-  InstantDamageEffect: {fileID: 11400000, guid: 0ad3613c06049a14382d8599397be83a, type: 2}
+  InstantDamageEffect: {fileID: 11400000, guid: 90d13d9d2cb765648a0d7e4619caa0bb, type: 2}
   DurationEffect: {fileID: 0}
   AdditionalEffects: []
   TargetEffects:
-  - {fileID: 11400000, guid: 5333b202eebb70843be7027f3051ea80, type: 2}
-  LifeTime: 0.8
+  - {fileID: 11400000, guid: e020fa4d41da96d43b303363eadf0129, type: 2}
+  LifeTime: 0
   SpawnDelay: 0.3
   MinConvergeDistance: 4
   ImpactVFX: {fileID: 2944396702758532163, guid: e190bf97c041e58448af6b043116cba0, type: 3}

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Class_Cleric
   m_EditorClassIdentifier: 
   ClassName: Cleric
-  ClassIcon: {fileID: 0}
+  ClassIcon: {fileID: 21300000, guid: a68a2430c566aff44a4951c15bd99730, type: 3}
   Description: The healer who fights from range. His light burns enemies and mends
     allies in its path, and everyone he heals takes less damage for a while.
   Role: 3
@@ -38,13 +38,12 @@ MonoBehaviour:
     AmountPerLevel: 1
   - Attribute: 14
     AmountPerLevel: 100
-  - Attribute: 6
-    AmountPerLevel: 50
   AvailableSubclasses: []
-  ClassAnimatorOverride: {fileID: 22100000, guid: 75ec53281b263d24dbe5fee5e2ab9c9e, type: 2}
-  MainHandWeaponPrefab: {fileID: 0}
+  ClassAnimatorOverride: {fileID: 22100000, guid: 64da5fe3f7cb7ea48baff673a078d7f5, type: 2}
+  MainHandWeaponPrefab: {fileID: 6409903527971818013, guid: 7bea6d1a74f72294d8df22a0cdea31aa, type: 3}
   OffHandWeaponPrefab: {fileID: 0}
   MainHandRotationOffset: {x: 0, y: 0, z: 0}
   MainHandPositionOffset: {x: 0, y: 0, z: 0}
   OffHandRotationOffset: {x: 0, y: 0, z: 0}
   OffHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandPose: {fileID: 0}

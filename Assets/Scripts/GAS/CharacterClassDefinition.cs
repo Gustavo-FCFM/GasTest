@@ -105,6 +105,23 @@ public class CharacterClassDefinition : ScriptableObject
 
     [Tooltip("Desplazamiento extra del arma secundaria respecto del hueso, en espacio local.")]
     public Vector3 OffHandPositionOffset;
+
+    // ============================================================
+    // POSE DE LA MANO SECUNDARIA
+    //
+    // Una pose fija para el brazo IZQUIERDO mientras se juega la clase: el libro del
+    // Clérigo (HumanM@ObjectBook01_L, en Kevin Iglesias > Masked Poses), un farol, un
+    // escudo sostenido de otra forma... Va en la capa OffHandPose del Animator, que
+    // tiene la máscara del brazo izquierdo: el resto del cuerpo corre, salta y ataca
+    // igual que siempre, y ese brazo se queda sosteniendo el objeto.
+    //
+    // Vacío = la capa queda en peso 0 y el brazo se anima normal (todas las clases de
+    // antes). Si el Animator no tiene la capa (falta correr la herramienta), no hace nada.
+    // ============================================================
+
+    [Tooltip("Pose del brazo izquierdo mientras se juega la clase (ej. el libro del Clérigo: " +
+             "HumanM@ObjectBook01_L). Vacío = el brazo se anima normal.")]
+    public AnimationClip OffHandPose;
 }
 
 // Cuánto sube UN atributo por cada nivel que gana el personaje. La lista

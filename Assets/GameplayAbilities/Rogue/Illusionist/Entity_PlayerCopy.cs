@@ -103,8 +103,12 @@ public class Entity_PlayerCopy : NetworkBehaviour
         CharacterClassDefinition cls = localPc.ResolveClassByIndex(idx);
         if (cls == null) return;                               // índice inválido: sin arma (degradación silenciosa)
 
+        // Mismo armado que el jugador, así la copia de un Clérigo también sostiene el libro.
         if (WalkAnimator != null && cls.ClassAnimatorOverride != null)
-            WalkAnimator.runtimeAnimatorController = cls.ClassAnimatorOverride;
+        {
+            WalkAnimator.runtimeAnimatorController = PlayerController.BuildClassAnimator(cls, cls.ClassAnimatorOverride);
+            PlayerController.ApplyOffHandPoseWeight(WalkAnimator, cls);
+        }
 
         EquipWeapon(cls.MainHandWeaponPrefab, FindDeep(transform, MainHandSocketName),
                     cls.MainHandPositionOffset, cls.MainHandRotationOffset);

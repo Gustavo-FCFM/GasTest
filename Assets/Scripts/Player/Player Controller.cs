@@ -2293,27 +2293,17 @@ public class PlayerController : NetworkBehaviour
     {
         if (characterAnimator == null) return;
 
-        RuntimeAnimatorController source = cls != null && cls.ClassAnimatorOverride != null
-            ? cls.ClassAnimatorOverride
-            : characterAnimator.runtimeAnimatorController;
-        if (source == null) return;
-
-        // Separamos el controller base de los overrides que traiga la clase.
-        RuntimeAnimatorController baseController = source;
-        var classOverrides = new List<KeyValuePair<AnimationClip, AnimationClip>>();
-
-        if (source is AnimatorOverrideController sourceOverride)
-        {
-            baseController = sourceOverride.runtimeAnimatorController;
-            sourceOverride.GetOverrides(classOverrides);
-        }
-        if (baseController == null) return;
-
-        _runtimeAnimator = new AnimatorOverrideController(baseController);
-        if (classOverrides.Count > 0) _runtimeAnimator.ApplyOverrides(classOverrides);
+        AnimatorOverrideController built = BuildClassAnimator(cls, characterAnimator.runtimeAnimatorController);
+        if (built == null) return;
+        _runtimeAnimator = built;
 
         _currentActionClip = null; // la ranura vuelve al placeholder
         characterAnimator.runtimeAnimatorController = _runtimeAnimator;
+
+        // Cambiar de controller devuelve las capas a su peso por defecto: la pose de la
+        // mano secundaria se prende recién ahora (ver OffHandPose en la clase).
+        _offHandPoseClass = cls;
+        ApplyOffHandPoseWeight(characterAnimator, cls);
 
         // ¿El controller base tiene realmente la ranura de acción? Si el estado
         // genérico todavía no se creó en el Animator, el esquema nuevo no puede
@@ -2373,6 +2363,9 @@ public class PlayerController : NetworkBehaviour
 
         if (characterAnimator == null) return;
 
+        // El brazo del libro cae con el resto del cuerpo, no se queda sosteniéndolo.
+        ApplyOffHandPoseWeight(characterAnimator, _offHandPoseClass, off: true);
+
         if (!string.IsNullOrEmpty(_deathSlotKey) && DeathClips != null && DeathClips.Length > 0)
         {
             AnimationClip clip = DeathClips[Random.Range(0, DeathClips.Length)];
@@ -2387,6 +2380,7 @@ public class PlayerController : NetworkBehaviour
         if (_orbitCam != null) _orbitCam.FollowOverride = null;
         if (_ragdoll != null && _ragdoll.IsActive) _ragdoll.Deactivate();
         if (characterAnimator != null && _hasDeadParam) characterAnimator.SetBool(DeadParam, false);
+        ApplyOffHandPoseWeight(characterAnimator, _offHandPoseClass);
     }
 
     // El aturdido se lee del tag en cada copia: los tags viajan sincronizados, así que
@@ -2709,6 +2703,70 @@ public class PlayerController : NetworkBehaviour
     // nombre exacto: el indexador del AnimatorOverrideController sí las distingue y,
     // si no coincide al carácter, la asignación no hace nada EN SILENCIO (la
     // habilidad se quedaría con el clip placeholder).
+    // ---------------------------------------------------------
+    // POSE DE LA MANO SECUNDARIA (el libro del Clérigo)
+    //
+    // Una capa "OffHandPose" al final del Animator, con la máscara del brazo izquierdo
+    // y un solo estado con el clip PLACEHOLDER_OffHandPose. Si la clase trae una pose,
+    // se pone en esa ranura y la capa va a peso 1; si no, a peso 0 y el brazo se anima
+    // normal. Como es la ÚLTIMA capa, el brazo sigue sosteniendo el libro también
+    // mientras UpperBody ataca con la otra mano. La capa y la ranura las crea
+    // Mercenarios > Instalar la pose de la mano secundaria.
+    // ---------------------------------------------------------
+    public const string OffHandPoseSlotName  = "PLACEHOLDER_OffHandPose";
+    public const string OffHandPoseLayerName = "OffHandPose";
+
+    // La clase con la que se armó el Animator: al revivir se vuelve a prender su pose.
+    private CharacterClassDefinition _offHandPoseClass;
+
+    // Arma el controller de runtime de una clase: parte del controller BASE, le aplica
+    // los overrides de la clase y pone la pose de la mano secundaria. Lo usan el
+    // jugador y las Copias exactas del Ilusionista, así se ven igual.
+    public static AnimatorOverrideController BuildClassAnimator(CharacterClassDefinition cls,
+                                                                RuntimeAnimatorController fallback)
+    {
+        RuntimeAnimatorController source = cls != null && cls.ClassAnimatorOverride != null
+            ? cls.ClassAnimatorOverride
+            : fallback;
+        if (source == null) return null;
+
+        // Separamos el controller base de los overrides que traiga la clase.
+        RuntimeAnimatorController baseController = source;
+        var classOverrides = new List<KeyValuePair<AnimationClip, AnimationClip>>();
+
+        if (source is AnimatorOverrideController sourceOverride)
+        {
+            baseController = sourceOverride.runtimeAnimatorController;
+            sourceOverride.GetOverrides(classOverrides);
+        }
+        if (baseController == null) return null;
+
+        var built = new AnimatorOverrideController(baseController);
+        if (classOverrides.Count > 0) built.ApplyOverrides(classOverrides);
+
+        if (cls != null && cls.OffHandPose != null)
+        {
+            var slots = new List<KeyValuePair<AnimationClip, AnimationClip>>();
+            built.GetOverrides(slots);
+            string poseKey = ResolveSlotKey(slots, OffHandPoseSlotName);
+            if (poseKey != null) built[poseKey] = cls.OffHandPose;
+        }
+        return built;
+    }
+
+    // Prende la capa de la pose si la clase trae una, y la apaga si no (o si 'off').
+    // Sin la capa en el Animator no hace nada.
+    public static void ApplyOffHandPoseWeight(Animator animator, CharacterClassDefinition cls, bool off = false)
+    {
+        if (animator == null || animator.runtimeAnimatorController == null) return;
+
+        int layer = animator.GetLayerIndex(OffHandPoseLayerName);
+        if (layer < 0) return;
+
+        bool on = !off && cls != null && cls.OffHandPose != null;
+        animator.SetLayerWeight(layer, on ? 1f : 0f);
+    }
+
     private static string ResolveSlotKey(List<KeyValuePair<AnimationClip, AnimationClip>> slots, string slotName)
     {
         if (string.IsNullOrEmpty(slotName)) return null;

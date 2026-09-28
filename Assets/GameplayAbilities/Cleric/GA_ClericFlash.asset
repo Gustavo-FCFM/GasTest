@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: GA_ClericFlash
   m_EditorClassIdentifier: 
   AbilityName: Flash
-  AbilityIcon: {fileID: 0}
+  AbilityIcon: {fileID: 21300000, guid: f696e7386d0b95741905340ea306c976, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 10f0981bf286ed844b33e0f4b4b974e3, type: 2}
   CooldownDuration: 0
@@ -50,5 +50,9 @@ MonoBehaviour:
     m_Bits: 4294967167
   BodyRadius: 0.4
   BodyHeight: 1.8
+  WalkableNormalY: 0.6
+  LedgeSearchUp: 3
+  FloorSearchDown: 25
   BackoffStep: 0.5
+  MaxDrop: 4
   FlashVFX: {fileID: 0}
