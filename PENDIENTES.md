@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 28 de septiembre de 2026
+# Pendientes — actualizado el 29 de septiembre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -40,6 +40,9 @@ rm -rf "Assets/FishNet" "Assets/FishNet.meta" "Assets/TextMesh Pro/Examples & Ex
 ```
 
 - [ ] Hecho en la máquina de casa (el trabajo ya lo hizo esta máquina el 28).
+      **29 de septiembre: a medias.** `TextMesh Pro/Examples & Extras` ya no está;
+      `Assets/FishNet` sigue (solo `.csproj`/`.sln` viejos y sus `.meta`, ignorados por git).
+      Falta borrar esa carpeta con Unity cerrado.
 
 ---
 
@@ -90,8 +93,10 @@ En orden de lo que más mueve la demo:
    - [ ] El `FlashVFX` del Destello.
    - [ ] Después: las tres subclases (Vida, Luz, Orden), con Resurrección y Revelar
          invisibles como sistemas nuevos.
-2. **El mapa del cementerio** (sección 7): el greybox de un sector es trabajo de editor
-   tuyo, 1–2 semanas. Se puede hacer en paralelo con las clases.
+2. **El mapa del cementerio — GREYBOX ARMADO (29 de septiembre), falta jugarlo.** Escena
+   nueva `Scenes/Mercenaries_Graveyard.unity` (copia de la del modo, con sala, red y menús;
+   la vieja no se tocó). Ya la estás editando a mano. Detalle, rutas
+   medidas y lo que falta en la sección 7.
 3. **Sonido**: el sistema está; faltan los clips (y volver a prender la sección de
    sonido de Ajustes).
 4. **Animaciones que se ven raras** (sección 5).
@@ -1538,15 +1543,76 @@ marcando las rutas a cada atrio (como guían a las almas a casa), velas como luz
 campanas sonando cuando aparece el Objetivo (cuando haya sonido).
 
 **Cómo construirlo:**
-- [ ] Greybox de UN sector con cubos (panteón, atrio, laberinto, media torre, tramo de
-      catacumba), hacerlo prefab y rotarlo 3 veces
-- [ ] NavMesh: rampas y escalones de lápidas, nada de escaleras de mano (no hay trepar)
-- [ ] La fosa con un **NavMesh Link con Bidirectional apagado** (los bots solo bajan)
-- [ ] Subir `MercArenaBounds.CeilingHeight` a ~25 m
-- [ ] Mover spawns, campamentos (fantasmas en tumbas, magos en torres, jefe en la
-      capilla), botiquines y el `ObjectiveSpawnPoint` a la cripta
+- [x] Greybox de UN sector (panteón, atrio, laberinto, torre, catacumbas, capilla y
+      cripta), prefab `Prefabs/Map/Graveyard_Sector` rotado 3 veces (29 de septiembre)
+- [x] NavMesh: rampas macizas y escalones de lápidas, nada de escaleras de mano
+- [x] La fosa con un **NavMesh Link de un solo sentido** (los bots solo bajan), y otro
+      para bajar del techo de nichos al pre-atrio
+- [x] `MercArenaBounds.CeilingHeight` a 25 m, y tapas invisibles hasta 26 m sobre todas
+      las paredes de afuera (el salto del Bárbaro las pasaba)
+- [x] Spawns, campamentos (jefe en la capilla, magos arriba de cada torre, fantasmas en
+      el campo de tumbas y en la explanada), botiquines y `ObjectiveSpawnPoint` en la cripta
+- [ ] **Abrir la escena en el editor, darle Play y recorrerla** (ver abajo qué mirar)
 - [ ] Probar con bots cuánto tardan en volver por cada ruta, y jugarlo, ANTES de decorar
 - [ ] Decoración al final: nichos, cruces, velas, pétalos
+
+### Lo que quedó armado (29 de septiembre)
+
+**Después lo retocaste a mano** (29 de septiembre): sacaste algunos muros que no te
+gustaron y agrandaste la aparición de enemigos del centro. Te gustó como quedó; desde
+acá se edita solo a mano. Las rutas de abajo se midieron ANTES de esos cambios: con
+menos muros probablemente bajaron.
+
+La armó `Scripts/Editor/MercGraveyardBuilder.cs`, una sola vez: copió `Mercenaries_Gamemode`
+a **`Mercenaries_Graveyard`** (con sala, red, HUD, menús y espectador), armó el sector
+como prefab, reusó las bases, los 9 campamentos (más uno), los 9 botiquines y el punto
+del Objetivo, y horneó el NavMesh. **Desde ahí se edita a mano**: la herramienta se
+borró el 29 de septiembre, sin commitear (volver a correrla pisaba los cambios): las
+mallas de los pisos con hoyos quedan como están en `Art/Models/Graveyard`.
+
+- **Escena en Build Settings DESACTIVADA**: la build sigue abriendo el mapa viejo. Para
+  probar el cementerio en una build, ponerla primera y activarla.
+- **Pisos con hoyos**: el piso de cada sector es una malla en anillos (coordenadas
+  polares), así los hoyos de las escaleras cortan exacto y el sector gira sin costuras.
+  Todo hoyo cae sobre algo caminable (la cripta o una catacumba).
+- **La torre** mide 12×12: con 10×10 los tramos de escalera empalmaban de costado con el
+  descanso y el NavMesh se comía la unión (los bots no subían).
+- La capilla **no tiene techo** (se ve desde el menú y el espectador). Sus puertas: una
+  ancha hacia la avenida y una angosta hacia cada torre. La rampa de la cripta sale
+  hacia la torre, no hacia la base.
+- La cámara del menú y la del espectador arrancan más alto y más lejos.
+- **18 botiquines** (29 de septiembre): los 9 del piso, más uno arriba de cada torre y
+  dos en el techo de nichos junto al muro de cada sector (a los dos lados de la avenida).
+  Se pusieron sobre la escena ya editada, sin rehacer el mapa. Para sumar o sacar más,
+  a mano (duplicar uno: Ctrl+D y moverlo; FishNet le da su identificador de red solo).
+
+**Rutas medidas con el NavMesh** (a 4.5 m/s, la velocidad cargando la bolsa; el informe
+lo deja el modo batch en `routes.txt`):
+
+| Ruta | Distancia | Cargando |
+|---|---|---|
+| Cripta → entrega, lo más corto | 76 m | ~17 s |
+| A pie: capilla y avenida | 80 m | ~18 s |
+| Catacumba: torre y pasillos | 100 m | ~22 s |
+| Techos: torre, puente y techos de nichos | 137 m | ~30 s |
+| Base → cripta caminando | 90 m | (sin bolsa, ~15 s) |
+| Base → cripta por la fosa | 106 m | (sin bolsa, ~18 s) |
+
+Tres cosas para decidir jugándolo:
+- [ ] **La ruta a pie queda en ~18 s**, un poco debajo de los 20–25 s del diseño. Palanca
+      barata: cerrar la puerta ancha de la capilla (salir solo por las de las torres
+      suma ~15 m).
+- [ ] **La fosa NO es más rápida que caminar** (106 m contra 90): las dos van derecho del
+      atrio al centro, así que la distancia es casi la misma. Hoy su ventaja es ir
+      tapado, sin pasar por el laberinto ni por el jefe. Si tiene que ser un atajo, hay
+      que alargar la de arriba (lo de la capilla ayuda).
+- [ ] **La ruta por los techos es la más lenta** (~30 s): subir la torre cuesta. Es la
+      alta y expuesta; ver si alguien la usa.
+
+**Qué mirar al recorrerla:** que la cámara no se meta en el techo de las catacumbas,
+que los magos no se caigan de la torre, que el jefe tenga lugar en la capilla, que desde
+el pre-atrio se lean las dos entradas al atrio, y que el muñeco de práctica
+(`HumanDummy_F Red`, movido a la explanada del equipo 1) no estorbe.
 
 ---
 
@@ -1614,8 +1680,12 @@ componente roto ni desactivado en los prefabs, ningún tipo huérfano.
 
 **Lo que se dejó a propósito:**
 - Las herramientas del menú `Mercenarios ▸` (paredes, espectador, menú principal,
-  botiquines, audio, registros): son de mantenimiento, y van a hacer falta para montar
-  el mapa del cementerio.
+  botiquines, audio, registros). **Actualización del 29 de septiembre:** el cementerio se
+  armó copiando la escena, así que no hicieron falta. Se borraron las de paredes,
+  espectador, menú principal y botiquines (ya aplicadas en las dos escenas), y la que
+  armó el cementerio. Quedan
+  registros (se usa siempre) y audio (**todavía no se corrió**: falta crear
+  `AudioLibrary` y el `AudioListener`, en las dos escenas).
 - El `Rigidbody` cinemático de la raíz del jugador: sirve para los triggers, y el
   ragdoll ya lo excluye.
 - `ASC.GetTagCount`: nadie lo usa hoy, pero es el accesor natural de los tags con

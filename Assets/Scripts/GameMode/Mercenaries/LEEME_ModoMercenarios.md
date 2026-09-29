@@ -165,6 +165,17 @@ que cumplieron. Si algún día necesitás **regenerar la arena** —por ejemplo 
 rejas, o para un segundo mapa— hay que restaurarlas primero; el comando y su trampa están
 en `PENDIENTES.md`.
 
+## El segundo mapa: el Cementerio (greybox)
+
+`Assets/Scenes/Mercenaries_Graveyard.unity` es el mapa para la demo de diciembre, en
+cubos grises. Es una **copia** de esta escena con otro mapa, así que trae la sala, la red,
+el HUD y los menús sin cablear nada; esta escena no se tocó. Tiene cripta con el Objetivo
+(−6 m), capilla con el jefe, explanada, laberinto de nichos, tres torres campanario,
+catacumbas y la fosa de bajada al costado de cada atrio. Lo arma
+una herramienta, una sola vez (desde ahí se edita a mano): un sector de 120° como
+prefab (`Prefabs/Map/Graveyard_Sector`), girado tres veces. Las rutas
+medidas y lo que falta están en `PENDIENTES.md`, sección 7.
+
 ## La sala de espera
 
 `LobbyManager` (en `Scripts/Network/`) es la sala compartida: una `SyncList` con autoridad
@@ -259,9 +270,9 @@ Todo vive en `Scripts/Settings/`:
   `UI_SettingsPanel.GetOrCreate().Open()` desde cualquier lado; si hay uno en la escena
   (para tocarle colores en el Inspector) lo usa, si no lo crea. ESC lo cierra y guarda.
 
-Lo instala **`Mercenarios ▸ Instalar el menú principal en la arena`** (agrega
-`UI_MainMenu`, `MenuOrbitCamera` en la cámara de la sala y un `UI_SettingsPanel`). Se
-puede correr las veces que haga falta.
+Ya está instalado en las dos escenas: `UI_MainMenu`, `MenuOrbitCamera` en la cámara de
+la sala y un `UI_SettingsPanel`. (La herramienta que lo instalaba se borró el 29 de
+septiembre; para una escena nueva, copiar una de las dos.)
 
 Las dos cámaras (`ThirdPersonOrbitCam` y `SpectatorCamera`) multiplican su sensibilidad
 por la de los ajustes y respetan la inversión del eje Y.

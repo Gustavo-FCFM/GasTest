@@ -76,7 +76,7 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
 |---|---|
 | `Assets/Art/` | Modelos, materiales (`Materials/Arena` es la arena), animaciones (los AOC por clase), VFX, e `Icons/` (`Classes/` y `Abilities/` por clase). |
 | `Assets/Audio/` | Los clips: `Sfx/` y `Music/`. La biblioteca que los referencia está en `Resources/AudioLibrary`. |
-| `Assets/Prefabs/` | Todos los prefabs: `Player/` (jugador y su cámara), `Enemies/`, `Objective/`, `Projectiles/`, `Summons/`, `UI/`. |
+| `Assets/Prefabs/` | Todos los prefabs: `Player/` (jugador y su cámara), `Enemies/`, `Objective/`, `Projectiles/`, `Summons/`, `UI/`, `Map/` (el sector del cementerio). |
 | `Assets/Attributes/` | Clases jugables (`Class_*.asset`) y stats (`ASDef_*`), por clase; `Enemies/` y `Summons/` para los NPCs. |
 | `Assets/Effects/` | Los `GE_*`, por tipo (Damage, Buffs, CC, Debuffs, Cooldowns). |
 | `Assets/GameplayAbilities/` | Los `GA_*` por clase, **con sus scripts `GA_*.cs` al lado** — son contenido. `Enemies/` para las de los NPCs. |
@@ -98,6 +98,11 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
 - `Assets/Scenes/Test_Network.unity` — pruebas rápidas de clases y habilidades.
 - `Assets/Scenes/Mercenaries_Gamemode.unity` — **el modo de juego**, la arena 3c3c3. Es también la
   pantalla de inicio: el menú principal es un panel sobre la arena, no otra escena.
+- `Assets/Scenes/Mercenaries_Graveyard.unity` — **el mapa nuevo** (El Cementerio de los Tres
+  Panteones), en greybox. Es una copia de la del modo con otro mapa: trae la sala, la red y
+  los menús. Tres instancias de `Prefabs/Map/Graveyard_Sector` giradas 120°: lo que se
+  cambie en el prefab cambia en los tres sectores. La generó una herramienta una sola
+  vez; desde ahí se edita a mano (Gustavo ya le sacó muros y agrandó el centro).
 
 ---
 
@@ -146,7 +151,15 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   escena: no se spawnea (pasó con los botiquines, aparecía uno solo). Al terminar de
   crearlos hay que llamar `NetworkObject.CreateSceneId(Scene, force, out changed)` por
   reflexión — es lo mismo que corre *Tools ▸ Fish-Networking ▸ Utility ▸ Reserialize
-  NetworkObjects*. Ejemplo en `Editor/MercHealthPackSetup.AssignSceneIds`.
+  NetworkObjects*:
+
+  ```csharp
+  var m = typeof(NetworkObject).GetMethod("CreateSceneId",
+      BindingFlags.Static | BindingFlags.NonPublic, null,
+      new[] { typeof(Scene), typeof(bool), typeof(int).MakeByRefType() }, null);
+  object[] args = { scene, false, 0 };   // true = rehacer TODOS (escena copiada de otra)
+  m.Invoke(null, args);                  // args[2] = cuántos cambió
+  ```
 - **Una habilidad interrumpible se decide en DOS lados.** El servidor la corta al activar
   otra (`CancelSerial`), pero antes el cliente tiene que dejar leer el botón nuevo mientras
   hay una corriendo (`_attackInterruptible` / `_runningSlot` en
