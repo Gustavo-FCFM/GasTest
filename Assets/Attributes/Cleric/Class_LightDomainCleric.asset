@@ -20,12 +20,12 @@ MonoBehaviour:
   Role: 3
   BaseAttributes: {fileID: 11400000, guid: 7b298bccd92168e4192fcc934d546b93, type: 2}
   Abilities:
-  - InputSlot: 6
-    Ability: {fileID: 11400000, guid: 6f7b2fa117308d647a0c7472e470bf7f, type: 2}
   - InputSlot: 1
     Ability: {fileID: 11400000, guid: d5a910e46e5e2194bb17df6484ea79e5, type: 2}
   - InputSlot: 2
     Ability: {fileID: 11400000, guid: 39cdd5b8fa13d3948b6dd52051987cd3, type: 2}
+  - InputSlot: 6
+    Ability: {fileID: 11400000, guid: 6f7b2fa117308d647a0c7472e470bf7f, type: 2}
   - InputSlot: 3
     Ability: {fileID: 11400000, guid: 7fa4a9d0af9c1854f8a52c6c44b0dede, type: 2}
   - InputSlot: 4
