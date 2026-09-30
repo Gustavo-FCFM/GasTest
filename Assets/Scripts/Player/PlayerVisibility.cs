@@ -103,7 +103,8 @@ public class PlayerVisibility : MonoBehaviour
         if (localASC == null) return EView.Normal;
 
         if (ReferenceEquals(localASC, _asc)) return EView.Ghost;          // soy yo
-        if (localASC.IsEnemyOf(_asc))        return EView.Hidden;         // me ve un enemigo
+        if (localASC.IsEnemyOf(_asc))                                     // me ve un enemigo
+            return _asc.IsHiddenFromEnemies ? EView.Hidden : EView.Normal; // (salvo que esté revelado)
 
         return GhostForAllies ? EView.Ghost : EView.Normal;               // un aliado
     }

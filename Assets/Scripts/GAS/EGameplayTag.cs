@@ -96,4 +96,6 @@ public enum EGameplayTag
     Status_Channeling,         // Está en medio de una habilidad canalizada (el molinete del bárbaro). Mientras dure, CanActivate bloquea TODA otra habilidad salvo las marcadas con UsableWhileChanneling. Lo pone y lo saca GA_ContinuousAoE con BlockOtherAbilities
 
     State_Disarmed,            // Desarmado: no puede usar el ataque BÁSICO (clic izquierdo), sí sus habilidades. Lo bloquea GameplayAbility.CanActivate con IsBasicAttack. Lo da la Zona de verdad del Clérigo del Orden; lo va a reusar el Guerrero
+
+    State_AlwaysVisible,       // Revelado: aunque tenga Status_Invisible, los ENEMIGOS lo ven igual (modelo, barra de vida, números). Ver ASC.IsHiddenFromEnemies. Lo da el Faro de esperanza del Clérigo de la Luz a los enemigos dentro de su aura
 }

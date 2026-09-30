@@ -358,7 +358,7 @@ public class MercEnemyAI : NetworkBehaviour
             if (asc.GetComponent<PlayerController>() == null) continue;   // solo jugadores
             if (asc.HasTag(EGameplayTag.State_Dead)) continue;
             if (asc.HasTag(EGameplayTag.Status_SafeZone)) continue;       // en su base no se los toca
-            if (asc.HasTag(EGameplayTag.Status_Invisible)) continue;
+            if (asc.IsHiddenFromEnemies) continue;   // invisible y sin revelar
 
             // Correa: si para alcanzarlo tendría que irse lejos de su puesto, lo ignora.
             if (Vector3.Distance(_homePosition, asc.transform.position) > LeashRadius) continue;

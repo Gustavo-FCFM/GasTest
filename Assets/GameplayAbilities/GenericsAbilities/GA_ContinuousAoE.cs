@@ -76,8 +76,9 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
     public List<GameplayEffect> EffectsToApply;
 
     [Tooltip("Efectos que reciben SOLO los aliados (y el lanzador) que están en la zona, " +
-             "además de los de arriba. Sirve para una zona que afecta a todos pero cura a los " +
-             "propios (Zona de verdad). Vacío = nada extra.")]
+             "además de los de arriba. Corre aparte de Targets: sirve para una zona que afecta a todos " +
+             "pero cura a los propios (Zona de verdad) y para una que daña enemigos y cura aliados " +
+             "(Luz del amanecer). Vacío = nada extra.")]
     public List<GameplayEffect> AllyEffects;
 
     [Header("Sincronización")]
@@ -228,16 +229,18 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
                 else if (Targets == EAoETarget.Allies  && IsAlly(targetASC))  isValidTarget = true;
                 else if (Targets == EAoETarget.All)                           isValidTarget = true;
 
+                // Lo que es SOLO para los aliados, se apunte la zona a quien se apunte: la
+                // Zona de verdad (Targets All) silencia a los tres equipos y cura solo a los
+                // suyos; la Luz del amanecer (Targets Enemies) quema a los enemigos y cura a
+                // los aliados que estén adentro.
+                if (AllyEffects != null && AllyEffects.Count > 0 && IsAlly(targetASC))
+                    foreach (var effect in AllyEffects)
+                        if (effect != null) targetASC.ApplyGameplayEffect(effect, OwnerASC);
+
                 if (isValidTarget)
                 {
                     if (EffectsToApply != null)
                         foreach (var effect in EffectsToApply)
-                            if (effect != null) targetASC.ApplyGameplayEffect(effect, OwnerASC);
-
-                    // Lo que es SOLO para los aliados, aunque la zona afecte a todos (la
-                    // Zona de verdad silencia a los tres equipos y cura solo a los suyos).
-                    if (AllyEffects != null && AllyEffects.Count > 0 && IsAlly(targetASC))
-                        foreach (var effect in AllyEffects)
                             if (effect != null) targetASC.ApplyGameplayEffect(effect, OwnerASC);
 
                     OnTargetHit(targetASC);

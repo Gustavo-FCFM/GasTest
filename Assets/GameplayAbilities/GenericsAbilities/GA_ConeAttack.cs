@@ -151,6 +151,7 @@ public class GA_ConeAttack : GameplayAbility
             {
                 ApplyEffectsTo(AdditionalEffects, targetASC);
                 ChargeUltimate();
+                OnEnemyHit(targetASC);
             }
 
             targetsHit.Add(targetASC);
@@ -164,6 +165,10 @@ public class GA_ConeAttack : GameplayAbility
             else PlayImpactVFX(hitPos);
         }
     }
+
+    // Gancho para que una habilidad concreta reaccione a cada ENEMIGO alcanzado (la
+    // Quemadura santa del Clérigo de la Luz lo marca). Corre en el servidor.
+    protected virtual void OnEnemyHit(AbilitySystemComponent enemy) { }
 
     // Instancia HitVFX en la posición de impacto. La llama cada peer con
     // su propia copia (ver ServerPlayAbilityVFX).

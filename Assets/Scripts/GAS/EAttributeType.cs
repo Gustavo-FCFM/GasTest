@@ -49,5 +49,10 @@ public enum EAttributeType
     // Tiene tope (ver AbilitySystemComponent.MaxCCResistance): por más que se apilen
     // fuentes nunca llega a inmunidad total — para eso está Status_Unstoppable, que
     // es explícito.
-    CCResistance
+    CCResistance,
+
+    // % EXTRA de curación que RECIBE (0.15 = las curaciones le rinden un 15 % más). Lo
+    // aplica ExecuteInstantEffect a toda curación que llegue por un efecto. Lo da el Faro de
+    // esperanza del Clérigo de la Luz a los aliados dentro de su aura.
+    HealingReceived
 }

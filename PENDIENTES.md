@@ -149,14 +149,45 @@ En orden de lo que más mueve la demo:
          Zona nadie puede atacar (tampoco el Clérigo ni sus aliados) y los aliados se
          curan; la entrega tarda 6 s.
 
-   **Lo que sigue: Dominio de la luz.** Hacen falta sus números.
+   **Dominio de la luz — HECHO (30 de septiembre, herramienta corrida y funcionando),
+   FALTA PROBAR.** Idea de Gustavo: sus hechizos pasan de instantáneos a CON EL TIEMPO. Los
+   números que no vinieron los puso Claude (marcados ⚙).
 
-   | Subclase · habilidad | Qué ya hay | Qué falta |
+   | Ranura | Habilidad | Pieza |
    |---|---|---|
-   | **Luz** · hechizos de fuego | Efectos periódicos; la Bendición ya cuenta los ticks | Solo assets: versiones con el tiempo del arco, la curación y la Luz guía |
-   | **Luz** · Luz del amanecer | Zonas al piso (`GroundTargetAbility`, `GA_ContinuousAoE`) | Que la misma zona dañe enemigos y cure aliados, si hoy no lo hace |
-   | **Luz** · Faro de esperanza | El aura por anillos del Paladín; `IHealModifier` para curaciones salientes | "Más curación recibida" (atributo nuevo, AL FINAL del enum) y **revelar invisibles** (sistema nuevo, sobre `PlayerVisibility`) |
-   | **Luz** · Quemadura santa | `GA_ConeAttack`, efectos con el tiempo, y el Enemigo jurado (cura a quien golpea al marcado) | Juntar esas piezas |
+   | Los GE | Quemadura: 1 × daño mágico cada 1 s por 5 s. Curación: 2 × daño mágico cada 1 s por 5 s. Refresh: reaplicarlos renueva la duración SIN cortar el ritmo de 1 s (Refresh solo toca la duración, el tick sigue su cuenta), así que pegar más seguido no suma ticks | `GE_RadiantBurn`, `GE_RadiantHeal` |
+   | Clic izq. | El combo, con un arco que quema a los enemigos y cura con el tiempo a los aliados | `GA_RadiantStaffCombo` → `GA_RadiantLightArc` |
+   | Clic der. | Healing Word que cura con el tiempo. Ojo: gastar dos cargas seguidas en el mismo aliado solo renueva la curación, no la suma | `GA_RadiantHealingWord` |
+   | Q | Guiding Bolt que quema (conserva su marca Bane) | `GA_RadiantGuidingBolt` |
+   | E | Luz del amanecer: zona que cada 1 s quema a los enemigos y cura a los aliados que están adentro. ⚙ 6 m, 4 s, a 15 m | `GA_DawnLight` (`GA_ContinuousAoE`; `AllyEffects` ahora corre aparte de `Targets`) |
+   | Pasiva extra | Faro de esperanza, cada 1 s. Aliados (y él): +15 % de curación recibida y 0.5 × daño mágico de curación. Enemigos: revelados aunque estén invisibles. ⚙ 12 m | El aura por anillos del Paladín (`PaladinAuraPassive`) en `ClericLightBehaviours` + `GE_BeaconOfHope` (atributo nuevo `HealingReceived`), `GE_BeaconHeal`, `GE_Revealed` (tag nuevo `State_AlwaysVisible`) |
+   | R | Quemadura santa: cono grande que quema a los enemigos y cura a los aliados (los mismos GE), y marca a los enemigos alcanzados: los aliados que los golpean se curan, como con el Enemigo jurado. ⚙ 10 m, 120°, marca de 5 s; ⚙ 0.5 × daño mágico por golpe, como mucho cada 0.2 s por aliado | `GA_HolyFire` (nuevo: un `GA_ConeAttack` con el gancho nuevo `OnEnemyHit`) + `GE_HolyFireHeal` |
+
+   Estadísticas: las mismas de la Vida y el Orden. Cooldowns de E y R en 0: mandan
+   `GE_Cooldown_Extra` y `GE_Cooldown_Ultimate`. El Destello, igual.
+
+   Piezas nuevas de código: atributo **`HealingReceived`** y tag **`State_AlwaysVisible`**
+   (los dos al FINAL de sus enums); `ASC.IsHiddenFromEnemies` (invisible y sin revelar):
+   lo preguntan el modelo, la barra de vida, los números de daño y los NPCs, en vez del
+   tag a secas. El revelado NO saca la invisibilidad: sus aliados lo siguen viendo
+   fantasma y al salir del aura vuelve a desaparecer.
+
+   - [x] Correr `Mercenarios ▸ Crear el Dominio de la luz del Clérigo (una sola vez)` y
+         borrar `Assets/Scripts/Editor/MercClericLightSetup.cs`. Crea los GE, las copias
+         del kit, la E, la R, `ClericLightBehaviours` (Bendición + Faro), la subclase, la
+         cuelga de `Class_Cleric` y actualiza los registros.
+   - [ ] En el editor: el `VisualPrefab` de la Luz del amanecer, el `HitVFX` de la
+         Quemadura santa, y el VFX del aura si querés que se vea.
+   - [ ] **Probar la subclase: el DAÑO y los ÍCONOS.** Daño: cuánto quema y cuánto cura
+         de verdad cada cosa (el arco, Guiding Bolt, la Luz del amanecer, la Quemadura santa,
+         la curación del Faro) contra los números de arriba, y si la curación con el tiempo
+         rinde de más (con 10 de daño mágico, un Healing Word cura 100 en 5 s contra 20 del
+         normal). Íconos: que cada habilidad y cada efecto (quemadura, curación, Faro,
+         revelado) muestre el suyo en la barra y en los efectos activos.
+   - [ ] Probar: la quemadura y la curación tickean cada 1 s aunque se peguen más seguido;
+         la Luz del amanecer quema y cura en la zona; con el Faro, un Pícaro invisible
+         cerca se ve (y al alejarse vuelve a desaparecer) y las curaciones rinden un
+         15 % más; la Quemadura santa cura a los aliados que golpean a los quemados.
 
    **Arreglos del 30 de septiembre, PROBADOS ✅:**
    - **Los lanzamientos no se veían en las otras pantallas**: el hacha del Bárbaro, las

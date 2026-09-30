@@ -129,7 +129,7 @@ public class UI_WorldHealthbar : MonoBehaviour
         // debe verse — una barra de vida flotando delata la posición exacta y hacía
         // inútil la invisibilidad. Los ALIADOS sí lo siguen viendo, y además le notan
         // el buff en su barra de efectos.
-        if (isEnemy && _asc != null && _asc.HasTag(EGameplayTag.Status_Invisible))
+        if (isEnemy && _asc != null && _asc.IsHiddenFromEnemies)
         {
             SetVisible(false);
             return;

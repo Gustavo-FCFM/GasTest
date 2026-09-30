@@ -942,6 +942,15 @@ public class AbilitySystemComponent : MonoBehaviour
             if (sourceASC != null && mod.Attribute == EAttributeType.Health && calculatedMagnitude > 0)
                 calculatedMagnitude = sourceASC.ResolveOutgoingHeal(this, calculatedMagnitude, isPeriodicTick);
 
+            // Y la curación que RECIBE este personaje (Faro de esperanza del Clérigo de la
+            // Luz: +15 % dentro del aura). Vale para toda curación que llegue por un efecto,
+            // tenga autor o no (un botiquín también).
+            if (mod.Attribute == EAttributeType.Health && calculatedMagnitude > 0)
+            {
+                float bonus = GetAttributeValue(EAttributeType.HealingReceived);
+                if (bonus != 0f) calculatedMagnitude *= Mathf.Max(0f, 1f + bonus);
+            }
+
             if (mod.Attribute == EAttributeType.Health && calculatedMagnitude < 0)
             {
                 // INMUNIDAD TOTAL (Status_Immunity, ej. Protección divina del Paladín):
@@ -1533,6 +1542,14 @@ public class AbilitySystemComponent : MonoBehaviour
     // =========================================================
     // AFILIACIÓN / EQUIPOS
     // =========================================================
+
+    // True si los ENEMIGOS no deberían verlo: invisible y sin revelar. El Faro de
+    // esperanza del Clérigo de la Luz revela (State_AlwaysVisible) sin sacarle la
+    // invisibilidad: sus aliados lo siguen viendo fantasma y, al salir del aura, vuelve a
+    // desaparecer solo. Todo lo que oculta a un invisible (modelo, barra de vida, números,
+    // los NPCs que lo ignoran) pregunta ESTO y no el tag a secas.
+    public bool IsHiddenFromEnemies =>
+        HasTag(EGameplayTag.Status_Invisible) && !HasTag(EGameplayTag.State_AlwaysVisible);
 
     // True si target es un objetivo válido para atacar: TeamID distinto
     // (o cualquiera de los dos en 0 = neutral, siempre hostil).

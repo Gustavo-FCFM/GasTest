@@ -41,6 +41,7 @@ MonoBehaviour:
   AvailableSubclasses:
   - {fileID: 11400000, guid: 2ff330b0c335d1b49a43c09b69759389, type: 2}
   - {fileID: 11400000, guid: a31961d72e2505a4ca2cb243a5e377b2, type: 2}
+  - {fileID: 11400000, guid: c7126ec9f9b8b0549bd0cccac46b1909, type: 2}
   ClassAnimatorOverride: {fileID: 22100000, guid: 64da5fe3f7cb7ea48baff673a078d7f5, type: 2}
   MainHandWeaponPrefab: {fileID: 6409903527971818013, guid: 7bea6d1a74f72294d8df22a0cdea31aa, type: 3}
   OffHandWeaponPrefab: {fileID: 0}

@@ -1462,8 +1462,9 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     {
         if (_asc == null) return;
 
-        // Un enemigo invisible no puede delatarse por los números que le salen encima.
-        if (_asc.HasTag(EGameplayTag.Status_Invisible))
+        // Un enemigo invisible no puede delatarse por los números que le salen encima
+        // (salvo que esté revelado, ver IsHiddenFromEnemies).
+        if (_asc.IsHiddenFromEnemies)
         {
             PlayerController local = PlayerController.LocalPlayer;
             AbilitySystemComponent localAsc = local != null ? local.GetComponent<AbilitySystemComponent>() : null;
