@@ -59,7 +59,7 @@ public class MercObjective : NetworkBehaviour
     [Header("Entrega")]
     [Tooltip("Segundos que hay que quedarse en la zona de entrega para anotar. Salir de la " +
              "zona o recibir daño de otro personaje reinicia la cuenta. 0 = entrega instantánea.")]
-    public float DeliverSeconds = 3f;
+    public float DeliverSeconds = 6f;   // 6 y no 3 (30 sept.): más que los 5 s de la Zona de verdad, en la que nadie puede atacar; con 3 s se entregaba entera adentro sin que nadie pudiera frenarlo
 
     [Header("Presentación")]
     [Tooltip("Altura del flotado cuando está en el piso.")]

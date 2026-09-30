@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6bb5562b5ea8394f8a1925c1d716fda, type: 3}
+  m_Name: GA_ZoneOfTruth
+  m_EditorClassIdentifier: 
+  AbilityName: Zone of Truth
+  AbilityIcon: {fileID: 21300000, guid: 466752f5275f99e47971d046d71176bf, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: 4165da9d9de274a4aa511261df047340, type: 2}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 0
+  ActivationBlockedTags: 0100000003000000
+  ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  AnimationClip: {fileID: 3094330708855449807, guid: 8d3c95e724e453047940371ad39c4153, type: 3}
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  IsInterruptible: 0
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  VisualsSequence: []
+  MaxCharges: 1
+  Targets: 2
+  Radius: 6
+  TotalDuration: 5
+  TickInterval: 0.5
+  DeployMode: 1
+  MaxRange: 10
+  FollowOwner: 0
+  VisualPrefab: {fileID: 1151652431613522, guid: 45130264cfc2aff4f8ca3b20703f20f9, type: 3}
+  VisualScaleMultiplier: 1
+  EffectsToApply:
+  - {fileID: 11400000, guid: a0c41f3e4e7b1c54ba6beba7f55d009b, type: 2}
+  AllyEffects:
+  - {fileID: 11400000, guid: 367479c5276f6f3489dc15e58d722f43, type: 2}
+  StartDelay: 0

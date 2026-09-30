@@ -1822,7 +1822,7 @@ public class PlayerController : NetworkBehaviour
             GameplayAbility inst = ASC.GrantAbility(assignment.Ability);
             switch (assignment.InputSlot)
             {
-                case EAbilityInput.PrimaryAttack:   PrimaryAttackAbility = inst; inst.IsInterruptible = true; break;
+                case EAbilityInput.PrimaryAttack:   PrimaryAttackAbility = inst; inst.IsInterruptible = true; inst.IsBasicAttack = true; break;
                 case EAbilityInput.SecondaryAttack: AimAbility           = inst; break;
                 case EAbilityInput.Action1:         AbilityQ             = inst; break;
                 case EAbilityInput.Action2:         AbilityE             = inst; break;

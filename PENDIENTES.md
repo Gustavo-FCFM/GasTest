@@ -117,21 +117,46 @@ En orden de lo que más mueve la demo:
    ataques; el kit base igual. Los cooldowns de E y R están en 0 en la habilidad:
    mandan `GE_Cooldown_Extra` y `GE_Cooldown_Ultimate`, para ajustarlos ahí.
 
-   **Lo que sigue: Dominio del orden, y después el de la Luz.** Hacen falta sus números.
+   **Dominio del orden — HECHO (30 de septiembre, herramienta corrida y funcionando).** Números de Gustavo; los que no vinieron los puso Claude (marcados ⚙).
+
+   | Ranura | Habilidad | Pieza |
+   |---|---|---|
+   | Clic izq. (base, Vida y Orden) | **Combo nuevo**: bastonazo en cono (físico, `GE_Class_Damage`) + el arco de luz de siempre (mágico) | `GA_ClericStaffCombo` = `GA_ClericStaffSwing` (copia del cono del Paladín) + `GA_ClericLightArc` |
+   | Clic izq. (Orden) | El mismo combo, pero el arco aturde 1 s al PRIMER enemigo que toca. ⚙ El mismo enemigo no se vuelve a aturdir antes de 3 s: sin eso, con ataques cada 0.8 s quedaba aturdido para siempre | `GA_OrderStaffCombo` → `GA_OrderLightArc` (`FirstHitEffects` = `GE_OrderStun`, `FirstHitCooldownPerTarget` 3; 0 = sin límite) |
+   | E | Aturdir: marca a un enemigo a 10 m; si le pega a un aliado (o al Clérigo), `GE_Stun` y la marca se consume. ⚙ Marca de 4 s | `GA_CommandHalt` (nuevo, como el Enemigo jurado pero escuchando los golpes que DA) + `GE_CommandHaltMark` |
+   | Pasiva extra | Heroísmo: al curar a un aliado, además de la resistencia al daño de la Bendición, +30 % de resistencia al control por 6 s | `GE_Heroism` (copia de `GE_Blessing` + `CCResistance`) en lugar de la Bendición, en `ClericOrderBehaviours` |
+   | R | Zona de verdad: 6 m, 5 s, a 10 m. TODOS adentro (los tres equipos, el Clérigo incluido) quedan silenciados y desarmados; los aliados se curan. ⚙ 0.2 × daño mágico por tick de 0.5 s (unos 20) | `GA_ZoneOfTruth` (`GA_ContinuousAoE` con `Targets` All y la lista nueva `AllyEffects`) + `GE_ZoneOfTruth` + `GE_ZoneOfTruthHeal` |
+
+   Estadísticas: iguales a las de la Vida (las tres subclases comparten). Cooldowns de E y
+   R en 0: mandan `GE_Cooldown_Extra` y `GE_Cooldown_Ultimate`.
+
+   Piezas nuevas de código: tag **`State_Disarmed`** (al final del enum; bloquea el
+   ataque básico de CUALQUIER clase, marcado con `IsBasicAttack` al equipar; lo va a
+   reusar el Guerrero), `FirstHitEffects` en `GA_ProjectileShoot`, `AllyEffects` en
+   `GA_ContinuousAoE` y `GA_CommandHalt`. **La entrega de la carga pasó de 3 a 6 s**
+   (`MercObjective.DeliverSeconds`): más que los 5 s de la Zona de verdad.
+
+   - [x] Correr `Mercenarios ▸ Crear el Dominio del orden y el combo del Clérigo (una sola
+         vez)` y borrar `Assets/Scripts/Editor/MercClericOrderSetup.cs`. Cambia el clic
+         izquierdo de `Class_Cleric` y `Class_LifeDomainCleric` por el combo, crea todo
+         lo del Orden, lo cuelga de `Class_Cleric` y actualiza los registros.
+   - [x] El ícono de la Zona de verdad y su `VisualPrefab` (`Art/VFX/Zone of Truth`), y el
+         ícono del desarme en `GE_ZoneOfTruth`. Pendiente: el clip del bastonazo es el del
+         cono del Paladín; cambiarlo si el artista hace uno.
+   - [ ] Probar a fondo en red: el combo pega con el bastón y después lanza el arco; el Orden aturde
+         solo al primero que toca el arco; Aturdir aturde al marcado cuando le pega a un
+         aliado y no cuando le pega a un enemigo suyo; Heroísmo aparece al curar; en la
+         Zona nadie puede atacar (tampoco el Clérigo ni sus aliados) y los aliados se
+         curan; la entrega tarda 6 s.
+
+   **Lo que sigue: Dominio de la luz.** Hacen falta sus números.
 
    | Subclase · habilidad | Qué ya hay | Qué falta |
    |---|---|---|
-   | **Orden** · aturdir al primer impacto | Proyectil que atraviesa + aturdido | Efectos solo para el PRIMER enemigo tocado |
-   | **Orden** · Aturdir | Marcas sobre enemigos (Enemigo jurado, Apostar) | Reaccionar cuando el marcado le pega a un aliado |
-   | **Orden** · Heroísmo | Aura por anillos + atributo `CCResistance` | **Sin código**: un efecto de aura |
-   | **Orden** · Zona de verdad | Zona al piso + `State_Silenced` | **Desarmar** (tag nuevo que bloquea el básico; lo reusa el Guerrero) y zona que afecte a los TRES equipos (confirmado: también al propio equipo y al Clérigo) |
    | **Luz** · hechizos de fuego | Efectos periódicos; la Bendición ya cuenta los ticks | Solo assets: versiones con el tiempo del arco, la curación y la Luz guía |
    | **Luz** · Luz del amanecer | Zonas al piso (`GroundTargetAbility`, `GA_ContinuousAoE`) | Que la misma zona dañe enemigos y cure aliados, si hoy no lo hace |
    | **Luz** · Faro de esperanza | El aura por anillos del Paladín; `IHealModifier` para curaciones salientes | "Más curación recibida" (atributo nuevo, AL FINAL del enum) y **revelar invisibles** (sistema nuevo, sobre `PlayerVisibility`) |
    | **Luz** · Quemadura santa | `GA_ConeAttack`, efectos con el tiempo, y el Enemigo jurado (cura a quien golpea al marcado) | Juntar esas piezas |
-
-   Orden: **Orden** (trae Desarmar para el Guerrero, y dos casi gratis) → **Luz** (la
-   más larga).
 
    **Arreglos del 30 de septiembre, PROBADOS ✅:**
    - **Los lanzamientos no se veían en las otras pantallas**: el hacha del Bárbaro, las

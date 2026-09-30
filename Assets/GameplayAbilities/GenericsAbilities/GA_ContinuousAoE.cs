@@ -75,6 +75,11 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
     // en cada tick.
     public List<GameplayEffect> EffectsToApply;
 
+    [Tooltip("Efectos que reciben SOLO los aliados (y el lanzador) que están en la zona, " +
+             "además de los de arriba. Sirve para una zona que afecta a todos pero cura a los " +
+             "propios (Zona de verdad). Vacío = nada extra.")]
+    public List<GameplayEffect> AllyEffects;
+
     [Header("Sincronización")]
     // Espera antes de que el área empiece a existir, tras activar la habilidad.
     public float StartDelay = 0.5f;
@@ -227,6 +232,12 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
                 {
                     if (EffectsToApply != null)
                         foreach (var effect in EffectsToApply)
+                            if (effect != null) targetASC.ApplyGameplayEffect(effect, OwnerASC);
+
+                    // Lo que es SOLO para los aliados, aunque la zona afecte a todos (la
+                    // Zona de verdad silencia a los tres equipos y cura solo a los suyos).
+                    if (AllyEffects != null && AllyEffects.Count > 0 && IsAlly(targetASC))
+                        foreach (var effect in AllyEffects)
                             if (effect != null) targetASC.ApplyGameplayEffect(effect, OwnerASC);
 
                     OnTargetHit(targetASC);

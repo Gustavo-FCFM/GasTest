@@ -51,6 +51,16 @@ public class GA_ProjectileShoot : GameplayAbility
     [UnityEngine.Serialization.FormerlySerializedAs("AllyEffects")]
     public List<GameplayEffect> TargetEffects;
 
+    [Tooltip("Efectos SOLO para el PRIMER enemigo que toca cada proyectil (el aturdido del " +
+             "Clérigo del Orden). Los que atraviese después reciben el daño normal, no esto. " +
+             "Vacío = nada.")]
+    public List<GameplayEffect> FirstHitEffects;
+
+    [Tooltip("Segundos mínimos antes de volver a aplicarle los FirstHitEffects al MISMO " +
+             "enemigo. Sin esto, un aturdido de 1 s con ataques cada 0.8 s lo deja aturdido " +
+             "para siempre. 0 = sin límite.")]
+    public float FirstHitCooldownPerTarget = 3f;
+
     [Tooltip("Alcance del proyectil expresado en SEGUNDOS de vuelo (con velocidad constante, " +
              "alcance = LifeTime × LaunchForce). Pasado ese tiempo se despawnea solo aunque no haya " +
              "chocado con nada. 0 = usar el default del prefab (5s).\n\n" +
@@ -407,5 +417,36 @@ public class GA_ProjectileShoot : GameplayAbility
         if (ImpactVFX == null) return;
         GameObject vfx = Instantiate(ImpactVFX, position, Quaternion.identity);
         Destroy(vfx, 1.0f);
+    }
+
+    // =========================================================
+    // PRIMER IMPACTO (FirstHitEffects)
+    // =========================================================
+
+    // Desde cuándo se le puede volver a aplicar cada efecto a cada enemigo. Estático y
+    // por (lanzador, enemigo, efecto) y no un campo de la instancia: un combo crea
+    // copias NUEVAS de sus pasos en cada activación (GA_ComboSequence), así que un
+    // registro guardado acá se perdería en cada ataque.
+    private static readonly Dictionary<(AbilitySystemComponent, AbilitySystemComponent, GameplayEffect), float>
+        _firstHitReadyAt = new Dictionary<(AbilitySystemComponent, AbilitySystemComponent, GameplayEffect), float>();
+
+    // Le aplica los FirstHitEffects al primer enemigo que tocó un proyectil de esta
+    // habilidad, si ya pasó su tiempo mínimo con ese enemigo. La llama GC_Projectile,
+    // en el servidor.
+    public void ApplyFirstHitEffects(AbilitySystemComponent target)
+    {
+        if (FirstHitEffects == null || target == null || OwnerASC == null) return;
+
+        foreach (GameplayEffect effect in FirstHitEffects)
+        {
+            if (effect == null) continue;
+
+            var key = (OwnerASC, target, effect);
+            if (FirstHitCooldownPerTarget > 0f &&
+                _firstHitReadyAt.TryGetValue(key, out float readyAt) && Time.time < readyAt) continue;
+
+            target.ApplyGameplayEffect(effect, OwnerASC);
+            if (FirstHitCooldownPerTarget > 0f) _firstHitReadyAt[key] = Time.time + FirstHitCooldownPerTarget;
+        }
     }
 }

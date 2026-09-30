@@ -434,6 +434,11 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         // molinete del bárbaro deja seguir usando Frenzy y el salto, y nada más.
         if (!UsableWhileChanneling && OwnerASC.HasTag(EGameplayTag.Status_Channeling)) return false;
 
+        // Desarmado (Zona de verdad del Clérigo del Orden): sin ataque básico, pero con
+        // las habilidades. Va acá y no en el ActivationBlockedTags de cada asset para que
+        // valga para TODAS las clases sin tocar ninguna.
+        if (IsBasicAttack && OwnerASC.HasTag(EGameplayTag.State_Disarmed)) return false;
+
         if (ActivationRequiredTags != null)
             foreach (EGameplayTag tag in ActivationRequiredTags)
                 if (!OwnerASC.HasTag(tag)) return false;
@@ -667,6 +672,11 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // True en la instancia que ocupa el slot de la DEFINITIVA (R). La marca
     // PlayerController al equipar; el respawn la usa para no resetearle el cooldown.
     [System.NonSerialized] public bool IsUltimate;
+
+    // True si esta instancia es el ATAQUE BÁSICO (clic izquierdo) de su dueño. La marca
+    // PlayerController al equipar, igual que IsUltimate. La usa el desarme
+    // (State_Disarmed): bloquea el básico y deja las habilidades.
+    [System.NonSerialized] public bool IsBasicAttack;
 
     // Apaga el sistema de cargas en ESTA instancia. La usan los combos y el TagSwitch
     // al clonar un paso/variante: ese clon es solo la ejecución, su ciclo de vida

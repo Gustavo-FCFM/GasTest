@@ -13,7 +13,7 @@ pruebas rápidas de clases.
 
 **Lo nuevo desde la prueba de 9 (24–28 de septiembre):**
 
-- **La entrega toma 3 s** parado en la plataforma (`MercObjective.DeliverSeconds`); salir de
+- **La entrega toma 6 s** (antes 3; se subió el 30 de septiembre para durar más que la Zona de verdad del Clérigo) parado en la plataforma (`MercObjective.DeliverSeconds`); salir de
   la zona o recibir daño reinicia la cuenta (se detecta por el aviso de daño Y por la vida
   bajando, sin contar el recorte al máximo cuando se acaba un bono de vida). **Con la bolsa
   no se entra a la base propia**: la pared frena y la base expulsa
@@ -121,7 +121,7 @@ composición: la sala segura es el **único lugar donde se puede cambiar de clas
 - Se levanta **con solo acercarse**. Quien lo lleva se mueve un 25 % más lento y **pierde
   la definitiva**: ese botón pasa a soltar el Objetivo.
 - Hay que llevarlo a la **plataforma de entrega de tu base**, que está justo afuera de la
-  puerta de tu sala segura, y **quedarse ahí 3 segundos** (`MercObjective.DeliverSeconds`).
+  puerta de tu sala segura, y **quedarse ahí 6 segundos** (`MercObjective.DeliverSeconds`).
   Salir de la zona o recibir daño de otro reinicia la cuenta. Todos ven "ENTREGANDO" con
   una barra en el marcador del Objetivo: es la última oportunidad de los rivales.
 - Cada entrega = 1 punto. **Con 2 puntos se gana** y la partida termina (y se reinicia
@@ -805,7 +805,7 @@ vacío media partida.
 | Cuánto te frena llevarlo | `CarrySlowPercent` | 25 % |
 | Dónde se ve mientras lo cargás | `CarryOffset` | 2,1 m sobre la cabeza |
 | Radio de la entrega | cada `MercTeamBase` → `DeliveryRadius` | 3,5 m |
-| Cuánto hay que quedarse para entregar | `MercObjective.DeliverSeconds` (0 = al instante) | 3 s |
+| Cuánto hay que quedarse para entregar | `MercObjective.DeliverSeconds` (0 = al instante) | 6 s |
 | Columna de luz mientras se entrega | `BeaconHeight` / `BeaconRadius` / `BeaconAlpha` | 40 m / 1,6 m / 0,4 |
 | El portador no entra a su sala | cada `MercTeamBase` → `EjectObjectiveCarrier` | prendido |
 

@@ -252,6 +252,12 @@ public class GC_Projectile : NetworkBehaviour
             {
                 if (!enemiesHit.Contains(targetASC))
                 {
+                    // El PRIMER enemigo de este proyectil recibe además los efectos de
+                    // primer impacto (el aturdido del Clérigo del Orden). Ver
+                    // GA_ProjectileShoot.FirstHitEffects.
+                    if (enemiesHit.Count == 0 && sourceAbility is GA_ProjectileShoot shooter)
+                        shooter.ApplyFirstHitEffects(targetASC);
+
                     if (damageEffect != null) targetASC.ApplyGameplayEffect(damageEffect, sourceASC);
                     if (durationEffect != null) targetASC.ApplyGameplayEffect(durationEffect, sourceASC);
                     if (additionalEffects != null)
