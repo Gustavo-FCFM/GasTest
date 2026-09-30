@@ -67,3 +67,7 @@ MonoBehaviour:
   HealPercentOfBlocked: 0.2
   HealRingIndex: 0
   HealExtraEffects: []
+  HealVFX: {fileID: 1374770465800164, guid: d0e33492ce1ba064291b3ff95ce32e4e, type: 3}
+  HealVFXOffset: {x: 0, y: 0, z: 0}
+  AttachHealVFX: 1
+  HealVFXLifetime: 1

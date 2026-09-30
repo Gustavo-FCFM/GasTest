@@ -34,7 +34,7 @@ using System.Collections.Generic;
 // cien capas de Resistencia. Con Refresh, el efecto se renueva mientras estés
 // dentro y se cae solo un tick después de salir.
 // ============================================================
-public class PaladinAuraPassive : MonoBehaviour
+public class PaladinAuraPassive : MonoBehaviour, IPassiveTargetVFX
 {
     // A quién afecta un anillo del aura.
     public enum EAuraTarget { Allies, Enemies }
@@ -103,6 +103,21 @@ public class PaladinAuraPassive : MonoBehaviour
     [Tooltip("Efectos extra que se le aplican al aliado curado (un VFX de destello, un buff " +
              "corto...). Opcional — la curación en sí no los necesita.")]
     public List<GameplayEffect> HealExtraEffects;
+
+    [Header("VFX de la Curación")]
+    [Tooltip("VFX que aparece sobre cada aliado CADA VEZ que el aura lo cura (se ve en todas " +
+             "las pantallas). Solo si de verdad le subió la vida: a uno lleno no le sale nada.")]
+    public GameObject HealVFX;
+
+    [Tooltip("Dónde aparece, medido desde los pies del curado. (0, 1, 0) es el pecho; un " +
+             "efecto pensado para el piso va con (0, 0, 0).")]
+    public Vector3 HealVFXOffset = new Vector3(0f, 1f, 0f);
+
+    [Tooltip("Pegarlo al curado, así lo sigue si se mueve. Apagado, queda donde apareció.")]
+    public bool AttachHealVFX = true;
+
+    [Tooltip("Segundos hasta que el VFX se borra.")]
+    public float HealVFXLifetime = 1f;
 
     private AbilitySystemComponent        _asc;
     private NetworkAbilitySystemComponent _netAsc;
@@ -255,10 +270,29 @@ public class PaladinAuraPassive : MonoBehaviour
             // Y el número verde sobre el curado, por el mismo motivo.
             ally.ShowCombatNumber(healed, ECombatNumber.Heal);
 
+            // El destello sobre el curado, en todas las pantallas (ver PlayPassiveVFX).
+            if (healed > 0f && HealVFX != null)
+            {
+                if (_netAsc != null) _netAsc.ServerPlayPassiveVFXOn(ally);
+                else                 PlayPassiveVFX(ally);   // sin red
+            }
+
             if (HealExtraEffects != null)
                 foreach (var effect in HealExtraEffects)
                     if (effect != null) ally.ApplyGameplayEffect(effect, _asc);
         }
+    }
+
+    // Dibuja el destello sobre el curado. Corre en CADA peer, con su propia copia de
+    // este componente: el servidor solo manda a quién (NetworkASC.ServerPlayPassiveVFXOn).
+    public void PlayPassiveVFX(AbilitySystemComponent target)
+    {
+        if (HealVFX == null || target == null) return;
+
+        Transform t = target.transform;
+        GameObject vfx = Instantiate(HealVFX, t.position + HealVFXOffset, Quaternion.identity);
+        if (AttachHealVFX) vfx.transform.SetParent(t, true);
+        Destroy(vfx, HealVFXLifetime);
     }
 
     // =========================================================

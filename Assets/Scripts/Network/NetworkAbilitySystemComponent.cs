@@ -1138,6 +1138,35 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     }
 
     // =========================================================
+    // VFX DE UNA PASIVA SOBRE OTRO PERSONAJE (ver IPassiveTargetVFX)
+    //
+    // La curación del aura del Paladín se resuelve solo en el servidor, así que su
+    // destello sobre cada curado necesita su propia réplica, igual que el del escudo.
+    // Viaja solo el objetivo: el prefab y los ajustes los pone la pasiva de cada peer.
+    // =========================================================
+
+    [Server]
+    public void ServerPlayPassiveVFXOn(AbilitySystemComponent target)
+    {
+        if (target == null) return;
+
+        // El servidor lo dibuja local (importa para el host, que renderiza esa copia).
+        GetComponentInChildren<IPassiveTargetVFX>()?.PlayPassiveVFX(target);
+
+        NetworkObject targetNob = target.GetComponent<NetworkObject>();
+        if (targetNob != null) ObserversPlayPassiveVFXOn(targetNob);
+    }
+
+    [ObserversRpc]
+    private void ObserversPlayPassiveVFXOn(NetworkObject target)
+    {
+        if (IsServerInitialized || target == null) return;
+
+        AbilitySystemComponent targetAsc = target.GetComponent<AbilitySystemComponent>();
+        if (targetAsc != null) GetComponentInChildren<IPassiveTargetVFX>()?.PlayPassiveVFX(targetAsc);
+    }
+
+    // =========================================================
     // ANIMACIÓN DE UN PASO DE COMBO
     //
     // Un combo (GA_ComboSequence / GA_AlternatingCombo) transmite su PROPIA animación
