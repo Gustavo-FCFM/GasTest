@@ -375,7 +375,8 @@ public class NetworkGameManager : NetworkBehaviour
         if (MercenariesGameMode.Instance != null)
             delay = MercenariesGameMode.Instance.RespawnSeconds;
 
-        StartCoroutine(RespawnBotCoroutine(bot, delay));
+        TrackRespawn(bot.GetComponent<NetworkAbilitySystemComponent>(),
+                     StartCoroutine(RespawnBotCoroutine(bot, delay)));
     }
 
     private System.Collections.IEnumerator RespawnBotCoroutine(PlayerController bot, float delay)
@@ -384,6 +385,7 @@ public class NetworkGameManager : NetworkBehaviour
         if (bot == null) yield break;
 
         NetworkAbilitySystemComponent netASC = bot.GetComponent<NetworkAbilitySystemComponent>();
+        if (netASC != null) _pendingRespawns.Remove(netASC);
         int team = netASC != null ? netASC.NetTeamID : 0;
 
         Transform spawnPoint = ResolveSpawnPointForTeam(team) ?? GetRandomSpawnPoint();
@@ -407,7 +409,32 @@ public class NetworkGameManager : NetworkBehaviour
         if (MercenariesGameMode.Instance != null)
             delay = MercenariesGameMode.Instance.RespawnSeconds;
 
-        StartCoroutine(RespawnCoroutine(conn, delay));
+        NetworkAbilitySystemComponent netASC = _playerObjects.TryGetValue(conn, out GameObject obj) && obj != null
+            ? obj.GetComponent<NetworkAbilitySystemComponent>()
+            : null;
+        TrackRespawn(netASC, StartCoroutine(RespawnCoroutine(conn, delay)));
+    }
+
+    // Reapariciones en espera, por personaje. Existe para poder CANCELAR una: la
+    // Resurrección del Clérigo revive al muerto donde cayó, y sin esto la cuenta seguía
+    // corriendo y a los segundos lo mandaba a la base igual. Programar otra (murió de
+    // nuevo) reemplaza la anterior.
+    private readonly Dictionary<NetworkAbilitySystemComponent, Coroutine> _pendingRespawns =
+        new Dictionary<NetworkAbilitySystemComponent, Coroutine>();
+
+    private void TrackRespawn(NetworkAbilitySystemComponent netASC, Coroutine routine)
+    {
+        if (netASC == null) return;
+        CancelRespawn(netASC);
+        _pendingRespawns[netASC] = routine;
+    }
+
+    [Server]
+    public void CancelRespawn(NetworkAbilitySystemComponent netASC)
+    {
+        if (netASC == null || !_pendingRespawns.TryGetValue(netASC, out Coroutine routine)) return;
+        if (routine != null) StopCoroutine(routine);
+        _pendingRespawns.Remove(netASC);
     }
 
     // Espera el delay, manda al jugador a un spawn point al azar, y lo revive.
@@ -422,6 +449,7 @@ public class NetworkGameManager : NetworkBehaviour
         NetworkAbilitySystemComponent netASC =
             playerObj.GetComponent<NetworkAbilitySystemComponent>();
         if (netASC == null) yield break;
+        _pendingRespawns.Remove(netASC);
 
         // Reaparecer en la BASE PROPIA (regla del modo): dentro de la sala segura la
         // vida vuelve al máximo y no te pueden tocar mientras te reorganizás.

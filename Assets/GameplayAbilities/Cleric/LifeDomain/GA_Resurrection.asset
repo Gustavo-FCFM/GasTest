@@ -9,16 +9,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 636f4f13857926149bb632c6a7a4371c, type: 3}
-  m_Name: GA_LayOnHands
+  m_Script: {fileID: 11500000, guid: e1a6f8d5d67a7b741b1dd3c9d58eff96, type: 3}
+  m_Name: GA_Resurrection
   m_EditorClassIdentifier: 
-  AbilityName: LayOnHands
-  AbilityIcon: {fileID: 21300000, guid: 0a7c6e00fc60d2a47bace86d4f3d6f45, type: 3}
+  AbilityName: Resurrection
+  AbilityIcon: {fileID: 21300000, guid: 2ffaf24c637340340a06edd190c00d7f, type: 3}
   CostEffect: {fileID: 0}
-  CooldownEffect: {fileID: 11400000, guid: bd07a782525833e47889b22896900f13, type: 2}
+  CooldownEffect: {fileID: 11400000, guid: 4165da9d9de274a4aa511261df047340, type: 2}
   CooldownDuration: 0
   UseAttackSpeedAsCooldown: 0
-  UltimateChargeAmount: 1
+  UltimateChargeAmount: 0
   ActivationBlockedTags: 0100000003000000
   ActivationRequiredTags: 
   UsableWhileChanneling: 0
@@ -41,14 +41,8 @@ MonoBehaviour:
     m_Bits: 128
   VisualsSequence: []
   MaxCharges: 1
-  Targets: 0
-  MaxRange: 6
-  SelectionAngle: 30
-  SelfIfNoTarget: 1
-  AllowDeadTargets: 0
-  TargetEffects:
-  - {fileID: 11400000, guid: ab05ab65a33c9754bbeb168b51e81d90, type: 2}
-  ImpactVFX: {fileID: 1374770465800164, guid: d0e33492ce1ba064291b3ff95ce32e4e, type: 3}
-  AttachImpactVFX: 1
-  ImpactVFXOffset: {x: 0, y: 1, z: 0}
-  ImpactVFXLifetime: 1
+  MaxRange: 10
+  SelectionAngle: 35
+  HealthFraction: 1
+  ImpactVFX: {fileID: 3377181292992421420, guid: 48c5715f9603c3842a353516a8baefbb, type: 3}
+  ImpactVFXLifetime: 3

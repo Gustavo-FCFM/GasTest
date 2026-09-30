@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 29 de septiembre de 2026
+# Pendientes — actualizado el 30 de septiembre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -110,8 +110,8 @@ En orden de lo que más mueve la demo:
    | Subclase · habilidad | Qué ya hay | Qué falta |
    |---|---|---|
    | **Vida** · Preservar vida | `GA_Target` hacia aliados + `Status_Immortal` (no deja bajar de 1 de vida; lo usa el Inmortal) | **Sin código**: dos assets |
-   | **Vida** · Médico bendecido | Modificadores de daño saliente (`IDamageModifier`, como el backstab) | Un gancho igual para CURACIONES (hoy solo corre sobre daño) |
-   | **Vida** · Resurrección | `GA_Target` con Allow Dead Targets; `ASC.Revive()` y su versión en red (la usa el Inmortal) | Revivir a OTRO donde está su cuerpo, con la mitad de la vida, y cancelar su reaparición en la base |
+   | **Vida** · Médico bendecido | Modificadores de daño saliente (`IDamageModifier`, como el backstab) | **CÓDIGO HECHO (30 sept.)**: `IHealModifier` (el gemelo de `IDamageModifier` para curaciones, corre en `ExecuteInstantEffect`) y `BlessedHealerPassive` (curación × (1 + `MaxBonus` × vida faltante)). Falta ponerla en el prefab de la subclase |
+   | **Vida** · Resurrección | `GA_Target` con Allow Dead Targets; `ASC.Revive()` y su versión en red (la usa el Inmortal) | **CÓDIGO HECHO (30 sept.)**: `GA_Resurrection` (busca el CUERPO recorriendo los jugadores: con ragdoll el muerto no tiene cápsula y `GA_Target` no lo ve), `NetworkASC.ServerResurrect` (revive donde cayó, con `HealthFraction` de la vida y sus cooldowns como estaban) y `NetworkGameManager.CancelRespawn` (su vuelta a la base se cancela) |
    | **Luz** · hechizos de fuego | Efectos periódicos; la Bendición ya cuenta los ticks | Solo assets: versiones con el tiempo del arco, la curación y la Luz guía |
    | **Luz** · Luz del amanecer | Zonas al piso (`GroundTargetAbility`, `GA_ContinuousAoE`) | Que la misma zona dañe enemigos y cure aliados, si hoy no lo hace |
    | **Luz** · Faro de esperanza | El aura por anillos del Paladín | "Más curación recibida" (atributo nuevo, AL FINAL del enum) y **revelar invisibles** (sistema nuevo, sobre `PlayerVisibility`) |
@@ -126,13 +126,37 @@ En orden de lo que más mueve la demo:
    para el Guerrero, y dos casi gratis) → **Luz** (la más larga).
 
    Para decidir antes de arrancar:
-   - [ ] **Resurrección y los 5 s de reaparición**: el cuerpo existe solo hasta que el
-         muerto reaparece. ¿Así (hay que ser rápido), reaparición más larga si hay un
-         Clérigo aliado con la definitiva lista, o un botón de "esperar resurrección"?
-   - [ ] **Números**: el glosario no tiene nada del Clérigo. Valores de arranque
-         propuestos por Claude, y se ajustan en el editor.
-   - [ ] **Zona de verdad afecta a todos**, también al equipo propio y al Clérigo (así
-         dice el diseño). Confirmar.
+   - [x] **Resurrección y los 5 s de reaparición**: se quedan los 5 s, hay que ser
+         rápido (decidido el 30 de septiembre).
+   - [x] **Números: los da Gustavo** (decidido el 30 de septiembre). Los de la **Vida**:
+         180 de vida, 10 de daño mágico, 8 de ataque, lo demás igual al base (nivel 3);
+         Preservar vida a alcance medio (10 m, glosario) y 3 s; Médico bendecido hasta
+         +30 %; la Resurrección devuelve TODA la vida, a alcance medio; el kit base igual.
+         Cooldowns de E y R en 0 en la habilidad: mandan `GE_Cooldown_Extra` y
+         `GE_Cooldown_Ultimate`, para ajustarlos ahí.
+   - [x] **Correr `Mercenarios ▸ Crear el Dominio de la vida del Clérigo (una sola vez)`**
+         y borrar `Assets/Scripts/Editor/MercClericLifeSetup.cs`. Crea `ASDef_` y
+         `Class_LifeDomainCleric`, `GE_PreserveLife`, `GA_PreserveLife` (copia de
+         `GA_HealingWord`), `GA_Resurrection`, `ClericLifeBehaviours` (Bendición + Médico
+         bendecido), la cuelga de `Class_Cleric` y actualiza los registros (con eso sale
+         también el `GE_GuidingLightDamage` borrado).
+   - [ ] Probar la Vida: Preservar vida no deja bajar de 1 por 3 s; el Médico bendecido
+         cura más a quien tiene menos vida; la Resurrección revive al aliado donde cayó,
+         con toda la vida, y NO lo manda a la base a los 5 s; en red, los demás lo ven
+         levantarse.
+   - [x] **Contorno de los aliados muertos** (30 de septiembre, PROBADO ✅):
+         `DeadAllyHighlighter` en `ClericLifeBehaviours` (ya puesto) + el shader
+         `Mercenaries/Outline` (`Assets/Shaders/Resources`). Solo en la pantalla del Clérigo
+         de la Vida: VERDE si la R está lista y el cuerpo a 10 m, ROJO si no. Probar con
+         ragdoll (el contorno cae con el cuerpo), que se borre al revivir y al reaparecer,
+         y que los demás jugadores no lo vean. Colores, grosor y latido en el componente.
+   - [x] **Los lanzamientos no se veían en las otras pantallas** (30 de septiembre, PROBADO
+         EN RED ✅): el hacha del Bárbaro, las dagas del Pícaro y el arco y la
+         Guiding Bolt del Clérigo. Cobran al SOLTAR, así que al salir de `Activate()` el
+         servidor creía que la habilidad se había plantado y no mandaba la animación. Marca
+         nueva `StartedThisActivation` en `GameplayAbility` (la pone `GA_ProjectileShoot`).
+   - [x] **Zona de verdad afecta a todos**, también al equipo propio y al Clérigo, como
+         dice el diseño (confirmado el 30 de septiembre).
 2. **El mapa del cementerio — GREYBOX ARMADO (29 de septiembre), falta jugarlo.** Escena
    nueva `Scenes/Mercenaries_Graveyard.unity` (copia de la del modo, con sala, red y menús;
    la vieja no se tocó). Ya la estás editando a mano. Detalle, rutas

@@ -10,14 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 749805704a6088741af34d91f0891ced, type: 3}
-  m_Name: Class_Cleric
+  m_Name: Class_LifeDomainCleric
   m_EditorClassIdentifier: 
-  ClassName: Cleric
-  ClassIcon: {fileID: 21300000, guid: a68a2430c566aff44a4951c15bd99730, type: 3}
-  Description: The healer who fights from range. His light burns enemies and mends
-    allies in its path, and everyone he heals takes less damage for a while.
+  ClassName: Life Domain
+  ClassIcon: {fileID: 21300000, guid: 4c5e81a67f8ce824d8ff733a302f9ea8, type: 3}
+  Description: The cleric who refuses to let anyone fall. Keeps a dying ally standing
+    for a moment, heals harder the more hurt they are, and brings the fallen back
+    to the fight.
   Role: 3
-  BaseAttributes: {fileID: 11400000, guid: 1e1aedd4892e5f04fb91643e280fd884, type: 2}
+  BaseAttributes: {fileID: 11400000, guid: 9352511327bf038449f384002c14a661, type: 2}
   Abilities:
   - InputSlot: 1
     Ability: {fileID: 11400000, guid: a722fef8255f8494fbdb4145b1b64d58, type: 2}
@@ -27,19 +28,14 @@ MonoBehaviour:
     Ability: {fileID: 11400000, guid: c599de90196b787438b3bbb420159046, type: 2}
   - InputSlot: 6
     Ability: {fileID: 11400000, guid: 6f7b2fa117308d647a0c7472e470bf7f, type: 2}
-  PassiveBehaviorsPrefab: {fileID: 481456162507743029, guid: 8e1122b8b95a4504992667c3b2cc3251, type: 3}
+  - InputSlot: 4
+    Ability: {fileID: 11400000, guid: bddceaf7c74a95a418496efb820cc065, type: 2}
+  - InputSlot: 5
+    Ability: {fileID: 11400000, guid: 7744dec84ff9fbd4295013479b74505a, type: 2}
+  PassiveBehaviorsPrefab: {fileID: 481456162507743029, guid: d4a57e2f784080d4db1f1d5d0069a67c, type: 3}
   PassiveEffects: []
-  StatGrowthPerLevel:
-  - Attribute: 2
-    AmountPerLevel: 50
-  - Attribute: 8
-    AmountPerLevel: 1
-  - Attribute: 17
-    AmountPerLevel: 1
-  - Attribute: 14
-    AmountPerLevel: 100
-  AvailableSubclasses:
-  - {fileID: 11400000, guid: 2ff330b0c335d1b49a43c09b69759389, type: 2}
+  StatGrowthPerLevel: []
+  AvailableSubclasses: []
   ClassAnimatorOverride: {fileID: 22100000, guid: 64da5fe3f7cb7ea48baff673a078d7f5, type: 2}
   MainHandWeaponPrefab: {fileID: 6409903527971818013, guid: 7bea6d1a74f72294d8df22a0cdea31aa, type: 3}
   OffHandWeaponPrefab: {fileID: 0}

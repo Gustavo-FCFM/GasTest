@@ -937,6 +937,11 @@ public class AbilitySystemComponent : MonoBehaviour
                 if (critical && !HasTag(EGameplayTag.Status_Immunity)) anyCritical = true;
             }
 
+            // Lo mismo para las CURACIONES que reparte el autor (Médico bendecido del
+            // Clérigo de la Vida). Ver IHealModifier.
+            if (sourceASC != null && mod.Attribute == EAttributeType.Health && calculatedMagnitude > 0)
+                calculatedMagnitude = sourceASC.ResolveOutgoingHeal(this, calculatedMagnitude, isPeriodicTick);
+
             if (mod.Attribute == EAttributeType.Health && calculatedMagnitude < 0)
             {
                 // INMUNIDAD TOTAL (Status_Immunity, ej. Protección divina del Paladín):
@@ -1417,7 +1422,10 @@ public class AbilitySystemComponent : MonoBehaviour
     // resetAbilities: devuelve las habilidades listas (cooldown a cero, cargas llenas,
     // menos la R). Es true también para la auto-revivida del Inmortal: revive para
     // seguir pegando, y con el kit en cooldown no tendría con qué.
-    public void Revive(bool resetAbilities = true)
+    //
+    // healthFraction: con cuánta vida vuelve, como fracción de la máxima. 1 = llena (el
+    // respawn en la base); la Resurrección del Clérigo trae a un aliado con la mitad.
+    public void Revive(bool resetAbilities = true, float healthFraction = 1f)
     {
         // Olvidar quién nos mató la vida anterior: si después caemos a una
         // DeathZone o morimos por otra vía, no queremos darle la baja a alguien
@@ -1437,7 +1445,10 @@ public class AbilitySystemComponent : MonoBehaviour
 
         RemoveTag(EGameplayTag.State_Dead);
         if (Attributes.ContainsKey(EAttributeType.MaxHealth))
-            SetCurrentAttributeValue(EAttributeType.Health, Attributes[EAttributeType.MaxHealth].CurrentValue);
+        {
+            float max = Attributes[EAttributeType.MaxHealth].CurrentValue;
+            SetCurrentAttributeValue(EAttributeType.Health, Mathf.Max(1f, max * Mathf.Clamp01(healthFraction)));
+        }
         OnRevive?.Invoke();
     }
 
@@ -1561,6 +1572,40 @@ public class AbilitySystemComponent : MonoBehaviour
     public void UnregisterDamageModifier(IDamageModifier modifier)
     {
         _damageModifiers.Remove(modifier);
+    }
+
+    // Lo mismo para las curaciones que reparte este personaje (ver IHealModifier).
+    private readonly List<IHealModifier> _healModifiers = new List<IHealModifier>();
+
+    public void RegisterHealModifier(IHealModifier modifier)
+    {
+        if (modifier != null && !_healModifiers.Contains(modifier))
+            _healModifiers.Add(modifier);
+    }
+
+    public void UnregisterHealModifier(IHealModifier modifier)
+    {
+        _healModifiers.Remove(modifier);
+    }
+
+    // Corre los modificadores de curación de ESTE personaje (el que cura) sobre una
+    // curación a 'target'. La llama ExecuteInstantEffect sobre el ASC del autor.
+    public float ResolveOutgoingHeal(AbilitySystemComponent target, float magnitude, bool isPeriodicTick)
+    {
+        if (_healModifiers.Count == 0) return magnitude;
+
+        HealContext ctx = new HealContext
+        {
+            Source         = this,
+            Target         = target,
+            IsPeriodicTick = isPeriodicTick,
+            Magnitude      = magnitude,
+        };
+
+        for (int i = 0; i < _healModifiers.Count; i++)
+            _healModifiers[i]?.ModifyOutgoingHeal(ref ctx);
+
+        return Mathf.Max(0f, ctx.Magnitude);
     }
 
     // Corre el pipeline de daño SALIENTE de ESTE personaje (el atacante) contra

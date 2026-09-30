@@ -894,7 +894,7 @@ MonoBehaviour:
   NetworkMoveDirection: {x: 0, y: 0, z: 0}
   isRadialMenuOpen: 0
   AutoRepeatPrimaryAttack: 1
-  StartSubclassWithFullUltimate: 0
+  StartSubclassWithFullUltimate: 1
   UltimateKeptOnClassChange: 0.5
   TankChargePerDamage: 0.15
   DamageChargePerKill: 30
@@ -949,7 +949,6 @@ MonoBehaviour:
   NetworkBehaviours:
   - {fileID: 1688608165834369433}
   - {fileID: 5838954965263433604}
-  - {fileID: 0}
   - {fileID: 4048573921564837201}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
@@ -961,7 +960,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584115137463354811
+  _initializedTimestamp: -8584108174126336829
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
@@ -1047,7 +1046,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b09233446f8fe4140b9273915b218fd9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 3
+  _componentIndexCache: 2
   _addedNetworkObject: {fileID: 57168585733728244}
   _networkObjectCache: {fileID: 57168585733728244}
   ExperiencePerKill: 50

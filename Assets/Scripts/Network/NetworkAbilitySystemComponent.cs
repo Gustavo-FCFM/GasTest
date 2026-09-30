@@ -911,6 +911,7 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         _asc.CancelInterruptibleAbilities();
 
         ability.CommittedThisActivation = false;
+        ability.StartedThisActivation   = false;
         ability.Activate();
 
         // Una habilidad de MANTENER no anima con un clip one-shot sino con un estado
@@ -927,7 +928,9 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         // sin comprometer costo ni cooldown (el Golpe mortal del Pícaro sin nadie a
         // tiro es el caso típico). Entonces tampoco se anima — animar algo que no pasó
         // le miente al que está mirando, y encima delata la posición del que falló.
-        if (!ability.CommittedThisActivation) return;
+        // La excepción son las que cobran después (un lanzamiento cobra al soltar): esas
+        // avisan con StartedThisActivation que sí arrancaron.
+        if (!ability.CommittedThisActivation && !ability.StartedThisActivation) return;
 
         // De qué habilidad sale la animación: normalmente ella misma, pero las
         // envoltorio (ataque que cambia según un tag) delegan en su variante — y hay
@@ -1925,6 +1928,22 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     public void Revive()
     {
         if (_asc != null) _asc.Revive();
+    }
+
+    // Revivir DONDE ESTÁ, traído por otro (la Resurrección del Clérigo). A diferencia
+    // del respawn: no se mueve, vuelve con parte de la vida y conserva sus cooldowns
+    // (lo traen de vuelta en medio de la pelea, no reaparece descansado). Cancela la
+    // reaparición en la base que ya estaba programada: si no, a los segundos lo
+    // mandaría a la base igual.
+    [Server]
+    public void ServerResurrect(float healthFraction)
+    {
+        if (_asc == null || !_asc.HasTag(EGameplayTag.State_Dead)) return;
+
+        NetworkGameManager gm = FindFirstObjectByType<NetworkGameManager>();
+        if (gm != null) gm.CancelRespawn(this);
+
+        _asc.Revive(resetAbilities: false, healthFraction: healthFraction);
     }
 
     // =========================================================

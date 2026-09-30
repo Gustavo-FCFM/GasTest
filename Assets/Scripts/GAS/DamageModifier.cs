@@ -71,3 +71,29 @@ public interface IIncomingDamageModifier
     // Ajusta el contexto de un golpe que va a recibir el dueño de este modificador.
     void ModifyIncomingDamage(ref IncomingDamageContext ctx);
 }
+
+// ============================================================
+// IHealModifier / HealContext
+//
+// El mismo pipeline, pero para las CURACIONES que reparte el dueño. Lo registra una
+// pasiva en el ASC de quien CURA (Médico bendecido del Clérigo de la Vida: cura más
+// cuanta menos vida tiene el objetivo), y ExecuteInstantEffect lo corre sobre toda
+// curación que venga de un efecto con autor, incluida la que uno se hace a sí mismo.
+//
+// Lo que escribe la vida directo (el aura del Paladín, el escudo que cura) no pasa
+// por acá: no es un efecto, es una cuenta propia de esa pieza.
+// ============================================================
+
+public struct HealContext
+{
+    public AbilitySystemComponent Source;   // Quien cura (dueño de los modificadores)
+    public AbilitySystemComponent Target;   // Quien recibe la curación (puede ser el mismo)
+    public bool  IsPeriodicTick;            // True si es un tick de una curación con el tiempo
+    public float Magnitude;                 // Magnitud actual (positiva = curación). Mutable.
+}
+
+public interface IHealModifier
+{
+    // Ajusta una curación saliente del dueño de este modificador.
+    void ModifyOutgoingHeal(ref HealContext ctx);
+}

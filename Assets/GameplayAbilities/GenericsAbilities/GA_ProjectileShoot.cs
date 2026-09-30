@@ -112,6 +112,10 @@ public class GA_ProjectileShoot : GameplayAbility
             }
 
             OwnerASC.StartAbilityCoroutine(ShootSequence());
+
+            // Arrancó de verdad, aunque cobre recién al soltar: sin esto el servidor no
+            // les manda la animación a los demás (ver StartedThisActivation).
+            StartedThisActivation = true;
         }
     }
 

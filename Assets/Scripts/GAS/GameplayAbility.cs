@@ -379,6 +379,14 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // animarse: la reinicia ServerActivateAbility antes de cada Activate().
     [System.NonSerialized] public bool CommittedThisActivation;
 
+    // True si ESTA activación arrancó de verdad aunque cobre MÁS TARDE. Un lanzamiento
+    // (GA_ProjectileShoot) cobra al soltar el proyectil, no al empezar la animación: al
+    // salir de Activate() todavía no comprometió nada, y sin esta marca el servidor
+    // creía que se había plantado y no les mandaba la animación a los demás (el hacha
+    // del Bárbaro y la daga del Pícaro volaban sin que se viera el brazo). La reinicia
+    // ServerActivateAbility junto con la de arriba.
+    [System.NonSerialized] public bool StartedThisActivation;
+
     // Para no repetir el aviso de "CooldownEffect sin tag" en cada activación.
     [System.NonSerialized] private bool _warnedNoCooldownTag;
 
