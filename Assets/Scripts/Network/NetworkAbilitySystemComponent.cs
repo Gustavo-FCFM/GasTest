@@ -1699,6 +1699,41 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         AudioManager.Play(ability.ImpactSound, position);
     }
 
+    // Como ServerPlayAbilityVFX, pero sobre un PERSONAJE: se manda su NetworkObject en
+    // vez de una posición, así cada peer puede pegarle el VFX y que lo siga (la curación
+    // de GA_Target sobre un aliado que se está moviendo).
+    [Server]
+    public void ServerPlayAbilityVFXOn(GameplayAbility ability, AbilitySystemComponent target)
+    {
+        if (ability == null || target == null) return;
+
+        ability.PlayImpactVFXOn(target);
+        AudioManager.Play(ability.ImpactSound, target.transform.position);
+
+        int abilityIndex = GameplayAbilityRegistry.Instance != null
+            ? GameplayAbilityRegistry.Instance.GetIndex(ability) : -1;
+        NetworkObject targetNob = target.GetComponent<NetworkObject>();
+
+        if (abilityIndex >= 0 && targetNob != null)
+            ObserversPlayAbilityVFXOn(abilityIndex, targetNob);
+        else if (abilityIndex < 0)
+            Debug.LogWarning($"[NetworkASC] '{ability.AbilityName}' no está en GameplayAbilityRegistry — su VFX de impacto no se replicará a los clientes remotos.");
+    }
+
+    [ObserversRpc]
+    private void ObserversPlayAbilityVFXOn(int abilityIndex, NetworkObject target)
+    {
+        // El servidor ya lo reprodujo en ServerPlayAbilityVFXOn() de arriba.
+        if (IsServerInitialized || target == null) return;
+
+        GameplayAbility ability = GameplayAbilityRegistry.Instance?.GetAbility(abilityIndex);
+        AbilitySystemComponent targetAsc = target.GetComponent<AbilitySystemComponent>();
+        if (ability == null || targetAsc == null) return;
+
+        ability.PlayImpactVFXOn(targetAsc);
+        AudioManager.Play(ability.ImpactSound, targetAsc.transform.position);
+    }
+
     // Muestra/oculta el arma en mano de este personaje en TODOS los peers.
     //
     // La usan las habilidades de lanzamiento: el hueso de prop del rig anima el arma

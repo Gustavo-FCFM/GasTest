@@ -171,7 +171,9 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   directo** (como el aura del Paladín) tiene que avisar con `NotifyHealedAlly`, o el
   soporte no carga con ella — y con `ASC.ShowCombatNumber(curado, ECombatNumber.Heal)`,
   o no sale su número verde. Lo que pasa por `ExecuteInstantEffect` avisa las dos
-  cosas solo.
+  cosas solo. **Curarse a uno mismo no carga**: `OnHealedAlly` es solo para curar a
+  OTRO. La pasiva que quiera enterarse de la autocuración (la Bendición del Clérigo)
+  escucha `OnHealedSelf`, que va aparte justamente para no tocar la carga.
 
 Los detalles finos del GAS (pipeline de daño, acumulación de efectos, animaciones de
 combo) están en `DesignDocuments/GAS_Arquitectura.docx`.

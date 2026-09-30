@@ -3,13 +3,14 @@ using UnityEngine;
 // ============================================================
 // ClericBlessingPassive  (Bendición — pasiva del Clérigo)
 //
-// "Los aliados a los que cura obtienen resistencia al daño durante un tiempo."
+// "Los aliados a los que cura obtienen resistencia al daño durante un tiempo." También
+// el propio Clérigo cuando se cura a sí mismo.
 //
 // No hace falta tocar cada curación del Clérigo (el arco, la curación apuntada, y las
 // de las subclases que vengan): todas pasan por el pipeline de efectos, que ya avisa
-// OnHealedAlly cuando ESTE personaje le sube la vida a un ALIADO (nunca a sí mismo, y
-// sin contar lo que se pasaba del máximo). Esta pasiva escucha ese aviso y le aplica
-// BlessingEffect al curado. Una curación que escriba la vida directo tiene que avisar
+// OnHealedAlly cuando ESTE personaje le sube la vida a un ALIADO, y OnHealedSelf cuando
+// se la sube a sí mismo (sin contar, en los dos, lo que se pasaba del máximo). Esta
+// pasiva escucha los dos avisos y le aplica BlessingEffect al curado. Una curación que escriba la vida directo tiene que avisar
 // con NotifyHealedAlly —como el aura del Paladín— y queda cubierta igual.
 //
 // Vive en el PassiveBehaviorsPrefab de la clase: se crea al equiparla y se destruye al
@@ -39,12 +40,16 @@ public class ClericBlessingPassive : MonoBehaviour
 
     private void OnEnable()
     {
-        if (_asc != null) _asc.OnHealedAlly += HandleHealedAlly;
+        if (_asc == null) return;
+        _asc.OnHealedAlly += HandleHealedAlly;
+        _asc.OnHealedSelf += HandleHealedSelf;
     }
 
     private void OnDisable()
     {
-        if (_asc != null) _asc.OnHealedAlly -= HandleHealedAlly;
+        if (_asc == null) return;
+        _asc.OnHealedAlly -= HandleHealedAlly;
+        _asc.OnHealedSelf -= HandleHealedSelf;
     }
 
     // Se anota y se aplica en el Update, no en el aviso mismo: una curación con el
@@ -61,6 +66,8 @@ public class ClericBlessingPassive : MonoBehaviour
 
         _pending.Add(ally);
     }
+
+    private void HandleHealedSelf(float healed) => HandleHealedAlly(_asc, healed);
 
     private void Update()
     {

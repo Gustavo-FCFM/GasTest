@@ -67,8 +67,19 @@ public class GA_Target : GameplayAbility
     public List<GameplayEffect> TargetEffects;
 
     [Header("Visuales")]
-    [Tooltip("VFX que aparece sobre el objetivo alcanzado.")]
+    [Tooltip("VFX que aparece sobre el objetivo alcanzado (se ve en todas las pantallas).")]
     public GameObject ImpactVFX;
+
+    [Tooltip("Pegar el VFX al objetivo, así lo sigue si se mueve. Apagado, queda quieto " +
+             "donde apareció.")]
+    public bool AttachImpactVFX = true;
+
+    [Tooltip("Dónde aparece el VFX, medido desde los pies del objetivo. (0, 1, 0) es a la " +
+             "altura del pecho; un aura pensada para ir en el piso va con (0, 0, 0).")]
+    public Vector3 ImpactVFXOffset = new Vector3(0f, 1f, 0f);
+
+    [Tooltip("Segundos hasta que el VFX se borra.")]
+    public float ImpactVFXLifetime = 2f;
 
     // =========================================================
     // ACTIVACIÓN
@@ -118,9 +129,9 @@ public class GA_Target : GameplayAbility
             pc.PlayAnimation(this);
         }
 
-        Vector3 vfxPos = target.transform.position + Vector3.up;
-        if (netAsc != null) netAsc.ServerPlayAbilityVFX(this, vfxPos);
-        else PlayImpactVFX(vfxPos);
+        // Se manda el OBJETIVO y no un punto: cada pantalla le pega el VFX a él.
+        if (netAsc != null) netAsc.ServerPlayAbilityVFXOn(this, target);
+        else PlayImpactVFXOn(target);
 
         EndAbility();
     }
@@ -161,7 +172,18 @@ public class GA_Target : GameplayAbility
     {
         if (ImpactVFX == null) return;
         GameObject vfx = Instantiate(ImpactVFX, position, Quaternion.identity);
-        Destroy(vfx, 2.0f);
+        Destroy(vfx, ImpactVFXLifetime);
+    }
+
+    public override void PlayImpactVFXOn(AbilitySystemComponent target)
+    {
+        if (ImpactVFX == null || target == null) return;
+
+        Transform t = target.transform;
+        GameObject vfx = Instantiate(ImpactVFX, t.position + ImpactVFXOffset, Quaternion.identity);
+        // Pegado al personaje: lo sigue, y si el personaje desaparece se va con él.
+        if (AttachImpactVFX) vfx.transform.SetParent(t, true);
+        Destroy(vfx, ImpactVFXLifetime);
     }
 
     // Vista previa del alcance de selección en el Editor.

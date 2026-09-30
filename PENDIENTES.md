@@ -61,11 +61,18 @@ En orden de lo que más mueve la demo:
    | Pasiva | Bendición: los aliados que cura reciben +10 % de resistencia 5 s | `ClericBlessingPassive` (nueva) |
    | Clic izq. | Arco de luz: atraviesa; 1.0× daño mágico a enemigos (`GE_Class_Magic_Damage`), 2.0× curación a aliados (`GE_SmiteHealing`); vuela hasta chocar (`LifeTime` 0) | `GA_ProjectileShoot` |
    | Clic der. | Curación al aliado de la mira (o a uno mismo), 2.0× (`GE_SmiteHealing`), 4 cargas de 3 s | `GA_Target` |
-   | Q | Luz guía: rayo muy rápido (100) que atraviesa, 2.0× y +20 % de daño recibido 4 s | `GA_ProjectileShoot` |
+   | Q | Guiding Bolt (Luz guía): rayo muy rápido (100) que atraviesa, 2.0× y +20 % de daño recibido 5 s (`GE_Bane`) | `GA_ProjectileShoot` |
    | Shift | Destello: estilo Misty Step, la mira es la guía. Mirando un piso, ahí; mirando una pared o una plataforma por abajo, al piso de ENCIMA (o si no, al de abajo); mirando al aire, al piso más cercano bajo ese punto. Caminando de lado o hacia atrás, en esa dirección lo más lejos posible, mirando al frente. Siempre sobre piso; no cruza paredes invisibles, rejas ni muros | `GA_Teleport` (nueva, con `DirectionalTeleport`) |
 
-   Estadísticas de partida: 80 vida, 4 defensa, 6 ataque, 8 daño mágico, 0.9 s entre
-   ataques. El bot elige su rol por `EClassRole` (el Clérigo juega de Support). Ya tiene
+   Estadísticas de partida: 80 vida, 4 defensa, 6 ataque, 8 daño mágico, 0.8 s entre
+   ataques (29 de septiembre; antes 0.9). La curación se llama ahora `GA_HealingWord`
+   (antes `GA_ClericHeal`, mismo asset). Guiding Bolt y el Destello no se pueden usar
+   aturdido ni silenciado (el Destello tampoco enraizado).
+
+   - [ ] **Correr `Mercenarios ▸ Actualizar los registros de red`**: el registro de
+         efectos todavía apunta a `GE_GuidingLightDamage`, que se borró (Guiding Bolt
+         ahora usa el daño mágico común). `GE_Bane` es el viejo `GE_GuidingLightMark`
+         renombrado: ese sigue bien. El bot elige su rol por `EClassRole` (el Clérigo juega de Support). Ya tiene
    íconos, `AOC_Cleric` y el bastón (`Quarterstaff 1`) en la mano derecha.
 
    ⚠ **`GE_SmiteHealing` ahora escala con daño mágico** (antes con ataque) y lo comparte
@@ -73,26 +80,59 @@ En orden de lo que más mueve la demo:
    porque el Paladín tiene 8 y 8, pero si algún día sube uno solo de los dos, la curación
    de su rayo cambia con él. Si querés separarlos: duplicar el GE para el Clérigo.
 
-   **El libro en la mano izquierda — CÓDIGO HECHO, falta cablear y probar.** Campo nuevo
-   `Off Hand Pose` en cada clase: una pose fija del brazo izquierdo que va en la capa
-   `OffHandPose` de `AC_Player` (última capa, máscara `Human Arm Left Mask`). El libro se
-   queda en su lugar mientras el bastón ataca, se suelta al morir sin ragdoll, y las
-   copias del Ilusionista también lo sostienen. La herramienta ya se corrió (la capa y
-   `PLACEHOLDER_OffHandPose` están) y se borró, pero `Class_Cleric` quedó con los dos
-   campos vacíos:
+   **El libro en la mano izquierda — QUITADO por ahora (29 de septiembre).** La pose fija
+   dejaba la mano siempre hacia abajo y se veía raro. El código quedó (campo `Off Hand
+   Pose` de cada clase y la capa `OffHandPose` de `AC_Player`) por si el artista hace
+   una pose que sirva; `Human_MageBook.prefab` se borró.
 
-   - [ ] En `Class_Cleric`: `Off Hand Pose` = el clip `HumanM@ObjectBook01_L` (adentro del
-         .fbx, en Kevin Iglesias ▸ Human Animations ▸ Animations ▸ Masked Poses) y
-         `Off Hand Weapon Prefab` = `Book`.
-   - [ ] Acomodar el libro con `Off Hand Rotation / Position Offset` (el socket de la
-         izquierda viene girado 180°: empezar con 180 en Z).
-   - [ ] Probar en red: el otro jugador también ve el libro sostenido.
-   - [ ] `Human_MageBook.prefab` quedó suelto en la raíz de `Assets/`: salió de la carpeta
-         del demo de Kevin (`Human Spellcasting Animations/Prefabs`), que es lo único que lo
-         usa. Devolverlo ahí (tu `Book` no depende de él).
-   - [ ] El `FlashVFX` del Destello.
-   - [ ] Después: las tres subclases (Vida, Luz, Orden), con Resurrección y Revelar
-         invisibles como sistemas nuevos.
+   **Arte (animaciones, esqueletos, VFX y sonido): lo toma el artista contratado.**
+   Lo de arte de esta lista queda para él.
+
+   - [ ] El `FlashVFX` del Destello (artista).
+   - [x] La Bendición también cuando el Clérigo se cura a sí mismo (29 de septiembre):
+         aviso nuevo `ASC.OnHealedSelf`, aparte de `OnHealedAlly` para que curarse NO
+         cargue la definitiva. **Compila; falta probarlo** (clic derecho sin nadie en la
+         mira, herido: tiene que aparecer `GE_Blessing` 5 s).
+   - [x] El VFX de la curación sigue al curado (29 de septiembre): `GA_Target` tiene
+         `Attach Impact VFX`, `Impact VFX Offset` y `Impact VFX Lifetime`, y la red manda
+         al OBJETIVO (`NetworkASC.ServerPlayAbilityVFXOn`) en vez de un punto. Vale para
+         todo `GA_Target`. **Compila; falta probarlo en red** (dejar que Unity recompile:
+         hay una RPC nueva). Para el aura `Healing` de Hovl, probar Offset (0, 0, 0).
+
+   **★ MAÑANA A PRIMERA HORA: las subclases del Clérigo.** Plan del 29 de septiembre.
+
+   Cómo va: cada subclase es su propio `Class_*.asset` con kit completo, colgado de
+   `Class_Cleric` en `AvailableSubclasses`, igual que los juramentos del Paladín. Así una
+   subclase puede reemplazar habilidades de la base (la Luz cambia la curación
+   instantánea por una con el tiempo). Armas nuevas (hoz, martillo) y colores de los
+   hechizos: del artista; mientras, el bastón.
+
+   | Subclase · habilidad | Qué ya hay | Qué falta |
+   |---|---|---|
+   | **Vida** · Preservar vida | `GA_Target` hacia aliados + `Status_Immortal` (no deja bajar de 1 de vida; lo usa el Inmortal) | **Sin código**: dos assets |
+   | **Vida** · Médico bendecido | Modificadores de daño saliente (`IDamageModifier`, como el backstab) | Un gancho igual para CURACIONES (hoy solo corre sobre daño) |
+   | **Vida** · Resurrección | `GA_Target` con Allow Dead Targets; `ASC.Revive()` y su versión en red (la usa el Inmortal) | Revivir a OTRO donde está su cuerpo, con la mitad de la vida, y cancelar su reaparición en la base |
+   | **Luz** · hechizos de fuego | Efectos periódicos; la Bendición ya cuenta los ticks | Solo assets: versiones con el tiempo del arco, la curación y la Luz guía |
+   | **Luz** · Luz del amanecer | Zonas al piso (`GroundTargetAbility`, `GA_ContinuousAoE`) | Que la misma zona dañe enemigos y cure aliados, si hoy no lo hace |
+   | **Luz** · Faro de esperanza | El aura por anillos del Paladín | "Más curación recibida" (atributo nuevo, AL FINAL del enum) y **revelar invisibles** (sistema nuevo, sobre `PlayerVisibility`) |
+   | **Luz** · Quemadura santa | `GA_ConeAttack`, efectos con el tiempo, y el Enemigo jurado (cura a quien golpea al marcado) | Juntar esas piezas |
+   | **Orden** · aturdir al primer impacto | Proyectil que atraviesa + aturdido | Efectos solo para el PRIMER enemigo tocado |
+   | **Orden** · Aturdir | Marcas sobre enemigos (Enemigo jurado, Apostar) | Reaccionar cuando el marcado le pega a un aliado |
+   | **Orden** · Heroísmo | Aura por anillos + atributo `CCResistance` | **Sin código**: un efecto de aura |
+   | **Orden** · Zona de verdad | Zona al piso + `State_Silenced` | **Desarmar** (tag nuevo que bloquea el básico; lo reusa el Guerrero) y zona que afecte a los TRES equipos |
+
+   Orden propuesto: **Vida** (Preservar vida sale sin código; la Resurrección es lo más
+   difícil y toca la reaparición y la red, mejor temprano) → **Orden** (trae Desarmar
+   para el Guerrero, y dos casi gratis) → **Luz** (la más larga).
+
+   Para decidir antes de arrancar:
+   - [ ] **Resurrección y los 5 s de reaparición**: el cuerpo existe solo hasta que el
+         muerto reaparece. ¿Así (hay que ser rápido), reaparición más larga si hay un
+         Clérigo aliado con la definitiva lista, o un botón de "esperar resurrección"?
+   - [ ] **Números**: el glosario no tiene nada del Clérigo. Valores de arranque
+         propuestos por Claude, y se ajustan en el editor.
+   - [ ] **Zona de verdad afecta a todos**, también al equipo propio y al Clérigo (así
+         dice el diseño). Confirmar.
 2. **El mapa del cementerio — GREYBOX ARMADO (29 de septiembre), falta jugarlo.** Escena
    nueva `Scenes/Mercenaries_Graveyard.unity` (copia de la del modo, con sala, red y menús;
    la vieja no se tocó). Ya la estás editando a mano. Detalle, rutas

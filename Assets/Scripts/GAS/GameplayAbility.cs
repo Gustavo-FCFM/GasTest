@@ -1061,6 +1061,15 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         OwnerASC = prev;
     }
 
+    // VFX de impacto sobre un PERSONAJE en vez de un punto: lo que llega por
+    // NetworkAbilitySystemComponent.ServerPlayAbilityVFXOn(), que manda al objetivo
+    // (su NetworkObject) y no una posición, así cada peer puede pegárselo. Por defecto
+    // cae al VFX puntual a un metro de altura; GA_Target lo sobreescribe para seguirlo.
+    public virtual void PlayImpactVFXOn(AbilitySystemComponent target)
+    {
+        if (target != null) PlayImpactVFX(target.transform.position + Vector3.up);
+    }
+
     // =========================================================
     // GIZMOS — vista previa del área real de la habilidad en el Editor
     // =========================================================

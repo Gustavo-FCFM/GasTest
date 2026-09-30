@@ -125,6 +125,12 @@ public class AbilitySystemComponent : MonoBehaviour
     public event Action<AbilitySystemComponent, float> OnHealedAlly;
     public void NotifyHealedAlly(AbilitySystemComponent ally, float healed) => OnHealedAlly?.Invoke(ally, healed);
 
+    // ESTE personaje se curó a SÍ MISMO con un efecto propio (la curación del Clérigo sin
+    // nadie en la mira). Va aparte de OnHealedAlly a propósito: curarse no carga la
+    // definitiva de soporte, pero una pasiva como la Bendición sí quiere enterarse. El
+    // robo de vida y los botiquines escriben la vida directo y no pasan por acá.
+    public event Action<float> OnHealedSelf;
+
     // Cuánta carga tiene la definitiva: 0 = recién usada, con el cooldown entero por
     // delante; 1 = lista. Todas las definitivas comparten el tag de cooldown
     // Ability_Cooldown_Ultimate, así que se lee de ahí. Sin cooldown puesto, está lista.
@@ -1050,6 +1056,10 @@ public class AbilitySystemComponent : MonoBehaviour
         {
             if (damageEndured > 0f) OnDamageEndured?.Invoke(damageEndured);
             if (healthHealed > 0f && !sourceASC.IsEnemyOf(this)) sourceASC.NotifyHealedAlly(this, healthHealed);
+        }
+        else if (ReferenceEquals(sourceASC, this) && healthHealed > 0f)
+        {
+            OnHealedSelf?.Invoke(healthHealed);
         }
 
         // Los números flotantes, sobre este personaje. El daño es lo que pasó bloqueo y
