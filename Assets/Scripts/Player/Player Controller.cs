@@ -1097,6 +1097,20 @@ public class PlayerController : NetworkBehaviour
         }
     }
 
+    // Una habilidad UsableWhileHolding con el escudo arriba (la Carga defensiva). Solo se
+    // pide al servidor: NO se toca el estado del mantenido (isAttacking ya está en true
+    // por el escudo, y _holdAbility tiene que seguir apuntándolo para que soltar el botón
+    // lo baje) ni se anticipa la animación (rompería la pose del escudo). Las de rueda o
+    // de zona no entran acá: necesitan su propio modo de apuntado.
+    private void PressWhileHolding(GameplayAbility ability, EAbilityInput slot)
+    {
+        if (ability is IRadialMenuAbility) return;
+        if (ability is IGroundTargetAbility ground && ground.UsesGroundTarget) return;
+        if (!ability.CanActivate()) return;
+
+        RequestAbility(slot);
+    }
+
     // Al presionar el input de una habilidad: si es de menú radial, abre
     // el menú; si no, predice la animación localmente y pide su
     // activación al servidor.
@@ -1106,7 +1120,14 @@ public class PlayerController : NetworkBehaviour
         // escudo ocupa las manos. El input se sigue leyendo igual (HandleAbilityInput
         // no corta por IsAimingAbility) porque hace falta detectar cuándo se SUELTA
         // la que está en curso — pero las demás presiones se descartan acá.
-        if (IsHoldingAbility) return;
+        //
+        // La excepción son las marcadas UsableWhileHolding (la Carga defensiva del
+        // Guerrero): esas pasan, sin tocar el estado del escudo, que sigue arriba.
+        if (IsHoldingAbility)
+        {
+            if (ability.CanUseWhileHolding && !(ability is IHoldAbility)) PressWhileHolding(ability, slot);
+            return;
+        }
 
         // Lo que arranca ahora no es (todavía) un básico interrumpible: la rueda, el
         // mantenido y la zona nunca lo son, y el camino normal lo vuelve a decidir abajo.

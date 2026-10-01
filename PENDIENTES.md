@@ -246,6 +246,68 @@ En orden de lo que más mueve la demo:
          `OathOfConquestBehaviours`. Ajustes al lado: `Heal VFX Offset` (0, 1, 0 = pecho),
          `Attach Heal VFX`, `Heal VFX Lifetime`.
    - [x] Probar en red: el otro jugador ve el destello sobre los curados.
+   **Guerrero (Fighter) — KIT BASE HECHO Y PROBADO ✅ (1 de octubre).** Los assets los
+   creó una herramienta corrida en batch con Unity cerrado (ya borrada). Números de
+   Gustavo; los que no vinieron, marcados ⚙.
+
+   | Ranura | Qué hace | Pieza |
+   |---|---|---|
+   | Stats | 100 vida, 8 ataque, 6 armadura, 1 s entre ataques, velocidad 6 (la del Bárbaro), 100 de energía | `ASDef_Fighter` (copia del Paladín, sin daño mágico) |
+   | Clic izq. | Combo ALTERNADO de dos conos de 180° y 2 m, daño de clase y "Stones hit": derecha→izquierda (`Attack1H01_R`) e izquierda→derecha (`Attack1H02_R`) | `GA_FighterPrimaryCombo` → `GA_FighterSlashRight` / `GA_FighterSlashLeft` |
+   | Clic der. | El escudo del Paladín + **parry**: ⚙ los primeros 0.3 s al levantarlo, un golpe que la barrera frena se frena ENTERO y no gasta energía; si el atacante está a ⚙ 3.5 m o menos, queda aturdido (`GE_ParryStun`, 1 s) | `GA_FighterShieldBlock` + `Entity_ShieldBarrier` (`ParryWindow`, `ParryMeleeRange`, `ParryStunEffect`) |
+   | Q | Postura: en defensiva pasa a ofensiva y viceversa, 1 s de reutilización. Ofensiva +2 ataque; defensiva +2 armadura. Empieza en defensiva. El botón muestra la postura ACTUAL | `GA_FighterStance` (`GA_TagSwitch`) + `GE_StanceDefensive` / `GE_StanceOffensive` |
+   | Shift | Carga según la postura. Ofensiva: atraviesa y daña a todos. Defensiva: frena frente al primero, le pega y lo aturde (`GE_Stun`). ⚙ 5 m a 35 de velocidad (los del Ángel vengador); su cooldown es el de `GE_Cooldown_MoveAbility` | `GA_FighterCharge` (`GA_TagSwitch`) → `GA_FighterChargeOffensive` / `GA_FighterChargeDefensive` |
+   | Pasiva | Segundo aliento. Fuera de combate (3 s sin que le baje la vida): cada 1 s, 5 % de la vida que le FALTA (como Sett del LoL). Bajo el 30 %: el 80 % de su vida máxima de ese momento, en 5 curaciones durante 5 s (la primera en el acto); ⚙ puede volver a saltar a los 60 s | `OutOfCombatRegen` + `EmergencyHeal` en `FighterBehaviours`. Modo de la regeneración: % de lo que falta, % de la máxima o fijo |
+
+   Piezas nuevas de código:
+   - **`ReplacesGroup`** en los GE: el último de un `EffectGroup` reemplaza a los otros sin
+     importar Priority. Las posturas comparten grupo (`Status_Stance`), así que entrar a una
+     saca la otra en el acto: nunca están las dos. Por eso NO hace falta que duren 0.5 s:
+     duran "para siempre" (99999 s, como `GE_EnergyRegen`) y son Hidden, para que la muerte
+     no las borre.
+   - Tags nuevos (al final del enum): `Stance_Defensive`, `Stance_Offensive`, `Status_Stance`.
+   - **`CurrentIcon`**: el HUD revisa el ícono cada frame. `GA_TagSwitch` con
+     `ShowVariantIcon` muestra el de la variante activa (`Icon` por variante y
+     `DefaultIcon` para cambiarlos). El Castigo divino del Paladín no cambia (apagado).
+   - **`GA_Dash`**: `StopAtFirstEnemy` (se acorta para frenar frente al primero),
+     `FirstHitEffects` y `StopShortDistance`.
+   - **La barrera sigue la mira** (`FollowAimPitch`, `PitchPivotHeight`, `PitchFactor`):
+     sube y baja con el mismo ángulo que el torso (`UpperBodyAim.CurrentPitch`), así se ve
+     igual en todas las pantallas y el servidor bloquea con esa geometría. Vale también
+     para el Paladín.
+
+   - [x] **Probar el Guerrero** (PROBADO ✅; Gustavo ajustó valores e íconos): el combo alterna los dos cortes; el escudo apunta arriba y
+         abajo con la mira (también el del Paladín); parry contra un melee (aturde, no gasta
+         energía) y contra un proyectil (frena, no gasta); Q cambia la postura, el ícono y
+         la armadura/ataque (mirar los stats); el Shift según la postura; la regeneración
+         fuera de combate y la de emergencia bajo el 30 %; que al morir conserve la postura.
+   - [x] **Carga defensiva con el escudo arriba** (1 de octubre, PROBADO ✅):
+         casilla nueva `Usable While Holding` en las habilidades (MARCARLA en
+         `GA_FighterChargeDefensive`). El `GA_TagSwitch` la resuelve por variante: la ofensiva
+         sigue bloqueada. El escudo sigue arriba durante y después de la carga (se baja
+         soltando el botón) y la carga no se anima mientras se sostiene. Probar: cargar con
+         el escudo, soltar el clic derecho después de la carga (tiene que bajar), soltarlo
+         EN MEDIO de la carga, y en red (que no vuelva el escudo eterno).
+   - [ ] En el editor: el ajuste de la espada en la mano (`MainHandRotationOffset` en
+         `Class_Fighter`: se copió en cero del martillo del Paladín) y los VFX.
+
+   **Subclases del Guerrero — lo decidido (1 de octubre), sin empezar:**
+   - **Comandante · Salto heroico**: elegir una zona y TELETRANSPORTARSE (no un salto físico
+     como el del Bárbaro), con animación de salto después. GA nuevo solo para esa definitiva,
+     más la bandera (una zona con `AllyEffects`).
+   - **Escudo a la espalda en postura ofensiva** (para tomar el arma a dos manos): poco
+     código, unas 40 líneas en `PlayerController` que mueven el arma de la mano izquierda a
+     un socket en la espalda mientras tenga `Stance_Offensive` (los tags ya viajan a todos).
+     Hace falta un `Socket_Back` en el hueso de la columna (editor) y poses de dos manos
+     (Kevin trae `WeaponHold2H01`).
+   - **Habilidades que se mantienen para cargar** (el ataque de 3 etapas del Maestro de
+     batalla; también apuntar y soltar en las de distancia, y migrar el Golpe final del
+     Inmortal): un sistema genérico de "mantener = cargar / apuntar, tocar = rápido" sobre el
+     `IHoldAbility` que ya usa el escudo. Es la pieza más grande de las subclases.
+   - **Guardián**: su postura defensiva da +3 de armadura (no +2), y el DOBLE de energía (200
+     de máxima). **Venganza**: pasiva permanente que mira vida actual contra máxima; al
+     llegar a la mitad de la vida tiene el máximo, 30 % de resistencia al daño y al control.
+
 2. **El mapa del cementerio — GREYBOX ARMADO (29 de septiembre), falta jugarlo.** Escena
    nueva `Scenes/Mercenaries_Graveyard.unity` (copia de la del modo, con sala, red y menús;
    la vieja no se tocó). Ya la estás editando a mano. Detalle, rutas

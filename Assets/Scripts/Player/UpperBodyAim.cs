@@ -75,6 +75,12 @@ public class UpperBodyAim : MonoBehaviour
     private float _lastSent = float.NaN;
     private float _nextSendTime;
 
+    // La inclinación actual, en grados (positivo = mirando hacia ABAJO, la misma
+    // convención que el eje X de Unity). Vale en todas las copias: el dueño la mide de su
+    // cámara y las demás la siguen por red. La usa la barrera del escudo para apuntar
+    // hacia donde mira el jugador (ver Entity_ShieldBarrier.FollowAimPitch).
+    public float CurrentPitch => _pitch;
+
     private void Awake()
     {
         _player = GetComponent<PlayerController>();

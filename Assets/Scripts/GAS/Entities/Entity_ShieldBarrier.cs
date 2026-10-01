@@ -64,6 +64,32 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
              "daño traían: se cobra un costo fijo por proyectil detenido.")]
     public float EnergyPerProjectileBlocked = 10f;
 
+    [Header("Parry (Guerrero)")]
+    [Tooltip("Segundos, desde que se LEVANTA el escudo, en los que un golpe que la barrera frena " +
+             "es un PARRY: se frena entero y no gasta energía. 0 = sin parry (el Paladín).")]
+    public float ParryWindow = 0f;
+
+    [Tooltip("Hasta qué distancia del dueño de la barrera un atacante cuenta como cuerpo a cuerpo. " +
+             "A esos, el parry además los aturde (ParryStunEffect); a los de lejos solo se les " +
+             "frena el golpe entero.")]
+    public float ParryMeleeRange = 3.5f;
+
+    [Tooltip("Lo que recibe el atacante cuerpo a cuerpo al que le hacen parry (GE_ParryStun).")]
+    public GameplayEffect ParryStunEffect;
+
+    [Header("Inclinación con la Mira")]
+    [Tooltip("La barrera sube y baja con la mira del jugador (mirando al cielo, el escudo apunta " +
+             "arriba). Sigue la misma inclinación que el torso (UpperBodyAim), así que se ve igual " +
+             "en todas las pantallas y el servidor bloquea con la misma geometría.")]
+    public bool FollowAimPitch = true;
+
+    [Tooltip("Altura del punto sobre el que gira la barrera, medida desde los pies (el pecho).")]
+    public float PitchPivotHeight = 1.2f;
+
+    [Tooltip("Cuánto de la inclinación de la mira sigue la barrera. 1 = toda.")]
+    [Range(0f, 1.5f)]
+    public float PitchFactor = 1f;
+
     [Header("Protección a Aliados")]
     [Tooltip("Si la barrera también protege a los aliados que queden detrás (lo que la convierte " +
              "en un escudo de equipo estilo Reinhardt). Desactivalo para un escudo puramente personal.")]
@@ -109,6 +135,18 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
     private bool  _raised;
     private float _scanTimer;
 
+    // Cuándo se levantó por última vez (para la ventana del parry).
+    private float _raisedAt = -999f;
+
+    // Inclinación: de dónde sale el ángulo y la pose guardada del prefab, sobre la que
+    // se gira (así el ajuste que se le haya dado en el prefab se respeta).
+    private UpperBodyAim _aim;
+    private Vector3      _baseLocalPosition;
+    private Quaternion   _baseLocalRotation;
+
+    // True mientras dura la ventana del parry.
+    public bool IsParrying => _raised && ParryWindow > 0f && Time.time - _raisedAt <= ParryWindow;
+
     // =========================================================
     // CICLO DE VIDA
     // =========================================================
@@ -119,6 +157,10 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
         // PassiveBehaviorsPrefab, que a su vez es hijo del jugador).
         _ownerASC = GetComponentInParent<AbilitySystemComponent>();
         _box      = GetComponent<BoxCollider>();
+        _aim      = _ownerASC != null ? _ownerASC.GetComponentInChildren<UpperBodyAim>(true) : null;
+
+        _baseLocalPosition = transform.localPosition;
+        _baseLocalRotation = transform.localRotation;
 
         if (_box != null && !_box.isTrigger)
             Debug.LogWarning($"[{name}] El BoxCollider de la barrera NO es trigger. Siendo sólido " +
@@ -164,6 +206,21 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
         RefreshCoveredAllies();
     }
 
+    // La barrera gira alrededor del pecho siguiendo la mira. En LateUpdate, después de
+    // que UpperBodyAim actualizó el ángulo del frame. Se gira sobre el eje X del PADRE
+    // (el prefab de pasivas, que gira con el cuerpo), así el yaw lo sigue poniendo el
+    // cuerpo y esto solo agrega el sube-y-baja.
+    private void LateUpdate()
+    {
+        if (!FollowAimPitch || _aim == null) return;
+
+        Quaternion pitch = Quaternion.Euler(_aim.CurrentPitch * PitchFactor, 0f, 0f);
+        Vector3    pivot = new Vector3(0f, PitchPivotHeight, 0f);
+
+        transform.localPosition = pivot + pitch * (_baseLocalPosition - pivot);
+        transform.localRotation = pitch * _baseLocalRotation;
+    }
+
     // =========================================================
     // LEVANTAR / BAJAR
     // =========================================================
@@ -188,6 +245,7 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
 
         if (raised)
         {
+            _raisedAt = Time.time; // arranca la ventana del parry
             Register(_ownerASC);   // el dueño siempre queda cubierto
             _scanTimer = 0f;       // que el primer barrido de aliados sea inmediato
         }
@@ -267,6 +325,23 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
 
         // ¿La barrera se interpone de verdad entre el atacante y la víctima?
         if (!Blocks(ctx.Source.transform.position, ctx.Target.transform.position, out Vector3 hitPoint)) return;
+
+        // PARRY: en la ventana de recién levantado, el golpe se frena ENTERO y no gasta
+        // energía. Si el atacante está cerca (cuerpo a cuerpo), además queda aturdido; a
+        // uno de lejos solo se le frena el golpe.
+        if (IsParrying)
+        {
+            ctx.Magnitude  = 0f;
+            ctx.WasBlocked = true;
+
+            if (ParryStunEffect != null &&
+                Vector3.Distance(ctx.Source.transform.position, _ownerASC.transform.position) <= ParryMeleeRange)
+                ctx.Source.ApplyGameplayEffect(ParryStunEffect, _ownerASC);
+
+            OnDamageBlocked?.Invoke(incoming, hitPoint);
+            BroadcastFlash(hitPoint);
+            return;
+        }
 
         float energy = _ownerASC.GetAttributeValue(EAttributeType.Energy);
         if (energy <= 0f) return; // sin energía no frena nada (la habilidad ya está bajando el escudo)
@@ -378,7 +453,9 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
     {
         if (!_raised || _ownerASC == null) return;
 
-        if (EnergyPerProjectileBlocked > 0f)
+        // Un proyectil parado en la ventana del parry no gasta energía (es de lejos: no
+        // aturde a nadie, solo se frena entero, que un proyectil ya hace siempre).
+        if (EnergyPerProjectileBlocked > 0f && !IsParrying)
         {
             float energy = _ownerASC.GetAttributeValue(EAttributeType.Energy);
             _ownerASC.SetCurrentAttributeValue(EAttributeType.Energy,

@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea2df43c9d4a20c4288e699409b5aa07, type: 3}
+  m_Name: GA_FighterShieldBlock
+  m_EditorClassIdentifier: 
+  AbilityName: Shield Block
+  AbilityIcon: {fileID: 21300000, guid: cf20f2008440dec4bae7f5473afd3184, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 0}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 0
+  ActivationBlockedTags: 01000000
+  ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  AnimationClip: {fileID: 0}
+  AnimationTriggerName: HoldTrigger
+  AnimationID: 98
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  IsInterruptible: 0
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  VisualsSequence: []
+  MaxCharges: 1
+  BlockEffect: {fileID: 11400000, guid: 1054c3ec700fed144bdc881c3366fd5d, type: 2}
+  MinEnergyToActivate: 10
+  EnergyDrainPerSecond: 0
+  MaxHoldTime: 0
+  HoldSafetyTimeout: 20
+  HoldClip: {fileID: 3094330708855449807, guid: 47e702d39cca6d040a91d04069cdee77, type: 3}
+  RaiseClip: {fileID: 0}
+  LowerClip: {fileID: 0}
+  ShieldHitClip: {fileID: 3094330708855449807, guid: 772f29ee37bacbb41a04c5148d93100c, type: 3}
+  ShieldHitCooldown: 0.1

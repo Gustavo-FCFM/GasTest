@@ -98,4 +98,9 @@ public enum EGameplayTag
     State_Disarmed,            // Desarmado: no puede usar el ataque BÁSICO (clic izquierdo), sí sus habilidades. Lo bloquea GameplayAbility.CanActivate con IsBasicAttack. Lo da la Zona de verdad del Clérigo del Orden; lo va a reusar el Guerrero
 
     State_AlwaysVisible,       // Revelado: aunque tenga Status_Invisible, los ENEMIGOS lo ven igual (modelo, barra de vida, números). Ver ASC.IsHiddenFromEnemies. Lo da el Faro de esperanza del Clérigo de la Luz a los enemigos dentro de su aura
+
+    // --- POSTURAS DEL GUERRERO ---
+    Stance_Defensive,          // Postura defensiva del Guerrero (+armadura). La da GE_StanceDefensive; con ella el Shift es la Carga defensiva
+    Stance_Offensive,          // Postura ofensiva del Guerrero (+ataque). La da GE_StanceOffensive; con ella el Shift es la Carga ofensiva
+    Status_Stance,             // No lo otorga nadie: es el EffectGroup de las dos posturas (con ReplacesGroup, entrar a una saca la otra)
 }

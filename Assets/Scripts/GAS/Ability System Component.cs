@@ -533,8 +533,9 @@ public class AbilitySystemComponent : MonoBehaviour
                     GameplayEffect otro = ActiveEffects[i].Definition;
                     if (otro == effect || otro.EffectGroup != effect.EffectGroup) continue;
 
-                    if (otro.Priority >= effect.Priority) return;   // ya hay uno igual/superior
-                    RemoveActiveEffect(ActiveEffects[i]);           // este es superior → quitar el inferior
+                    // ReplacesGroup (posturas): el nuevo SIEMPRE saca a los otros del grupo.
+                    if (!effect.ReplacesGroup && otro.Priority >= effect.Priority) return;   // ya hay uno igual/superior
+                    RemoveActiveEffect(ActiveEffects[i]);           // este es superior (o reemplaza) → quitar el otro
                 }
             }
 

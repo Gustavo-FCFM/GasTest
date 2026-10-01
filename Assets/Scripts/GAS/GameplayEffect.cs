@@ -64,6 +64,12 @@ public class GameplayEffect : ScriptableObject
     [Tooltip("Dentro de un EffectGroup, mayor Priority gana. Aplicar uno de Priority MENOR a uno ya activo del grupo no hace nada; uno de Priority MAYOR reemplaza a los inferiores.")]
     public int Priority = 0;
 
+    [Tooltip("Dentro de su EffectGroup, el ÚLTIMO en aplicarse reemplaza a los demás, sin " +
+             "importar Priority. Es para estados excluyentes que se alternan, como las posturas " +
+             "del Guerrero: entrar a la ofensiva saca la defensiva en el mismo instante, así " +
+             "nunca se tienen las dos ventajas a la vez.")]
+    public bool ReplacesGroup = false;
+
     // Icono que se muestra en la barra de buffs/debuffs.
     public Sprite Icon;
 

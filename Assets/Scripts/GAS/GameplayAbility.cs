@@ -74,6 +74,18 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
              "seguro — si fuera al revés habría que acordarse de agregarla a una lista.")]
     public bool UsableWhileChanneling = false;
 
+    [Tooltip("Esta habilidad SÍ se puede usar mientras se sostiene una habilidad de MANTENER " +
+             "(el escudo). Lo normal es que el escudo ocupe las manos y bloquee todo; la Carga " +
+             "defensiva del Guerrero es la excepción: carga con el escudo arriba.\n\n" +
+             "El escudo SIGUE arriba durante y después de esta habilidad: se baja soltando el " +
+             "botón, como siempre. Mientras se sostiene, esta habilidad no reproduce su " +
+             "animación, para no romper la pose del escudo.")]
+    public bool UsableWhileHolding = false;
+
+    // Si se puede usar con un mantenido arriba. Virtual porque un GA_TagSwitch lo
+    // resuelve según la variante que se dispararía (la Carga defensiva sí, la ofensiva no).
+    public virtual bool CanUseWhileHolding => UsableWhileHolding;
+
     [Header("Animación")]
     [Tooltip("FORMA RECOMENDADA: arrastrá acá el clip de esta habilidad y listo — no hace falta " +
              "crear un estado en el Animator, ni reservar un AnimationID, ni mapear el clip en el " +
@@ -372,6 +384,11 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // animación del combo padre llegaba justo después de la del primer paso y la
     // pisaba — en la pantalla de los demás el primer golpe no se veía, solo el segundo.
     public virtual bool BroadcastsOwnAnimation => false;
+
+    // El ícono que el HUD tiene que mostrar AHORA. Casi siempre es AbilityIcon; un
+    // GA_TagSwitch con ShowVariantIcon lo cambia según el tag (la postura del Guerrero).
+    // UI_AbilitySlot lo revisa cada frame.
+    public virtual Sprite CurrentIcon => AbilityIcon;
 
     // True si ESTA activación llegó a CommitAbility, o sea si de verdad se ejecutó.
     // Una habilidad que se planta sola —el Golpe mortal del Pícaro sin nadie a tiro—

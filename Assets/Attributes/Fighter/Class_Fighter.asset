@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 749805704a6088741af34d91f0891ced, type: 3}
+  m_Name: Class_Fighter
+  m_EditorClassIdentifier: 
+  ClassName: Fighter
+  ClassIcon: {fileID: 21300000, guid: fd0df9f4c10bf604fb297a0cc27b3c9f, type: 3}
+  Description: 'A frontline soldier who changes stance on the fly: a defensive one
+    that holds the line behind his shield, and an offensive one that hits harder.
+    A well-timed block becomes a parry that stuns whoever struck him.'
+  Role: 1
+  BaseAttributes: {fileID: 11400000, guid: 0e2275220d36a2644b4d67e9d0f15715, type: 2}
+  Abilities:
+  - InputSlot: 1
+    Ability: {fileID: 11400000, guid: e03685a7f8450d147a210b7e1effe534, type: 2}
+  - InputSlot: 2
+    Ability: {fileID: 11400000, guid: da04c02d81730c449af28763e9450833, type: 2}
+  - InputSlot: 3
+    Ability: {fileID: 11400000, guid: a8d78254d7d677647b5025dd9b115065, type: 2}
+  - InputSlot: 6
+    Ability: {fileID: 11400000, guid: e33fcd237b6f6e6438abc870ae8cbb8b, type: 2}
+  PassiveBehaviorsPrefab: {fileID: 9026357972262154142, guid: 6717a63c8d0b8454594cef004ecbf2c5, type: 3}
+  PassiveEffects:
+  - {fileID: 11400000, guid: 5425dc3edd0320d4a8b0ad013919b6cc, type: 2}
+  - {fileID: 11400000, guid: 71af769e08a6061438522b63f129b721, type: 2}
+  StatGrowthPerLevel:
+  - Attribute: 2
+    AmountPerLevel: 60
+  - Attribute: 8
+    AmountPerLevel: 1
+  - Attribute: 14
+    AmountPerLevel: 100
+  - Attribute: 6
+    AmountPerLevel: 50
+  AvailableSubclasses: []
+  ClassAnimatorOverride: {fileID: 22100000, guid: 75ec53281b263d24dbe5fee5e2ab9c9e, type: 2}
+  MainHandWeaponPrefab: {fileID: 1309212752354464438, guid: 92948b840284b93478272de155a25eda, type: 3}
+  OffHandWeaponPrefab: {fileID: 3844116661835162637, guid: 355227fa58c247448aac64714c11cb4a, type: 3}
+  MainHandRotationOffset: {x: 0, y: 0, z: 0}
+  MainHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandRotationOffset: {x: 0, y: 180, z: 0}
+  OffHandPositionOffset: {x: 0, y: 0, z: -0.1}
+  OffHandPose: {fileID: 0}

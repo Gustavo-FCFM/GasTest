@@ -84,6 +84,19 @@ public class GA_Dash : GameplayAbility
     public float HitRadius = 1.2f;
     public GameObject HitVFX;
 
+    [Header("Frenar en el Primero (Carga defensiva del Guerrero)")]
+    [Tooltip("El dash termina frente al PRIMER enemigo del camino, y solo él recibe el daño y " +
+             "los FirstHitEffects. Apagado = atraviesa y daña a todos (lo de siempre).")]
+    public bool StopAtFirstEnemy = false;
+
+    [Tooltip("Efectos SOLO para el primer enemigo del camino (el aturdido de la Carga " +
+             "defensiva). Vale también sin StopAtFirstEnemy.")]
+    public List<GameplayEffect> FirstHitEffects;
+
+    [Tooltip("Con StopAtFirstEnemy: a cuántos metros ANTES del enemigo se frena, para no " +
+             "quedar metido adentro de él.")]
+    public float StopShortDistance = 1f;
+
     [Header("Reinicio por Muerte")]
     [Tooltip("Si un enemigo golpeado por el dash muere dentro de esta ventana (seg), se recupera una carga.")]
     public float KillResetWindow = 2f;
@@ -151,18 +164,35 @@ public class GA_Dash : GameplayAbility
         if (Physics.SphereCast(castOrigin, HitRadius * 0.9f, dir, out RaycastHit wallHit, DashDistance, WallLayer, QueryTriggerInteraction.Ignore))
             dist = Mathf.Max(0f, wallHit.distance);
 
+        // Los enemigos del camino, en el orden en que se los atraviesa.
+        List<AbilitySystemComponent> onPath = CollectPathEnemies(origin, dir, dist);
+
+        // Carga defensiva: el dash se acorta para terminar justo frente al primero, y
+        // solo a él le pega.
+        bool stopped = StopAtFirstEnemy && onPath.Count > 0;
+        if (stopped)
+        {
+            float along = Vector3.Dot(onPath[0].transform.position - origin, dir);
+            dist = Mathf.Clamp(along - StopShortDistance, 0f, dist);
+            onPath.RemoveRange(1, onPath.Count - 1);
+        }
+
         // Daño a lo largo del recorrido (server-authoritative).
-        List<AbilitySystemComponent> hitEnemies = ResolvePathDamage(origin, dir, dist);
+        List<AbilitySystemComponent> hitEnemies = ApplyPathHits(onPath);
 
-        // Impulso en el proceso dueño (atraviesa jugadores, frena con inercia).
+        // Impulso en el proceso dueño (atraviesa jugadores, frena con inercia). Si se
+        // frenó en un enemigo, la velocidad se baja para cubrir JUSTO esa distancia: la
+        // duración tiene un mínimo y, a toda velocidad, lo pasaría de largo.
         float duration = Mathf.Clamp(dist / Mathf.Max(1f, DashSpeed), 0.1f, 0.6f);
+        float speed    = stopped ? dist / duration : DashSpeed;
         if (netAsc != null)
-            netAsc.ServerStartDash(dir * DashSpeed, duration, ExcludePlayerLayer.value, faceDashDir,
-                                   ExitSpeedPercent, ExitDamping);
+            netAsc.ServerStartDash(dir * speed, duration, ExcludePlayerLayer.value, faceDashDir,
+                                   stopped ? 0f : ExitSpeedPercent, ExitDamping);
         else if (pc != null)
-            pc.ApplyDashVelocity(dir * DashSpeed, faceDashDir); // fallback sin red (no gestiona el fin del impulso)
+            pc.ApplyDashVelocity(dir * speed, faceDashDir); // fallback sin red (no gestiona el fin del impulso)
 
-        if (pc != null) pc.PlayAnimation(this);
+        // Con el escudo arriba no se anima (en el host): rompería la pose del escudo.
+        if (pc != null && !pc.IsHoldingAbility) pc.PlayAnimation(this);
 
         // La recarga ya la arrancó CommitAbility; acá solo queda vigilar las muertes
         // para el reembolso.
@@ -174,21 +204,18 @@ public class GA_Dash : GameplayAbility
         // NetworkAbilitySystemComponent.DashRoutine cuando termina la duración.
     }
 
-    // Aplica DamageEffect a todos los enemigos dentro de una cápsula que recorre
-    // el trayecto del dash (desde el origen hasta la distancia recortada) y
-    // devuelve la lista de golpeados (para el reembolso por muerte).
-    private List<AbilitySystemComponent> ResolvePathDamage(Vector3 origin, Vector3 dir, float dist)
+    // Los enemigos dentro de una cápsula que recorre el trayecto del dash (desde el
+    // origen hasta la distancia recortada), en el orden en que se los atraviesa.
+    private List<AbilitySystemComponent> CollectPathEnemies(Vector3 origin, Vector3 dir, float dist)
     {
-        var hitList = new List<AbilitySystemComponent>();
-        if (dist <= 0f) return hitList;
+        var candidates = new List<AbilitySystemComponent>();
+        if (dist <= 0f) return candidates;
 
-        NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
         Vector3 p0 = origin + Vector3.up * 0.5f;
         Vector3 p1 = p0 + dir * dist;
 
         Collider[] cols = Physics.OverlapCapsule(p0, p1, HitRadius, TargetLayer);
         var seen = new HashSet<AbilitySystemComponent>();
-        var candidates = new List<AbilitySystemComponent>();
 
         foreach (var c in cols)
         {
@@ -209,11 +236,22 @@ public class GA_Dash : GameplayAbility
                 Vector3.Dot(a.transform.position - origin, dir)
                 .CompareTo(Vector3.Dot(b.transform.position - origin, dir)));
         }
+        return candidates;
+    }
 
-        foreach (var asc in candidates)
+    // Aplica el daño y los efectos a los enemigos dados (ya en orden), con el VFX de
+    // impacto, y devuelve la lista de golpeados (para el reembolso por muerte). Los
+    // FirstHitEffects van solo al primero.
+    private List<AbilitySystemComponent> ApplyPathHits(List<AbilitySystemComponent> enemies)
+    {
+        var hitList = new List<AbilitySystemComponent>();
+        NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
+
+        foreach (var asc in enemies)
         {
             if (DamageEffect != null) asc.ApplyGameplayEffect(DamageEffect, OwnerASC);
             ApplyEffectsTo(AdditionalEffects, asc);
+            if (hitList.Count == 0) ApplyEffectsTo(FirstHitEffects, asc);
             ChargeUltimate();
 
             Vector3 hitPos = asc.transform.position + Vector3.up;

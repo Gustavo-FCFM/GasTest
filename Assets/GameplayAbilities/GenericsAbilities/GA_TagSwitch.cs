@@ -42,7 +42,21 @@ public class GA_TagSwitch : GameplayAbility
                  "Desactivado = la variante sigue activa mientras dure el efecto que da el tag " +
                  "(el caso de un ult que cambia tus ataques por un rato).")]
         public bool ConsumeTag;
+
+        [Tooltip("Solo con ShowVariantIcon: el ícono del botón mientras esta variante sea la que " +
+                 "se dispararía. Vacío = el ícono de su habilidad.")]
+        public Sprite Icon;
     }
+
+    [Header("Ícono")]
+    [Tooltip("Si el botón muestra el ícono de la variante que se dispararía AHORA, en vez del " +
+             "propio. Lo usan las posturas del Guerrero (Q y Shift) para que se vea en qué " +
+             "postura está. Apagado = el ícono de siempre (el Castigo divino del Paladín).")]
+    public bool ShowVariantIcon = false;
+
+    [Tooltip("Solo con ShowVariantIcon: el ícono cuando no aplica ninguna variante. Vacío = el " +
+             "de DefaultAbility.")]
+    public Sprite DefaultIcon;
 
     [Header("Variante por Defecto")]
     [Tooltip("La que se ejecuta cuando no aplica ninguna variante (el ataque normal).")]
@@ -108,6 +122,40 @@ public class GA_TagSwitch : GameplayAbility
         // El fin de la habilidad lo maneja la VARIANTE (su propio EndAbility, que
         // llega cuando termina su secuencia). Llamarlo también acá liberaría
         // isAttacking antes de tiempo y dejaría al jugador atacar encima del swing.
+    }
+
+    // El ícono de la variante que se dispararía ahora (ver ShowVariantIcon). Corre en el
+    // dueño: los tags le llegan sincronizados, así que el botón cambia solo.
+    public override Sprite CurrentIcon
+    {
+        get
+        {
+            if (!ShowVariantIcon || OwnerASC == null) return AbilityIcon;
+
+            if (Variants != null)
+                foreach (var variant in Variants)
+                {
+                    if (variant.Ability == null || variant.RequiredTag == EGameplayTag.None) continue;
+                    if (!OwnerASC.HasTag(variant.RequiredTag)) continue;
+                    return variant.Icon != null ? variant.Icon
+                         : variant.Ability.AbilityIcon != null ? variant.Ability.AbilityIcon : AbilityIcon;
+                }
+
+            if (DefaultIcon != null) return DefaultIcon;
+            return DefaultAbility != null && DefaultAbility.AbilityIcon != null ? DefaultAbility.AbilityIcon : AbilityIcon;
+        }
+    }
+
+    // Con el escudo arriba, decide la variante que se dispararía AHORA (o el propio switch,
+    // si lo marcaron a él). Corre en el dueño y en el servidor: los dos ven los mismos tags.
+    public override bool CanUseWhileHolding
+    {
+        get
+        {
+            if (UsableWhileHolding) return true;
+            GameplayAbility template = ResolveTemplate(out _, out _);
+            return template != null && template.UsableWhileHolding;
+        }
     }
 
     // Elige qué habilidad ejecutar: la primera variante cuyo tag tenga el dueño, o

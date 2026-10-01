@@ -78,6 +78,11 @@ public class UI_AbilitySlot : MonoBehaviour
     {
         if (assignedAbility == null || ownerASC == null) return;
 
+        // El ícono puede cambiar en partida (las posturas del Guerrero: ver
+        // GameplayAbility.CurrentIcon). Comparar una referencia por frame es gratis.
+        Sprite icon = assignedAbility.CurrentIcon;
+        if (icon != null && iconImage.sprite != icon) iconImage.sprite = icon;
+
         float timeRemaining;
         float totalDuration;
         bool  isOnCooldown;

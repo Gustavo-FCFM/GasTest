@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c273186160e84441a7e43da8ed5284e, type: 3}
+  m_Name: GA_FighterCharge
+  m_EditorClassIdentifier: 
+  AbilityName: Charge
+  AbilityIcon: {fileID: 21300000, guid: 14d6c1c6267d2564ab552ab51b28ab04, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: 10f0981bf286ed844b33e0f4b4b974e3, type: 2}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 0
+  ActivationBlockedTags: 
+  ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  AnimationClip: {fileID: 0}
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  IsInterruptible: 0
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  VisualsSequence: []
+  MaxCharges: 1
+  ShowVariantIcon: 1
+  DefaultIcon: {fileID: 0}
+  DefaultAbility: {fileID: 11400000, guid: b0bea3d533af40f45b50c3156467af9d, type: 2}
+  Variants:
+  - RequiredTag: 56
+    Ability: {fileID: 11400000, guid: 136c7c4e1de9a844da581a166f9192b5, type: 2}
+    ConsumeTag: 0
+    Icon: {fileID: 0}

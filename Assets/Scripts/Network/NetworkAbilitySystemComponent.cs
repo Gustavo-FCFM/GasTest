@@ -930,7 +930,11 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         // apretar nada mientras mantiene, pero si su estado se desincroniza (pasó: creía
         // haber bajado el escudo), acá está la verdad: sin este corte, un Paladín podía
         // atacar con el clic izquierdo y tener el escudo arriba a la vez, para siempre.
-        if (IsAnotherHoldActive(ability))
+        //
+        // La excepción son las marcadas UsableWhileHolding (la Carga defensiva del
+        // Guerrero). Esas entran, pero sin animación propia (ver más abajo).
+        bool duringHold = IsAnotherHoldActive(ability);
+        if (duringHold && !ability.CanUseWhileHolding)
         {
             NotifyOwnerAbilityRejected(ability);
             return;
@@ -954,6 +958,10 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         // sostenido: su Activate() ya mandó ServerBroadcastHoldAnimation. Mandar acá
         // además el clip suelto pisaría ese estado apenas se levanta.
         if (ability is IHoldAbility) return;
+
+        // Usada con el escudo arriba: su clip suelto pisaría la pose sostenida del escudo
+        // en las demás pantallas. Se ve como una carga con el escudo al frente.
+        if (duringHold) return;
 
         // Un combo manda la animación de CADA paso por su cuenta. La del padre llegaría
         // justo después de la del primer paso y la pisaría: en la pantalla de los demás
@@ -1711,7 +1719,12 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         yield return new WaitForSeconds(duration);
         pc.SetCollisionExclusion(excludeMask, false);
         pc.ClearDashVelocity(exitSpeedPercent, exitDamping);
-        pc.FinishAttack();
+
+        // Con el escudo arriba (la Carga defensiva del Guerrero, UsableWhileHolding) el
+        // dash termina pero el escudo NO: un FinishAttack() "de todo" acá le borraba el
+        // mantenido al dueño mientras el servidor lo seguía teniendo, y al soltar el botón
+        // nadie avisaba — el escudo eterno. Se baja soltando el botón, como siempre.
+        if (!pc.IsHoldingAbility) pc.FinishAttack();
     }
 
     // =========================================================
