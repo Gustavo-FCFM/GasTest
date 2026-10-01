@@ -339,7 +339,7 @@ En orden de lo que más mueve la demo:
      Protección divina) solo el aturdido. El desarme ya no bloquea "el básico" por código.
    - Tags nuevos (al final): `Status_BreakLimits`, `Status_WeakPoint`.
 
-   - [ ] **Volver a correr `Mercenarios ▸ Aplicar los bloqueos por tipo de acción (una
+   - [x] **Volver a correr `Mercenarios ▸ Aplicar los bloqueos por tipo de acción (una
          sola vez)` y BORRAR `Assets/Scripts/Editor/MercActionTagsSetup.cs`.** Se corrió
          antes de dos ajustes de Gustavo y en los assets todavía quedaron así: el Blink con
          enraizado + silencio (tiene que ser solo enraizado) y la Protección divina con
