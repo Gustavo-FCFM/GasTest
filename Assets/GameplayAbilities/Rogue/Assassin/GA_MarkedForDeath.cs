@@ -20,7 +20,7 @@ using System.Collections.Generic;
 // Como toda GameplayAbility, Activate() corre en el servidor.
 // ============================================================
 [CreateAssetMenu(fileName = "GA_MarkedForDeath", menuName = "GAS/Specific Abilities/Assassin/Marked For Death")]
-public class GA_MarkedForDeath : GameplayAbility, IGroundTargetAbility
+public class GA_MarkedForDeath : TargetImpactAbility, IGroundTargetAbility
 {
     [Header("Zona Objetivo")]
     [Tooltip("Distancia máxima a la que se puede marcar la zona.")]
@@ -45,9 +45,6 @@ public class GA_MarkedForDeath : GameplayAbility, IGroundTargetAbility
     [Tooltip("Se re-aplica al propio jugador si MATÓ al menos a un enemigo con esta " +
              "habilidad (el GE de invisibilidad del Asesino).")]
     public GameplayEffect InvisibilityOnKillEffect;
-
-    [Header("Visuales")]
-    public GameObject ImpactVFX;
 
     // Valida (incluye el requisito de estar invisible, vía ActivationRequiredTags),
     // teletransporta a la zona, daña a todos los enemigos dentro, y re-invisibiliza
@@ -95,9 +92,7 @@ public class GA_MarkedForDeath : GameplayAbility, IGroundTargetAbility
             // ApplyGameplayEffect es síncrono: si lo mató, el tag ya está puesto.
             if (target.HasTag(EGameplayTag.State_Dead)) killedAny = true;
 
-            Vector3 hitPos = target.transform.position + Vector3.up;
-            if (netAsc != null) netAsc.ServerPlayAbilityVFX(this, hitPos);
-            else PlayImpactVFX(hitPos);
+            PlayImpactVFXOnTarget(target);
         }
 
         // "Si al menos un enemigo muere, el jugador se vuelve invisible."
@@ -105,15 +100,6 @@ public class GA_MarkedForDeath : GameplayAbility, IGroundTargetAbility
             OwnerASC.ApplyGameplayEffect(InvisibilityOnKillEffect, OwnerASC);
 
         EndAbility();
-    }
-
-    // Instancia ImpactVFX en cada impacto. La llama cada peer con su propia copia
-    // (ver NetworkAbilitySystemComponent.ServerPlayAbilityVFX).
-    public override void PlayImpactVFX(Vector3 position)
-    {
-        if (ImpactVFX == null) return;
-        GameObject vfx = Instantiate(ImpactVFX, position, Quaternion.identity);
-        Destroy(vfx, 2f);
     }
 
     // Vista previa: alcance de marcado y tamaño de la zona (dibujada al frente,

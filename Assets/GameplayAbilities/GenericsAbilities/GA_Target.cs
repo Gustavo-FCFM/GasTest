@@ -26,7 +26,7 @@ using System.Collections.Generic;
 // autocasteo apagado) la habilidad sale sin cobrar costo, cooldown ni carga.
 // ============================================================
 [CreateAssetMenu(fileName = "GA_Target", menuName = "GAS/Generics/Target")]
-public class GA_Target : GameplayAbility
+public class GA_Target : TargetImpactAbility
 {
     // A quién apunta la habilidad. Allies es el valor 0 = el comportamiento original,
     // así que los assets ya configurados no cambian al agregar esto.
@@ -65,21 +65,6 @@ public class GA_Target : GameplayAbility
     // FormerlySerializedAs: se llamó "AllyEffects" y vivía en GameplayAbility.
     [UnityEngine.Serialization.FormerlySerializedAs("AllyEffects")]
     public List<GameplayEffect> TargetEffects;
-
-    [Header("Visuales")]
-    [Tooltip("VFX que aparece sobre el objetivo alcanzado (se ve en todas las pantallas).")]
-    public GameObject ImpactVFX;
-
-    [Tooltip("Pegar el VFX al objetivo, así lo sigue si se mueve. Apagado, queda quieto " +
-             "donde apareció.")]
-    public bool AttachImpactVFX = true;
-
-    [Tooltip("Dónde aparece el VFX, medido desde los pies del objetivo. (0, 1, 0) es a la " +
-             "altura del pecho; un aura pensada para ir en el piso va con (0, 0, 0).")]
-    public Vector3 ImpactVFXOffset = new Vector3(0f, 1f, 0f);
-
-    [Tooltip("Segundos hasta que el VFX se borra.")]
-    public float ImpactVFXLifetime = 2f;
 
     // =========================================================
     // ACTIVACIÓN
@@ -121,17 +106,13 @@ public class GA_Target : GameplayAbility
         ApplyEffectsTo(TargetEffects, target);
 
         PlayerController pc = OwnerASC.GetComponent<PlayerController>();
-        NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
-
         if (pc != null)
         {
             pc.RotateToAim();
             pc.PlayAnimation(this);
         }
 
-        // Se manda el OBJETIVO y no un punto: cada pantalla le pega el VFX a él.
-        if (netAsc != null) netAsc.ServerPlayAbilityVFXOn(this, target);
-        else PlayImpactVFXOn(target);
+        PlayImpactVFXOnTarget(target);
 
         EndAbility();
     }
@@ -167,24 +148,6 @@ public class GA_Target : GameplayAbility
     // =========================================================
     // VISUALES Y GIZMOS
     // =========================================================
-
-    public override void PlayImpactVFX(Vector3 position)
-    {
-        if (ImpactVFX == null) return;
-        GameObject vfx = Instantiate(ImpactVFX, position, Quaternion.identity);
-        Destroy(vfx, ImpactVFXLifetime);
-    }
-
-    public override void PlayImpactVFXOn(AbilitySystemComponent target)
-    {
-        if (ImpactVFX == null || target == null) return;
-
-        Transform t = target.transform;
-        GameObject vfx = Instantiate(ImpactVFX, t.position + ImpactVFXOffset, Quaternion.identity);
-        // Pegado al personaje: lo sigue, y si el personaje desaparece se va con él.
-        if (AttachImpactVFX) vfx.transform.SetParent(t, true);
-        Destroy(vfx, ImpactVFXLifetime);
-    }
 
     // Vista previa del alcance de selección en el Editor.
     public override void DrawGizmos(Transform origin)

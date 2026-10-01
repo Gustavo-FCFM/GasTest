@@ -771,22 +771,58 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         if (definition.TargetVFXScale != Vector3.zero)
             vfx.transform.localScale = definition.TargetVFXScale;
 
+        // Los VFX de un solo disparo se repiten mientras dure el efecto (ver
+        // GameplayEffect.TargetVFXLoop). Sin acción al terminar: un Destroy propio del
+        // prefab se lo llevaría antes de tiempo.
+        if (definition.TargetVFXLoop)
+            foreach (ParticleSystem ps in vfx.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                ParticleSystem.MainModule main = ps.main;
+                main.loop = true;
+                main.stopAction = ParticleSystemStopAction.None;
+            }
+
         _activeEffectVfx[effectIndex] = vfx;
     }
 
     private void DespawnEffectVfx(int effectIndex)
     {
         if (!_activeEffectVfx.TryGetValue(effectIndex, out GameObject vfx)) return;
-        if (vfx != null) Destroy(vfx);
+        FadeOutEffectVfx(vfx);
         _activeEffectVfx.Remove(effectIndex);
     }
 
     private void DespawnAllEffectVfx()
     {
         foreach (var kvp in _activeEffectVfx)
-            if (kvp.Value != null) Destroy(kvp.Value);
+            FadeOutEffectVfx(kvp.Value);
 
         _activeEffectVfx.Clear();
+    }
+
+    // Deja de emitir y borra el VFX cuando se apagó la última partícula, en vez de
+    // cortarlo de golpe. Un VFX sin partículas (un modelo, una malla) se va al instante.
+    private const float MaxEffectVfxFade = 3f;
+
+    private static void FadeOutEffectVfx(GameObject vfx)
+    {
+        if (vfx == null) return;
+
+        ParticleSystem[] systems = vfx.GetComponentsInChildren<ParticleSystem>();
+        if (systems.Length == 0) { Destroy(vfx); return; }
+
+        float longest = 0f;
+        foreach (ParticleSystem ps in systems)
+        {
+            ps.Stop(false, ParticleSystemStopBehavior.StopEmitting);
+            ParticleSystem.MinMaxCurve life = ps.main.startLifetime;
+            float seconds = life.mode == ParticleSystemCurveMode.Constant     ? life.constant
+                          : life.mode == ParticleSystemCurveMode.TwoConstants ? life.constantMax
+                          :                                                     life.curveMultiplier;
+            longest = Mathf.Max(longest, seconds);
+        }
+
+        Destroy(vfx, Mathf.Min(longest, MaxEffectVfxFade));
     }
 
     // =========================================================

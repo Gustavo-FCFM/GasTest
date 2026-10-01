@@ -23,10 +23,11 @@ MonoBehaviour:
   EffectType: 1
   Modifiers: []
   IsCrowdControl: 1
-  TargetVFX: {fileID: 0}
+  TargetVFX: {fileID: 6097779538034126439, guid: b6d3e2e4b8df2964eb3dfce561902f3e, type: 3}
   TargetVFXOffset: {x: 0, y: 0, z: 0}
   TargetVFXRotation: {x: 0, y: 0, z: 0}
   TargetVFXScale: {x: 0, y: 0, z: 0}
+  TargetVFXLoop: 1
   TargetSound:
     Clips: []
     Volume: 1

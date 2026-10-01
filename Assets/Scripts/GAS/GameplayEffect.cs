@@ -131,6 +131,13 @@ public class GameplayEffect : ScriptableObject
     [Tooltip("Escala del VFX. En CERO usa la escala del prefab tal cual.")]
     public Vector3 TargetVFXScale;
 
+    [Tooltip("Repetir las partículas del VFX mientras dure el efecto. Muchos VFX de los packs " +
+             "son de un solo disparo (emiten un segundo y se apagan), así que sin esto el " +
+             "objeto sigue vivo pero vacío hasta que el efecto termina. Al terminar, deja de " +
+             "emitir y las partículas que quedan se desvanecen solas en vez de cortarse de golpe. " +
+             "Apagalo si el VFX está pensado para verse UNA vez al aplicarse.")]
+    public bool TargetVFXLoop = true;
+
     [Header("Sonido en el Objetivo")]
     [Tooltip("Suena en el personaje cuando el efecto se le aplica (solo efectos CON duración: " +
              "quemadura, stun, escudo...). El daño instantáneo tiene su propio sonido de golpe " +

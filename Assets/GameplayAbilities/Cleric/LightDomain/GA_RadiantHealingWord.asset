@@ -42,7 +42,7 @@ MonoBehaviour:
   VisualsSequence: []
   MaxCharges: 4
   Targets: 0
-  MaxRange: 20
+  MaxRange: 10
   SelectionAngle: 25
   SelfIfNoTarget: 1
   AllowDeadTargets: 0

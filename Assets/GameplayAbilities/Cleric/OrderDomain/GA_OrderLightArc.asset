@@ -53,7 +53,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: e020fa4d41da96d43b303363eadf0129, type: 2}
   FirstHitEffects:
   - {fileID: 11400000, guid: 5385c025f54703549938ea1709b4591b, type: 2}
-  FirstHitCooldownPerTarget: 3
+  FirstHitCooldownPerTarget: 5
   LifeTime: 0
   SpawnDelay: 0.3
   MinConvergeDistance: 4

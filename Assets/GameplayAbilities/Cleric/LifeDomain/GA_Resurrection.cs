@@ -20,7 +20,7 @@ using UnityEngine;
 // Sin ningún aliado muerto en la mira no se lanza y no gasta la definitiva.
 // ============================================================
 [CreateAssetMenu(fileName = "GA_Resurrection", menuName = "GAS/Cleric/Resurrection")]
-public class GA_Resurrection : GameplayAbility
+public class GA_Resurrection : TargetImpactAbility
 {
     [Header("Selección")]
     [Tooltip("Distancia máxima desde el Clérigo hasta el cuerpo.")]
@@ -34,13 +34,6 @@ public class GA_Resurrection : GameplayAbility
     [Tooltip("Con cuánta vida vuelve, como fracción de su vida máxima. 0.5 = la mitad.")]
     [Range(0.05f, 1f)]
     public float HealthFraction = 0.5f;
-
-    [Header("Visuales")]
-    [Tooltip("VFX que aparece sobre el aliado al volver (se ve en todas las pantallas).")]
-    public GameObject ImpactVFX;
-
-    [Tooltip("Segundos hasta que el VFX se borra.")]
-    public float ImpactVFXLifetime = 3f;
 
     // =========================================================
     // ACTIVACIÓN
@@ -81,9 +74,7 @@ public class GA_Resurrection : GameplayAbility
             pc.PlayAnimation(this);
         }
 
-        NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
-        if (netAsc != null) netAsc.ServerPlayAbilityVFXOn(this, ally);
-        else PlayImpactVFXOn(ally);
+        PlayImpactVFXOnTarget(ally);
 
         EndAbility();
     }
@@ -144,20 +135,6 @@ public class GA_Resurrection : GameplayAbility
     // =========================================================
     // VISUALES Y GIZMOS
     // =========================================================
-
-    public override void PlayImpactVFX(Vector3 position)
-    {
-        if (ImpactVFX == null) return;
-        Destroy(Instantiate(ImpactVFX, position, Quaternion.identity), ImpactVFXLifetime);
-    }
-
-    // Pegado al aliado: aparece en sus pies y lo sigue mientras se levanta.
-    public override void PlayImpactVFXOn(AbilitySystemComponent target)
-    {
-        if (ImpactVFX == null || target == null) return;
-        GameObject vfx = Instantiate(ImpactVFX, target.transform.position, Quaternion.identity, target.transform);
-        Destroy(vfx, ImpactVFXLifetime);
-    }
 
     public override void DrawGizmos(Transform origin)
     {

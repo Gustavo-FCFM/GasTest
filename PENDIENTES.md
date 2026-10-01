@@ -189,6 +189,43 @@ En orden de lo que más mueve la demo:
          cerca se ve (y al alejarse vuelve a desaparecer) y las curaciones rinden un
          15 % más; la Quemadura santa cura a los aliados que golpean a los quemados.
 
+   **VFX de efectos y de impacto — HECHO, FALTA PROBAR (30 de septiembre, tarde).**
+   - **`TargetVFXLoop`** (casilla nueva en cada GE, prendida por defecto): las partículas
+     del Target VFX se repiten mientras dure el efecto aunque el prefab sea de un solo
+     disparo, y al terminar se desvanecen en vez de cortarse. Ojo: quedó prendida también
+     en los GE que ya tenían VFX (auras, `GE_DivineProtection`, `GE_FinalBlowShield`,
+     `GE_PreserveLife`, `GE_Heroism`, `GE_Inmortal_Rage`, `GE_HeroicInterventionBuff`,
+     `GE_DivineSmiteCharge`, `GE_RadiantHeal`): si alguno era un destello de una sola vez,
+     apagársela.
+   - **`VFX_EyeReveal`** (`Art/VFX`): el ojo con halo y chispas encima del revelado por el
+     Faro. Ya puesto. La herramienta que lo armó (`Editor/MercEyeVfxSetup.cs`) se puede
+     borrar.
+   - **`TargetImpactAbility`** (`Scripts/GAS`): la base común del VFX de impacto sobre un
+     personaje (Attach, Offset, Lifetime). La heredan `GA_Target`, `GA_SwornEnemy`,
+     `GA_CommandHalt`, `GA_MarkedForDeath`, `GA_Resurrection` y `GA_HeroicInterception`;
+     se borró la copia que tenía cada una. Enemigo jurado, Aturdir y la Marca ahora pegan el
+     VFX al objetivo (antes quieto 2 s); la Resurrección queda igual (pies, 3 s); la
+     Intercepción sigue en el punto de aterrizaje (ahí solo cuenta Lifetime).
+   - [ ] Probar: Healing Word de la Luz (el VFX dura los 5 s y se apaga suave); Enemigo
+         jurado o Aturdir sobre alguien que se mueve; Resurrección.
+
+   **Limpieza de assets pendiente (en el editor, revisión del 30 de septiembre):**
+   - [ ] `GA_DivineSmiteVengeane`: **VFX doble**. Su Visuals Sequence pone el aura `Buff`
+         y `GE_DivineSmiteCharge` pone el mismo prefab. Borrar el de la secuencia.
+   - [ ] `GA_Frenzy`: pasar `RageBuff` (el elemento que termina con `Status_Frenzy`) al
+         Target VFX de `GE_Frenzy`. El del escudo (termina al gastarse) se queda.
+   - [ ] `GA_InvencibleConqueror`: pasar `RageBuff` al Target VFX de
+         `GE_InvencibleConquerorTag`.
+   - [ ] `GA_AvengingAngel`: dos VFX por dos vías (`RageBuff` en la secuencia, las alas en
+         `GE_AvengingAngelTag`). Funciona; un GE admite UN Target VFX, así que pasarlo todo
+         al GE pide juntarlos en un prefab.
+   - [ ] `GA_RadiantHealingWord`: su Impact VFX (`Healing buff`) y el de `GE_RadiantHeal`
+         (`Healing buff Burn`) salen juntos. Si se ven encimados, sacarle el Impact VFX.
+   - [ ] 10 GE viven en `GameplayAbilities/` y no en `Effects/` (Venganza: `GE_AvengingAngelTag`,
+         `GE_AvenginAngelBuffs` —con error de tipeo—, `GE_SwornEnemy`, `GE_SwornEnemyHeal`;
+         Conquista: `GE_InvencibleConquerorTag`, `GE_ShieldOfFaith`; Pirata: `GE_WinGamble`,
+         `GE_LoseGamble`, `GE_WinHeal`, `GE_LoseHeal`). Moverlos desde Unity no rompe nada.
+
    **Arreglos del 30 de septiembre, PROBADOS ✅:**
    - **Los lanzamientos no se veían en las otras pantallas**: el hacha del Bárbaro, las
      dagas del Pícaro y el arco y la Guiding Bolt del Clérigo. Cobran al SOLTAR, así que

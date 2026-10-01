@@ -24,7 +24,7 @@ using System.Collections.Generic;
 // evita tener que llevar una lista de marcas vivas.
 // ============================================================
 [CreateAssetMenu(fileName = "GA_SwornEnemy", menuName = "GAS/Specific Abilities/Vengeance/Sworn Enemy")]
-public class GA_SwornEnemy : GameplayAbility
+public class GA_SwornEnemy : TargetImpactAbility
 {
     [Header("Selección de Enemigo")]
     [Tooltip("Alcance máximo para buscar al enemigo a marcar.")]
@@ -49,9 +49,6 @@ public class GA_SwornEnemy : GameplayAbility
              "de ataques rápidos se curaría muchísimo más que una de golpes lentos por el simple " +
              "hecho de pegar más veces.")]
     public float RewardCooldownPerAlly = 0.5f;
-
-    [Header("Visuales")]
-    public GameObject ImpactVFX;
 
     // Objetivo marcado ahora mismo, para poder desuscribirnos al re-marcar o al
     // expirar. NonSerialized: estado de runtime por instancia otorgada.
@@ -115,17 +112,13 @@ public class GA_SwornEnemy : GameplayAbility
         OwnerASC.StartAbilityCoroutine(MarkRoutine(MarkEffect.Duration));
 
         PlayerController pc = OwnerASC.GetComponent<PlayerController>();
-        NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
-
         if (pc != null)
         {
             pc.RotateToAim();
             pc.PlayAnimation(this);
         }
 
-        Vector3 vfxPos = target.transform.position + Vector3.up;
-        if (netAsc != null) netAsc.ServerPlayAbilityVFX(this, vfxPos);
-        else PlayImpactVFX(vfxPos);
+        PlayImpactVFXOnTarget(target);
 
         EndAbility();
     }
@@ -196,13 +189,6 @@ public class GA_SwornEnemy : GameplayAbility
     // =========================================================
     // VISUALES Y GIZMOS
     // =========================================================
-
-    public override void PlayImpactVFX(Vector3 position)
-    {
-        if (ImpactVFX == null) return;
-        GameObject vfx = Instantiate(ImpactVFX, position, Quaternion.identity);
-        Destroy(vfx, 2.0f);
-    }
 
     public override void DrawGizmos(Transform origin)
     {

@@ -19,7 +19,7 @@ using System.Collections;
 // Una marca a la vez: volver a lanzarla sobre otro suelta la anterior.
 // ============================================================
 [CreateAssetMenu(fileName = "GA_CommandHalt", menuName = "GAS/Cleric/Command Halt")]
-public class GA_CommandHalt : GameplayAbility
+public class GA_CommandHalt : TargetImpactAbility
 {
     [Header("Selección de Enemigo")]
     [Tooltip("Alcance máximo para buscar al enemigo a marcar. 10 m = alcance medio.")]
@@ -35,9 +35,6 @@ public class GA_CommandHalt : GameplayAbility
 
     [Tooltip("Lo que recibe el marcado si le pega a un aliado (GE_Stun).")]
     public GameplayEffect StunEffect;
-
-    [Header("Visuales")]
-    public GameObject ImpactVFX;
 
     // Enemigo marcado ahora mismo. NonSerialized: estado de runtime por instancia otorgada.
     [System.NonSerialized] private AbilitySystemComponent _marked;
@@ -89,10 +86,7 @@ public class GA_CommandHalt : GameplayAbility
             pc.PlayAnimation(this);
         }
 
-        Vector3 vfxPos = target.transform.position + Vector3.up;
-        NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
-        if (netAsc != null) netAsc.ServerPlayAbilityVFX(this, vfxPos);
-        else PlayImpactVFX(vfxPos);
+        PlayImpactVFXOnTarget(target);
 
         EndAbility();
     }
@@ -145,12 +139,6 @@ public class GA_CommandHalt : GameplayAbility
     // =========================================================
     // VISUALES Y GIZMOS
     // =========================================================
-
-    public override void PlayImpactVFX(Vector3 position)
-    {
-        if (ImpactVFX == null) return;
-        Destroy(Instantiate(ImpactVFX, position, Quaternion.identity), 2f);
-    }
 
     public override void DrawGizmos(Transform origin)
     {

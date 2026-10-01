@@ -175,6 +175,13 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   OTRO. La pasiva que quiera enterarse de la autocuración (la Bendición del Clérigo)
   escucha `OnHealedSelf`, que va aparte justamente para no tocar la carga.
 
+- **Dónde va cada VFX.** Lo que dura lo que dura un buff o un debuff va en el
+  `TargetVFX` del **GE** (aparece pegado a quien lo recibe, en todas las pantallas, y se
+  va cuando el efecto termina; `TargetVFXLoop` repite las partículas de un solo
+  disparo). No en la Visuals Sequence de la habilidad con `EndWithTag`. Un VFX de
+  impacto sobre un personaje: heredar de **`TargetImpactAbility`** y llamar
+  `PlayImpactVFXOnTarget(objetivo)`, en vez de copiar el instanciado.
+
 Los detalles finos del GAS (pipeline de daño, acumulación de efectos, animaciones de
 combo) están en `DesignDocuments/GAS_Arquitectura.docx`.
 

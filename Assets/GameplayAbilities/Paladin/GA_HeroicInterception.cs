@@ -28,7 +28,7 @@ using System.Collections.Generic;
 // cooldown de la habilidad ES, además, lo que tarda en volver cada carga.
 // ============================================================
 [CreateAssetMenu(fileName = "GA_HeroicInterception", menuName = "GAS/Specific Abilities/Paladin/Heroic Interception")]
-public class GA_HeroicInterception : GameplayAbility
+public class GA_HeroicInterception : TargetImpactAbility
 {
     [Header("Selección de Aliado")]
     [Tooltip("Alcance máximo para buscar al aliado al que interceptar.")]
@@ -58,9 +58,6 @@ public class GA_HeroicInterception : GameplayAbility
     // FormerlySerializedAs: se llamó "AllyEffects" y vivía en GameplayAbility.
     [UnityEngine.Serialization.FormerlySerializedAs("AllyEffects")]
     public List<GameplayEffect> TargetEffects;
-
-    [Header("Visuales")]
-    public GameObject ImpactVFX;
 
     // =========================================================
     // ACTIVACIÓN
@@ -144,13 +141,6 @@ public class GA_HeroicInterception : GameplayAbility
     // =========================================================
     // VISUALES Y GIZMOS
     // =========================================================
-
-    public override void PlayImpactVFX(Vector3 position)
-    {
-        if (ImpactVFX == null) return;
-        GameObject vfx = Instantiate(ImpactVFX, position, Quaternion.identity);
-        Destroy(vfx, 2.0f);
-    }
 
     // Vista previa del alcance de selección en el Editor.
     public override void DrawGizmos(Transform origin)

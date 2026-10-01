@@ -19,14 +19,15 @@ MonoBehaviour:
   OnMaxStacksEffect: {fileID: 0}
   EffectGroup: 0
   Priority: 0
-  Icon: {fileID: 21300000, guid: 0fa56c455cebd6240a56c55ee12d5879, type: 3}
+  Icon: {fileID: 21300000, guid: 914c15314a8d2af4ca43287ee1beeb18, type: 3}
   EffectType: 1
   Modifiers: []
   IsCrowdControl: 0
-  TargetVFX: {fileID: 0}
-  TargetVFXOffset: {x: 0, y: 0, z: 0}
+  TargetVFX: {fileID: 2674612780929056217, guid: 9dda32dbcf4e1524791a28495446ed60, type: 3}
+  TargetVFXOffset: {x: 0, y: 1, z: 0}
   TargetVFXRotation: {x: 0, y: 0, z: 0}
   TargetVFXScale: {x: 0, y: 0, z: 0}
+  TargetVFXLoop: 1
   TargetSound:
     Clips: []
     Volume: 1

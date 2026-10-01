@@ -22,7 +22,7 @@ MonoBehaviour:
   ActivationBlockedTags: 0100000003000000
   ActivationRequiredTags: 
   UsableWhileChanneling: 0
-  AnimationClip: {fileID: 3094330708855449807, guid: 8d3c95e724e453047940371ad39c4153, type: 3}
+  AnimationClip: {fileID: 3094330708855449807, guid: bc8cbcd09bf81b646b58bf68f9f55d95, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 1
   CastSound:

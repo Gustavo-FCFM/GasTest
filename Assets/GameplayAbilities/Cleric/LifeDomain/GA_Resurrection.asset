@@ -45,4 +45,6 @@ MonoBehaviour:
   SelectionAngle: 35
   HealthFraction: 1
   ImpactVFX: {fileID: 3377181292992421420, guid: 48c5715f9603c3842a353516a8baefbb, type: 3}
+  AttachImpactVFX: 1
+  ImpactVFXOffset: {x: 0, y: 0, z: 0}
   ImpactVFXLifetime: 3
