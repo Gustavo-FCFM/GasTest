@@ -19,7 +19,7 @@ MonoBehaviour:
   CooldownDuration: 0
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 0
-  ActivationBlockedTags: 0100000003000000
+  ActivationBlockedTags: 01000000
   ActivationRequiredTags: 
   UsableWhileChanneling: 0
   UsableWhileHolding: 0
