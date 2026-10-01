@@ -198,8 +198,12 @@ En orden de lo que más mueve la demo:
      `GE_DivineSmiteCharge`, `GE_RadiantHeal`): si alguno era un destello de una sola vez,
      apagársela.
    - **`VFX_EyeReveal`** (`Art/VFX`): el ojo con halo y chispas encima del revelado por el
-     Faro. Ya puesto. La herramienta que lo armó (`Editor/MercEyeVfxSetup.cs`) se puede
-     borrar.
+     Faro. Ya puesto; la herramienta que lo armó se borró.
+   - **El VFX del aturdido** (`GE_Stun` y `GE_OrderStun`) sube a y = 1: quedaba muy abajo.
+   - **El círculo de la Zona de verdad salía parado**: el prefab acuesta el círculo girando
+     su raíz −90° en X, y las zonas lo creaban con rotación cero. `GA_ContinuousAoE` (y
+     `GA_InstantAoE`, por las dudas) ahora respetan la rotación del prefab. La Luz del
+     amanecer no cambia (su prefab no tiene rotación).
    - **`TargetImpactAbility`** (`Scripts/GAS`): la base común del VFX de impacto sobre un
      personaje (Attach, Offset, Lifetime). La heredan `GA_Target`, `GA_SwornEnemy`,
      `GA_CommandHalt`, `GA_MarkedForDeath`, `GA_Resurrection` y `GA_HeroicInterception`;
@@ -207,7 +211,8 @@ En orden de lo que más mueve la demo:
      VFX al objetivo (antes quieto 2 s); la Resurrección queda igual (pies, 3 s); la
      Intercepción sigue en el punto de aterrizaje (ahí solo cuenta Lifetime).
    - [ ] Probar: Healing Word de la Luz (el VFX dura los 5 s y se apaga suave); Enemigo
-         jurado o Aturdir sobre alguien que se mueve; Resurrección.
+         jurado o Aturdir sobre alguien que se mueve; Resurrección; el círculo de la Zona
+         de verdad acostado en el piso; las estrellas del aturdido a la altura de la cabeza.
 
    **Limpieza de assets pendiente (en el editor, revisión del 30 de septiembre):**
    - [ ] `GA_DivineSmiteVengeane`: **VFX doble**. Su Visuals Sequence pone el aura `Buff`

@@ -155,7 +155,8 @@ public class GA_InstantAoE : GameplayAbility, IGroundTargetAbility
     {
         if (VisualPrefab == null) return;
 
-        GameObject vfx = Instantiate(VisualPrefab, position, Quaternion.identity);
+        // Con la rotación del prefab (ver GA_ContinuousAoE.PlayImpactVFX).
+        GameObject vfx = Instantiate(VisualPrefab, position, VisualPrefab.transform.rotation);
 
         // Con VFX_AreaVisual el círculo calza EXACTO con Radius y se desvanece al
         // terminar; si no, cae al multiplicador a ojo de siempre.

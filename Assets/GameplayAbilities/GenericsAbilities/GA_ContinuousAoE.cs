@@ -287,7 +287,9 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
     {
         if (VisualPrefab == null || OwnerASC == null) return;
 
-        GameObject vfxInstance = Instantiate(VisualPrefab, position, Quaternion.identity);
+        // Con la rotación del PREFAB, no cero: muchos VFX de los packs acuestan el círculo
+        // girando su raíz −90° en X (Zone of Truth), y con Quaternion.identity quedaba parado.
+        GameObject vfxInstance = Instantiate(VisualPrefab, position, VisualPrefab.transform.rotation);
         if (ShouldFollowOwner) vfxInstance.transform.SetParent(OwnerASC.transform);
 
         // Si el prefab tiene VFX_AreaVisual, el círculo calza EXACTO con Radius y se
