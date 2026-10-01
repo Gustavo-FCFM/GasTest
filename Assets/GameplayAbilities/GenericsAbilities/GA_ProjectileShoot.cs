@@ -11,9 +11,17 @@ using FishNet.Object;
 // del dueño. Esta habilidad solo se encarga de crear/lanzar el
 // proyectil — toda la lógica de impacto (daño, VFX) vive en
 // GC_Projectile, que recibe los datos necesarios en Initialize().
+//
+// APUNTAR ANTES DE LANZAR (casilla AimBeforeThrow, para los lanzamientos de arma):
+// apretar levanta el arma y la deja atrás (AimHoldClip), la cámara del dueño se acerca a
+// la mira y el modelo se le esconde (ThirdPersonOrbitCam); soltar lanza YA: se reproduce
+// el lanzamiento desde esa pose (AimReleaseClip, sin el impulso hacia atrás) y el
+// proyectil sale en el momento en que el clip suelta. Es un mantenido (IHoldAbility)
+// SOLO con la casilla puesta: los demás disparos (castigos, el arco del combo del
+// Clérigo) siguen saliendo al apretar.
 // ============================================================
 [CreateAssetMenu(fileName = "GA_ProjectileShoot", menuName = "GAS/Generics/Projectile Shoot")]
-public class GA_ProjectileShoot : GameplayAbility
+public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
 {
     [Header("Configuración del Proyectil")]
     public GameObject ProjectilePrefab;
@@ -84,12 +92,59 @@ public class GA_ProjectileShoot : GameplayAbility
     [Header("Visuales")]
     public GameObject ImpactVFX;
 
+    [Header("Apuntar (mantener para apuntar, soltar para lanzar)")]
+    [Tooltip("Mantener el botón apunta (el arma atrás, la cámara cerca de la mira, el modelo " +
+             "oculto para el que apunta) y SOLTAR lanza al instante. Apagado = sale al apretar, " +
+             "como siempre (los castigos, el arco del combo del Clérigo).")]
+    public bool AimBeforeThrow = false;
+
+    [Tooltip("Pose de apuntar, en bucle, mientras se mantiene (ej. HumanM@ThrowWeapon01_R - Hold).")]
+    public AnimationClip AimHoldClip;
+
+    [Tooltip("El lanzamiento DESDE la pose de apuntar, sin el impulso hacia atrás: se reproduce " +
+             "al soltar. Si trae el evento AnimationEvent_HitFrame, el proyectil sale ahí. " +
+             "Vacío = se usa el AnimationClip entero.")]
+    public AnimationClip AimReleaseClip;
+
+    [Tooltip("Si el clip de soltar no trae el evento: segundos desde que se suelta hasta que " +
+             "sale el proyectil.")]
+    public float AimReleaseDelay = 0.1f;
+
+    [Tooltip("Corte de seguridad: si el aviso de soltar nunca llega, lanza a los tantos segundos.")]
+    public float AimSafetyTimeout = 30f;
+
+    [System.NonSerialized] private bool _aiming;
+    [System.NonSerialized] private float _aimStartedAt;
+
+    // IHoldAbility: solo con la casilla puesta se maneja como mantenido.
+    public bool UsesHoldInput => AimBeforeThrow;
+    public bool IsHolding     => _aiming;
+    public AnimationClip HoldLoopClip   => AimBeforeThrow ? AimHoldClip : null;
+    public AnimationClip HoldStartClip  => null;
+    public AnimationClip HoldEndClip    => null;   // al soltar va el clip de soltar, por la ranura de acción
+    public AnimationClip HoldImpactClip => null;
+
+    public override bool AimsCameraWhileHeld => AimBeforeThrow;
+
+    // El clip que se ve al soltar (y del que salen los tiempos del lanzamiento apuntado).
+    public AnimationClip ReleaseClip => AimReleaseClip != null ? AimReleaseClip : AnimationClip;
+
+    // Para el RPC de animación: el paso 1 es soltar después de apuntar.
+    public override AnimationClip GetStepAnimationClip(int sequenceIndex, int stepIndex)
+        => stepIndex == 1 ? ReleaseClip : AnimationClip;
+
     // Valida, reproduce la animación de disparo (con o sin PlayerController)
     // y arranca la secuencia de disparo.
     public override void Activate()
     {
         if (!IsServer) return;   // ← NUEVO
         if (!CanActivate()) return;
+
+        if (AimBeforeThrow)
+        {
+            StartAiming();
+            return;
+        }
 
         // OJO: acá NO se cobra. El cooldown empieza cuando el hacha SALE de la mano, no
         // cuando arranca la animación — ver ShootSequence.
@@ -127,6 +182,109 @@ public class GA_ProjectileShoot : GameplayAbility
             // les manda la animación a los demás (ver StartedThisActivation).
             StartedThisActivation = true;
         }
+    }
+
+    // =========================================================
+    // APUNTAR (AimBeforeThrow)
+    // =========================================================
+
+    // Apretar: el arma atrás en bucle. Nada se cobra hasta soltar.
+    private void StartAiming()
+    {
+        if (_aiming || OwnerASC == null) return;
+
+        _aiming       = true;
+        _aimStartedAt = Time.time;
+
+        PlayerController pc = OwnerASC.GetComponent<PlayerController>();
+        if (pc != null) pc.PlayHoldAnimation(this);
+
+        NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
+        if (netAsc != null)
+            netAsc.ServerBroadcastHoldAnimation(this, NetworkAbilitySystemComponent.EHoldAnimationPhase.Start);
+
+        OwnerASC.StartAbilityCoroutine(AimWatch());
+    }
+
+    // Vigila el apuntado en el servidor: un aturdido o la muerte lo cortan SIN lanzar (y
+    // sin cobrar), y el corte de seguridad lanza si el aviso de soltar nunca llega.
+    private IEnumerator AimWatch()
+    {
+        while (_aiming)
+        {
+            if (OwnerASC == null || OwnerASC.HasTag(EGameplayTag.State_Dead) ||
+                OwnerASC.HasTag(EGameplayTag.State_Stunned))
+            {
+                CancelAim();
+                yield break;
+            }
+
+            if (AimSafetyTimeout > 0f && Time.time - _aimStartedAt >= AimSafetyTimeout)
+            {
+                EndHold();
+                yield break;
+            }
+            yield return null;
+        }
+    }
+
+    // Soltar (IHoldAbility.EndHold, lo pide el dueño al soltar el botón): lanza YA.
+    // Idempotente.
+    public void EndHold()
+    {
+        if (!_aiming || OwnerASC == null) return;
+
+        if (OwnerASC.HasTag(EGameplayTag.State_Dead) || OwnerASC.HasTag(EGameplayTag.State_Stunned))
+        {
+            CancelAim();
+            return;
+        }
+
+        _aiming = false;
+        StopAimAnimation();
+
+        PlayerController pc = OwnerASC.GetComponent<PlayerController>();
+        if (pc != null) pc.RotateToAim();
+
+        // El lanzamiento desde la pose: al dueño ya se lo mostró su propia predicción
+        // (PredictOwnerReleaseVisuals); a los demás les llega por acá.
+        NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
+        if (netAsc != null) netAsc.ServerBroadcastStepAnimationToOthers(this, 0, 1, this);
+        else if (pc != null) pc.PlayActionClip(ReleaseClip, 1f, AnimationTriggerName, AnimationID);
+
+        OwnerASC.StartAbilityCoroutine(ShootSequence(fromAim: true));
+    }
+
+    // Cortado sin lanzar: no sale nada ni se cobra nada.
+    private void CancelAim()
+    {
+        if (!_aiming) return;
+        _aiming = false;
+        StopAimAnimation();
+        EndAbility();
+    }
+
+    private void StopAimAnimation()
+    {
+        PlayerController pc = OwnerASC.GetComponent<PlayerController>();
+        if (pc != null) pc.StopHoldAnimation();
+
+        NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
+        if (netAsc != null)
+            netAsc.ServerBroadcastHoldAnimation(this, NetworkAbilitySystemComponent.EHoldAnimationPhase.Stop);
+    }
+
+    // El dueño soltó el botón: muestra el lanzamiento en el acto, sin esperar al
+    // servidor, y esconde el arma en el mismo momento en que el servidor la va a soltar.
+    public override void PredictOwnerReleaseVisuals(PlayerController pc)
+    {
+        if (pc == null || !AimBeforeThrow) return;
+
+        pc.PlayActionClip(ReleaseClip, 1f, AnimationTriggerName, AnimationID);
+
+        if (!HideWeaponWhileFlying) return;
+        ResolveThrowTiming(true, out float releaseDelay, out float backswing);
+        pc.PredictWeaponHide(releaseDelay, releaseDelay + backswing);
     }
 
     // ¿Este Animator tiene ese parámetro, del tipo esperado? Pedirle algo que no tiene
@@ -168,9 +326,9 @@ public class GA_ProjectileShoot : GameplayAbility
     //
     // En los dos casos se sale SIN EndAbility: el "fin" lo manda la habilidad nueva, que
     // es la que pasa a mandar (ver GameplayAbility.IsInterruptible).
-    private IEnumerator ShootSequence()
+    private IEnumerator ShootSequence(bool fromAim = false)
     {
-        ResolveThrowTiming(out float releaseDelay, out float backswing);
+        ResolveThrowTiming(fromAim, out float releaseDelay, out float backswing);
 
         int cancelSerial = OwnerASC != null ? OwnerASC.CancelSerial : 0;
 
@@ -238,15 +396,30 @@ public class GA_ProjectileShoot : GameplayAbility
     {
         if (pc == null || !HideWeaponWhileFlying) return;
 
-        ResolveThrowTiming(out float releaseDelay, out float backswing);
+        ResolveThrowTiming(false, out float releaseDelay, out float backswing);
         pc.PredictWeaponHide(releaseDelay, releaseDelay + backswing);
     }
 
     // Cuando sale el proyectil (releaseDelay) y cuanto dura el remate hasta devolver el
     // arma a la mano (backswing). Lo calculan por igual el servidor y el dueño: los dos
     // datos salen del asset y del ritmo de ataque, que estan de los dos lados.
-    private void ResolveThrowTiming(out float releaseDelay, out float backswing)
+    //
+    // fromAim: el lanzamiento soltado después de apuntar. Los tiempos salen del clip de
+    // soltar (que ya arranca con el arma atrás), a su velocidad natural.
+    private void ResolveThrowTiming(bool fromAim, out float releaseDelay, out float backswing)
     {
+        if (fromAim)
+        {
+            AnimationClip clip = ReleaseClip;
+            releaseDelay = AimReleaseDelay;
+            if (clip != null)
+                foreach (AnimationEvent evt in clip.events)
+                    if (evt.functionName == HitFrameEventName) { releaseDelay = evt.time; break; }
+
+            backswing = clip != null ? Mathf.Max(0.1f, clip.length - releaseDelay) : 0.4f;
+            return;
+        }
+
         float speedMultiplier = 1f;
         float atkSpeedStat = OwnerASC != null ? OwnerASC.GetAttributeValue(EAttributeType.AtkSpeed) : 0f;
         if (atkSpeedStat > 0) speedMultiplier = 1f / atkSpeedStat;
@@ -271,9 +444,11 @@ public class GA_ProjectileShoot : GameplayAbility
         float animSpeed = ResolveAnimationSpeed();
         if (animSpeed <= 0f) animSpeed = 1f;
 
+        // Sin eventos, SpawnDelay se escala con la velocidad impuesta si la hay (un paso
+        // de combo o de un cargado con AnimationSpeedOverride).
         releaseDelay = releaseTimes.Count > 0
             ? releaseTimes[0] / animSpeed
-            : SpawnDelay / speedMultiplier;
+            : SpawnDelay / (AnimationSpeedOverride > 0f ? AnimationSpeedOverride : speedMultiplier);
 
         float backswingTime = 0.5f;
         backswing = backswingTime / speedMultiplier;

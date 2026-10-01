@@ -1193,6 +1193,14 @@ public class BotController : MonoBehaviour
 
     private static EAbilityKind Classify(GameplayAbility a)
     {
+        // Un cargado o un lanzamiento que se apunta (GA_ChargedAttack) se juzga por lo que
+        // sale al soltar: su última etapa (el hacha, las dagas, los conos del Maestro).
+        if (a is GA_ChargedAttack charged && charged.Stages.Count > 0)
+        {
+            GameplayAbility last = charged.Stages[charged.Stages.Count - 1].Ability;
+            if (last != null) return Classify(last);
+        }
+
         if (a is GA_SelfBuff || a is GA_TagSwitch || a is GA_ShieldBlock) return EAbilityKind.Buff;
 
         // El Golpe final del Inmortal no hereda de ninguna genérica —es su propia clase—
@@ -1565,7 +1573,7 @@ public class BotController : MonoBehaviour
 
         // Una habilidad de MANTENER queda abierta hasta que alguien suelta el botón, y un
         // bot no tiene botones. Se la anota para soltarla sola (ver Update).
-        if (ability is IHoldAbility hold)
+        if (HoldInput.IsHold(ability) && ability is IHoldAbility hold)
         {
             _held      = hold;
             _heldUntil = Time.time + HoldSeconds;

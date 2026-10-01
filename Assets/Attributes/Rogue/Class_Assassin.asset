@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ClassName: Assassin
   ClassIcon: {fileID: 21300000, guid: 445b3487b3a229844be688e53b283941, type: 3}
-  Description: The pure rogue. Hides to ambush and marks a target to finish it. Hunts whoever got separated; head on and in plain sight, he loses.
+  Description: The pure rogue. Hides to ambush and marks a target to finish it. Hunts
+    whoever got separated; head on and in plain sight, he loses.
   Role: 2
   BaseAttributes: {fileID: 11400000, guid: d4bdb499162328d498ae70ec392a2dc7, type: 2}
   Abilities:
@@ -35,5 +36,16 @@ MonoBehaviour:
   StatGrowthPerLevel: []
   AvailableSubclasses: []
   ClassAnimatorOverride: {fileID: 22100000, guid: f175085a22aa728459655748dd969669, type: 2}
+  StanceAnimatorOverride: {fileID: 0}
+  StanceAnimatorTag: 0
   MainHandWeaponPrefab: {fileID: 5857225396379586743, guid: 2bd1d7cd9d0928f458195d58dfb564b6, type: 3}
   OffHandWeaponPrefab: {fileID: 5857225396379586743, guid: 2bd1d7cd9d0928f458195d58dfb564b6, type: 3}
+  MainHandRotationOffset: {x: 0, y: 0, z: 0}
+  MainHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandPose: {fileID: 0}
+  OffHandPoseRequiredTag: 0
+  StowOffHandTag: 0
+  StowedOffHandPositionOffset: {x: 0, y: 0, z: 0}
+  StowedOffHandRotationOffset: {x: 0, y: 0, z: 0}

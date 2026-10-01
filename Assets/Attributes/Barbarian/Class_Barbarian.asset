@@ -14,7 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ClassName: Barbarian
   ClassIcon: {fileID: 21300000, guid: 150ec0fe7eb33a744879df340d60234b, type: 3}
-  Description: Takes a beating and hits hard. Throws his axe from range, closes the gap with a leap, and Rage heals him with every hit. The one who opens the fight.
+  Description: Takes a beating and hits hard. Throws his axe from range, closes the
+    gap with a leap, and Rage heals him with every hit. The one who opens the fight.
+  Role: 0
   BaseAttributes: {fileID: 11400000, guid: 018a6225b1f822143aa86c2bcaef873f, type: 2}
   Abilities:
   - InputSlot: 1
@@ -41,5 +43,16 @@ MonoBehaviour:
   - {fileID: 11400000, guid: fc80e36e6c65c4c4c8c8c0da24e9a267, type: 2}
   - {fileID: 11400000, guid: dc7a0186b9ca16342b41ac3a101fe68d, type: 2}
   ClassAnimatorOverride: {fileID: 22100000, guid: c1aea6e6b93746e4dbab09a9b224bfaa, type: 2}
+  StanceAnimatorOverride: {fileID: 0}
+  StanceAnimatorTag: 0
   MainHandWeaponPrefab: {fileID: 8072587243417393782, guid: c61cbb6b38d7de247a8e5b46c0726dec, type: 3}
   OffHandWeaponPrefab: {fileID: 0}
+  MainHandRotationOffset: {x: 0, y: 0, z: 0}
+  MainHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandPose: {fileID: 0}
+  OffHandPoseRequiredTag: 0
+  StowOffHandTag: 0
+  StowedOffHandPositionOffset: {x: 0, y: 0, z: 0}
+  StowedOffHandRotationOffset: {x: 0, y: 0, z: 0}

@@ -14,7 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ClassName: Berserker
   ClassIcon: {fileID: 21300000, guid: 3a3a94c5d846c634f8d0e8369d21714f, type: 3}
-  Description: A barbarian of fast strikes. Attacks twice as often and each hit lands softer. Whirlwind is for fighting surrounded. The longer the fight, the better he does.
+  Description: A barbarian of fast strikes. Attacks twice as often and each hit lands
+    softer. Whirlwind is for fighting surrounded. The longer the fight, the better
+    he does.
   Role: 1
   BaseAttributes: {fileID: 11400000, guid: 5f2d453bdca4bc847bc79581b5e6b791, type: 2}
   Abilities:
@@ -35,5 +37,16 @@ MonoBehaviour:
   StatGrowthPerLevel: []
   AvailableSubclasses: []
   ClassAnimatorOverride: {fileID: 22100000, guid: a6e013513f2d1ab40b229d993cd946c9, type: 2}
+  StanceAnimatorOverride: {fileID: 0}
+  StanceAnimatorTag: 0
   MainHandWeaponPrefab: {fileID: 3759308019276334546, guid: c63c393a3f353e04d924d176e228fc70, type: 3}
   OffHandWeaponPrefab: {fileID: 3759308019276334546, guid: c63c393a3f353e04d924d176e228fc70, type: 3}
+  MainHandRotationOffset: {x: 0, y: 0, z: 0}
+  MainHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandPose: {fileID: 0}
+  OffHandPoseRequiredTag: 0
+  StowOffHandTag: 0
+  StowedOffHandPositionOffset: {x: 0, y: 0, z: 0}
+  StowedOffHandRotationOffset: {x: 0, y: 0, z: 0}

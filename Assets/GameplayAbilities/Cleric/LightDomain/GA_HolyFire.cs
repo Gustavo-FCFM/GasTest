@@ -18,7 +18,7 @@ using System.Collections.Generic;
 // uno solo; un cono alcanza a muchos. Mismo gancho (OnTookDamage del marcado, en el
 // servidor) y el mismo freno por aliado para que pegar rápido no cure de más.
 // ============================================================
-[CreateAssetMenu(fileName = "GA_HolyFire", menuName = "GAS/Cleric/Holy Fire")]
+[CreateAssetMenu(fileName = "GA_HolyFire", menuName = "GAS/Specific Abilities/Cleric/Light/Holy Fire")]
 public class GA_HolyFire : GA_ConeAttack
 {
     [Header("La Marca (aliados que lo golpean se curan)")]

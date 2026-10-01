@@ -89,6 +89,7 @@ public class GA_ShieldBlock : GameplayAbility, IHoldAbility
     // Estado del mantenido. NonSerialized: es estado de runtime por instancia
     // otorgada, no se guarda en el asset (mismo criterio que las cargas de GA_Dash).
     [System.NonSerialized] private bool _holding;
+    public bool UsesHoldInput => true;
     public bool IsHolding => _holding;
 
     // Barrera a la que estamos suscritos mientras dura el mantenido, y cuándo se

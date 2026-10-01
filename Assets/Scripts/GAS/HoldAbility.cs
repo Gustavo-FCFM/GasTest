@@ -27,6 +27,11 @@ using UnityEngine;
 // ============================================================
 public interface IHoldAbility
 {
+    // Si de verdad se maneja manteniendo el botón. Casi siempre sí; un lanzamiento
+    // (GA_ProjectileShoot) solo con su casilla AimBeforeThrow. Todo lo que decide "esto
+    // es un mantenido" pregunta por HoldInput.IsHold, no por la interfaz a secas.
+    bool UsesHoldInput { get; }
+
     // Termina el mantenido. La llama el servidor: cuando el dueño suelta el botón,
     // cuando se agota el recurso, o al morir/cambiar de clase. TIENE que ser
     // idempotente — llamarla dos veces no debe romper nada, porque esas tres vías
@@ -49,4 +54,11 @@ public interface IHoldAbility
     // OPCIONAL — reacción one-shot al recibir un golpe mientras se bloquea, sin salir
     // del mantenido (el escudo "acusa" el impacto).
     AnimationClip HoldImpactClip { get; }
+}
+
+public static class HoldInput
+{
+    // ¿Esta habilidad se maneja como mantenido (apretar arranca, soltar termina)?
+    public static bool IsHold(GameplayAbility ability)
+        => ability is IHoldAbility hold && hold.UsesHoldInput;
 }

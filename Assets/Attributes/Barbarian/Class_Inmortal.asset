@@ -14,7 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ClassName: Inmortal
   ClassIcon: {fileID: 21300000, guid: 01a083dd1c5fae649a40e683197eb815, type: 3}
-  Description: A barbarian who will not stay dead. His ultimate picks him back up with his abilities ready again. Slow, heavy swings and a finisher that punishes the wounded.
+  Description: A barbarian who will not stay dead. His ultimate picks him back up
+    with his abilities ready again. Slow, heavy swings and a finisher that punishes
+    the wounded.
   Role: 1
   BaseAttributes: {fileID: 11400000, guid: f48497a22d22faf43b99c324878da5ca, type: 2}
   Abilities:
@@ -30,8 +32,21 @@ MonoBehaviour:
     Ability: {fileID: 11400000, guid: 841ec26c95a61014994aee639a5c6d47, type: 2}
   - InputSlot: 5
     Ability: {fileID: 11400000, guid: 35250ec3ba95b494bba4a6e9e79b250e, type: 2}
+  PassiveBehaviorsPrefab: {fileID: 0}
+  PassiveEffects: []
   StatGrowthPerLevel: []
   AvailableSubclasses: []
   ClassAnimatorOverride: {fileID: 22100000, guid: c1aea6e6b93746e4dbab09a9b224bfaa, type: 2}
+  StanceAnimatorOverride: {fileID: 0}
+  StanceAnimatorTag: 0
   MainHandWeaponPrefab: {fileID: 1309212752354464438, guid: 92948b840284b93478272de155a25eda, type: 3}
   OffHandWeaponPrefab: {fileID: 0}
+  MainHandRotationOffset: {x: 0, y: 0, z: 0}
+  MainHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandPose: {fileID: 0}
+  OffHandPoseRequiredTag: 0
+  StowOffHandTag: 0
+  StowedOffHandPositionOffset: {x: 0, y: 0, z: 0}
+  StowedOffHandRotationOffset: {x: 0, y: 0, z: 0}

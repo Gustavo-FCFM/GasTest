@@ -70,6 +70,7 @@ public class GA_HoldTagSwitch : GA_TagSwitch, IHoldAbility
     // IHoldAbility: todo a la variante
     // =========================================================
 
+    public bool UsesHoldInput => true;
     public bool IsHolding => _lastResolved is IHoldAbility held && held.IsHolding;
 
     public void EndHold()
@@ -81,6 +82,16 @@ public class GA_HoldTagSwitch : GA_TagSwitch, IHoldAbility
     public AnimationClip HoldStartClip  => ActiveHold?.HoldStartClip;
     public AnimationClip HoldEndClip    => ActiveHold?.HoldEndClip;
     public AnimationClip HoldImpactClip => ActiveHold?.HoldImpactClip;
+
+    // La cámara de apuntar, si la variante la pide (en ofensiva, apuntar la lanza).
+    public override bool AimsCameraWhileHeld => ActiveHold is GameplayAbility held && held.AimsCameraWhileHeld;
+
+    // Al soltar, la variante muestra lo suyo en el dueño (el lanzamiento de la lanza).
+    public override void PredictOwnerReleaseVisuals(PlayerController pc)
+    {
+        GameplayAbility instance = CurrentInstance();
+        if (instance != null) instance.PredictOwnerReleaseVisuals(pc);
+    }
 
     // El HUD muestra el cooldown de la variante que se dispararía ahora (en ofensiva, el
     // del ataque cargado; en defensiva, el del escudo).

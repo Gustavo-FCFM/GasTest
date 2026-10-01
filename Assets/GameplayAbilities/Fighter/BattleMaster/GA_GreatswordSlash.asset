@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: GA_GreatswordSlash
   m_EditorClassIdentifier: 
   AbilityName: Greatsword Slash
-  AbilityIcon: {fileID: 0}
+  AbilityIcon: {fileID: 21300000, guid: e4e3d366f524d754580c101c74e8f080, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 45327044be4f41c4d8f5289bc6f9b3be, type: 2}
   CooldownDuration: 0

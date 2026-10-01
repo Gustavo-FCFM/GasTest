@@ -1063,7 +1063,7 @@ public class PlayerController : NetworkBehaviour
         if (isAttacking || IsAimingAbility || Time.time < _nextAutoRepeatAt) return;
 
         GameplayAbility ability = PrimaryAttackAbility;
-        if (ability is IRadialMenuAbility || ability is IHoldAbility) return;
+        if (ability is IRadialMenuAbility || HoldInput.IsHold(ability)) return;
         if (ability is IGroundTargetAbility ground && ground.UsesGroundTarget) return;
         if (!ability.CanActivate()) return;
 
@@ -1125,7 +1125,7 @@ public class PlayerController : NetworkBehaviour
         // Guerrero): esas pasan, sin tocar el estado del escudo, que sigue arriba.
         if (IsHoldingAbility)
         {
-            if (ability.CanUseWhileHolding && !(ability is IHoldAbility)) PressWhileHolding(ability, slot);
+            if (ability.CanUseWhileHolding && !HoldInput.IsHold(ability)) PressWhileHolding(ability, slot);
             return;
         }
 
@@ -1143,7 +1143,7 @@ public class PlayerController : NetworkBehaviour
             currentRadialAbility = ability;
             if (UI_RadialMenu.Instance != null) UI_RadialMenu.Instance.Show(radial);
         }
-        else if (ability is IHoldAbility)
+        else if (HoldInput.IsHold(ability))
         {
             // Habilidad de MANTENER: se activa por el camino NORMAL (el servidor
             // valida y arranca el estado), y queda registrada acá para que soltar el
@@ -1310,6 +1310,10 @@ public class PlayerController : NetworkBehaviour
         _holdAbility = null;
 
         StopHoldAnimation();
+
+        // Un lanzamiento apuntado sale al soltar: se muestra ya, sin esperar al servidor.
+        // Al cortarlo desde afuera (un menú) no se lanza nada.
+        if (!forceFinish && (!IsSpawned || IsOwner)) ability.PredictOwnerReleaseVisuals(this);
 
         if (NetASC != null) NetASC.ServerRequestEndHoldAbility(_holdSlot);
         else if (ability is IHoldAbility hold) hold.EndHold(); // fallback singleplayer
@@ -3619,6 +3623,10 @@ public class PlayerController : NetworkBehaviour
         TickFootsteps();
         TickStunAnimation();
         TickStanceVisuals();
+
+        // Mantener un lanzamiento acerca la cámara a la mira (solo el dueño tiene cámara).
+        if (_orbitCam != null)
+            _orbitCam.Aiming = _holdAbility != null && _holdAbility.AimsCameraWhileHeld;
 
         if (Mathf.Approximately(_modelSpinSpeed, 0f) || characterAnimator == null) return;
 

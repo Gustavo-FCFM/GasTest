@@ -109,6 +109,27 @@ public class ThirdPersonOrbitCam : MonoBehaviour
              "diferencia entre las dos evita el parpadeo cuando quedás justo en el límite.")]
     public float ShowDistance = 1.5f;
 
+    [Header("Apuntar (mantener un lanzamiento)")]
+    [Tooltip("Dónde queda la cámara mientras se apunta: más cerca y pegada al hombro. Se " +
+             "pasa de CamOffset a este suavemente.")]
+    public Vector3 AimCamOffset = new Vector3(0.6f, 0.05f, -1.4f);
+
+    [Tooltip("Qué tan rápido entra y sale del modo apuntar (1/segundos: 6 ≈ 0.17 s).")]
+    public float AimBlendSpeed = 6f;
+
+    [Tooltip("Sensibilidad mientras se apunta, como fracción de la normal. Más baja = más fino.")]
+    [Range(0.1f, 1f)]
+    public float AimSensitivity = 0.75f;
+
+    [Tooltip("Mientras se apunta, el modelo del jugador se deja de dibujar en SU pantalla (sigue " +
+             "proyectando sombra) para que no tape la mira. Al soltar vuelve.")]
+    public bool HideTargetWhileAiming = true;
+
+    // Lo prende PlayerController mientras el dueño mantiene una habilidad que apunta
+    // (GameplayAbility.AimsCameraWhileHeld).
+    [HideInInspector] public bool Aiming;
+    private float _aimBlend;
+
     private float rotX = 0f;
     private float rotY = 0f;
 
@@ -153,7 +174,7 @@ public class ThirdPersonOrbitCam : MonoBehaviour
 
             // Los ajustes del jugador (panel de Ajustes): multiplican la sensibilidad de
             // arriba —que es la base del prefab— y dan vuelta el eje Y si lo pidió.
-            float userMult = GameSettings.MouseSensitivity;
+            float userMult = GameSettings.MouseSensitivity * Mathf.Lerp(1f, AimSensitivity, _aimBlend);
             float ySign    = GameSettings.InvertY ? -1f : 1f;
 
             if (fromGamepad)
@@ -185,12 +206,16 @@ public class ThirdPersonOrbitCam : MonoBehaviour
         }
         _lastFocus = focusPoint;
 
+        // Apuntando, el hombro pasa suave de CamOffset a AimCamOffset (más cerca).
+        _aimBlend = Mathf.MoveTowards(_aimBlend, Aiming ? 1f : 0f, AimBlendSpeed * Time.deltaTime);
+        Vector3 camOffset = Vector3.Lerp(CamOffset, AimCamOffset, _aimBlend);
+
         // El offset del hombro se descompone en DIRECCIÓN y DISTANCIA: la dirección se
         // mantiene siempre (para no perder la vista sobre el hombro) y lo único que se
         // acorta al chocar es la distancia.
-        float   armLength = CamOffset.magnitude;
+        float   armLength = camOffset.magnitude;
         Vector3 armDir    = armLength > 0.001f
-            ? (targetRotation * CamOffset).normalized
+            ? (targetRotation * camOffset).normalized
             : targetRotation * Vector3.back;
 
         float desiredDistance = ResolveArmLength(focusPoint, armDir, armLength);
@@ -247,6 +272,14 @@ public class ThirdPersonOrbitCam : MonoBehaviour
 
     private void UpdateTargetVisibility()
     {
+        // Apuntando: oculto sí o sí. Al soltar, la cámara se aleja y el criterio de la
+        // distancia de abajo lo vuelve a mostrar.
+        if (Aiming && HideTargetWhileAiming)
+        {
+            if (!_targetHidden) SetTargetHidden(true);
+            return;
+        }
+
         if (!HideTargetWhenClose)
         {
             if (_targetHidden) SetTargetHidden(false);

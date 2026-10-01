@@ -19,7 +19,7 @@ using UnityEngine;
 //
 // Sin ningún aliado muerto en la mira no se lanza y no gasta la definitiva.
 // ============================================================
-[CreateAssetMenu(fileName = "GA_Resurrection", menuName = "GAS/Cleric/Resurrection")]
+[CreateAssetMenu(fileName = "GA_Resurrection", menuName = "GAS/Specific Abilities/Cleric/Life/Resurrection")]
 public class GA_Resurrection : TargetImpactAbility
 {
     [Header("Selección")]

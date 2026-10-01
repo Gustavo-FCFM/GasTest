@@ -27,7 +27,7 @@ using UnityEngine;
 // El movimiento lo ejecuta el DUEÑO (el transform es client-authoritative): se le
 // pide por ServerTeleportOwnerTo, igual que el Blink y la Intercepción.
 // ============================================================
-[CreateAssetMenu(fileName = "GA_Teleport", menuName = "GAS/Generic Abilities/Teleport")]
+[CreateAssetMenu(fileName = "GA_Teleport", menuName = "GAS/Generics/Teleport")]
 public class GA_Teleport : GameplayAbility, IGroundTargetAbility
 {
     [Header("Destino")]
@@ -147,6 +147,16 @@ public class GA_Teleport : GameplayAbility, IGroundTargetAbility
         faceDir.y = 0f;
         if (faceDir.sqrMagnitude < 0.0001f) faceDir = OwnerASC.transform.forward;
 
+        ExecuteTeleport(pc, netAsc, origin, landing, faceDir);
+    }
+
+    // El viaje en sí, con el destino ya resuelto y cobrado: destello en la salida y en
+    // la llegada, mover al dueño y animar. Una subclase lo reemplaza para hacer otra cosa
+    // con el mismo destino seguro (el Salto heroico del Comandante: salta, aparece, golpea
+    // y clava su bandera). Tiene que terminar con EndAbility().
+    protected virtual void ExecuteTeleport(PlayerController pc, NetworkAbilitySystemComponent netAsc,
+                                           Vector3 origin, Vector3 landing, Vector3 faceDir)
+    {
         if (netAsc != null)
         {
             netAsc.ServerPlayAbilityVFX(this, origin + Vector3.up);

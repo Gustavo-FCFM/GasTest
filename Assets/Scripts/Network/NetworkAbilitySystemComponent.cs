@@ -957,7 +957,7 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         // Una habilidad de MANTENER no anima con un clip one-shot sino con un estado
         // sostenido: su Activate() ya mandó ServerBroadcastHoldAnimation. Mandar acá
         // además el clip suelto pisaría ese estado apenas se levanta.
-        if (ability is IHoldAbility) return;
+        if (HoldInput.IsHold(ability)) return;
 
         // Usada con el escudo arriba: su clip suelto pisaría la pose sostenida del escudo
         // en las demás pantallas. Se ve como una carga con el escudo al frente.
@@ -1270,6 +1270,39 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
             ? GameplayAbilityRegistry.Instance?.GetAbility(parentIndex) : null;
 
         // Si no se puede resolver el clip, PlayActionClip cae solo al esquema viejo.
+        AnimationClip clip = parent != null ? parent.GetStepAnimationClip(sequenceIndex, stepIndex) : null;
+        pc.PlayActionClip(clip, animationSpeed, trigger, actionID);
+    }
+
+    // Igual que ServerBroadcastComboStepAnimation, pero saltea a TODOS los dueños: para
+    // lo que el dueño ya animó por su cuenta en su pantalla (soltar un lanzamiento
+    // apuntado, ver GA_ProjectileShoot.PredictOwnerReleaseVisuals).
+    [Server]
+    public void ServerBroadcastStepAnimationToOthers(GameplayAbility parent, int sequenceIndex,
+                                                     int stepIndex, GameplayAbility stepInstance)
+    {
+        if (parent == null || stepInstance == null) return;
+
+        int parentIndex = GameplayAbilityRegistry.Instance != null
+            ? GameplayAbilityRegistry.Instance.GetIndex(parent) : -1;
+
+        ObserversPlayStepAnimationToOthers(parentIndex, sequenceIndex, stepIndex,
+                                           stepInstance.AnimationTriggerName, stepInstance.AnimationID,
+                                           stepInstance.ResolveAnimationSpeed());
+    }
+
+    [ObserversRpc]
+    private void ObserversPlayStepAnimationToOthers(int parentIndex, int sequenceIndex, int stepIndex,
+                                                    string trigger, int actionID, float animationSpeed)
+    {
+        if (IsOwner) return;
+
+        PlayerController pc = GetComponent<PlayerController>();
+        if (pc == null) return;
+
+        GameplayAbility parent = parentIndex >= 0
+            ? GameplayAbilityRegistry.Instance?.GetAbility(parentIndex) : null;
+
         AnimationClip clip = parent != null ? parent.GetStepAnimationClip(sequenceIndex, stepIndex) : null;
         pc.PlayActionClip(clip, animationSpeed, trigger, actionID);
     }

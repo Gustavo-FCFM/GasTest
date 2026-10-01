@@ -69,6 +69,7 @@ public class GA_ChargedAttack : GameplayAbility, IHoldAbility
 
     [System.NonSerialized] private bool  _holding;
     [System.NonSerialized] private float _chargeStartedAt;
+    public bool UsesHoldInput => true;
     public bool IsHolding => _holding;
 
     // Para el RPC de animación de los pasos: la "secuencia" 0 son las etapas.

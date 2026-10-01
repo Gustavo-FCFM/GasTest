@@ -87,7 +87,19 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
 
     // ¿El área sigue al dueño? Solo puede seguirlo si nace sobre él: una zona
     // apuntada con la retícula queda siempre fija donde cayó.
-    private bool ShouldFollowOwner => FollowOwner && DeployMode == EAoEDeploy.AtOwner;
+    private bool ShouldFollowOwner => FollowOwner && DeployMode == EAoEDeploy.AtOwner && !_hasCenterOverride;
+
+    // Despliegue pedido por OTRA habilidad (la bandera del Salto heroico): nace en ese
+    // punto, fija, y sin animación propia (la del lanzador ya la puso quien la llama).
+    [System.NonSerialized] private bool    _hasCenterOverride;
+    [System.NonSerialized] private Vector3 _centerOverride;
+
+    public void ActivateAt(Vector3 center)
+    {
+        _hasCenterOverride = true;
+        _centerOverride    = center;
+        Activate();
+    }
 
     // Valida, cobra costo/cooldown y arranca la secuencia del área.
     public override void Activate()
@@ -104,11 +116,11 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
             // El centro se resuelve ACÁ, al activar: con la retícula, el punto de mira
             // es el del instante del casteo (si lo leyéramos después del StartDelay, el
             // jugador ya podría estar apuntando a otro lado).
-            Vector3 center = ResolveCenter(pc);
+            Vector3 center = _hasCenterOverride ? _centerOverride : ResolveCenter(pc);
 
             // La animacion normal es un disparo suelto. Una subclase puede reemplazarla
             // por algo sostenido (ver GA_Whirlwind) devolviendo true en el hook.
-            if (!TryPlayCustomAnimation(pc) && pc != null) pc.PlayAnimation(this);
+            if (!_hasCenterOverride && !TryPlayCustomAnimation(pc) && pc != null) pc.PlayAnimation(this);
 
             OnAreaStarted();
             OwnerASC.StartAbilityCoroutine(AoESequence(center));

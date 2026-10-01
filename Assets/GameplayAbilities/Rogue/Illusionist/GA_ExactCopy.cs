@@ -15,7 +15,7 @@ using System.Collections;
 // sincroniza al dueño), aplicándolo solo al agotar la ÚLTIMA carga. Un solo valor
 // (ResolveCooldownDuration) define el cooldown y la recarga por carga.
 // ============================================================
-[CreateAssetMenu(fileName = "GA_ExactCopy", menuName = "GAS/Specific Abilities/Illusionist/Exact Copy")]
+[CreateAssetMenu(fileName = "GA_ExactCopy", menuName = "GAS/Specific Abilities/Rogue/Illusionist/Exact Copy")]
 public class GA_ExactCopy : GameplayAbility
 {
     [Header("Copia")]

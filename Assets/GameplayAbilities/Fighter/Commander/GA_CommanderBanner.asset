@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6bb5562b5ea8394f8a1925c1d716fda, type: 3}
+  m_Name: GA_CommanderBanner
+  m_EditorClassIdentifier: 
+  AbilityName: Battle Banner
+  AbilityIcon: {fileID: 21300000, guid: f4f9181881f0f3b4c9c341d9316e2cd6, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 0}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 0
+  ActivationBlockedTags: 
+  ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  UsableWhileHolding: 0
+  AnimationClip: {fileID: 0}
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  IsInterruptible: 0
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  VisualsSequence: []
+  MaxCharges: 1
+  Targets: 0
+  Radius: 6
+  TotalDuration: 8
+  TickInterval: 1
+  DeployMode: 0
+  MaxRange: 15
+  FollowOwner: 0
+  VisualPrefab: {fileID: 4990058852693962874, guid: 90381c1575d8a0e46ac5d116df7156b4, type: 3}
+  VisualScaleMultiplier: 1
+  EffectsToApply:
+  - {fileID: 11400000, guid: 9de71880dd9d5f547844f878d3bb3afa, type: 2}
+  AllyEffects:
+  - {fileID: 11400000, guid: bd0c84268a6ffba448d318f828a9d5ee, type: 2}
+  StartDelay: 0

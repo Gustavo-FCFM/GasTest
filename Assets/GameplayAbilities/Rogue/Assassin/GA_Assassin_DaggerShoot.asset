@@ -57,3 +57,8 @@ MonoBehaviour:
   SpawnDelay: 0.5
   MinConvergeDistance: 4
   ImpactVFX: {fileID: 1758473627833946668, guid: 9b21333b068a5084ba09535839bee3c8, type: 3}
+  AimBeforeThrow: 1
+  AimHoldClip: {fileID: 3094330708855449807, guid: c6394379fdb70c24ea2b1eddb8fba34f, type: 3}
+  AimReleaseClip: {fileID: -5060625908618555442, guid: c25522e533a3f5149b1926cb6ee3c8f1, type: 3}
+  AimReleaseDelay: 0.1
+  AimSafetyTimeout: 30

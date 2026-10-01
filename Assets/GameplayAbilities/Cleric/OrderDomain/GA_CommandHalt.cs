@@ -18,7 +18,7 @@ using System.Collections;
 //
 // Una marca a la vez: volver a lanzarla sobre otro suelta la anterior.
 // ============================================================
-[CreateAssetMenu(fileName = "GA_CommandHalt", menuName = "GAS/Cleric/Command Halt")]
+[CreateAssetMenu(fileName = "GA_CommandHalt", menuName = "GAS/Specific Abilities/Cleric/Order/Command Halt")]
 public class GA_CommandHalt : TargetImpactAbility
 {
     [Header("Selección de Enemigo")]

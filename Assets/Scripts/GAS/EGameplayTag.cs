@@ -107,4 +107,7 @@ public enum EGameplayTag
     // --- MAESTRO DE BATALLA ---
     Status_BreakLimits,        // Romper límites activo: Punto débil aplica su marca potenciada (ver WeakPointPassive). Lo da GE_BreakLimits junto con Status_Unstoppable
     Status_WeakPoint,          // Marcado por Punto débil (recibe más daño). También es el EffectGroup de las dos marcas, con ReplacesGroup
+
+    // --- COMANDANTE ---
+    Status_CommandingVoice,    // Voz de mando activa: prende el anillo de velocidad del aura del Comandante (PaladinAuraPassive con RequiredOwnerTag). Lo da GE_CommandingVoice
 }

@@ -15,7 +15,7 @@ using System.Collections.Generic;
 // Al ser golpeadas, se comportan igual que cualquier copia (ciegan + hieren al enemigo
 // que las golpea y explotan). Los aliados no pueden golpearlas (mismo equipo).
 // ============================================================
-[CreateAssetMenu(fileName = "GA_CopyParty", menuName = "GAS/Specific Abilities/Illusionist/Copy Party")]
+[CreateAssetMenu(fileName = "GA_CopyParty", menuName = "GAS/Specific Abilities/Rogue/Illusionist/Copy Party")]
 public class GA_CopyParty : GameplayAbility
 {
     [Header("Fiesta de copias")]

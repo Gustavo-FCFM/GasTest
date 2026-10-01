@@ -9,7 +9,7 @@ using UnityEngine;
 // alrededor del punto de reaparición. La dispara PlayerController
 // automáticamente al morir, si está disponible.
 // ============================================================
-[CreateAssetMenu(fileName = "GA_ImmortalWrath", menuName = "GAS/Specific Abilities/Immortal/Immortal Wrath")]
+[CreateAssetMenu(fileName = "GA_ImmortalWrath", menuName = "GAS/Specific Abilities/Barbarian/Immortal/Immortal Wrath")]
 public class GA_ImmortalWrath : GameplayAbility
 {
     [Header("Configuración Immortal Wrath")]

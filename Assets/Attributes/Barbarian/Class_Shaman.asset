@@ -14,7 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ClassName: Shaman
   ClassIcon: {fileID: 21300000, guid: 1dd62a67146a3094f9f34b2d9aa78b51, type: 3}
-  Description: A barbarian who never fights alone. Plants totems that make nearby allies tougher, faster or deadlier, and his ultimate raises all four at once. The one who holds ground.
+  Description: A barbarian who never fights alone. Plants totems that make nearby
+    allies tougher, faster or deadlier, and his ultimate raises all four at once.
+    The one who holds ground.
   Role: 1
   BaseAttributes: {fileID: 11400000, guid: 06d50662e88e07440acd6ca1d40486dd, type: 2}
   Abilities:
@@ -30,9 +32,21 @@ MonoBehaviour:
     Ability: {fileID: 11400000, guid: 8902185c93152ec4a8a659346dbea617, type: 2}
   - InputSlot: 5
     Ability: {fileID: 11400000, guid: c0119bad393d6f74f9f62aa452dea6ad, type: 2}
+  PassiveBehaviorsPrefab: {fileID: 0}
   PassiveEffects: []
   StatGrowthPerLevel: []
   AvailableSubclasses: []
   ClassAnimatorOverride: {fileID: 22100000, guid: c1aea6e6b93746e4dbab09a9b224bfaa, type: 2}
+  StanceAnimatorOverride: {fileID: 0}
+  StanceAnimatorTag: 0
   MainHandWeaponPrefab: {fileID: 1564936832730364612, guid: 0342517dbd4207440ab83141155d018b, type: 3}
   OffHandWeaponPrefab: {fileID: 0}
+  MainHandRotationOffset: {x: 0, y: 0, z: 0}
+  MainHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandPose: {fileID: 0}
+  OffHandPoseRequiredTag: 0
+  StowOffHandTag: 0
+  StowedOffHandPositionOffset: {x: 0, y: 0, z: 0}
+  StowedOffHandRotationOffset: {x: 0, y: 0, z: 0}

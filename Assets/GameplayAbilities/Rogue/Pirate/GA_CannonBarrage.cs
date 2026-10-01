@@ -21,7 +21,7 @@ using UnityEngine;
 // el Pirata debe tener GamblePassive en su PassiveBehaviorsPrefab (de ahí sale el GE
 // de la marca y los efectos de la apuesta — no se configuran de nuevo acá).
 // ============================================================
-[CreateAssetMenu(fileName = "GA_CannonBarrage", menuName = "GAS/Specific Abilities/Pirate/Cannon Barrage")]
+[CreateAssetMenu(fileName = "GA_CannonBarrage", menuName = "GAS/Specific Abilities/Rogue/Pirate/Cannon Barrage")]
 public class GA_CannonBarrage : GA_ContinuousAoE
 {
     // La pasiva del dueño, que lleva el registro de apuestas. Se resuelve la primera

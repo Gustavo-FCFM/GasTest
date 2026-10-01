@@ -23,7 +23,7 @@ MonoBehaviour:
   ActivationRequiredTags: 
   UsableWhileChanneling: 0
   UsableWhileHolding: 0
-  AnimationClip: {fileID: 0}
+  AnimationClip: {fileID: 3094330708855449807, guid: 18afe56f6fdf0b0478209f4b1512c8cc, type: 3}
   AnimationTriggerName: 
   AnimationID: 1
   CastSound:

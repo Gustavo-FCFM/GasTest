@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 749805704a6088741af34d91f0891ced, type: 3}
+  m_Name: Class_CommanderFighter
+  m_EditorClassIdentifier: 
+  ClassName: Commander
+  ClassIcon: {fileID: 21300000, guid: 02bfef8aee3adcb4fab6ad83480d001d, type: 3}
+  Description: The battlefield leader. His stance inspires every ally around him;
+    in offensive stance he grips his spear with both hands, strikes from mid range
+    and hurls it to stun enemies. He leaps into the fray and plants his banner.
+  Role: 1
+  BaseAttributes: {fileID: 11400000, guid: 05c6b8bc042380a4794999adf6699f49, type: 2}
+  Abilities:
+  - InputSlot: 1
+    Ability: {fileID: 11400000, guid: 5dc20e8c8b47f0a41a117ca71aed422b, type: 2}
+  - InputSlot: 2
+    Ability: {fileID: 11400000, guid: 26b318ae86482f8489c1222803aa0b6d, type: 2}
+  - InputSlot: 3
+    Ability: {fileID: 11400000, guid: 93a05fb96c69ab34392cfc0382810790, type: 2}
+  - InputSlot: 6
+    Ability: {fileID: 11400000, guid: e33fcd237b6f6e6438abc870ae8cbb8b, type: 2}
+  - InputSlot: 4
+    Ability: {fileID: 11400000, guid: c5e0519347d03ce4385114ed9afbcc5a, type: 2}
+  - InputSlot: 5
+    Ability: {fileID: 11400000, guid: 7a4000aed49eea84f94d5e6462c2f3ca, type: 2}
+  PassiveBehaviorsPrefab: {fileID: 9026357972262154142, guid: 9393811f2675c1a42a071655bd6f8a36, type: 3}
+  PassiveEffects:
+  - {fileID: 11400000, guid: 5425dc3edd0320d4a8b0ad013919b6cc, type: 2}
+  - {fileID: 11400000, guid: 6380aee251c0493479b81ddfd0e2c79e, type: 2}
+  StatGrowthPerLevel: []
+  AvailableSubclasses: []
+  ClassAnimatorOverride: {fileID: 22100000, guid: 75ec53281b263d24dbe5fee5e2ab9c9e, type: 2}
+  StanceAnimatorOverride: {fileID: 22100000, guid: 3865512a18d92d84983a6d947cda2397, type: 2}
+  StanceAnimatorTag: 56
+  MainHandWeaponPrefab: {fileID: 6409903527971818013, guid: 7bea6d1a74f72294d8df22a0cdea31aa, type: 3}
+  OffHandWeaponPrefab: {fileID: 3844116661835162637, guid: 355227fa58c247448aac64714c11cb4a, type: 3}
+  MainHandRotationOffset: {x: -0.000005008956, y: 180, z: 180}
+  MainHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandRotationOffset: {x: 0, y: 180, z: 0}
+  OffHandPositionOffset: {x: 0, y: 0, z: -0.1}
+  OffHandPose: {fileID: 0}
+  OffHandPoseRequiredTag: 0
+  StowOffHandTag: 56
+  StowedOffHandPositionOffset: {x: 0, y: 0, z: -0.2}
+  StowedOffHandRotationOffset: {x: 0, y: 180, z: 0}

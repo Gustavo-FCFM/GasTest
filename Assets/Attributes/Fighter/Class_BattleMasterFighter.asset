@@ -21,7 +21,7 @@ MonoBehaviour:
   BaseAttributes: {fileID: 11400000, guid: 676c79869bb26d54baf2279001bfa954, type: 2}
   Abilities:
   - InputSlot: 1
-    Ability: {fileID: 11400000, guid: e934390e3496a294bbee54d7768b78fe, type: 2}
+    Ability: {fileID: 11400000, guid: 3dd2da92883781949875ed386336df8d, type: 2}
   - InputSlot: 2
     Ability: {fileID: 11400000, guid: 3fd0e0eb6c6a46d42b61f966bbca5437, type: 2}
   - InputSlot: 3

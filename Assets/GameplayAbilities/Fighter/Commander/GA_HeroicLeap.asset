@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0756d5d041f008c458de3cbe92ac70a0, type: 3}
+  m_Name: GA_HeroicLeap
+  m_EditorClassIdentifier: 
+  AbilityName: Heroic Leap
+  AbilityIcon: {fileID: 21300000, guid: f4f9181881f0f3b4c9c341d9316e2cd6, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: 4165da9d9de274a4aa511261df047340, type: 2}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 0
+  ActivationBlockedTags: 0100000002000000
+  ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  UsableWhileHolding: 0
+  AnimationClip: {fileID: 3094330708855449807, guid: b1844fbe628f5bf4ab29e6c68912a708, type: 3}
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  IsInterruptible: 0
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  VisualsSequence: []
+  MaxCharges: 1
+  MaxRange: 15
+  MarkerRadius: 3
+  DirectionalTeleport: 0
+  ForwardDot: 0.5
+  EnvironmentMask:
+    serializedVersion: 2
+    m_Bits: 4294967167
+  BodyRadius: 0.4
+  BodyHeight: 1.8
+  WalkableNormalY: 0.6
+  LedgeSearchUp: 3
+  FloorSearchDown: 25
+  BackoffStep: 0.5
+  MaxDrop: 4
+  FlashVFX: {fileID: 4994997792314849709, guid: 3dd50886582244645be87adb42aa8528, type: 3}
+  JumpDelay: 0.35
+  LandClip: {fileID: 3094330708855449807, guid: c969c57136eab8b48b882fdc45e975c4, type: 3}
+  LandRecovery: 0.5
+  ImpactRadius: 3
+  ImpactDamageEffect: {fileID: 11400000, guid: c2127ef72c4edec4597a0c316179f081, type: 2}
+  ImpactEffects: []
+  BannerAbility: {fileID: 11400000, guid: 2126fd4c0dda9cb4daf0a99e93be8082, type: 2}

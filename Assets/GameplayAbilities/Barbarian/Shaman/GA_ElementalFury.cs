@@ -12,7 +12,7 @@ using FishNet.Object;
 // tornado de daño continuo (con VFX) que dura Duration segundos.
 // Al terminar, despawnea los tótems invocados.
 // ============================================================
-[CreateAssetMenu(fileName = "GA_ElementalFury", menuName = "GAS/Specific Abilities/Shaman/Elemental Fury")]
+[CreateAssetMenu(fileName = "GA_ElementalFury", menuName = "GAS/Specific Abilities/Barbarian/Shaman/Elemental Fury")]
 public class GA_ElementalFury : GameplayAbility
 {
     [Header("Configuración de Invocación")]

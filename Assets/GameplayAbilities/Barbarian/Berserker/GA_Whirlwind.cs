@@ -15,7 +15,7 @@ using UnityEngine;
 // Todo lo del área en sí (radio, ticks, VFX, seguir al dueño, retícula) se hereda tal
 // cual: acá solo viven los tres hooks que la base deja abiertos.
 // ============================================================
-[CreateAssetMenu(fileName = "GA_Whirlwind", menuName = "GAS/Generics/Whirlwind (AoE + giro)")]
+[CreateAssetMenu(fileName = "GA_Whirlwind", menuName = "GAS/Generics/Whirlwind")]
 public class GA_Whirlwind : GA_ContinuousAoE, IChanneledAbility
 {
     [Header("Animación sostenida")]

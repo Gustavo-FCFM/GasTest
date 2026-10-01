@@ -371,6 +371,11 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // salía: dos hachas al mismo tiempo.
     public virtual void PredictOwnerVisuals(PlayerController pc) { }
 
+    // Lo mismo, pero al SOLTAR el botón de un mantenido: un lanzamiento apuntado
+    // (GA_ProjectileShoot con AimBeforeThrow) muestra el lanzamiento en el acto y esconde
+    // el arma a tiempo, sin esperar el viaje al servidor. Lo llama PlayerController.
+    public virtual void PredictOwnerReleaseVisuals(PlayerController pc) { }
+
     // ¿Vale la pena que el dueño ANTICIPE la animación, antes de que el servidor
     // conteste? Por defecto sí. Las de objetivo único dicen que no cuando no hay nadie
     // a tiro: el servidor va a descartar la activación igual, y anticiparla hace que el
@@ -389,6 +394,11 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // GA_TagSwitch con ShowVariantIcon lo cambia según el tag (la postura del Guerrero).
     // UI_AbilitySlot lo revisa cada frame.
     public virtual Sprite CurrentIcon => AbilityIcon;
+
+    // Si mientras se MANTIENE el botón la cámara del dueño se acerca a la mira (los
+    // lanzamientos: mantener para apuntar, soltar para lanzar). Lo lee PlayerController
+    // del mantenido en curso. Ver GA_ChargedAttack.AimCamera.
+    public virtual bool AimsCameraWhileHeld => false;
 
     // True si ESTA activación llegó a CommitAbility, o sea si de verdad se ejecutó.
     // Una habilidad que se planta sola —el Golpe mortal del Pícaro sin nadie a tiro—

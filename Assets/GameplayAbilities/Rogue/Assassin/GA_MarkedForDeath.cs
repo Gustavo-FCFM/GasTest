@@ -19,7 +19,7 @@ using System.Collections.Generic;
 //
 // Como toda GameplayAbility, Activate() corre en el servidor.
 // ============================================================
-[CreateAssetMenu(fileName = "GA_MarkedForDeath", menuName = "GAS/Specific Abilities/Assassin/Marked For Death")]
+[CreateAssetMenu(fileName = "GA_MarkedForDeath", menuName = "GAS/Specific Abilities/Rogue/Assassin/Marked For Death")]
 public class GA_MarkedForDeath : TargetImpactAbility, IGroundTargetAbility
 {
     [Header("Zona Objetivo")]

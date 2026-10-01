@@ -12,7 +12,7 @@ using FishNet.Object;
 // un máximo de tótems activos (despawneando el más viejo si se
 // pasa), y cobra un cooldown individual por tipo de tótem.
 // ============================================================
-[CreateAssetMenu(fileName = "GA_SpawnTotem", menuName = "GAS/Specific Abilities/Shaman/Spawn Totem")]
+[CreateAssetMenu(fileName = "GA_SpawnTotem", menuName = "GAS/Specific Abilities/Barbarian/Shaman/Spawn Totem")]
 public class GA_SpawnTotem : GameplayAbility, IRadialMenuAbility
 {
     [Header("Configuración de Invocación")]
