@@ -49,6 +49,6 @@ MonoBehaviour:
   OffHandPositionOffset: {x: 0, y: 0, z: -0.1}
   OffHandPose: {fileID: 0}
   OffHandPoseRequiredTag: 0
-  StowOffHandTag: 0
+  StowOffHandTag: 56
   StowedOffHandPositionOffset: {x: 0, y: 0, z: -0.2}
   StowedOffHandRotationOffset: {x: 0, y: 180, z: 0}
