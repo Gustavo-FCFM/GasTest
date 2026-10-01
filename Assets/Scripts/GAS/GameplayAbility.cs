@@ -451,10 +451,14 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         // molinete del bárbaro deja seguir usando Frenzy y el salto, y nada más.
         if (!UsableWhileChanneling && OwnerASC.HasTag(EGameplayTag.Status_Channeling)) return false;
 
-        // Desarmado (Zona de verdad del Clérigo del Orden): sin ataque básico, pero con
-        // las habilidades. Va acá y no en el ActivationBlockedTags de cada asset para que
-        // valga para TODAS las clases sin tocar ninguna.
-        if (IsBasicAttack && OwnerASC.HasTag(EGameplayTag.State_Disarmed)) return false;
+        // Desarmado, silenciado y enraizado NO se resuelven acá: cada habilidad dice en su
+        // ActivationBlockedTags qué la bloquea (1 de octubre, pedido de Gustavo):
+        //   · State_Disarmed  → las acciones de ARMA (golpear con ella o lanzarla).
+        //   · State_Silenced  → las de MAGIA o fantasía.
+        //   · State_Rooted    → las de MOVIMIENTO.
+        //   · State_Stunned   → todas.
+        // Antes el desarme bloqueaba "el ataque básico" de cualquier clase desde acá, pero
+        // eso no distinguía un tajo de un hechizo.
 
         if (ActivationRequiredTags != null)
             foreach (EGameplayTag tag in ActivationRequiredTags)
@@ -691,8 +695,9 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     [System.NonSerialized] public bool IsUltimate;
 
     // True si esta instancia es el ATAQUE BÁSICO (clic izquierdo) de su dueño. La marca
-    // PlayerController al equipar, igual que IsUltimate. La usa el desarme
-    // (State_Disarmed): bloquea el básico y deja las habilidades.
+    // PlayerController al equipar, igual que IsUltimate. (Hasta el 1 de octubre la usaba
+    // el desarme; ahora el desarme va por el ActivationBlockedTags de cada habilidad de
+    // arma. Se deja la marca por si otra regla necesita saber cuál es el básico.)
     [System.NonSerialized] public bool IsBasicAttack;
 
     // Apaga el sistema de cargas en ESTA instancia. La usan los combos y el TagSwitch
@@ -721,11 +726,24 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         PlayerController pc = OwnerASC?.GetComponent<PlayerController>();
         // Con CUÁL terminó: si el dueño está manteniendo el escudo, que termine otra
         // habilidad (el básico que el escudo cortó) no lo baja. Ver FinishAttack.
-        if (pc != null) pc.FinishAttack(this);
+        //
+        // Una variante de un GA_TagSwitch avisa con el nombre del SWITCH (ReportEndAs):
+        // el dueño apretó el switch, no la variante. Sin esto, un mantenido dentro de un
+        // switch (el clic derecho del Maestro de batalla) que el servidor corta por su
+        // cuenta avisaba con un nombre que el dueño no reconocía, y quedaba trabado.
+        GameplayAbility reported = ReportEndAs != null ? ReportEndAs : this;
+        if (pc != null) pc.FinishAttack(reported);
 
         NetworkAbilitySystemComponent netASC = OwnerASC?.GetComponent<NetworkAbilitySystemComponent>();
-        if (netASC != null) netASC.ServerNotifyAbilityEnded(this);
+        if (netASC != null) netASC.ServerNotifyAbilityEnded(reported);
     }
+
+    // Con qué nombre avisa su fin (ver EndAbility). Lo pone GA_TagSwitch en sus variantes.
+    [System.NonSerialized] public GameplayAbility ReportEndAs;
+
+    // El cooldown que el HUD muestra para esta habilidad. Casi siempre es el propio; un
+    // GA_HoldTagSwitch muestra el de la variante que se dispararía ahora.
+    public virtual GameplayEffect CooldownEffectForDisplay => CooldownEffect;
 
     // Resuelve la duración del cooldown en segundos, con prioridad:
     // AtkSpeed dinámico > CooldownDuration (del GA) > Duration del CooldownEffect.

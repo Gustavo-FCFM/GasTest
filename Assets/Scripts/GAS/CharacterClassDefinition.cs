@@ -69,6 +69,19 @@ public class CharacterClassDefinition : ScriptableObject
     // ataque pesado vs rápido, etc.).
     public AnimatorOverrideController ClassAnimatorOverride;
 
+    // Animaciones de una POSTURA: mientras el personaje tenga StanceAnimatorTag, los clips
+    // de este override (quieto, caminar, correr...) reemplazan a los de la clase, y al
+    // perder el tag vuelven. El Maestro de batalla lo usa en ofensiva: de espada y escudo
+    // (AOC_Paladin_SwordAndShield) pasa al mandoble a dos manos (AOC_Paladin_2Handed).
+    // Tiene que estar armado sobre el mismo Animator base que el de la clase. Las ranuras
+    // de las habilidades (PLACEHOLDER_...) no se tocan.
+    [Tooltip("Override que se aplica encima del de la clase mientras tenga el tag de abajo " +
+             "(ej. el Maestro de batalla en ofensiva: AOC_Paladin_2Handed). Vacío = nunca cambia.")]
+    public AnimatorOverrideController StanceAnimatorOverride;
+
+    [Tooltip("Mientras tenga este tag se usa el override de arriba. None = nunca.")]
+    public EGameplayTag StanceAnimatorTag = EGameplayTag.None;
+
     [Header("Armamento")]
     [Tooltip("Configura aquí las armas que usa esta clase")]
     public GameObject MainHandWeaponPrefab; // Arma principal (mano derecha)
@@ -122,6 +135,31 @@ public class CharacterClassDefinition : ScriptableObject
     [Tooltip("Pose del brazo izquierdo mientras se juega la clase (ej. el libro del Clérigo: " +
              "HumanM@ObjectBook01_L). Vacío = el brazo se anima normal.")]
     public AnimationClip OffHandPose;
+
+    [Tooltip("La pose de arriba se aplica SOLO mientras el personaje tenga este tag. None = " +
+             "siempre. El Maestro de batalla la usa con Stance_Offensive: en ofensiva toma el " +
+             "mandoble a dos manos.")]
+    public EGameplayTag OffHandPoseRequiredTag = EGameplayTag.None;
+
+    // ============================================================
+    // ARMA SECUNDARIA A LA ESPALDA
+    //
+    // Mientras el personaje tenga StowOffHandTag, el arma de la mano izquierda (el escudo
+    // del Guerrero) se cuelga del PECHO (el hueso Chest del esqueleto humanoide, así no
+    // hace falta crear un socket) y vuelve a la mano al perder el tag. Los tags viajan a
+    // todos, así que se ve igual en todas las pantallas. Lo usan las subclases del
+    // Guerrero en postura ofensiva: "dejo la defensa para enfocarme en atacar".
+    // ============================================================
+
+    [Tooltip("Mientras tenga este tag, el arma secundaria va a la espalda. None = nunca.")]
+    public EGameplayTag StowOffHandTag = EGameplayTag.None;
+
+    [Tooltip("Posición del arma guardada, en el espacio del hueso del pecho. Se ajusta mirando " +
+             "en Play (cambiar la clase y volver a equiparla la recoloca).")]
+    public Vector3 StowedOffHandPositionOffset;
+
+    [Tooltip("Rotación (grados) del arma guardada, en el espacio del hueso del pecho.")]
+    public Vector3 StowedOffHandRotationOffset;
 }
 
 // Cuánto sube UN atributo por cada nivel que gana el personaje. La lista

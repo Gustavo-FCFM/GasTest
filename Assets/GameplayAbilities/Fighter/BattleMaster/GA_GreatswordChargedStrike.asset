@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7e0086412fa0014581193af1d9b1fc6, type: 3}
+  m_Name: GA_GreatswordChargedStrike
+  m_EditorClassIdentifier: 
+  AbilityName: Charged Strike
+  AbilityIcon: {fileID: 21300000, guid: c162f10bbaab3ad48bca1988b104d1c6, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: ecfe07a06c63704479a331a9bae55086, type: 2}
+  CooldownDuration: 5
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 0
+  ActivationBlockedTags: 0100000035000000
+  ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  UsableWhileHolding: 0
+  AnimationClip: {fileID: 0}
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  IsInterruptible: 0
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  VisualsSequence: []
+  MaxCharges: 1
+  Stages:
+  - MinChargeTime: 0
+    Ability: {fileID: 11400000, guid: 25a4ea0bba9b66844a57ef7bd817e6de, type: 2}
+  - MinChargeTime: 0.6
+    Ability: {fileID: 11400000, guid: 9a3871314cb9b5c4dbbef336d054549f, type: 2}
+  - MinChargeTime: 1.2
+    Ability: {fileID: 11400000, guid: 0024d680924b7ed4f9caa5c5ac9763df, type: 2}
+  MaxChargeTime: 1.5
+  HoldSafetyTimeout: 10
+  ChargingEffect: {fileID: 11400000, guid: cb446d1ea0347e744b37236a3721437f, type: 2}
+  ChargeLoopClip: {fileID: -8123199073581041544, guid: 6961f3b37eaf3284ca4d3bf300640af3, type: 3}
+  ChargeStartClip: {fileID: 0}

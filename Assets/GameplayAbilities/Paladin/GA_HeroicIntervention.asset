@@ -21,16 +21,31 @@ MonoBehaviour:
   UltimateChargeAmount: 1
   ActivationBlockedTags: 0100000002000000
   ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  UsableWhileHolding: 0
   AnimationClip: {fileID: 3094330708855449807, guid: 772f29ee37bacbb41a04c5148d93100c, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 1
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  IsInterruptible: 0
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
   VisualsSequence: []
   MaxCharges: 2
-  TargetEffects:
-  - {fileID: 11400000, guid: 8c560dd9602d93b4badb1ee5dbd65dce, type: 2}
+  ImpactVFX: {fileID: 0}
+  AttachImpactVFX: 1
+  ImpactVFXOffset: {x: 0, y: 1, z: 0}
+  ImpactVFXLifetime: 2
   MaxRange: 10
   SelectionAngle: 30
   AllowDeadTargets: 0
@@ -38,4 +53,5 @@ MonoBehaviour:
   FaceAwayFromAlly: 1
   SelfEffects:
   - {fileID: 11400000, guid: 8c560dd9602d93b4badb1ee5dbd65dce, type: 2}
-  ImpactVFX: {fileID: 0}
+  TargetEffects:
+  - {fileID: 11400000, guid: 8c560dd9602d93b4badb1ee5dbd65dce, type: 2}

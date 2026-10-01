@@ -19,15 +19,29 @@ MonoBehaviour:
   CooldownDuration: 0
   UseAttackSpeedAsCooldown: 1
   UltimateChargeAmount: 0
-  ActivationBlockedTags: 01000000
+  ActivationBlockedTags: 0100000035000000
   ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  UsableWhileHolding: 0
   AnimationClip: {fileID: 0}
   AnimationTriggerName: AttackTrigger
   AnimationID: 99
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  IsInterruptible: 0
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
   VisualsSequence: []
+  MaxCharges: 1
   FirstSequence:
   - AbilityToCast: {fileID: 11400000, guid: d3f383ba0b1a5dc46847a2fa679a266e, type: 2}
     DelayAfter: 0

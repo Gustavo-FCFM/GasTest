@@ -19,9 +19,10 @@ MonoBehaviour:
   CooldownDuration: 0
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 0
-  ActivationBlockedTags: 010000000200000003000000
+  ActivationBlockedTags: 010000000300000002000000
   ActivationRequiredTags: 
   UsableWhileChanneling: 0
+  UsableWhileHolding: 0
   AnimationClip: {fileID: 3094330708855449807, guid: 39e2b573902399d4fbd58117e24ea1d2, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 1

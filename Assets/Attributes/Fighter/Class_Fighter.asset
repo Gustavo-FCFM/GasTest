@@ -41,7 +41,8 @@ MonoBehaviour:
     AmountPerLevel: 100
   - Attribute: 6
     AmountPerLevel: 50
-  AvailableSubclasses: []
+  AvailableSubclasses:
+  - {fileID: 11400000, guid: 17c3ad398681eeb4586674ddfccce0a0, type: 2}
   ClassAnimatorOverride: {fileID: 22100000, guid: 75ec53281b263d24dbe5fee5e2ab9c9e, type: 2}
   MainHandWeaponPrefab: {fileID: 1309212752354464438, guid: 92948b840284b93478272de155a25eda, type: 3}
   OffHandWeaponPrefab: {fileID: 3844116661835162637, guid: 355227fa58c247448aac64714c11cb4a, type: 3}
@@ -50,3 +51,7 @@ MonoBehaviour:
   OffHandRotationOffset: {x: 0, y: 180, z: 0}
   OffHandPositionOffset: {x: 0, y: 0, z: -0.1}
   OffHandPose: {fileID: 0}
+  OffHandPoseRequiredTag: 0
+  StowOffHandTag: 0
+  StowedOffHandPositionOffset: {x: 0, y: 0, z: 0}
+  StowedOffHandRotationOffset: {x: 0, y: 0, z: 0}

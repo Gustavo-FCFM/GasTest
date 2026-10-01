@@ -19,9 +19,10 @@ MonoBehaviour:
   CooldownDuration: 0
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 1
-  ActivationBlockedTags: 
+  ActivationBlockedTags: 0100000035000000
   ActivationRequiredTags: 
   UsableWhileChanneling: 0
+  UsableWhileHolding: 0
   AnimationClip: {fileID: 3094330708855449807, guid: c25522e533a3f5149b1926cb6ee3c8f1, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 2
@@ -50,6 +51,8 @@ MonoBehaviour:
   DurationEffect: {fileID: 11400000, guid: 16573965ce339a749892bca518120f2b, type: 2}
   AdditionalEffects: []
   TargetEffects: []
+  FirstHitEffects: []
+  FirstHitCooldownPerTarget: 3
   LifeTime: 0
   SpawnDelay: 0.5
   MinConvergeDistance: 4

@@ -22,6 +22,7 @@ MonoBehaviour:
   ActivationBlockedTags: 0100000003000000
   ActivationRequiredTags: 
   UsableWhileChanneling: 0
+  UsableWhileHolding: 0
   AnimationClip: {fileID: 3094330708855449807, guid: 8d3c95e724e453047940371ad39c4153, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 1
@@ -41,8 +42,11 @@ MonoBehaviour:
     m_Bits: 128
   VisualsSequence: []
   MaxCharges: 1
+  ImpactVFX: {fileID: 0}
+  AttachImpactVFX: 1
+  ImpactVFXOffset: {x: 0, y: 1, z: 0}
+  ImpactVFXLifetime: 2
   MaxRange: 10
   SelectionAngle: 30
   MarkEffect: {fileID: 11400000, guid: 29e7a204d021d204396830c43eb4201f, type: 2}
   StunEffect: {fileID: 11400000, guid: 599bef532c08eae4a8e05af2dc063cf9, type: 2}
-  ImpactVFX: {fileID: 0}

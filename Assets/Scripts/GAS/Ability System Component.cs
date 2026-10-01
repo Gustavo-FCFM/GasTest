@@ -1340,10 +1340,11 @@ public class AbilitySystemComponent : MonoBehaviour
     public bool GetCooldownStatus(GameplayAbility ability, out float timeRemaining, out float totalDuration)
     {
         timeRemaining = 0f; totalDuration = 0f;
-        if (ability?.CooldownEffect == null) return false;
+        GameplayEffect cooldown = ability?.CooldownEffectForDisplay;
+        if (cooldown == null) return false;
         foreach (var e in ActiveEffects)
         {
-            if (e.Definition == ability.CooldownEffect)
+            if (e.Definition == cooldown)
             {
                 timeRemaining = e.DurationRemaining;
                 totalDuration = e.TotalDuration;

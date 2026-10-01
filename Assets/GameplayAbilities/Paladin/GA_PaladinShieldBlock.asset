@@ -22,9 +22,21 @@ MonoBehaviour:
   ActivationBlockedTags: 01000000
   ActivationRequiredTags: 
   UsableWhileChanneling: 0
+  UsableWhileHolding: 0
   AnimationClip: {fileID: 0}
   AnimationTriggerName: HoldTrigger
   AnimationID: 98
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  IsInterruptible: 0
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
@@ -34,6 +46,7 @@ MonoBehaviour:
   MinEnergyToActivate: 10
   EnergyDrainPerSecond: 0
   MaxHoldTime: 0
+  HoldSafetyTimeout: 20
   HoldClip: {fileID: 3094330708855449807, guid: 47e702d39cca6d040a91d04069cdee77, type: 3}
   RaiseClip: {fileID: 0}
   LowerClip: {fileID: 0}

@@ -2067,6 +2067,7 @@ public class PlayerController : NetworkBehaviour
         if (newClass.OffHandWeaponPrefab != null && OffHandSocket != null)
         {
             currentOffWeapon = Instantiate(newClass.OffHandWeaponPrefab, OffHandSocket);
+            _offHandStowed = false;   // nace en la mano; TickStanceVisuals la guarda si hace falta
             currentOffWeapon.transform.SetLocalPositionAndRotation(
                 newClass.OffHandPositionOffset,
                 Quaternion.Euler(newClass.OffHandRotationOffset));
@@ -2324,7 +2325,9 @@ public class PlayerController : NetworkBehaviour
         // Cambiar de controller devuelve las capas a su peso por defecto: la pose de la
         // mano secundaria se prende recién ahora (ver OffHandPose en la clase).
         _offHandPoseClass = cls;
-        ApplyOffHandPoseWeight(characterAnimator, cls);
+        ApplyOffHandPoseWeight(characterAnimator, cls, asc: ASC);
+        _offHandPoseOn = WantsOffHandPose(cls, ASC);
+        PrepareStanceAnimator(cls);
 
         // ¿El controller base tiene realmente la ranura de acción? Si el estado
         // genérico todavía no se creó en el Animator, el esquema nuevo no puede
@@ -2401,7 +2404,7 @@ public class PlayerController : NetworkBehaviour
         if (_orbitCam != null) _orbitCam.FollowOverride = null;
         if (_ragdoll != null && _ragdoll.IsActive) _ragdoll.Deactivate();
         if (characterAnimator != null && _hasDeadParam) characterAnimator.SetBool(DeadParam, false);
-        ApplyOffHandPoseWeight(characterAnimator, _offHandPoseClass);
+        ApplyOffHandPoseWeight(characterAnimator, _offHandPoseClass, asc: ASC);
     }
 
     // El aturdido se lee del tag en cada copia: los tags viajan sincronizados, así que
@@ -2725,14 +2728,14 @@ public class PlayerController : NetworkBehaviour
     // si no coincide al carácter, la asignación no hace nada EN SILENCIO (la
     // habilidad se quedaría con el clip placeholder).
     // ---------------------------------------------------------
-    // POSE DE LA MANO SECUNDARIA (el libro del Clérigo)
+    // POSE DE LA MANO SECUNDARIA (el mandoble a dos manos del Maestro de batalla)
     //
-    // Una capa "OffHandPose" al final del Animator, con la máscara del brazo izquierdo
-    // y un solo estado con el clip PLACEHOLDER_OffHandPose. Si la clase trae una pose,
-    // se pone en esa ranura y la capa va a peso 1; si no, a peso 0 y el brazo se anima
-    // normal. Como es la ÚLTIMA capa, el brazo sigue sosteniendo el libro también
-    // mientras UpperBody ataca con la otra mano. La capa y la ranura las crea
-    // Mercenarios > Instalar la pose de la mano secundaria.
+    // Una capa "OffHandPose" en el Animator, con la máscara del brazo izquierdo y un solo
+    // estado con el clip PLACEHOLDER_OffHandPose. Si la clase trae una pose (y tiene el
+    // tag que pide, ver OffHandPoseRequiredTag), se pone en esa ranura y la capa va a peso
+    // 1; si no, a peso 0 y el brazo se anima normal. Desde el 1 de octubre va DEBAJO de
+    // UpperBody (antes era la última, para el libro del Clérigo): así los ataques a dos
+    // manos mueven también ese brazo, y la pose solo se ve caminando o quieto.
     // ---------------------------------------------------------
     public const string OffHandPoseSlotName  = "PLACEHOLDER_OffHandPose";
     public const string OffHandPoseLayerName = "OffHandPose";
@@ -2776,16 +2779,154 @@ public class PlayerController : NetworkBehaviour
     }
 
     // Prende la capa de la pose si la clase trae una, y la apaga si no (o si 'off').
+    // Si la clase pide un tag (OffHandPoseRequiredTag), solo con ese tag puesto en 'asc'.
     // Sin la capa en el Animator no hace nada.
-    public static void ApplyOffHandPoseWeight(Animator animator, CharacterClassDefinition cls, bool off = false)
+    public static void ApplyOffHandPoseWeight(Animator animator, CharacterClassDefinition cls, bool off = false,
+                                              AbilitySystemComponent asc = null)
     {
         if (animator == null || animator.runtimeAnimatorController == null) return;
 
         int layer = animator.GetLayerIndex(OffHandPoseLayerName);
         if (layer < 0) return;
 
-        bool on = !off && cls != null && cls.OffHandPose != null;
-        animator.SetLayerWeight(layer, on ? 1f : 0f);
+        animator.SetLayerWeight(layer, !off && WantsOffHandPose(cls, asc) ? 1f : 0f);
+    }
+
+    private static bool WantsOffHandPose(CharacterClassDefinition cls, AbilitySystemComponent asc)
+    {
+        if (cls == null || cls.OffHandPose == null) return false;
+        if (cls.OffHandPoseRequiredTag == EGameplayTag.None) return true;
+        return asc != null && asc.HasTag(cls.OffHandPoseRequiredTag);
+    }
+
+    // ---------------------------------------------------------
+    // POSTURA A LA VISTA: escudo a la espalda y pose de dos manos según un tag
+    //
+    // Corre en TODAS las copias (desde LateUpdate): los tags viajan sincronizados, así
+    // que cada pantalla decide sola qué mostrar, sin RPC. Solo hace algo cuando el
+    // estado cambia.
+    // ---------------------------------------------------------
+    private bool _offHandStowed;
+    private bool _offHandPoseOn;
+    private Transform _backBone;
+
+    private void TickStanceVisuals()
+    {
+        CharacterClassDefinition cls = _offHandPoseClass;
+        if (cls == null || ASC == null) return;
+
+        bool dead = ASC.HasTag(EGameplayTag.State_Dead);
+
+        if (cls.StowOffHandTag != EGameplayTag.None && currentOffWeapon != null)
+        {
+            bool stow = !dead && ASC.HasTag(cls.StowOffHandTag);
+            if (stow != _offHandStowed) PlaceOffHandWeapon(cls, stow);
+        }
+
+        // Se compara contra el peso REAL de la capa, no contra lo último que se pidió:
+        // cada vez que una habilidad cambia un clip del Animator (SetActionClip, los del
+        // mantenido) Unity hace un rebind que devuelve las capas a su peso por defecto (0).
+        // Mirando solo "ya la prendí", la pose se apagaba en el primer ataque y no volvía.
+        if (cls.OffHandPose != null && characterAnimator != null)
+        {
+            int layer = characterAnimator.GetLayerIndex(OffHandPoseLayerName);
+            if (layer >= 0)
+            {
+                float wanted = !dead && WantsOffHandPose(cls, ASC) ? 1f : 0f;
+                _offHandPoseOn = wanted > 0f;
+                if (!Mathf.Approximately(characterAnimator.GetLayerWeight(layer), wanted))
+                    characterAnimator.SetLayerWeight(layer, wanted);
+            }
+        }
+
+        // Las animaciones de la postura (ver StanceAnimatorOverride en la clase).
+        if (_stanceClipsOn != null && _runtimeAnimator != null)
+        {
+            bool stance = ASC.HasTag(cls.StanceAnimatorTag);
+            if (stance != _stanceClipsApplied)
+            {
+                _stanceClipsApplied = stance;
+                _runtimeAnimator.ApplyOverrides(stance ? _stanceClipsOn : _stanceClipsOff);
+            }
+        }
+    }
+
+    // ---------------------------------------------------------
+    // ANIMACIONES DE LA POSTURA
+    //
+    // Al armar el Animator se anotan, clip por clip, qué pone el override de la postura y
+    // qué tenía la clase en ese lugar; cambiar de postura es aplicar una lista o la otra
+    // sobre el mismo controller de runtime (no se rearma, así las ranuras de las
+    // habilidades siguen valiendo). Las ranuras PLACEHOLDER_ se saltean: son de las
+    // habilidades, y pisarlas cortaría un ataque a la mitad.
+    // ---------------------------------------------------------
+    private List<KeyValuePair<AnimationClip, AnimationClip>> _stanceClipsOn;
+    private List<KeyValuePair<AnimationClip, AnimationClip>> _stanceClipsOff;
+    private bool _stanceClipsApplied;
+
+    private void PrepareStanceAnimator(CharacterClassDefinition cls)
+    {
+        _stanceClipsOn = _stanceClipsOff = null;
+        _stanceClipsApplied = false;
+
+        if (cls == null || cls.StanceAnimatorOverride == null || cls.StanceAnimatorTag == EGameplayTag.None) return;
+        if (_runtimeAnimator == null) return;
+
+        if (cls.StanceAnimatorOverride.runtimeAnimatorController != _runtimeAnimator.runtimeAnimatorController)
+        {
+            Debug.LogWarning($"[Postura] {cls.StanceAnimatorOverride.name} no está armado sobre el mismo Animator " +
+                             $"base que la clase {cls.name}: no se usa.");
+            return;
+        }
+
+        var current = new List<KeyValuePair<AnimationClip, AnimationClip>>();
+        _runtimeAnimator.GetOverrides(current);
+        var classClips = new Dictionary<AnimationClip, AnimationClip>();
+        foreach (var pair in current)
+            if (pair.Key != null) classClips[pair.Key] = pair.Value;
+
+        var stance = new List<KeyValuePair<AnimationClip, AnimationClip>>();
+        cls.StanceAnimatorOverride.GetOverrides(stance);
+
+        _stanceClipsOn  = new List<KeyValuePair<AnimationClip, AnimationClip>>();
+        _stanceClipsOff = new List<KeyValuePair<AnimationClip, AnimationClip>>();
+        foreach (var pair in stance)
+        {
+            if (pair.Key == null || pair.Value == null) continue;
+            if (pair.Key.name.StartsWith("PLACEHOLDER_", System.StringComparison.OrdinalIgnoreCase)) continue;
+
+            classClips.TryGetValue(pair.Key, out AnimationClip classClip);
+            if (classClip == pair.Value) continue;   // el mismo clip: no hace falta cambiarlo
+
+            _stanceClipsOn.Add(pair);
+            _stanceClipsOff.Add(new KeyValuePair<AnimationClip, AnimationClip>(pair.Key, classClip));
+        }
+
+        if (_stanceClipsOn.Count == 0) _stanceClipsOn = _stanceClipsOff = null;
+    }
+
+    // Cuelga el arma secundaria del pecho (guardada) o la devuelve a la mano.
+    private void PlaceOffHandWeapon(CharacterClassDefinition cls, bool stowed)
+    {
+        Transform parent = stowed ? BackBone() : OffHandSocket;
+        if (parent == null) return;
+
+        _offHandStowed = stowed;
+        currentOffWeapon.transform.SetParent(parent, false);
+        currentOffWeapon.transform.SetLocalPositionAndRotation(
+            stowed ? cls.StowedOffHandPositionOffset : cls.OffHandPositionOffset,
+            Quaternion.Euler(stowed ? cls.StowedOffHandRotationOffset : cls.OffHandRotationOffset));
+    }
+
+    // El hueso del pecho del esqueleto humanoide (o la columna si no hay pecho).
+    private Transform BackBone()
+    {
+        if (_backBone != null) return _backBone;
+        if (characterAnimator == null || !characterAnimator.isHuman) return null;
+
+        _backBone = characterAnimator.GetBoneTransform(HumanBodyBones.Chest);
+        if (_backBone == null) _backBone = characterAnimator.GetBoneTransform(HumanBodyBones.Spine);
+        return _backBone;
     }
 
     private static string ResolveSlotKey(List<KeyValuePair<AnimationClip, AnimationClip>> slots, string slotName)
@@ -3477,6 +3618,7 @@ public class PlayerController : NetworkBehaviour
     {
         TickFootsteps();
         TickStunAnimation();
+        TickStanceVisuals();
 
         if (Mathf.Approximately(_modelSpinSpeed, 0f) || characterAnimator == null) return;
 

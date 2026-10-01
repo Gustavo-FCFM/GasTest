@@ -76,7 +76,7 @@ public class GA_TagSwitch : GameplayAbility
     // Qué variante se ejecutó en la última activación. La necesita
     // ResolveAnimationSource DESPUÉS de Activate(): para entonces el tag ya se
     // consumió, así que volver a resolverlo por tag daría la variante equivocada.
-    [System.NonSerialized] private GameplayAbility _lastResolved;
+    [System.NonSerialized] protected GameplayAbility _lastResolved;
 
     // =========================================================
     // ACTIVACIÓN
@@ -160,7 +160,7 @@ public class GA_TagSwitch : GameplayAbility
 
     // Elige qué habilidad ejecutar: la primera variante cuyo tag tenga el dueño, o
     // la habilidad por defecto.
-    private GameplayAbility ResolveTemplate(out bool consumeTag, out EGameplayTag usedTag)
+    protected GameplayAbility ResolveTemplate(out bool consumeTag, out EGameplayTag usedTag)
     {
         consumeTag = false;
         usedTag    = EGameplayTag.None;
@@ -200,9 +200,14 @@ public class GA_TagSwitch : GameplayAbility
         if (OwnerASC.HasTag(tag)) OwnerASC.RemoveTag(tag);
     }
 
+    // Si a las variantes se les limpia costo y cooldown (lo normal: el ciclo de vida es
+    // del switch, ver cabecera). GA_HoldTagSwitch lo apaga: ahí cada variante paga lo
+    // suyo, porque el escudo y el ataque cargado no comparten cooldown.
+    protected virtual bool StripVariantCooldowns => true;
+
     // Clon propio de una variante, cacheado por template. Se le limpian costo y
     // cooldown porque el ciclo de vida es del switch (ver cabecera).
-    private GameplayAbility GetOrCreateInstance(GameplayAbility template)
+    protected GameplayAbility GetOrCreateInstance(GameplayAbility template)
     {
         _instances ??= new Dictionary<GameplayAbility, GameplayAbility>();
 
@@ -212,9 +217,13 @@ public class GA_TagSwitch : GameplayAbility
         GameplayAbility instance = Instantiate(template);
         instance.Initialize(OwnerASC);
         instance.SourceTemplate = template;   // para resolver su índice en GameplayAbilityRegistry
-        instance.CooldownEffect = null;
-        instance.CostEffect     = null;
-        instance.DisableCharges();
+        instance.ReportEndAs    = this;       // su fin se avisa con el nombre del switch (ver EndAbility)
+        if (StripVariantCooldowns)
+        {
+            instance.CooldownEffect = null;
+            instance.CostEffect     = null;
+            instance.DisableCharges();
+        }
 
         _instances[template] = instance;
         return instance;

@@ -19,16 +19,33 @@ MonoBehaviour:
   CooldownDuration: 6
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 1
-  ActivationBlockedTags: 0300000001000000
+  ActivationBlockedTags: 0100000003000000
   ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  UsableWhileHolding: 0
   AnimationClip: {fileID: 3094330708855449807, guid: 8ab57abc06f7ffd47ae8d91e99f41fa2, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 1
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  IsInterruptible: 0
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
   VisualsSequence: []
   MaxCharges: 2
+  ImpactVFX: {fileID: 0}
+  AttachImpactVFX: 1
+  ImpactVFXOffset: {x: 0, y: 1, z: 0}
+  ImpactVFXLifetime: 2
   Targets: 0
   MaxRange: 8
   SelectionAngle: 30
@@ -36,4 +53,3 @@ MonoBehaviour:
   AllowDeadTargets: 0
   TargetEffects:
   - {fileID: 11400000, guid: 97a675e6082b3c64aa1b911c1458eebb, type: 2}
-  ImpactVFX: {fileID: 0}

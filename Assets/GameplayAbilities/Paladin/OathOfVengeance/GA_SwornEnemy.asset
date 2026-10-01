@@ -21,9 +21,22 @@ MonoBehaviour:
   UltimateChargeAmount: 1
   ActivationBlockedTags: 0100000003000000
   ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  UsableWhileHolding: 0
   AnimationClip: {fileID: 3094330708855449807, guid: c2160d1a58a158543817a3f1c504dc91, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 1
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  IsInterruptible: 0
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
@@ -36,11 +49,16 @@ MonoBehaviour:
     AttachToOwner: 0
     DestroyTime: 0.2
     EndWithTag: 0
+    EndWhenAttributeDepleted: 0
+    DepletedAttribute: 0
   MaxCharges: 1
+  ImpactVFX: {fileID: 0}
+  AttachImpactVFX: 1
+  ImpactVFXOffset: {x: 0, y: 1, z: 0}
+  ImpactVFXLifetime: 2
   MaxRange: 20
   SelectionAngle: 30
   MarkEffect: {fileID: 11400000, guid: 6e59b97783b793240bf253b764cb44cc, type: 2}
   AllyRewardEffects:
   - {fileID: 11400000, guid: 915ce433672a7fb4c8475dc2f4c92796, type: 2}
   RewardCooldownPerAlly: 0.2
-  ImpactVFX: {fileID: 0}

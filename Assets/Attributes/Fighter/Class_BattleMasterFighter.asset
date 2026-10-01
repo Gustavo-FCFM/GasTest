@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 749805704a6088741af34d91f0891ced, type: 3}
+  m_Name: Class_BattleMasterFighter
+  m_EditorClassIdentifier: 
+  ClassName: Battle Master
+  ClassIcon: {fileID: 21300000, guid: 02bfef8aee3adcb4fab6ad83480d001d, type: 3}
+  Description: The fighter who lives for the duel. In offensive stance he grips his
+    greatsword with both hands and charges devastating strikes; his blows expose
+    weak points, and he can strip an enemy of their weapon.
+  Role: 2
+  BaseAttributes: {fileID: 11400000, guid: 676c79869bb26d54baf2279001bfa954, type: 2}
+  Abilities:
+  - InputSlot: 1
+    Ability: {fileID: 11400000, guid: e934390e3496a294bbee54d7768b78fe, type: 2}
+  - InputSlot: 2
+    Ability: {fileID: 11400000, guid: 3fd0e0eb6c6a46d42b61f966bbca5437, type: 2}
+  - InputSlot: 3
+    Ability: {fileID: 11400000, guid: a8d78254d7d677647b5025dd9b115065, type: 2}
+  - InputSlot: 6
+    Ability: {fileID: 11400000, guid: e33fcd237b6f6e6438abc870ae8cbb8b, type: 2}
+  - InputSlot: 4
+    Ability: {fileID: 11400000, guid: 739770c04ee53d34c93d504e507ca1f0, type: 2}
+  - InputSlot: 5
+    Ability: {fileID: 11400000, guid: fa63cb71a0530db44a915aa70ede8921, type: 2}
+  PassiveBehaviorsPrefab: {fileID: 9026357972262154142, guid: 0a4ea988770ea0447b7a232f07205a42, type: 3}
+  PassiveEffects:
+  - {fileID: 11400000, guid: 5425dc3edd0320d4a8b0ad013919b6cc, type: 2}
+  - {fileID: 11400000, guid: 71af769e08a6061438522b63f129b721, type: 2}
+  StatGrowthPerLevel: []
+  AvailableSubclasses: []
+  ClassAnimatorOverride: {fileID: 22100000, guid: 75ec53281b263d24dbe5fee5e2ab9c9e, type: 2}
+  StanceAnimatorOverride: {fileID: 22100000, guid: c1aea6e6b93746e4dbab09a9b224bfaa, type: 2}
+  StanceAnimatorTag: 56
+  MainHandWeaponPrefab: {fileID: 1309212752354464438, guid: 92948b840284b93478272de155a25eda, type: 3}
+  OffHandWeaponPrefab: {fileID: 3844116661835162637, guid: 355227fa58c247448aac64714c11cb4a, type: 3}
+  MainHandRotationOffset: {x: 0, y: 0, z: 0}
+  MainHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandRotationOffset: {x: 0, y: 180, z: 0}
+  OffHandPositionOffset: {x: 0, y: 0, z: -0.1}
+  OffHandPose: {fileID: 0}
+  OffHandPoseRequiredTag: 0
+  StowOffHandTag: 56
+  StowedOffHandPositionOffset: {x: 0, y: 0, z: -0.2}
+  StowedOffHandRotationOffset: {x: 0, y: 180, z: 0}

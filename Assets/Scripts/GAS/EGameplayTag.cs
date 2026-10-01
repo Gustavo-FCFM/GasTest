@@ -95,7 +95,7 @@ public enum EGameplayTag
     // --- CANALIZADOS ---
     Status_Channeling,         // Está en medio de una habilidad canalizada (el molinete del bárbaro). Mientras dure, CanActivate bloquea TODA otra habilidad salvo las marcadas con UsableWhileChanneling. Lo pone y lo saca GA_ContinuousAoE con BlockOtherAbilities
 
-    State_Disarmed,            // Desarmado: no puede usar el ataque BÁSICO (clic izquierdo), sí sus habilidades. Lo bloquea GameplayAbility.CanActivate con IsBasicAttack. Lo da la Zona de verdad del Clérigo del Orden; lo va a reusar el Guerrero
+    State_Disarmed,            // Desarmado: no puede usar las acciones de ARMA (golpear con ella o lanzarla). Lo bloquea el ActivationBlockedTags de cada habilidad de arma (desde el 1 de octubre; antes era solo el ataque básico). Lo da la Zona de verdad del Clérigo del Orden; lo va a reusar el Guerrero
 
     State_AlwaysVisible,       // Revelado: aunque tenga Status_Invisible, los ENEMIGOS lo ven igual (modelo, barra de vida, números). Ver ASC.IsHiddenFromEnemies. Lo da el Faro de esperanza del Clérigo de la Luz a los enemigos dentro de su aura
 
@@ -103,4 +103,8 @@ public enum EGameplayTag
     Stance_Defensive,          // Postura defensiva del Guerrero (+armadura). La da GE_StanceDefensive; con ella el Shift es la Carga defensiva
     Stance_Offensive,          // Postura ofensiva del Guerrero (+ataque). La da GE_StanceOffensive; con ella el Shift es la Carga ofensiva
     Status_Stance,             // No lo otorga nadie: es el EffectGroup de las dos posturas (con ReplacesGroup, entrar a una saca la otra)
+
+    // --- MAESTRO DE BATALLA ---
+    Status_BreakLimits,        // Romper límites activo: Punto débil aplica su marca potenciada (ver WeakPointPassive). Lo da GE_BreakLimits junto con Status_Unstoppable
+    Status_WeakPoint,          // Marcado por Punto débil (recibe más daño). También es el EffectGroup de las dos marcas, con ReplacesGroup
 }

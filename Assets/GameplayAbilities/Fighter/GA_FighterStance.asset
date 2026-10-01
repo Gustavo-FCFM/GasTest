@@ -22,6 +22,7 @@ MonoBehaviour:
   ActivationBlockedTags: 01000000
   ActivationRequiredTags: 
   UsableWhileChanneling: 0
+  UsableWhileHolding: 0
   AnimationClip: {fileID: 0}
   AnimationTriggerName: 
   AnimationID: 1
