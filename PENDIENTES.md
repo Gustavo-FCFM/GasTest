@@ -291,22 +291,62 @@ En orden de lo que más mueve la demo:
    - [ ] En el editor: el ajuste de la espada en la mano (`MainHandRotationOffset` en
          `Class_Fighter`: se copió en cero del martillo del Paladín) y los VFX.
 
-   **Subclases del Guerrero — lo decidido (1 de octubre), sin empezar:**
-   - **Comandante · Salto heroico**: elegir una zona y TELETRANSPORTARSE (no un salto físico
-     como el del Bárbaro), con animación de salto después. GA nuevo solo para esa definitiva,
-     más la bandera (una zona con `AllyEffects`).
-   - **Escudo a la espalda en postura ofensiva** (para tomar el arma a dos manos): poco
-     código, unas 40 líneas en `PlayerController` que mueven el arma de la mano izquierda a
-     un socket en la espalda mientras tenga `Stance_Offensive` (los tags ya viajan a todos).
-     Hace falta un `Socket_Back` en el hueso de la columna (editor) y poses de dos manos
-     (Kevin trae `WeaponHold2H01`).
-   - **Habilidades que se mantienen para cargar** (el ataque de 3 etapas del Maestro de
-     batalla; también apuntar y soltar en las de distancia, y migrar el Golpe final del
-     Inmortal): un sistema genérico de "mantener = cargar / apuntar, tocar = rápido" sobre el
-     `IHoldAbility` que ya usa el escudo. Es la pieza más grande de las subclases.
-   - **Guardián**: su postura defensiva da +3 de armadura (no +2), y el DOBLE de energía (200
-     de máxima). **Venganza**: pasiva permanente que mira vida actual contra máxima; al
-     llegar a la mitad de la vida tiene el máximo, 30 % de resistencia al daño y al control.
+   **Subclases del Guerrero — lo decidido (1 de octubre):**
+   - **Comandante · Salto heroico** (sin empezar): elegir una zona y TELETRANSPORTARSE (no
+     un salto físico como el del Bárbaro), con animación de salto después. GA nuevo solo
+     para esa definitiva, más la bandera (una zona con `AllyEffects`). En ofensiva toma la
+     lanza a dos manos (mismo sistema que el Maestro: `StowOffHandTag` +
+     `StanceAnimatorOverride`) y su "Apuntado" lanza el arma.
+   - **Guardián** (sin empezar): su postura defensiva da +3 de armadura (no +2), y el DOBLE
+     de energía (200 de máxima). **Venganza**: pasiva permanente que mira vida actual contra
+     máxima; al llegar a la mitad de la vida tiene el máximo, 30 % de resistencia al daño y
+     al control.
+   - Pendiente aparte: migrar el Golpe final del Inmortal a `GA_ChargedAttack`, y usarlo
+     para "mantener para apuntar, soltar para lanzar" en las de distancia.
+
+   **Maestro de batalla — PROBADO ✅ (1 de octubre).** El mandoble siempre equipado. En
+   postura OFENSIVA: a dos manos, escudo a la espalda, un tajo de mandoble y ataque cargado.
+   En DEFENSIVA: escudo en la mano y el arma a una mano (el kit base). Números de Claude
+   (⚙), Gustavo los ajusta.
+
+   | Ranura | Qué hace | Pieza |
+   |---|---|---|
+   | Clic izq. | Defensiva: el combo del Guerrero. Ofensiva: UN tajo de mandoble (`Attack2H01`), ⚙ 1.3 × ataque, 2.5 m, 180° | `GA_BattleMasterPrimary` (`GA_TagSwitch`) → `GA_GreatswordSlash` |
+   | Clic der. | Defensiva: el escudo con parry. Ofensiva: **ataque cargado** como la Q de Sion, con la pose del Golpe final del Inmortal: tocar = golpe rápido; ⚙ a los 0.6 s la segunda etapa y a los 1.2 s la tercera (aturde 1 s); se suelta solo a los 1.5 s. ⚙ 1.2 / 2 / 3 × ataque, 2.5 m, 120°; ralentiza un 40 % mientras carga; un aturdido corta la carga sin golpe; 3 s de cooldown, que el botón muestra solo en ofensiva | `GA_BattleMasterGuard` (`GA_HoldTagSwitch`) → `GA_GreatswordChargedStrike` (`GA_ChargedAttack`) + `GA_ChargedStrikeStage1/2/3` |
+   | E | Desarme: el enemigo de enfrente (⚙ 3 m) no puede usar sus acciones de ARMA ⚙ 2 s (la resistencia al control lo acorta); 25 s de cooldown | `GA_Disarm` (`GA_Target`) + `GE_Disarmed` (`State_Disarmed`) |
+   | Pasiva extra | Punto débil: al dañar a un enemigo lo marca ⚙ 3 s, ⚙ +10 % de daño recibido (+20 % con Romper límites). Las dos marcas no se acumulan | `WeakPointPassive` en `BattleMasterBehaviours` + `GE_WeakPoint` / `GE_WeakPointEmpowered` |
+   | R | Romper límites: ⚙ 8 s Imparable (inmune al control, limpia los debuffs) y ⚙ +30 % de ataque; Punto débil potenciado | `GA_LimitBreak` + `GE_LimitBreak` (`Status_Unstoppable` + `Status_BreakLimits`) |
+   | Stats | ⚙ 200 vida, 10 ataque, el resto como el Guerrero, nivel 3. Rol: Daño | `ASDef_BattleMasterFighter` |
+
+   Piezas nuevas de código (detalle en la guía y la arquitectura):
+   - **`GA_ChargedAttack`** (genérico): mantener carga, soltar dispara la etapa alcanzada;
+     cada etapa es OTRA habilidad (cono, línea, proyectil).
+   - **`GA_HoldTagSwitch`**: un `GA_TagSwitch` entre habilidades de MANTENER (escudo /
+     carga). Le pasa a la variante el soltar, los clips y el cooldown que muestra el HUD
+     (`CooldownEffectForDisplay`). Cada variante paga su propio cooldown.
+   - **`ReportEndAs`**: una variante de un switch avisa su fin con el nombre del switch.
+     Sin esto, un mantenido dentro de un switch que el servidor corta solo (sin energía, la
+     carga al tope) dejaba trabado al dueño.
+   - **La postura a la vista**, todo según un tag y sin RPC: `StowOffHandTag` cuelga el
+     escudo del hueso del pecho; `StanceAnimatorOverride` + `StanceAnimatorTag` cambian los
+     clips de la clase por los de otro AOC (el Maestro en ofensiva usa
+     `AOC_Paladin_2Handed`). La pose del brazo izquierdo (`OffHandPose`) ya no la usa; su
+     peso ahora se repone cada frame (cada cambio de clip del Animator lo reiniciaba).
+   - **Bloqueos por tipo de acción**: cada habilidad dice qué la bloquea en
+     `ActivationBlockedTags`. Desarmado = las de ARMA (golpear o lanzar, no el escudo),
+     Silencio = las de MAGIA o fantasía, Enraizado = las de MOVIMIENTO, Aturdido = todas;
+     las que mezclan dos tipos llevan los dos. Las de salir de apuros (Comida de emergencia,
+     Protección divina) solo el aturdido. El desarme ya no bloquea "el básico" por código.
+   - Tags nuevos (al final): `Status_BreakLimits`, `Status_WeakPoint`.
+
+   - [ ] **Volver a correr `Mercenarios ▸ Aplicar los bloqueos por tipo de acción (una
+         sola vez)` y BORRAR `Assets/Scripts/Editor/MercActionTagsSetup.cs`.** Se corrió
+         antes de dos ajustes de Gustavo y en los assets todavía quedaron así: el Blink con
+         enraizado + silencio (tiene que ser solo enraizado) y la Protección divina con
+         silencio (tiene que ser solo el aturdido). Correrla de nuevo no rompe nada.
+   - [ ] En el editor: el modelo del mandoble (no hay uno: queda la espada); los VFX de las
+         etapas de carga; si al caminar en ofensiva se ve a una mano, agregarle a
+         `AOC_Paladin_2Handed` los clips 2H de caminar y correr (hoy solo cambia el de quieto).
 
 2. **El mapa del cementerio — GREYBOX ARMADO (29 de septiembre), falta jugarlo.** Escena
    nueva `Scenes/Mercenaries_Graveyard.unity` (copia de la del modo, con sala, red y menús;
@@ -1618,9 +1658,9 @@ Qué se reusa, en corto:
 
 ## Sistemas compartidos — hacerlos una vez
 
-- [ ] **Desarmar** — Guerrero (Maestro de batalla), Clérigo (Zona de verdad)
+- [x] **Desarmar** — Guerrero (Maestro de batalla), Clérigo (Zona de verdad). Hecho: `State_Disarmed` bloquea las acciones de arma (1 de octubre)
 - [ ] **Repeler** — Monje (Patada del viento), Explorador (trampa explosiva)
-- [ ] **Revelar invisibles** — Clérigo (Faro de esperanza), Explorador (Búho)
+- [x] **Revelar invisibles** — Clérigo (Faro de esperanza), Explorador (Búho). Hecho: `State_AlwaysVisible`
 - [ ] **Vuelo libre** — Mago, quizá Muerte silenciosa del Shinobi
 - [ ] **Mascota con IA en red** — Explorador; sirve para futuros summons
 
@@ -1636,7 +1676,7 @@ Qué se reusa, en corto:
 nuevo vive casi todo en las subclases). Contra: al llegar a nivel 3 no hay qué elegir.
 
 - [x] Decidir: Clérigo + Guerrero completos (28 de septiembre). Clérigo: kit base hecho;
-      siguen sus subclases, después el Guerrero.
+      Clérigo completo; Guerrero: kit base y Maestro de batalla hechos, faltan Comandante y Guardián.
 - [ ] Antes del Mago: definir la extra de Filo danzante y el vuelo libre
 
 ---

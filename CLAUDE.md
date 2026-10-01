@@ -175,6 +175,14 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   OTRO. La pasiva que quiera enterarse de la autocuración (la Bendición del Clérigo)
   escucha `OnHealedSelf`, que va aparte justamente para no tocar la carga.
 
+- **Qué bloquea a cada habilidad lo dice su `ActivationBlockedTags`, por TIPO de acción**
+  (desde el 1 de octubre de 2026): `State_Stunned` en todas las que se aprietan;
+  `State_Disarmed` en las de ARMA (golpear con ella o lanzarla; el bloqueo con escudo NO);
+  `State_Silenced` en las de MAGIA o fantasía; `State_Rooted` en las de MOVIMIENTO. Una
+  habilidad de dos tipos lleva los dos tags (cualquiera la bloquea). Las de "salir de
+  apuros" (Comida de emergencia, Protección divina) solo llevan el aturdido. Una
+  habilidad nueva tiene que llevar los suyos. Nada de esto se resuelve por código.
+
 - **Dónde va cada VFX.** Lo que dura lo que dura un buff o un debuff va en el
   `TargetVFX` del **GE** (aparece pegado a quien lo recibe, en todas las pantallas, y se
   va cuando el efecto termina; `TargetVFXLoop` repite las partículas de un solo
