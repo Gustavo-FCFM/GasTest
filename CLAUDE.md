@@ -183,6 +183,11 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   apuros" (Comida de emergencia, Protección divina) solo llevan el aturdido. Una
   habilidad nueva tiene que llevar los suyos. Nada de esto se resuelve por código.
 
+- **¿Es de mantener? Se pregunta `HoldInput.IsHold(habilidad)`, no `is IHoldAbility`**
+  (desde el 1 de octubre de 2026). `GA_ProjectileShoot` implementa la interfaz pero solo
+  es un mantenido con su casilla `AimBeforeThrow` (los lanzamientos apuntados). Un
+  mantenido nuevo implementa `UsesHoldInput => true`.
+
 - **Dónde va cada VFX.** Lo que dura lo que dura un buff o un debuff va en el
   `TargetVFX` del **GE** (aparece pegado a quien lo recibe, en todas las pantallas, y se
   va cuando el efecto termina; `TargetVFXLoop` repite las partículas de un solo

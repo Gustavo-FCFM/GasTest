@@ -292,11 +292,7 @@ En orden de lo que más mueve la demo:
          `Class_Fighter`: se copió en cero del martillo del Paladín) y los VFX.
 
    **Subclases del Guerrero — lo decidido (1 de octubre):**
-   - **Comandante · Salto heroico** (sin empezar): elegir una zona y TELETRANSPORTARSE (no
-     un salto físico como el del Bárbaro), con animación de salto después. GA nuevo solo
-     para esa definitiva, más la bandera (una zona con `AllyEffects`). En ofensiva toma la
-     lanza a dos manos (mismo sistema que el Maestro: `StowOffHandTag` +
-     `StanceAnimatorOverride`) y su "Apuntado" lanza el arma.
+   - **Comandante**: código hecho, ver su sección abajo.
    - **Guardián** (sin empezar): su postura defensiva da +3 de armadura (no +2), y el DOBLE
      de energía (200 de máxima). **Venganza**: pasiva permanente que mira vida actual contra
      máxima; al llegar a la mitad de la vida tiene el máximo, 30 % de resistencia al daño y
@@ -347,6 +343,69 @@ En orden de lo que más mueve la demo:
    - [ ] En el editor: el modelo del mandoble (no hay uno: queda la espada); los VFX de las
          etapas de carga; si al caminar en ofensiva se ve a una mano, agregarle a
          `AOC_Paladin_2Handed` los clips 2H de caminar y correr (hoy solo cambia el de quieto).
+
+   **Comandante — HECHO (1 de octubre), falta probar.** La lanza (el bastón del Clérigo)
+   siempre equipada. En OFENSIVA: a dos manos (pose de lanza de Kevin), escudo a la
+   espalda, estocada y lanzamiento. En DEFENSIVA: el kit base. Números de Claude (⚙),
+   Gustavo los ajusta.
+
+   | Ranura | Qué hace | Pieza |
+   |---|---|---|
+   | Clic izq. | Defensiva: el combo del Guerrero. Ofensiva: estocada de lanza (`AttackPolearm01`), ⚙ 1.2 × ataque, 3.5 m de largo | `GA_CommanderPrimary` (`GA_TagSwitch`) → `GA_SpearThrust` (`GA_LineAttack`) |
+   | Clic der. | Defensiva: el escudo. Ofensiva: lanzamiento APUNTADO (ver abajo): atraviesa y aturde 1 s a cada enemigo que toca, ⚙ 1.5 × ataque; ⚙ 8 s de cooldown | `GA_CommanderGuard` (`GA_HoldTagSwitch`) → `GA_SpearThrow` (`GA_ProjectileShoot` con `AimBeforeThrow`) |
+   | Q | La postura, pero SOLO da el tag: los +2 los da el aura | `GA_CommanderStance` → `GE_CommanderStanceDefensive/Offensive` (ocultos) |
+   | Pasiva extra | Inspiración de batalla: el aura del Paladín con un anillo por postura (⚙ 8 m, a él y a los aliados): +2 de armadura en defensiva, +2 de ataque en ofensiva | `PaladinAuraPassive` en `CommanderBehaviours` + `GE_CommanderAuraDefensive/Offensive` |
+   | E | Voz de mando: ⚙ 6 s con `Status_CommandingVoice`, que prende otro anillo del aura: ⚙ +20 % de velocidad de movimiento y de ataque. ⚙ 20 s de cooldown. Animación: el grito del Bárbaro | `GA_CommandingVoice` (`GA_SelfBuff`) + `GE_CommandingVoice` / `GE_CommandingVoiceBuff` |
+   | R | Salto heroico: se apunta con el marcador (⚙ 15 m), despega, aparece en el destino a los ⚙ 0.35 s, golpea ⚙ 2 × ataque en ⚙ 3 m y clava la bandera: ⚙ 8 s, ⚙ 6 m, daña ⚙ 0.3 × ataque por segundo a los enemigos y da ⚙ +20 % de daño y +3 de armadura a los aliados | `GA_HeroicLeap` (nuevo, hereda de `GA_Teleport`) + `GA_CommanderBanner` (`GA_ContinuousAoE`) + `PF_CommanderBanner` |
+   | Stats | ⚙ como el Maestro de batalla con 8 de ataque. Rol: Tanque (la definitiva se carga con el daño recibido) | `ASDef_CommanderFighter` |
+
+   Código nuevo: `GA_HeroicLeap`; `GA_Teleport.ExecuteTeleport` (el viaje, aparte de
+   buscar el destino seguro); `GA_ContinuousAoE.ActivateAt(punto)` (una zona que nace
+   donde otra habilidad diga, sin animación); tag `Status_CommandingVoice` (al final).
+
+   **Lanzamientos apuntados (1 de octubre, pedido de Gustavo tras probar la lanza).**
+   Casilla nueva `Aim Before Throw` en `GA_ProjectileShoot`, prendida en el hacha del
+   Bárbaro (y sus 3 subclases), las dagas del Pícaro, del Asesino y del Ilusionista, y la
+   lanza del Comandante. Los castigos, el Guiding Bolt y el arco del combo del Clérigo NO
+   la tienen: siguen saliendo al apretar.
+   - Mantener: el arma atrás (`Aim Hold Clip`: `ThrowWeapon01_R - Hold` /
+     `ThrowSpear01_R - Hold`), la cámara se acerca a la mira (`Aim Cam Offset` en la
+     cámara, sensibilidad ×0.75) y el modelo del jugador se le esconde (sigue la sombra).
+   - Soltar: sale YA. Se reproduce el lanzamiento desde la pose (`Aim Release Clip`: tomas
+     nuevas `HumanM@ThrowWeapon01_R - Release` y `HumanM@ThrowSpear01_R - Release`, que la
+     herramienta armó buscando en el clip entero el cuadro más parecido a la pose de
+     apuntar) y el proyectil sale cuando el clip suelta: el hacha y las dagas a los 0.25 s
+     (el evento del clip original, corrido); la lanza a los ⚙ 0.25 s (`Aim Release
+     Delay`, su clip no trae evento). El dueño lo ve en el acto (predicción) y la cámara
+     y el modelo vuelven.
+   - Un aturdido o la muerte mientras apunta lo cortan sin lanzar y sin cobrar. No se
+     suelta solo (corte de seguridad a los 30 s).
+   - Se reemplazó la versión anterior (envoltorios `GA_ChargedAttack` "...Aim", que se
+     borraron) y `GA_ChargedAttack` volvió a como estaba.
+   - Por dentro: `IHoldAbility.UsesHoldInput` + `HoldInput.IsHold` (un
+     `GA_ProjectileShoot` es mantenido solo con la casilla);
+     `GameplayAbility.AimsCameraWhileHeld` y `PredictOwnerReleaseVisuals`;
+     `NetworkASC.ServerBroadcastStepAnimationToOthers` (el clip de soltar a los demás, sin
+     repetírselo al dueño).
+
+   - [x] Correr `Mercenarios ▸ Crear el Comandante` (corrida y borrada).
+   - [x] La herramienta de los lanzamientos apuntados (la corrió Claude en modo batch con
+         Unity cerrado, y la borró). La lanza del Comandante quedó dada vuelta en la mano
+         (`Main Hand Rotation Offset` = (0, 180, 180)): revisar.
+   - [ ] En el editor: los íconos (habilidades, clase, buffs del aura); el evento de
+         impacto de `HumanM@AttackPolearm01` (la herramienta lo puso al 40 % del clip, a
+         ojo); el momento en que la lanza sale de la mano (mejor: ponerle el evento
+         `AnimationEvent_HitFrame` a la toma `ThrowSpear01_R - Release` en el importer);
+         cómo vuela la lanza (el proyectil gira el arma copiada un ángulo fijo, el que le
+         sirve al hacha: si vuela de lado, hace falta un ajuste por clase); la bandera
+         parada (`PF_CommanderBanner`).
+   - [ ] Probar los lanzamientos apuntados: hacha, dagas y lanza; mantener (pose, cámara,
+         modelo oculto), soltar (sale enseguida desde la pose, y se ve en la otra
+         pantalla), aturdido mientras apunta (no lanza ni cobra), los bots (mantienen un
+         rato y sueltan). Ojo: abrir un menú mientras se apunta lanza el arma.
+   - [ ] Probar el Comandante: las auras se prenden y apagan con la postura (en él y en
+         un aliado); la Voz de mando; el Salto heroico (que no atraviese paredes, que se
+         vea en la otra pantalla, el golpe y la bandera).
 
 2. **El mapa del cementerio — GREYBOX ARMADO (29 de septiembre), falta jugarlo.** Escena
    nueva `Scenes/Mercenaries_Graveyard.unity` (copia de la del modo, con sala, red y menús;
