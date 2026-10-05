@@ -446,7 +446,7 @@ batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 
          Guerrero y sus subclases; el Monje cuando llegue), sin importar el rol:
          `Ultimate Seconds Per Block` en `Entity_ShieldBarrier`. Ojo: cada tick de un área
          (el molinete) es un golpe. **PROBADO ✅.**
-   - [ ] En el editor: los íconos (habilidades, clase, Venganza, Avatar); mirar la barrera
+   - [x] **Revisado por Gustavo (5 de octubre).** En el editor: los íconos (habilidades, clase, Venganza, Avatar); mirar la barrera
          grande en `GuardianBehaviours` (si tapa demasiado o queda corta, su escala) y el
          escudo ×1.3 en la mano.
    - [x] **PROBADO ✅ (5 de octubre).** Probar: el escudo más grande cubre a un aliado detrás; devolver daño a un melee (y
@@ -565,7 +565,7 @@ de esta noche es lo que la gente diga y lo que se vea en la grabación.
 
 Son las perillas y dudas que quedaron abiertas y que solo se contestan jugando:
 
-- [ ] **La entrega de 3 s**: ¿los rivales llegan a cortarla? ¿3 s es poco o mucho?
+- [x] **Subida a 6 s (30 de septiembre, `MercObjective.DeliverSeconds`).** **La entrega de 3 s**: ¿los rivales llegan a cortarla? ¿3 s es poco o mucho?
       ¿Una herida o un veneno encima reiniciándola se siente justo o frustrante? De
       paso: salir de la zona a mitad vuelve la barra a 0, y en un cliente la barra
       avanza suave, no a saltos.
@@ -1962,14 +1962,14 @@ lo deja el modo batch en `routes.txt`):
 | Base → cripta por la fosa | 106 m | (sin bolsa, ~18 s) |
 
 Tres cosas para decidir jugándolo:
-- [ ] **La ruta a pie queda en ~18 s**, un poco debajo de los 20–25 s del diseño. Palanca
+- [x] **Rutas revisadas por Gustavo (5 de octubre): están bien.** **La ruta a pie queda en ~18 s**, un poco debajo de los 20–25 s del diseño. Palanca
       barata: cerrar la puerta ancha de la capilla (salir solo por las de las torres
       suma ~15 m).
-- [ ] **La fosa NO es más rápida que caminar** (106 m contra 90): las dos van derecho del
+- [x] **La fosa NO es más rápida que caminar** (106 m contra 90): las dos van derecho del
       atrio al centro, así que la distancia es casi la misma. Hoy su ventaja es ir
       tapado, sin pasar por el laberinto ni por el jefe. Si tiene que ser un atajo, hay
       que alargar la de arriba (lo de la capilla ayuda).
-- [ ] **La ruta por los techos es la más lenta** (~30 s): subir la torre cuesta. Es la
+- [x] **La ruta por los techos es la más lenta** (~30 s): subir la torre cuesta. Es la
       alta y expuesta; ver si alguien la usa.
 
 **Qué mirar al recorrerla:** que la cámara no se meta en el techo de las catacumbas,
