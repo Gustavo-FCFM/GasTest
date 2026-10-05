@@ -43,7 +43,7 @@ MonoBehaviour:
   VisualsSequence: []
   MaxCharges: 1
   Range: 2.5
-  ConeAngle: 60
+  ConeAngle: 90
   UseVerticalAim: 1
   OriginOffset: {x: 0, y: 1, z: 0}
   DamageEffect: {fileID: 11400000, guid: 273959881038dcb42b97e5362494197b, type: 2}
