@@ -43,7 +43,7 @@ MonoBehaviour:
   StanceAnimatorTag: 56
   MainHandWeaponPrefab: {fileID: 6409903527971818013, guid: 7bea6d1a74f72294d8df22a0cdea31aa, type: 3}
   OffHandWeaponPrefab: {fileID: 3844116661835162637, guid: 355227fa58c247448aac64714c11cb4a, type: 3}
-  MainHandRotationOffset: {x: -0.000005008956, y: 180, z: 180}
+  MainHandRotationOffset: {x: 0, y: 0, z: 0}
   MainHandPositionOffset: {x: 0, y: 0, z: 0}
   OffHandRotationOffset: {x: 0, y: 180, z: 0}
   OffHandPositionOffset: {x: 0, y: 0, z: -0.1}

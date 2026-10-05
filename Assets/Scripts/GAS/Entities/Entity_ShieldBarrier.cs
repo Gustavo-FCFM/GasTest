@@ -77,6 +77,37 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
     [Tooltip("Lo que recibe el atacante cuerpo a cuerpo al que le hacen parry (GE_ParryStun).")]
     public GameplayEffect ParryStunEffect;
 
+    [Header("Carga de la Definitiva")]
+    [Tooltip("Segundos que se le descuentan a la definitiva del dueño por cada GOLPE que frena " +
+             "la barrera (la cantidad de golpes, no el daño): uno pequeño y uno enorme valen lo " +
+             "mismo. Cuenta también lo que frena por un aliado, los proyectiles y el parry. 0 = no " +
+             "carga nada.")]
+    public float UltimateSecondsPerBlock = 1f;
+
+    // El mismo golpe frenado para varios a la vez (un barrido contra él y dos aliados detrás)
+    // cuenta UNA vez: mismo atacante, mismo frame.
+    private AbilitySystemComponent _lastBlockedAttacker;
+    private int _lastBlockedFrame = -1;
+
+    [Header("Devolver (Guardián)")]
+    [Tooltip("Fracción del daño FRENADO que se le devuelve al atacante CUERPO A CUERPO (a " +
+             "ParryMeleeRange o menos), como daño físico normal: pasa por su armadura. 1 = todo " +
+             "(el Guardián). 0 = nada (el resto de los escudos). Lo devuelto no se puede volver " +
+             "a devolver, así dos Guardianes no se rebotan el daño.")]
+    [Range(0f, 1f)]
+    public float ReflectMeleeFraction = 0f;
+
+    [Tooltip("En la ventana del parry, los proyectiles no se paran: cambian de dueño (pasan a " +
+             "ser del dueño de la barrera) y salen hacia donde apunta. Una sola vez por " +
+             "proyectil.")]
+    public bool ReflectProjectilesOnParry = false;
+
+    // Candado de la devolución: mientras se aplica un daño devuelto, ninguna barrera lo
+    // vuelve a devolver (sí lo puede frenar). Todo corre en el hilo principal, de forma
+    // sincrónica, así que alcanza con un estático.
+    private static bool s_reflecting;
+    private GameplayEffect _reflectEffect;
+
     [Header("Inclinación con la Mira")]
     [Tooltip("La barrera sube y baja con la mira del jugador (mirando al cielo, el escudo apunta " +
              "arriba). Sigue la misma inclinación que el torso (UpperBodyAim), así que se ve igual " +
@@ -187,7 +218,11 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
     }
 
     private void OnDisable() => SetRaised(false);
-    private void OnDestroy() => SetRaised(false);
+    private void OnDestroy()
+    {
+        SetRaised(false);
+        if (_reflectEffect != null) Destroy(_reflectEffect);
+    }
 
     // Sigue el tag del dueño: levantar/bajar la barrera y, mientras está arriba,
     // refrescar cada tanto la lista de aliados cubiertos.
@@ -340,6 +375,11 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
 
             OnDamageBlocked?.Invoke(incoming, hitPoint);
             BroadcastFlash(hitPoint);
+            if (!ctx.IsPeriodicTick)
+            {
+                ChargeUltimateForBlock(ctx.Source);
+                ReflectToAttacker(ctx.Source, incoming);
+            }
             return;
         }
 
@@ -366,7 +406,78 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
 
         OnDamageBlocked?.Invoke(blocked, hitPoint);
         BroadcastFlash(hitPoint);
+        if (!ctx.IsPeriodicTick)
+        {
+            ChargeUltimateForBlock(ctx.Source);
+            ReflectToAttacker(ctx.Source, blocked);
+        }
     }
+
+    // Le adelanta la definitiva al dueño por un golpe frenado (ver UltimateSecondsPerBlock).
+    // Corre en el servidor, donde se resuelven los bloqueos.
+    private void ChargeUltimateForBlock(AbilitySystemComponent attacker)
+    {
+        if (UltimateSecondsPerBlock <= 0f || _ownerASC == null) return;
+        if (ReferenceEquals(attacker, _lastBlockedAttacker) && Time.frameCount == _lastBlockedFrame) return;
+
+        _lastBlockedAttacker = attacker;
+        _lastBlockedFrame    = Time.frameCount;
+        _ownerASC.ReduceCooldownByTag(EGameplayTag.Ability_Cooldown_Ultimate, UltimateSecondsPerBlock);
+    }
+
+    // =========================================================
+    // DEVOLVER (Guardián)
+    // =========================================================
+
+    // Le devuelve al atacante cuerpo a cuerpo lo frenado (por ReflectMeleeFraction), como
+    // un golpe físico normal del dueño de la barrera: pasa por la armadura del atacante y
+    // su propio escudo lo puede frenar, pero no devolver (ver s_reflecting).
+    private void ReflectToAttacker(AbilitySystemComponent attacker, float blocked)
+    {
+        if (ReflectMeleeFraction <= 0f || s_reflecting || attacker == null || blocked <= 0f) return;
+        if (attacker.HasTag(EGameplayTag.State_Dead)) return;
+        if (Vector3.Distance(attacker.transform.position, _ownerASC.transform.position) > ParryMeleeRange) return;
+
+        GameplayEffect damage = ReflectEffect();
+        damage.Modifiers[0].Magnitude = -blocked * ReflectMeleeFraction;
+
+        s_reflecting = true;
+        try     { attacker.ApplyGameplayEffect(damage, _ownerASC); }
+        finally { s_reflecting = false; }
+    }
+
+    // Un efecto de daño plano, creado una vez y reusado (la magnitud se pone en cada golpe).
+    private GameplayEffect ReflectEffect()
+    {
+        if (_reflectEffect != null) return _reflectEffect;
+
+        _reflectEffect = ScriptableObject.CreateInstance<GameplayEffect>();
+        _reflectEffect.name       = "GE_ReflectedDamage(runtime)";
+        _reflectEffect.Duration   = 0f;
+        _reflectEffect.EffectType = GameplayEffect.EEffectType.Hidden;
+        _reflectEffect.Modifiers  = new List<Modifier>
+        {
+            new Modifier { Attribute = EAttributeType.Health, Type = Modifier.EModificationType.Add },
+        };
+        return _reflectEffect;
+    }
+
+    // Hacia dónde apunta el dueño: el giro del cuerpo y la inclinación de la mira
+    // (UpperBodyAim, que llega a todas las copias). El parry manda ahí los proyectiles.
+    public Vector3 AimDirection
+    {
+        get
+        {
+            if (_ownerASC == null) return transform.forward;
+            float pitch = _aim != null ? _aim.CurrentPitch : 0f;
+            return Quaternion.Euler(pitch, _ownerASC.transform.eulerAngles.y, 0f) * Vector3.forward;
+        }
+    }
+
+    public AbilitySystemComponent Owner => _ownerASC;
+
+    // True si un proyectil que toca la barrera AHORA se devuelve en vez de pararse.
+    public bool ReflectsProjectilesNow => ReflectProjectilesOnParry && IsParrying;
 
     // =========================================================
     // FEEDBACK VISUAL DEL BLOQUEO
@@ -449,9 +560,9 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
     // es otra unidad — un proyectil de 5 y uno de 80 curaban exactamente lo mismo.
     // El daño real se estima contra el dueño de la barrera, que es quien lo habría
     // recibido (ver AbilitySystemComponent.EstimateInstantDamage).
-    public void NotifyProjectileBlocked(GameplayEffect damageEffect, AbilitySystemComponent shooter, Vector3 hitPoint)
+    public float NotifyProjectileBlocked(GameplayEffect damageEffect, AbilitySystemComponent shooter, Vector3 hitPoint)
     {
-        if (!_raised || _ownerASC == null) return;
+        if (!_raised || _ownerASC == null) return 0f;
 
         // Un proyectil parado en la ventana del parry no gasta energía (es de lejos: no
         // aturde a nadie, solo se frena entero, que un proyectil ya hace siempre).
@@ -466,6 +577,8 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
         if (blocked > 0f) OnDamageBlocked?.Invoke(blocked, hitPoint);
 
         BroadcastFlash(hitPoint);
+        ChargeUltimateForBlock(shooter);
+        return blocked;
     }
 
     // True si este golpe viene de un enemigo del dueño de la barrera. Lo usa

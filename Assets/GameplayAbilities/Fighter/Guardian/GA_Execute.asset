@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1028859bcbaa42040be2a514018de3e1, type: 3}
+  m_Name: GA_Execute
+  m_EditorClassIdentifier: 
+  AbilityName: Execute
+  AbilityIcon: {fileID: 21300000, guid: 5b219e4b7c295504591214df193689ce, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: bd07a782525833e47889b22896900f13, type: 2}
+  CooldownDuration: 12
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 1
+  ActivationBlockedTags: 0100000035000000
+  ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  UsableWhileHolding: 0
+  AnimationClip: {fileID: 3094330708855449807, guid: c2f07439e693fa44aafbe0e6acebb19c, type: 3}
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  IsInterruptible: 0
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  VisualsSequence: []
+  MaxCharges: 1
+  Range: 2.5
+  ConeAngle: 60
+  UseVerticalAim: 1
+  OriginOffset: {x: 0, y: 1, z: 0}
+  DamageEffect: {fileID: 11400000, guid: 273959881038dcb42b97e5362494197b, type: 2}
+  AdditionalEffects: []
+  TargetEffects: []
+  HitVFX: {fileID: 1758473627833946668, guid: 9b21333b068a5084ba09535839bee3c8, type: 3}
+  HealFractionOfVictimMaxHealth: 0.2
+  ResetCooldownOnKill: 1

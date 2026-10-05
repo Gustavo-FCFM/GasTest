@@ -114,8 +114,9 @@ public class GA_LineAttack : GameplayAbility
     {
         Vector3 origin    = OwnerASC.transform.TransformPoint(OriginOffset);
         Vector3 direction = ResolveAttackDirection(UseVerticalAim);
-        Vector3 center    = origin + (direction * (Length / 2));
-        Vector3 halfExtents = new Vector3(Width / 2f, Height / 2f, Length / 2f);
+        float   length    = Length * MeleeReach;   // el Avatar del Guardián pega más lejos
+        Vector3 center    = origin + (direction * (length / 2));
+        Vector3 halfExtents = new Vector3(Width / 2f, Height / 2f, length / 2f);
 
         // La caja se orienta según la DIRECCIÓN del golpe y no según la rotación del
         // cuerpo: son lo mismo mientras la estocada sea horizontal, pero cuando se

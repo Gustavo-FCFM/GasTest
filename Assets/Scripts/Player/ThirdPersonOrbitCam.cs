@@ -125,10 +125,28 @@ public class ThirdPersonOrbitCam : MonoBehaviour
              "proyectando sombra) para que no tape la mira. Al soltar vuelve.")]
     public bool HideTargetWhileAiming = true;
 
+    [Tooltip("Segundos manteniendo el botón antes de que la cámara se acerque y el modelo se " +
+             "esconda. Un lanzamiento rápido no mueve la cámara; mantener es apuntar.")]
+    public float AimDelay = 1f;
+
+    [Header("Personaje agrandado (el Avatar del Guardián)")]
+    [Tooltip("Cuánto se aleja la cámara cuando el personaje crece, como fracción de lo que " +
+             "creció. 0.6 = creciendo ×1.5, la cámara se aleja ×1.3. La altura del punto que " +
+             "mira sube entera con el tamaño.")]
+    [Range(0f, 1.5f)]
+    public float GrowDistanceFactor = 0.6f;
+
+    // Tamaño actual del modelo respecto del normal (1 = normal). Lo pone PlayerController
+    // mientras crece y se achica, así la cámara lo acompaña de a poco.
+    [HideInInspector] public float TargetScale = 1f;
+
     // Lo prende PlayerController mientras el dueño mantiene una habilidad que apunta
-    // (GameplayAbility.AimsCameraWhileHeld).
+    // (GameplayAbility.AimsCameraWhileHeld). Recién después de AimDelay cuenta como
+    // apuntando (_aimActive).
     [HideInInspector] public bool Aiming;
     private float _aimBlend;
+    private float _aimHeldSince = -1f;
+    private bool  _aimActive;
 
     private float rotX = 0f;
     private float rotY = 0f;
@@ -196,7 +214,8 @@ public class ThirdPersonOrbitCam : MonoBehaviour
         Quaternion targetRotation = Quaternion.Euler(rotX, rotY, 0);
 
         // 3. Calcular Posición, respetando las paredes
-        Vector3 focusPoint = Target.position + PivotOffset;
+        // Más grande, mira desde más alto (la cabeza subió con el modelo).
+        Vector3 focusPoint = Target.position + PivotOffset * TargetScale;
         if (FollowOverride != null)
         {
             Vector3 wanted = FollowOverride.position + Vector3.up * 0.4f;
@@ -207,8 +226,15 @@ public class ThirdPersonOrbitCam : MonoBehaviour
         _lastFocus = focusPoint;
 
         // Apuntando, el hombro pasa suave de CamOffset a AimCamOffset (más cerca).
-        _aimBlend = Mathf.MoveTowards(_aimBlend, Aiming ? 1f : 0f, AimBlendSpeed * Time.deltaTime);
+        if (!Aiming) _aimHeldSince = -1f;
+        else if (_aimHeldSince < 0f) _aimHeldSince = Time.time;
+        _aimActive = Aiming && Time.time - _aimHeldSince >= AimDelay;
+
+        _aimBlend = Mathf.MoveTowards(_aimBlend, _aimActive ? 1f : 0f, AimBlendSpeed * Time.deltaTime);
         Vector3 camOffset = Vector3.Lerp(CamOffset, AimCamOffset, _aimBlend);
+
+        // Y se aleja un poco, para que el personaje agrandado entre en cuadro.
+        camOffset *= 1f + (TargetScale - 1f) * GrowDistanceFactor;
 
         // El offset del hombro se descompone en DIRECCIÓN y DISTANCIA: la dirección se
         // mantiene siempre (para no perder la vista sobre el hombro) y lo único que se
@@ -274,7 +300,7 @@ public class ThirdPersonOrbitCam : MonoBehaviour
     {
         // Apuntando: oculto sí o sí. Al soltar, la cámara se aleja y el criterio de la
         // distancia de abajo lo vuelve a mostrar.
-        if (Aiming && HideTargetWhileAiming)
+        if (_aimActive && HideTargetWhileAiming)
         {
             if (!_targetHidden) SetTargetHidden(true);
             return;

@@ -112,7 +112,8 @@ public class GA_ConeAttack : GameplayAbility
     {
         Vector3 origin = OwnerASC.transform.TransformPoint(OriginOffset);
 
-        Collider[] potentialTargets = Physics.OverlapSphere(origin, Range, TargetLayer);
+        // El alcance crece con MeleeRangeBonus (el Avatar del Guardián).
+        Collider[] potentialTargets = Physics.OverlapSphere(origin, Range * MeleeReach, TargetLayer);
         NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
 
         // Hacia dónde apunta el cono. Se resuelve UNA vez por frame de impacto, no por

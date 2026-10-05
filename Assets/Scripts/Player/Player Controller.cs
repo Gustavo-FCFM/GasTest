@@ -2075,6 +2075,10 @@ public class PlayerController : NetworkBehaviour
             currentOffWeapon.transform.SetLocalPositionAndRotation(
                 newClass.OffHandPositionOffset,
                 Quaternion.Euler(newClass.OffHandRotationOffset));
+
+            // El escudo grande del Guardián: el mismo modelo, escalado.
+            if (newClass.OffHandScale > 0f && !Mathf.Approximately(newClass.OffHandScale, 1f))
+                currentOffWeapon.transform.localScale *= newClass.OffHandScale;
         }
     }
 
@@ -2843,6 +2847,8 @@ public class PlayerController : NetworkBehaviour
             }
         }
 
+        TickGrow(cls, dead);
+
         // Las animaciones de la postura (ver StanceAnimatorOverride en la clase).
         if (_stanceClipsOn != null && _runtimeAnimator != null)
         {
@@ -2907,6 +2913,39 @@ public class PlayerController : NetworkBehaviour
         }
 
         if (_stanceClipsOn.Count == 0) _stanceClipsOn = _stanceClipsOff = null;
+    }
+
+    // ---------------------------------------------------------
+    // CRECER (el Avatar del Guardián, ver GrowTag en la clase)
+    //
+    // Solo el MODELO (el hijo con el Animator): la cápsula, la cámara y la barrera no
+    // cambian. Corre en todas las copias, leyendo el tag. Crece y se achica de a poco.
+    // ---------------------------------------------------------
+    private Vector3 _modelBaseScale;
+    private bool    _modelBaseScaleKnown;
+    private const float GrowPerSecond = 3f;
+
+    private void TickGrow(CharacterClassDefinition cls, bool dead)
+    {
+        if (characterAnimator == null) return;
+        Transform model = characterAnimator.transform;
+
+        if (!_modelBaseScaleKnown)
+        {
+            _modelBaseScale      = model.localScale;
+            _modelBaseScaleKnown = true;
+        }
+
+        bool    grow   = cls.GrowTag != EGameplayTag.None && !dead && ASC.HasTag(cls.GrowTag);
+        Vector3 wanted = _modelBaseScale * (grow ? Mathf.Max(0.1f, cls.GrowScale) : 1f);
+
+        if (model.localScale != wanted)
+            model.localScale = Vector3.MoveTowards(model.localScale, wanted,
+                                                   GrowPerSecond * _modelBaseScale.magnitude * Time.deltaTime);
+
+        // La cámara del dueño acompaña el tamaño: mira desde más alto y se aleja un poco.
+        if (_orbitCam != null && _modelBaseScale.x > 0.0001f)
+            _orbitCam.TargetScale = model.localScale.x / _modelBaseScale.x;
     }
 
     // Cuelga el arma secundaria del pecho (guardada) o la devuelve a la mano.
@@ -3180,6 +3219,11 @@ public class PlayerController : NetworkBehaviour
     public void ApplyHoldAnimation(GameplayAbility ability)
     {
         if (characterAnimator == null || ability is not IHoldAbility hold) return;
+
+        // Sin pose (un lanzamiento apuntado sin AimHoldClip, como el Guiding Bolt): el
+        // personaje sigue con su animación normal. Entrar al bucle reproduciría el último
+        // clip que quedó en esa ranura, que es de otra habilidad.
+        if (hold.HoldLoopClip == null) return;
 
         if (!HasHoldSlots)
         {

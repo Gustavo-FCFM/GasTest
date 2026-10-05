@@ -54,5 +54,9 @@ public enum EAttributeType
     // % EXTRA de curación que RECIBE (0.15 = las curaciones le rinden un 15 % más). Lo
     // aplica ExecuteInstantEffect a toda curación que llegue por un efecto. Lo da el Faro de
     // esperanza del Clérigo de la Luz a los aliados dentro de su aura.
-    HealingReceived
+    HealingReceived,
+
+    // % EXTRA de alcance de los golpes cuerpo a cuerpo (conos y líneas): 0.5 = llegan un 50 %
+    // más lejos. Lo da el Avatar del Guardián al crecer. Sin declarar vale 0 (alcance normal).
+    MeleeRangeBonus
 }

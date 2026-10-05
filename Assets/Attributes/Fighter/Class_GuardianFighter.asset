@@ -10,28 +10,32 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 749805704a6088741af34d91f0891ced, type: 3}
-  m_Name: Class_Fighter
+  m_Name: Class_GuardianFighter
   m_EditorClassIdentifier: 
-  ClassName: Fighter
-  ClassIcon: {fileID: 21300000, guid: fd0df9f4c10bf604fb297a0cc27b3c9f, type: 3}
-  Description: 'A frontline soldier who changes stance on the fly: a defensive one
-    that holds the line behind his shield, and an offensive one that hits harder.
-    A well-timed block becomes a parry that stuns whoever struck him.'
+  ClassName: Guardian
+  ClassIcon: {fileID: 21300000, guid: 96db33fe1dd9542408d6020fd58dd73e, type: 3}
+  Description: The wall of the team. His great shield covers him and every ally behind
+    it, returns every blow it blocks, and a well-timed parry sends projectiles back.
+    The more he bleeds, the harder he is to bring down.
   Role: 1
-  BaseAttributes: {fileID: 11400000, guid: 0e2275220d36a2644b4d67e9d0f15715, type: 2}
+  BaseAttributes: {fileID: 11400000, guid: 237055d6fde6e4e48b37ee4c8ba93058, type: 2}
   Abilities:
   - InputSlot: 1
     Ability: {fileID: 11400000, guid: e03685a7f8450d147a210b7e1effe534, type: 2}
   - InputSlot: 2
     Ability: {fileID: 11400000, guid: da04c02d81730c449af28763e9450833, type: 2}
   - InputSlot: 3
-    Ability: {fileID: 11400000, guid: a8d78254d7d677647b5025dd9b115065, type: 2}
+    Ability: {fileID: 11400000, guid: 75f349d835f023741b194e74965678ae, type: 2}
   - InputSlot: 6
     Ability: {fileID: 11400000, guid: e33fcd237b6f6e6438abc870ae8cbb8b, type: 2}
-  PassiveBehaviorsPrefab: {fileID: 9026357972262154142, guid: 6717a63c8d0b8454594cef004ecbf2c5, type: 3}
+  - InputSlot: 4
+    Ability: {fileID: 11400000, guid: 490ce21d8341f154b830c8512b5b9b89, type: 2}
+  - InputSlot: 5
+    Ability: {fileID: 11400000, guid: 909ace3f0755aad419af9fb688596dbd, type: 2}
+  PassiveBehaviorsPrefab: {fileID: 9026357972262154142, guid: e66a0b0838e5252429af4598cf01252e, type: 3}
   PassiveEffects:
   - {fileID: 11400000, guid: 5425dc3edd0320d4a8b0ad013919b6cc, type: 2}
-  - {fileID: 11400000, guid: 71af769e08a6061438522b63f129b721, type: 2}
+  - {fileID: 11400000, guid: 65f322306fcd59541854e82423283c22, type: 2}
   StatGrowthPerLevel:
   - Attribute: 2
     AmountPerLevel: 60
@@ -41,10 +45,7 @@ MonoBehaviour:
     AmountPerLevel: 100
   - Attribute: 6
     AmountPerLevel: 50
-  AvailableSubclasses:
-  - {fileID: 11400000, guid: 17c3ad398681eeb4586674ddfccce0a0, type: 2}
-  - {fileID: 11400000, guid: 425e52fb908c0004bb9fc17ccb2b3a77, type: 2}
-  - {fileID: 11400000, guid: bab651adec009cb41972ed3874f401b4, type: 2}
+  AvailableSubclasses: []
   ClassAnimatorOverride: {fileID: 22100000, guid: 75ec53281b263d24dbe5fee5e2ab9c9e, type: 2}
   StanceAnimatorOverride: {fileID: 0}
   StanceAnimatorTag: 0
@@ -59,6 +60,6 @@ MonoBehaviour:
   StowOffHandTag: 0
   StowedOffHandPositionOffset: {x: 0, y: 0, z: 0}
   StowedOffHandRotationOffset: {x: 0, y: 0, z: 0}
-  OffHandScale: 1
-  GrowTag: 0
+  OffHandScale: 1.3
+  GrowTag: 61
   GrowScale: 1.5

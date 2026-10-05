@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 30 de septiembre de 2026
+# Pendientes — actualizado el 5 de octubre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -50,6 +50,15 @@ rm -rf "Assets/FishNet" "Assets/FishNet.meta" "Assets/TextMesh Pro/Examples & Ex
 
 En orden de lo que más mueve la demo:
 
+**Regla desde el 5 de octubre: no se hacen modelos ni VFX nuevos.** Ya se están haciendo
+los modelos del juego y el artista hará los VFX: hasta entonces se reusan los modelos que
+hay (espada, bastón como lanza) y los VFX gratis. Los pendientes de ese tipo quedan
+marcados "Pospuesto".
+
+**Estado al 5 de octubre:** Clérigo completo y probado. Guerrero: kit base, Maestro de
+batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 9).
+**Guardián: hecho y probado ✅** (5 de octubre). **El Guerrero queda completo** (kit base y las 3 subclases).
+
 1. **Clases nuevas — DECIDIDO (28 de septiembre): Clérigo + Guerrero completos**, en ese
    orden. Detalle y estimación en la sección 6.
 
@@ -69,7 +78,7 @@ En orden de lo que más mueve la demo:
    (antes `GA_ClericHeal`, mismo asset). Guiding Bolt y el Destello no se pueden usar
    aturdido ni silenciado (el Destello tampoco enraizado).
 
-   - [ ] **Correr `Mercenarios ▸ Actualizar los registros de red`**: el registro de
+   - [x] **Correr `Mercenarios ▸ Actualizar los registros de red`** (hecho: los registros se rehicieron varias veces desde entonces): el registro de
          efectos todavía apunta a `GE_GuidingLightDamage`, que se borró (Guiding Bolt
          ahora usa el daño mágico común). `GE_Bane` es el viejo `GE_GuidingLightMark`
          renombrado: ese sigue bien. El bot elige su rol por `EClassRole` (el Clérigo juega de Support). Ya tiene
@@ -91,12 +100,12 @@ En orden de lo que más mueve la demo:
    - [ ] El `FlashVFX` del Destello (artista).
    - [x] La Bendición también cuando el Clérigo se cura a sí mismo (29 de septiembre):
          aviso nuevo `ASC.OnHealedSelf`, aparte de `OnHealedAlly` para que curarse NO
-         cargue la definitiva. **Compila; falta probarlo** (clic derecho sin nadie en la
+         cargue la definitiva. **PROBADO ✅ (5 de octubre)** (clic derecho sin nadie en la
          mira, herido: tiene que aparecer `GE_Blessing` 5 s).
    - [x] El VFX de la curación sigue al curado (29 de septiembre): `GA_Target` tiene
          `Attach Impact VFX`, `Impact VFX Offset` y `Impact VFX Lifetime`, y la red manda
          al OBJETIVO (`NetworkASC.ServerPlayAbilityVFXOn`) en vez de un punto. Vale para
-         todo `GA_Target`. **Compila; falta probarlo en red** (dejar que Unity recompile:
+         todo `GA_Target`. **PROBADO ✅ (5 de octubre)** (dejar que Unity recompile:
          hay una RPC nueva). Para el aura `Healing` de Hovl, probar Offset (0, 0, 0).
 
    **Subclases del Clérigo.** Cada una es su propio `Class_*.asset` con kit completo,
@@ -143,7 +152,7 @@ En orden de lo que más mueve la demo:
    - [x] El ícono de la Zona de verdad y su `VisualPrefab` (`Art/VFX/Zone of Truth`), y el
          ícono del desarme en `GE_ZoneOfTruth`. Pendiente: el clip del bastonazo es el del
          cono del Paladín; cambiarlo si el artista hace uno.
-   - [ ] Probar a fondo en red: el combo pega con el bastón y después lanza el arco; el Orden aturde
+   - [x] **PROBADO ✅ (5 de octubre).** Probar a fondo en red: el combo pega con el bastón y después lanza el arco; el Orden aturde
          solo al primero que toca el arco; Aturdir aturde al marcado cuando le pega a un
          aliado y no cuando le pega a un enemigo suyo; Heroísmo aparece al curar; en la
          Zona nadie puede atacar (tampoco el Clérigo ni sus aliados) y los aliados se
@@ -176,15 +185,15 @@ En orden de lo que más mueve la demo:
          borrar `Assets/Scripts/Editor/MercClericLightSetup.cs`. Crea los GE, las copias
          del kit, la E, la R, `ClericLightBehaviours` (Bendición + Faro), la subclase, la
          cuelga de `Class_Cleric` y actualiza los registros.
-   - [ ] En el editor: el `VisualPrefab` de la Luz del amanecer, el `HitVFX` de la
+   - [-] Pospuesto (VFX gratis por ahora): el `VisualPrefab` de la Luz del amanecer, el `HitVFX` de la
          Quemadura santa, y el VFX del aura si querés que se vea.
-   - [ ] **Probar la subclase: el DAÑO y los ÍCONOS.** Daño: cuánto quema y cuánto cura
+   - [x] **PROBADO ✅ (5 de octubre).** **Probar la subclase: el DAÑO y los ÍCONOS.** Daño: cuánto quema y cuánto cura
          de verdad cada cosa (el arco, Guiding Bolt, la Luz del amanecer, la Quemadura santa,
          la curación del Faro) contra los números de arriba, y si la curación con el tiempo
          rinde de más (con 10 de daño mágico, un Healing Word cura 100 en 5 s contra 20 del
          normal). Íconos: que cada habilidad y cada efecto (quemadura, curación, Faro,
          revelado) muestre el suyo en la barra y en los efectos activos.
-   - [ ] Probar: la quemadura y la curación tickean cada 1 s aunque se peguen más seguido;
+   - [x] **PROBADO ✅.** Probar: la quemadura y la curación tickean cada 1 s aunque se peguen más seguido;
          la Luz del amanecer quema y cura en la zona; con el Faro, un Pícaro invisible
          cerca se ve (y al alejarse vuelve a desaparecer) y las curaciones rinden un
          15 % más; la Quemadura santa cura a los aliados que golpean a los quemados.
@@ -210,7 +219,7 @@ En orden de lo que más mueve la demo:
      se borró la copia que tenía cada una. Enemigo jurado, Aturdir y la Marca ahora pegan el
      VFX al objetivo (antes quieto 2 s); la Resurrección queda igual (pies, 3 s); la
      Intercepción sigue en el punto de aterrizaje (ahí solo cuenta Lifetime).
-   - [ ] Probar: Healing Word de la Luz (el VFX dura los 5 s y se apaga suave); Enemigo
+   - [x] **PROBADO ✅.** Probar: Healing Word de la Luz (el VFX dura los 5 s y se apaga suave); Enemigo
          jurado o Aturdir sobre alguien que se mueve; Resurrección; el círculo de la Zona
          de verdad acostado en el piso; las estrellas del aturdido a la altura de la cabeza.
 
@@ -288,17 +297,14 @@ En orden de lo que más mueve la demo:
          soltando el botón) y la carga no se anima mientras se sostiene. Probar: cargar con
          el escudo, soltar el clic derecho después de la carga (tiene que bajar), soltarlo
          EN MEDIO de la carga, y en red (que no vuelva el escudo eterno).
-   - [ ] En el editor: el ajuste de la espada en la mano (`MainHandRotationOffset` en
+   - [-] Pospuesto (modelos y VFX del juego en camino): el ajuste de la espada en la mano (`MainHandRotationOffset` en
          `Class_Fighter`: se copió en cero del martillo del Paladín) y los VFX.
 
    **Subclases del Guerrero — lo decidido (1 de octubre):**
    - **Comandante**: código hecho, ver su sección abajo.
-   - **Guardián** (sin empezar): su postura defensiva da +3 de armadura (no +2), y el DOBLE
-     de energía (200 de máxima). **Venganza**: pasiva permanente que mira vida actual contra
-     máxima; al llegar a la mitad de la vida tiene el máximo, 30 % de resistencia al daño y
-     al control.
-   - Pendiente aparte: migrar el Golpe final del Inmortal a `GA_ChargedAttack`, y usarlo
-     para "mantener para apuntar, soltar para lanzar" en las de distancia.
+   - **Guardián**: hecho y probado, ver su sección abajo (después del Comandante).
+   - Pendiente aparte: migrar el Golpe final del Inmortal a `GA_ChargedAttack` (apuntar
+     los lanzamientos ya se resolvió con `AimBeforeThrow`).
 
    **Maestro de batalla — PROBADO ✅ (1 de octubre).** El mandoble siempre equipado. En
    postura OFENSIVA: a dos manos, escudo a la espalda, un tajo de mandoble y ataque cargado.
@@ -340,11 +346,11 @@ En orden de lo que más mueve la demo:
          antes de dos ajustes de Gustavo y en los assets todavía quedaron así: el Blink con
          enraizado + silencio (tiene que ser solo enraizado) y la Protección divina con
          silencio (tiene que ser solo el aturdido). Correrla de nuevo no rompe nada.
-   - [ ] En el editor: el modelo del mandoble (no hay uno: queda la espada); los VFX de las
+   - [-] Pospuesto (modelos y VFX del juego en camino): el modelo del mandoble (no hay uno: queda la espada); los VFX de las
          etapas de carga; si al caminar en ofensiva se ve a una mano, agregarle a
          `AOC_Paladin_2Handed` los clips 2H de caminar y correr (hoy solo cambia el de quieto).
 
-   **Comandante — HECHO (1 de octubre), falta probar.** La lanza (el bastón del Clérigo)
+   **Comandante — HECHO Y PROBADO ✅ (5 de octubre), salvo el aturdido al apuntar.** La lanza (el bastón del Clérigo)
    siempre equipada. En OFENSIVA: a dos manos (pose de lanza de Kevin), escudo a la
    espalda, estocada y lanzamiento. En DEFENSIVA: el kit base. Números de Claude (⚙),
    Gustavo los ajusta.
@@ -388,24 +394,67 @@ En orden de lo que más mueve la demo:
      `NetworkASC.ServerBroadcastStepAnimationToOthers` (el clip de soltar a los demás, sin
      repetírselo al dueño).
 
-   - [x] Correr `Mercenarios ▸ Crear el Comandante` (corrida y borrada).
-   - [x] La herramienta de los lanzamientos apuntados (la corrió Claude en modo batch con
-         Unity cerrado, y la borró). La lanza del Comandante quedó dada vuelta en la mano
-         (`Main Hand Rotation Offset` = (0, 180, 180)): revisar.
-   - [ ] En el editor: los íconos (habilidades, clase, buffs del aura); el evento de
-         impacto de `HumanM@AttackPolearm01` (la herramienta lo puso al 40 % del clip, a
-         ojo); el momento en que la lanza sale de la mano (mejor: ponerle el evento
-         `AnimationEvent_HitFrame` a la toma `ThrowSpear01_R - Release` en el importer);
-         cómo vuela la lanza (el proyectil gira el arma copiada un ángulo fijo, el que le
-         sirve al hacha: si vuela de lado, hace falta un ajuste por clase); la bandera
-         parada (`PF_CommanderBanner`).
-   - [ ] Probar los lanzamientos apuntados: hacha, dagas y lanza; mantener (pose, cámara,
-         modelo oculto), soltar (sale enseguida desde la pose, y se ve en la otra
-         pantalla), aturdido mientras apunta (no lanza ni cobra), los bots (mantienen un
-         rato y sueltan). Ojo: abrir un menú mientras se apunta lanza el arma.
-   - [ ] Probar el Comandante: las auras se prenden y apagan con la postura (en él y en
-         un aliado); la Voz de mando; el Salto heroico (que no atraviese paredes, que se
-         vea en la otra pantalla, el golpe y la bandera).
+   - [x] Correr `Mercenarios ▸ Crear el Comandante` (corrida y borrada) y la herramienta
+         de los lanzamientos apuntados (corrida en batch y borrada).
+   - [x] Íconos del Comandante y del Maestro de batalla (Gustavo, 5 de octubre).
+   - [x] **Probado (5 de octubre):** el lanzamiento apuntado ("me gustó como está"), las
+         auras cambian con la postura, la Voz de mando. La lanza en la mano volvió a
+         (0, 0, 0): el agarre no era el problema.
+   - [x] **La cámara se acerca recién al mantener 1 s** (5 de octubre, pedido de Gustavo):
+         un lanzamiento rápido no mueve la cámara ni esconde el modelo; mantener = apuntar.
+         `Aim Delay` en la cámara (junto a `Aim Cam Offset`, que sirve para ajustar cuánto
+         se acerca). **Compila; falta probarlo.**
+   - [x] El Guiding Bolt tiene `Aim Before Throw` (lo prendió Gustavo) sin pose de
+         apuntar: sin `Aim Hold Clip` el personaje sigue con su animación normal (antes
+         habría entrado al bucle de mantener con el clip de otra habilidad). Solo apunta la
+         cámara.
+   - [ ] **Jueves 9:** probar el aturdido mientras se apunta (no lanza ni cobra), con
+         otro jugador o el control; y los bots con los lanzamientos.
+   - [-] Pospuesto: el evento de impacto de la estocada (al 40 % a ojo), el momento en que
+         suelta la lanza, la bandera. Se usa lo que hay hasta que lleguen los modelos y
+         VFX del juego.
+
+   **Guardián — HECHO Y PROBADO ✅ (5 de octubre).**
+   Tanque. En ofensiva, el kit del Guerrero sin cambios; lo suyo está en la defensiva y en
+   sus tres habilidades. Números de Claude (⚙), Gustavo los ajusta.
+
+   | Pieza | Qué hace | Cómo |
+   |---|---|---|
+   | Postura | Defensiva: +3 de armadura (no +2). Ofensiva: la del Guerrero (+2 de ataque). Cambiar de postura NO toca la energía ni el escudo: solo el tag y el stat (Gustavo) | `GA_GuardianStance` → `GA_GuardianEnterDefensiveStance` + `GE_GuardianStanceDefensive` |
+   | Escudo grande | El escudo de siempre a ⚙ ×1.3 (`Off Hand Scale` en la clase, sin modelo nuevo) y la BARRERA (lo que de verdad frena) ⚙ 1.5 veces más ancha y 1.4 más alta, para cubrirlo a él y a los aliados detrás. 400 de energía base (Gustavo) | `GuardianBehaviours` (copia de `FighterBehaviours`) con la barrera escalada; `ASDef_GuardianFighter` |
+   | Devolver daño | Al frenar un golpe CUERPO A CUERPO (a 3.5 m o menos), el atacante recibe TODO lo frenado como daño físico normal (pasa por su armadura). Lo devuelto no se vuelve a devolver | `Entity_ShieldBarrier.ReflectMeleeFraction` = 1 (los demás escudos en 0) |
+   | Parry devuelve proyectiles | En la ventana del parry, el proyectil cambia de dueño y sale hacia donde apunta el Guardián, con el daño que traía. Una vez por proyectil | `Entity_ShieldBarrier.ReflectProjectilesOnParry` + `GC_Projectile.Reflect` |
+   | E — Ejecución | Golpe hacia adelante (cono de ⚙ 60°, 2.5 m): 1 × ataque + 15 % de la vida que le falta al enemigo, sin tope. Si lo mata: se reinicia el cooldown y se cura ⚙ 20 % de la vida máxima del muerto. ⚙ 12 s | `GA_Execute` (hereda de `GA_ConeAttack`) + `GE_ExecuteDamage` |
+   | Pasiva — Venganza | Resistencia al daño y al control: 3 % por cada 5 % de vida que falta, 30 % a la mitad de la vida. Se ve en la barra como un buff con su número | `VengeancePassive` + `GE_Vengeance` (10 acumulaciones de 3 %) |
+   | R — Avatar | ⚙ 8 s: Imparable, un escudo igual a su vida máxima (lo que sobre se va al terminar), el modelo crece ×1.5 en todas las pantallas y sus golpes cuerpo a cuerpo llegan ×1.5 más lejos | `GA_Avatar` (`GA_SelfBuff`) + `GE_Avatar`; `GrowTag`/`GrowScale` en la clase; atributo nuevo `MeleeRangeBonus` (conos y líneas) |
+   | Stats | ⚙ 220 de vida, 8 de ataque, 6 de armadura (9 en defensiva), 400 de energía. Rol: Tanque | `ASDef_GuardianFighter` |
+
+   Código nuevo: `GA_Execute`, `VengeancePassive`; en `Entity_ShieldBarrier` devolver daño
+   y proyectiles; `GC_Projectile.Reflect`; `CharacterClassDefinition.OffHandScale`,
+   `GrowTag`, `GrowScale`; `EAttributeType.MeleeRangeBonus` y `Status_Avatar` (al final).
+
+   - [x] Correr `Mercenarios ▸ Crear el Guardián (una sola vez)` (corrida y borrada:
+         `Assets/Scripts/Editor/MercGuardianSetup.cs`).
+   - [x] **La cámara acompaña al Avatar** (5 de octubre, pedido de Gustavo): mientras el
+         modelo crece, el punto que mira sube con él y la cámara se aleja un poco
+         (`Grow Distance Factor` en la cámara, ⚙ 0.6: creciendo ×1.5 se aleja ×1.3).
+         **PROBADO ✅.**
+   - [x] **Los escudos cargan la definitiva por golpe bloqueado** (5 de octubre, pedido de
+         Gustavo): 1 s menos por cada GOLPE que frena la barrera (la cantidad, no el daño),
+         también lo que frena por un aliado, los proyectiles y el parry. Un mismo golpe
+         frenado para varios a la vez cuenta una vez. Vale para todos los escudos (Paladín,
+         Guerrero y sus subclases; el Monje cuando llegue), sin importar el rol:
+         `Ultimate Seconds Per Block` en `Entity_ShieldBarrier`. Ojo: cada tick de un área
+         (el molinete) es un golpe. **PROBADO ✅.**
+   - [ ] En el editor: los íconos (habilidades, clase, Venganza, Avatar); mirar la barrera
+         grande en `GuardianBehaviours` (si tapa demasiado o queda corta, su escala) y el
+         escudo ×1.3 en la mano.
+   - [x] **PROBADO ✅ (5 de octubre).** Probar: el escudo más grande cubre a un aliado detrás; devolver daño a un melee (y
+         que no rebote entre dos Guardianes); el parry con un hacha o una daga (que salga
+         hacia la mira y dañe al equipo contrario); la Ejecución al matar (cooldown y
+         curación); la Venganza bajando de vida; el Avatar (tamaño en la otra pantalla, el
+         escudo, el alcance). La energía tarda más en llenarse (la regeneración es la misma
+         para 400).
 
 2. **El mapa del cementerio — GREYBOX ARMADO (29 de septiembre), falta jugarlo.** Escena
    nueva `Scenes/Mercenaries_Graveyard.unity` (copia de la del modo, con sala, red y menús;
@@ -1735,7 +1784,7 @@ Qué se reusa, en corto:
 nuevo vive casi todo en las subclases). Contra: al llegar a nivel 3 no hay qué elegir.
 
 - [x] Decidir: Clérigo + Guerrero completos (28 de septiembre). Clérigo: kit base hecho;
-      Clérigo completo; Guerrero: kit base y Maestro de batalla hechos, faltan Comandante y Guardián.
+      Clérigo completo; Guerrero: kit base, Maestro de batalla, Comandante y Guardián probados (5 de octubre): Guerrero completo.
 - [ ] Antes del Mago: definir la extra de Filo danzante y el vuelo libre
 
 ---

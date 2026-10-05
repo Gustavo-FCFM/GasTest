@@ -160,6 +160,25 @@ public class CharacterClassDefinition : ScriptableObject
 
     [Tooltip("Rotación (grados) del arma guardada, en el espacio del hueso del pecho.")]
     public Vector3 StowedOffHandRotationOffset;
+
+    [Tooltip("Tamaño del arma secundaria respecto del prefab. 1 = como viene. El Guardián lleva " +
+             "el escudo de siempre más grande (1.3) mientras no haya un modelo propio.")]
+    public float OffHandScale = 1f;
+
+    // ============================================================
+    // CRECER (el Avatar del Guardián)
+    //
+    // Mientras el personaje tenga GrowTag, el MODELO crece a GrowScale (se ve en todas
+    // las pantallas: los tags viajan solos). Solo el modelo: la cápsula que recibe los
+    // golpes y la cámara no cambian. El alcance de los golpes lo sube aparte el atributo
+    // MeleeRangeBonus.
+    // ============================================================
+
+    [Tooltip("Mientras tenga este tag, el modelo crece a Grow Scale. None = nunca.")]
+    public EGameplayTag GrowTag = EGameplayTag.None;
+
+    [Tooltip("Tamaño del modelo con el tag (1.5 = 50 % más grande).")]
+    public float GrowScale = 1.5f;
 }
 
 // Cuánto sube UN atributo por cada nivel que gana el personaje. La lista

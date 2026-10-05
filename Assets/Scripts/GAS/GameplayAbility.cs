@@ -400,6 +400,11 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // del mantenido en curso. Ver GA_ChargedAttack.AimCamera.
     public virtual bool AimsCameraWhileHeld => false;
 
+    // Multiplicador del alcance de los golpes cuerpo a cuerpo (conos y líneas): 1 +
+    // MeleeRangeBonus del dueño. El Avatar del Guardián lo sube al crecer.
+    protected float MeleeReach
+        => OwnerASC != null ? Mathf.Max(0.1f, 1f + OwnerASC.GetAttributeValue(EAttributeType.MeleeRangeBonus)) : 1f;
+
     // True si ESTA activación llegó a CommitAbility, o sea si de verdad se ejecutó.
     // Una habilidad que se planta sola —el Golpe mortal del Pícaro sin nadie a tiro—
     // sale de Activate() sin haber comprometido nada, y entonces tampoco tiene que

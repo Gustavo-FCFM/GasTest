@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 923ea9fbcde13614b8da2b7689d349ea, type: 3}
-  m_Name: GE_BannerBuff
+  m_Name: GE_Avatar
   m_EditorClassIdentifier: 
-  Duration: 2.1
+  Duration: 8
   Period: 0
   StackingPolicy: 0
   MaxStacks: 0
@@ -20,22 +20,22 @@ MonoBehaviour:
   EffectGroup: 0
   Priority: 0
   ReplacesGroup: 0
-  Icon: {fileID: 21300000, guid: f4f9181881f0f3b4c9c341d9316e2cd6, type: 3}
+  Icon: {fileID: 21300000, guid: 7fec4267fceb17b46b83d96d5fe5469c, type: 3}
   EffectType: 0
   Modifiers:
-  - Attribute: 8
-    Type: 1
-    Magnitude: 1.2
-    UseAttributeScaling: 0
-    SourceAttribute: 0
+  - Attribute: 16
+    Type: 0
+    Magnitude: 0
+    UseAttributeScaling: 1
+    SourceAttribute: 2
     AttributeCoefficient: 1
     UseTargetHealthScaling: 0
     TargetHealthMode: 0
     TargetHealthCoefficient: 0
     MinMagnitude: 0
-  - Attribute: 20
+  - Attribute: 23
     Type: 0
-    Magnitude: 0.1
+    Magnitude: 0.5
     UseAttributeScaling: 0
     SourceAttribute: 0
     AttributeCoefficient: 1
@@ -54,4 +54,4 @@ MonoBehaviour:
     Volume: 1
     PitchVariance: 0.08
     MaxDistance: 35
-  GrantedTags: 
+  GrantedTags: 250000003d000000

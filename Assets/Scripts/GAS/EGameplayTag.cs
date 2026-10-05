@@ -110,4 +110,7 @@ public enum EGameplayTag
 
     // --- COMANDANTE ---
     Status_CommandingVoice,    // Voz de mando activa: prende el anillo de velocidad del aura del Comandante (PaladinAuraPassive con RequiredOwnerTag). Lo da GE_CommandingVoice
+
+    // --- GUARDIÁN ---
+    Status_Avatar,             // Avatar activo: el modelo crece (CharacterClassDefinition.GrowTag) y sus golpes cuerpo a cuerpo llegan más lejos (MeleeRangeBonus). Lo da GE_Avatar junto con Status_Unstoppable
 }

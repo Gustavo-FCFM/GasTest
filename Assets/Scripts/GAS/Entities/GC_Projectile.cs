@@ -223,6 +223,15 @@ public class GC_Projectile : NetworkBehaviour
         {
             if (!barrier.IsRaised || !barrier.IsHostile(sourceASC)) return;
 
+            // PARRY QUE DEVUELVE (Guardián): el proyectil no se para, cambia de dueño y sale
+            // hacia donde apunta el dueño de la barrera. Una sola vez por proyectil.
+            if (barrier.ReflectsProjectilesNow && !_reflected)
+            {
+                float carried = barrier.NotifyProjectileBlocked(damageEffect, sourceASC, transform.position);
+                Reflect(barrier.Owner, barrier.AimDirection, carried);
+                return;
+            }
+
             // Le pasamos el efecto de daño (no un número) para que la barrera pueda
             // reportar cuánto daño evitó de verdad — ver NotifyProjectileBlocked.
             barrier.NotifyProjectileBlocked(damageEffect, sourceASC, transform.position);
@@ -255,7 +264,7 @@ public class GC_Projectile : NetworkBehaviour
                     // El PRIMER enemigo de este proyectil recibe además los efectos de
                     // primer impacto (el aturdido del Clérigo del Orden). Ver
                     // GA_ProjectileShoot.FirstHitEffects.
-                    if (enemiesHit.Count == 0 && sourceAbility is GA_ProjectileShoot shooter)
+                    if (enemiesHit.Count == 0 && !_reflected && sourceAbility is GA_ProjectileShoot shooter)
                         shooter.ApplyFirstHitEffects(targetASC);
 
                     if (damageEffect != null) targetASC.ApplyGameplayEffect(damageEffect, sourceASC);
@@ -296,6 +305,64 @@ public class GC_Projectile : NetworkBehaviour
             // Si llegamos aquí, no tiene ASC y no es trigger.
             DespawnSelf();
         }
+    }
+
+    // =========================================================
+    // DEVUELTO POR UN PARRY (escudo del Guardián)
+    // =========================================================
+
+    private void OnDestroy()
+    {
+        if (_carriedDamage != null) Destroy(_carriedDamage);
+    }
+
+    // True si un parry ya lo devolvió: no se vuelve a devolver, y lo del primer impacto
+    // (el aturdido del Orden) era de su lanzador original, no viaja con él.
+    private bool _reflected;
+
+    // Cambia de dueño y de dirección, en el servidor (el vuelo lo simula él y el
+    // NetworkTransform lo lleva a los demás). Conserva la velocidad y sus efectos extra:
+    // ahora dañan al equipo del lanzador original. Lo que cura a aliados (la estela del
+    // Castigo divino) se descarta: curaría a los del Guardián con la magia del Paladín.
+    //
+    // EL DAÑO ES EL QUE TRAÍA ('carriedDamage', calculado con los stats del que lo tiró):
+    // con el efecto original, el daño se recalcularía con los stats del nuevo dueño, y un
+    // rayo mágico devuelto por un Guardián (sin daño mágico) haría 1.
+    private GameplayEffect _carriedDamage;
+
+    public void Reflect(AbilitySystemComponent newSource, Vector3 direction, float carriedDamage)
+    {
+        if (!IsServerInitialized || newSource == null) return;
+
+        _reflected      = true;
+        sourceASC       = newSource;
+        ultChargeAmount = 0f;
+        allyEffects     = null;
+        enemiesHit.Clear();
+        alliesHit.Clear();
+
+        if (carriedDamage > 0f)
+        {
+            _carriedDamage = ScriptableObject.CreateInstance<GameplayEffect>();
+            _carriedDamage.name       = "GE_ReflectedProjectile(runtime)";
+            _carriedDamage.Duration   = 0f;
+            _carriedDamage.EffectType = GameplayEffect.EEffectType.Hidden;
+            _carriedDamage.Modifiers  = new List<Modifier>
+            {
+                new Modifier { Attribute = EAttributeType.Health, Type = Modifier.EModificationType.Add,
+                               Magnitude = -carriedDamage },
+            };
+            damageEffect = _carriedDamage;
+        }
+
+        Vector3 dir = direction.sqrMagnitude > 0.0001f ? direction.normalized : -transform.forward;
+
+        Rigidbody rb = GetComponent<Rigidbody>();
+        float speed = rb != null ? Mathf.Max(rb.linearVelocity.magnitude, 10f) : 10f;
+
+        // Un poco hacia afuera, para que no siga adentro de la barrera que lo devolvió.
+        transform.SetPositionAndRotation(transform.position + dir * 0.5f, Quaternion.LookRotation(dir));
+        if (rb != null) rb.linearVelocity = dir * speed;
     }
 
     // Reproduce el VFX de impacto en TODOS los peers. Un Instantiate() local acá
