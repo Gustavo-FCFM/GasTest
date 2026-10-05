@@ -77,6 +77,23 @@ public class GA_ChargedAttack : GameplayAbility, IHoldAbility
         => stepIndex >= 0 && stepIndex < Stages.Count && Stages[stepIndex].Ability != null
             ? Stages[stepIndex].Ability.AnimationClip : null;
 
+    // Para la barra de carga (UI_ChargeBar): dónde empieza cada etapa y cuándo se suelta
+    // sola. Sin tope (MaxChargeTime en 0), la barra termina un poco después de la última.
+    public override bool GetChargeStages(List<float> stageTimes, out float maxTime)
+    {
+        stageTimes.Clear();
+        float last = 0f;
+        foreach (ChargeStage stage in Stages)
+        {
+            if (stage.Ability == null) continue;
+            stageTimes.Add(stage.MinChargeTime);
+            last = Mathf.Max(last, stage.MinChargeTime);
+        }
+
+        maxTime = MaxChargeTime > 0f ? MaxChargeTime : last + 0.5f;
+        return stageTimes.Count > 1 && maxTime > 0f;
+    }
+
     // =========================================================
     // CARGAR
     // =========================================================

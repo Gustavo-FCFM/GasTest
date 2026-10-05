@@ -444,6 +444,11 @@ public class PlayerController : NetworkBehaviour
     // True mientras el dueño sostiene una habilidad de mantener.
     public bool IsHoldingAbility => _holdAbility != null;
 
+    // Lo que sostiene y desde cuándo (Time.time al apretar), para la barra de carga
+    // (UI_ChargeBar). Se cuenta en el dueño: el servidor arranca casi a la vez.
+    public GameplayAbility HeldAbility => _holdAbility;
+    public float HoldStartedAt { get; private set; }
+
     // True mientras se mantiene apretada una habilidad que se apunta antes de
     // lanzarse (menú radial o zona en el suelo), o una de MANTENER. En ese estado
     // isAttacking está en true a propósito, pero HAY que seguir leyendo el input
@@ -1156,6 +1161,7 @@ public class PlayerController : NetworkBehaviour
             _attackStartTime = Time.time;
             _holdAbility     = ability;
             _holdSlot        = slot;
+            HoldStartedAt    = Time.time;
 
             // Predicción local del "levantar", mismo criterio que el camino normal:
             // solo en cliente remoto (en el host la dispara el Activate del servidor).

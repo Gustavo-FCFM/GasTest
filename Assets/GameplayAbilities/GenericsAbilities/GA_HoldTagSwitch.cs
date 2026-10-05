@@ -86,6 +86,13 @@ public class GA_HoldTagSwitch : GA_TagSwitch, IHoldAbility
     // La cámara de apuntar, si la variante la pide (en ofensiva, apuntar la lanza).
     public override bool AimsCameraWhileHeld => ActiveHold is GameplayAbility held && held.AimsCameraWhileHeld;
 
+    // La barra de carga es la de la variante (en ofensiva, el ataque cargado).
+    public override bool GetChargeStages(System.Collections.Generic.List<float> stageTimes, out float maxTime)
+    {
+        maxTime = 0f;
+        return ActiveHold is GameplayAbility held && held.GetChargeStages(stageTimes, out maxTime);
+    }
+
     // Al soltar, la variante muestra lo suyo en el dueño (el lanzamiento de la lanza).
     public override void PredictOwnerReleaseVisuals(PlayerController pc)
     {

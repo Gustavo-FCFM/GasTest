@@ -400,6 +400,15 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // del mantenido en curso. Ver GA_ChargedAttack.AimCamera.
     public virtual bool AimsCameraWhileHeld => false;
 
+    // Las etapas de una carga, para la barra de carga del dueño (UI_ChargeBar): en
+    // stageTimes, los segundos en que empieza cada etapa; en maxTime, cuándo se suelta
+    // sola. false = esta habilidad no tiene etapas (no se dibuja barra).
+    public virtual bool GetChargeStages(List<float> stageTimes, out float maxTime)
+    {
+        maxTime = 0f;
+        return false;
+    }
+
     // Multiplicador del alcance de los golpes cuerpo a cuerpo (conos y líneas): 1 +
     // MeleeRangeBonus del dueño. El Avatar del Guardián lo sube al crecer.
     protected float MeleeReach
