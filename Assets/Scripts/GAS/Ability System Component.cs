@@ -497,6 +497,10 @@ public class AbilitySystemComponent : MonoBehaviour
     {
         if (effect == null) return;
 
+        // Repeler / atraer: pasa en el instante de aplicarse, aparte de lo que haga el
+        // efecto con sus modificadores (ver TryApplyKnockback).
+        if (effect.KnockbackDistance > 0f) TryApplyKnockback(effect, source);
+
         // Inmunidad a debuffs (Imparable del Pirata): mientras Status_Unstoppable esté
         // activo, los efectos marcados como Debuff CON DURACIÓN (CC, DoT) no entran. El
         // daño instantáneo (Duration 0) sí — no queremos hacerlo invulnerable, solo a CC.
@@ -622,6 +626,56 @@ public class AbilitySystemComponent : MonoBehaviour
 
             OnActiveEffectAddedCallback?.Invoke(effect, finalDuration);
         }
+    }
+
+    // =========================================================
+    // REPELER / ATRAER (GameplayEffect.KnockbackDistance)
+    // =========================================================
+
+    // Mueve a ESTE personaje al recibir un efecto con desplazamiento. Es control: un
+    // Imparable no se mueve y la Resistencia al control recorta la distancia (con el mismo
+    // tope que la duración de un CC). El escudo NO lo frena: el escudo mitiga daño, no
+    // control. Lo ejecuta NetworkAbilitySystemComponent.ServerApplyKnockback (el dueño si
+    // es un jugador, el servidor si es un bot o un NPC).
+    private void TryApplyKnockback(GameplayEffect effect, object source)
+    {
+        AbilitySystemComponent sourceASC = source as AbilitySystemComponent;
+        if (sourceASC == null || sourceASC == this) return;
+        if (HasTag(EGameplayTag.State_Dead) || HasTag(EGameplayTag.Status_Unstoppable)) return;
+
+        NetworkAbilitySystemComponent netAsc = GetComponent<NetworkAbilitySystemComponent>();
+        if (netAsc == null || !netAsc.IsServerInitialized) return;
+
+        float distance   = effect.KnockbackDistance;
+        float resistance = Mathf.Min(GetAttributeValue(EAttributeType.CCResistance), MaxCCResistance);
+        distance *= 1f - resistance;
+
+        Vector3 from = sourceASC.transform.position;
+        Vector3 to   = transform.position;
+        Vector3 dir;
+        switch (effect.KnockbackDirection)
+        {
+            case GameplayEffect.EKnockbackDirection.TowardSource:
+                dir = from - to;
+                // Se detiene antes de llegar: nunca lo atraviesa ni lo pasa de largo.
+                float gap = new Vector3(dir.x, 0f, dir.z).magnitude - effect.PullStopDistance;
+                distance = Mathf.Min(distance, Mathf.Max(0f, gap));
+                break;
+            case GameplayEffect.EKnockbackDirection.SourceForward:
+                dir = sourceASC.transform.forward;
+                break;
+            default:
+                dir = to - from;
+                // Encimados: lo manda hacia donde mira quien empuja.
+                if (new Vector3(dir.x, 0f, dir.z).sqrMagnitude < 0.01f) dir = sourceASC.transform.forward;
+                break;
+        }
+
+        dir.y = 0f;
+        if (dir.sqrMagnitude < 0.0001f || distance < 0.05f) return;
+
+        netAsc.ServerApplyKnockback(dir.normalized * distance, Mathf.Max(0.05f, effect.KnockbackDuration),
+                                    effect.KnockbackUpVelocity);
     }
 
     // =========================================================

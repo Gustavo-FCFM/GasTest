@@ -22,6 +22,14 @@ public class GameplayEffect : ScriptableObject
         Override  // El nuevo reemplaza al viejo (ej: un buff que cambia de nivel)
     }
 
+    // Hacia dónde mueve el desplazamiento de este efecto (ver KnockbackDistance).
+    public enum EKnockbackDirection
+    {
+        AwayFromSource,  // Repeler: lejos de quien lo aplicó (el dash del Monje)
+        TowardSource,    // Atraer: hacia quien lo aplicó (un gancho); frena a PullStopDistance
+        SourceForward    // Hacia donde mira quien lo aplicó (una patada en línea)
+    }
+
     // Si es Buff/Debuff/Hidden — controla si aparece en la barra de
     // efectos activos y de qué color (ver UI_EffectSlot).
     public enum EEffectType
@@ -115,6 +123,25 @@ public class GameplayEffect : ScriptableObject
             return false;
         }
     }
+
+    [Header("Desplazamiento (Repeler / Atraer)")]
+    [Tooltip("Metros que mueve al objetivo en el instante en que recibe el efecto. 0 = no lo " +
+             "mueve. Es CONTROL: no le hace nada a un Imparable (Status_Unstoppable) y la " +
+             "Resistencia al control recorta la distancia. El escudo no lo frena (el escudo solo " +
+             "mitiga daño). Solo pasa al APLICARSE, no en cada tick.")]
+    public float KnockbackDistance = 0f;
+
+    [Tooltip("Repeler (lejos de quien lo aplicó), atraer (hacia él) o hacia donde mira quien lo aplicó.")]
+    public EKnockbackDirection KnockbackDirection = EKnockbackDirection.AwayFromSource;
+
+    [Tooltip("Segundos que tarda el desplazamiento. Arranca rápido y frena al final.")]
+    public float KnockbackDuration = 0.3f;
+
+    [Tooltip("Velocidad hacia arriba al empujar (lo levanta un poco del piso). 0 = a ras del piso.")]
+    public float KnockbackUpVelocity = 0f;
+
+    [Tooltip("Solo al ATRAER: a cuántos metros de quien lo aplicó se detiene, para que no lo atraviese.")]
+    public float PullStopDistance = 1.5f;
 
     [Header("VFX en el Objetivo")]
     [Tooltip("VFX que aparece sobre QUIEN RECIBE este efecto y vive lo que viva el efecto. " +

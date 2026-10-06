@@ -1699,6 +1699,62 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     }
 
     // =========================================================
+    // REPELER / ATRAER — lo pide AbilitySystemComponent.TryApplyKnockback al recibir un
+    // efecto con KnockbackDistance. displacement es el recorrido horizontal entero.
+    //
+    // Mismo reparto que el dash: a un jugador lo mueve SU cliente (TargetRpc, el transform
+    // es suyo); a un bot, su cerebro sobre el NavMesh; a un NPC, el servidor acá mismo.
+    // =========================================================
+
+    [Server]
+    public void ServerApplyKnockback(Vector3 displacement, float duration, float upVelocity)
+    {
+        if (HasOwnerConnection())
+        {
+            TargetExecuteKnockback(Owner, displacement, duration, upVelocity);
+            return;
+        }
+
+        BotController brain = GetComponent<BotController>();
+        if (brain != null)
+        {
+            brain.ServerDash(displacement / duration, duration, false);
+            return;
+        }
+
+        StartCoroutine(ServerPushRoutine(displacement, duration));
+    }
+
+    [TargetRpc]
+    private void TargetExecuteKnockback(NetworkConnection conn, Vector3 displacement, float duration, float upVelocity)
+    {
+        PlayerController pc = GetComponent<PlayerController>();
+        if (pc != null) pc.ApplyKnockback(displacement, duration, upVelocity);
+    }
+
+    // Un NPC: el servidor es su autoridad. Con NavMeshAgent se mueve con agent.Move, que
+    // no lo saca del NavMesh (no lo mete en una pared ni lo tira del mapa); sin agente, el
+    // transform directo. Arranca rápido y frena al final, igual que en un jugador.
+    private IEnumerator ServerPushRoutine(Vector3 displacement, float duration)
+    {
+        UnityEngine.AI.NavMeshAgent agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            float before = PlayerController.KnockbackEase(elapsed / duration);
+            elapsed += Time.deltaTime;
+            float after  = PlayerController.KnockbackEase(Mathf.Min(1f, elapsed / duration));
+
+            Vector3 step = displacement * (after - before);
+            if (agent != null && agent.enabled && agent.isOnNavMesh) agent.Move(step);
+            else                                                      transform.position += step;
+
+            yield return null;
+        }
+    }
+
+    // =========================================================
     // DASH (GA_Dash / Dash siniestro) — impulso rápido con inercia.
     //
     // El daño a lo largo del trayecto lo resuelve el servidor al activar (ver

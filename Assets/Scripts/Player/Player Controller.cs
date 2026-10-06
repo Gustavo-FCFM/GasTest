@@ -374,6 +374,15 @@ public class PlayerController : NetworkBehaviour
     private Vector3 _dashVelocity;
     private bool    _dashActive;
 
+    // Repelido / atraído (GameplayEffect.KnockbackDistance): un recorrido horizontal que
+    // NO depende del input y corre aunque esté aturdido o enraizado — es control, lo
+    // mueve quien empuja. Ver ApplyKnockback / TickKnockback.
+    private bool    _knockbackActive;
+    private Vector3 _knockbackDisplacement;
+    private float   _knockbackDuration;
+    private float   _knockbackElapsed;
+    private float   _knockbackProgress;
+
     // Resto de velocidad que deja un dash al TERMINAR (ver ClearDashVelocity). No es
     // lo mismo que _abilityVelocity: acá el jugador conserva el control normal —gira,
     // frena y SALTA— y esto solo se suma a su movimiento mientras se disipa. Es lo que
@@ -702,6 +711,16 @@ public class PlayerController : NetworkBehaviour
             return;
         }
 
+        // Repelido / atraído: el empuje manda sobre el input, aunque esté aturdido o
+        // enraizado. Las habilidades siguen leyéndose (si no está aturdido) para no
+        // perderse el soltar de un mantenido, como el escudo.
+        if (TickKnockback())
+        {
+            if (!ASC.HasTag(EGameplayTag.State_Stunned)) HandleAbilityInput();
+            UpdateAnimations();
+            return;
+        }
+
         if (ASC.HasTag(EGameplayTag.State_Stunned)) return;
 
         HandleMovementInput();
@@ -727,6 +746,7 @@ public class PlayerController : NetworkBehaviour
         if (characterController == null || !characterController.enabled) return;
 
         _inertiaVelocity = Vector3.zero;
+        _knockbackActive = false;
 
         if (characterController.isGrounded && verticalVelocity < 0) verticalVelocity = -2f;
         else                                                        verticalVelocity += gravity * Time.deltaTime;
@@ -959,6 +979,53 @@ public class PlayerController : NetworkBehaviour
         verticalVelocity = leftover.y;
     }
 
+    // Repeler / atraer: lo llama NetworkAbilitySystemComponent.TargetExecuteKnockback en
+    // el DUEÑO. displacement es el recorrido horizontal entero; upVelocity lo levanta un
+    // poco del piso. Pisa cualquier impulso que traía (dash, salto, inercia).
+    public void ApplyKnockback(Vector3 displacement, float duration, float upVelocity)
+    {
+        _knockbackDisplacement = new Vector3(displacement.x, 0f, displacement.z);
+        _knockbackDuration     = Mathf.Max(0.05f, duration);
+        _knockbackElapsed      = 0f;
+        _knockbackProgress     = 0f;
+        _knockbackActive       = true;
+
+        _inertiaVelocity = Vector3.zero;
+        _abilityVelocity = Vector3.zero;
+        _dashVelocity    = Vector3.zero;
+        if (upVelocity > 0f) verticalVelocity = upVelocity;
+    }
+
+    // Arranca rápido y frena al final (la fracción del recorrido hecha a la fracción t
+    // del tiempo). La comparte el empuje de los NPCs en el servidor.
+    public static float KnockbackEase(float t) => 1f - (1f - t) * (1f - t);
+
+    // Avanza el empuje un frame. Choca con las paredes (CharacterController) y sigue
+    // cayendo con gravedad. false = no hay empuje en curso.
+    private bool TickKnockback()
+    {
+        if (!_knockbackActive) return false;
+        if (characterController == null || !characterController.enabled)
+        {
+            _knockbackActive = false;
+            return false;
+        }
+
+        _knockbackElapsed += Time.deltaTime;
+        float t     = Mathf.Min(1f, _knockbackElapsed / _knockbackDuration);
+        float eased = KnockbackEase(t);
+        Vector3 step = _knockbackDisplacement * (eased - _knockbackProgress);
+        _knockbackProgress = eased;
+
+        if (characterController.isGrounded && verticalVelocity < 0) verticalVelocity = -2f;
+        verticalVelocity += gravity * Time.deltaTime;
+
+        characterController.Move(step + Vector3.up * verticalVelocity * Time.deltaTime);
+
+        if (t >= 1f) _knockbackActive = false;
+        return true;
+    }
+
     // Teletransporta instantáneamente a una posición (blink de Golpe mortal).
     // Desactiva el CharacterController un instante para mover el transform sin
     // que el propio CC lo bloquee, y orienta al personaje hacia faceDir. Debe
@@ -973,6 +1040,7 @@ public class PlayerController : NetworkBehaviour
         transform.position          = position;
         characterController.enabled = true;
         verticalVelocity            = 0f;
+        _knockbackActive            = false;
 
         faceDir.y = 0;
         if (faceDir.sqrMagnitude > 0.0001f)

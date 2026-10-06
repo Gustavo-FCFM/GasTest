@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 5 de octubre de 2026
+# Pendientes — actualizado el 6 de octubre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -1767,7 +1767,7 @@ Qué se reusa, en corto:
 ## Sistemas compartidos — hacerlos una vez
 
 - [x] **Desarmar** — Guerrero (Maestro de batalla), Clérigo (Zona de verdad). Hecho: `State_Disarmed` bloquea las acciones de arma (1 de octubre)
-- [ ] **Repeler** — Monje (Patada del viento), Explorador (trampa explosiva)
+- [x] **Repeler / atraer** — Monje (Patada del viento), Explorador (trampa explosiva). Hecho y probado (6 de octubre): sección "Desplazamiento" de cada GE (`KnockbackDistance`, dirección, duración, elevación, `PullStopDistance`). Es CC: el Imparable no se mueve, la resistencia al control recorta la distancia, el escudo no lo frena. Falta: que la trampa empuje desde ella y no desde el Explorador
 - [x] **Revelar invisibles** — Clérigo (Faro de esperanza), Explorador (Búho). Hecho: `State_AlwaysVisible`
 - [ ] **Vuelo libre** — Mago, quizá Muerte silenciosa del Shinobi
 - [ ] **Mascota con IA en red** — Explorador; sirve para futuros summons
