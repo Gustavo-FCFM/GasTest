@@ -1732,6 +1732,28 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         if (pc != null) pc.ApplyKnockback(displacement, duration, upVelocity);
     }
 
+    // =========================================================
+    // VUELO LIBRE (GA_Flight) — el vuelo dura lo que Status_Flying; esto solo le manda al
+    // DUEÑO los números del vuelo y el impulso de despegue (el transform es suyo). Un bot
+    // no vuela (GA_Flight.MovesThroughOwner).
+    // =========================================================
+
+    [Server]
+    public void ServerStartFlight(float launchSpeed, float speedMultiplier, float forwardBoost, float verticalSpeed,
+                                  float idleSink)
+    {
+        if (!HasOwnerConnection()) return;
+        TargetStartFlight(Owner, launchSpeed, speedMultiplier, forwardBoost, verticalSpeed, idleSink);
+    }
+
+    [TargetRpc]
+    private void TargetStartFlight(NetworkConnection conn, float launchSpeed, float speedMultiplier,
+                                   float forwardBoost, float verticalSpeed, float idleSink)
+    {
+        PlayerController pc = GetComponent<PlayerController>();
+        if (pc != null) pc.StartFlight(launchSpeed, speedMultiplier, forwardBoost, verticalSpeed, idleSink);
+    }
+
     // Un NPC: el servidor es su autoridad. Con NavMeshAgent se mueve con agent.Move, que
     // no lo saca del NavMesh (no lo mete en una pared ni lo tira del mapa); sin agente, el
     // transform directo. Arranca rápido y frena al final, igual que en un jugador.

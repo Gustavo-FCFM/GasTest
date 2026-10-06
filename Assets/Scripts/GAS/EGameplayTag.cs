@@ -113,4 +113,7 @@ public enum EGameplayTag
 
     // --- GUARDIÁN ---
     Status_Avatar,             // Avatar activo: el modelo crece (CharacterClassDefinition.GrowTag) y sus golpes cuerpo a cuerpo llegan más lejos (MeleeRangeBonus). Lo da GE_Avatar junto con Status_Unstoppable
+
+    // --- SISTEMAS COMPARTIDOS ---
+    Status_Flying,             // Vuelo libre: sin gravedad, se mueve en 3D hacia donde mira la cámara, Espacio sube y Ctrl baja; no aterriza mientras dure; el daño o un enraizado lo terminan. Lo da el GE del GA_Flight (ver PlayerController → VUELO LIBRE)
 }

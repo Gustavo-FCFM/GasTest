@@ -223,6 +223,10 @@ public class AbilitySystemComponent : MonoBehaviour
 
         GameplayTags[tag] = 1;
         OnTagAddedCallback?.Invoke(tag);
+
+        // Vuelo libre: enraizarlo lo baja (cae lento, ver PlayerController).
+        if (tag == EGameplayTag.State_Rooted && HasTag(EGameplayTag.Status_Flying))
+            RemoveEffectsWithTag(EGameplayTag.Status_Flying);
     }
 
     // Resta una fuente del tag. Solo lo quita (y notifica) cuando el conteo llega
@@ -1124,6 +1128,10 @@ public class AbilitySystemComponent : MonoBehaviour
         if (sourceASC != null && !ReferenceEquals(sourceASC, this))
         {
             if (damageEndured > 0f) OnDamageEndured?.Invoke(damageEndured);
+
+            // Vuelo libre: cualquier daño de otro lo baja (cae lento, ver PlayerController).
+            if (damageEndured > 0f && HasTag(EGameplayTag.Status_Flying))
+                RemoveEffectsWithTag(EGameplayTag.Status_Flying);
             if (healthHealed > 0f && !sourceASC.IsEnemyOf(this)) sourceASC.NotifyHealedAlly(this, healthHealed);
         }
         else if (ReferenceEquals(sourceASC, this) && healthHealed > 0f)

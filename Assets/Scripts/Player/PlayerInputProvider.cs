@@ -53,6 +53,13 @@ public class PlayerInputProvider : MonoBehaviour
     public InputAction Cheat           { get; private set; }
     public InputAction ChangeClass     { get; private set; }
 
+    // Bajar mientras se vuela (Ctrl / L3). Puede faltar si el asset todavía no tiene la
+    // acción "Descend": entonces DescendHeld lee el Ctrl izquierdo directo.
+    public InputAction Descend         { get; private set; }
+    public bool DescendHeld => Descend != null
+        ? Descend.IsPressed()
+        : Keyboard.current != null && Keyboard.current.leftCtrlKey.isPressed;
+
     // Acciones del mapa "UI" (para navegar menús con control sin chocar con las
     // de juego). Se leen solo cuando el jugador está en modo UI (ver SetUIMode).
     public InputAction Navigate { get; private set; }
@@ -113,6 +120,7 @@ public class PlayerInputProvider : MonoBehaviour
         Ability3        = _playerMap.FindAction("Ability3", true);
         Cheat           = _playerMap.FindAction("Cheat", true);
         ChangeClass     = _playerMap.FindAction("ChangeClass", true);
+        Descend         = _playerMap.FindAction("Descend", false);
 
         _uiMap   = _assetInstance.FindActionMap("UI", true);
         Navigate = _uiMap.FindAction("Navigate", true);

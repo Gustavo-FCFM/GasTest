@@ -58,6 +58,7 @@ marcados "Pospuesto".
 **Estado al 5 de octubre:** Clérigo completo y probado. Guerrero: kit base, Maestro de
 batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 9).
 **Guardián: hecho y probado ✅** (5 de octubre). **El Guerrero queda completo** (kit base y las 3 subclases).
+**6 de octubre:** barra de carga por etapas del ataque cargado (`UI_ChargeBar`), repeler / atraer y vuelo libre: hechos y probados. Queda la mascota con IA en red.
 
 1. **Clases nuevas — DECIDIDO (28 de septiembre): Clérigo + Guerrero completos**, en ese
    orden. Detalle y estimación en la sección 6.
@@ -1769,7 +1770,7 @@ Qué se reusa, en corto:
 - [x] **Desarmar** — Guerrero (Maestro de batalla), Clérigo (Zona de verdad). Hecho: `State_Disarmed` bloquea las acciones de arma (1 de octubre)
 - [x] **Repeler / atraer** — Monje (Patada del viento), Explorador (trampa explosiva). Hecho y probado (6 de octubre): sección "Desplazamiento" de cada GE (`KnockbackDistance`, dirección, duración, elevación, `PullStopDistance`). Es CC: el Imparable no se mueve, la resistencia al control recorta la distancia, el escudo no lo frena. Falta: que la trampa empuje desde ella y no desde el Explorador
 - [x] **Revelar invisibles** — Clérigo (Faro de esperanza), Explorador (Búho). Hecho: `State_AlwaysVisible`
-- [ ] **Vuelo libre** — Mago, quizá Muerte silenciosa del Shinobi
+- [x] **Vuelo libre** — Mago, quizá Muerte silenciosa del Shinobi. Hecho y probado (6 de octubre): `GA_Flight` (Create ▸ GAS ▸ Generics ▸ Flight) + un GE que dé `Status_Flying`. Despega con impulso; WASD en 3D hacia la cámara (×ForwardBoost solo hacia adelante), Espacio sube, **Ctrl baja (Ctrl ya no ataca; en control, L3)**; no aterriza; sin techo propio (el del mapa). Quieto en el aire cae despacio (`IdleSinkSpeed`). Daño de otro o enraizado lo terminan; al terminar en el aire, o aturdido, cae lento. Los bots no lo usan. Prueba: `GA_Flight` y `GE_Fly` quedaron en `GameplayAbilities/` (mover `GE_Fly` a `Effects/` desde Unity)
 - [ ] **Mascota con IA en red** — Explorador; sirve para futuros summons
 
 ## Para la demo: Clérigo + Guerrero (~4–4.5 semanas)
@@ -1785,7 +1786,7 @@ nuevo vive casi todo en las subclases). Contra: al llegar a nivel 3 no hay qué 
 
 - [x] Decidir: Clérigo + Guerrero completos (28 de septiembre). Clérigo: kit base hecho;
       Clérigo completo; Guerrero: kit base, Maestro de batalla, Comandante y Guardián probados (5 de octubre): Guerrero completo.
-- [ ] Antes del Mago: definir la extra de Filo danzante y el vuelo libre
+- [ ] Antes del Mago: definir la extra de Filo danzante (el vuelo libre ya está, 6 de octubre)
 
 ---
 

@@ -379,6 +379,23 @@ public class PlayerController : NetworkBehaviour
     private Vector3 _dashVelocity;
     private bool    _dashActive;
 
+    // VUELO LIBRE (Status_Flying, lo da el GE de un GA_Flight). Mientras esté el tag: sin
+    // gravedad, WASD mueve en 3D hacia donde mira la cámara (más rápido si solo va hacia
+    // adelante), Espacio sube y Ctrl baja, y no aterriza aunque toque el piso. Los números
+    // llegan del GA_Flight por StartFlight. Al terminar en el aire, o aturdido en pleno
+    // vuelo, cae lento (la gravedad de la caída de pluma, sin aleteos).
+    private float _flightSpeedMultiplier = 1.5f;
+    private float _flightForwardBoost    = 1.5f;
+    private float _flightVerticalSpeed   = 6f;
+    private float _flightIdleSink        = 1.5f;  // hasta cuánto cae (m/s) si no se mueve
+    private float _flightSinkNow;         // lo que está cayendo ahora por quedarse quieto
+    private float _flightLaunch;          // impulso de despegue que se disipa solo
+    private float _flightVerticalNow;     // velocidad vertical del vuelo, para el Animator
+    private bool  _wasFlying;
+    private bool  _flightFalling;         // terminó el vuelo en el aire: cae lento hasta el piso
+
+    private bool IsFlying => ASC != null && ASC.HasTag(EGameplayTag.Status_Flying);
+
     // Repelido / atraído (GameplayEffect.KnockbackDistance): un recorrido horizontal que
     // NO depende del input y corre aunque esté aturdido o enraizado — es control, lo
     // mueve quien empuja. Ver ApplyKnockback / TickKnockback.
@@ -716,6 +733,8 @@ public class PlayerController : NetworkBehaviour
             return;
         }
 
+        UpdateFlightState();
+
         // Repelido / atraído: el empuje corre aunque esté aturdido o enraizado; si no lo
         // está, conserva parte del control (knockbackSteerControl). Las habilidades siguen leyéndose (si no está aturdido) para no
         // perderse el soltar de un mantenido, como el escudo.
@@ -726,7 +745,11 @@ public class PlayerController : NetworkBehaviour
             return;
         }
 
-        if (ASC.HasTag(EGameplayTag.State_Stunned)) return;
+        if (ASC.HasTag(EGameplayTag.State_Stunned))
+        {
+            if (IsFlying || _flightFalling) SlowFall();
+            return;
+        }
 
         HandleMovementInput();
         HandleAbilityInput();
@@ -767,6 +790,9 @@ public class PlayerController : NetworkBehaviour
     {
         if (ASC.HasTag(EGameplayTag.State_Rooted))
         {
+            // Enraizado en pleno vuelo: queda quieto en el aire.
+            if (IsFlying) { verticalVelocity = 0f; _flightVerticalNow = 0f; return; }
+
             _inertiaVelocity  = Vector3.zero;
             verticalVelocity += gravity * Time.deltaTime;
             characterController.Move(Vector3.up * verticalVelocity * Time.deltaTime);
@@ -815,6 +841,42 @@ public class PlayerController : NetworkBehaviour
             return;
         }
 
+        // Vuelo libre (ver VUELO LIBRE): reemplaza al caminar, al salto y a la gravedad.
+        if (IsFlying)
+        {
+            Camera cam = MainCamera;
+            Vector3 dir = Vector3.zero;
+            if (cam != null)
+            {
+                Transform camT = cam.transform;
+                dir = camT.forward * moveInput.y + camT.right * moveInput.x;
+                if (dir.sqrMagnitude > 1f) dir.Normalize();
+            }
+
+            float flySpeed = baseSpeed * _flightSpeedMultiplier;
+            if (moveInput.y > 0.5f && Mathf.Abs(moveInput.x) < 0.3f) flySpeed *= _flightForwardBoost;
+
+            float climb = 0f;
+            if (_input.Jump.IsPressed()) climb += 1f;
+            if (_input.DescendHeld)      climb -= 1f;
+
+            // Quieto en el aire (sin WASD ni subir/bajar) va cayendo despacio, cada vez un poco
+            // más rápido hasta _flightIdleSink: para no caer hay que moverse. Moverse lo corta.
+            bool idle = dir.sqrMagnitude < 0.01f && Mathf.Approximately(climb, 0f);
+            _flightSinkNow = idle ? Mathf.MoveTowards(_flightSinkNow, _flightIdleSink, _flightIdleSink * Time.deltaTime) : 0f;
+
+            _flightLaunch *= Mathf.Exp(-3f * Time.deltaTime);
+            if (_flightLaunch < 0.05f) _flightLaunch = 0f;
+
+            Vector3 flyVelocity = dir * flySpeed + Vector3.up * (climb * _flightVerticalSpeed + _flightLaunch - _flightSinkNow);
+            _flightVerticalNow = flyVelocity.y;
+            verticalVelocity   = 0f;
+            _inertiaVelocity   = Vector3.zero;
+
+            characterController.Move(flyVelocity * Time.deltaTime);
+            return;
+        }
+
         // Inercia que dejó el último dash: se disipa sola y se SUMA al movimiento
         // normal, así que el jugador nunca pierde el control mientras se le va.
         if (_inertiaVelocity.sqrMagnitude > 0.01f)
@@ -847,9 +909,11 @@ public class PlayerController : NetworkBehaviour
             }
         }
 
-        verticalVelocity += gravity * (feathered ? featherFallGravityScale : 1f) * Time.deltaTime;
+        // Después de volar también cae lento (sin aleteos: eso es solo de la caída de pluma).
+        bool slowFall = feathered || _flightFalling;
+        verticalVelocity += gravity * (slowFall ? featherFallGravityScale : 1f) * Time.deltaTime;
 
-        if (feathered && featherFallMaxSpeed > 0f && verticalVelocity < -featherFallMaxSpeed)
+        if (slowFall && featherFallMaxSpeed > 0f && verticalVelocity < -featherFallMaxSpeed)
             verticalVelocity = -featherFallMaxSpeed;
 
         Vector3 finalMove = new Vector3(horizontal.x, 0, horizontal.z)
@@ -1033,13 +1097,66 @@ public class PlayerController : NetworkBehaviour
             if (!isAttacking || IsHoldingAbility) FaceCameraForward();
         }
 
-        if (characterController.isGrounded && verticalVelocity < 0) verticalVelocity = -2f;
-        verticalVelocity += gravity * Time.deltaTime;
+        if (IsFlying) verticalVelocity = 0f;   // volando, el empuje no lo hace caer
+        else
+        {
+            if (characterController.isGrounded && verticalVelocity < 0) verticalVelocity = -2f;
+            verticalVelocity += gravity * Time.deltaTime;
+        }
 
         characterController.Move(step + (steer + Vector3.up * verticalVelocity) * Time.deltaTime);
 
         if (t >= 1f) _knockbackActive = false;
         return true;
+    }
+
+    // =========================================================
+    // VUELO LIBRE
+    // =========================================================
+
+    // Lo llama NetworkAbilitySystemComponent.TargetStartFlight en el DUEÑO al activar un
+    // GA_Flight: los números de ese vuelo y el impulso de despegue. El vuelo en sí dura lo
+    // que dure Status_Flying.
+    public void StartFlight(float launchSpeed, float speedMultiplier, float forwardBoost, float verticalSpeed,
+                            float idleSink)
+    {
+        _flightLaunch          = Mathf.Max(0f, launchSpeed);
+        _flightSpeedMultiplier = Mathf.Max(0.1f, speedMultiplier);
+        _flightForwardBoost    = Mathf.Max(1f, forwardBoost);
+        _flightVerticalSpeed   = Mathf.Max(0f, verticalSpeed);
+        _flightIdleSink        = Mathf.Max(0f, idleSink);
+        _flightSinkNow         = 0f;
+        _flightFalling         = false;
+    }
+
+    // Detecta el fin del vuelo: si se acaba en el aire, cae lento hasta tocar el piso.
+    private void UpdateFlightState()
+    {
+        bool flying = IsFlying;
+        if (_wasFlying && !flying)
+        {
+            _flightFalling = true;
+            _flightLaunch  = 0f;
+            verticalVelocity = 0f;
+        }
+        _wasFlying = flying;
+
+        if (_flightFalling && !flying && characterController.isGrounded) _flightFalling = false;
+    }
+
+    // Aturdido en pleno vuelo (o cayendo después de volar): no se queda colgado en el
+    // aire, cae lento. El vuelo sigue cuando se le pasa el aturdido.
+    private void SlowFall()
+    {
+        if (characterController == null || !characterController.enabled) return;
+
+        if (characterController.isGrounded && verticalVelocity < 0) verticalVelocity = -2f;
+        verticalVelocity += gravity * featherFallGravityScale * Time.deltaTime;
+        if (featherFallMaxSpeed > 0f && verticalVelocity < -featherFallMaxSpeed)
+            verticalVelocity = -featherFallMaxSpeed;
+
+        _flightVerticalNow = verticalVelocity;
+        characterController.Move(Vector3.up * verticalVelocity * Time.deltaTime);
     }
 
     // Teletransporta instantáneamente a una posición (blink de Golpe mortal).
@@ -1057,6 +1174,7 @@ public class PlayerController : NetworkBehaviour
         characterController.enabled = true;
         verticalVelocity            = 0f;
         _knockbackActive            = false;
+        _flightFalling              = false;
 
         faceDir.y = 0;
         if (faceDir.sqrMagnitude > 0.0001f)
@@ -2215,7 +2333,8 @@ public class PlayerController : NetworkBehaviour
         //
         // El latch se suelta en cuanto isGrounded da false una vez; de ahí en más manda
         // la física como siempre, así que el aterrizaje se detecta normal.
-        bool airborne = !characterController.isGrounded;
+        // Volando nunca "aterriza": aunque roce el piso sigue en la pose del aire.
+        bool airborne = !characterController.isGrounded || IsFlying;
         if (_leapTakeoffPending)
         {
             // Se suelta al despegar, o por TIEMPO: si el impulso nunca llega (RPC perdido,
@@ -2238,7 +2357,7 @@ public class PlayerController : NetworkBehaviour
         // de verdad esta moviendo al personaje en cada momento.
         if (!string.IsNullOrEmpty(VerticalSpeedParam))
         {
-            float vertical = _dashActive ? _dashVelocity.y : verticalVelocity;
+            float vertical = IsFlying ? _flightVerticalNow : _dashActive ? _dashVelocity.y : verticalVelocity;
             characterAnimator.SetFloat(VerticalSpeedParam, vertical);
         }
 
@@ -2248,7 +2367,7 @@ public class PlayerController : NetworkBehaviour
 
         // Y que lo vean los demás (ver "LOCOMOCIÓN EN RED").
         BroadcastLocomotion(speed, localVel.x, localVel.z, airborne,
-                            _dashActive ? _dashVelocity.y : verticalVelocity);
+                            IsFlying ? _flightVerticalNow : _dashActive ? _dashVelocity.y : verticalVelocity);
     }
 
     // =========================================================

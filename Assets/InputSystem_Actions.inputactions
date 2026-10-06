@@ -34,6 +34,15 @@
                     "initialStateCheck": false
                 },
                 {
+                    "name": "Descend",
+                    "type": "Button",
+                    "id": "d35c0e2d-1a7b-4f3e-9c41-5d2f8e6a0b17",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "PrimaryAttack",
                     "type": "Button",
                     "id": "a1000001-0000-4000-8000-000000000001",
@@ -279,7 +288,18 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard&Mouse",
-                    "action": "PrimaryAttack",
+                    "action": "Descend",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "b00000f1-0000-4000-8000-0000000000f1",
+                    "path": "<Gamepad>/leftStickPress",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Gamepad",
+                    "action": "Descend",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
