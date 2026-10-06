@@ -10,7 +10,13 @@ using UnityEngine;
 //
 // Este switch ES de mantener (IHoldAbility) y le pasa todo a la variante activa:
 // si sostiene, el soltar (EndHold), los clips de la animación de mantener y el
-// cooldown que muestra el HUD. Todas sus variantes tienen que ser de mantener.
+// cooldown que muestra el HUD.
+//
+// UNA VARIANTE PUEDE NO SER DE MANTENER (desde el 6 de octubre de 2026): el Apuntado del
+// Monje es el bloqueo (mantener), pero con Ki es la Defensa paciente, un buff de un toque.
+// UsesHoldInput pregunta a la variante que se dispararía AHORA, así el botón se comporta
+// como ella. Y ConsumeTag de la variante funciona igual que en el GA_TagSwitch (el Ki se
+// gasta al usarlo).
 //
 // DIFERENCIAS CON EL GA_TagSwitch:
 //   · Cada variante paga SU costo y SU cooldown (StripVariantCooldowns apagado): el
@@ -54,23 +60,42 @@ public class GA_HoldTagSwitch : GA_TagSwitch, IHoldAbility
         if (!IsServer) return;
         if (!CanActivate()) return;
 
-        GameplayAbility instance = CurrentInstance();
+        GameplayAbility template = ResolveTemplate(out bool consumeTag, out EGameplayTag usedTag);
+        GameplayAbility instance = template != null ? GetOrCreateInstance(template) : null;
         if (instance == null)
         {
             EndAbility();
             return;
         }
 
-        _lastResolved = instance;
+        _lastResolved      = instance;
+        _lastResolvedFrame = Time.frameCount;
         instance.AnimationSpeedOverride = AnimationSpeedOverride;
         instance.Activate();   // la variante cobra lo suyo y arranca el mantenido
+
+        // La de un solo uso (el Ki) se gasta al usarla.
+        if (consumeTag) ConsumeTagFromOwner(usedTag);
     }
 
     // =========================================================
     // IHoldAbility: todo a la variante
     // =========================================================
 
-    public bool UsesHoldInput => true;
+    // Es de mantener si lo es la variante: la que acaba de correr (en el mismo frame, para
+    // la capa de red, que pregunta DESPUÉS de activar y con el Ki ya gastado), o si no la
+    // que se dispararía ahora según los tags.
+    [System.NonSerialized] private int _lastResolvedFrame = -1;
+
+    public bool UsesHoldInput
+    {
+        get
+        {
+            if (IsHolding) return true;
+            if (_lastResolved != null && _lastResolvedFrame == Time.frameCount) return HoldInput.IsHold(_lastResolved);
+            GameplayAbility template = ResolveTemplate(out _, out _);
+            return template == null || HoldInput.IsHold(template);
+        }
+    }
     public bool IsHolding => _lastResolved is IHoldAbility held && held.IsHolding;
 
     public void EndHold()

@@ -98,6 +98,9 @@ public class GA_FinalBlow : GameplayAbility, IChanneledAbility
         if (ChargeLoopAnimation != null && netAscChannel != null)
             netAscChannel.ServerPlayChannelAnimation(this, true);
 
+        // La barra de carga del dueño: se llena hasta que sale el golpe (roja si lo cortan).
+        ShowCastBar(ChargeTime, channel: false);
+
         float timer = 0f;
         bool  wasInterrupted = false;
 
@@ -122,6 +125,8 @@ public class GA_FinalBlow : GameplayAbility, IChanneledAbility
         // en alto para siempre. Cuando sale bien, el mandoble pisa la salida enseguida.
         if (ChargeLoopAnimation != null && netAscChannel != null)
             netAscChannel.ServerPlayChannelAnimation(this, false);
+
+        HideCastBar(wasInterrupted);
 
         if (wasInterrupted)
         {

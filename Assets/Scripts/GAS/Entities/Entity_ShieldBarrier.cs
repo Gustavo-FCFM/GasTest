@@ -108,6 +108,15 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
     private static bool s_reflecting;
     private GameplayEffect _reflectEffect;
 
+    [Header("Cápsula (Defensa paciente del Monje)")]
+    [Tooltip("La barrera frena los golpes que le llegan al DUEÑO desde CUALQUIER lado, sin " +
+             "mirar la geometría (una cápsula a su alrededor). No cubre aliados ni sigue la mira. " +
+             "El BoxCollider igual hace falta: que lo envuelva entero, para parar los proyectiles.")]
+    public bool Omnidirectional = false;
+
+    [Tooltip("Solo con Omnidirectional: a qué distancia del pecho del dueño sale el destello del golpe.")]
+    public float OmniFlashRadius = 0.8f;
+
     [Header("Inclinación con la Mira")]
     [Tooltip("La barrera sube y baja con la mira del jugador (mirando al cielo, el escudo apunta " +
              "arriba). Sigue la misma inclinación que el torso (UpperBodyAim), así que se ve igual " +
@@ -233,7 +242,7 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
         bool shouldBeRaised = _ownerASC.HasTag(ActiveTag);
         if (shouldBeRaised != _raised) SetRaised(shouldBeRaised);
 
-        if (!_raised || !ProtectAllies) return;
+        if (!_raised || !ProtectAllies || Omnidirectional) return;
 
         _scanTimer -= Time.deltaTime;
         if (_scanTimer > 0f) return;
@@ -247,7 +256,7 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
     // cuerpo y esto solo agrega el sube-y-baja.
     private void LateUpdate()
     {
-        if (!FollowAimPitch || _aim == null) return;
+        if (!FollowAimPitch || Omnidirectional || _aim == null) return;
 
         Quaternion pitch = Quaternion.Euler(_aim.CurrentPitch * PitchFactor, 0f, 0f);
         Vector3    pivot = new Vector3(0f, PitchPivotHeight, 0f);
@@ -358,8 +367,15 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
         float incoming = -ctx.Magnitude;
         if (incoming <= 0f) return;
 
-        // ¿La barrera se interpone de verdad entre el atacante y la víctima?
-        if (!Blocks(ctx.Source.transform.position, ctx.Target.transform.position, out Vector3 hitPoint)) return;
+        // ¿La barrera se interpone de verdad entre el atacante y la víctima? La cápsula no
+        // pregunta: cubre al dueño (y solo a él) desde cualquier lado.
+        Vector3 hitPoint;
+        if (Omnidirectional)
+        {
+            if (!ReferenceEquals(ctx.Target, _ownerASC)) return;
+            hitPoint = OmniHitPoint(ctx.Source.transform.position);
+        }
+        else if (!Blocks(ctx.Source.transform.position, ctx.Target.transform.position, out hitPoint)) return;
 
         // PARRY: en la ventana de recién levantado, el golpe se frena ENTERO y no gasta
         // energía. Si el atacante está cerca (cuerpo a cuerpo), además queda aturdido; a
@@ -504,6 +520,16 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
         OnFlash?.Invoke(hitPoint);
     }
 
+    // Cápsula: el destello sale del lado del atacante, a OmniFlashRadius del pecho.
+    private Vector3 OmniHitPoint(Vector3 attackerPos)
+    {
+        Vector3 chest = _ownerASC.transform.position + Vector3.up * AimHeight;
+        Vector3 dir   = attackerPos + Vector3.up * AimHeight - chest;
+        dir.y = 0f;
+        if (dir.sqrMagnitude < 0.0001f) dir = _ownerASC.transform.forward;
+        return chest + dir.normalized * OmniFlashRadius;
+    }
+
     // True si el segmento atacante → víctima atraviesa el volumen de la barrera.
     //
     // Se mide a la altura del pecho (AimHeight): a ras del piso el segmento pasaría
@@ -545,6 +571,21 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
 
         hitPoint = hit.point;
         return true;
+    }
+
+    // La barrera de MANTENER de un personaje (la que levanta GA_ShieldBlock): la primera que
+    // no sea cápsula. El Monje tiene dos —el bloqueo y la de Defensa paciente— y el escudo
+    // se tiene que enganchar a la suya.
+    public static Entity_ShieldBarrier FindHeld(Component owner)
+    {
+        if (owner == null) return null;
+        Entity_ShieldBarrier first = null;
+        foreach (Entity_ShieldBarrier b in owner.GetComponentsInChildren<Entity_ShieldBarrier>(true))
+        {
+            if (!b.Omnidirectional) return b;
+            if (first == null) first = b;
+        }
+        return first;
     }
 
     // True si esta barrera está levantada. Lo consulta GC_Projectile al chocar.

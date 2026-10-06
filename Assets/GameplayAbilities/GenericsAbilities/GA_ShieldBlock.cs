@@ -165,7 +165,7 @@ public class GA_ShieldBlock : GameplayAbility, IHoldAbility
         UnsubscribeFromBarrier();
 
         _subscribedBarrier = OwnerASC != null
-            ? OwnerASC.GetComponentInChildren<Entity_ShieldBarrier>(true) : null;
+            ? Entity_ShieldBarrier.FindHeld(OwnerASC) : null;
 
         if (_subscribedBarrier == null)
         {

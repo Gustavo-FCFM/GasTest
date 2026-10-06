@@ -58,7 +58,7 @@ marcados "Pospuesto".
 **Estado al 5 de octubre:** Clérigo completo y probado. Guerrero: kit base, Maestro de
 batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 9).
 **Guardián: hecho y probado ✅** (5 de octubre). **El Guerrero queda completo** (kit base y las 3 subclases).
-**6 de octubre:** barra de carga por etapas del ataque cargado (`UI_ChargeBar`), repeler / atraer y vuelo libre: hechos y probados. Queda la mascota con IA en red.
+**6 de octubre:** barra de carga por etapas del ataque cargado (`UI_ChargeBar`), repeler / atraer y vuelo libre: hechos y probados. **Monje: el código del kit base está (falta correr `MercMonkSetup` y probar) y la barra de canalizar (`UI_CastBar`).** Queda la mascota con IA en red.
 
 1. **Clases nuevas — DECIDIDO (28 de septiembre): Clérigo + Guerrero completos**, en ese
    orden. Detalle y estimación en la sección 6.
@@ -456,6 +456,53 @@ batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 
          curación); la Venganza bajando de vida; el Avatar (tamaño en la otra pantalla, el
          escudo, el alcance). La energía tarda más en llenarse (la regeneración es la misma
          para 400).
+
+   **Monje — kit base: CÓDIGO HECHO (6 de octubre), falta correr la herramienta y probar.**
+   Daño, a puño limpio. Decisiones de Gustavo (6 de octubre); los números que no vinieron
+   los puso Claude (⚙).
+
+   | Ranura | Habilidad | Pieza |
+   |---|---|---|
+   | Pasiva | Artes marciales: cada ataque que pega (uno por ataque, no por enemigo) suma 5 % de velocidad de ataque, hasta 4 acumulaciones, 8 s. ⚙ También 5 % de movimiento (lo decía el documento) | `MartialArtsPassive` (nueva) + `GE_MartialArts` (Stack 4, AtkSpeed × 0.95, MovSpeed × 1.05) |
+   | Q | Ki: 3 cargas (⚙ 8 s cada una). Deja el Ki preparado (⚙ 10 s): la PRÓXIMA acción sale con Ki y lo gasta. Con Ki ya preparado no se gasta otra carga | `GA_Ki` (`GA_SelfBuff`, MaxCharges 3) + `GE_Ki` (tag nuevo `Status_Ki`) |
+   | Clic izq. | Dos puñetazos (`AttackPunch01_R` y `_L`, cono de 2 m y ⚙ 90°), 1 s entre ataques. Con Ki, **Ráfaga de golpes**: primero se pone las 4 acumulaciones de una y después pega | `GA_MonkAttack` (`GA_TagSwitch`, ConsumeTag) → `GA_MonkStrikes` / `GA_FlurryOfBlows` (combo: `GA_FlurryStacks` + los dos puños) |
+   | Clic der. | Bloqueo frontal, más chico que los escudos: ⚙ frena el 40 % por energía según el daño frenado. Con Ki, **Defensa paciente**: 6 s de una cápsula alrededor que frena el 40 % desde cualquier lado con la misma energía, SIN mantener el botón (puede atacar a la vez) | `GA_MonkGuard` (`GA_HoldTagSwitch`: ahora acepta una variante que no es de mantener y consume el tag) → `GA_MonkBlock` / `GA_PatientDefense` + `GE_PatientDefense` (tag nuevo `Status_PatientDefense`). La cápsula es una segunda barrera en `MonkBehaviours` con la casilla nueva `Omnidirectional` y una esfera con el material del escudo |
+   | Shift | **Patada voladora**: embestida larga y LENTA (⚙ 14 m a 9 m/s); izquierda/derecha la tuercen (⚙ 70°/s), **volver a apretar Shift la corta** (por el precipicio), choca con paredes y frena en el primer enemigo. Con Ki, **Patada del dragón**: ⚙ 16 m a 16 m/s y aturde al primero | `GA_MonkKick` (`GA_TagSwitch`) → `GA_FlyingKick` / `GA_DragonKick`: genérico nuevo **`GA_RushAttack`** (Create ▸ GAS ▸ Generics ▸ Rush Attack), como la carga de Reinhardt |
+
+   Estadísticas (`ASDef_Monk`): 80 de vida (+50 por nivel), 4 de ataque (+1 por nivel), 4 de
+   armadura, 50 de energía, 1 s entre ataques, la velocidad del Pícaro (6.5). Sin arma. Por
+   ahora usa el AOC del Pícaro.
+
+   - [ ] **Correr `Mercenarios ▸ Crear el Monje (kit base, una sola vez)`** (con Unity
+         abierto, o en batch con Unity cerrado: `-executeMethod MercMonkSetup.Create`) y
+         borrar `Assets/Scripts/Editor/MercMonkSetup.cs`. Crea todo en
+         `GameplayAbilities/Monk` y `Attributes/Monk`, lo agrega al jugador y a la sala, y
+         actualiza los registros. Busca íconos por nombre (`Class_Monk_Icon`, `Ki_Icon`,
+         `Martial_Arts_Icon`, `Patient_Defense_Icon`, `Strikes_Icon`, `Flurry_Of_Blows_Icon`,
+         `Monk_Block_Icon`, `Flying_Kick_Icon`, `Dragon_Kick_Icon`); los que no estén, a mano.
+   - [ ] Probar: los puños y las acumulaciones (íconos con su número); Ki → clic izq. sale
+         con las 4 de una; Ki → clic der. prende la cápsula 6 s y se puede atacar dentro;
+         la cápsula frena desde la espalda y gasta energía; Ki → Shift aturde; la Patada
+         voladora se tuerce con A/D y se corta con Shift; choca con una pared y termina.
+   - [ ] Los clips: la pose del bloqueo es la del escudo del Guerrero (no hay una de guardia
+         a puño limpio); la patada es `AttackKick01_R` suelta (si se quiere una pose
+         sostenida mientras vuela, va en `Rush Loop Clip` de la patada).
+   - [ ] Revisar con dos jugadores: que los demás vean los puñetazos de la Ráfaga (un combo
+         dentro de un `GA_TagSwitch` es nuevo: el switch ahora deja que el combo mande sus
+         animaciones).
+   - Lo que cambió del documento: la Ráfaga ya no son "2 golpes extra por ataque" sino las 4
+     acumulaciones de una; la Defensa paciente no es "bloquear todo" sino la cápsula al 40 %.
+   - Subclases (después): Samurái, Shinobi y Maestro elemental (ver sección 6).
+
+   **Barra de canalizar (6 de octubre), CÓDIGO HECHO, falta probar.** `UI_CastBar`, bajo la
+   barra de carga, solo para el que la usa, como la del WoW: amarilla y se LLENA en una
+   carga (el **Golpe final** del Inmortal), verde y se VACÍA en un canalizado (el
+   **molinete** del Berserker), roja con "Interrupted" si la cortan. Una habilidad la pide
+   con `ShowCastBar(duración, channel)` / `HideCastBar(interrumpida)`.
+   - [ ] Probar con el Golpe final (y cortarlo con un aturdido) y con el molinete.
+   - [ ] Canalizar como MECÁNICA genérica (un tiempo de lanzamiento antes de que salga
+         cualquier habilidad, que se corta si te aturden): no está; la barra ya sirve para
+         cuando se haga.
 
 2. **El mapa del cementerio — GREYBOX ARMADO (29 de septiembre), falta jugarlo.** Escena
    nueva `Scenes/Mercenaries_Graveyard.unity` (copia de la del modo, con sala, red y menús;

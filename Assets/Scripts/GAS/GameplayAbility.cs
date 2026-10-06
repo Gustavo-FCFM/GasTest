@@ -409,6 +409,21 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         return false;
     }
 
+    // Barra de canalizar del DUEÑO (UI_CastBar), estilo WoW. channel = se vacía mientras
+    // dura (un canalizado, el molinete); si no, se llena hasta que la habilidad sale (una
+    // carga, el Golpe final). Llamarlas en el servidor; HideCastBar(true) la pone roja.
+    protected void ShowCastBar(float duration, bool channel)
+    {
+        NetworkAbilitySystemComponent netAsc = OwnerASC != null ? OwnerASC.GetComponent<NetworkAbilitySystemComponent>() : null;
+        if (netAsc != null && netAsc.IsServerInitialized) netAsc.ServerShowCastBar(AbilityName, duration, channel);
+    }
+
+    protected void HideCastBar(bool interrupted)
+    {
+        NetworkAbilitySystemComponent netAsc = OwnerASC != null ? OwnerASC.GetComponent<NetworkAbilitySystemComponent>() : null;
+        if (netAsc != null && netAsc.IsServerInitialized) netAsc.ServerHideCastBar(interrupted);
+    }
+
     // Multiplicador del alcance de los golpes cuerpo a cuerpo (conos y líneas): 1 +
     // MeleeRangeBonus del dueño. El Avatar del Guardián lo sube al crecer.
     protected float MeleeReach

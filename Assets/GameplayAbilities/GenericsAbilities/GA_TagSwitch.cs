@@ -124,6 +124,24 @@ public class GA_TagSwitch : GameplayAbility
         // isAttacking antes de tiempo y dejaría al jugador atacar encima del swing.
     }
 
+    // Si alguna de sus habilidades se mueve por el dueño (la Patada voladora del Monje), el
+    // switch también: un bot no la propone.
+    public override bool MovesThroughOwner
+    {
+        get
+        {
+            if (DefaultAbility != null && DefaultAbility.MovesThroughOwner) return true;
+            if (Variants != null)
+                foreach (var variant in Variants)
+                    if (variant.Ability != null && variant.Ability.MovesThroughOwner) return true;
+            return false;
+        }
+    }
+
+    // Si la variante que corrió es un combo, él manda la animación de cada paso: la del
+    // switch pisaría la del primer golpe en las demás pantallas (ver NetworkASC).
+    public override bool BroadcastsOwnAnimation => _lastResolved != null && _lastResolved.BroadcastsOwnAnimation;
+
     // El ícono de la variante que se dispararía ahora (ver ShowVariantIcon). Corre en el
     // dueño: los tags le llegan sincronizados, así que el botón cambia solo.
     public override Sprite CurrentIcon
@@ -185,7 +203,7 @@ public class GA_TagSwitch : GameplayAbility
     // es como llegan estos estados: un GE con duración de un GA_SelfBuff); si aun así
     // el tag sigue puesto, se lo quita a mano — hay mecánicas que lo otorgan sueltas,
     // igual que hace el crítico asegurado.
-    private void ConsumeTagFromOwner(EGameplayTag tag)
+    protected void ConsumeTagFromOwner(EGameplayTag tag)
     {
         if (OwnerASC == null || tag == EGameplayTag.None) return;
 

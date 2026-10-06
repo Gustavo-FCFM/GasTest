@@ -1177,8 +1177,9 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         // (importa para el host, que renderiza esa misma copia).
         if (IsServerInitialized) return;
 
-        Entity_ShieldBarrier barrier = GetComponentInChildren<Entity_ShieldBarrier>(true);
-        if (barrier != null) barrier.PlayFlash(hitPoint);
+        // Puede haber dos (el Monje: el bloqueo y la cápsula): destella la que esté arriba.
+        foreach (Entity_ShieldBarrier barrier in GetComponentsInChildren<Entity_ShieldBarrier>(true))
+            barrier.PlayFlash(hitPoint);
     }
 
     // =========================================================
@@ -1752,6 +1753,91 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     {
         PlayerController pc = GetComponent<PlayerController>();
         if (pc != null) pc.StartFlight(launchSpeed, speedMultiplier, forwardBoost, verticalSpeed, idleSink);
+    }
+
+    // =========================================================
+    // EMBESTIDA (GA_RushAttack) — la Patada voladora del Monje. El dueño se mueve (el
+    // transform es suyo); el servidor golpea a los que alcanza. Cualquiera de los dos la
+    // puede cortar: el dueño al volver a apretar o al chocar (ServerRequestStopRush), el
+    // servidor al frenar en un enemigo o si lo aturden (ServerStopRush).
+    // =========================================================
+
+    private bool _rushStopRequested;
+
+    [Server]
+    public void ServerStartRush(Vector3 velocity, float duration, float turnRate, int excludeMask, bool cancelable)
+    {
+        _rushStopRequested = false;
+        if (!HasOwnerConnection()) return;
+        TargetStartRush(Owner, velocity, duration, turnRate, excludeMask, cancelable);
+    }
+
+    [TargetRpc]
+    private void TargetStartRush(NetworkConnection conn, Vector3 velocity, float duration, float turnRate,
+                                 int excludeMask, bool cancelable)
+    {
+        PlayerController pc = GetComponent<PlayerController>();
+        if (pc != null) pc.StartRush(velocity, duration, turnRate, excludeMask, cancelable);
+    }
+
+    [Server]
+    public void ServerStopRush()
+    {
+        if (!HasOwnerConnection()) return;
+        TargetStopRush(Owner);
+    }
+
+    [TargetRpc]
+    private void TargetStopRush(NetworkConnection conn)
+    {
+        PlayerController pc = GetComponent<PlayerController>();
+        if (pc != null) pc.StopRush(false);
+    }
+
+    // El dueño la cortó (volvió a apretar) o chocó con una pared.
+    [ServerRpc]
+    public void ServerRequestStopRush()
+    {
+        _rushStopRequested = true;
+    }
+
+    // Lo pregunta la embestida cada frame en el servidor.
+    public bool ConsumeRushStopRequest()
+    {
+        bool requested = _rushStopRequested;
+        _rushStopRequested = false;
+        return requested;
+    }
+
+    // =========================================================
+    // BARRA DE CANALIZAR (UI_CastBar) — solo la ve el dueño. La piden las habilidades en
+    // el servidor con GameplayAbility.ShowCastBar / HideCastBar. Un bot no tiene pantalla.
+    // =========================================================
+
+    [Server]
+    public void ServerShowCastBar(string label, float duration, bool channel)
+    {
+        if (!HasOwnerConnection()) return;
+        TargetShowCastBar(Owner, label, duration, channel);
+    }
+
+    [TargetRpc]
+    private void TargetShowCastBar(NetworkConnection conn, string label, float duration, bool channel)
+    {
+        UI_CastBar.Show(label, duration, channel);
+    }
+
+    [Server]
+    public void ServerHideCastBar(bool interrupted)
+    {
+        if (!HasOwnerConnection()) return;
+        TargetHideCastBar(Owner, interrupted);
+    }
+
+    [TargetRpc]
+    private void TargetHideCastBar(NetworkConnection conn, bool interrupted)
+    {
+        UI_CastBar.Hide(interrupted);
     }
 
     // Un NPC: el servidor es su autoridad. Con NavMeshAgent se mueve con agent.Move, que

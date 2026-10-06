@@ -76,6 +76,8 @@ public class GA_Whirlwind : GA_ContinuousAoE, IChanneledAbility
     // cualquier habilidad sin que ninguna tenga que conocer a esta.
     protected override void OnAreaStarted()
     {
+        // La barra del dueño se vacía mientras dura el molinete.
+        ShowCastBar(TotalDuration, channel: true);
         if (BlockOtherAbilities) OwnerASC.AddTag(EGameplayTag.Status_Channeling);
     }
 
@@ -84,6 +86,8 @@ public class GA_Whirlwind : GA_ContinuousAoE, IChanneledAbility
     // NINGUNA habilidad por el resto de la partida.
     protected override void OnAreaFinished()
     {
+        HideCastBar(interrupted: false);
+
         if (ChannelLoopAnimation != null)
         {
             var netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();

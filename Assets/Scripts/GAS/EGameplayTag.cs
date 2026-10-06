@@ -116,4 +116,8 @@ public enum EGameplayTag
 
     // --- SISTEMAS COMPARTIDOS ---
     Status_Flying,             // Vuelo libre: sin gravedad, se mueve en 3D hacia donde mira la cámara, Espacio sube y Ctrl baja; no aterriza mientras dure; el daño o un enraizado lo terminan. Lo da el GE del GA_Flight (ver PlayerController → VUELO LIBRE)
+
+    // --- MONJE ---
+    Status_Ki,                 // Ki preparado: la PRÓXIMA acción (Disparo, Apuntado o Patada) sale en su versión con Ki y lo gasta (GA_TagSwitch / GA_HoldTagSwitch con ConsumeTag). Lo da GE_Ki
+    Status_PatientDefense,     // Defensa paciente: la barrera en cápsula del Monje (Entity_ShieldBarrier con Omnidirectional) está arriba sin mantener el botón. Lo da GE_PatientDefense
 }

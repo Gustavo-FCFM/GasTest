@@ -396,6 +396,17 @@ public class PlayerController : NetworkBehaviour
 
     private bool IsFlying => ASC != null && ASC.HasTag(EGameplayTag.Status_Flying);
 
+    // Embestida (GA_RushAttack, la Patada voladora del Monje): avanza sola a velocidad
+    // constante; izquierda/derecha la tuercen y volver a apretar su botón la corta. Ver
+    // StartRush / TickRush.
+    private bool          _rushActive;
+    private Vector3       _rushVelocity;
+    private float         _rushEndsAt;
+    private float         _rushTurnRate;
+    private int           _rushExcludeMask;
+    private bool          _rushCancelable;
+    private EAbilityInput _rushSlot;
+
     // Repelido / atraído (GameplayEffect.KnockbackDistance): un recorrido horizontal que
     // NO depende del input y corre aunque esté aturdido o enraizado — es control, lo
     // mueve quien empuja. Ver ApplyKnockback / TickKnockback.
@@ -736,8 +747,9 @@ public class PlayerController : NetworkBehaviour
         UpdateFlightState();
 
         // Repelido / atraído: el empuje corre aunque esté aturdido o enraizado; si no lo
-        // está, conserva parte del control (knockbackSteerControl). Las habilidades siguen leyéndose (si no está aturdido) para no
-        // perderse el soltar de un mantenido, como el escudo.
+        // está, conserva parte del control (knockbackSteerControl). Las habilidades siguen
+        // leyéndose (si no está aturdido) para no perderse el soltar de un mantenido, como
+        // el escudo.
         if (TickKnockback())
         {
             if (!ASC.HasTag(EGameplayTag.State_Stunned)) HandleAbilityInput();
@@ -747,7 +759,15 @@ public class PlayerController : NetworkBehaviour
 
         if (ASC.HasTag(EGameplayTag.State_Stunned))
         {
+            if (_rushActive) StopRush(false);   // el servidor también la corta
             if (IsFlying || _flightFalling) SlowFall();
+            return;
+        }
+
+        // Embestida: avanza sola; el input solo la tuerce o la corta (ver TickRush).
+        if (TickRush())
+        {
+            UpdateAnimations();
             return;
         }
 
@@ -1053,6 +1073,8 @@ public class PlayerController : NetworkBehaviour
     // poco del piso. Pisa cualquier impulso que traía (dash, salto, inercia).
     public void ApplyKnockback(Vector3 displacement, float duration, float upVelocity)
     {
+        if (_rushActive) StopRush(true);   // empujado, la embestida se corta
+
         _knockbackDisplacement = new Vector3(displacement.x, 0f, displacement.z);
         _knockbackDuration     = Mathf.Max(0.05f, duration);
         _knockbackElapsed      = 0f;
@@ -1108,6 +1130,94 @@ public class PlayerController : NetworkBehaviour
 
         if (t >= 1f) _knockbackActive = false;
         return true;
+    }
+
+    // =========================================================
+    // EMBESTIDA (GA_RushAttack)
+    // =========================================================
+
+    // Lo llama NetworkAbilitySystemComponent.TargetStartRush en el DUEÑO. velocity es la
+    // horizontal entera (dirección × velocidad).
+    public void StartRush(Vector3 velocity, float duration, float turnRate, int excludeMask, bool cancelable)
+    {
+        if (_rushActive) StopRush(false);
+
+        _rushVelocity    = new Vector3(velocity.x, 0f, velocity.z);
+        _rushEndsAt      = Time.time + Mathf.Max(0.05f, duration);
+        _rushTurnRate    = turnRate;
+        _rushExcludeMask = excludeMask;
+        _rushCancelable  = cancelable;
+        _rushSlot        = _runningSlot != EAbilityInput.None ? _runningSlot : EAbilityInput.Movement;
+        _rushActive      = true;
+
+        verticalVelocity = 0f;
+        _inertiaVelocity = Vector3.zero;
+        SetCollisionExclusion(excludeMask, true);
+
+        if (_rushVelocity.sqrMagnitude > 0.0001f) transform.forward = _rushVelocity.normalized;
+    }
+
+    // Termina la embestida. notifyServer: la cortó el dueño (volvió a apretar o chocó con
+    // una pared), así el servidor deja de buscar a quién golpear.
+    public void StopRush(bool notifyServer)
+    {
+        if (!_rushActive) return;
+        _rushActive = false;
+
+        SetCollisionExclusion(_rushExcludeMask, false);
+        _inertiaVelocity = _rushVelocity * 0.2f;   // no frena en seco
+        _inertiaDamping  = 4f;
+
+        if (notifyServer && NetASC != null) NetASC.ServerRequestStopRush();
+    }
+
+    // Avanza la embestida un frame. false = no hay ninguna en curso.
+    private bool TickRush()
+    {
+        if (!_rushActive) return false;
+
+        if (Time.time >= _rushEndsAt || characterController == null || !characterController.enabled)
+        {
+            StopRush(false);
+            return false;
+        }
+
+        // Volver a apretar el mismo botón la corta (por si iba derecho a un precipicio).
+        UnityEngine.InputSystem.InputAction action = ActionForSlot(_rushSlot);
+        if (_rushCancelable && action != null && action.WasPressedThisFrame())
+        {
+            StopRush(true);
+            return true;
+        }
+
+        // Izquierda / derecha la tuercen un poco.
+        if (_rushTurnRate > 0f)
+        {
+            float turn = _input.MoveValue.x * _rushTurnRate * Time.deltaTime;
+            _rushVelocity = Quaternion.Euler(0f, turn, 0f) * _rushVelocity;
+        }
+        if (_rushVelocity.sqrMagnitude > 0.0001f) transform.forward = _rushVelocity.normalized;
+
+        // Sin gravedad mientras dura, como el dash. Una pared la termina.
+        CollisionFlags flags = characterController.Move(_rushVelocity * Time.deltaTime);
+        if ((flags & CollisionFlags.Sides) != 0) StopRush(true);
+
+        return true;
+    }
+
+    // La acción de input de cada ranura (para cortar la embestida con su mismo botón).
+    private UnityEngine.InputSystem.InputAction ActionForSlot(EAbilityInput slot)
+    {
+        switch (slot)
+        {
+            case EAbilityInput.Movement:        return _input.MovementAbility;
+            case EAbilityInput.Action1:         return _input.Ability1;
+            case EAbilityInput.Action2:         return _input.Ability2;
+            case EAbilityInput.Action3:         return _input.Ability3;
+            case EAbilityInput.SecondaryAttack: return _input.Secondary;
+            case EAbilityInput.PrimaryAttack:   return _input.PrimaryAttack;
+            default:                            return null;
+        }
     }
 
     // =========================================================
@@ -1175,6 +1285,7 @@ public class PlayerController : NetworkBehaviour
         verticalVelocity            = 0f;
         _knockbackActive            = false;
         _flightFalling              = false;
+        if (_rushActive) StopRush(false);
 
         faceDir.y = 0;
         if (faceDir.sqrMagnitude > 0.0001f)
