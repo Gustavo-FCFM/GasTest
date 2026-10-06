@@ -19,6 +19,7 @@ MonoBehaviour:
   OnMaxStacksEffect: {fileID: 0}
   EffectGroup: 0
   Priority: 0
+  ReplacesGroup: 0
   Icon: {fileID: 0}
   EffectType: 2
   Modifiers:
@@ -33,8 +34,19 @@ MonoBehaviour:
     TargetHealthCoefficient: 0
     MinMagnitude: 1
   IsCrowdControl: 0
+  KnockbackDistance: 1
+  KnockbackDirection: 0
+  KnockbackDuration: 0.3
+  KnockbackUpVelocity: 1
+  PullStopDistance: 1.5
   TargetVFX: {fileID: 0}
   TargetVFXOffset: {x: 0, y: 0, z: 0}
   TargetVFXRotation: {x: 0, y: 0, z: 0}
   TargetVFXScale: {x: 0, y: 0, z: 0}
+  TargetVFXLoop: 1
+  TargetSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
   GrantedTags: 

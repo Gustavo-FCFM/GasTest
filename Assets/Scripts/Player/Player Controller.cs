@@ -354,6 +354,11 @@ public class PlayerController : NetworkBehaviour
     // (y no mientras estás quieto girando la cámara), ver FaceCameraForward.
     public float aimTurnSpeed = 15f;
 
+    [Tooltip("Cuánto control conserva un jugador mientras lo repelen o lo atraen: su movimiento normal, " +
+             "multiplicado por esto, se SUMA al empuje (y el cuerpo sigue a la cámara). 0 = ninguno, " +
+             "1 = camina normal encima del empuje. Aturdido o enraizado no tiene control igual.")]
+    [Range(0f, 1f)] public float knockbackSteerControl = 0.6f;
+
     private float   verticalVelocity;
     private Vector3 spawnPosition;
 
@@ -711,8 +716,8 @@ public class PlayerController : NetworkBehaviour
             return;
         }
 
-        // Repelido / atraído: el empuje manda sobre el input, aunque esté aturdido o
-        // enraizado. Las habilidades siguen leyéndose (si no está aturdido) para no
+        // Repelido / atraído: el empuje corre aunque esté aturdido o enraizado; si no lo
+        // está, conserva parte del control (knockbackSteerControl). Las habilidades siguen leyéndose (si no está aturdido) para no
         // perderse el soltar de un mantenido, como el escudo.
         if (TickKnockback())
         {
@@ -1017,10 +1022,21 @@ public class PlayerController : NetworkBehaviour
         Vector3 step = _knockbackDisplacement * (eased - _knockbackProgress);
         _knockbackProgress = eased;
 
+        // Parte del control normal encima del empuje: puede corregir, no anularlo.
+        Vector3 steer = Vector3.zero;
+        if (!ASC.HasTag(EGameplayTag.State_Stunned) && !ASC.HasTag(EGameplayTag.State_Rooted))
+        {
+            float speed = ASC.GetAttributeValue(EAttributeType.MovSpeed);
+            if (speed <= 0f) speed = 5f;
+            Vector2 move = _input.MoveValue;
+            steer = GetWASDInputVector(move.x, move.y) * speed * knockbackSteerControl;
+            if (!isAttacking || IsHoldingAbility) FaceCameraForward();
+        }
+
         if (characterController.isGrounded && verticalVelocity < 0) verticalVelocity = -2f;
         verticalVelocity += gravity * Time.deltaTime;
 
-        characterController.Move(step + Vector3.up * verticalVelocity * Time.deltaTime);
+        characterController.Move(step + (steer + Vector3.up * verticalVelocity) * Time.deltaTime);
 
         if (t >= 1f) _knockbackActive = false;
         return true;
