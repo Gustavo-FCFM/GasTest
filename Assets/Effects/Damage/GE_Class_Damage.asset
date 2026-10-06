@@ -34,11 +34,11 @@ MonoBehaviour:
     TargetHealthCoefficient: 0
     MinMagnitude: 1
   IsCrowdControl: 0
-  KnockbackDistance: 1
+  KnockbackDistance: 0
   KnockbackDirection: 0
-  KnockbackDuration: 0.3
-  KnockbackUpVelocity: 1
-  PullStopDistance: 1.5
+  KnockbackDuration: 0
+  KnockbackUpVelocity: 0
+  PullStopDistance: 0
   TargetVFX: {fileID: 0}
   TargetVFXOffset: {x: 0, y: 0, z: 0}
   TargetVFXRotation: {x: 0, y: 0, z: 0}
