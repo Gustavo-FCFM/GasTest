@@ -23,6 +23,8 @@ public class AttributeSetDefinition : ScriptableObject
     // Lista de atributos y sus valores de partida para esta clase. Agregar
     // o quitar entradas acá cambia directamente con qué stats arranca el
     // personaje al equipar esta clase.
-    [Header("Atributos Base para esta Clase")]
+    [Section("Atributos base")]
+    [Tooltip("Con qué valor arranca cada atributo al equipar la clase (nivel 1). Lo que suben por " +
+             "nivel está en la clase (Stats y progresión).")]
     public List<BaseAttribute> InitialAttributes;
 }

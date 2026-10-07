@@ -36,26 +36,55 @@ MonoBehaviour:
     Volume: 1
     PitchVariance: 0.08
     MaxDistance: 35
+  Effects:
+  - When: 1
+    ApplyTo: 0
+    Effect: {fileID: 11400000, guid: 5385c025f54703549938ea1709b4591b, type: 2}
+    OnlyIfTargetHas: 0
+  - When: 0
+    ApplyTo: 0
+    Effect: {fileID: 11400000, guid: 90d13d9d2cb765648a0d7e4619caa0bb, type: 2}
+    OnlyIfTargetHas: 0
+  - When: 0
+    ApplyTo: 1
+    Effect: {fileID: 11400000, guid: e020fa4d41da96d43b303363eadf0129, type: 2}
+    OnlyIfTargetHas: 0
+  Visuals:
+  - When: 2
+    VFXPrefab: {fileID: 2944396702758532163, guid: e190bf97c041e58448af6b043116cba0, type: 3}
+    Delay: 0
+    Offset: {x: 0, y: 0, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    Attach: 0
+    MatchAreaSize: 0
+    AreaSizeMultiplier: 0
+    DestroyTime: 1
+    EndWithTag: 0
+    EndWhenAttributeDepleted: 0
+    DepletedAttribute: 0
   IsInterruptible: 1
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  VisualsSequence: []
   MaxCharges: 1
   ProjectilePrefab: {fileID: 406129108226925510, guid: 29b7325ea45914c4bb7592ed1cdc376b, type: 3}
   LaunchForce: 20
   SpawnOffset: {x: 0.3, y: 1.3, z: 0.6}
   AddSpin: 1
   HideWeaponWhileFlying: 0
-  InstantDamageEffect: {fileID: 11400000, guid: 90d13d9d2cb765648a0d7e4619caa0bb, type: 2}
+  LifeTime: 0
+  MinConvergeDistance: 4
+  SpawnDelay: 0.3
+  FirstHitCooldownPerTarget: 5
+  AimBeforeThrow: 0
+  AimHoldClip: {fileID: 0}
+  AimReleaseClip: {fileID: 0}
+  AimReleaseDelay: 0.1
+  AimSafetyTimeout: 30
+  InstantDamageEffect: {fileID: 0}
   DurationEffect: {fileID: 0}
   AdditionalEffects: []
-  TargetEffects:
-  - {fileID: 11400000, guid: e020fa4d41da96d43b303363eadf0129, type: 2}
-  FirstHitEffects:
-  - {fileID: 11400000, guid: 5385c025f54703549938ea1709b4591b, type: 2}
-  FirstHitCooldownPerTarget: 5
-  LifeTime: 0
-  SpawnDelay: 0.3
-  MinConvergeDistance: 4
-  ImpactVFX: {fileID: 2944396702758532163, guid: e190bf97c041e58448af6b043116cba0, type: 3}
+  TargetEffects: []
+  FirstHitEffects: []
+  ImpactVFX: {fileID: 0}

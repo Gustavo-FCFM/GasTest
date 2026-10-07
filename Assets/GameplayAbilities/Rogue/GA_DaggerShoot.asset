@@ -36,29 +36,51 @@ MonoBehaviour:
     Volume: 1
     PitchVariance: 0.08
     MaxDistance: 35
+  Effects:
+  - When: 0
+    ApplyTo: 0
+    Effect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
+    OnlyIfTargetHas: 0
+  - When: 0
+    ApplyTo: 0
+    Effect: {fileID: 11400000, guid: 16573965ce339a749892bca518120f2b, type: 2}
+    OnlyIfTargetHas: 0
+  Visuals:
+  - When: 2
+    VFXPrefab: {fileID: 1758473627833946668, guid: 9b21333b068a5084ba09535839bee3c8, type: 3}
+    Delay: 0
+    Offset: {x: 0, y: 0, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    Attach: 0
+    MatchAreaSize: 0
+    AreaSizeMultiplier: 0
+    DestroyTime: 1
+    EndWithTag: 0
+    EndWhenAttributeDepleted: 0
+    DepletedAttribute: 0
   IsInterruptible: 1
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  VisualsSequence: []
   MaxCharges: 1
   ProjectilePrefab: {fileID: 406129108226925510, guid: 8c21a3df091c8204ea5a34229c270862, type: 3}
   LaunchForce: 50
   SpawnOffset: {x: 0, y: 1.5, z: 0.5}
   AddSpin: 1
   HideWeaponWhileFlying: 1
-  InstantDamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
-  DurationEffect: {fileID: 11400000, guid: 16573965ce339a749892bca518120f2b, type: 2}
-  AdditionalEffects: []
-  TargetEffects: []
-  FirstHitEffects: []
-  FirstHitCooldownPerTarget: 3
   LifeTime: 0
-  SpawnDelay: 0.5
   MinConvergeDistance: 4
-  ImpactVFX: {fileID: 1758473627833946668, guid: 9b21333b068a5084ba09535839bee3c8, type: 3}
+  SpawnDelay: 0.5
+  FirstHitCooldownPerTarget: 3
   AimBeforeThrow: 1
   AimHoldClip: {fileID: 3094330708855449807, guid: c6394379fdb70c24ea2b1eddb8fba34f, type: 3}
   AimReleaseClip: {fileID: -5060625908618555442, guid: c25522e533a3f5149b1926cb6ee3c8f1, type: 3}
   AimReleaseDelay: 0.1
   AimSafetyTimeout: 30
+  InstantDamageEffect: {fileID: 0}
+  DurationEffect: {fileID: 0}
+  AdditionalEffects: []
+  TargetEffects: []
+  FirstHitEffects: []
+  ImpactVFX: {fileID: 0}

@@ -6,7 +6,7 @@ using System.Collections.Generic;
 // GA_InstantAoE
 //
 // Golpe de área de UNA sola aplicación: revisa quién está dentro del radio y le
-// aplica la lista de GameplayEffect una vez. Es la versión instantánea de
+// aplica la lista de efectos una vez. Es la versión instantánea de
 // GA_ContinuousAoE (misma configuración: área, efectos, dónde se despliega), sin
 // duración ni ticks. Pensada para explosiones, ondas expansivas, bombas, etc.
 //
@@ -18,25 +18,26 @@ using System.Collections.Generic;
 // después de ese tiempo). El punto de la zona se resuelve al ACTIVAR, así que apuntar
 // a otro lado durante el delay no cambia dónde cae.
 //
+// A QUIÉN AFECTA lo dice cada entrada de la lista (enemigos, aliados, todos). El VFX
+// del estallido es una entrada "En el impacto" de la lista de VFX, con "Calzar con el
+// área" para que mida lo mismo que el radio.
+//
 // Si en cambio querés una zona que PERSISTA aplicando efectos cada tanto (charco de
 // veneno, aura, la zona de los Cañones del Pirata), usá GA_ContinuousAoE.
 // ============================================================
 [CreateAssetMenu(fileName = "GA_InstantAoE", menuName = "GAS/Generics/Instant AoE")]
 public class GA_InstantAoE : GameplayAbility, IGroundTargetAbility
 {
-    [Header("Targets")]
-    [Tooltip("A quién afecta el área.")]
-    public GA_ContinuousAoE.EAoETarget Targets = GA_ContinuousAoE.EAoETarget.Enemies;
-
-    [Header("Configuración de Área")]
+    [Section(AbilitySection.Shape)]
+    [Tooltip("Radio del área, en metros.")]
     public float Radius = 4f;
 
-    [Header("Despliegue")]
     [Tooltip("AtOwner: el área estalla sobre el dueño. AtReticle: se apunta con el marcador " +
              "en el suelo (mantener → apuntar → soltar) y cae ahí.")]
     public GA_ContinuousAoE.EAoEDeploy DeployMode = GA_ContinuousAoE.EAoEDeploy.AtOwner;
 
-    [Tooltip("Solo con AtReticle: alcance máximo al que se puede lanzar la zona.")]
+    [ShowIf(nameof(DeployMode), GA_ContinuousAoE.EAoEDeploy.AtReticle)]
+    [Tooltip("Alcance máximo al que se puede lanzar la zona.")]
     public float MaxRange = 15f;
 
     // IGroundTargetAbility: valores del marcador del suelo (solo se muestra si
@@ -45,21 +46,13 @@ public class GA_InstantAoE : GameplayAbility, IGroundTargetAbility
     public float TargetRadius     => Radius;
     public bool  UsesGroundTarget => DeployMode == GA_ContinuousAoE.EAoEDeploy.AtReticle;
 
-    [Header("Lista de Efectos")]
-    [Tooltip("Todos los GameplayEffect que se aplican UNA vez a cada objetivo válido.")]
-    public List<GameplayEffect> EffectsToApply;
-
-    [Header("Efectos Visuales")]
-    public GameObject VisualPrefab;
-    [Tooltip("Multiplica Radius para el tamaño del VFX (no afecta el área real).")]
-    public float VisualScaleMultiplier = 2.0f;
-    [Tooltip("Segundos hasta que se destruye el VFX del impacto.")]
-    public float VisualLifetime = 2f;
-
-    [Header("Sincronización")]
+    [Section(AbilitySection.Timing)]
     [Tooltip("Espera antes de que el golpe caiga (para acompañar la animación). Se ajusta " +
              "por la velocidad de ataque, igual que en las demás habilidades.")]
     public float StartDelay = 0f;
+
+    public override float VisualAreaRadius => Radius;
+    public override bool SupportsVisualTiming(EVisualWhen when) => true;
 
     // Valida, cobra costo/cooldown y programa el impacto.
     public override void Activate()
@@ -114,12 +107,11 @@ public class GA_InstantAoE : GameplayAbility, IGroundTargetAbility
     // el VFX de impacto en todos los peers.
     private void Detonate(Vector3 center)
     {
-        NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
-        if (netAsc != null) netAsc.ServerPlayAbilityVFX(this, center);
-        else PlayImpactVFX(center);
+        BroadcastImpactVFX(center);
 
         Collider[] hits = Physics.OverlapSphere(center, Radius, TargetLayer);
         var seen = new HashSet<AbilitySystemComponent>();
+        bool firstEnemy = true;
 
         foreach (var hit in hits)
         {
@@ -128,40 +120,23 @@ public class GA_InstantAoE : GameplayAbility, IGroundTargetAbility
             // aplicaríamos los efectos más de una vez (y esto es de UNA sola aplicación).
             if (targetASC == null || !seen.Add(targetASC)) continue;
 
-            bool isValidTarget =
-                (Targets == GA_ContinuousAoE.EAoETarget.Enemies && IsEnemy(targetASC)) ||
-                (Targets == GA_ContinuousAoE.EAoETarget.Allies  && IsAlly(targetASC))  ||
-                 Targets == GA_ContinuousAoE.EAoETarget.All;
+            bool enemy = IsEnemy(targetASC);
+            if (!ApplyHitEffects(targetASC, firstHit: enemy && firstEnemy)) continue;
 
-            if (!isValidTarget) continue;
+            // El sonido ya sonó una vez en el estallido: acá solo los VFX de golpe.
+            BroadcastHitVFX(targetASC, withSound: false);
 
-            if (EffectsToApply != null)
-                foreach (var effect in EffectsToApply)
-                    if (effect != null) targetASC.ApplyGameplayEffect(effect, OwnerASC);
+            if (!enemy) continue;
+            firstEnemy = false;
 
             OnTargetHit(targetASC);
-
             if (OwnerASC.CompareTag("Player")) ChargeUltimate();
         }
     }
 
-    // Gancho para que una habilidad concreta reaccione a cada objetivo alcanzado
+    // Gancho para que una habilidad concreta reaccione a cada enemigo alcanzado
     // (ej: los Cañones del Pirata, que además le apuestan a quien golpean).
     protected virtual void OnTargetHit(AbilitySystemComponent target) { }
-
-    // Instancia el VFX escalado al radio. La llama cada peer con su propia copia
-    // (ver NetworkAbilitySystemComponent.ServerPlayAbilityVFX).
-    public override void PlayImpactVFX(Vector3 position)
-    {
-        if (VisualPrefab == null) return;
-
-        // Con la rotación del prefab (ver GA_ContinuousAoE.PlayImpactVFX).
-        GameObject vfx = Instantiate(VisualPrefab, position, VisualPrefab.transform.rotation);
-
-        // Con VFX_AreaVisual el círculo calza EXACTO con Radius y se desvanece al
-        // terminar; si no, cae al multiplicador a ojo de siempre.
-        VFX_AreaVisual.Configure(vfx, Radius, VisualScaleMultiplier, VisualLifetime);
-    }
 
     // Vista previa del área en el Editor.
     public override void DrawGizmos(Transform origin)
@@ -174,5 +149,43 @@ public class GA_InstantAoE : GameplayAbility, IGroundTargetAbility
 
         Gizmos.color = new Color(1f, 0.5f, 0.1f, 0.35f);
         Gizmos.DrawSphere(center, Radius);
+    }
+
+#if UNITY_EDITOR
+    public override void DrawSceneHandles(Transform origin)
+    {
+        if (origin == null) return;
+
+        Vector3 center = origin.position;
+        if (DeployMode == GA_ContinuousAoE.EAoEDeploy.AtReticle)
+        {
+            AbilityHandles.Distance(this, "Max Range", origin.position, origin.forward, ref MaxRange,
+                                    AbilityHandles.DistanceColor);
+            center = origin.position + origin.forward * MaxRange;
+        }
+        AbilityHandles.Radius(this, "Radius", center, ref Radius, AbilityHandles.RadiusColor, origin.right);
+    }
+#endif
+
+    // =========================================================
+    // DATOS VIEJOS (solo para pasarlos a las listas; ver GameplayAbility.UpgradeLegacyData)
+    // =========================================================
+
+    [SerializeField, HideInInspector] private GA_ContinuousAoE.EAoETarget Targets = GA_ContinuousAoE.EAoETarget.Enemies;
+    [SerializeField, HideInInspector] private List<GameplayEffect> EffectsToApply;
+    [SerializeField, HideInInspector] private GameObject VisualPrefab;
+    [SerializeField, HideInInspector] private float VisualScaleMultiplier = 2f;
+    [SerializeField, HideInInspector] private float VisualLifetime = 2f;
+
+    protected override void OnUpgradeLegacyData(ref bool changed)
+    {
+        base.OnUpgradeLegacyData(ref changed);
+
+        UpgradeEffects(EffectsToApply, EEffectWhen.OnHit, GA_ContinuousAoE.ToEffectTarget(Targets), ref changed);
+        UpgradeVisual(ref VisualPrefab, new AbilityVisual
+        {
+            When = EVisualWhen.OnImpact, MatchAreaSize = true,
+            AreaSizeMultiplier = VisualScaleMultiplier, DestroyTime = VisualLifetime,
+        }, ref changed);
     }
 }

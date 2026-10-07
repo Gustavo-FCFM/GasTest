@@ -6,9 +6,9 @@ using System.Collections.Generic;
 //
 // Habilidad de objetivo único: elige al enemigo que el jugador tiene en la
 // mira (el más centrado dentro de un ángulo/rango), se teletransporta a su
-// ESPALDA y le inflige daño en base a un porcentaje de su vida faltante (eso
-// lo configura el GameplayEffect vía Modifier.UseTargetHealthScaling). Si el
-// golpe MATA al objetivo, reinicia su propio cooldown.
+// ESPALDA y le aplica la lista de efectos (el daño en base a un porcentaje de su
+// vida faltante lo configura el GameplayEffect vía Modifier.UseTargetHealthScaling).
+// Si el golpe MATA al objetivo, reinicia su propio cooldown.
 //
 // Como toda GameplayAbility del proyecto, Activate() corre en el servidor
 // (autoridad de daño). El teletransporte del CharacterController, en cambio,
@@ -18,27 +18,17 @@ using System.Collections.Generic;
 [CreateAssetMenu(fileName = "GA_Blink", menuName = "GAS/Specific Abilities/Rogue/Blink Strike")]
 public class GA_Blink : GameplayAbility
 {
-    [Header("Selección de Objetivo")]
+    [Section(AbilitySection.Targeting)]
     [Tooltip("Alcance máximo para buscar al enemigo objetivo.")]
     public float MaxRange = 12f;
     [Tooltip("Ángulo máximo (grados) entre la mira y el enemigo para que cuente como objetivo.")]
     public float SelectionAngle = 25f;
 
-    [Header("Teletransporte")]
+    [Section(AbilitySection.Movement)]
     [Tooltip("A qué distancia por detrás del enemigo aparece el jugador.")]
     public float BehindDistance = 1.5f;
 
-    [Header("Efectos")]
-    [Tooltip("Daño a aplicar. Para que pegue según la vida faltante del objetivo, " +
-             "en su Modifier activá UseTargetHealthScaling (MissingHealth) y ajustá el coeficiente.")]
-    public GameplayEffect DamageEffect;
-    // Efectos EXTRA que se aplican al objetivo además del daño (heridas, marcar, etc.). Opcional.
-    public List<GameplayEffect> AdditionalEffects;
-
-    [Header("Visuales")]
-    public GameObject ImpactVFX;
-
-    // Valida, elige objetivo, teletransporta detrás de él, aplica el daño y
+    // Valida, elige objetivo, teletransporta detrás de él, aplica los efectos y
     // (si lo mata) reinicia el cooldown.
     public override void Activate()
     {
@@ -78,14 +68,11 @@ public class GA_Blink : GameplayAbility
         // Daño (con autoridad de servidor). Guardamos si el objetivo ya estaba
         // muerto para saber si fue ESTA habilidad la que lo mató.
         bool wasDead = target.HasTag(EGameplayTag.State_Dead);
-        if (DamageEffect != null) target.ApplyGameplayEffect(DamageEffect, OwnerASC);
-        else Debug.LogWarning("[GA_Blink] activado sin un DamageEffect asignado.");
-        ApplyEffectsTo(AdditionalEffects, target);
+        if (!HasEffects(EEffectWhen.OnHit)) Debug.LogWarning($"[{AbilityName}] activado sin ningún efecto 'Al golpear'.");
+        ApplyHitEffects(target, firstHit: true);
         ChargeUltimate();
 
-        Vector3 hitPos = target.transform.position + Vector3.up;
-        if (netAsc != null) netAsc.ServerPlayAbilityVFX(this, hitPos);
-        else PlayImpactVFX(hitPos);
+        BroadcastHitVFX(target);
 
         // Si el golpe mató al objetivo, reiniciar el cooldown (dejar la habilidad
         // lista de nuevo). ApplyGameplayEffect es síncrono, así que el tag de
@@ -108,20 +95,30 @@ public class GA_Blink : GameplayAbility
     // gesto en el vacío se ve como si la habilidad se hubiera gastado.
     public override bool CanPredictActivation() => FindTarget() != null;
 
-    // Instancia ImpactVFX en el punto de impacto. La llama cada peer con su
-    // propia copia (ver NetworkAbilitySystemComponent.ServerPlayAbilityVFX).
-    public override void PlayImpactVFX(Vector3 position)
-    {
-        if (ImpactVFX == null) return;
-        GameObject vfx = Instantiate(ImpactVFX, position, Quaternion.identity);
-        Destroy(vfx, 2.0f);
-    }
-
     // Vista previa del alcance de selección en el Editor.
     public override void DrawGizmos(Transform origin)
+        => DrawSelectionGizmo(origin, MaxRange, SelectionAngle, new Color(0.6f, 0.1f, 0.8f, 0.9f));
+
+#if UNITY_EDITOR
+    public override void DrawSceneHandles(Transform origin)
+        => AbilityHandles.Selection(this, origin, ref MaxRange, ref SelectionAngle);
+#endif
+
+    // =========================================================
+    // DATOS VIEJOS (solo para pasarlos a las listas; ver GameplayAbility.UpgradeLegacyData)
+    // =========================================================
+
+    [SerializeField, HideInInspector] private GameplayEffect DamageEffect;
+    [SerializeField, HideInInspector] private List<GameplayEffect> AdditionalEffects;
+    [SerializeField, HideInInspector] private GameObject ImpactVFX;
+
+    protected override void OnUpgradeLegacyData(ref bool changed)
     {
-        if (origin == null) return;
-        Gizmos.color = new Color(0.6f, 0.1f, 0.8f, 0.9f);
-        Gizmos.DrawWireSphere(origin.position, MaxRange);
+        base.OnUpgradeLegacyData(ref changed);
+
+        UpgradeEffect(ref DamageEffect, EEffectWhen.OnHit, EEffectTarget.Enemies, ref changed);
+        UpgradeEffects(AdditionalEffects, EEffectWhen.OnHit, EEffectTarget.Enemies, ref changed);
+        UpgradeVisual(ref ImpactVFX, new AbilityVisual { When = EVisualWhen.OnHit, Offset = Vector3.up, DestroyTime = 2f },
+                      ref changed);
     }
 }

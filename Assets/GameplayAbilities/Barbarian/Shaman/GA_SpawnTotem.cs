@@ -11,48 +11,72 @@ using FishNet.Object;
 // spawnea en el suelo bajo el cursor (con ground-snapping), respeta
 // un máximo de tótems activos (despawneando el más viejo si se
 // pasa), y cobra un cooldown individual por tipo de tótem.
+//
+// Cada opción de la rueda es UNA entrada de la lista Totems, con todo junto: nombre,
+// descripción, ícono, prefab y cooldown. Antes eran cinco listas sueltas que había que
+// mantener en el mismo orden a mano; los assets viejos se pasan solos a la lista.
 // ============================================================
 [CreateAssetMenu(fileName = "GA_SpawnTotem", menuName = "GAS/Specific Abilities/Barbarian/Shaman/Spawn Totem")]
 public class GA_SpawnTotem : GameplayAbility, IRadialMenuAbility
 {
-    [Header("Configuración de Invocación")]
-    public GameObject[]   TotemPrefabs;
-    public Sprite[]       TotemIcons;
-    // Un cooldown independiente por cada tipo de tótem (mismo índice que
-    // TotemPrefabs/TotemIcons).
-    public GameplayEffect[] IndividualCooldownEffects;
-    public float          MaxSpawnRange = 10f;
-    public GameObject     SpawnVFX;
-
-    // Implementación de IRadialMenuAbility.
-    public float   MaxRadialRange => MaxSpawnRange;
-    public Sprite[] RadialIcons   => TotemIcons;
-
-    [Header("En la rueda")]
-    [Tooltip("Nombre de cada tótem en la rueda (lo ve el jugador: en inglés). Mismo orden que TotemPrefabs.")]
-    public string[] TotemNames = { "Bear Totem", "Eagle Totem", "Tiger Totem", "Wolf Totem" };
-
-    [Tooltip("Qué da cada tótem, debajo del nombre en la rueda. Mismo orden que TotemPrefabs.")]
-    public string[] TotemDescriptions =
+    // Una opción de la rueda.
+    [System.Serializable]
+    public struct TotemOption
     {
-        "Nearby allies: more max health",
-        "Nearby allies: more movement speed",
-        "Nearby allies: more attack speed",
-        "Nearby allies: more damage",
-    };
+        [Tooltip("Nombre en la rueda (lo ve el jugador: en inglés).")]
+        public string Name;
 
-    public string[] RadialLabels       => TotemNames;
-    public string[] RadialDescriptions => TotemDescriptions;
+        [Tooltip("Qué da, debajo del nombre en la rueda (en inglés).")]
+        public string Description;
 
-    // En la rueda, el tótem se ve apagado mientras corre su cooldown propio (el primer tag
-    // de su IndividualCooldownEffects). Corre en el dueño, con los tags sincronizados.
-    public bool IsRadialOptionAvailable(int index)
+        public Sprite Icon;
+
+        [Tooltip("El tótem que se invoca (con Entity_Totem y NetworkObject).")]
+        public GameObject Prefab;
+
+        [Tooltip("Cooldown propio de este tótem: mientras su PRIMER GrantedTag esté puesto, no se " +
+                 "puede volver a invocar (y en la rueda se ve apagado).")]
+        public GameplayEffect Cooldown;
+    }
+
+    [Section("Tótems")]
+    [Tooltip("Las opciones de la rueda, en orden (la primera arriba, después en sentido horario).")]
+    public List<TotemOption> Totems = new List<TotemOption>();
+
+    [Section(AbilitySection.Shape)]
+    [Tooltip("Hasta dónde se puede poner el tótem desde el jugador.")]
+    public float MaxSpawnRange = 10f;
+
+    // Implementación de IRadialMenuAbility (la rueda lee arrays: se arman de la lista).
+    public float    MaxRadialRange     => MaxSpawnRange;
+    public Sprite[] RadialIcons        => Collect(t => t.Icon);
+    public string[] RadialLabels       => Collect(t => t.Name);
+    public string[] RadialDescriptions => Collect(t => t.Description);
+
+    private T[] Collect<T>(System.Func<TotemOption, T> pick)
     {
-        if (OwnerASC == null || IndividualCooldownEffects == null || index < 0 ||
-            index >= IndividualCooldownEffects.Length || IndividualCooldownEffects[index] == null) return true;
+        if (Totems == null) return new T[0];
+        T[] result = new T[Totems.Count];
+        for (int i = 0; i < Totems.Count; i++) result[i] = pick(Totems[i]);
+        return result;
+    }
 
-        var tags = IndividualCooldownEffects[index].GrantedTags;
-        return tags == null || tags.Count == 0 || !OwnerASC.HasTag(tags[0]);
+    // No busca personajes ni golpea: invoca. Sus VFX "en el impacto" salen donde aparece.
+    public override bool UsesTargetLayer => false;
+    public override bool UsesHitEffects  => false;
+    public override bool SupportsVisualTiming(EVisualWhen when) => when != EVisualWhen.OnHit;
+
+    // En la rueda, el tótem se ve apagado mientras corre su cooldown propio. Corre en el
+    // dueño, con los tags sincronizados.
+    public bool IsRadialOptionAvailable(int index) => !IsOnCooldown(index);
+
+    private bool IsOnCooldown(int index)
+    {
+        if (OwnerASC == null || Totems == null || index < 0 || index >= Totems.Count) return false;
+
+        GameplayEffect cd = Totems[index].Cooldown;
+        if (cd == null || cd.GrantedTags == null || cd.GrantedTags.Count == 0) return false;
+        return OwnerASC.HasTag(cd.GrantedTags[0]);
     }
 
     // Tótems actualmente invocados por este jugador, en orden de
@@ -77,28 +101,21 @@ public class GA_SpawnTotem : GameplayAbility, IRadialMenuAbility
 
         if (OwnerASC == null) { EndAbility(); return; }
 
-        if (TotemPrefabs == null || totemIndex < 0 || totemIndex >= TotemPrefabs.Length || TotemPrefabs[totemIndex] == null)
+        if (Totems == null || totemIndex < 0 || totemIndex >= Totems.Count || Totems[totemIndex].Prefab == null)
         {
             EndAbility();
             return;
         }
 
         // Verificar cooldown individual del tótem. El tag es opcional: si el GE no
-        // tiene GrantedTags no podemos saber si está en cooldown (y antes esto
-        // reventaba con IndexOutOfRange al leer GrantedTags[0] a ciegas).
-        if (IndividualCooldownEffects != null &&
-            IndividualCooldownEffects.Length > totemIndex &&
-            IndividualCooldownEffects[totemIndex] != null &&
-            IndividualCooldownEffects[totemIndex].GrantedTags != null &&
-            IndividualCooldownEffects[totemIndex].GrantedTags.Count > 0)
+        // tiene GrantedTags no podemos saber si está en cooldown.
+        if (IsOnCooldown(totemIndex))
         {
-            EGameplayTag cdTag = IndividualCooldownEffects[totemIndex].GrantedTags[0];
-            if (OwnerASC.HasTag(cdTag))
-            {
-                EndAbility();
-                return;
-            }
+            EndAbility();
+            return;
         }
+
+        TotemOption option = Totems[totemIndex];
 
         CommitAbility();
 
@@ -118,7 +135,7 @@ public class GA_SpawnTotem : GameplayAbility, IRadialMenuAbility
             }
         }
 
-        GameObject totemObj = Instantiate(TotemPrefabs[totemIndex], groundPosition, Quaternion.identity);
+        GameObject totemObj = Instantiate(option.Prefab, groundPosition, Quaternion.identity);
 
         Entity_Totem totemScript = totemObj.GetComponent<Entity_Totem>();
         if (totemScript != null)
@@ -133,7 +150,7 @@ public class GA_SpawnTotem : GameplayAbility, IRadialMenuAbility
         if (totemNob != null)
             InstanceFinder.ServerManager.Spawn(totemNob);
         else
-            Debug.LogWarning("[GA_SpawnTotem] El TotemPrefab no tiene NetworkObject — no se va a replicar a los clientes.");
+            Debug.LogWarning("[GA_SpawnTotem] El prefab del tótem no tiene NetworkObject — no se va a replicar a los clientes.");
 
         // Límite de tótems activos
         activeTotems.Enqueue(totemObj);
@@ -149,18 +166,11 @@ public class GA_SpawnTotem : GameplayAbility, IRadialMenuAbility
         }
 
         // Cooldown individual
-        if (IndividualCooldownEffects != null &&
-            IndividualCooldownEffects.Length > totemIndex &&
-            IndividualCooldownEffects[totemIndex] != null)
-        {
-            OwnerASC.ApplyGameplayEffect(IndividualCooldownEffects[totemIndex], OwnerASC);
-        }
+        if (option.Cooldown != null) OwnerASC.ApplyGameplayEffect(option.Cooldown, OwnerASC);
 
         // Instantiate() acá solo se vería en el proceso servidor —
-        // ServerPlayAbilityVFX lo reproduce en todos los peers.
-        NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
-        if (netAsc != null) netAsc.ServerPlayAbilityVFX(this, groundPosition);
-        else PlayImpactVFX(groundPosition);
+        // BroadcastImpactVFX lo reproduce en todos los peers.
+        BroadcastImpactVFX(groundPosition);
 
         PlayerController pc = OwnerASC.GetComponent<PlayerController>();
         if (pc != null) pc.PlayAnimation(this);
@@ -168,11 +178,62 @@ public class GA_SpawnTotem : GameplayAbility, IRadialMenuAbility
         EndAbility();
     }
 
-    // Instancia SpawnVFX en el punto de invocación. La llama cada peer con
-    // su propia copia (ver ServerPlayAbilityVFX).
-    public override void PlayImpactVFX(Vector3 position)
+    public override void DrawGizmos(Transform origin)
     {
-        if (SpawnVFX == null) return;
-        Destroy(Instantiate(SpawnVFX, position, Quaternion.identity), 2f);
+        if (origin == null) return;
+        Gizmos.color = new Color(0.4f, 1f, 0.5f, 0.6f);
+        Gizmos.DrawWireSphere(origin.position, MaxSpawnRange);
+    }
+
+#if UNITY_EDITOR
+    public override void DrawSceneHandles(Transform origin)
+    {
+        if (origin == null) return;
+        AbilityHandles.Radius(this, "Max Spawn Range", origin.position, ref MaxSpawnRange,
+                              AbilityHandles.RadiusColor, origin.forward);
+    }
+#endif
+
+    // =========================================================
+    // DATOS VIEJOS (solo para pasarlos a la lista; ver GameplayAbility.UpgradeLegacyData)
+    // =========================================================
+
+    [SerializeField, HideInInspector] private GameObject[]     TotemPrefabs;
+    [SerializeField, HideInInspector] private Sprite[]         TotemIcons;
+    [SerializeField, HideInInspector] private GameplayEffect[] IndividualCooldownEffects;
+    [SerializeField, HideInInspector] private string[]         TotemNames;
+    [SerializeField, HideInInspector] private string[]         TotemDescriptions;
+    [SerializeField, HideInInspector] private GameObject       SpawnVFX;
+
+    protected override void OnUpgradeLegacyData(ref bool changed)
+    {
+        base.OnUpgradeLegacyData(ref changed);
+
+        if (TotemPrefabs != null && TotemPrefabs.Length > 0)
+        {
+            if (Totems == null) Totems = new List<TotemOption>();
+
+            for (int i = 0; i < TotemPrefabs.Length; i++)
+            {
+                Totems.Add(new TotemOption
+                {
+                    Prefab      = TotemPrefabs[i],
+                    Icon        = TotemIcons != null && i < TotemIcons.Length ? TotemIcons[i] : null,
+                    Cooldown    = IndividualCooldownEffects != null && i < IndividualCooldownEffects.Length
+                                    ? IndividualCooldownEffects[i] : null,
+                    Name        = TotemNames != null && i < TotemNames.Length ? TotemNames[i] : "",
+                    Description = TotemDescriptions != null && i < TotemDescriptions.Length ? TotemDescriptions[i] : "",
+                });
+            }
+
+            TotemPrefabs = null;
+            TotemIcons = null;
+            IndividualCooldownEffects = null;
+            TotemNames = null;
+            TotemDescriptions = null;
+            changed = true;
+        }
+
+        UpgradeVisual(ref SpawnVFX, new AbilityVisual { When = EVisualWhen.OnImpact, DestroyTime = 2f }, ref changed);
     }
 }

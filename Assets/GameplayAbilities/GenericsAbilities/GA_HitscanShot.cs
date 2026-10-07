@@ -31,7 +31,7 @@ using System.Collections.Generic;
 [CreateAssetMenu(fileName = "GA_HitscanShot", menuName = "GAS/Generics/Hitscan Shot")]
 public class GA_HitscanShot : GameplayAbility
 {
-    [Header("Disparo")]
+    [Section(AbilitySection.Shape)]
     [Tooltip("Alcance máximo del disparo.")]
     public float MaxRange = 50f;
 
@@ -50,20 +50,12 @@ public class GA_HitscanShot : GameplayAbility
     [Tooltip("Capas que FRENAN el disparo (paredes/entorno).")]
     public LayerMask WallLayer;
 
-    [Header("Efectos al impactar")]
-    [Tooltip("Daño al enemigo alcanzado.")]
-    public GameplayEffect DamageEffect;
-
-    [Tooltip("Efectos EXTRA que se le aplican al enemigo alcanzado, además del daño. Opcional.")]
-    public List<GameplayEffect> AdditionalEffects;
-
-    [Tooltip("VFX del impacto (chispa/sangre). Se reproduce en todos los peers.")]
-    public GameObject HitVFX;
-
-    [Header("Retroceso (impulso contrario al tiro)")]
-    [Tooltip("Velocidad del empujón hacia atrás. 0 = sin retroceso.")]
+    [Section("Retroceso")]
+    [Tooltip("Velocidad del empujón hacia atrás (contrario al tiro: disparar al piso te eleva). " +
+             "0 = sin retroceso.")]
     public float RecoilSpeed = 0f;
 
+    [ShowIf(nameof(RecoilSpeed), ShowIfAttribute.Positive)]
     [Tooltip("Cuánto dura el empujón (después cae por gravedad).")]
     public float RecoilDuration = 0.25f;
 
@@ -72,14 +64,20 @@ public class GA_HitscanShot : GameplayAbility
              "rato y se va disipando. Se conserva también la parte VERTICAL, así que un rocket " +
              "jump mantiene el arco en vez de caer a plomo apenas termina el impulso.")]
     [Range(0f, 1f)]
+    [ShowIf(nameof(RecoilSpeed), ShowIfAttribute.Positive)]
     public float RecoilExitSpeedPercent = 0.35f;
 
+    [ShowIf(nameof(RecoilSpeed), ShowIfAttribute.Positive)]
     [Tooltip("Qué tan rápido se disipa esa inercia, en 1/segundos. Más alto = se va antes. " +
              "Mientras dura, el jugador conserva el control normal: puede girar, frenar y saltar.")]
     public float RecoilExitDamping = 3f;
 
+    [ShowIf(nameof(RecoilSpeed), ShowIfAttribute.Positive)]
     [Tooltip("Capa de JUGADORES a atravesar durante el empujón (igual que en el dash).")]
     public LayerMask ExcludePlayerLayer;
+
+    // El impacto del tiro (en la pared o en el enemigo) es un punto: acepta VFX de impacto.
+    public override bool SupportsVisualTiming(EVisualWhen when) => true;
 
     public override void Activate()
     {
@@ -175,21 +173,14 @@ public class GA_HitscanShot : GameplayAbility
 
         if (victim != null)
         {
-            if (DamageEffect != null) victim.ApplyGameplayEffect(DamageEffect, OwnerASC);
-            ApplyEffectsTo(AdditionalEffects, victim);
+            ApplyHitEffects(victim, firstHit: true);
             ChargeUltimate();
+            // El sonido ya va con el impacto de abajo: acá solo los VFX de golpe.
+            BroadcastHitVFX(victim, withSound: false);
         }
 
         // VFX del impacto (en la pared o en el enemigo) para todos los peers.
-        if (netAsc != null) netAsc.ServerPlayAbilityVFX(this, impactPoint);
-        else PlayImpactVFX(impactPoint);
-    }
-
-    public override void PlayImpactVFX(Vector3 position)
-    {
-        if (HitVFX == null) return;
-        GameObject vfx = Instantiate(HitVFX, position, Quaternion.identity);
-        Destroy(vfx, 1.5f);
+        BroadcastImpactVFX(impactPoint);
     }
 
     // Vista previa del disparo en el Editor.
@@ -203,5 +194,34 @@ public class GA_HitscanShot : GameplayAbility
         Gizmos.color = new Color(1f, 0.9f, 0.2f, 0.9f);
         Gizmos.DrawLine(p0, p1);
         if (BulletRadius > 0f) Gizmos.DrawWireSphere(p1, BulletRadius);
+    }
+
+#if UNITY_EDITOR
+    public override void DrawSceneHandles(Transform origin)
+    {
+        if (origin == null) return;
+
+        AbilityHandles.Height(this, "Muzzle Height", origin.position, ref MuzzleHeight, AbilityHandles.OffsetColor);
+        Vector3 p0 = origin.position + Vector3.up * MuzzleHeight;
+        AbilityHandles.Distance(this, "Max Range", p0, origin.forward, ref MaxRange, AbilityHandles.DistanceColor);
+    }
+#endif
+
+    // =========================================================
+    // DATOS VIEJOS (solo para pasarlos a las listas; ver GameplayAbility.UpgradeLegacyData)
+    // =========================================================
+
+    [SerializeField, HideInInspector] private GameplayEffect DamageEffect;
+    [SerializeField, HideInInspector] private List<GameplayEffect> AdditionalEffects;
+    [SerializeField, HideInInspector] private GameObject HitVFX;
+
+    protected override void OnUpgradeLegacyData(ref bool changed)
+    {
+        base.OnUpgradeLegacyData(ref changed);
+
+        UpgradeEffect(ref DamageEffect, EEffectWhen.OnHit, EEffectTarget.Enemies, ref changed);
+        UpgradeEffects(AdditionalEffects, EEffectWhen.OnHit, EEffectTarget.Enemies, ref changed);
+        // Salía donde pegaba el tiro (pared o enemigo): es un VFX "en el impacto".
+        UpgradeVisual(ref HitVFX, new AbilityVisual { When = EVisualWhen.OnImpact, DestroyTime = 1.5f }, ref changed);
     }
 }

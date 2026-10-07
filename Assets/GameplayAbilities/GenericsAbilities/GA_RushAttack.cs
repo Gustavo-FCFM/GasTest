@@ -14,7 +14,7 @@ using System.Collections.Generic;
 // corto y rápido, no hay tiempo de cambiar nada). Acá el trayecto no se conoce de
 // antemano (se tuerce y se puede cortar), así que el servidor mira cada frame quién
 // está cerca del dueño y le pega al llegar. Con StopAtFirstEnemy, el primero que toca
-// recibe el golpe (y los FirstHitEffects: el aturdido de la Patada del dragón) y la
+// recibe el golpe (y los efectos "al primer golpe": el aturdido de la Patada del dragón) y la
 // embestida termina ahí; sin eso atraviesa y le pega a todos una vez.
 //
 // RED: el movimiento lo hace el dueño (el transform es suyo): NetworkASC.ServerStartRush
@@ -29,7 +29,7 @@ using System.Collections.Generic;
 [CreateAssetMenu(fileName = "GA_RushAttack", menuName = "GAS/Generics/Rush Attack")]
 public class GA_RushAttack : GameplayAbility, IChanneledAbility
 {
-    [Header("Movimiento")]
+    [Section(AbilitySection.Movement)]
     [Tooltip("Metros que recorre si nada la corta.")]
     public float Distance = 14f;
 
@@ -45,25 +45,14 @@ public class GA_RushAttack : GameplayAbility, IChanneledAbility
     [Tooltip("Capas que atraviesa mientras dura (los jugadores), sin dejar de chocar con las paredes.")]
     public LayerMask ExcludePlayerLayer;
 
-    [Header("Golpe")]
-    public GameplayEffect DamageEffect;
-
-    [Tooltip("Efectos extra a cada enemigo golpeado.")]
-    public List<GameplayEffect> AdditionalEffects = new List<GameplayEffect>();
-
-    [Tooltip("Efectos solo al PRIMER enemigo golpeado (el aturdido de la Patada del dragón).")]
-    public List<GameplayEffect> FirstHitEffects = new List<GameplayEffect>();
-
-    [Tooltip("Radio alrededor del dueño en el que un enemigo cuenta como alcanzado.")]
-    public float HitRadius = 1.2f;
-
     [Tooltip("Termina en el primer enemigo que toca. Apagado = lo atraviesa y sigue (cada enemigo, una vez).")]
     public bool StopAtFirstEnemy = true;
 
-    [Tooltip("VFX de impacto en cada enemigo golpeado (en todas las pantallas).")]
-    public GameObject HitVFX;
+    [Section(AbilitySection.Shape)]
+    [Tooltip("Radio alrededor del dueño en el que un enemigo cuenta como alcanzado.")]
+    public float HitRadius = 1.2f;
 
-    [Header("Animación")]
+    [Section(AbilitySection.Animation)]
     [Tooltip("OPCIONAL: pose EN BUCLE mientras dura (la patada extendida). Vacío = solo el AnimationClip suelto.")]
     public AnimationClip RushLoopClip;
 
@@ -148,7 +137,6 @@ public class GA_RushAttack : GameplayAbility, IChanneledAbility
         System.Array.Sort(cols, (a, b) =>
             (a.transform.position - center).sqrMagnitude.CompareTo((b.transform.position - center).sqrMagnitude));
 
-        NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
         bool any = false;
 
         foreach (Collider c in cols)
@@ -161,25 +149,13 @@ public class GA_RushAttack : GameplayAbility, IChanneledAbility
             hit.Add(asc);
             any = true;
 
-            if (DamageEffect != null) asc.ApplyGameplayEffect(DamageEffect, OwnerASC);
-            ApplyEffectsTo(AdditionalEffects, asc);
-            if (first) ApplyEffectsTo(FirstHitEffects, asc);
+            ApplyHitEffects(asc, firstHit: first);
             ChargeUltimate();
-
-            Vector3 hitPos = asc.transform.position + Vector3.up;
-            if (netAsc != null) netAsc.ServerPlayAbilityVFX(this, hitPos);
-            else PlayImpactVFX(hitPos);
+            BroadcastHitVFX(asc);
 
             if (StopAtFirstEnemy) break;
         }
         return any;
-    }
-
-    public override void PlayImpactVFX(Vector3 position)
-    {
-        if (HitVFX == null) return;
-        GameObject vfx = Instantiate(HitVFX, position, Quaternion.identity);
-        Destroy(vfx, 1.5f);
     }
 
     public override void DrawGizmos(Transform origin)
@@ -191,5 +167,36 @@ public class GA_RushAttack : GameplayAbility, IChanneledAbility
         Gizmos.DrawLine(p0, p1);
         Gizmos.DrawWireSphere(p0, HitRadius);
         Gizmos.DrawWireSphere(p1, HitRadius);
+    }
+
+#if UNITY_EDITOR
+    public override void DrawSceneHandles(Transform origin)
+    {
+        if (origin == null) return;
+
+        Vector3 p0 = origin.position + Vector3.up;
+        AbilityHandles.Distance(this, "Distance", p0, origin.forward, ref Distance, AbilityHandles.DistanceColor);
+        AbilityHandles.Radius(this, "Hit Radius", p0, ref HitRadius, AbilityHandles.RadiusColor, origin.right);
+    }
+#endif
+
+    // =========================================================
+    // DATOS VIEJOS (solo para pasarlos a las listas; ver GameplayAbility.UpgradeLegacyData)
+    // =========================================================
+
+    [SerializeField, HideInInspector] private GameplayEffect DamageEffect;
+    [SerializeField, HideInInspector] private List<GameplayEffect> AdditionalEffects;
+    [SerializeField, HideInInspector] private List<GameplayEffect> FirstHitEffects;
+    [SerializeField, HideInInspector] private GameObject HitVFX;
+
+    protected override void OnUpgradeLegacyData(ref bool changed)
+    {
+        base.OnUpgradeLegacyData(ref changed);
+
+        UpgradeEffect(ref DamageEffect, EEffectWhen.OnHit, EEffectTarget.Enemies, ref changed);
+        UpgradeEffects(AdditionalEffects, EEffectWhen.OnHit, EEffectTarget.Enemies, ref changed);
+        UpgradeEffects(FirstHitEffects, EEffectWhen.OnFirstHit, EEffectTarget.Enemies, ref changed);
+        UpgradeVisual(ref HitVFX, new AbilityVisual { When = EVisualWhen.OnHit, Offset = Vector3.up, DestroyTime = 1.5f },
+                      ref changed);
     }
 }

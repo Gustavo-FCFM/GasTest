@@ -6,19 +6,23 @@ using System.Collections.Generic;
 // GA_ConeAttack
 //
 // Ataque cuerpo a cuerpo en forma de cono frente al dueño: detecta
-// enemigos dentro de un radio (Range) y un ángulo (ConeAngle
-// heredado de GameplayAbility), y les aplica DamageEffect. Pensada
-// para ataques primarios tipo hacha/espada.
+// a quien esté dentro de un radio (Range) y un ángulo (ConeAngle),
+// y le aplica la lista de efectos de la habilidad (GameplayAbility.Effects).
+// Pensada para ataques primarios tipo hacha/espada.
+//
+// A los ALIADOS solo los tiene en cuenta si la lista trae algo para ellos: así un
+// ataque normal los ignora, y uno con una curación a aliados daña enemigos y cura
+// amigos a su paso (Castigo divino del Paladín).
 // ============================================================
 [CreateAssetMenu(fileName = "GA_ConeAttack", menuName = "GAS/Generics/Cone Attack")]
 public class GA_ConeAttack : GameplayAbility
 {
-    [Header("Configuración del Cono")]
-    // Radio del cono de detección, desde la posición del dueño.
+    [Section(AbilitySection.Shape)]
+    [Tooltip("Alcance del cono, en metros, desde el punto de salida.")]
     public float Range = 2.5f;
 
     [Range(0f, 360f)]
-    // Ángulo de apertura del cono de detección.
+    [Tooltip("Apertura del cono, en grados (el ángulo completo). 90 = un cuarto de círculo.")]
     public float ConeAngle = 90f;
 
     [Tooltip("El barrido se inclina hacia donde apunta la CÁMARA (arriba o abajo), en vez de " +
@@ -38,27 +42,6 @@ public class GA_ConeAttack : GameplayAbility
              "Importa MÁS con puntería vertical encendida, porque ahí el ángulo se mide en 3D.\n\n" +
              "En CERO (el default) sale del pivote, como se comportó siempre.")]
     public Vector3 OriginOffset = Vector3.zero;
-
-    [Header("Efectos")]
-    // Efecto que se le aplica a cada enemigo golpeado.
-    public GameplayEffect DamageEffect;
-    // Efectos EXTRA que se aplican a cada enemigo golpeado, además del daño
-    // (ralentizar, heridas, marcar, etc.). Opcional.
-    public List<GameplayEffect> AdditionalEffects;
-
-    [Tooltip("Efectos que esta habilidad le aplica a los ALIADOS que alcance. El daño y los " +
-             "AdditionalEffects van a los enemigos; esta lista, a los aliados.\n\n" +
-             "VACÍA (lo normal) = la habilidad ignora por completo a los aliados. En cuanto tenga " +
-             "algo, empieza a considerarlos objetivos válidos: es lo que convierte un ataque normal " +
-             "en uno que daña enemigos Y cura aliados a su paso (Castigo divino del Paladín).")]
-    // FormerlySerializedAs: se llamó "AllyEffects" y vivía en GameplayAbility. Unity
-    // serializa por NOMBRE, así que mientras el campo siga llamándose TargetEffects los
-    // assets ya configurados conservan su valor al bajarlo a esta clase.
-    [UnityEngine.Serialization.FormerlySerializedAs("AllyEffects")]
-    public List<GameplayEffect> TargetEffects;
-
-    // VFX que aparece en cada enemigo golpeado.
-    public GameObject HitVFX;
 
     // Valida, rota al dueño hacia el punto de mira, cobra costo/cooldown
     // y arranca la secuencia de ataque.
@@ -114,7 +97,12 @@ public class GA_ConeAttack : GameplayAbility
 
         // El alcance crece con MeleeRangeBonus (el Avatar del Guardián).
         Collider[] potentialTargets = Physics.OverlapSphere(origin, Range * MeleeReach, TargetLayer);
-        NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
+
+        // Del más cercano al más lejano: así "el primer golpe" (los efectos al primer
+        // golpe) cae en el que de verdad está adelante, y no en uno al azar
+        // (OverlapSphere no devuelve los colliders en ningún orden garantizado).
+        System.Array.Sort(potentialTargets, (a, b) =>
+            (a.transform.position - origin).sqrMagnitude.CompareTo((b.transform.position - origin).sqrMagnitude));
 
         // Hacia dónde apunta el cono. Se resuelve UNA vez por frame de impacto, no por
         // objetivo: en un barrido escalonado, cada golpe usa la dirección de SU momento.
@@ -141,44 +129,29 @@ public class GA_ConeAttack : GameplayAbility
             AbilitySystemComponent targetASC = targetCollider.GetComponentInParent<AbilitySystemComponent>();
             if (targetASC == null || targetsHit.Contains(targetASC)) continue;
 
-            // Reparte según afiliación: daño a enemigos, TargetEffects a aliados (solo
-            // si la habilidad los tiene configurados — si no, devuelve false y el
-            // aliado se saltea, que es el comportamiento clásico).
-            if (!ApplyAffiliationEffects(targetASC, DamageEffect, TargetEffects)) continue;
+            // La lista de efectos reparte según afiliación: a los enemigos siempre, a los
+            // aliados solo si hay algo para ellos (si no, devuelve false y se saltea).
+            if (!ApplyHitEffects(targetASC, firstHit: targetsHit.Count == 0)) continue;
 
-            // Los efectos extra y la carga de ultimate son parte del GOLPE: solo
-            // corresponden cuando lo alcanzado es un enemigo.
+            // La carga de ultimate y el gancho son parte del GOLPE: solo corresponden
+            // cuando lo alcanzado es un enemigo.
             if (IsEnemy(targetASC))
             {
-                ApplyEffectsTo(AdditionalEffects, targetASC);
                 ChargeUltimate();
                 OnEnemyHit(targetASC);
             }
 
             targetsHit.Add(targetASC);
 
-            // Instantiate() acá solo crearía el VFX en el proceso que
-            // corre esta habilidad (el servidor) — un cliente remoto
-            // nunca lo vería. ServerPlayAbilityVFX lo reproduce en el
-            // servidor y le avisa a los demás peers.
-            Vector3 hitPos = targetASC.transform.position + Vector3.up;
-            if (netAsc != null) netAsc.ServerPlayAbilityVFX(this, hitPos);
-            else PlayImpactVFX(hitPos);
+            // Instantiate() acá solo crearía el VFX en el proceso que corre esta
+            // habilidad (el servidor): BroadcastHitVFX lo reproduce en todos los peers.
+            BroadcastHitVFX(targetASC);
         }
     }
 
     // Gancho para que una habilidad concreta reaccione a cada ENEMIGO alcanzado (la
     // Quemadura santa del Clérigo de la Luz lo marca). Corre en el servidor.
     protected virtual void OnEnemyHit(AbilitySystemComponent enemy) { }
-
-    // Instancia HitVFX en la posición de impacto. La llama cada peer con
-    // su propia copia (ver ServerPlayAbilityVFX).
-    public override void PlayImpactVFX(Vector3 position)
-    {
-        if (HitVFX == null) return;
-        GameObject hitInstance = Instantiate(HitVFX, position, Quaternion.identity);
-        Destroy(hitInstance, 2.0f);
-    }
 
     // Dibuja el cono real: mismo Range/ConeAngle que usa
     // PerformDetectionAndDamage() (OverlapSphere + filtro de ángulo).
@@ -204,5 +177,39 @@ public class GA_ConeAttack : GameplayAbility
         }
 
         Gizmos.DrawLine(center, prevPoint);
+    }
+
+#if UNITY_EDITOR
+    public override void DrawSceneHandles(Transform origin)
+    {
+        if (origin == null) return;
+
+        Vector3 center = origin.TransformPoint(OriginOffset);
+        AbilityHandles.Distance(this, "Range", center, origin.forward, ref Range, AbilityHandles.DistanceColor);
+        AbilityHandles.Angle(this, "Cone Angle", center, origin.forward, Range, ref ConeAngle, AbilityHandles.AngleColor);
+        AbilityHandles.Offset(this, "Origin Offset", origin, ref OriginOffset, AbilityHandles.OffsetColor);
+    }
+#endif
+
+    // =========================================================
+    // DATOS VIEJOS (solo para pasarlos a las listas; ver GameplayAbility.UpgradeLegacyData)
+    // =========================================================
+
+    [SerializeField, HideInInspector] private GameplayEffect DamageEffect;
+    [SerializeField, HideInInspector] private List<GameplayEffect> AdditionalEffects;
+    // Se llamó "AllyEffects" y vivía en GameplayAbility.
+    [UnityEngine.Serialization.FormerlySerializedAs("AllyEffects")]
+    [SerializeField, HideInInspector] private List<GameplayEffect> TargetEffects;
+    [SerializeField, HideInInspector] private GameObject HitVFX;
+
+    protected override void OnUpgradeLegacyData(ref bool changed)
+    {
+        base.OnUpgradeLegacyData(ref changed);
+
+        UpgradeEffect(ref DamageEffect, EEffectWhen.OnHit, EEffectTarget.Enemies, ref changed);
+        UpgradeEffects(AdditionalEffects, EEffectWhen.OnHit, EEffectTarget.Enemies, ref changed);
+        UpgradeEffects(TargetEffects, EEffectWhen.OnHit, EEffectTarget.Allies, ref changed);
+        UpgradeVisual(ref HitVFX, new AbilityVisual { When = EVisualWhen.OnHit, Offset = Vector3.up, DestroyTime = 2f },
+                      ref changed);
     }
 }

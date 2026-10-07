@@ -30,14 +30,15 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "GA_Teleport", menuName = "GAS/Generics/Teleport")]
 public class GA_Teleport : GameplayAbility, IGroundTargetAbility
 {
-    [Header("Destino")]
+    [Section(AbilitySection.Shape)]
     [Tooltip("Distancia máxima (en el plano) desde el personaje hasta el destino.")]
     public float MaxRange = 12f;
 
+    [ShowIf(nameof(DirectionalTeleport), false)]
     [Tooltip("Radio del marcador en el suelo (solo visual, sin Directional).")]
     public float MarkerRadius = 1f;
 
-    [Header("Dirección (estilo Misty Step)")]
+    [Section(AbilitySection.Movement)]
     [Tooltip("Apagado: se marca el lugar manteniendo el botón y al soltar apareces ahí.\n" +
              "Prendido: sale al APRETAR, con la misma regla que el dash direccional. Si " +
              "caminas hacia donde miras (o estás quieto), vas a donde miras; si caminas de " +
@@ -48,6 +49,7 @@ public class GA_Teleport : GameplayAbility, IGroundTargetAbility
     [Tooltip("Solo con Directional: qué tan alineado con la mira tiene que ir el movimiento " +
              "para contar como 'hacia adelante'. 0.5 ≈ incluye las diagonales hacia adelante.")]
     [Range(0f, 1f)]
+    [ShowIf(nameof(DirectionalTeleport))]
     public float ForwardDot = 0.5f;
 
     public float MaxTargetRange   => MaxRange;
@@ -55,7 +57,7 @@ public class GA_Teleport : GameplayAbility, IGroundTargetAbility
     // Direccional sale al apretar, sin marcador: es una esquiva, tiene que ser inmediata.
     public bool  UsesGroundTarget => !DirectionalTeleport;
 
-    [Header("Aterrizaje seguro")]
+    [Section("Aterrizaje seguro", startCollapsed: true)]
     [Tooltip("Capas del escenario: piso y obstáculos. Por defecto todo menos los personajes " +
              "(7). Las paredes invisibles (Ignore Raycast, 2) frenan pero nunca cuentan como piso.")]
     public LayerMask EnvironmentMask = ~(1 << 7);
@@ -84,10 +86,11 @@ public class GA_Teleport : GameplayAbility, IGroundTargetAbility
              "de cada punto que se prueba. Si no hay piso a esa distancia, ese punto no vale.")]
     public float MaxDrop = 4f;
 
-    [Header("Visuales")]
-    [Tooltip("Se reproduce en el punto de salida y en el de llegada (el VisualsSequence del " +
-             "asset sigue funcionando aparte).")]
-    public GameObject FlashVFX;
+    // Los VFX "en el impacto" salen en el punto de salida y en el de llegada (el destello
+    // de antes, FlashVFX). No busca personajes con TargetLayer ni golpea a nadie.
+    public override bool UsesTargetLayer => false;
+    public override bool UsesHitEffects  => false;
+    public override bool SupportsVisualTiming(EVisualWhen when) => when != EVisualWhen.OnHit || UsesHitEffects;
 
     private const int InvisibleWalls = 1 << 2;   // Ignore Raycast: límites y paredes de salas
     private int FloorMask => EnvironmentMask & ~InvisibleWalls;
@@ -157,18 +160,14 @@ public class GA_Teleport : GameplayAbility, IGroundTargetAbility
     protected virtual void ExecuteTeleport(PlayerController pc, NetworkAbilitySystemComponent netAsc,
                                            Vector3 origin, Vector3 landing, Vector3 faceDir)
     {
-        if (netAsc != null)
-        {
-            netAsc.ServerPlayAbilityVFX(this, origin + Vector3.up);
-            netAsc.ServerTeleportOwnerTo(landing, faceDir);
-            netAsc.ServerPlayAbilityVFX(this, landing + Vector3.up);
-        }
-        else if (pc != null)
-        {
-            PlayImpactVFX(origin + Vector3.up);
-            pc.TeleportTo(landing, faceDir);
-            PlayImpactVFX(landing + Vector3.up);
-        }
+        // Los VFX "en el impacto" se piden a los PIES: la altura la pone el Offset de cada
+        // entrada (el destello de siempre va con (0, 1, 0), a la altura del pecho).
+        BroadcastImpactVFX(origin);
+
+        if (netAsc != null)  netAsc.ServerTeleportOwnerTo(landing, faceDir);
+        else if (pc != null) pc.TeleportTo(landing, faceDir);
+
+        BroadcastImpactVFX(landing);
 
         if (pc != null) pc.PlayAnimation(this);
 
@@ -330,17 +329,39 @@ public class GA_Teleport : GameplayAbility, IGroundTargetAbility
                                  QueryTriggerInteraction.Ignore);
     }
 
-    public override void PlayImpactVFX(Vector3 position)
-    {
-        if (FlashVFX == null) return;
-        GameObject vfx = Instantiate(FlashVFX, position, Quaternion.identity);
-        Destroy(vfx, 2f);
-    }
-
     public override void DrawGizmos(Transform origin)
     {
         if (origin == null) return;
         Gizmos.color = new Color(1f, 0.95f, 0.5f, 0.9f);
         Gizmos.DrawWireSphere(origin.position, MaxRange);
+    }
+
+#if UNITY_EDITOR
+    public override void DrawSceneHandles(Transform origin)
+    {
+        if (origin == null) return;
+        AbilityHandles.Distance(this, "Max Range", origin.position, origin.forward, ref MaxRange,
+                                AbilityHandles.DistanceColor);
+    }
+#endif
+
+    // =========================================================
+    // DATOS VIEJOS (solo para pasarlos a las listas; ver GameplayAbility.UpgradeLegacyData)
+    // =========================================================
+
+    [SerializeField, HideInInspector] private GameObject FlashVFX;
+
+    // A qué altura salía el destello: el teletransporte lo pedía a la altura del pecho; el
+    // Salto heroico, en el piso donde cae.
+    protected virtual Vector3 LegacyFlashOffset => Vector3.up;
+
+    protected override void OnUpgradeLegacyData(ref bool changed)
+    {
+        base.OnUpgradeLegacyData(ref changed);
+
+        UpgradeVisual(ref FlashVFX, new AbilityVisual
+        {
+            When = EVisualWhen.OnImpact, Offset = LegacyFlashOffset, DestroyTime = 2f,
+        }, ref changed);
     }
 }

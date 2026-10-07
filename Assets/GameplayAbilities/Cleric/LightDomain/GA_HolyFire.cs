@@ -21,7 +21,7 @@ using System.Collections.Generic;
 [CreateAssetMenu(fileName = "GA_HolyFire", menuName = "GAS/Specific Abilities/Cleric/Light/Holy Fire")]
 public class GA_HolyFire : GA_ConeAttack
 {
-    [Header("La Marca (aliados que lo golpean se curan)")]
+    [Section("La marca (aliados que lo golpean se curan)")]
     [Tooltip("Segundos que queda marcado cada enemigo alcanzado. Lo natural es lo mismo que " +
              "dura la quemadura.")]
     public float MarkDuration = 5f;

@@ -18,7 +18,7 @@ using System.Collections.Generic;
 [CreateAssetMenu(fileName = "GA_CopyParty", menuName = "GAS/Specific Abilities/Rogue/Illusionist/Copy Party")]
 public class GA_CopyParty : GameplayAbility
 {
-    [Header("Fiesta de copias")]
+    [Section("Copias")]
     [Tooltip("Cuántas copias genera CADA jugador elegible (uno mismo + aliados en rango).")]
     public int CopiesPerPlayer = 4;
     [Tooltip("Radio para encontrar aliados (y a vos mismo) a copiar.")]
@@ -29,6 +29,29 @@ public class GA_CopyParty : GameplayAbility
     public float MoveSpeedOverride = 0f;
     [Tooltip("Capa de personajes para buscar a los jugadores (Character).")]
     public LayerMask CharacterLayer;
+
+    // Busca con su propia capa (CharacterLayer) y no golpea a nadie: crea copias.
+    public override bool UsesTargetLayer => false;
+    public override bool UsesHitEffects  => false;
+
+    public override void DrawGizmos(Transform origin)
+    {
+        if (origin == null) return;
+        Gizmos.color = new Color(0.7f, 0.5f, 1f, 0.8f);
+        Gizmos.DrawWireSphere(origin.position, Range);
+        Gizmos.color = new Color(0.7f, 0.5f, 1f, 0.4f);
+        Gizmos.DrawWireSphere(origin.position, DisperseDistance);
+    }
+
+#if UNITY_EDITOR
+    public override void DrawSceneHandles(Transform origin)
+    {
+        if (origin == null) return;
+        AbilityHandles.Radius(this, "Range", origin.position, ref Range, AbilityHandles.RadiusColor, origin.right);
+        AbilityHandles.Radius(this, "Disperse Distance", origin.position, ref DisperseDistance,
+                              AbilityHandles.DistanceColor, origin.forward);
+    }
+#endif
 
     public override void Activate()
     {

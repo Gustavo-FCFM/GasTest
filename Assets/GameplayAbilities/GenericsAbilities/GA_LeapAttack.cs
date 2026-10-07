@@ -15,31 +15,19 @@ using System.Collections.Generic;
 [CreateAssetMenu(fileName = "GA_LeapAttack", menuName = "GAS/Generics/Leap Attack")]
 public class GA_LeapAttack : GameplayAbility, ILeapAbility
 {
-    [Header("Configuración del Salto")]
-    // Impulso vertical inicial del salto.
+    [Section(AbilitySection.Movement)]
+    [Tooltip("Impulso vertical inicial del salto.")]
     public float JumpVelocity = 15f;
-    // Impulso hacia adelante (dirección de la cámara del dueño) del salto.
+    [Tooltip("Impulso hacia adelante (hacia donde mira la cámara del dueño).")]
     public float ForwardForce = 5f;
 
-    [Header("Área de Impacto")]
-    // Radio del área de daño al aterrizar (slam).
+    [Section(AbilitySection.Shape)]
+    [Tooltip("Radio del golpe al aterrizar, en metros. A los alcanzados les aplica la lista de " +
+             "efectos; el VFX del aterrizaje es una entrada 'En el impacto' (con 'Calzar con el " +
+             "área' mide lo mismo que este radio).")]
     public float AbilityRadius = 3f;
 
-    [Header("Efectos")]
-    // Daño que recibe cada enemigo dentro de AbilityRadius al aterrizar.
-    public GameplayEffect DamageEffect;
-    // Control de masas (aturdir, enraizar, etc.) que además se le aplica
-    // a cada enemigo golpeado.
-    public GameplayEffect CrowdControlEffect;
-    // Efectos EXTRA que se aplican a cada enemigo golpeado al aterrizar. Opcional.
-    public List<GameplayEffect> AdditionalEffects;
-
-    [Header("Visuales")]
-    public GameObject ImpactVFX;
-    [Tooltip("Multiplica AbilityRadius para el tamaño del VFX. No afecta el daño real — solo lo visual.")]
-    public float ImpactVFXScaleMultiplier = 2f;
-
-    [Header("Animación aérea")]
+    [Section(AbilitySection.Animation)]
     [Tooltip("OPCIONAL: el DESPEGUE. Se reproduce una vez y encadena al bucle.\n\n" +
              "Va separado del bucle a propósito: si el despegue vive dentro del clip que se " +
              "loopea, el salto entero se repite una y otra vez mientras el personaje está en el " +
@@ -104,11 +92,9 @@ public class GA_LeapAttack : GameplayAbility, ILeapAbility
         // El VFX de impacto es puramente cosmético, pero Instantiate() acá
         // (que corre en el servidor) solo lo crea en ESTE proceso — igual
         // que pasaba con el arma del proyectil, un cliente remoto nunca lo
-        // ve. ServerPlayAbilityVFX lo reproduce localmente en el servidor Y
+        // ve. BroadcastImpactVFX lo reproduce localmente en el servidor Y
         // le avisa a los demás peers que hagan lo mismo con su propia copia.
-        NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
-        if (netAsc != null) netAsc.ServerPlayAbilityVFX(this, impactCenter);
-        else PlayImpactVFX(impactCenter); // fallback sin red (singleplayer/NPC)
+        BroadcastImpactVFX(impactCenter);
 
         Collider[] hitColliders = Physics.OverlapSphere(impactCenter, AbilityRadius, TargetLayer);
         HashSet<AbilitySystemComponent> enemiesHit = new HashSet<AbilitySystemComponent>();
@@ -120,29 +106,17 @@ public class GA_LeapAttack : GameplayAbility, ILeapAbility
 
             if (IsEnemy(targetASC) && !enemiesHit.Contains(targetASC))
             {
-                if (DamageEffect != null)        targetASC.ApplyGameplayEffect(DamageEffect, OwnerASC);
+                ApplyHitEffects(targetASC, firstHit: enemiesHit.Count == 0);
                 ChargeUltimate();
-                if (CrowdControlEffect != null)  targetASC.ApplyGameplayEffect(CrowdControlEffect, OwnerASC);
-                ApplyEffectsTo(AdditionalEffects, targetASC);
+                BroadcastHitVFX(targetASC, withSound: false);
                 enemiesHit.Add(targetASC);
             }
         }
     }
 
-    // Instancia ImpactVFX escalado según AbilityRadius. Llamado
-    // localmente por cada peer (servidor y, vía ObserversRpc, todos los
-    // clientes) para reproducir el VFX con su propia copia del prefab —
-    // ver NetworkAbilitySystemComponent.ServerPlayAbilityVFX().
-    public override void PlayImpactVFX(Vector3 position)
-    {
-        if (ImpactVFX == null) return;
-
-        GameObject vfx = Instantiate(ImpactVFX, position, Quaternion.identity);
-
-        // Con VFX_AreaVisual el círculo de impacto calza EXACTO con AbilityRadius y se
-        // desvanece; si no, cae al multiplicador a ojo de siempre.
-        VFX_AreaVisual.Configure(vfx, AbilityRadius, ImpactVFXScaleMultiplier, 2.0f);
-    }
+    // El área del aterrizaje: con "Calzar con el área", el VFX mide lo mismo que el golpe.
+    public override float VisualAreaRadius => AbilityRadius;
+    public override bool SupportsVisualTiming(EVisualWhen when) => true;
 
     // El impacto real se resuelve alrededor de OwnerASC.transform.position al
     // ATERRIZAR (ver ExecuteImpactCheck arriba) — no sabemos de antemano dónde
@@ -156,5 +130,38 @@ public class GA_LeapAttack : GameplayAbility, ILeapAbility
         Gizmos.DrawSphere(origin.position, AbilityRadius);
         Gizmos.color = new Color(1f, 0.25f, 0.1f, 1f);
         Gizmos.DrawWireSphere(origin.position, AbilityRadius);
+    }
+
+#if UNITY_EDITOR
+    public override void DrawSceneHandles(Transform origin)
+    {
+        if (origin == null) return;
+        AbilityHandles.Radius(this, "Ability Radius", origin.position, ref AbilityRadius,
+                              AbilityHandles.RadiusColor, origin.right);
+    }
+#endif
+
+    // =========================================================
+    // DATOS VIEJOS (solo para pasarlos a las listas; ver GameplayAbility.UpgradeLegacyData)
+    // =========================================================
+
+    [SerializeField, HideInInspector] private GameplayEffect DamageEffect;
+    [SerializeField, HideInInspector] private GameplayEffect CrowdControlEffect;
+    [SerializeField, HideInInspector] private List<GameplayEffect> AdditionalEffects;
+    [SerializeField, HideInInspector] private GameObject ImpactVFX;
+    [SerializeField, HideInInspector] private float ImpactVFXScaleMultiplier = 2f;
+
+    protected override void OnUpgradeLegacyData(ref bool changed)
+    {
+        base.OnUpgradeLegacyData(ref changed);
+
+        UpgradeEffect(ref DamageEffect, EEffectWhen.OnHit, EEffectTarget.Enemies, ref changed);
+        UpgradeEffect(ref CrowdControlEffect, EEffectWhen.OnHit, EEffectTarget.Enemies, ref changed);
+        UpgradeEffects(AdditionalEffects, EEffectWhen.OnHit, EEffectTarget.Enemies, ref changed);
+        UpgradeVisual(ref ImpactVFX, new AbilityVisual
+        {
+            When = EVisualWhen.OnImpact, MatchAreaSize = true,
+            AreaSizeMultiplier = ImpactVFXScaleMultiplier, DestroyTime = 2f,
+        }, ref changed);
     }
 }

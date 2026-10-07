@@ -48,24 +48,27 @@ public class GA_TagSwitch : GameplayAbility
         public Sprite Icon;
     }
 
-    [Header("Ícono")]
+    [Section(AbilitySection.General)]
     [Tooltip("Si el botón muestra el ícono de la variante que se dispararía AHORA, en vez del " +
              "propio. Lo usan las posturas del Guerrero (Q y Shift) para que se vea en qué " +
              "postura está. Apagado = el ícono de siempre (el Castigo divino del Paladín).")]
     public bool ShowVariantIcon = false;
 
-    [Tooltip("Solo con ShowVariantIcon: el ícono cuando no aplica ninguna variante. Vacío = el " +
-             "de DefaultAbility.")]
+    [ShowIf(nameof(ShowVariantIcon))]
+    [Tooltip("El ícono cuando no aplica ninguna variante. Vacío = el de DefaultAbility.")]
     public Sprite DefaultIcon;
 
-    [Header("Variante por Defecto")]
+    [Section("Variantes")]
     [Tooltip("La que se ejecuta cuando no aplica ninguna variante (el ataque normal).")]
     public GameplayAbility DefaultAbility;
 
-    [Header("Variantes por Tag")]
     [Tooltip("Se evalúan EN ORDEN y gana la primera cuyo tag esté presente. Poné arriba las " +
              "más específicas o las que deban tener prioridad si se solapan dos estados.")]
     public List<TagVariant> Variants;
+
+    // Envoltorio: busca y golpea la variante que se ejecuta, no esta.
+    public override bool UsesTargetLayer => false;
+    public override bool UsesHitEffects  => false;
 
     // Instancias clonadas de cada variante (una por habilidad, cacheada). Se crean
     // la primera vez que hacen falta y se reusan: las habilidades guardan estado de
@@ -280,6 +283,14 @@ public class GA_TagSwitch : GameplayAbility
     // principal desde el jugador seleccionado como con cualquier otra habilidad.
     public override void DrawGizmos(Transform origin)
     {
-        DefaultAbility?.DrawGizmos(origin);
+        if (DefaultAbility != null) DefaultAbility.DrawGizmos(origin);
     }
+
+#if UNITY_EDITOR
+    // Las manijas ajustan el asset de la variante por defecto (es la forma que se ve).
+    public override void DrawSceneHandles(Transform origin)
+    {
+        if (DefaultAbility != null && DefaultAbility != this) DefaultAbility.DrawSceneHandles(origin);
+    }
+#endif
 }

@@ -12,39 +12,41 @@ using System.Collections.Generic;
 //   1. Despega: el clip de la habilidad (AnimationClip, el comienzo de un salto).
 //   2. A los JumpDelay segundos APARECE en el destino (no es un salto físico: es un
 //      teletransporte con animación) y aterriza (LandClip).
-//   3. Golpea a los enemigos en ImpactRadius alrededor del punto de llegada.
+//   3. Golpea a los enemigos en ImpactRadius alrededor del punto de llegada (la lista de
+//      efectos de la habilidad).
 //   4. Clava la bandera: BannerAbility, una zona (GA_ContinuousAoE) que nace fija en el
 //      punto de llegada y daña a los enemigos / potencia a los aliados mientras dura.
 //
-// El destello del asset (FlashVFX) sale solo en la llegada, a los pies: es el impacto.
+// Los VFX "en el impacto" salen solo en la llegada, a los pies.
 // ============================================================
 [CreateAssetMenu(fileName = "GA_HeroicLeap", menuName = "GAS/Specific Abilities/Fighter/Commander/Heroic Leap")]
 public class GA_HeroicLeap : GA_Teleport
 {
-    [Header("Salto")]
-    [Tooltip("Segundos desde que despega hasta que aparece en el destino.")]
-    public float JumpDelay = 0.35f;
-
-    [Tooltip("Clip del aterrizaje (el despegue es el AnimationClip de la habilidad).")]
-    public AnimationClip LandClip;
-
-    [Tooltip("Segundos que queda ocupado después de aterrizar, antes de poder actuar.")]
-    public float LandRecovery = 0.5f;
-
-    [Header("Golpe al Llegar")]
+    [Section(AbilitySection.Shape)]
     [Tooltip("Radio del golpe alrededor del punto de llegada. También conviene ponerlo en " +
              "Marker Radius, así el marcador muestra a quién va a alcanzar.")]
     public float ImpactRadius = 3f;
 
-    public GameplayEffect ImpactDamageEffect;
+    [Section(AbilitySection.Timing)]
+    [Tooltip("Segundos desde que despega hasta que aparece en el destino.")]
+    public float JumpDelay = 0.35f;
 
-    [Tooltip("Efectos extra a cada enemigo alcanzado (opcional).")]
-    public List<GameplayEffect> ImpactEffects;
+    [Tooltip("Segundos que queda ocupado después de aterrizar, antes de poder actuar.")]
+    public float LandRecovery = 0.5f;
 
-    [Header("Bandera")]
+    [Section("Bandera")]
     [Tooltip("La zona que se clava al llegar. Nace FIJA en el punto de llegada (ponerle " +
              "FollowOwner apagado) y sin animación propia.")]
     public GA_ContinuousAoE BannerAbility;
+
+    [Section(AbilitySection.Animation)]
+    [Tooltip("Clip del aterrizaje (el despegue es el AnimationClip de la habilidad).")]
+    public AnimationClip LandClip;
+
+    // A diferencia del teletransporte, este sí golpea al llegar.
+    public override bool UsesTargetLayer => true;
+    public override bool UsesHitEffects  => true;
+    public override float VisualAreaRadius => ImpactRadius;
 
     // Para el RPC de animación de los pasos: 0 = despegue, 1 = aterrizaje.
     public override AnimationClip GetStepAnimationClip(int sequenceIndex, int stepIndex)
@@ -73,16 +75,10 @@ public class GA_HeroicLeap : GA_Teleport
         }
 
         // Aparece en el destino (el dueño mueve su propio transform).
-        if (netAsc != null)
-        {
-            netAsc.ServerTeleportOwnerTo(landing, faceDir);
-            netAsc.ServerPlayAbilityVFX(this, landing);
-        }
-        else if (pc != null)
-        {
-            pc.TeleportTo(landing, faceDir);
-            PlayImpactVFX(landing);
-        }
+        if (netAsc != null)  netAsc.ServerTeleportOwnerTo(landing, faceDir);
+        else if (pc != null) pc.TeleportTo(landing, faceDir);
+
+        BroadcastImpactVFX(landing);
 
         PlayLandAnimation(pc, netAsc);
         HitAround(landing);
@@ -109,16 +105,16 @@ public class GA_HeroicLeap : GA_Teleport
         if (ImpactRadius <= 0f) return;
 
         var done = new HashSet<AbilitySystemComponent>();
+        bool first = true;
         foreach (Collider c in Physics.OverlapSphere(center, ImpactRadius, TargetLayer))
         {
             AbilitySystemComponent target = c.GetComponentInParent<AbilitySystemComponent>();
             if (target == null || !done.Add(target)) continue;
             if (!IsEnemy(target) || target.HasTag(EGameplayTag.State_Dead)) continue;
 
-            if (ImpactDamageEffect != null) target.ApplyGameplayEffect(ImpactDamageEffect, OwnerASC);
-            if (ImpactEffects != null)
-                foreach (GameplayEffect effect in ImpactEffects)
-                    if (effect != null) target.ApplyGameplayEffect(effect, OwnerASC);
+            ApplyHitEffects(target, firstHit: first);
+            BroadcastHitVFX(target, withSound: false);
+            first = false;
         }
     }
 
@@ -145,5 +141,34 @@ public class GA_HeroicLeap : GA_Teleport
         // El golpe, dibujado en el tope del alcance hacia adelante.
         Gizmos.color = new Color(1f, 0.5f, 0.2f, 0.5f);
         Gizmos.DrawWireSphere(origin.position + origin.forward * MaxRange, ImpactRadius);
+    }
+
+#if UNITY_EDITOR
+    public override void DrawSceneHandles(Transform origin)
+    {
+        base.DrawSceneHandles(origin);
+        if (origin == null) return;
+
+        AbilityHandles.Radius(this, "Impact Radius", origin.position + origin.forward * MaxRange, ref ImpactRadius,
+                              AbilityHandles.RadiusColor, origin.right);
+    }
+#endif
+
+    // =========================================================
+    // DATOS VIEJOS (solo para pasarlos a las listas; ver GameplayAbility.UpgradeLegacyData)
+    // =========================================================
+
+    [SerializeField, HideInInspector] private GameplayEffect ImpactDamageEffect;
+    [SerializeField, HideInInspector] private List<GameplayEffect> ImpactEffects;
+
+    // El destello del salto salía a los pies, donde cae (el del teletransporte, en el pecho).
+    protected override Vector3 LegacyFlashOffset => Vector3.zero;
+
+    protected override void OnUpgradeLegacyData(ref bool changed)
+    {
+        base.OnUpgradeLegacyData(ref changed);
+
+        UpgradeEffect(ref ImpactDamageEffect, EEffectWhen.OnHit, EEffectTarget.Enemies, ref changed);
+        UpgradeEffects(ImpactEffects, EEffectWhen.OnHit, EEffectTarget.Enemies, ref changed);
     }
 }

@@ -36,36 +36,51 @@ MonoBehaviour:
     Volume: 1
     PitchVariance: 0.08
     MaxDistance: 35
+  Effects: []
+  Visuals:
+  - When: 2
+    VFXPrefab: {fileID: 3744133877081091469, guid: a2a060732547fe64581bb0cb3c2bdf1d, type: 3}
+    Delay: 0
+    Offset: {x: 0, y: 0, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    Attach: 0
+    MatchAreaSize: 0
+    AreaSizeMultiplier: 0
+    DestroyTime: 2
+    EndWithTag: 0
+    EndWhenAttributeDepleted: 0
+    DepletedAttribute: 0
   IsInterruptible: 0
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  VisualsSequence: []
   MaxCharges: 1
-  TotemPrefabs:
-  - {fileID: 1564936832730364612, guid: d4cec081c92d2c04fbf4a2eae5e1aec7, type: 3}
-  - {fileID: 1564936832730364612, guid: b5fed081739057d40a1f79c0cec54762, type: 3}
-  - {fileID: 1564936832730364612, guid: b63783dd32f378f4d97bd222a4f04f52, type: 3}
-  - {fileID: 1564936832730364612, guid: 38112faa447d74946bf350636678be65, type: 3}
-  TotemIcons:
-  - {fileID: 21300000, guid: 95e74f627f2452745813d67eb9c0b63d, type: 3}
-  - {fileID: 21300000, guid: cb6add1f3e6dffb459ffa9215e188359, type: 3}
-  - {fileID: 21300000, guid: 5458d2aa114d929418de6c74c9806cf8, type: 3}
-  - {fileID: 21300000, guid: 11b1ee7ff303aa04382ca53cd7824af7, type: 3}
-  IndividualCooldownEffects:
-  - {fileID: 11400000, guid: c352164367780a54e9b2a7a1bd1d7ef8, type: 2}
-  - {fileID: 11400000, guid: 167def151585bb34c9cf21cc923b2010, type: 2}
-  - {fileID: 11400000, guid: edf7f61866b81824bb584b3a4002a48f, type: 2}
-  - {fileID: 11400000, guid: 4f826c6e2a70e3c4ebd81be8b061245a, type: 2}
+  Totems:
+  - Name: Bear Totem
+    Description: Max health
+    Icon: {fileID: 21300000, guid: 95e74f627f2452745813d67eb9c0b63d, type: 3}
+    Prefab: {fileID: 1564936832730364612, guid: d4cec081c92d2c04fbf4a2eae5e1aec7, type: 3}
+    Cooldown: {fileID: 11400000, guid: c352164367780a54e9b2a7a1bd1d7ef8, type: 2}
+  - Name: Eagle Totem
+    Description: Movement speed
+    Icon: {fileID: 21300000, guid: cb6add1f3e6dffb459ffa9215e188359, type: 3}
+    Prefab: {fileID: 1564936832730364612, guid: b5fed081739057d40a1f79c0cec54762, type: 3}
+    Cooldown: {fileID: 11400000, guid: 167def151585bb34c9cf21cc923b2010, type: 2}
+  - Name: Tiger Totem
+    Description: Attack speed
+    Icon: {fileID: 21300000, guid: 5458d2aa114d929418de6c74c9806cf8, type: 3}
+    Prefab: {fileID: 1564936832730364612, guid: b63783dd32f378f4d97bd222a4f04f52, type: 3}
+    Cooldown: {fileID: 11400000, guid: edf7f61866b81824bb584b3a4002a48f, type: 2}
+  - Name: Wolf Totem
+    Description: More damage
+    Icon: {fileID: 21300000, guid: 11b1ee7ff303aa04382ca53cd7824af7, type: 3}
+    Prefab: {fileID: 1564936832730364612, guid: 38112faa447d74946bf350636678be65, type: 3}
+    Cooldown: {fileID: 11400000, guid: 4f826c6e2a70e3c4ebd81be8b061245a, type: 2}
   MaxSpawnRange: 5
-  SpawnVFX: {fileID: 3744133877081091469, guid: a2a060732547fe64581bb0cb3c2bdf1d, type: 3}
-  TotemNames:
-  - Bear Totem
-  - Eagle Totem
-  - Tiger Totem
-  - Wolf Totem
-  TotemDescriptions:
-  - Max health
-  - Movement speed
-  - Attack speed
-  - More damage
+  TotemPrefabs: []
+  TotemIcons: []
+  IndividualCooldownEffects: []
+  TotemNames: []
+  TotemDescriptions: []
+  SpawnVFX: {fileID: 0}

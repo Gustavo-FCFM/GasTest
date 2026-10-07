@@ -26,20 +26,19 @@ using System.Collections.Generic;
 [CreateAssetMenu(fileName = "GA_SwornEnemy", menuName = "GAS/Specific Abilities/Paladin/Vengeance/Sworn Enemy")]
 public class GA_SwornEnemy : TargetImpactAbility
 {
-    [Header("Selección de Enemigo")]
+    [Section(AbilitySection.Targeting)]
     [Tooltip("Alcance máximo para buscar al enemigo a marcar.")]
     public float MaxRange = 10f;
 
     [Tooltip("Ángulo máximo (grados) entre la mira y el enemigo para que cuente como objetivo.")]
     public float SelectionAngle = 30f;
 
-    [Header("La Marca")]
+    [Section("La marca")]
     [Tooltip("Efecto CON DURACIÓN que se le aplica al enemigo marcado. Acá va el modificador de " +
              "Vulnerability (recibe más daño) y el tag Status_SwornEnemy.\n\n" +
              "Su Duration es la que manda: la vigilancia de golpes dura exactamente lo mismo.")]
     public GameplayEffect MarkEffect;
 
-    [Header("Curación a los Aliados")]
     [Tooltip("Efectos que recibe CADA aliado que golpee al marcado. Normalmente una curación " +
              "instantánea. El Paladín también cuenta como aliado de sí mismo, así que él también " +
              "se cura al golpearlo.")]
@@ -104,6 +103,7 @@ public class GA_SwornEnemy : TargetImpactAbility
         ClearMark();
 
         target.ApplyGameplayEffect(MarkEffect, OwnerASC);
+        ApplyHitEffects(target, firstHit: true);   // lo que la lista tenga para el marcado
 
         _marked = target;
         _lastReward = new Dictionary<AbilitySystemComponent, float>();
@@ -191,9 +191,10 @@ public class GA_SwornEnemy : TargetImpactAbility
     // =========================================================
 
     public override void DrawGizmos(Transform origin)
-    {
-        if (origin == null) return;
-        Gizmos.color = new Color(0.9f, 0.75f, 0.2f, 0.9f);
-        Gizmos.DrawWireSphere(origin.position, MaxRange);
-    }
+        => DrawSelectionGizmo(origin, MaxRange, SelectionAngle, new Color(0.9f, 0.75f, 0.2f, 0.9f));
+
+#if UNITY_EDITOR
+    public override void DrawSceneHandles(Transform origin)
+        => AbilityHandles.Selection(this, origin, ref MaxRange, ref SelectionAngle);
+#endif
 }

@@ -30,7 +30,7 @@ using System.Collections.Generic;
 [CreateAssetMenu(fileName = "GA_HeroicInterception", menuName = "GAS/Specific Abilities/Paladin/Heroic Interception")]
 public class GA_HeroicInterception : TargetImpactAbility
 {
-    [Header("Selección de Aliado")]
+    [Section(AbilitySection.Targeting)]
     [Tooltip("Alcance máximo para buscar al aliado al que interceptar.")]
     public float MaxRange = 14f;
 
@@ -42,7 +42,7 @@ public class GA_HeroicInterception : TargetImpactAbility
              "cadáver desperdicia la carga.")]
     public bool AllowDeadTargets = false;
 
-    [Header("Salto")]
+    [Section(AbilitySection.Movement)]
     [Tooltip("A qué distancia por DELANTE del aliado (según hacia dónde mira él) aterriza el Paladín.")]
     public float FrontDistance = 2.5f;
 
@@ -50,14 +50,11 @@ public class GA_HeroicInterception : TargetImpactAbility
              "y encarando la amenaza). Desactivado = queda mirando al aliado.")]
     public bool FaceAwayFromAlly = true;
 
-    [Header("Efectos")]
-    [Tooltip("Buff que se aplica al PROPIO Paladín al interceptar (la resistencia al daño).")]
-    public List<GameplayEffect> SelfEffects;
-    [Tooltip("Efectos que se le aplican al ALIADO interceptado (normalmente el mismo buff de " +
-             "resistencia que recibe el Paladín).")]
-    // FormerlySerializedAs: se llamó "AllyEffects" y vivía en GameplayAbility.
-    [UnityEngine.Serialization.FormerlySerializedAs("AllyEffects")]
-    public List<GameplayEffect> TargetEffects;
+    // LOS EFECTOS van en la lista: "Al activarse → El lanzador" para el Paladín (la
+    // resistencia al daño) y "Al golpear → Aliados" para el aliado interceptado.
+    // Los VFX "en el impacto" salen donde aterriza.
+    public override bool SupportsVisualTiming(EVisualWhen when) => true;
+    protected override EVisualWhen LegacyImpactVFXWhen => EVisualWhen.OnImpact;
 
     // =========================================================
     // ACTIVACIÓN
@@ -108,13 +105,11 @@ public class GA_HeroicInterception : TargetImpactAbility
 
         if (pc != null) pc.PlayAnimation(this);
 
-        // Buffs: al aliado interceptado y a uno mismo.
-        ApplyEffectsTo(TargetEffects, ally);
-        ApplyEffectsTo(SelfEffects, OwnerASC);
+        // Al aliado interceptado (lo de uno mismo ya lo aplicó CommitAbility: "al activarse").
+        ApplyHitEffects(ally, firstHit: true);
+        BroadcastHitVFX(ally, withSound: false);   // el sonido va con el impacto de abajo
 
-        Vector3 vfxPos = landing + Vector3.up;
-        if (netAsc != null) netAsc.ServerPlayAbilityVFX(this, vfxPos);
-        else PlayImpactVFX(vfxPos);
+        BroadcastImpactVFX(landing);
 
         EndAbility();
     }
@@ -144,9 +139,27 @@ public class GA_HeroicInterception : TargetImpactAbility
 
     // Vista previa del alcance de selección en el Editor.
     public override void DrawGizmos(Transform origin)
+        => DrawSelectionGizmo(origin, MaxRange, SelectionAngle, new Color(0.95f, 0.85f, 0.3f, 0.9f));
+
+#if UNITY_EDITOR
+    public override void DrawSceneHandles(Transform origin)
+        => AbilityHandles.Selection(this, origin, ref MaxRange, ref SelectionAngle);
+#endif
+
+    // =========================================================
+    // DATOS VIEJOS (solo para pasarlos a las listas; ver GameplayAbility.UpgradeLegacyData)
+    // =========================================================
+
+    [SerializeField, HideInInspector] private List<GameplayEffect> SelfEffects;
+    // Se llamó "AllyEffects" y vivía en GameplayAbility.
+    [UnityEngine.Serialization.FormerlySerializedAs("AllyEffects")]
+    [SerializeField, HideInInspector] private List<GameplayEffect> TargetEffects;
+
+    protected override void OnUpgradeLegacyData(ref bool changed)
     {
-        if (origin == null) return;
-        Gizmos.color = new Color(0.95f, 0.85f, 0.3f, 0.9f);
-        Gizmos.DrawWireSphere(origin.position, MaxRange);
+        base.OnUpgradeLegacyData(ref changed);
+
+        UpgradeEffects(SelfEffects, EEffectWhen.OnActivate, EEffectTarget.Self, ref changed);
+        UpgradeEffects(TargetEffects, EEffectWhen.OnHit, EEffectTarget.Allies, ref changed);
     }
 }

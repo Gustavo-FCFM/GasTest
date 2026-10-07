@@ -12,14 +12,14 @@ using UnityEngine;
 // Recibir daño de otro o quedar enraizado TERMINA el vuelo (lo hace el ASC: quita los
 // efectos que dan Status_Flying).
 //
-// BuffEffect TIENE que otorgar Status_Flying y su duración es la del vuelo. El movimiento
+// Un efecto "Al activarse → El lanzador" TIENE que otorgar Status_Flying, y su duración es la del vuelo. El movimiento
 // lo hace el cliente dueño (PlayerController → VUELO LIBRE): el transform es suyo.
 // Los bots no la usan (MovesThroughOwner).
 // ============================================================
 [CreateAssetMenu(fileName = "GA_Flight", menuName = "GAS/Generics/Flight")]
 public class GA_Flight : GA_SelfBuff
 {
-    [Header("Vuelo")]
+    [Section("Vuelo")]
     [Tooltip("Velocidad hacia arriba del despegue. Se disipa sola en menos de un segundo.")]
     public float LaunchSpeed = 12f;
 
@@ -43,9 +43,8 @@ public class GA_Flight : GA_SelfBuff
         if (!IsServer) return;
         if (!CanActivate()) return;
 
-        if (BuffEffect == null || BuffEffect.GrantedTags == null ||
-            !BuffEffect.GrantedTags.Contains(EGameplayTag.Status_Flying))
-            Debug.LogWarning($"[{AbilityName}] Su BuffEffect no otorga Status_Flying: no va a volar.");
+        if (!AnyEffectGrants(EGameplayTag.Status_Flying, EEffectWhen.OnActivate, EEffectTarget.Self))
+            Debug.LogWarning($"[{AbilityName}] Ningún efecto 'Al activarse → El lanzador' otorga Status_Flying: no va a volar.");
 
         base.Activate();
 

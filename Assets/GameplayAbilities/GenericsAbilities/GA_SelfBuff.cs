@@ -4,46 +4,55 @@ using System.Collections.Generic;
 // ============================================================
 // GA_SelfBuff
 //
-// Habilidad de buff: se aplica a sí mismo un GameplayEffect con duración
-// (y opcionalmente varios más). Pensada para habilidades tipo "Grito de
-// guerra", "Postura defensiva" o "Enfurecer".
+// Habilidad de buff: se aplica a sí mismo uno o varios GameplayEffect. Pensada para
+// habilidades tipo "Grito de guerra", "Postura defensiva" o "Enfurecer".
 //
-// VISUALES: usá el VisualsSequence del GameplayAbility base (soporta varios
-// VFX, delays, offsets y fin por tag — ideal para un aura que dure lo mismo
-// que el buff, con EndWithTag = el tag que otorga el BuffEffect). Antes esta
-// clase tenía además un ParticlePrefab propio que hacía casi lo mismo; se
-// quitó por redundante (GA_Rage llegaba a instanciar el VFX dos veces, una
-// por cada sistema).
+// LOS EFECTOS van en la lista de la habilidad como "Al activarse → El lanzador" (los
+// aplica CommitAbility). Antes eran BuffEffect + AdditionalEffects: los assets viejos
+// se pasan solos a la lista.
+//
+// VISUALES: usá la lista de VFX con entradas "Al lanzar" (soporta varios VFX, delays,
+// offsets y fin por tag — ideal para un aura que dure lo mismo que el buff, con
+// EndWithTag = el tag que otorga el efecto).
 // ============================================================
 [CreateAssetMenu(fileName = "GA_SelfBuff", menuName = "GAS/Generics/Self Buff")]
 public class GA_SelfBuff : GameplayAbility
 {
-    [Header("Buff Settings")]
-    // Efecto que se aplica al propio dueño al activar.
-    public GameplayEffect BuffEffect;
-    // Efectos EXTRA que se aplican al propio dueño además del BuffEffect
-    // (varios buffs a la vez, un escudo, un tag de estado, etc.). Opcional.
-    public List<GameplayEffect> AdditionalEffects;
+    // Un buff propio no busca a nadie ni golpea: el Inspector esconde TargetLayer y marca
+    // cualquier entrada que no sea "al activarse".
+    public override bool UsesTargetLayer => false;
+    public override bool UsesHitEffects  => false;
 
-    // Valida, cobra costo/cooldown (y reproduce el VisualsSequence), y aplica
-    // el buff al dueño.
+    // Valida, cobra costo/cooldown (con eso se aplican los efectos "al activarse" y los VFX
+    // "al lanzar") y anima.
     public override void Activate()
     {
-        if (!IsServer) return;   // ← NUEVO
+        if (!IsServer) return;
         if (!CanActivate()) return;
 
+        if (!HasEffects(EEffectWhen.OnActivate))
+            Debug.LogWarning($"[{AbilityName}] es un buff propio sin ningún efecto 'Al activarse': no hace nada.");
+
         CommitAbility();
-
-        if (BuffEffect != null)
-            OwnerASC.ApplyGameplayEffect(BuffEffect, OwnerASC);
-        else
-            Debug.LogWarning("GA_SelfBuff activado sin un BuffEffect asignado.");
-
-        ApplyEffectsTo(AdditionalEffects, OwnerASC);
 
         PlayerController pc = OwnerASC.GetComponent<PlayerController>();
         if (pc != null) pc.PlayAnimation(this);
 
         EndAbility();
+    }
+
+    // =========================================================
+    // DATOS VIEJOS (solo para pasarlos a las listas; ver GameplayAbility.UpgradeLegacyData)
+    // =========================================================
+
+    [SerializeField, HideInInspector] private GameplayEffect BuffEffect;
+    [SerializeField, HideInInspector] private List<GameplayEffect> AdditionalEffects;
+
+    protected override void OnUpgradeLegacyData(ref bool changed)
+    {
+        base.OnUpgradeLegacyData(ref changed);
+
+        UpgradeEffect(ref BuffEffect, EEffectWhen.OnActivate, EEffectTarget.Self, ref changed);
+        UpgradeEffects(AdditionalEffects, EEffectWhen.OnActivate, EEffectTarget.Self, ref changed);
     }
 }

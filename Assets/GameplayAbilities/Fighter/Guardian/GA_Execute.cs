@@ -12,7 +12,7 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "GA_Execute", menuName = "GAS/Specific Abilities/Fighter/Guardian/Execute")]
 public class GA_Execute : GA_ConeAttack
 {
-    [Header("Al Ejecutar")]
+    [Section("Al ejecutar")]
     [Tooltip("Fracción de la vida MÁXIMA del ejecutado que se cura el Guardián (0.2 = 20 %).")]
     [Range(0f, 1f)]
     public float HealFractionOfVictimMaxHealth = 0.2f;

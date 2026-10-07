@@ -1,26 +1,28 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 // ============================================================
 // GA_ImmortalWrath
 //
 // Ultimate de resurrección: solo se puede activar estando MUERTO
-// (sobreescribe CanActivate). Revive con 1 de vida, se aplica un
-// buff de inmortalidad, y hace una explosión de daño en área
-// alrededor del punto de reaparición. La dispara PlayerController
-// automáticamente al morir, si está disponible.
+// (sobreescribe CanActivate). Revive con 1 de vida, se aplica los efectos
+// "al activarse" (el buff de inmortalidad), y hace una explosión en área
+// alrededor del punto de reaparición (los efectos "al golpear"). La dispara
+// PlayerController automáticamente al morir, si está disponible.
 // ============================================================
 [CreateAssetMenu(fileName = "GA_ImmortalWrath", menuName = "GAS/Specific Abilities/Barbarian/Immortal/Immortal Wrath")]
 public class GA_ImmortalWrath : GameplayAbility
 {
-    [Header("Configuración Immortal Wrath")]
-    // FormerlySerializedAs: este campo se llamaba "InmortalBuffEffect". Unity
-    // serializa los campos por NOMBRE, así que sin esto el asset ya configurado
-    // perdería la referencia en silencio al renombrarlo.
-    [UnityEngine.Serialization.FormerlySerializedAs("InmortalBuffEffect")]
-    public GameplayEffect ImmortalBuffEffect;
-    public GameplayEffect ExplosionDamageEffect;
-    // Radio de la explosión de daño alrededor del punto de reaparición.
+    [Section(AbilitySection.Shape)]
+    [Tooltip("Radio de la explosión alrededor del punto de reaparición.")]
     public float AbilityRadius = 3f;
+
+    public override float VisualAreaRadius => AbilityRadius;
+    public override bool SupportsVisualTiming(EVisualWhen when) => true;
+
+    // Se cobra estando MUERTO: un buff aplicado en CommitAbility se perdería al revivir.
+    // Los efectos "al activarse" se aplican a mano, después de revivir.
+    protected override bool ApplyActivationEffectsOnCommit => false;
 
     // Solo se puede activar si el personaje está muerto (y no en
     // cooldown) — al revés de cualquier otra habilidad.
@@ -36,14 +38,10 @@ public class GA_ImmortalWrath : GameplayAbility
         return true;
     }
 
-    // Revive con 1 de vida, aplica el buff de inmortalidad, y hace
-    // explotar de daño a los enemigos dentro de AbilityRadius.
+    // Revive al dueño con 1 de vida, le aplica lo "al activarse", y daña a los enemigos
+    // dentro de AbilityRadius.
     public override void Activate()
     {
-        // NOTA: Esta habilidad se activa al morir, que ocurre en el servidor.
-        // No necesita el guard if (!IsServer) porque HandlePlayerDeath ya
-        // corre desde el servidor en PlayerController.
-        // Aun así lo dejamos por consistencia.
         if (!IsServer) return;
 
         CommitAbility();
@@ -53,16 +51,20 @@ public class GA_ImmortalWrath : GameplayAbility
             OwnerASC.Revive();   // con el kit fresco: revivir para seguir pegando, no para huir
             OwnerASC.SetCurrentAttributeValue(EAttributeType.Health, 1f);
 
-            if (ImmortalBuffEffect != null)
-                OwnerASC.ApplyGameplayEffect(ImmortalBuffEffect, OwnerASC);
+            ApplyActivationEffects();
 
-            Collider[] hits = Physics.OverlapSphere(OwnerASC.transform.position, AbilityRadius, TargetLayer);
-            foreach (Collider hit in hits)
+            Vector3 center = OwnerASC.transform.position;
+            BroadcastImpactVFX(center);
+
+            // Un personaje puede tener varios colliders: cada uno recibe la explosión una vez.
+            var seen = new HashSet<AbilitySystemComponent>();
+            foreach (Collider hit in Physics.OverlapSphere(center, AbilityRadius, TargetLayer))
             {
                 AbilitySystemComponent targetASC = hit.GetComponentInParent<AbilitySystemComponent>();
-                if (targetASC != null && IsEnemy(targetASC))
-                    if (ExplosionDamageEffect != null)
-                        targetASC.ApplyGameplayEffect(ExplosionDamageEffect, OwnerASC);
+                if (targetASC == null || !IsEnemy(targetASC) || !seen.Add(targetASC)) continue;
+
+                ApplyHitEffects(targetASC, firstHit: seen.Count == 1);
+                BroadcastHitVFX(targetASC, withSound: false);
             }
 
             PlayerController pc = OwnerASC.GetComponent<PlayerController>();
@@ -70,5 +72,38 @@ public class GA_ImmortalWrath : GameplayAbility
         }
 
         EndAbility();
+    }
+
+    public override void DrawGizmos(Transform origin)
+    {
+        if (origin == null) return;
+        Gizmos.color = new Color(1f, 0.2f, 0.2f, 0.3f);
+        Gizmos.DrawSphere(origin.position, AbilityRadius);
+    }
+
+#if UNITY_EDITOR
+    public override void DrawSceneHandles(Transform origin)
+    {
+        if (origin == null) return;
+        AbilityHandles.Radius(this, "Ability Radius", origin.position, ref AbilityRadius,
+                              AbilityHandles.RadiusColor, origin.right);
+    }
+#endif
+
+    // =========================================================
+    // DATOS VIEJOS (solo para pasarlos a las listas; ver GameplayAbility.UpgradeLegacyData)
+    // =========================================================
+
+    // Se llamaba "InmortalBuffEffect".
+    [UnityEngine.Serialization.FormerlySerializedAs("InmortalBuffEffect")]
+    [SerializeField, HideInInspector] private GameplayEffect ImmortalBuffEffect;
+    [SerializeField, HideInInspector] private GameplayEffect ExplosionDamageEffect;
+
+    protected override void OnUpgradeLegacyData(ref bool changed)
+    {
+        base.OnUpgradeLegacyData(ref changed);
+
+        UpgradeEffect(ref ImmortalBuffEffect, EEffectWhen.OnActivate, EEffectTarget.Self, ref changed);
+        UpgradeEffect(ref ExplosionDamageEffect, EEffectWhen.OnHit, EEffectTarget.Enemies, ref changed);
     }
 }

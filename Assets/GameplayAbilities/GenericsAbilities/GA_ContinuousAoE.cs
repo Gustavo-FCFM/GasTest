@@ -5,8 +5,8 @@ using System.Collections.Generic;
 // ============================================================
 // GA_ContinuousAoE
 //
-// Zona de efecto que dura un tiempo (TotalDuration) y le aplica una
-// lista de GameplayEffect a todo lo que esté dentro de su radio,
+// Zona de efecto que dura un tiempo (TotalDuration) y le aplica la
+// lista de efectos de la habilidad a todo lo que esté dentro de su radio,
 // a intervalos regulares (TickInterval). Puede quedarse fija en el
 // punto de activación o seguir al dueño (FollowOwner). Pensada para
 // auras, charcos de veneno, tornados, etc.
@@ -16,40 +16,53 @@ using System.Collections.Generic;
 // IGroundTargetAbility). Con retícula el área siempre queda FIJA en el punto elegido
 // (FollowOwner se ignora): ahí es donde cae, no puede seguirte.
 //
+// A QUIÉN AFECTA lo dice cada entrada de la lista de efectos: una zona puede dañar
+// enemigos y curar aliados a la vez (Luz del amanecer), o silenciar a todos y curar
+// solo a los propios (Zona de verdad). El VFX de la zona es una entrada "En el impacto"
+// con "Calzar con el área" (mide lo mismo que el radio) y "Lo sigue" (si la zona sigue
+// al dueño, el VFX también). Con Destroy Time en 0 dura lo que la zona.
+//
 // Para un golpe de área de UNA sola aplicación (sin ticks ni duración) usá
 // GA_InstantAoE — este es para zonas que persisten.
 // ============================================================
 [CreateAssetMenu(fileName = "GA_ContinuousAoE", menuName = "GAS/Generics/Continuous AoE")]
 public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
 {
-    // A quién afecta el área.
+    // A quién afectaba el área en el formato viejo (ahora lo dice cada entrada de efectos).
     public enum EAoETarget { Enemies, Allies, All }
 
     // Dónde nace el área. AtOwner es el valor 0 = el comportamiento de siempre, así
     // que los assets ya configurados no cambian.
     public enum EAoEDeploy { AtOwner, AtReticle }
 
-    [Header("Targets")]
-    // FormerlySerializedAs: este campo se llamaba "Objetivos". Unity serializa los
-    // campos por NOMBRE, así que sin esto los assets ya configurados perderían su
-    // valor en silencio al renombrarlo.
-    [UnityEngine.Serialization.FormerlySerializedAs("Objetivos")]
-    public EAoETarget Targets = EAoETarget.Enemies;
+    // Cómo se traduce el viejo "Targets" de un área a la entrada de efectos.
+    public static EEffectTarget ToEffectTarget(EAoETarget targets)
+    {
+        switch (targets)
+        {
+            case EAoETarget.Allies: return EEffectTarget.Allies;
+            case EAoETarget.All:    return EEffectTarget.Everyone;
+            default:                return EEffectTarget.Enemies;
+        }
+    }
 
-    [Header("Configuración de Área")]
+    [Section(AbilitySection.Shape)]
+    [Tooltip("Radio del área, en metros.")]
     public float Radius        = 4f;
-    public float TotalDuration = 5f;
-    // Cada cuánto se vuelve a revisar quién está dentro del área y se le
-    // reaplican los efectos.
-    public float TickInterval  = 0.5f;
 
-    [Header("Despliegue")]
     [Tooltip("AtOwner: el área nace sobre el dueño (comportamiento clásico). AtReticle: se apunta " +
              "con el marcador en el suelo (mantener → apuntar → soltar) y queda fija ahí.")]
     public EAoEDeploy DeployMode = EAoEDeploy.AtOwner;
 
-    [Tooltip("Solo con AtReticle: alcance máximo al que se puede desplegar la zona.")]
+    [ShowIf(nameof(DeployMode), EAoEDeploy.AtReticle)]
+    [Tooltip("Alcance máximo al que se puede desplegar la zona.")]
     public float MaxRange = 15f;
+
+    // Si el área se mueve con el dueño o queda fija donde se activó. Se ignora con
+    // DeployMode = AtReticle (una zona apuntada siempre queda fija donde cae).
+    [ShowIf(nameof(DeployMode), EAoEDeploy.AtOwner)]
+    [Tooltip("La zona se mueve con el dueño (un aura). Apagado = queda fija donde nació.")]
+    public bool FollowOwner = true;
 
     // IGroundTargetAbility: el marcador del suelo usa estos valores para la vista
     // previa. PlayerController solo muestra el marcador si DeployMode es AtReticle
@@ -60,30 +73,25 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
     // True si esta configuración se apunta con la retícula.
     public bool UsesGroundTarget => DeployMode == EAoEDeploy.AtReticle;
 
-    [Header("Comportamiento")]
-    // Si el área se mueve con el dueño o queda fija donde se activó. Se ignora con
-    // DeployMode = AtReticle (una zona apuntada siempre queda fija donde cae).
-    public bool FollowOwner = true;
-
-    [Header("Efectos Visuales")]
-    public GameObject VisualPrefab;
-    // Multiplica Radius para el tamaño del VFX (no afecta el área real).
-    public float VisualScaleMultiplier = 2.0f;
-
-    [Header("Lista de Efectos")]
-    // Todos los GameplayEffect que se le aplican a cada objetivo válido
-    // en cada tick.
-    public List<GameplayEffect> EffectsToApply;
-
-    [Tooltip("Efectos que reciben SOLO los aliados (y el lanzador) que están en la zona, " +
-             "además de los de arriba. Corre aparte de Targets: sirve para una zona que afecta a todos " +
-             "pero cura a los propios (Zona de verdad) y para una que daña enemigos y cura aliados " +
-             "(Luz del amanecer). Vacío = nada extra.")]
-    public List<GameplayEffect> AllyEffects;
-
-    [Header("Sincronización")]
-    // Espera antes de que el área empiece a existir, tras activar la habilidad.
+    [Section(AbilitySection.Timing)]
+    [Tooltip("Espera antes de que el área empiece a existir, tras activar la habilidad.")]
     public float StartDelay = 0.5f;
+
+    [Tooltip("Cuánto dura la zona, en segundos.")]
+    public float TotalDuration = 5f;
+
+    // Cada cuánto se vuelve a revisar quién está dentro del área y se le
+    // reaplican los efectos.
+    [Tooltip("Cada cuántos segundos se aplican los efectos a los que están adentro.")]
+    public float TickInterval  = 0.5f;
+
+    public override float VisualAreaRadius => Radius;
+    protected override float VisualDefaultLifetime => TotalDuration;
+    public override bool SupportsVisualTiming(EVisualWhen when) => true;
+
+    // El VFX "en el impacto" con "Lo sigue" se pega al dueño solo si la zona lo sigue.
+    protected override Transform VisualImpactParent(AbilitySystemComponent owner)
+        => ShouldFollowOwner && owner != null ? owner.transform : null;
 
     // ¿El área sigue al dueño? Solo puede seguirlo si nace sobre él: una zona
     // apuntada con la retícula queda siempre fija donde cayó.
@@ -104,7 +112,7 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
     // Valida, cobra costo/cooldown y arranca la secuencia del área.
     public override void Activate()
     {
-        if (!IsServer) return;   // ← NUEVO
+        if (!IsServer) return;
         if (!CanActivate()) return;
 
         CommitAbility();
@@ -198,11 +206,11 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
     protected virtual void OnAreaFinished() { }
 
     // Reproduce el VFX del área, y cada TickInterval revisa quién está
-    // dentro del radio (según Objetivos) para aplicarle EffectsToApply,
-    // durante TotalDuration segundos.
+    // dentro del radio para aplicarle la lista de efectos, durante TotalDuration segundos.
     private IEnumerator AreaRoutine(Vector3 spawnPoint)
     {
         float timeElapsed = 0f;
+        bool firstEnemy = true;
 
         // Un tick de 0 (o negativo) NO es "cada frame": con WaitForSeconds(0) el bucle
         // avanza un frame por vuelta y timeElapsed nunca crece, así que el área aplicaba
@@ -219,12 +227,10 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
         }
 
         // Instantiate() acá solo se vería en el proceso servidor —
-        // ServerPlayAbilityVFX lo reproduce en todos los peers (cada uno
-        // con su propia copia, que se autodestruye sola tras TotalDuration
-        // en vez de que la sigamos con una referencia acá).
-        NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
-        if (netAsc != null) netAsc.ServerPlayAbilityVFX(this, spawnPoint);
-        else PlayImpactVFX(spawnPoint);
+        // BroadcastImpactVFX lo reproduce en todos los peers (cada uno con su propia
+        // copia, que se autodestruye sola tras TotalDuration en vez de que la sigamos
+        // con una referencia acá).
+        BroadcastImpactVFX(spawnPoint);
 
         while (timeElapsed < TotalDuration)
         {
@@ -236,29 +242,19 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
                 AbilitySystemComponent targetASC = hit.GetComponentInParent<AbilitySystemComponent>();
                 if (targetASC == null) continue;
 
-                bool isValidTarget = false;
-                if      (Targets == EAoETarget.Enemies && IsEnemy(targetASC)) isValidTarget = true;
-                else if (Targets == EAoETarget.Allies  && IsAlly(targetASC))  isValidTarget = true;
-                else if (Targets == EAoETarget.All)                           isValidTarget = true;
+                // Cada entrada de la lista dice a quién va: la Zona de verdad silencia a
+                // los tres equipos y cura solo a los suyos; la Luz del amanecer quema a los
+                // enemigos y cura a los aliados que estén adentro.
+                bool enemy = IsEnemy(targetASC);
+                if (!ApplyHitEffects(targetASC, firstHit: enemy && firstEnemy)) continue;
 
-                // Lo que es SOLO para los aliados, se apunte la zona a quien se apunte: la
-                // Zona de verdad (Targets All) silencia a los tres equipos y cura solo a los
-                // suyos; la Luz del amanecer (Targets Enemies) quema a los enemigos y cura a
-                // los aliados que estén adentro.
-                if (AllyEffects != null && AllyEffects.Count > 0 && IsAlly(targetASC))
-                    foreach (var effect in AllyEffects)
-                        if (effect != null) targetASC.ApplyGameplayEffect(effect, OwnerASC);
+                BroadcastHitVFX(targetASC, withSound: false);
 
-                if (isValidTarget)
-                {
-                    if (EffectsToApply != null)
-                        foreach (var effect in EffectsToApply)
-                            if (effect != null) targetASC.ApplyGameplayEffect(effect, OwnerASC);
+                if (!enemy) continue;
+                firstEnemy = false;
 
-                    OnTargetHit(targetASC);
-
-                    if (OwnerASC.CompareTag("Player")) ChargeUltimate();
-                }
+                OnTargetHit(targetASC);
+                if (OwnerASC.CompareTag("Player")) ChargeUltimate();
             }
 
             yield return new WaitForSeconds(tick);
@@ -266,7 +262,7 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
         }
     }
 
-    // Gancho para que una habilidad concreta reaccione a cada objetivo alcanzado, en
+    // Gancho para que una habilidad concreta reaccione a cada enemigo alcanzado, en
     // cada tick (ej: los Cañones del Pirata, que además le apuestan a quien golpean).
     protected virtual void OnTargetHit(AbilitySystemComponent target) { }
 
@@ -293,19 +289,44 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
         Gizmos.DrawSphere(origin.position, Radius);
     }
 
-    // Instancia VisualPrefab en el punto de origen (parentado al dueño si
-    // FollowOwner) y lo destruye solo tras TotalDuration segundos.
-    public override void PlayImpactVFX(Vector3 position)
+#if UNITY_EDITOR
+    public override void DrawSceneHandles(Transform origin)
     {
-        if (VisualPrefab == null || OwnerASC == null) return;
+        if (origin == null) return;
 
-        // Con la rotación del PREFAB, no cero: muchos VFX de los packs acuestan el círculo
-        // girando su raíz −90° en X (Zone of Truth), y con Quaternion.identity quedaba parado.
-        GameObject vfxInstance = Instantiate(VisualPrefab, position, VisualPrefab.transform.rotation);
-        if (ShouldFollowOwner) vfxInstance.transform.SetParent(OwnerASC.transform);
+        Vector3 center = origin.position;
+        if (DeployMode == EAoEDeploy.AtReticle)
+        {
+            AbilityHandles.Distance(this, "Max Range", origin.position, origin.forward, ref MaxRange,
+                                    AbilityHandles.DistanceColor);
+            center = origin.position + origin.forward * MaxRange;
+        }
+        AbilityHandles.Radius(this, "Radius", center, ref Radius, AbilityHandles.RadiusColor, origin.right);
+    }
+#endif
 
-        // Si el prefab tiene VFX_AreaVisual, el círculo calza EXACTO con Radius y se
-        // desvanece al terminar; si no, cae al multiplicador a ojo de siempre.
-        VFX_AreaVisual.Configure(vfxInstance, Radius, VisualScaleMultiplier, TotalDuration);
+    // =========================================================
+    // DATOS VIEJOS (solo para pasarlos a las listas; ver GameplayAbility.UpgradeLegacyData)
+    // =========================================================
+
+    // Se llamaba "Objetivos".
+    [UnityEngine.Serialization.FormerlySerializedAs("Objetivos")]
+    [SerializeField, HideInInspector] private EAoETarget Targets = EAoETarget.Enemies;
+    [SerializeField, HideInInspector] private List<GameplayEffect> EffectsToApply;
+    [SerializeField, HideInInspector] private List<GameplayEffect> AllyEffects;
+    [SerializeField, HideInInspector] private GameObject VisualPrefab;
+    [SerializeField, HideInInspector] private float VisualScaleMultiplier = 2f;
+
+    protected override void OnUpgradeLegacyData(ref bool changed)
+    {
+        base.OnUpgradeLegacyData(ref changed);
+
+        UpgradeEffects(EffectsToApply, EEffectWhen.OnHit, ToEffectTarget(Targets), ref changed);
+        UpgradeEffects(AllyEffects, EEffectWhen.OnHit, EEffectTarget.Allies, ref changed);
+        UpgradeVisual(ref VisualPrefab, new AbilityVisual
+        {
+            When = EVisualWhen.OnImpact, MatchAreaSize = true, Attach = true,
+            AreaSizeMultiplier = VisualScaleMultiplier,
+        }, ref changed);
     }
 }

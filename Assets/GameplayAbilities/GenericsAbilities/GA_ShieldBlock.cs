@@ -29,7 +29,7 @@ using System.Collections;
 [CreateAssetMenu(fileName = "GA_ShieldBlock", menuName = "GAS/Generics/Shield Block")]
 public class GA_ShieldBlock : GameplayAbility, IHoldAbility
 {
-    [Header("Estado de Bloqueo")]
+    [Section("Bloqueo")]
     [Tooltip("GameplayEffect que se aplica al dueño MIENTRAS sostiene el escudo. Tiene que " +
              "otorgar el tag que la barrera escucha (Status_Blocking por defecto) — ese tag es lo " +
              "que la enciende, y viaja a todos los peers por NetTags.\n\n" +
@@ -39,7 +39,7 @@ public class GA_ShieldBlock : GameplayAbility, IHoldAbility
              "corta la habilidad de forma anormal.")]
     public GameplayEffect BlockEffect;
 
-    [Header("Energía")]
+    [Section("Energía")]
     [Tooltip("Energía mínima necesaria para poder levantar el escudo. Con 0 se puede levantar " +
              "mientras quede cualquier resto (pero se cae al primer golpe).")]
     public float MinEnergyToActivate = 5f;
@@ -56,9 +56,14 @@ public class GA_ShieldBlock : GameplayAbility, IHoldAbility
              "para siempre si ese aviso no llega — y ahí el dueño puede atacar de nuevo mientras " +
              "el servidor sigue creyendo que tiene el escudo puesto. Llegar a este tope no es " +
              "normal: se avisa por consola con el nombre de quien lo tenía.")]
+    [ShowIf(nameof(MaxHoldTime), 0f)]
     public float HoldSafetyTimeout = 20f;
 
-    [Header("Animación de Mantener")]
+    // El escudo no busca personajes ni golpea: lo que frena lo resuelve la barrera.
+    public override bool UsesTargetLayer => false;
+    public override bool UsesHitEffects  => false;
+
+    [Section(AbilitySection.Animation)]
     [Tooltip("Clip de SOSTENER el escudo, EN BUCLE (el personaje ya lo tiene levantado). Es el " +
              "único obligatorio: con solo este y un estado en el Animator, la habilidad ya se ve bien.")]
     public AnimationClip HoldClip;
@@ -132,11 +137,10 @@ public class GA_ShieldBlock : GameplayAbility, IHoldAbility
 
         NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
 
-        if (VisualsSequence != null && VisualsSequence.Count > 0)
-        {
-            if (netAsc != null) netAsc.ServerPlayAbilityVisualsSequence(this);
-            else OwnerASC.StartAbilityCoroutine(PlayVisualsSequence());
-        }
+        // Lo que CommitAbility haría al activar: los efectos "al activarse" y los VFX
+        // "al lanzar" de las listas.
+        ApplyActivationEffects();
+        PlayCastVisuals();
 
         // Este es el tag que enciende la barrera en TODOS los peers (viaja por NetTags).
         if (BlockEffect != null) OwnerASC.ApplyGameplayEffect(BlockEffect, OwnerASC);

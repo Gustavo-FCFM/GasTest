@@ -38,7 +38,7 @@ using System.Collections.Generic;
 [CreateAssetMenu(fileName = "GA_Dash", menuName = "GAS/Generics/Dash")]
 public class GA_Dash : GameplayAbility
 {
-    [Header("Movimiento del Dash")]
+    [Section(AbilitySection.Movement)]
     [Tooltip("Distancia objetivo del dash (se recorta si hay una pared antes).")]
     public float DashDistance = 8f;
     [Tooltip("Velocidad del impulso. El frenado/inercia lo da la atenuación de PlayerController.")]
@@ -55,9 +55,9 @@ public class GA_Dash : GameplayAbility
              "arriba. 1 = solo adelante exacto; 0.5 ≈ incluye diagonales hacia adelante. Los " +
              "costados y hacia atrás siempre quedan horizontales (no elevan).")]
     [Range(0f, 1f)]
+    [ShowIf(nameof(DirectionalDodge))]
     public float ForwardDashElevationDot = 0.5f;
 
-    [Header("Inercia al Terminar")]
     [Tooltip("Qué fracción de la velocidad del dash se CONSERVA cuando termina el impulso, en vez " +
              "de frenar en seco. 0 = frenada seca (el comportamiento viejo). 0.35 = salís del dash " +
              "todavía corriendo y se va disipando. Se conserva también la parte VERTICAL, así que " +
@@ -70,34 +70,25 @@ public class GA_Dash : GameplayAbility
              "el control normal: puede girar, frenar y saltar.")]
     public float ExitDamping = 3f;
 
-    [Header("Colisión")]
     [Tooltip("Capas que FRENAN el dash (paredes/entorno). Se usa para recortar la distancia.")]
     public LayerMask WallLayer;
     [Tooltip("Capa de JUGADORES a atravesar durante el dash (se excluye de la colisión del CC).")]
     public LayerMask ExcludePlayerLayer;
 
-    [Header("Daño en el Trayecto")]
-    public GameplayEffect DamageEffect;
-    // Efectos EXTRA que se aplican a cada enemigo atravesado, además del daño. Opcional.
-    public List<GameplayEffect> AdditionalEffects;
-    [Tooltip("Radio del barrido de daño a lo largo del recorrido.")]
-    public float HitRadius = 1.2f;
-    public GameObject HitVFX;
-
-    [Header("Frenar en el Primero (Carga defensiva del Guerrero)")]
-    [Tooltip("El dash termina frente al PRIMER enemigo del camino, y solo él recibe el daño y " +
-             "los FirstHitEffects. Apagado = atraviesa y daña a todos (lo de siempre).")]
+    [Tooltip("El dash termina frente al PRIMER enemigo del camino, y solo él recibe los efectos " +
+             "(con los de 'al primer golpe' incluidos). Apagado = atraviesa y daña a todos (lo de " +
+             "siempre). La Carga defensiva del Guerrero.")]
     public bool StopAtFirstEnemy = false;
 
-    [Tooltip("Efectos SOLO para el primer enemigo del camino (el aturdido de la Carga " +
-             "defensiva). Vale también sin StopAtFirstEnemy.")]
-    public List<GameplayEffect> FirstHitEffects;
-
-    [Tooltip("Con StopAtFirstEnemy: a cuántos metros ANTES del enemigo se frena, para no " +
-             "quedar metido adentro de él.")]
+    [ShowIf(nameof(StopAtFirstEnemy))]
+    [Tooltip("A cuántos metros ANTES del enemigo se frena, para no quedar metido adentro de él.")]
     public float StopShortDistance = 1f;
 
-    [Header("Reinicio por Muerte")]
+    [Section(AbilitySection.Shape)]
+    [Tooltip("Radio del barrido de daño a lo largo del recorrido.")]
+    public float HitRadius = 1.2f;
+
+    [Section("Reinicio por muerte")]
     [Tooltip("Si un enemigo golpeado por el dash muere dentro de esta ventana (seg), se recupera una carga.")]
     public float KillResetWindow = 2f;
 
@@ -239,24 +230,18 @@ public class GA_Dash : GameplayAbility
         return candidates;
     }
 
-    // Aplica el daño y los efectos a los enemigos dados (ya en orden), con el VFX de
-    // impacto, y devuelve la lista de golpeados (para el reembolso por muerte). Los
-    // FirstHitEffects van solo al primero.
+    // Aplica la lista de efectos a los enemigos dados (ya en orden), con el VFX de
+    // golpe, y devuelve la lista de golpeados (para el reembolso por muerte). Los de
+    // "al primer golpe" van solo al primero.
     private List<AbilitySystemComponent> ApplyPathHits(List<AbilitySystemComponent> enemies)
     {
         var hitList = new List<AbilitySystemComponent>();
-        NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
 
         foreach (var asc in enemies)
         {
-            if (DamageEffect != null) asc.ApplyGameplayEffect(DamageEffect, OwnerASC);
-            ApplyEffectsTo(AdditionalEffects, asc);
-            if (hitList.Count == 0) ApplyEffectsTo(FirstHitEffects, asc);
+            ApplyHitEffects(asc, firstHit: hitList.Count == 0);
             ChargeUltimate();
-
-            Vector3 hitPos = asc.transform.position + Vector3.up;
-            if (netAsc != null) netAsc.ServerPlayAbilityVFX(this, hitPos);
-            else PlayImpactVFX(hitPos);
+            BroadcastHitVFX(asc);
 
             hitList.Add(asc);
         }
@@ -284,15 +269,6 @@ public class GA_Dash : GameplayAbility
         }
     }
 
-    // Instancia HitVFX en la posición de impacto. La llama cada peer con su
-    // propia copia (ver NetworkAbilitySystemComponent.ServerPlayAbilityVFX).
-    public override void PlayImpactVFX(Vector3 position)
-    {
-        if (HitVFX == null) return;
-        GameObject vfx = Instantiate(HitVFX, position, Quaternion.identity);
-        Destroy(vfx, 1.5f);
-    }
-
     // Vista previa del trayecto del dash en el Editor (línea hacia adelante con
     // el radio de golpe).
     public override void DrawGizmos(Transform origin)
@@ -306,5 +282,37 @@ public class GA_Dash : GameplayAbility
         Gizmos.DrawLine(p0, p1);
         Gizmos.DrawWireSphere(p0, HitRadius);
         Gizmos.DrawWireSphere(p1, HitRadius);
+    }
+
+#if UNITY_EDITOR
+    public override void DrawSceneHandles(Transform origin)
+    {
+        if (origin == null) return;
+
+        Vector3 p0 = origin.position + Vector3.up * 0.5f;
+        AbilityHandles.Distance(this, "Dash Distance", p0, origin.forward, ref DashDistance, AbilityHandles.DistanceColor);
+        AbilityHandles.Radius(this, "Hit Radius", p0 + origin.forward * DashDistance, ref HitRadius,
+                              AbilityHandles.RadiusColor, origin.right);
+    }
+#endif
+
+    // =========================================================
+    // DATOS VIEJOS (solo para pasarlos a las listas; ver GameplayAbility.UpgradeLegacyData)
+    // =========================================================
+
+    [SerializeField, HideInInspector] private GameplayEffect DamageEffect;
+    [SerializeField, HideInInspector] private List<GameplayEffect> AdditionalEffects;
+    [SerializeField, HideInInspector] private List<GameplayEffect> FirstHitEffects;
+    [SerializeField, HideInInspector] private GameObject HitVFX;
+
+    protected override void OnUpgradeLegacyData(ref bool changed)
+    {
+        base.OnUpgradeLegacyData(ref changed);
+
+        UpgradeEffect(ref DamageEffect, EEffectWhen.OnHit, EEffectTarget.Enemies, ref changed);
+        UpgradeEffects(AdditionalEffects, EEffectWhen.OnHit, EEffectTarget.Enemies, ref changed);
+        UpgradeEffects(FirstHitEffects, EEffectWhen.OnFirstHit, EEffectTarget.Enemies, ref changed);
+        UpgradeVisual(ref HitVFX, new AbilityVisual { When = EVisualWhen.OnHit, Offset = Vector3.up, DestroyTime = 1.5f },
+                      ref changed);
     }
 }

@@ -36,11 +36,16 @@ MonoBehaviour:
     Volume: 1
     PitchVariance: 0.08
     MaxDistance: 35
+  Effects:
+  - When: 2
+    ApplyTo: 2
+    Effect: {fileID: 11400000, guid: 394247cf9df320c46b79493f3420d612, type: 2}
+    OnlyIfTargetHas: 0
+  Visuals: []
   IsInterruptible: 0
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  VisualsSequence: []
   MaxCharges: 1
-  BuffEffect: {fileID: 11400000, guid: 394247cf9df320c46b79493f3420d612, type: 2}
+  BuffEffect: {fileID: 0}
   AdditionalEffects: []

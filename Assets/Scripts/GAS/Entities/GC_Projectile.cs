@@ -17,20 +17,18 @@ using FishNet.Object.Synchronizing;
 [RequireComponent(typeof(Collider))]
 public class GC_Projectile : NetworkBehaviour
 {
-    private GameplayEffect damageEffect;    // Daño instantáneo al impactar
-    private GameplayEffect durationEffect;  // Efecto con duración adicional al impactar
-    private List<GameplayEffect> additionalEffects; // Efectos EXTRA al impactar (opcional)
-    // Efectos que se le aplican a los ALIADOS que atraviesa (curaciones, escudos...).
-    // Vacío = el proyectil los ignora por completo, como hizo siempre.
-    private List<GameplayEffect> allyEffects;
     private AbilitySystemComponent sourceASC; // Quién disparó (solo poblado en el servidor)
     private float lifeTime = 5f;
     private float ultChargeAmount = 0f;
-    // Prefab de VFX a reproducir en el impacto.
-    private GameObject impactVfxPrefab;
-    // Instancia de GA_ProjectileShoot que disparó — la necesitamos para
-    // replicar el VFX de impacto a todos los peers (ver OnTriggerEnter).
+    // Instancia de GA_ProjectileShoot que disparó. Lo que le hace el proyectil a quien
+    // toca es SU lista de efectos (ApplyHitEffects: daño a enemigos, curación a aliados
+    // si la trae, lo de primer golpe), y sus VFX de impacto se replican desde ella.
     private GameplayAbility sourceAbility;
+
+    // El daño principal, pisado por el que traía un proyectil devuelto por un parry (ver
+    // Reflect). null = el de la habilidad.
+    private GameplayEffect PrimaryDamage => _carriedDamage != null ? _carriedDamage
+                                          : sourceAbility != null ? sourceAbility.PrimaryDamageEffect : null;
 
     // Enemigos ya golpeados, para no repetir daño en el mismo frame si el
     // proyectil atraviesa varios colliders del mismo objetivo.
@@ -154,18 +152,13 @@ public class GC_Projectile : NetworkBehaviour
     // resolver el impacto y publicar quién disparó.
     // Nota: la velocidad NO se pasa acá — la setea GA_ProjectileShoot.SpawnProjectile
     // directo sobre el Rigidbody. Antes había un parámetro 'speed' que no se usaba.
-    // 'allyEffects' y 'lifeTimeSeconds' son opcionales: sin ellos el proyectil se
-    // comporta igual que siempre (ignora aliados, vive 5 segundos).
-    public void Initialize(GameplayEffect damage, GameplayEffect durationEffect, AbilitySystemComponent source, float ultCharge, GameObject impactVFX, GameplayAbility ability = null, List<GameplayEffect> extraEffects = null, List<GameplayEffect> allyEffects = null, float lifeTimeSeconds = 0f)
+    // Los efectos ya no se pasan sueltos: los lee de 'ability' al chocar. 'lifeTimeSeconds'
+    // es opcional: sin él vive 5 segundos.
+    public void Initialize(AbilitySystemComponent source, float ultCharge, GameplayAbility ability, float lifeTimeSeconds = 0f)
     {
-        damageEffect         = damage;
-        this.durationEffect  = durationEffect;
         sourceASC            = source;
         ultChargeAmount      = ultCharge;
-        impactVfxPrefab      = impactVFX;
         sourceAbility        = ability;
-        additionalEffects    = extraEffects;
-        this.allyEffects     = allyEffects;
 
         // Alcance del proyectil expresado como tiempo de vuelo: con velocidad
         // constante, "vive 2s" es "llega hasta 2s × velocidad". 0 = dejar el default.
@@ -227,14 +220,14 @@ public class GC_Projectile : NetworkBehaviour
             // hacia donde apunta el dueño de la barrera. Una sola vez por proyectil.
             if (barrier.ReflectsProjectilesNow && !_reflected)
             {
-                float carried = barrier.NotifyProjectileBlocked(damageEffect, sourceASC, transform.position);
+                float carried = barrier.NotifyProjectileBlocked(PrimaryDamage, sourceASC, transform.position);
                 Reflect(barrier.Owner, barrier.AimDirection, carried);
                 return;
             }
 
             // Le pasamos el efecto de daño (no un número) para que la barrera pueda
             // reportar cuánto daño evitó de verdad — ver NotifyProjectileBlocked.
-            barrier.NotifyProjectileBlocked(damageEffect, sourceASC, transform.position);
+            barrier.NotifyProjectileBlocked(PrimaryDamage, sourceASC, transform.position);
             PlayImpactVFXEverywhere();
             DespawnSelf();
             return;
@@ -248,35 +241,28 @@ public class GC_Projectile : NetworkBehaviour
         PlayImpactVFXEverywhere();
 
         // 2. ¿Es un personaje?
-        if (targetASC != null)
+        if (targetASC != null && sourceAbility != null && sourceASC != null)
         {
-            // SISTEMA DE EQUIPOS (AFILIACIÓN LÓGICA)
-            bool isEnemy = false;
-
-            if (sourceASC.TeamID == 0 || targetASC.TeamID == 0) isEnemy = true;
-            else if (sourceASC.TeamID != targetASC.TeamID) isEnemy = true;
+            // SISTEMA DE EQUIPOS (AFILIACIÓN LÓGICA): neutral (equipo 0) cuenta como enemigo.
+            bool isEnemy = sourceASC.IsEnemyOf(targetASC);
 
             // A) Es enemigo y no lo hemos golpeado antes
             if (isEnemy)
             {
-                if (!enemiesHit.Contains(targetASC))
+                if (enemiesHit.Add(targetASC))
                 {
-                    // El PRIMER enemigo de este proyectil recibe además los efectos de
-                    // primer impacto (el aturdido del Clérigo del Orden). Ver
-                    // GA_ProjectileShoot.FirstHitEffects.
-                    if (enemiesHit.Count == 0 && !_reflected && sourceAbility is GA_ProjectileShoot shooter)
-                        shooter.ApplyFirstHitEffects(targetASC);
+                    // La lista de efectos de la habilidad, en su orden. El PRIMER enemigo de
+                    // este proyectil recibe además los de "al primer golpe" (el aturdido del
+                    // Clérigo del Orden). Devuelto por un parry: solo lo que daña, con el
+                    // daño que traía (ver Reflect).
+                    bool first = enemiesHit.Count == 1 && !_reflected;
+                    sourceAbility.ApplyHitEffects(targetASC, first, sourceASC, _carriedDamage, onlyHostile: _reflected);
 
-                    if (damageEffect != null) targetASC.ApplyGameplayEffect(damageEffect, sourceASC);
-                    if (durationEffect != null) targetASC.ApplyGameplayEffect(durationEffect, sourceASC);
-                    if (additionalEffects != null)
-                        foreach (var extra in additionalEffects)
-                            if (extra != null) targetASC.ApplyGameplayEffect(extra, sourceASC);
-                    if (sourceASC != null && ultChargeAmount > 0)
-                    {
+                    if (ultChargeAmount > 0)
                         sourceASC.ReduceCooldownByTag(EGameplayTag.Ability_Cooldown_Ultimate, ultChargeAmount);
-                    }
-                    enemiesHit.Add(targetASC);
+
+                    // Los VFX "al golpear" sobre él (el sonido ya va con el impacto de arriba).
+                    if (!_reflected) sourceAbility.BroadcastHitVFX(targetASC, withSound: false);
                 }
 
                 // NOTA: Si quieres que el proyectil se DESTRUYA al golpear a un enemigo
@@ -286,16 +272,17 @@ public class GC_Projectile : NetworkBehaviour
             // B) Es aliado
             else
             {
-                // Nunca le hacemos daño, pero SÍ le aplicamos los efectos de aliado
-                // si la habilidad los trae (Castigo divino del Paladín: la estela
-                // daña enemigos y cura aliados a su paso). Sin ellos la lista está
-                // vacía y esto no hace nada, que es el comportamiento de siempre.
+                // Nunca le hacemos daño, pero SÍ le aplicamos lo que la lista trae para
+                // los aliados (Castigo divino del Paladín: la estela daña enemigos y cura
+                // aliados a su paso). Sin nada para ellos, esto no hace nada, que es el
+                // comportamiento de siempre. Devuelto por un parry, tampoco: curaría a los
+                // del Guardián con la magia del Paladín.
                 //
                 // El proyectil lo atraviesa en los dos casos: no lo destruimos acá.
-                if (allyEffects != null && alliesHit.Add(targetASC))
+                if (!_reflected && sourceAbility.HasAllyHitEffects && alliesHit.Add(targetASC))
                 {
-                    foreach (var effect in allyEffects)
-                        if (effect != null) targetASC.ApplyGameplayEffect(effect, sourceASC);
+                    sourceAbility.ApplyHitEffects(targetASC, false, sourceASC);
+                    sourceAbility.BroadcastHitVFX(targetASC, withSound: false);
                 }
             }
         }
@@ -337,7 +324,6 @@ public class GC_Projectile : NetworkBehaviour
         _reflected      = true;
         sourceASC       = newSource;
         ultChargeAmount = 0f;
-        allyEffects     = null;
         enemiesHit.Clear();
         alliesHit.Clear();
 
@@ -352,7 +338,6 @@ public class GC_Projectile : NetworkBehaviour
                 new Modifier { Attribute = EAttributeType.Health, Type = Modifier.EModificationType.Add,
                                Magnitude = -carriedDamage },
             };
-            damageEffect = _carriedDamage;
         }
 
         Vector3 dir = direction.sqrMagnitude > 0.0001f ? direction.normalized : -transform.forward;
@@ -372,7 +357,7 @@ public class GC_Projectile : NetworkBehaviour
     // esta habilidad, sin sincronizar el GameObject del VFX en sí.
     private void PlayImpactVFXEverywhere()
     {
-        if (impactVfxPrefab == null || sourceAbility == null || sourceASC == null) return;
+        if (sourceAbility == null || sourceASC == null || !sourceAbility.HasImpactFeedback) return;
 
         NetworkAbilitySystemComponent shooterNetAsc = sourceASC.GetComponent<NetworkAbilitySystemComponent>();
         if (shooterNetAsc != null)

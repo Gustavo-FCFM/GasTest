@@ -36,11 +36,12 @@ MonoBehaviour:
     Volume: 1
     PitchVariance: 0.08
     MaxDistance: 35
+  Effects: []
+  Visuals: []
   IsInterruptible: 0
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  VisualsSequence: []
   MaxCharges: 1
   Sequence:
   - AbilityToCast: {fileID: 11400000, guid: d2acbfbe298bdeb44acd480de5aa42e9, type: 2}

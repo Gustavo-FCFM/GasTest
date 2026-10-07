@@ -36,21 +36,25 @@ MonoBehaviour:
     Volume: 1
     PitchVariance: 0.08
     MaxDistance: 35
-  IsInterruptible: 0
-  TargetLayer:
-    serializedVersion: 2
-    m_Bits: 128
-  VisualsSequence:
-  - VFXPrefab: {fileID: 6126188424833946103, guid: a58aa9a78f2b45b45bb0f3e2e1e3ad3c, type: 3}
+  Effects: []
+  Visuals:
+  - When: 0
+    VFXPrefab: {fileID: 6126188424833946103, guid: a58aa9a78f2b45b45bb0f3e2e1e3ad3c, type: 3}
     Delay: 0
     Offset: {x: 0, y: 0, z: 0}
     RotationOffset: {x: 0, y: 0, z: 0}
     Scale: {x: 0, y: 0, z: 0}
-    AttachToOwner: 0
+    Attach: 0
+    MatchAreaSize: 0
+    AreaSizeMultiplier: 0
     DestroyTime: 0.2
     EndWithTag: 0
     EndWhenAttributeDepleted: 0
     DepletedAttribute: 0
+  IsInterruptible: 0
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
   MaxCharges: 1
   ImpactVFX: {fileID: 0}
   AttachImpactVFX: 1

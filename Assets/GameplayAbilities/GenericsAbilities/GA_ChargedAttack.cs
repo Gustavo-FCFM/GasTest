@@ -18,7 +18,7 @@ using System.Collections.Generic;
 //
 // Es de MANTENER (IHoldAbility): el cliente avisa al soltar (como con el escudo), y la
 // pose de carga son los clips de mantener (ChargeStartClip / ChargeLoopClip). Mientras
-// carga se le puede aplicar un efecto (ChargingEffect: una ralentización). Un aturdido
+// carga se le pueden aplicar efectos (WhileChargingEffects: una ralentización). Un aturdido
 // o la muerte cortan la carga SIN golpe.
 //
 // La animación de la etapa llega a todas las pantallas por el mismo RPC que los pasos de
@@ -38,7 +38,7 @@ public class GA_ChargedAttack : GameplayAbility, IHoldAbility
         public GameplayAbility Ability;
     }
 
-    [Header("Etapas")]
+    [Section("Etapas de carga")]
     [Tooltip("En orden de MinChargeTime. Al soltar sale la última a la que se llegó.")]
     public List<ChargeStage> Stages = new List<ChargeStage>();
 
@@ -46,15 +46,15 @@ public class GA_ChargedAttack : GameplayAbility, IHoldAbility
              "seguridad de abajo).")]
     public float MaxChargeTime = 2f;
 
+    [Tooltip("Lo que se aplica al empezar a cargar y se saca al soltar (una ralentización, " +
+             "por ejemplo). Opcional.")]
+    public List<GameplayEffect> WhileChargingEffects = new List<GameplayEffect>();
+
+    [Section(AbilitySection.Advanced, startCollapsed: true)]
     [Tooltip("Corte de seguridad si MaxChargeTime está en 0 y el aviso de soltar nunca llega.")]
     public float HoldSafetyTimeout = 10f;
 
-    [Header("Mientras Carga")]
-    [Tooltip("Efecto que se aplica al empezar a cargar y se saca al soltar (una ralentización, " +
-             "por ejemplo). Opcional.")]
-    public GameplayEffect ChargingEffect;
-
-    [Header("Animación de Carga")]
+    [Section(AbilitySection.Animation)]
     [Tooltip("Pose de carga EN BUCLE. Con este solo ya se ve.")]
     public AnimationClip ChargeLoopClip;
 
@@ -107,8 +107,13 @@ public class GA_ChargedAttack : GameplayAbility, IHoldAbility
         _holding         = true;
         _chargeStartedAt = Time.time;
 
-        if (CostEffect != null)     OwnerASC.ApplyGameplayEffect(CostEffect, this);
-        if (ChargingEffect != null) OwnerASC.ApplyGameplayEffect(ChargingEffect, OwnerASC);
+        if (CostEffect != null) OwnerASC.ApplyGameplayEffect(CostEffect, this);
+        ApplyEffectsTo(WhileChargingEffects, OwnerASC);
+
+        // No pasa por CommitAbility (el cooldown se cobra al soltar): los efectos "al
+        // activarse" y los VFX "al lanzar" se piden acá, al empezar a cargar.
+        ApplyActivationEffects();
+        PlayCastVisuals();
 
         PlayerController pc = OwnerASC.GetComponent<PlayerController>();
         if (pc != null) pc.PlayHoldAnimation(this);
@@ -189,7 +194,9 @@ public class GA_ChargedAttack : GameplayAbility, IHoldAbility
     {
         _holding = false;
 
-        if (ChargingEffect != null) OwnerASC.RemoveEffectsByDefinition(ChargingEffect);
+        if (WhileChargingEffects != null)
+            foreach (GameplayEffect effect in WhileChargingEffects)
+                if (effect != null) OwnerASC.RemoveEffectsByDefinition(effect);
 
         PlayerController pc = OwnerASC.GetComponent<PlayerController>();
         if (pc != null) pc.StopHoldAnimation();
@@ -238,9 +245,43 @@ public class GA_ChargedAttack : GameplayAbility, IHoldAbility
         EndAbility();
     }
 
+    // La forma es la de la ÚLTIMA etapa (la carga completa).
+    private GameplayAbility LastStage
+        => Stages != null && Stages.Count > 0 ? Stages[Stages.Count - 1].Ability : null;
+
     public override void DrawGizmos(Transform origin)
     {
-        if (Stages.Count > 0 && Stages[Stages.Count - 1].Ability != null)
-            Stages[Stages.Count - 1].Ability.DrawGizmos(origin);
+        if (LastStage != null) LastStage.DrawGizmos(origin);
+    }
+
+#if UNITY_EDITOR
+    // Las manijas ajustan el asset de la última etapa (su forma es la que se ve).
+    public override void DrawSceneHandles(Transform origin)
+    {
+        if (LastStage != null && LastStage != this) LastStage.DrawSceneHandles(origin);
+    }
+#endif
+
+    // Envoltorio: busca y golpea la etapa que sale, no esta.
+    public override bool UsesTargetLayer => false;
+    public override bool UsesHitEffects  => false;
+
+    // =========================================================
+    // DATOS VIEJOS (solo para pasarlos a la lista; ver GameplayAbility.UpgradeLegacyData)
+    // =========================================================
+
+    [SerializeField, HideInInspector] private GameplayEffect ChargingEffect;
+
+    protected override void OnUpgradeLegacyData(ref bool changed)
+    {
+        base.OnUpgradeLegacyData(ref changed);
+
+        if (ChargingEffect != null)
+        {
+            if (WhileChargingEffects == null) WhileChargingEffects = new List<GameplayEffect>();
+            WhileChargingEffects.Add(ChargingEffect);
+            ChargingEffect = null;
+            changed = true;
+        }
     }
 }

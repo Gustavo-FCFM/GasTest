@@ -12,17 +12,19 @@ using System.Collections.Generic;
 //
 // Casi todo sale de piezas que ya existen:
 //  - El daño "= vida faltante" lo hace el GameplayEffect con
-//    Modifier.UseTargetHealthScaling (MissingHealth, coeficiente negativo).
+//    Modifier.UseTargetHealthScaling (MissingHealth, coeficiente negativo), cargado
+//    en la lista de efectos como "Al golpear → Enemigos".
 //  - El teletransporte usa NetworkAbilitySystemComponent.ServerTeleportOwnerTo
 //    (el transform es client-authoritative: lo ejecuta el dueño).
-//  - Volver a invisible es simplemente re-aplicarse el GE de invisibilidad.
+//  - Volver a invisible es una entrada "Al matar → El lanzador" con el GE de
+//    invisibilidad.
 //
 // Como toda GameplayAbility, Activate() corre en el servidor.
 // ============================================================
 [CreateAssetMenu(fileName = "GA_MarkedForDeath", menuName = "GAS/Specific Abilities/Rogue/Assassin/Marked For Death")]
 public class GA_MarkedForDeath : TargetImpactAbility, IGroundTargetAbility
 {
-    [Header("Zona Objetivo")]
+    [Section(AbilitySection.Shape)]
     [Tooltip("Distancia máxima a la que se puede marcar la zona.")]
     public float MaxRange = 15f;
     [Tooltip("Radio de la zona: a quiénes alcanza el daño.")]
@@ -34,21 +36,12 @@ public class GA_MarkedForDeath : TargetImpactAbility, IGroundTargetAbility
     public float TargetRadius   => ZoneRadius;
     public bool  UsesGroundTarget => true; // esta habilidad SIEMPRE se apunta
 
-    [Header("Efectos")]
-    [Tooltip("Daño a cada enemigo de la zona. Para que pegue por su vida faltante, en su " +
-             "Modifier activá UseTargetHealthScaling (MissingHealth) con coeficiente NEGATIVO " +
-             "(ej: -1 = el 100% de la vida faltante).")]
-    public GameplayEffect DamageEffect;
-    [Tooltip("Efectos EXTRA para cada enemigo de la zona. Opcional.")]
-    public List<GameplayEffect> AdditionalEffects;
-
-    [Tooltip("Se re-aplica al propio jugador si MATÓ al menos a un enemigo con esta " +
-             "habilidad (el GE de invisibilidad del Asesino).")]
-    public GameplayEffect InvisibilityOnKillEffect;
+    public override float VisualAreaRadius => ZoneRadius;
+    public override bool SupportsVisualTiming(EVisualWhen when) => true;
 
     // Valida (incluye el requisito de estar invisible, vía ActivationRequiredTags),
-    // teletransporta a la zona, daña a todos los enemigos dentro, y re-invisibiliza
-    // si mató a alguno.
+    // teletransporta a la zona y le aplica la lista de efectos a todos los enemigos
+    // dentro (con lo de "al matar" si mata a alguno).
     public override void Activate()
     {
         if (!IsServer) return;
@@ -74,10 +67,13 @@ public class GA_MarkedForDeath : TargetImpactAbility, IGroundTargetAbility
 
         if (pc != null) pc.PlayAnimation(this);
 
-        // Daño a todos los enemigos de la zona (autoridad de servidor).
+        BroadcastImpactVFX(zoneCenter);
+
+        // Daño a todos los enemigos de la zona (autoridad de servidor). ApplyHitEffects
+        // es síncrono: si el golpe mata, aplica en el acto lo de "al matar" (la
+        // invisibilidad de vuelta).
         Collider[] cols = Physics.OverlapSphere(zoneCenter, ZoneRadius, TargetLayer);
-        var seen   = new HashSet<AbilitySystemComponent>();
-        bool killedAny = false;
+        var seen = new HashSet<AbilitySystemComponent>();
 
         foreach (var c in cols)
         {
@@ -85,19 +81,11 @@ public class GA_MarkedForDeath : TargetImpactAbility, IGroundTargetAbility
             if (target == null || ReferenceEquals(target, OwnerASC) || !IsEnemy(target) || !seen.Add(target)) continue;
             if (target.HasTag(EGameplayTag.State_Dead)) continue;
 
-            if (DamageEffect != null) target.ApplyGameplayEffect(DamageEffect, OwnerASC);
-            ApplyEffectsTo(AdditionalEffects, target);
+            ApplyHitEffects(target, firstHit: seen.Count == 1);
             ChargeUltimate();
 
-            // ApplyGameplayEffect es síncrono: si lo mató, el tag ya está puesto.
-            if (target.HasTag(EGameplayTag.State_Dead)) killedAny = true;
-
-            PlayImpactVFXOnTarget(target);
+            BroadcastHitVFX(target, withSound: false);
         }
-
-        // "Si al menos un enemigo muere, el jugador se vuelve invisible."
-        if (killedAny && InvisibilityOnKillEffect != null)
-            OwnerASC.ApplyGameplayEffect(InvisibilityOnKillEffect, OwnerASC);
 
         EndAbility();
     }
@@ -114,5 +102,34 @@ public class GA_MarkedForDeath : TargetImpactAbility, IGroundTargetAbility
         Vector3 preview = origin.position + origin.forward * MaxRange;
         Gizmos.color = new Color(0.9f, 0.1f, 0.3f, 0.25f);
         Gizmos.DrawSphere(preview, ZoneRadius);
+    }
+
+#if UNITY_EDITOR
+    public override void DrawSceneHandles(Transform origin)
+    {
+        if (origin == null) return;
+
+        AbilityHandles.Distance(this, "Max Range", origin.position, origin.forward, ref MaxRange,
+                                AbilityHandles.DistanceColor);
+        AbilityHandles.Radius(this, "Zone Radius", origin.position + origin.forward * MaxRange, ref ZoneRadius,
+                              AbilityHandles.RadiusColor, origin.right);
+    }
+#endif
+
+    // =========================================================
+    // DATOS VIEJOS (solo para pasarlos a las listas; ver GameplayAbility.UpgradeLegacyData)
+    // =========================================================
+
+    [SerializeField, HideInInspector] private GameplayEffect DamageEffect;
+    [SerializeField, HideInInspector] private List<GameplayEffect> AdditionalEffects;
+    [SerializeField, HideInInspector] private GameplayEffect InvisibilityOnKillEffect;
+
+    protected override void OnUpgradeLegacyData(ref bool changed)
+    {
+        base.OnUpgradeLegacyData(ref changed);
+
+        UpgradeEffect(ref DamageEffect, EEffectWhen.OnHit, EEffectTarget.Enemies, ref changed);
+        UpgradeEffects(AdditionalEffects, EEffectWhen.OnHit, EEffectTarget.Enemies, ref changed);
+        UpgradeEffect(ref InvisibilityOnKillEffect, EEffectWhen.OnKill, EEffectTarget.Self, ref changed);
     }
 }

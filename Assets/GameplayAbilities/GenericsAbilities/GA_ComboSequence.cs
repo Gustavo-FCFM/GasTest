@@ -33,9 +33,43 @@ public class GA_ComboSequence : GameplayAbility
         public int AnimationIDOverride;
     }
 
-    [Header("Secuencia del Combo")]
-    // Orden y timing de los pasos del combo.
+    [Section("Combo")]
+    [Tooltip("Los pasos del combo, en orden: qué habilidad sale en cada uno y cuánto esperar " +
+             "antes del siguiente.")]
     public List<ComboStep> Sequence;
+
+    // Envoltorio: buscan y golpean los pasos, no esta.
+    public override bool UsesTargetLayer => false;
+    public override bool UsesHitEffects  => false;
+
+    // La forma de cada paso distinto, dibujada encima (normalmente son la misma).
+    public override void DrawGizmos(Transform origin) => DrawStepGizmos(Sequence, origin, this);
+
+#if UNITY_EDITOR
+    public override void DrawSceneHandles(Transform origin) => DrawStepHandles(Sequence, origin, this);
+#endif
+
+    // Compartidas con GA_AlternatingCombo: cada habilidad de los pasos una sola vez (y
+    // nunca el propio combo, por si alguien lo pone de paso de sí mismo).
+    public static void DrawStepGizmos(List<ComboStep> steps, Transform origin, GameplayAbility owner)
+    {
+        if (steps == null) return;
+        var done = new HashSet<GameplayAbility>();
+        foreach (ComboStep step in steps)
+            if (step.AbilityToCast != null && step.AbilityToCast != owner && done.Add(step.AbilityToCast))
+                step.AbilityToCast.DrawGizmos(origin);
+    }
+
+#if UNITY_EDITOR
+    public static void DrawStepHandles(List<ComboStep> steps, Transform origin, GameplayAbility owner)
+    {
+        if (steps == null) return;
+        var done = new HashSet<GameplayAbility>();
+        foreach (ComboStep step in steps)
+            if (step.AbilityToCast != null && step.AbilityToCast != owner && done.Add(step.AbilityToCast))
+                step.AbilityToCast.DrawSceneHandles(origin);
+    }
+#endif
 
     // Clip EFECTIVO de un paso: el override si lo tiene, si no el del asset de su
     // habilidad. Compartido con GA_AlternatingCombo (ambos usan ComboStep) para que

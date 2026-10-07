@@ -191,9 +191,22 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
 - **Dónde va cada VFX.** Lo que dura lo que dura un buff o un debuff va en el
   `TargetVFX` del **GE** (aparece pegado a quien lo recibe, en todas las pantallas, y se
   va cuando el efecto termina; `TargetVFXLoop` repite las partículas de un solo
-  disparo). No en la Visuals Sequence de la habilidad con `EndWithTag`. Un VFX de
-  impacto sobre un personaje: heredar de **`TargetImpactAbility`** y llamar
-  `PlayImpactVFXOnTarget(objetivo)`, en vez de copiar el instanciado.
+  disparo). No en la lista de VFX de la habilidad con `EndWithTag`. Los VFX de la
+  habilidad van en su lista **`Visuals`** (cada entrada dice cuándo: al lanzar / al
+  golpear / en el impacto); en código se disparan con `BroadcastHitVFX(objetivo)` y
+  `BroadcastImpactVFX(punto)` — nunca un `Instantiate` a mano ni un campo `HitVFX` nuevo.
+
+- **Los efectos de una habilidad van en su lista `Effects`** (desde el 7 de octubre de
+  2026): cada entrada dice cuándo (al golpear, al primer golpe, al activarse, al matar),
+  a quién (enemigos, aliados, el lanzador, todos) y una condición de tag opcional. El
+  código los aplica con `ApplyHitEffects(objetivo, primerGolpe)`; "al activarse" lo hace
+  `CommitAbility`. Nada de campos sueltos `DamageEffect` / `AdditionalEffects` nuevos.
+  Los campos nuevos de un GA llevan **`[Section]`** (con las constantes de
+  `AbilitySection`) y, si dependen de otro, **`[ShowIf]`**; si tiene forma, que
+  sobreescriba `DrawGizmos` y `DrawSceneHandles` (manijas con `AbilityHandles`).
+  **Cambiar el tipo de un campo ya cargado en assets** (uno suelto a lista, etc.): dejar
+  el viejo como `[SerializeField, HideInInspector] private` con su mismo nombre y pasarlo
+  en `OnUpgradeLegacyData` — así los assets no pierden lo cargado.
 
 Los detalles finos del GAS (pipeline de daño, acumulación de efectos, animaciones de
 combo) están en `DesignDocuments/GAS_Arquitectura.docx`.

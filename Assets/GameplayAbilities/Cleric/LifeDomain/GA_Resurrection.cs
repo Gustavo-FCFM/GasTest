@@ -22,7 +22,7 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "GA_Resurrection", menuName = "GAS/Specific Abilities/Cleric/Life/Resurrection")]
 public class GA_Resurrection : TargetImpactAbility
 {
-    [Header("Selección")]
+    [Section(AbilitySection.Targeting)]
     [Tooltip("Distancia máxima desde el Clérigo hasta el cuerpo.")]
     public float MaxRange = 8f;
 
@@ -30,7 +30,7 @@ public class GA_Resurrection : TargetImpactAbility
              "debajo de la retícula, así que conviene más generoso que el de GA_Target.")]
     public float SelectionAngle = 35f;
 
-    [Header("Resurrección")]
+    [Section("Resurrección")]
     [Tooltip("Con cuánta vida vuelve, como fracción de su vida máxima. 0.5 = la mitad.")]
     [Range(0.05f, 1f)]
     public float HealthFraction = 0.5f;
@@ -66,6 +66,10 @@ public class GA_Resurrection : TargetImpactAbility
         NetworkAbilitySystemComponent allyNet = ally.GetComponent<NetworkAbilitySystemComponent>();
         if (allyNet != null) allyNet.ServerResurrect(HealthFraction);
         else                 ally.Revive(resetAbilities: false, healthFraction: HealthFraction); // sin red
+
+        // Lo que la lista tenga para el revivido ("Al golpear → Aliados": un escudo para
+        // que no lo vuelvan a tumbar al instante, por ejemplo).
+        if (!ally.HasTag(EGameplayTag.State_Dead)) ApplyHitEffects(ally, firstHit: true);
 
         PlayerController pc = OwnerASC.GetComponent<PlayerController>();
         if (pc != null)
@@ -137,9 +141,13 @@ public class GA_Resurrection : TargetImpactAbility
     // =========================================================
 
     public override void DrawGizmos(Transform origin)
-    {
-        if (origin == null) return;
-        Gizmos.color = new Color(1f, 0.9f, 0.4f, 0.9f);
-        Gizmos.DrawWireSphere(origin.position, MaxRange);
-    }
+        => DrawSelectionGizmo(origin, MaxRange, SelectionAngle, new Color(1f, 0.9f, 0.4f, 0.9f));
+
+#if UNITY_EDITOR
+    public override void DrawSceneHandles(Transform origin)
+        => AbilityHandles.Selection(this, origin, ref MaxRange, ref SelectionAngle);
+#endif
+
+    // Busca los cuerpos entre los jugadores, no con física (un ragdoll no está en la capa).
+    public override bool UsesTargetLayer => false;
 }

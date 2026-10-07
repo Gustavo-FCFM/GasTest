@@ -36,11 +36,12 @@ MonoBehaviour:
     Volume: 1
     PitchVariance: 0.08
     MaxDistance: 35
+  Effects: []
+  Visuals: []
   IsInterruptible: 0
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  VisualsSequence: []
   MaxCharges: 1
   Stages:
   - MinChargeTime: 0
@@ -50,7 +51,9 @@ MonoBehaviour:
   - MinChargeTime: 1.2
     Ability: {fileID: 11400000, guid: 0024d680924b7ed4f9caa5c5ac9763df, type: 2}
   MaxChargeTime: 1.5
+  WhileChargingEffects:
+  - {fileID: 11400000, guid: cb446d1ea0347e744b37236a3721437f, type: 2}
   HoldSafetyTimeout: 10
-  ChargingEffect: {fileID: 11400000, guid: cb446d1ea0347e744b37236a3721437f, type: 2}
   ChargeLoopClip: {fileID: -8123199073581041544, guid: 6961f3b37eaf3284ca4d3bf300640af3, type: 3}
   ChargeStartClip: {fileID: 0}
+  ChargingEffect: {fileID: 0}

@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 // ============================================================
 // GA_CommandHalt  (Canalizar divinidad: Aturdir — Clérigo, Dominio del orden)
@@ -8,7 +9,7 @@ using System.Collections;
 // contra un aliado, queda aturdido un tiempo."
 //
 // Marca al enemigo de la mira. Mientras la marca dure, la PRIMERA vez que ese enemigo
-// le pega a un aliado del Clérigo (o al Clérigo mismo), recibe StunEffect y la marca
+// le pega a un aliado del Clérigo (o al Clérigo mismo), recibe los PunishEffects y la marca
 // se consume. Si no le pega a nadie, la marca se va sola al terminar su duración.
 //
 // Es el mismo esquema que el Enemigo jurado del Paladín (GA_SwornEnemy), al revés:
@@ -21,20 +22,20 @@ using System.Collections;
 [CreateAssetMenu(fileName = "GA_CommandHalt", menuName = "GAS/Specific Abilities/Cleric/Order/Command Halt")]
 public class GA_CommandHalt : TargetImpactAbility
 {
-    [Header("Selección de Enemigo")]
+    [Section(AbilitySection.Targeting)]
     [Tooltip("Alcance máximo para buscar al enemigo a marcar. 10 m = alcance medio.")]
     public float MaxRange = 10f;
 
     [Tooltip("Ángulo máximo (grados) entre la mira y el enemigo para que cuente como objetivo.")]
     public float SelectionAngle = 30f;
 
-    [Header("La Marca")]
+    [Section("La marca")]
     [Tooltip("Efecto CON DURACIÓN que lleva el marcado (el ícono y la duración de la vigilancia). " +
              "Su Duration manda: la marca vigila exactamente ese tiempo.")]
     public GameplayEffect MarkEffect;
 
-    [Tooltip("Lo que recibe el marcado si le pega a un aliado (GE_Stun).")]
-    public GameplayEffect StunEffect;
+    [Tooltip("Lo que recibe el marcado si le pega a un aliado (GE_Stun). Puede ser más de uno.")]
+    public List<GameplayEffect> PunishEffects = new List<GameplayEffect>();
 
     // Enemigo marcado ahora mismo. NonSerialized: estado de runtime por instancia otorgada.
     [System.NonSerialized] private AbilitySystemComponent _marked;
@@ -62,9 +63,9 @@ public class GA_CommandHalt : TargetImpactAbility
             return;
         }
 
-        if (MarkEffect == null || StunEffect == null)
+        if (MarkEffect == null || PunishEffects == null || PunishEffects.Count == 0)
         {
-            Debug.LogWarning($"[{AbilityName}] le falta MarkEffect o StunEffect: no se lanza.");
+            Debug.LogWarning($"[{AbilityName}] le falta MarkEffect o algún efecto de castigo: no se lanza.");
             EndAbility();
             return;
         }
@@ -74,6 +75,7 @@ public class GA_CommandHalt : TargetImpactAbility
         ClearMark();   // una marca a la vez
 
         target.ApplyGameplayEffect(MarkEffect, OwnerASC);
+        ApplyHitEffects(target, firstHit: true);   // lo que la lista tenga para el marcado
         _marked = target;
         _marked.OnDealtDamage += HandleMarkedDealtDamage;
 
@@ -133,7 +135,7 @@ public class GA_CommandHalt : TargetImpactAbility
 
         AbilitySystemComponent stunned = _marked;
         ClearMark();
-        stunned.ApplyGameplayEffect(StunEffect, OwnerASC);
+        ApplyEffectsTo(PunishEffects, stunned);
     }
 
     // =========================================================
@@ -141,9 +143,29 @@ public class GA_CommandHalt : TargetImpactAbility
     // =========================================================
 
     public override void DrawGizmos(Transform origin)
+        => DrawSelectionGizmo(origin, MaxRange, SelectionAngle, new Color(0.4f, 0.6f, 1f, 0.9f));
+
+#if UNITY_EDITOR
+    public override void DrawSceneHandles(Transform origin)
+        => AbilityHandles.Selection(this, origin, ref MaxRange, ref SelectionAngle);
+#endif
+
+    // =========================================================
+    // DATOS VIEJOS (solo para pasarlos a las listas; ver GameplayAbility.UpgradeLegacyData)
+    // =========================================================
+
+    [SerializeField, HideInInspector] private GameplayEffect StunEffect;
+
+    protected override void OnUpgradeLegacyData(ref bool changed)
     {
-        if (origin == null) return;
-        Gizmos.color = new Color(0.4f, 0.6f, 1f, 0.9f);
-        Gizmos.DrawWireSphere(origin.position, MaxRange);
+        base.OnUpgradeLegacyData(ref changed);
+
+        if (StunEffect != null)
+        {
+            if (PunishEffects == null) PunishEffects = new List<GameplayEffect>();
+            PunishEffects.Add(StunEffect);
+            StunEffect = null;
+            changed = true;
+        }
     }
 }

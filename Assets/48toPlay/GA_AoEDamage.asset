@@ -16,25 +16,55 @@ MonoBehaviour:
   AbilityIcon: {fileID: 0}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 0}
+  CooldownDuration: 0
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 0
   ActivationBlockedTags: 
+  ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  UsableWhileHolding: 0
+  AnimationClip: {fileID: 0}
   AnimationTriggerName: AttackTrigger
   AnimationID: 1
-  AbilityRadius: 3
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  Effects: []
+  Visuals:
+  - When: 2
+    VFXPrefab: {fileID: 8378648546881499446, guid: 867c572a5be680d42a042d2349f10143, type: 3}
+    Delay: 0
+    Offset: {x: 0, y: 0, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    Attach: 1
+    MatchAreaSize: 1
+    AreaSizeMultiplier: 0.2
+    DestroyTime: 0
+    EndWithTag: 0
+    EndWhenAttributeDepleted: 0
+    DepletedAttribute: 0
+  IsInterruptible: 0
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  HitboxShape: 0
-  HitboxOffsetZ: 1.5
-  HitboxHalfExtents: {x: 1, y: 1, z: 1}
-  ConeAngle: 90
-  VisualsSequence: []
+  MaxCharges: 1
   Radius: 4
+  DeployMode: 0
+  MaxRange: 15
+  FollowOwner: 1
+  StartDelay: 0.5
   TotalDuration: 5
   TickInterval: 0.5
-  FollowOwner: 1
-  VisualPrefab: {fileID: 8378648546881499446, guid: 867c572a5be680d42a042d2349f10143, type: 3}
-  VisualScaleMultiplier: 0.2
+  Targets: 0
   EffectsToApply: []
-  StartDelay: 0.5
+  AllyEffects: []
+  VisualPrefab: {fileID: 0}
+  VisualScaleMultiplier: 0.2

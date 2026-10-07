@@ -18,11 +18,15 @@ using System.Collections;
 [CreateAssetMenu(fileName = "GA_ExactCopy", menuName = "GAS/Specific Abilities/Rogue/Illusionist/Exact Copy")]
 public class GA_ExactCopy : GameplayAbility
 {
-    [Header("Copia")]
+    [Section("Copia")]
     [Tooltip("Velocidad de caminado de la copia. 0 = usar la velocidad del jugador (MovSpeed).")]
     public float MoveSpeedOverride = 0f;
     [Tooltip("Alcance máximo hacia donde puede caminar la copia (recorta el punto de mira si está muy lejos). 0 = sin recorte.")]
     public float MaxRange = 0f;
+
+    // No busca personajes ni golpea a nadie: crea una copia.
+    public override bool UsesTargetLayer => false;
+    public override bool UsesHitEffects  => false;
 
     public override void Activate()
     {

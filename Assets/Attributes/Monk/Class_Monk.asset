@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Class_Monk
   m_EditorClassIdentifier: 
   ClassName: Monk
-  ClassIcon: {fileID: 21300000, guid: ae73fb56930f65d44858247c10d1c277, type: 3}
+  ClassIcon: {fileID: 21300000, guid: c76fec1fcad97684ab4d4c2dfd79688d, type: 3}
   Description: 'A martial artist who fights with bare hands. Every hit that lands
     makes him faster, and Ki empowers his next move: a flurry of blows, a defense
     that guards him from every side, or a kick that stuns.'

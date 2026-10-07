@@ -16,20 +16,17 @@ public class Modifier
     // reemplazar el valor entero.
     public enum EModificationType { Add, Multiply, Override }
 
-    [Header("Configuración Básica")]
     // A qué atributo del objetivo afecta este modificador.
     public EAttributeType Attribute;
 
     // Cómo se combina Magnitude con el valor actual del atributo.
     public EModificationType Type;
 
-    [Header("Valor Fijo")]
     // Cantidad base del cambio (ej: -10 de daño, o 1.2 para Multiply =
     // +20%). Si UseAttributeScaling está activo, esto se SUMA al
     // escalado calculado abajo.
     public float Magnitude;
 
-    [Header("Escalado de Atributos (Scaling)")]
     // Si está activo, el modificador también escala con un stat de quien
     // aplicó el efecto (ej: el Ataque del atacante), además de Magnitude.
     public bool UseAttributeScaling;
@@ -41,7 +38,6 @@ public class Modifier
     // Ataque se suma a Magnitude).
     public float AttributeCoefficient = 1.0f;
 
-    [Header("Escalado por Vida del Objetivo (Ejecución)")]
     // Si está activo, el modificador escala también con la VIDA del OBJETIVO
     // (el que recibe el efecto), no la del atacante. Sirve para:
     //  - Daño según la vida faltante del enemigo (ej: Golpe mortal del Pícaro).
@@ -70,7 +66,6 @@ public class Modifier
     // Solo se usa si UseTargetHealthScaling está activo.
     public float TargetHealthCoefficient = 0f;
 
-    [Header("Piso del Resultado")]
     [Tooltip("Valor MÍNIMO que puede dar este modificador después de todos los escalados, en " +
              "valor absoluto. En 0 (el default) no hay piso.\n\n" +
              "Se aplica en la dirección que el modificador YA tiene: poner 1 en un efecto de " +

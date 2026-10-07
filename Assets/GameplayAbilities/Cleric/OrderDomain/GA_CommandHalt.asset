@@ -36,11 +36,12 @@ MonoBehaviour:
     Volume: 1
     PitchVariance: 0.08
     MaxDistance: 35
+  Effects: []
+  Visuals: []
   IsInterruptible: 0
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  VisualsSequence: []
   MaxCharges: 1
   ImpactVFX: {fileID: 0}
   AttachImpactVFX: 1
@@ -49,4 +50,6 @@ MonoBehaviour:
   MaxRange: 10
   SelectionAngle: 30
   MarkEffect: {fileID: 11400000, guid: 29e7a204d021d204396830c43eb4201f, type: 2}
-  StunEffect: {fileID: 11400000, guid: 599bef532c08eae4a8e05af2dc063cf9, type: 2}
+  PunishEffects:
+  - {fileID: 11400000, guid: 599bef532c08eae4a8e05af2dc063cf9, type: 2}
+  StunEffect: {fileID: 0}

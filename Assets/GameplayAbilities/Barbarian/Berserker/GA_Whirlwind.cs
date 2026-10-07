@@ -18,7 +18,7 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "GA_Whirlwind", menuName = "GAS/Generics/Whirlwind")]
 public class GA_Whirlwind : GA_ContinuousAoE, IChanneledAbility
 {
-    [Header("Animación sostenida")]
+    [Section(AbilitySection.Animation)]
     [Tooltip("Clip que se reproduce EN BUCLE mientras dura el área. Es lo que convierte el " +
              "molinete en un molinete: sin esto la habilidad dispara un mandoble suelto que " +
              "termina en un segundo, y el personaje se queda quieto los otros nueve mientras el " +
@@ -34,7 +34,7 @@ public class GA_Whirlwind : GA_ContinuousAoE, IChanneledAbility
     [Tooltip("OPCIONAL: remate al terminar el área.")]
     public AnimationClip ChannelEndAnimation;
 
-    [Header("Giro")]
+    [Section("Molinete")]
     [Tooltip("Grados por segundo que gira el MODELO sobre su eje mientras dura el área. " +
              "0 = sin giro.\n\n" +
              "Gira el modelo y NO la raíz a propósito: la raíz la maneja la mira y el " +
@@ -43,7 +43,6 @@ public class GA_Whirlwind : GA_ContinuousAoE, IChanneledAbility
              "360 = una vuelta por segundo. Para un molinete rápido, 500-700.")]
     public float ModelSpinSpeed = 0f;
 
-    [Header("Bloqueo")]
     [Tooltip("Mientras dure el área, el personaje NO puede usar ninguna otra habilidad — salvo " +
              "las que tengan marcado 'Usable While Channeling' en su propio asset.\n\n" +
              "Así la lista de excepciones se arma desde el lado de las POCAS que sí (Frenzy y el " +

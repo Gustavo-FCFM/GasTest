@@ -15,24 +15,31 @@ using FishNet.Object;
 [CreateAssetMenu(fileName = "GA_ElementalFury", menuName = "GAS/Specific Abilities/Barbarian/Shaman/Elemental Fury")]
 public class GA_ElementalFury : GameplayAbility
 {
-    [Header("Configuración de Invocación")]
-    // Hasta 4 prefabs de tótem, uno por esquina del cuadrado.
+    [Section("Tótems")]
+    [Tooltip("Hasta 4 prefabs de tótem, uno por esquina del cuadrado.")]
     public GameObject[] TotemPrefabs;
-    // Distancia del centro a cada esquina donde aparecen los tótems.
+    [Tooltip("Distancia del centro a cada esquina donde aparecen los tótems.")]
     public float SquareRadius = 4f;
-    // Cuánto dura el tornado (y por lo tanto, cuánto viven los tótems).
-    public float Duration = 10f;
 
-    [Header("Tornado de Daño")]
-    public GameplayEffect DamageEffect;
+    [Section(AbilitySection.Shape)]
+    [Tooltip("Radio del tornado: a quiénes alcanza cada tick. El VFX del tornado es una entrada " +
+             "'En el impacto' (con 'Calzar con el área' mide lo mismo; con 'Lo sigue' sigue al " +
+             "dueño si el tornado lo sigue).")]
     public float DamageRadius = 5f;
-    // Cada cuánto se reaplica el daño a quien esté dentro del tornado.
-    public float TickRate = 0.5f;
-    public GameObject TornadoVFXPrefab;
-    // Multiplica DamageRadius para el tamaño del VFX (no afecta el área real).
-    public float TornadoVfxScaleMultiplier = 2.0f;
-    // Si el tornado sigue al dueño o queda fijo donde se activó.
+    [Tooltip("El tornado sigue al dueño. Apagado = queda fijo donde se activó.")]
     public bool FollowPlayer = false;
+
+    [Section(AbilitySection.Timing)]
+    [Tooltip("Cuánto dura el tornado (y por lo tanto, cuánto viven los tótems).")]
+    public float Duration = 10f;
+    [Tooltip("Cada cuánto se aplican los efectos a quien esté dentro del tornado.")]
+    public float TickRate = 0.5f;
+
+    public override float VisualAreaRadius => DamageRadius;
+    protected override float VisualDefaultLifetime => Duration;
+    public override bool SupportsVisualTiming(EVisualWhen when) => true;
+    protected override Transform VisualImpactParent(AbilitySystemComponent owner)
+        => FollowPlayer && owner != null ? owner.transform : null;
 
     // Valida, cobra costo/cooldown y arranca la secuencia de invocación +
     // tornado.
@@ -119,15 +126,16 @@ public class GA_ElementalFury : GameplayAbility
         }
 
         // Instanciar tornado visual. Instantiate() acá solo se vería en el
-        // proceso servidor — ServerPlayAbilityVFX lo reproduce en todos los
+        // proceso servidor — BroadcastImpactVFX lo reproduce en todos los
         // peers (cada uno con su propia copia, que se autodestruye sola
         // tras Duration en vez de que la sigamos con una referencia acá).
-        NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
-        if (netAsc != null) netAsc.ServerPlayAbilityVFX(this, centerPos);
-        else PlayImpactVFX(centerPos);
+        BroadcastImpactVFX(centerPos);
 
-        // Bucle de daño
+        // Bucle de daño. Un tick de 0 no puede ser "cada frame" (el tiempo no avanzaría
+        // nunca): como mínimo, 20 por segundo.
+        float tick = Mathf.Max(0.05f, TickRate);
         float timeElapsed = 0f;
+        bool firstEnemy = true;
         while (timeElapsed < Duration)
         {
             Vector3 currentCenter = FollowPlayer ? OwnerASC.transform.position : centerPos;
@@ -135,12 +143,15 @@ public class GA_ElementalFury : GameplayAbility
             foreach (var hitCol in hits)
             {
                 AbilitySystemComponent targetASC = hitCol.GetComponentInParent<AbilitySystemComponent>();
-                if (targetASC != null && IsEnemy(targetASC))
-                    if (DamageEffect != null) targetASC.ApplyGameplayEffect(DamageEffect, OwnerASC);
+                if (targetASC == null) continue;
+
+                bool enemy = IsEnemy(targetASC);
+                if (!ApplyHitEffects(targetASC, firstHit: enemy && firstEnemy)) continue;
+                if (enemy) firstEnemy = false;
             }
 
-            yield return new WaitForSeconds(TickRate);
-            timeElapsed += TickRate;
+            yield return new WaitForSeconds(tick);
+            timeElapsed += tick;
         }
 
         // Limpieza
@@ -155,17 +166,56 @@ public class GA_ElementalFury : GameplayAbility
         EndAbility();
     }
 
-    // Instancia TornadoVFXPrefab escalado según DamageRadius (parentado al
-    // dueño si FollowPlayer) y lo destruye tras Duration segundos.
-    public override void PlayImpactVFX(Vector3 position)
+    // El tornado y las cuatro esquinas de los tótems.
+    public override void DrawGizmos(Transform origin)
     {
-        if (TornadoVFXPrefab == null || OwnerASC == null) return;
+        if (origin == null) return;
 
-        GameObject tornadoInstance = Instantiate(TornadoVFXPrefab, position, Quaternion.identity);
-        if (FollowPlayer) tornadoInstance.transform.SetParent(OwnerASC.transform);
+        Gizmos.color = new Color(0.3f, 0.8f, 1f, 0.25f);
+        Gizmos.DrawSphere(origin.position, DamageRadius);
 
-        // Con VFX_AreaVisual el tornado calza EXACTO con DamageRadius y se desvanece al
-        // terminar; si no, cae al multiplicador a ojo de siempre.
-        VFX_AreaVisual.Configure(tornadoInstance, DamageRadius, TornadoVfxScaleMultiplier, Duration);
+        Gizmos.color = new Color(0.4f, 1f, 0.5f, 0.9f);
+        foreach (Vector3 corner in TotemCorners())
+            Gizmos.DrawWireCube(origin.position + corner + Vector3.up * 0.75f, new Vector3(0.4f, 1.5f, 0.4f));
+    }
+
+    private Vector3[] TotemCorners() => new Vector3[]
+    {
+        new Vector3( 1, 0,  1).normalized * SquareRadius,
+        new Vector3( 1, 0, -1).normalized * SquareRadius,
+        new Vector3(-1, 0,  1).normalized * SquareRadius,
+        new Vector3(-1, 0, -1).normalized * SquareRadius,
+    };
+
+#if UNITY_EDITOR
+    public override void DrawSceneHandles(Transform origin)
+    {
+        if (origin == null) return;
+
+        AbilityHandles.Radius(this, "Damage Radius", origin.position, ref DamageRadius,
+                              AbilityHandles.RadiusColor, origin.right);
+        AbilityHandles.Distance(this, "Square Radius", origin.position, new Vector3(1, 0, 1).normalized,
+                                ref SquareRadius, AbilityHandles.DistanceColor);
+    }
+#endif
+
+    // =========================================================
+    // DATOS VIEJOS (solo para pasarlos a las listas; ver GameplayAbility.UpgradeLegacyData)
+    // =========================================================
+
+    [SerializeField, HideInInspector] private GameplayEffect DamageEffect;
+    [SerializeField, HideInInspector] private GameObject TornadoVFXPrefab;
+    [SerializeField, HideInInspector] private float TornadoVfxScaleMultiplier = 2f;
+
+    protected override void OnUpgradeLegacyData(ref bool changed)
+    {
+        base.OnUpgradeLegacyData(ref changed);
+
+        UpgradeEffect(ref DamageEffect, EEffectWhen.OnHit, EEffectTarget.Enemies, ref changed);
+        UpgradeVisual(ref TornadoVFXPrefab, new AbilityVisual
+        {
+            When = EVisualWhen.OnImpact, MatchAreaSize = true, Attach = true,
+            AreaSizeMultiplier = TornadoVfxScaleMultiplier,
+        }, ref changed);
     }
 }

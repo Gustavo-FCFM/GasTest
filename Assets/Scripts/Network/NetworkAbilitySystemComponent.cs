@@ -1978,29 +1978,34 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         AudioManager.Play(ability.ImpactSound, position);
     }
 
-    // Como ServerPlayAbilityVFX, pero sobre un PERSONAJE: se manda su NetworkObject en
-    // vez de una posición, así cada peer puede pegarle el VFX y que lo siga (la curación
-    // de GA_Target sobre un aliado que se está moviendo).
+    // Como ServerPlayAbilityVFX, pero sobre un PERSONAJE: los VFX "al golpear" de la
+    // habilidad. Se manda su NetworkObject en vez de una posición, así cada peer puede
+    // pegarle el VFX y que lo siga (la curación de GA_Target sobre un aliado que se mueve).
+    // withSound = false cuando ese golpe ya suena por su impacto (el proyectil).
     [Server]
-    public void ServerPlayAbilityVFXOn(GameplayAbility ability, AbilitySystemComponent target)
+    public void ServerPlayAbilityVFXOn(GameplayAbility ability, AbilitySystemComponent target, bool withSound = true)
     {
         if (ability == null || target == null) return;
 
-        ability.PlayImpactVFXOn(target);
-        AudioManager.Play(ability.ImpactSound, target.transform.position);
+        ability.PlayImpactVFXOnFor(_asc, target);
+        if (withSound) AudioManager.Play(ability.ImpactSound, target.transform.position);
 
         int abilityIndex = GameplayAbilityRegistry.Instance != null
             ? GameplayAbilityRegistry.Instance.GetIndex(ability) : -1;
         NetworkObject targetNob = target.GetComponent<NetworkObject>();
 
-        if (abilityIndex >= 0 && targetNob != null)
-            ObserversPlayAbilityVFXOn(abilityIndex, targetNob);
-        else if (abilityIndex < 0)
+        if (abilityIndex < 0)
             Debug.LogWarning($"[NetworkASC] '{ability.AbilityName}' no está en GameplayAbilityRegistry — su VFX de impacto no se replicará a los clientes remotos.");
+        else if (targetNob != null)
+            ObserversPlayAbilityVFXOn(abilityIndex, targetNob, withSound);
+        else
+            // Sin NetworkObject no se lo puede nombrar por red: en las demás pantallas sale
+            // donde estaba (sin seguirlo), que es mejor que no verlo.
+            ObserversPlayAbilityHitVFXAt(abilityIndex, target.transform.position, withSound);
     }
 
     [ObserversRpc]
-    private void ObserversPlayAbilityVFXOn(int abilityIndex, NetworkObject target)
+    private void ObserversPlayAbilityVFXOn(int abilityIndex, NetworkObject target, bool withSound)
     {
         // El servidor ya lo reprodujo en ServerPlayAbilityVFXOn() de arriba.
         if (IsServerInitialized || target == null) return;
@@ -2009,8 +2014,20 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         AbilitySystemComponent targetAsc = target.GetComponent<AbilitySystemComponent>();
         if (ability == null || targetAsc == null) return;
 
-        ability.PlayImpactVFXOn(targetAsc);
-        AudioManager.Play(ability.ImpactSound, targetAsc.transform.position);
+        ability.PlayImpactVFXOnFor(_asc, targetAsc);
+        if (withSound) AudioManager.Play(ability.ImpactSound, targetAsc.transform.position);
+    }
+
+    [ObserversRpc]
+    private void ObserversPlayAbilityHitVFXAt(int abilityIndex, Vector3 position, bool withSound)
+    {
+        if (IsServerInitialized || _asc == null) return;
+
+        GameplayAbility ability = GameplayAbilityRegistry.Instance?.GetAbility(abilityIndex);
+        if (ability == null) return;
+
+        ability.PlayHitVFXAtFor(_asc, position);
+        if (withSound) AudioManager.Play(ability.ImpactSound, position);
     }
 
     // Muestra/oculta el arma en mano de este personaje en TODOS los peers.

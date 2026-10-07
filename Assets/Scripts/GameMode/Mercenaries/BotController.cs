@@ -1356,13 +1356,16 @@ public class BotController : MonoBehaviour
     //    gastarlo caminando apenas sale de cooldown.
     private bool ShouldUseBuff(GameplayAbility ability, bool engaged)
     {
-        GameplayEffect effect = ability is GA_SelfBuff buff ? buff.BuffEffect : null;
+        // Lo que se aplica a sí mismo al lanzarla (las entradas "al activarse → el lanzador").
+        _selfBuffEffects.Clear();
+        if (ability is GA_SelfBuff) ability.GetEffects(EEffectWhen.OnActivate, EEffectTarget.Self, _selfBuffEffects);
 
-        if (GrantsTag(effect, EGameplayTag.Status_Invisible))
+        if (AnyGrants(_selfBuffEffects, EGameplayTag.Status_Invisible))
             return !engaged && _target != null;
 
-        if (HealsHealth(effect))
-            return HealthFraction(_asc) <= 0.45f;
+        foreach (GameplayEffect effect in _selfBuffEffects)
+            if (HealsHealth(effect))
+                return HealthFraction(_asc) <= 0.45f;
 
         // Un buff de pelea se usa cuando HAY pelea: con un enemigo cerca, no despues de
         // aguantar un rato trabado. El Castigo del Paladin es justo eso — carga el proximo
@@ -1393,11 +1396,16 @@ public class BotController : MonoBehaviour
     {
         switch (ability)
         {
-            case GA_InstantAoE aoe: return AnyGrants(aoe.EffectsToApply, EGameplayTag.State_Stunned);
-            case GA_Target t:       return AnyGrants(t.TargetEffects,    EGameplayTag.State_Stunned);
-            default:                return false;
+            case GA_InstantAoE _:
+            case GA_Target _:
+                return ability.AnyEffectGrants(EGameplayTag.State_Stunned, EEffectWhen.OnHit);
+            default:
+                return false;
         }
     }
+
+    // Reusada por ShouldUseBuff para no pedir memoria en cada decisión.
+    private readonly List<GameplayEffect> _selfBuffEffects = new List<GameplayEffect>();
 
     private static bool AnyGrants(List<GameplayEffect> effects, EGameplayTag tag)
     {

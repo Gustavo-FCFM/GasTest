@@ -36,11 +36,29 @@ MonoBehaviour:
     Volume: 1
     PitchVariance: 0.08
     MaxDistance: 35
+  Effects:
+  - When: 0
+    ApplyTo: 0
+    Effect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
+    OnlyIfTargetHas: 0
+  Visuals:
+  - When: 2
+    VFXPrefab: {fileID: 5628875811531650112, guid: 25094fffe08a4ea42b4d444739ff5292, type: 3}
+    Delay: 0
+    Offset: {x: 0, y: 0, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    Attach: 1
+    MatchAreaSize: 1
+    AreaSizeMultiplier: 1
+    DestroyTime: 0
+    EndWithTag: 0
+    EndWhenAttributeDepleted: 0
+    DepletedAttribute: 0
   IsInterruptible: 0
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  VisualsSequence: []
   MaxCharges: 1
   TotemPrefabs:
   - {fileID: 1564936832730364612, guid: d4cec081c92d2c04fbf4a2eae5e1aec7, type: 3}
@@ -48,10 +66,10 @@ MonoBehaviour:
   - {fileID: 1564936832730364612, guid: b63783dd32f378f4d97bd222a4f04f52, type: 3}
   - {fileID: 1564936832730364612, guid: 38112faa447d74946bf350636678be65, type: 3}
   SquareRadius: 4
-  Duration: 10
-  DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
   DamageRadius: 10
-  TickRate: 0.5
-  TornadoVFXPrefab: {fileID: 5628875811531650112, guid: 25094fffe08a4ea42b4d444739ff5292, type: 3}
-  TornadoVfxScaleMultiplier: 1
   FollowPlayer: 0
+  Duration: 10
+  TickRate: 0.5
+  DamageEffect: {fileID: 0}
+  TornadoVFXPrefab: {fileID: 0}
+  TornadoVfxScaleMultiplier: 1

@@ -22,13 +22,32 @@ using System.Collections.Generic;
 [CreateAssetMenu(fileName = "GA_AlternatingCombo", menuName = "GAS/Generics/Alternating Combo")]
 public class GA_AlternatingCombo : GameplayAbility
 {
-    [Header("Secuencia A (activaciones impares: 1ª, 3ª, ...)")]
-    [Tooltip("Ej: combo de 2 estocadas (GA_LineAttack).")]
+    [Section("Combo")]
+    [Tooltip("SECUENCIA A: sale en las activaciones impares (1ª, 3ª, ...). Ej: combo de 2 " +
+             "estocadas (GA_LineAttack).")]
     public List<GA_ComboSequence.ComboStep> FirstSequence;
 
-    [Header("Secuencia B (activaciones pares: 2ª, 4ª, ...)")]
-    [Tooltip("Ej: combo de 2 barridos (GA_ConeAttack).")]
+    [Tooltip("SECUENCIA B: sale en las activaciones pares (2ª, 4ª, ...). Ej: combo de 2 " +
+             "barridos (GA_ConeAttack).")]
     public List<GA_ComboSequence.ComboStep> SecondSequence;
+
+    // Envoltorio: buscan y golpean los pasos, no esta.
+    public override bool UsesTargetLayer => false;
+    public override bool UsesHitEffects  => false;
+
+    public override void DrawGizmos(Transform origin)
+    {
+        GA_ComboSequence.DrawStepGizmos(FirstSequence, origin, this);
+        GA_ComboSequence.DrawStepGizmos(SecondSequence, origin, this);
+    }
+
+#if UNITY_EDITOR
+    public override void DrawSceneHandles(Transform origin)
+    {
+        GA_ComboSequence.DrawStepHandles(FirstSequence, origin, this);
+        GA_ComboSequence.DrawStepHandles(SecondSequence, origin, this);
+    }
+#endif
 
     // Cuál secuencia toca la próxima vez. Estado por instancia otorgada (server), no
     // se guarda en el asset.

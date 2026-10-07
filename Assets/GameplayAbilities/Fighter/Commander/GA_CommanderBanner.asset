@@ -36,23 +36,43 @@ MonoBehaviour:
     Volume: 1
     PitchVariance: 0.08
     MaxDistance: 35
+  Effects:
+  - When: 0
+    ApplyTo: 0
+    Effect: {fileID: 11400000, guid: 9de71880dd9d5f547844f878d3bb3afa, type: 2}
+    OnlyIfTargetHas: 0
+  - When: 0
+    ApplyTo: 1
+    Effect: {fileID: 11400000, guid: bd0c84268a6ffba448d318f828a9d5ee, type: 2}
+    OnlyIfTargetHas: 0
+  Visuals:
+  - When: 2
+    VFXPrefab: {fileID: 4990058852693962874, guid: 90381c1575d8a0e46ac5d116df7156b4, type: 3}
+    Delay: 0
+    Offset: {x: 0, y: 0, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    Attach: 1
+    MatchAreaSize: 1
+    AreaSizeMultiplier: 1
+    DestroyTime: 0
+    EndWithTag: 0
+    EndWhenAttributeDepleted: 0
+    DepletedAttribute: 0
   IsInterruptible: 0
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  VisualsSequence: []
   MaxCharges: 1
-  Targets: 0
   Radius: 6
-  TotalDuration: 8
-  TickInterval: 1
   DeployMode: 0
   MaxRange: 15
   FollowOwner: 0
-  VisualPrefab: {fileID: 4990058852693962874, guid: 90381c1575d8a0e46ac5d116df7156b4, type: 3}
-  VisualScaleMultiplier: 1
-  EffectsToApply:
-  - {fileID: 11400000, guid: 9de71880dd9d5f547844f878d3bb3afa, type: 2}
-  AllyEffects:
-  - {fileID: 11400000, guid: bd0c84268a6ffba448d318f828a9d5ee, type: 2}
   StartDelay: 0
+  TotalDuration: 8
+  TickInterval: 1
+  Targets: 0
+  EffectsToApply: []
+  AllyEffects: []
+  VisualPrefab: {fileID: 0}
+  VisualScaleMultiplier: 1

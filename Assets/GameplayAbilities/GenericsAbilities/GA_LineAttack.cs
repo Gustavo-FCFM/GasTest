@@ -6,27 +6,27 @@ using System.Collections.Generic;
 // GA_LineAttack
 //
 // Ataque cuerpo a cuerpo en forma de caja rectangular frente al
-// dueño (Length x Width x Height): detecta enemigos dentro de esa caja y les
-// aplica DamageEffect. Pensada para ataques de arma larga/lanza que
-// pegan en línea recta en vez de en cono.
+// dueño (Length x Width x Height): detecta a quien caiga dentro de esa caja y
+// le aplica la lista de efectos de la habilidad. Pensada para ataques de arma
+// larga/lanza que pegan en línea recta en vez de en cono.
 // ============================================================
 [CreateAssetMenu(fileName = "GA_LineAttack", menuName = "GAS/Generics/Line Attack")]
 public class GA_LineAttack : GameplayAbility
 {
-    [Header("Configuración de Línea")]
-    // Largo de la caja de detección, hacia adelante desde el dueño.
+    [Section(AbilitySection.Shape)]
+    [Tooltip("Largo de la caja de detección, hacia adelante desde el punto de salida.")]
     public float Length = 5f;
-    // Ancho de la caja de detección.
+
+    [Tooltip("Ancho de la caja de detección.")]
     public float Width  = 2f;
 
-    [Tooltip("Alto TOTAL de la caja de detección. Antes estaba fijo en el código (2) y por eso " +
-             "no aparecía acá.\n\n" +
-             "OJO CON EL CENTRADO: la caja se centra en el pivote del dueño, que está a los " +
-             "PIES. Con 2 va de un metro BAJO el suelo a un metro sobre los pies — o sea que la " +
-             "mitad se desperdicia enterrada y apenas llega a la cintura de quien tenés " +
-             "enfrente.\n\n" +
-             "Para cubrir un cuerpo entero de pie querés 4 o más. Bajalo para un barrido rasante " +
-             "que pase por debajo de los que saltan.")]
+    [Tooltip("Alto TOTAL de la caja de detección.\n\n" +
+             "OJO CON EL CENTRADO: la caja se centra en el punto de salida, que por defecto es el " +
+             "pivote del dueño, a los PIES. Con 2 va de un metro BAJO el suelo a un metro sobre los " +
+             "pies — o sea que la mitad se desperdicia enterrada y apenas llega a la cintura de " +
+             "quien tenés enfrente.\n\n" +
+             "Para cubrir un cuerpo entero de pie querés 4 o más (o subir la Y del Origin Offset). " +
+             "Bajalo para un barrido rasante que pase por debajo de los que saltan.")]
     public float Height = 2f;
 
     [Tooltip("Desde DÓNDE sale la caja, en espacio local del dueño (X = derecha, Y = arriba, " +
@@ -43,30 +43,11 @@ public class GA_LineAttack : GameplayAbility
              "vivo. Lo único que se toma de la mira es la INCLINACIÓN.")]
     public bool UseVerticalAim = false;
 
-    [Header("Efectos")]
-    public GameplayEffect DamageEffect;
-    // Efectos EXTRA que se aplican a cada enemigo golpeado, además del daño
-    // (ralentizar, heridas, marcar, etc.). Opcional.
-    public List<GameplayEffect> AdditionalEffects;
-
-    [Tooltip("Efectos que esta habilidad le aplica a los ALIADOS que alcance. El daño y los " +
-             "AdditionalEffects van a los enemigos; esta lista, a los aliados.\n\n" +
-             "VACÍA (lo normal) = la habilidad ignora por completo a los aliados. En cuanto tenga " +
-             "algo, empieza a considerarlos objetivos válidos: es lo que convierte un ataque normal " +
-             "en uno que daña enemigos Y cura aliados a su paso (Castigo divino del Paladín).")]
-    // FormerlySerializedAs: se llamó "AllyEffects" y vivía en GameplayAbility. Unity
-    // serializa por NOMBRE, así que mientras el campo siga llamándose TargetEffects los
-    // assets ya configurados conservan su valor al bajarlo a esta clase.
-    [UnityEngine.Serialization.FormerlySerializedAs("AllyEffects")]
-    public List<GameplayEffect> TargetEffects;
-
-    public GameObject HitVFX;
-
     // Valida, rota al dueño hacia el punto de mira, cobra costo/cooldown
     // y arranca la secuencia de ataque.
     public override void Activate()
     {
-        if (!IsServer) return;   // ← NUEVO
+        if (!IsServer) return;
         if (!CanActivate()) return;
 
         CommitAbility();
@@ -104,9 +85,8 @@ public class GA_LineAttack : GameplayAbility
         EndAbility();
     }
 
-    // Arma la caja (Length x Width) frente al dueño y le aplica daño a
-    // todos los enemigos que caigan dentro, reproduciendo el VFX de golpe
-    // en todos los peers.
+    // Arma la caja (Length x Width) frente al dueño y le aplica los efectos a todos los
+    // que caigan dentro, reproduciendo el VFX de golpe en todos los peers.
     //
     // targetsHit lo provee HitTimingRoutine y se COMPARTE entre los frames de impacto
     // del mismo golpe: así no se le pega dos veces al mismo objetivo.
@@ -126,39 +106,28 @@ public class GA_LineAttack : GameplayAbility
         Quaternion boxRotation = Quaternion.LookRotation(direction, Vector3.up);
 
         Collider[] hits = Physics.OverlapBox(center, halfExtents, boxRotation, TargetLayer);
-        NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
+
+        // En el orden en que la estocada los alcanza: el "primer golpe" es el de adelante.
+        System.Array.Sort(hits, (a, b) =>
+            Vector3.Dot(a.transform.position - origin, direction)
+            .CompareTo(Vector3.Dot(b.transform.position - origin, direction)));
 
         foreach (var hit in hits)
         {
             AbilitySystemComponent targetASC = hit.GetComponentInParent<AbilitySystemComponent>();
             if (targetASC == null || targetsHit.Contains(targetASC)) continue;
 
-            // Daño a enemigos, TargetEffects a aliados (ver el campo, más arriba).
-            if (!ApplyAffiliationEffects(targetASC, DamageEffect, TargetEffects)) continue;
+            // Enemigos siempre; aliados solo si la lista trae algo para ellos.
+            if (!ApplyHitEffects(targetASC, firstHit: targetsHit.Count == 0)) continue;
 
-            if (IsEnemy(targetASC))
-            {
-                ApplyEffectsTo(AdditionalEffects, targetASC);
-                ChargeUltimate();
-            }
+            if (IsEnemy(targetASC)) ChargeUltimate();
 
             targetsHit.Add(targetASC);
 
             // Instantiate() acá solo se vería en el proceso servidor —
-            // ServerPlayAbilityVFX lo reproduce en todos los peers.
-            Vector3 hitPos = targetASC.transform.position + Vector3.up;
-            if (netAsc != null) netAsc.ServerPlayAbilityVFX(this, hitPos);
-            else PlayImpactVFX(hitPos);
+            // BroadcastHitVFX lo reproduce en todos los peers.
+            BroadcastHitVFX(targetASC);
         }
-    }
-
-    // Instancia HitVFX en la posición de impacto. La llama cada peer con
-    // su propia copia (ver ServerPlayAbilityVFX).
-    public override void PlayImpactVFX(Vector3 position)
-    {
-        if (HitVFX == null) return;
-        GameObject hitInstance = Instantiate(HitVFX, position, Quaternion.identity);
-        Destroy(hitInstance, 2.0f);
     }
 
     // Dibuja el mismo box que usa PerformDamage() (OverlapBox), con la
@@ -180,5 +149,55 @@ public class GA_LineAttack : GameplayAbility
         Gizmos.DrawWireCube(Vector3.zero, halfExtents * 2f);
 
         Gizmos.matrix = prevMatrix;
+    }
+
+#if UNITY_EDITOR
+    // La caja se arrastra cara por cara: la de adelante cambia el largo, las de los costados
+    // el ancho y las de arriba/abajo el alto. Mover la cara de atrás o la de arriba también
+    // corre el punto de salida (Origin Offset), porque la caja nace ahí.
+    public override void DrawSceneHandles(Transform origin)
+    {
+        if (origin == null) return;
+
+        Vector3 start  = origin.TransformPoint(OriginOffset);
+        Vector3 center = start + origin.forward * (Length / 2f);
+        Vector3 size   = new Vector3(Width, Height, Length);
+
+        if (AbilityHandles.Box(this, "Line Box", center, origin.rotation, ref size, out Vector3 newCenter,
+                               AbilityHandles.BoxColor))
+        {
+            Width  = size.x;
+            Height = size.y;
+            Length = size.z;
+
+            Vector3 newStart = newCenter - origin.forward * (Length / 2f);
+            OriginOffset = origin.InverseTransformPoint(newStart);
+        }
+
+        AbilityHandles.Label(start + origin.forward * Length + Vector3.up * (Height * 0.5f + 0.2f),
+                             $"Length {Length:0.##} m · Width {Width:0.##} · Height {Height:0.##}",
+                             AbilityHandles.BoxColor);
+    }
+#endif
+
+    // =========================================================
+    // DATOS VIEJOS (solo para pasarlos a las listas; ver GameplayAbility.UpgradeLegacyData)
+    // =========================================================
+
+    [SerializeField, HideInInspector] private GameplayEffect DamageEffect;
+    [SerializeField, HideInInspector] private List<GameplayEffect> AdditionalEffects;
+    [UnityEngine.Serialization.FormerlySerializedAs("AllyEffects")]
+    [SerializeField, HideInInspector] private List<GameplayEffect> TargetEffects;
+    [SerializeField, HideInInspector] private GameObject HitVFX;
+
+    protected override void OnUpgradeLegacyData(ref bool changed)
+    {
+        base.OnUpgradeLegacyData(ref changed);
+
+        UpgradeEffect(ref DamageEffect, EEffectWhen.OnHit, EEffectTarget.Enemies, ref changed);
+        UpgradeEffects(AdditionalEffects, EEffectWhen.OnHit, EEffectTarget.Enemies, ref changed);
+        UpgradeEffects(TargetEffects, EEffectWhen.OnHit, EEffectTarget.Allies, ref changed);
+        UpgradeVisual(ref HitVFX, new AbilityVisual { When = EVisualWhen.OnHit, Offset = Vector3.up, DestroyTime = 2f },
+                      ref changed);
     }
 }

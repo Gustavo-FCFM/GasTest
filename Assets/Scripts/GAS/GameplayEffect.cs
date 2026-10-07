@@ -39,56 +39,70 @@ public class GameplayEffect : ScriptableObject
         Hidden  // No se muestra en UI (ej: el propio cooldown de una habilidad)
     }
 
-    [Header("Tipo de Efecto")]
-    [Tooltip("0 = Instantáneo, > 0 = Duración")]
     // Si es 0, el efecto se aplica una sola vez y desaparece (daño,
     // curación). Si es mayor a 0, queda activo ese tiempo (buffs,
     // debuffs, cooldowns).
+    [Section(EffectSection.Duration)]
+    [Tooltip("0 = instantáneo (daño, curación: se aplica y listo). > 0 = dura esos segundos " +
+             "(buffs, debuffs, cooldowns).")]
     public float Duration = 0f;
 
-    [Tooltip("0 = No periódico, > 0 = Intervalo entre ticks")]
     // Si es mayor a 0, mientras el efecto está activo se re-ejecuta cada
     // tantos segundos (ej: veneno que daña cada 2s).
+    [ShowIf(nameof(Duration), ShowIfAttribute.Positive)]
+    [Tooltip("Cada cuántos segundos se vuelve a aplicar mientras dura (un veneno que daña cada " +
+             "2 s). 0 = no es periódico.")]
     public float Period = 0f;
 
-    [Header("Reglas de Acumulación")]
-    [Tooltip("Refresh: Si ya tienes este efecto, solo reinicia su duración.")]
+    [Tooltip("Qué pasa si se vuelve a aplicar mientras ya está activo.\n\n" +
+             "· Refresh: reinicia su duración (uno solo).\n" +
+             "· Stack: se acumula (dos venenos = el doble).\n" +
+             "· Override: el nuevo reemplaza al viejo.")]
     public EStackingType StackingPolicy = EStackingType.Stack;
 
-    [Tooltip("Máximo de acumulaciones (solo con StackingPolicy = Stack). 0 = sin límite. " +
-             "Al llegar al tope, aplicarlo de nuevo refresca la acumulación que esté por " +
-             "expirar en vez de agregar otra (salvo que uses OnMaxStacksEffect).")]
+    [ShowIf(nameof(StackingPolicy), EStackingType.Stack)]
+    [Tooltip("Máximo de acumulaciones. 0 = sin límite. Al llegar al tope, aplicarlo de nuevo " +
+             "refresca la acumulación que esté por expirar en vez de agregar otra (salvo que uses " +
+             "OnMaxStacksEffect).")]
     public int MaxStacks = 0;
 
-    [Tooltip("Solo con Stack + MaxStacks > 0. Al llegar al tope de acumulaciones, en vez de " +
-             "refrescarlas se CONSUMEN todas y se aplica este efecto al objetivo (la 'explosión' " +
-             "de las Heridas del Ilusionista). Dejar en None para el comportamiento normal de tope.")]
+    [ShowIf(nameof(StackingPolicy), EStackingType.Stack)]
+    [ShowIf(nameof(MaxStacks), ShowIfAttribute.Positive)]
+    [Tooltip("Al llegar al tope de acumulaciones, en vez de refrescarlas se CONSUMEN todas y se " +
+             "aplica este efecto al objetivo (la 'explosión' de las Heridas del Ilusionista). " +
+             "None = el comportamiento normal de tope.")]
     public GameplayEffect OnMaxStacksEffect;
 
-    [Header("Exclusión Mutua (Jerarquía)")]
+    [Section(EffectSection.Group, startCollapsed: true)]
     [Tooltip("Efectos con el MISMO grupo (≠ None) se excluyen: solo vive el de mayor Priority a la vez. Ej: el buff normal del tótem y su versión potenciada comparten grupo, así no se acumulan.")]
     public EGameplayTag EffectGroup = EGameplayTag.None;
 
+    [ShowIf(nameof(EffectGroup), EGameplayTag.None, true)]
     [Tooltip("Dentro de un EffectGroup, mayor Priority gana. Aplicar uno de Priority MENOR a uno ya activo del grupo no hace nada; uno de Priority MAYOR reemplaza a los inferiores.")]
     public int Priority = 0;
 
+    [ShowIf(nameof(EffectGroup), EGameplayTag.None, true)]
     [Tooltip("Dentro de su EffectGroup, el ÚLTIMO en aplicarse reemplaza a los demás, sin " +
              "importar Priority. Es para estados excluyentes que se alternan, como las posturas " +
              "del Guerrero: entrar a la ofensiva saca la defensiva en el mismo instante, así " +
              "nunca se tienen las dos ventajas a la vez.")]
     public bool ReplacesGroup = false;
 
-    // Icono que se muestra en la barra de buffs/debuffs.
+    [Section(EffectSection.General)]
+    [Tooltip("Ícono en la barra de buffs/debuffs (no hace falta si es Hidden).")]
     public Sprite Icon;
 
-    // Si es Buff, Debuff o Hidden para la UI.
+    [Tooltip("Buff (verde) o Debuff (rojo) en la barra de efectos; Hidden no se muestra (un " +
+             "cooldown, un daño instantáneo).")]
     public EEffectType EffectType;
 
-    [Header("Modificadores")]
     // Qué atributos cambia este efecto y cuánto (ver Modifier.cs).
+    [Section(EffectSection.Modifiers)]
+    [Tooltip("Qué atributos cambia y cuánto. Cada entrada: atributo · cómo (sumar, multiplicar, " +
+             "reemplazar) · cuánto, y si escala con un stat del que lo aplica o con la vida del objetivo.")]
     public List<Modifier> Modifiers = new List<Modifier>();
 
-    [Header("Control de Masas (CC)")]
+    [Section(EffectSection.Control)]
     [Tooltip("Marca este efecto como CONTROL: su duración se acorta (o se alarga) con la " +
              "Resistencia al control del objetivo — ver EAttributeType.CCResistance.\n\n" +
              "No hace falta marcarlo si el efecto otorga State_Stunned, State_Rooted o " +
@@ -124,26 +138,30 @@ public class GameplayEffect : ScriptableObject
         }
     }
 
-    [Header("Desplazamiento (Repeler / Atraer)")]
     [Tooltip("Metros que mueve al objetivo en el instante en que recibe el efecto. 0 = no lo " +
              "mueve. Es CONTROL: no le hace nada a un Imparable (Status_Unstoppable) y la " +
              "Resistencia al control recorta la distancia. El escudo no lo frena (el escudo solo " +
              "mitiga daño). Solo pasa al APLICARSE, no en cada tick.")]
     public float KnockbackDistance = 0f;
 
+    [ShowIf(nameof(KnockbackDistance), ShowIfAttribute.Positive)]
     [Tooltip("Repeler (lejos de quien lo aplicó), atraer (hacia él) o hacia donde mira quien lo aplicó.")]
     public EKnockbackDirection KnockbackDirection = EKnockbackDirection.AwayFromSource;
 
+    [ShowIf(nameof(KnockbackDistance), ShowIfAttribute.Positive)]
     [Tooltip("Segundos que tarda el desplazamiento. Arranca rápido y frena al final.")]
     public float KnockbackDuration = 0.3f;
 
+    [ShowIf(nameof(KnockbackDistance), ShowIfAttribute.Positive)]
     [Tooltip("Velocidad hacia arriba al empujar (lo levanta un poco del piso). 0 = a ras del piso.")]
     public float KnockbackUpVelocity = 0f;
 
+    [ShowIf(nameof(KnockbackDistance), ShowIfAttribute.Positive)]
+    [ShowIf(nameof(KnockbackDirection), EKnockbackDirection.TowardSource)]
     [Tooltip("Solo al ATRAER: a cuántos metros de quien lo aplicó se detiene, para que no lo atraviese.")]
     public float PullStopDistance = 1.5f;
 
-    [Header("VFX en el Objetivo")]
+    [Section(EffectSection.Visuals)]
     [Tooltip("VFX que aparece sobre QUIEN RECIBE este efecto y vive lo que viva el efecto. " +
              "Pensado para que un debuff importante se vea encima del jugador afectado (las " +
              "flechas cayendo, un aura, unas cadenas), sin tener que instanciarlo a mano desde " +
@@ -153,17 +171,21 @@ public class GameplayEffect : ScriptableObject
              "Dejalo en None si el efecto no necesita nada visible.")]
     public GameObject TargetVFX;
 
+    [ShowIf(nameof(TargetVFX))]
     [Tooltip("Desplazamiento del VFX respecto al pivote del objetivo, en su espacio local. " +
              "Los pivotes están a los pies, así que casi siempre vas a querer subirlo en Y " +
              "(2-3 para algo que flote sobre la cabeza).")]
     public Vector3 TargetVFXOffset;
 
+    [ShowIf(nameof(TargetVFX))]
     [Tooltip("Rotación extra del VFX respecto al objetivo, en grados.")]
     public Vector3 TargetVFXRotation;
 
+    [ShowIf(nameof(TargetVFX))]
     [Tooltip("Escala del VFX. En CERO usa la escala del prefab tal cual.")]
     public Vector3 TargetVFXScale;
 
+    [ShowIf(nameof(TargetVFX))]
     [Tooltip("Repetir las partículas del VFX mientras dure el efecto. Muchos VFX de los packs " +
              "son de un solo disparo (emiten un segundo y se apagan), así que sin esto el " +
              "objeto sigue vivo pero vacío hasta que el efecto termina. Al terminar, deja de " +
@@ -171,17 +193,20 @@ public class GameplayEffect : ScriptableObject
              "Apagalo si el VFX está pensado para verse UNA vez al aplicarse.")]
     public bool TargetVFXLoop = true;
 
-    [Header("Sonido en el Objetivo")]
+    [Section(EffectSection.Sound)]
     [Tooltip("Suena en el personaje cuando el efecto se le aplica (solo efectos CON duración: " +
              "quemadura, stun, escudo...). El daño instantáneo tiene su propio sonido de golpe " +
              "recibido en AudioLibrary. Vacío = silencio.")]
     public SfxCue TargetSound;
 
-    [Header("Tags")]
     // Tags que se le agregan al objetivo mientras el efecto está activo
     // (ej: Stunned) y se le quitan al terminar. El primer tag de esta
     // lista también sirve como "identidad" del efecto para cooldowns y
     // sincronización en red — ver GameplayAbility.CanActivate() y
     // NetworkAbilitySystemComponent.
+    [Section(EffectSection.Tags)]
+    [Tooltip("Tags que tiene el objetivo mientras el efecto está activo (State_Stunned, " +
+             "Status_Slow...). El PRIMERO es además la identidad del efecto: con él se bloquea un " +
+             "cooldown y se reconoce el efecto en la red y en la UI.")]
     public List<EGameplayTag> GrantedTags = new List<EGameplayTag>();
 }

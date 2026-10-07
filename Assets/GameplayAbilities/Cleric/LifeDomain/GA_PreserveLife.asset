@@ -36,11 +36,16 @@ MonoBehaviour:
     Volume: 1
     PitchVariance: 0.08
     MaxDistance: 35
+  Effects:
+  - When: 0
+    ApplyTo: 1
+    Effect: {fileID: 11400000, guid: ef832d3ce70573845ab9626a0db8ddee, type: 2}
+    OnlyIfTargetHas: 0
+  Visuals: []
   IsInterruptible: 0
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  VisualsSequence: []
   MaxCharges: 1
   ImpactVFX: {fileID: 0}
   AttachImpactVFX: 0
@@ -51,5 +56,4 @@ MonoBehaviour:
   SelectionAngle: 25
   SelfIfNoTarget: 0
   AllowDeadTargets: 0
-  TargetEffects:
-  - {fileID: 11400000, guid: ef832d3ce70573845ab9626a0db8ddee, type: 2}
+  TargetEffects: []

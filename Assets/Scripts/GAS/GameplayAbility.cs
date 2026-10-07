@@ -19,21 +19,23 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // CONFIGURACIÓN GENERAL
     // =========================================================
 
-    [Header("Configuración General")]
+    [Section(AbilitySection.General)]
     public string AbilityName = "New Ability";
     public Sprite AbilityIcon;
 
-    [Header("Costes")]
-    // Efecto instantáneo que se descuenta al activar (ej: -20 de maná).
+    [Section(AbilitySection.CostCooldown)]
+    [Tooltip("Efecto instantáneo que se descuenta al activar (ej: -20 de maná).")]
     public GameplayEffect CostEffect;
 
-    [Header("Cooldown")]
     // Efecto CON duración que bloquea reactivar la habilidad mientras esté
     // activo (ver CanActivate). Lo IMPORTANTE del GE acá es su primer GrantedTag:
     // es la "identidad" del cooldown para la UI, la carga de ultimate y el
     // bloqueo por slot. La DURACIÓN normalmente la define CooldownDuration (abajo),
     // así podés REUSAR un mismo GE de cooldown para muchas habilidades (uno por
     // slot/tag) en vez de crear uno por cada una.
+    [Tooltip("GE con duración que bloquea volver a usarla. Lo que importa es su PRIMER " +
+             "GrantedTag (la identidad del cooldown); la duración normalmente sale de " +
+             "CooldownDuration, así un mismo GE sirve para muchas habilidades.")]
     public GameplayEffect CooldownEffect;
 
     [Tooltip("Duración del cooldown en segundos, configurada acá en el GA. Si es > 0, " +
@@ -42,7 +44,6 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
              "UseAttackSpeedAsCooldown (ese tiene prioridad).")]
     public float CooldownDuration = 0f;
 
-    [Header("Cooldown Dinámico")]
     [Tooltip("Marcá esto en los ATAQUES BÁSICOS: el cooldown sale del stat AtkSpeed del dueño " +
              "(ignorando CooldownDuration y el Duration del CooldownEffect), o sea que el cooldown " +
              "ES el ritmo de ataque.\n\n" +
@@ -51,14 +52,17 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
              "normales (cooldown = espera, no ritmo) reproducen su clip a velocidad natural.")]
     public bool UseAttackSpeedAsCooldown = false;
 
-    [Header("Ultimate Charge")]
     // Cuánto adelanta el cooldown de la ultimate cada vez que esta
     // habilidad conecta un golpe (ver ChargeUltimate).
+    [Tooltip("Segundos que le resta al cooldown de la DEFINITIVA cada golpe que conecta. 0 = nada.")]
     public float UltimateChargeAmount = 0f;
 
-    [Header("Bloqueos")]
     // Si el dueño tiene cualquiera de estos tags, CanActivate() falla
     // (ej: no se puede atacar si está Silenciado).
+    [Section(AbilitySection.Rules, startCollapsed: true)]
+    [Tooltip("Si el lanzador tiene CUALQUIERA de estos tags, no la puede usar. Por tipo de acción: " +
+             "State_Stunned en todas; State_Disarmed en las de arma; State_Silenced en las de " +
+             "magia; State_Rooted en las de movimiento.")]
     public List<EGameplayTag> ActivationBlockedTags;
 
     [Tooltip("Al revés que ActivationBlockedTags: el dueño DEBE tener TODOS estos tags para " +
@@ -86,7 +90,7 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // resuelve según la variante que se dispararía (la Carga defensiva sí, la ofensiva no).
     public virtual bool CanUseWhileHolding => UsableWhileHolding;
 
-    [Header("Animación")]
+    [Section(AbilitySection.Animation)]
     [Tooltip("FORMA RECOMENDADA: arrastrá acá el clip de esta habilidad y listo — no hace falta " +
              "crear un estado en el Animator, ni reservar un AnimationID, ni mapear el clip en el " +
              "override de cada clase. El clip se mete en runtime en la ranura genérica de acción " +
@@ -101,14 +105,38 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     [Tooltip("Esquema viejo (solo se usa si AnimationClip está vacío). 1=Melee, 2=Proyectil, 3=Salto, 4=Extra")]
     public int AnimationID = 1;
 
-    [Header("Sonido")]
+    [Section(AbilitySection.Sound)]
     [Tooltip("Al LANZAR: suena en el personaje junto con la animación. Lo oyen todos los peers " +
              "por el mismo camino que la animación. Vacío = silencio.")]
     public SfxCue CastSound;
 
-    [Tooltip("Al IMPACTAR: suena donde aparece el VFX de impacto (PlayImpactVFX), en todos los " +
-             "peers. Vacío = silencio.")]
+    [Tooltip("Al IMPACTAR: suena con los VFX de golpe e impacto (en cada objetivo alcanzado, o " +
+             "donde cae la habilidad), en todos los peers. Vacío = silencio.")]
     public SfxCue ImpactSound;
+
+    // =========================================================
+    // EFECTOS Y VFX (listas con condiciones)
+    //
+    // Las DOS listas que reemplazan a los campos sueltos de cada GA (DamageEffect,
+    // AdditionalEffects, TargetEffects, FirstHitEffects, HitVFX, ImpactVFX...). Viven en la
+    // base porque las reglas son las mismas para todas: cada entrada dice a quién y cuándo.
+    // Cada GA decide en qué momentos llama a ApplyHitEffects / BroadcastHitVFX /
+    // BroadcastImpactVFX; "al activarse" y "al lanzar" los resuelve CommitAbility para todas.
+    // =========================================================
+
+    [Section(AbilitySection.Effects)]
+    [Tooltip("Los GameplayEffect de la habilidad. Cada entrada dice CUÁNDO (al golpear, al " +
+             "primer golpe, al activarse, al matar), A QUIÉN (enemigos, aliados, el lanzador, " +
+             "todos) y, si querés, una CONDICIÓN (que el objetivo tenga un tag).\n\n" +
+             "Se aplican en el orden de la lista. El primero 'al golpear, a enemigos' sin condición " +
+             "es el DAÑO PRINCIPAL: el que mide una barrera al frenar un proyectil.")]
+    public List<AbilityEffect> Effects = new List<AbilityEffect>();
+
+    [Section(AbilitySection.Visuals)]
+    [Tooltip("Los VFX de la habilidad. Cada entrada dice CUÁNDO aparece (al lanzar, al golpear, " +
+             "en el impacto), dónde, de qué tamaño y cuánto dura. Se ven en todas las pantallas.")]
+    [UnityEngine.Serialization.FormerlySerializedAs("VisualsSequence")]
+    public List<AbilityVisual> Visuals = new List<AbilityVisual>();
 
     // Nombre del Animation Event que marca el FRAME DE IMPACTO dentro de un clip.
     //
@@ -219,6 +247,7 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // que se pueda cancelar el tiro antes de soltar, o encadenar otra cosa apenas soltó
     // sin esperar el remate de la animación.
     // ---------------------------------------------------------
+    [Section(AbilitySection.Rules)]
     [Tooltip("Otra habilidad puede CORTAR esta a mitad de camino. Lo que ya pegó (o ya " +
              "salió) queda; lo que faltaba no pasa, y el cooldown ya pagado NO se " +
              "devuelve. El ataque principal lo trae puesto de fábrica.")]
@@ -275,7 +304,6 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         }
     }
 
-    [Header("Detección")]
     // Capas de física que puede golpear esta habilidad. Es un FILTRO DE FÍSICA:
     // la detección (Physics.OverlapSphere/Box/Capsule) solo considera colliders
     // en estas capas. La afiliación amigo/enemigo se resuelve aparte en código
@@ -283,37 +311,20 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // personajes (jugadores + NPCs) y el filtro de equipo lo hace la habilidad.
     // La geometría de cada ataque (radio/largo/ángulo) la define cada habilidad
     // concreta con sus propios campos.
+    [Section(AbilitySection.Targeting)]
+    [Tooltip("Capas de física que puede alcanzar (normalmente 'Character', la 7). Es solo el " +
+             "filtro de física: quién es amigo o enemigo lo decide el código.")]
     public LayerMask TargetLayer;
 
-    // Un paso de la secuencia visual automática (ver VisualsSequence).
-    [System.Serializable]
-    public struct AbilityVisual
-    {
-        public GameObject   VFXPrefab;      // Qué instanciar
-        public float        Delay;          // Espera antes de instanciarlo, en segundos
-        public Vector3      Offset;         // Desplazamiento local respecto al dueño
-        public Vector3      RotationOffset; // Rotación local extra
-        public Vector3      Scale;          // Escala final (Vector3.zero = usar Vector3.one)
-        public bool         AttachToOwner;  // Si sigue al dueño como hijo de su transform
-        public float        DestroyTime;    // Se destruye solo tras estos segundos (si EndWithTag es None)
-        public EGameplayTag EndWithTag;     // En vez de DestroyTime, se destruye cuando el dueño pierde este tag
+    // ¿Esta habilidad busca personajes con TargetLayer? Las que no (un buff propio, un
+    // teletransporte, los envoltorios que delegan en otra) lo apagan y el Inspector
+    // esconde el campo: un campo que no hace nada invita a tocarlo y esperar un resultado.
+    public virtual bool UsesTargetLayer => true;
 
-        // Fin por ATRIBUTO AGOTADO, en vez de (o además de) por tag. El VFX vive
-        // mientras el atributo elegido sea mayor que cero.
-        //
-        // Existe para el escudo del Frenzy: el buff y el escudo son la MISMA
-        // habilidad, pero el escudo se consume con los golpes mientras el buff sigue
-        // corriendo. Con el tag solo, la burbuja quedaba puesta sin nada detrás.
-        //
-        // Con las dos condiciones configuradas, el VFX muere con la PRIMERA que falle.
-        public bool           EndWhenAttributeDepleted;
-        public EAttributeType DepletedAttribute;
-    }
-
-    [Header("Visuales de Habilidad (Automáticos)")]
-    // Secuencia de VFX que se reproduce sola al hacer CommitAbility(), sin
-    // que la habilidad tenga que instanciarlos a mano.
-    public List<AbilityVisual> VisualsSequence;
+    // ¿Esta habilidad GOLPEA a alguien (llama a ApplyHitEffects)? Las que no solo aceptan
+    // efectos "al activarse": el Inspector marca en rojo una entrada "al golpear" en un
+    // buff propio, que nunca se aplicaría.
+    public virtual bool UsesHitEffects => true;
 
     // Personaje dueño de esta instancia de habilidad. Lo asigna
     // Initialize() al otorgarla; el resto de la clase asume que nunca es
@@ -572,7 +583,20 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
             OwnerASC.ApplyGameplayEffect(CooldownEffect, this, ResolveCooldownDuration());
         }
 
-        if (VisualsSequence != null && VisualsSequence.Count > 0)
+        // Los efectos "al activarse" (un buff propio al lanzar). Una habilidad que tiene que
+        // aplicarlos en otro momento (la Ira inmortal, que primero revive) los pide ella.
+        if (ApplyActivationEffectsOnCommit) ApplyActivationEffects();
+
+        PlayCastVisuals();
+    }
+
+    // Los VFX "al lanzar" de la lista, en todas las pantallas. Lo hace CommitAbility; las
+    // habilidades que no pasan por ahí (el escudo, que cobra a mano) lo llaman ellas.
+    protected void PlayCastVisuals()
+    {
+        if (OwnerASC == null) return;
+
+        if (HasVisuals(EVisualWhen.OnCast))
         {
             // Instantiate() dentro de PlayVisualsSequence() corre en el
             // proceso que llama a CommitAbility() (el servidor) — un cliente
@@ -608,7 +632,7 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // cuánto dura el cooldown Y cuánto tarda en volver cada carga.
     // =========================================================
 
-    [Header("Cargas")]
+    [Section(AbilitySection.CostCooldown)]
     [Tooltip("Usos disponibles antes de tener que esperar la recarga. 1 (o 0) = sin sistema de " +
              "cargas: cooldown normal en cada uso, como cualquier habilidad.\n\n" +
              "Con 2 o más, el cooldown se aplica solo al gastar la ÚLTIMA carga, y cada carga " +
@@ -866,6 +890,205 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     }
 
     // =========================================================
+    // LA LISTA DE EFECTOS (Effects)
+    // =========================================================
+
+    // ¿Hay alguna entrada con efecto para este momento?
+    public bool HasEffects(EEffectWhen when)
+    {
+        if (Effects == null) return false;
+        foreach (AbilityEffect e in Effects)
+            if (e.Effect != null && e.When == when) return true;
+        return false;
+    }
+
+    // ¿Le hace algo a los ALIADOS que alcanza? Con eso un ataque empieza a tenerlos en
+    // cuenta (la estela del Castigo divino, que daña enemigos y cura aliados a su paso).
+    // Sin nada para ellos, los aliados se saltean: el comportamiento clásico.
+    public bool HasAllyHitEffects
+    {
+        get
+        {
+            if (Effects == null) return false;
+            foreach (AbilityEffect e in Effects)
+                if (e.Effect != null && IsHitTiming(e.When) &&
+                    (e.ApplyTo == EEffectTarget.Allies || e.ApplyTo == EEffectTarget.Everyone))
+                    return true;
+            return false;
+        }
+    }
+
+    // El DAÑO PRINCIPAL: la primera entrada "al golpear, a enemigos" sin condición. Lo usan
+    // la barrera (para medir cuánto frenó un proyectil) y el proyectil devuelto por un parry
+    // (que lo reemplaza por el daño que traía).
+    public GameplayEffect PrimaryDamageEffect
+    {
+        get
+        {
+            if (Effects == null) return null;
+            foreach (AbilityEffect e in Effects)
+                if (e.Effect != null && e.When == EEffectWhen.OnHit && e.ApplyTo == EEffectTarget.Enemies &&
+                    e.OnlyIfTargetHas == EGameplayTag.None)
+                    return e.Effect;
+            return null;
+        }
+    }
+
+    // ¿Algún efecto de la lista otorga este tag? Lo usan los bots para entender qué hace
+    // una habilidad mirando lo que aplica, no su nombre (¿aturde? ¿me vuelve invisible?).
+    public bool AnyEffectGrants(EGameplayTag tag, EEffectWhen? when = null, EEffectTarget? applyTo = null)
+    {
+        if (Effects == null) return false;
+        foreach (AbilityEffect e in Effects)
+        {
+            if (e.Effect == null || e.Effect.GrantedTags == null) continue;
+            if (when.HasValue && e.When != when.Value) continue;
+            if (applyTo.HasValue && e.ApplyTo != applyTo.Value) continue;
+            if (e.Effect.GrantedTags.Contains(tag)) return true;
+        }
+        return false;
+    }
+
+    // Los efectos de un momento y un destino, en orden (los bots, y quien necesite mirarlos).
+    public void GetEffects(EEffectWhen when, EEffectTarget applyTo, List<GameplayEffect> into)
+    {
+        if (Effects == null || into == null) return;
+        foreach (AbilityEffect e in Effects)
+            if (e.Effect != null && e.When == when && e.ApplyTo == applyTo) into.Add(e.Effect);
+    }
+
+    private static bool IsHitTiming(EEffectWhen when)
+        => when == EEffectWhen.OnHit || when == EEffectWhen.OnFirstHit;
+
+    // ¿Se cumple la condición de la entrada? 'subject' es el objetivo alcanzado (o el
+    // lanzador, en los efectos al activarse).
+    private static bool PassesCondition(AbilityEffect e, AbilitySystemComponent subject)
+        => e.OnlyIfTargetHas == EGameplayTag.None || (subject != null && subject.HasTag(e.OnlyIfTargetHas));
+
+    // Si CommitAbility aplica solo los efectos "al activarse". La Ira inmortal lo apaga: se
+    // cobra estando muerta, y un buff aplicado antes de revivir se perdería al revivir.
+    protected virtual bool ApplyActivationEffectsOnCommit => true;
+
+    // Los efectos "al activarse": al lanzador. Una entrada "al activarse" para enemigos o
+    // aliados no tiene a quién ir (todavía no golpeó a nadie): el Inspector la marca.
+    protected void ApplyActivationEffects()
+    {
+        if (OwnerASC == null || Effects == null) return;
+
+        foreach (AbilityEffect e in Effects)
+        {
+            if (e.Effect == null || e.When != EEffectWhen.OnActivate || e.ApplyTo != EEffectTarget.Self) continue;
+            if (!PassesCondition(e, OwnerASC)) continue;
+
+            OwnerASC.ApplyGameplayEffect(e.Effect, OwnerASC);
+        }
+    }
+
+    // Aplica a 'target' lo que le toca por haber sido ALCANZADO por esta habilidad, y
+    // devuelve true si era un objetivo válido:
+    //   · un enemigo, siempre;
+    //   · un aliado (o uno mismo), solo si la lista tiene algo para los aliados.
+    //
+    // firstHit: es el primer objetivo de esta activación (lo decide cada habilidad, que
+    // sabe en qué orden alcanza): recibe además las entradas "al primer golpe".
+    //
+    // Va en el orden de la lista, así el aturdido de primer golpe puede ir antes del daño
+    // si así está cargado. Las entradas "al lanzador" se aplican una vez por cada ENEMIGO
+    // golpeado; las "al matar", cuando el golpe deja muerto a un enemigo que estaba vivo.
+    protected bool ApplyHitEffects(AbilitySystemComponent target, bool firstHit = false)
+        => ApplyHitEffects(target, firstHit, OwnerASC);
+
+    // La versión completa, para quien golpea "en nombre" de la habilidad (el proyectil):
+    //   · source: quién figura como autor del golpe (el que lo devolvió, tras un parry).
+    //   · primaryOverride: reemplaza al DAÑO PRINCIPAL (el daño que trae un proyectil
+    //     devuelto, calculado con los stats de quien lo tiró).
+    //   · onlyHostile: solo lo que va a los enemigos — nada para aliados, ni para el autor,
+    //     ni de primer golpe (un proyectil devuelto no premia al que lo devolvió con los
+    //     efectos de otra clase).
+    public bool ApplyHitEffects(AbilitySystemComponent target, bool firstHit, AbilitySystemComponent source,
+                                GameplayEffect primaryOverride = null, bool onlyHostile = false)
+    {
+        if (target == null || source == null) return false;
+
+        bool enemy = source.IsEnemyOf(target);
+        bool ally  = !enemy && !onlyHostile && source.IsAllyOf(target, includeSelf: true);
+
+        if (!enemy && !(ally && HasAllyHitEffects)) return false;
+        if (Effects == null) return true;
+
+        bool wasAlive = !target.HasTag(EGameplayTag.State_Dead);
+        GameplayEffect primary = primaryOverride != null ? PrimaryDamageEffect : null;
+        bool primaryReplaced = false;
+
+        foreach (AbilityEffect e in Effects)
+        {
+            if (e.Effect == null) continue;
+
+            bool timing = e.When == EEffectWhen.OnHit ||
+                          (e.When == EEffectWhen.OnFirstHit && firstHit && !onlyHostile);
+            if (!timing) continue;
+
+            // ¿Le toca a este objetivo? (el lanzador cobra lo suyo por cada ENEMIGO golpeado)
+            bool reaches;
+            switch (e.ApplyTo)
+            {
+                case EEffectTarget.Enemies:  reaches = enemy;                 break;
+                case EEffectTarget.Allies:   reaches = ally;                  break;
+                case EEffectTarget.Everyone: reaches = enemy || ally;         break;
+                default:                     reaches = enemy && !onlyHostile; break;   // Self
+            }
+            if (!reaches || !PassesCondition(e, target)) continue;
+
+            // El filtro del primer golpe va al final: puede ANOTAR algo (el proyectil anota
+            // cuándo se puede volver a aturdir a ese enemigo), y no tiene que anotar nada que
+            // después no se aplique.
+            if (e.When == EEffectWhen.OnFirstHit && !CanApplyFirstHitEffect(target, e.Effect)) continue;
+
+            GameplayEffect effect = e.Effect;
+            if (!primaryReplaced && primary != null && effect == primary && e.When == EEffectWhen.OnHit &&
+                e.ApplyTo == EEffectTarget.Enemies)
+            {
+                effect = primaryOverride;
+                primaryReplaced = true;
+            }
+
+            if (e.ApplyTo == EEffectTarget.Self) source.ApplyGameplayEffect(effect, source);
+            else                                 target.ApplyGameplayEffect(effect, source);
+        }
+
+        if (enemy && !onlyHostile && wasAlive && target.HasTag(EGameplayTag.State_Dead))
+            ApplyKillEffects(target, source);
+
+        return true;
+    }
+
+    // Las entradas "al matar": al lanzador (las demás no tienen sentido: el Inspector las
+    // marca). 'victim' es el que murió, para la condición de tag.
+    private void ApplyKillEffects(AbilitySystemComponent victim, AbilitySystemComponent source)
+    {
+        foreach (AbilityEffect e in Effects)
+        {
+            if (e.Effect == null || e.When != EEffectWhen.OnKill || e.ApplyTo != EEffectTarget.Self) continue;
+            if (!PassesCondition(e, victim)) continue;
+            source.ApplyGameplayEffect(e.Effect, source);
+        }
+    }
+
+    // Filtro extra para las entradas "al primer golpe". El proyectil lo usa para no
+    // re-aturdir al mismo enemigo con cada disparo (FirstHitCooldownPerTarget).
+    protected virtual bool CanApplyFirstHitEffect(AbilitySystemComponent target, GameplayEffect effect) => true;
+
+    // ¿Qué momentos acepta esta habilidad? Para que el Inspector marque las entradas que
+    // nunca se van a aplicar. "Al activarse" lo aceptan todas (lo hace CommitAbility).
+    public virtual bool SupportsEffectTiming(EEffectWhen when)
+        => when == EEffectWhen.OnActivate || UsesHitEffects;
+
+    // ¿Qué VFX acepta? "Al lanzar" todas; "al golpear" las que golpean; "en el impacto" las
+    // que tienen un punto donde caen.
+    public virtual bool SupportsVisualTiming(EVisualWhen when)
+        => when == EVisualWhen.OnCast || (when == EVisualWhen.OnHit && UsesHitEffects);
+
+    // =========================================================
     // AFILIACIÓN — atajos hacia AbilitySystemComponent.IsEnemyOf/IsAllyOf
     // usando al dueño de esta habilidad como referencia
     // =========================================================
@@ -1058,16 +1281,20 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         float spd  = owner.GetAttributeValue(EAttributeType.AtkSpeed);
         if (spd > 0) mult = 1f / spd;
 
-        foreach (var v in VisualsSequence)
+        if (Visuals == null) yield break;
+
+        foreach (var v in Visuals)
         {
-            if (v.VFXPrefab == null) continue;
+            // Solo las de "al lanzar": las de golpe e impacto las dispara la habilidad
+            // cuando pasa eso (ver BroadcastHitVFX / BroadcastImpactVFX).
+            if (v.When != EVisualWhen.OnCast || v.VFXPrefab == null) continue;
 
             if (v.Delay > 0)
                 yield return new WaitForSeconds(v.Delay / mult);
 
             Vector3    pos = owner.transform.position + owner.transform.TransformDirection(v.Offset);
             Quaternion rot = owner.transform.rotation * Quaternion.Euler(v.RotationOffset);
-            GameObject vfx = v.AttachToOwner
+            GameObject vfx = v.Attach
                 ? Instantiate(v.VFXPrefab, pos, rot, owner.transform)
                 : Instantiate(v.VFXPrefab, pos, rot);
 
@@ -1129,22 +1356,68 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         return true;
     }
 
-    // Reproduce el VFX de impacto puntual de la habilidad (no la
-    // secuencia automática de arriba). No hace nada por defecto — cada
-    // subclase con un efecto de impacto (ImpactVFX, HitVFX...) la
-    // sobreescribe. Se llama en cada peer por separado a través de
-    // NetworkAbilitySystemComponent.ServerPlayAbilityVFX(), que resuelve
-    // esta MISMA habilidad en la copia local de cada cliente — así no
-    // hace falta sincronizar el GameObject del VFX por red.
-    public virtual void PlayImpactVFX(Vector3 position) { }
+    // ¿Hay alguna entrada de VFX para este momento?
+    public bool HasVisuals(EVisualWhen when)
+    {
+        if (Visuals == null) return false;
+        foreach (AbilityVisual v in Visuals)
+            if (v.VFXPrefab != null && v.When == when) return true;
+        return false;
+    }
 
-    // Reproduce el VFX de impacto usando un dueño puntual. El peer OBSERVADOR
-    // resuelve esta habilidad como el asset-template compartido (vía
-    // GameplayAbilityRegistry), que no tiene OwnerASC propio; algunos overrides
-    // (GA_SelfBuff, GA_ContinuousAoE) lo necesitan para parentar/posicionar el
-    // VFX en el jugador. El swap es sincrónico —PlayImpactVFX instancia y
-    // retorna en el mismo frame, y Unity es single-thread—, así que restaurar
-    // OwnerASC al final deja el template intacto para cualquier otro jugador.
+    private bool HasImpactSound => ImpactSound != null && ImpactSound.Clips != null && ImpactSound.Clips.Length > 0;
+
+    // ¿Tiene algo que mostrar o hacer sonar en el punto de impacto? (el proyectil no manda
+    // nada por red si no).
+    public bool HasImpactFeedback => HasVisuals(EVisualWhen.OnImpact) || HasImpactSound;
+
+    // SERVIDOR: los VFX "al golpear" sobre 'target' (y el sonido de impacto), en todas las
+    // pantallas. Se manda al personaje y no una posición: así un VFX pegado lo sigue.
+    // withSound = false cuando el mismo golpe ya suena por su impacto (el proyectil).
+    public void BroadcastHitVFX(AbilitySystemComponent target, bool withSound = true)
+    {
+        if (target == null) return;
+        if (!HasVisuals(EVisualWhen.OnHit) && !(withSound && HasImpactSound)) return;
+
+        NetworkAbilitySystemComponent netAsc = OwnerASC != null
+            ? OwnerASC.GetComponent<NetworkAbilitySystemComponent>() : null;
+
+        if (netAsc != null) netAsc.ServerPlayAbilityVFXOn(this, target, withSound);
+        else                PlayImpactVFXOn(target);   // sin red (escena de pruebas suelta)
+    }
+
+    // SERVIDOR: los VFX "en el impacto" en un punto del mundo (y el sonido), en todas las
+    // pantallas: donde estalla un área, donde aterriza un salto, donde choca un tiro.
+    public void BroadcastImpactVFX(Vector3 point)
+    {
+        if (!HasVisuals(EVisualWhen.OnImpact) && !HasImpactSound) return;
+
+        NetworkAbilitySystemComponent netAsc = OwnerASC != null
+            ? OwnerASC.GetComponent<NetworkAbilitySystemComponent>() : null;
+
+        if (netAsc != null) netAsc.ServerPlayAbilityVFX(this, point);
+        else                PlayImpactVFX(point);
+    }
+
+    // Los VFX "en el impacto" en un punto. Lo corre CADA peer con su propia copia de la
+    // habilidad (NetworkAbilitySystemComponent.ServerPlayAbilityVFX resuelve esta MISMA
+    // habilidad en cada cliente), así no hace falta sincronizar el GameObject del VFX.
+    // Virtual por si una habilidad necesita algo que la lista no cubre.
+    public virtual void PlayImpactVFX(Vector3 position)
+        => SpawnVisuals(EVisualWhen.OnImpact, OwnerASC, null, position);
+
+    // Los VFX "al golpear" sobre un PERSONAJE: lo que llega por
+    // NetworkAbilitySystemComponent.ServerPlayAbilityVFXOn().
+    public virtual void PlayImpactVFXOn(AbilitySystemComponent target)
+    {
+        if (target != null) SpawnVisuals(EVisualWhen.OnHit, OwnerASC, target, target.transform.position);
+    }
+
+    // Los mismos, con un dueño puntual. El peer OBSERVADOR resuelve esta habilidad como el
+    // asset-template compartido (vía GameplayAbilityRegistry), que no tiene OwnerASC propio;
+    // los VFX lo necesitan para parentarse al jugador o para esperar su Delay. El swap es
+    // sincrónico —instancian y retornan en el mismo frame, y Unity es single-thread—, así
+    // que restaurar OwnerASC al final deja el template intacto para cualquier otro jugador.
     public void PlayImpactVFXFor(AbilitySystemComponent owner, Vector3 position)
     {
         AbilitySystemComponent prev = OwnerASC;
@@ -1153,13 +1426,148 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         OwnerASC = prev;
     }
 
-    // VFX de impacto sobre un PERSONAJE en vez de un punto: lo que llega por
-    // NetworkAbilitySystemComponent.ServerPlayAbilityVFXOn(), que manda al objetivo
-    // (su NetworkObject) y no una posición, así cada peer puede pegárselo. Por defecto
-    // cae al VFX puntual a un metro de altura; GA_Target lo sobreescribe para seguirlo.
-    public virtual void PlayImpactVFXOn(AbilitySystemComponent target)
+    public void PlayImpactVFXOnFor(AbilitySystemComponent owner, AbilitySystemComponent target)
     {
-        if (target != null) PlayImpactVFX(target.transform.position + Vector3.up);
+        AbilitySystemComponent prev = OwnerASC;
+        OwnerASC = owner;
+        PlayImpactVFXOn(target);
+        OwnerASC = prev;
+    }
+
+    // Los VFX "al golpear" en una POSICIÓN: el respaldo para un objetivo sin NetworkObject
+    // (no se lo puede mandar por red), que en las demás pantallas sale donde estaba.
+    public void PlayHitVFXAtFor(AbilitySystemComponent owner, Vector3 position)
+        => SpawnVisuals(EVisualWhen.OnHit, owner, null, position);
+
+    // ---------------------------------------------------------
+    // Lo que cada habilidad le aporta a sus VFX de impacto
+    // ---------------------------------------------------------
+
+    // Radio del área, para las entradas con "Calzar con el área". 0 = no tiene área.
+    public virtual float VisualAreaRadius => 0f;
+
+    // Cuánto dura un VFX de golpe o impacto con DestroyTime en 0: lo que dura la habilidad
+    // (un área, su duración). Por defecto, 2 s.
+    protected virtual float VisualDefaultLifetime => 2f;
+
+    // A quién se pega un VFX de impacto con "Lo sigue": al lanzador, SOLO si el área lo
+    // sigue (una zona que se mueve con él). null = queda fijo donde apareció.
+    protected virtual Transform VisualImpactParent(AbilitySystemComponent owner) => null;
+
+    // Instancia las entradas de un momento. target != null = sobre un personaje (al golpear).
+    private void SpawnVisuals(EVisualWhen when, AbilitySystemComponent owner,
+                              AbilitySystemComponent target, Vector3 point)
+    {
+        if (Visuals == null) return;
+
+        foreach (AbilityVisual v in Visuals)
+        {
+            if (v.When != when || v.VFXPrefab == null) continue;
+
+            // Con espera, la corutina corre en el ASC del dueño (el template del observador
+            // no tiene dónde correrla). Sin dueño no hay espera: sale ya.
+            if (v.Delay > 0f && owner != null)
+                owner.StartAbilityCoroutine(SpawnVisualDelayed(v, owner, target, point));
+            else
+                SpawnVisual(v, owner, target, point);
+        }
+    }
+
+    private IEnumerator SpawnVisualDelayed(AbilityVisual v, AbilitySystemComponent owner,
+                                           AbilitySystemComponent target, Vector3 point)
+    {
+        yield return new WaitForSeconds(v.Delay);
+        // El objetivo pudo desaparecer en la espera: sale donde estaba.
+        if (target == null) SpawnVisual(v, owner, null, point);
+        else                SpawnVisual(v, owner, target, target.transform.position);
+    }
+
+    private void SpawnVisual(AbilityVisual v, AbilitySystemComponent owner,
+                             AbilitySystemComponent target, Vector3 point)
+    {
+        // Con la rotación del PREFAB, no cero: muchos VFX de los packs acuestan el círculo
+        // girando su raíz −90° en X (Zone of Truth), y con Quaternion.identity quedaban parados.
+        Quaternion rot = Quaternion.Euler(v.RotationOffset) * v.VFXPrefab.transform.rotation;
+        GameObject vfx = Instantiate(v.VFXPrefab, point + v.Offset, rot);
+
+        Transform parent = null;
+        if (v.Attach)
+            parent = target != null ? target.transform : (v.When == EVisualWhen.OnImpact ? VisualImpactParent(owner) : null);
+        if (parent != null) vfx.transform.SetParent(parent, true);
+
+        if (v.Scale != Vector3.zero) vfx.transform.localScale = v.Scale;
+
+        float lifetime = v.DestroyTime > 0f ? v.DestroyTime : VisualDefaultLifetime;
+        float radius   = VisualAreaRadius;
+
+        // Con VFX_AreaVisual el círculo calza EXACTO con el radio y se desvanece al
+        // terminar; si no, cae al multiplicador a ojo.
+        if (v.MatchAreaSize && radius > 0f)
+            VFX_AreaVisual.Configure(vfx, radius, v.AreaSizeMultiplier > 0f ? v.AreaSizeMultiplier : 1f, lifetime);
+        else
+            Destroy(vfx, lifetime);
+    }
+
+    // =========================================================
+    // DATOS VIEJOS → FORMATO NUEVO
+    //
+    // Cada GA tenía sus propios campos sueltos para los efectos y los VFX. Esos campos
+    // siguen existiendo (escondidos, con su nombre de siempre) SOLO para poder leer lo que
+    // ya estaba cargado en los assets: al cargarse, cada habilidad los pasa a las listas
+    // nuevas y los vacía. No hay que volver a cargar nada a mano.
+    //
+    // Pasa en memoria cada vez que se carga el asset (en el editor y en la build), así que
+    // funciona aunque el asset nunca se vuelva a guardar. 'Mercenarios ▸ Guardar las
+    // habilidades en el formato nuevo' los guarda en disco de una vez.
+    // =========================================================
+
+    // True si al cargarse pasó algo del formato viejo al nuevo y todavía no se guardó.
+    [System.NonSerialized] public bool UpgradedOnLoad;
+
+    protected virtual void OnEnable()
+    {
+        if (UpgradeLegacyData()) UpgradedOnLoad = true;
+    }
+
+    // Pasa los campos viejos a las listas. true = cambió algo.
+    public bool UpgradeLegacyData()
+    {
+        if (Effects == null) Effects = new List<AbilityEffect>();
+        if (Visuals == null) Visuals = new List<AbilityVisual>();
+
+        bool changed = false;
+        OnUpgradeLegacyData(ref changed);
+        return changed;
+    }
+
+    // Cada GA con campos viejos los pasa acá (llamando primero a la base).
+    protected virtual void OnUpgradeLegacyData(ref bool changed) { }
+
+    // Ayudas para OnUpgradeLegacyData: agregan y vacían el campo viejo.
+    protected void UpgradeEffect(ref GameplayEffect legacy, EEffectWhen when, EEffectTarget applyTo, ref bool changed)
+    {
+        if (legacy == null) return;
+        Effects.Add(new AbilityEffect(legacy, when, applyTo));
+        legacy = null;
+        changed = true;
+    }
+
+    protected void UpgradeEffects(List<GameplayEffect> legacy, EEffectWhen when, EEffectTarget applyTo, ref bool changed)
+    {
+        if (legacy == null || legacy.Count == 0) return;
+        foreach (GameplayEffect e in legacy)
+            if (e != null) Effects.Add(new AbilityEffect(e, when, applyTo));
+        legacy.Clear();
+        changed = true;
+    }
+
+    protected void UpgradeVisual(ref GameObject legacy, AbilityVisual visual, ref bool changed)
+    {
+        if (legacy == null) return;
+        visual.VFXPrefab = legacy;
+        Visuals.Add(visual);
+        legacy = null;
+        changed = true;
     }
 
     // =========================================================
@@ -1176,4 +1584,33 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // Physics.Overlap...(), para que el gizmo nunca se desincronice de lo
     // que realmente golpea.
     public virtual void DrawGizmos(Transform origin) { }
+
+    // El gizmo de las habilidades de OBJETIVO ÚNICO: el alcance (esfera) y el cono de
+    // selección alrededor de la mira (selectionAngle es la MITAD: "hasta X° de la mira").
+    // La mira sale de la cámara y no del cuerpo, así que es una aproximación: sirve para
+    // ver la escala, no para medir al centímetro.
+    protected static void DrawSelectionGizmo(Transform origin, float range, float selectionAngle, Color color)
+    {
+        if (origin == null) return;
+
+        Gizmos.color = color;
+        Gizmos.DrawWireSphere(origin.position, range);
+
+        Vector3 chest = origin.position + Vector3.up;
+        Gizmos.color = new Color(color.r, color.g, color.b, color.a * 0.7f);
+        for (int i = 0; i < 4; i++)
+        {
+            Quaternion around = Quaternion.AngleAxis(i * 90f, origin.forward);
+            Vector3 edge = around * (Quaternion.AngleAxis(selectionAngle, origin.up) * origin.forward);
+            Gizmos.DrawLine(chest, chest + edge * range);
+        }
+    }
+
+#if UNITY_EDITOR
+    // MANIJAS en la Scene view para ajustar los números de la forma arrastrando (alcance,
+    // radio, ángulo, desde dónde sale). Las dibuja el muñeco de prueba (AbilityPreview)
+    // con esta habilidad elegida; cada cambio tiene Deshacer y queda guardado en el asset.
+    // Cada GA con forma la sobreescribe usando las ayudas de AbilityHandles.
+    public virtual void DrawSceneHandles(Transform origin) { }
+#endif
 }

@@ -23,13 +23,15 @@ using FishNet.Object;
 [CreateAssetMenu(fileName = "GA_ProjectileShoot", menuName = "GAS/Generics/Projectile Shoot")]
 public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
 {
-    [Header("Configuración del Proyectil")]
+    [Section("Proyectil")]
+    [Tooltip("El prefab que vuela (con GC_Projectile, NetworkObject y Rigidbody). Al chocar le " +
+             "aplica la lista de efectos de ESTA habilidad a quien toque.")]
     public GameObject ProjectilePrefab;
-    // Velocidad de salida del proyectil.
+    [Tooltip("Velocidad de salida del proyectil.")]
     public float      LaunchForce  = 20f;
-    // Punto de salida, en espacio local del dueño (ej: la mano).
+    [Tooltip("Punto de salida, en espacio local del dueño (X = derecha, Y = arriba, Z = adelante): la mano.")]
     public Vector3    SpawnOffset  = new Vector3(0.5f, 1.5f, 1.0f);
-    // Si el proyectil gira sobre sí mismo mientras vuela (solo estético).
+    [Tooltip("Si el proyectil gira sobre sí mismo mientras vuela (solo estético).")]
     public bool       AddSpin      = true;
 
     [Tooltip("Esconde el arma que el personaje tiene en la mano mientras el proyectil vuela.\n\n" +
@@ -40,46 +42,12 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
              "Apagado (lo normal) para magos y cualquier disparo que no suelte el arma.")]
     public bool       HideWeaponWhileFlying = false;
 
-    [Header("Efectos al Impactar")]
-    // Daño instantáneo al golpear.
-    public GameplayEffect InstantDamageEffect;
-    // Efecto con duración que además se le aplica al golpear (ej: veneno).
-    public GameplayEffect DurationEffect;
-    // Efectos EXTRA que se aplican al golpear, además de los dos anteriores. Opcional.
-    public List<GameplayEffect> AdditionalEffects;
-
-    [Tooltip("Efectos que esta habilidad le aplica a los ALIADOS que alcance. El daño y los " +
-             "AdditionalEffects van a los enemigos; esta lista, a los aliados.\n\n" +
-             "VACÍA (lo normal) = la habilidad ignora por completo a los aliados. En cuanto tenga " +
-             "algo, empieza a considerarlos objetivos válidos: es lo que convierte un ataque normal " +
-             "en uno que daña enemigos Y cura aliados a su paso (Castigo divino del Paladín).")]
-    // FormerlySerializedAs: se llamó "AllyEffects" y vivía en GameplayAbility. Unity
-    // serializa por NOMBRE, así que mientras el campo siga llamándose TargetEffects los
-    // assets ya configurados conservan su valor al bajarlo a esta clase.
-    [UnityEngine.Serialization.FormerlySerializedAs("AllyEffects")]
-    public List<GameplayEffect> TargetEffects;
-
-    [Tooltip("Efectos SOLO para el PRIMER enemigo que toca cada proyectil (el aturdido del " +
-             "Clérigo del Orden). Los que atraviese después reciben el daño normal, no esto. " +
-             "Vacío = nada.")]
-    public List<GameplayEffect> FirstHitEffects;
-
-    [Tooltip("Segundos mínimos antes de volver a aplicarle los FirstHitEffects al MISMO " +
-             "enemigo. Sin esto, un aturdido de 1 s con ataques cada 0.8 s lo deja aturdido " +
-             "para siempre. 0 = sin límite.")]
-    public float FirstHitCooldownPerTarget = 3f;
-
     [Tooltip("Alcance del proyectil expresado en SEGUNDOS de vuelo (con velocidad constante, " +
              "alcance = LifeTime × LaunchForce). Pasado ese tiempo se despawnea solo aunque no haya " +
              "chocado con nada. 0 = usar el default del prefab (5s).\n\n" +
              "Para una estela/rayo que avanza lento y no cae, ponele al Rigidbody del prefab " +
              "Use Gravity en false y bajá LaunchForce.")]
     public float LifeTime = 0f;
-
-    [Header("Sincronización")]
-    // Espera entre activar la habilidad y que el proyectil realmente
-    // salga (para sincronizar con la animación de disparo).
-    public float SpawnDelay = 0.4f;
 
     [Tooltip("Distancia mínima a la que se considera que la retícula y el proyectil se " +
              "juntan. La retícula sale de la cámara y el proyectil de la mano: apuntando " +
@@ -89,29 +57,44 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
              "Subirlo endereza más el tiro de cerca; bajarlo lo hace más literal.")]
     public float MinConvergeDistance = 4f;
 
-    [Header("Visuales")]
-    public GameObject ImpactVFX;
+    [Section(AbilitySection.Timing)]
+    [Tooltip("Espera entre activar la habilidad y que el proyectil realmente salga, si el clip " +
+             "no trae el evento AnimationEvent_HitFrame (con el evento, sale en ese frame).")]
+    public float SpawnDelay = 0.4f;
 
-    [Header("Apuntar (mantener para apuntar, soltar para lanzar)")]
+    [Section(AbilitySection.Effects)]
+    [Tooltip("Segundos mínimos antes de volver a aplicarle los efectos 'al primer golpe' al MISMO " +
+             "enemigo (el primero que toca cada proyectil). Sin esto, un aturdido de 1 s con " +
+             "ataques cada 0.8 s lo deja aturdido para siempre. 0 = sin límite.")]
+    public float FirstHitCooldownPerTarget = 3f;
+
+    [Section("Apuntar (mantener y soltar)")]
     [Tooltip("Mantener el botón apunta (el arma atrás, la cámara cerca de la mira, el modelo " +
              "oculto para el que apunta) y SOLTAR lanza al instante. Apagado = sale al apretar, " +
              "como siempre (los castigos, el arco del combo del Clérigo).")]
     public bool AimBeforeThrow = false;
 
+    [ShowIf(nameof(AimBeforeThrow))]
     [Tooltip("Pose de apuntar, en bucle, mientras se mantiene (ej. HumanM@ThrowWeapon01_R - Hold).")]
     public AnimationClip AimHoldClip;
 
+    [ShowIf(nameof(AimBeforeThrow))]
     [Tooltip("El lanzamiento DESDE la pose de apuntar, sin el impulso hacia atrás: se reproduce " +
              "al soltar. Si trae el evento AnimationEvent_HitFrame, el proyectil sale ahí. " +
              "Vacío = se usa el AnimationClip entero.")]
     public AnimationClip AimReleaseClip;
 
+    [ShowIf(nameof(AimBeforeThrow))]
     [Tooltip("Si el clip de soltar no trae el evento: segundos desde que se suelta hasta que " +
              "sale el proyectil.")]
     public float AimReleaseDelay = 0.1f;
 
+    [ShowIf(nameof(AimBeforeThrow))]
     [Tooltip("Corte de seguridad: si el aviso de soltar nunca llega, lanza a los tantos segundos.")]
     public float AimSafetyTimeout = 30f;
+
+    // Donde choca es un punto: acepta VFX de impacto.
+    public override bool SupportsVisualTiming(EVisualWhen when) => true;
 
     [System.NonSerialized] private bool _aiming;
     [System.NonSerialized] private float _aimStartedAt;
@@ -519,14 +502,13 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
             // _shooterNob ahí) — llamarlo acá de nuevo solo pasaría en el
             // servidor y duplicaría el arma clonada en esa copia.
             //
-            // Le pasamos 'this' para que, al impactar (siempre en el
-            // servidor), el proyectil pueda pedirle a NetworkASC que
-            // reproduzca ImpactVFX en todos los peers vía PlayImpactVFX().
-            // TargetEffects: si está vacío el proyectil sigue
-            // ignorando a los aliados como siempre; si tiene algo, se lo aplica a los
-            // que atraviese (la estela del Castigo divino, que cura al pasar).
-            projectileScript.Initialize(InstantDamageEffect, DurationEffect, OwnerASC, UltimateChargeAmount,
-                                        ImpactVFX, this, AdditionalEffects, TargetEffects, LifeTime);
+            // Le pasamos 'this': al impactar (siempre en el servidor), el proyectil le
+            // aplica la lista de efectos de esta habilidad a quien toque
+            // (ApplyHitEffects) y le pide a NetworkASC los VFX de impacto en todos los
+            // peers. Si la lista no tiene nada para los aliados, el proyectil los sigue
+            // ignorando como siempre; si tiene, se lo aplica a los que atraviese (la
+            // estela del Castigo divino, que cura al pasar).
+            projectileScript.Initialize(OwnerASC, UltimateChargeAmount, this, LifeTime);
         }
 
         Rigidbody rb = newProjectile.GetComponent<Rigidbody>();
@@ -583,19 +565,16 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
         Gizmos.DrawWireSphere(point, 0.3f);
     }
 
-    // Instancia ImpactVFX en el punto de impacto. Llamado por GC_Projectile
-    // al impactar (siempre desde el servidor, vía
-    // NetworkAbilitySystemComponent.ServerPlayAbilityVFX) — y replicado a
-    // cada cliente con su propia copia local de esta misma habilidad.
-    public override void PlayImpactVFX(Vector3 position)
+#if UNITY_EDITOR
+    public override void DrawSceneHandles(Transform origin)
     {
-        if (ImpactVFX == null) return;
-        GameObject vfx = Instantiate(ImpactVFX, position, Quaternion.identity);
-        Destroy(vfx, 1.0f);
+        if (origin == null) return;
+        AbilityHandles.Offset(this, "Spawn Offset", origin, ref SpawnOffset, AbilityHandles.OffsetColor);
     }
+#endif
 
     // =========================================================
-    // PRIMER IMPACTO (FirstHitEffects)
+    // PRIMER IMPACTO (efectos "al primer golpe")
     // =========================================================
 
     // Desde cuándo se le puede volver a aplicar cada efecto a cada enemigo. Estático y
@@ -605,23 +584,42 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
     private static readonly Dictionary<(AbilitySystemComponent, AbilitySystemComponent, GameplayEffect), float>
         _firstHitReadyAt = new Dictionary<(AbilitySystemComponent, AbilitySystemComponent, GameplayEffect), float>();
 
-    // Le aplica los FirstHitEffects al primer enemigo que tocó un proyectil de esta
-    // habilidad, si ya pasó su tiempo mínimo con ese enemigo. La llama GC_Projectile,
-    // en el servidor.
-    public void ApplyFirstHitEffects(AbilitySystemComponent target)
+    // Los efectos "al primer golpe" (el primer enemigo que toca cada proyectil) solo se
+    // aplican si ya pasó su tiempo mínimo con ese enemigo. Lo consulta ApplyHitEffects,
+    // que llama GC_Projectile en el servidor.
+    protected override bool CanApplyFirstHitEffect(AbilitySystemComponent target, GameplayEffect effect)
     {
-        if (FirstHitEffects == null || target == null || OwnerASC == null) return;
+        if (FirstHitCooldownPerTarget <= 0f || OwnerASC == null || target == null) return true;
 
-        foreach (GameplayEffect effect in FirstHitEffects)
-        {
-            if (effect == null) continue;
+        var key = (OwnerASC, target, effect);
+        if (_firstHitReadyAt.TryGetValue(key, out float readyAt) && Time.time < readyAt) return false;
 
-            var key = (OwnerASC, target, effect);
-            if (FirstHitCooldownPerTarget > 0f &&
-                _firstHitReadyAt.TryGetValue(key, out float readyAt) && Time.time < readyAt) continue;
+        _firstHitReadyAt[key] = Time.time + FirstHitCooldownPerTarget;
+        return true;
+    }
 
-            target.ApplyGameplayEffect(effect, OwnerASC);
-            if (FirstHitCooldownPerTarget > 0f) _firstHitReadyAt[key] = Time.time + FirstHitCooldownPerTarget;
-        }
+    // =========================================================
+    // DATOS VIEJOS (solo para pasarlos a las listas; ver GameplayAbility.UpgradeLegacyData)
+    // =========================================================
+
+    [SerializeField, HideInInspector] private GameplayEffect InstantDamageEffect;
+    [SerializeField, HideInInspector] private GameplayEffect DurationEffect;
+    [SerializeField, HideInInspector] private List<GameplayEffect> AdditionalEffects;
+    [UnityEngine.Serialization.FormerlySerializedAs("AllyEffects")]
+    [SerializeField, HideInInspector] private List<GameplayEffect> TargetEffects;
+    [SerializeField, HideInInspector] private List<GameplayEffect> FirstHitEffects;
+    [SerializeField, HideInInspector] private GameObject ImpactVFX;
+
+    protected override void OnUpgradeLegacyData(ref bool changed)
+    {
+        base.OnUpgradeLegacyData(ref changed);
+
+        // En el orden en que se aplicaban: el aturdido de primer golpe iba ANTES del daño.
+        UpgradeEffects(FirstHitEffects, EEffectWhen.OnFirstHit, EEffectTarget.Enemies, ref changed);
+        UpgradeEffect(ref InstantDamageEffect, EEffectWhen.OnHit, EEffectTarget.Enemies, ref changed);
+        UpgradeEffect(ref DurationEffect, EEffectWhen.OnHit, EEffectTarget.Enemies, ref changed);
+        UpgradeEffects(AdditionalEffects, EEffectWhen.OnHit, EEffectTarget.Enemies, ref changed);
+        UpgradeEffects(TargetEffects, EEffectWhen.OnHit, EEffectTarget.Allies, ref changed);
+        UpgradeVisual(ref ImpactVFX, new AbilityVisual { When = EVisualWhen.OnImpact, DestroyTime = 1f }, ref changed);
     }
 }

@@ -14,19 +14,17 @@ using System.Collections.Generic;
 [CreateAssetMenu(fileName = "GA_FinalBlow", menuName = "GAS/Specific Abilities/Barbarian/Immortal/Final Blow")]
 public class GA_FinalBlow : GameplayAbility, IChanneledAbility
 {
-    [Header("Configuración Golpe Final")]
+    [Section("Carga")]
+    [Tooltip("Segundos de carga, enraizado, antes de que salga el golpe.")]
     public float ChargeTime = 1.5f;
 
-    [Header("Efectos")]
-    [Tooltip("Escudo que recibe MIENTRAS carga. Debe ser un GE con duración y un modificador " +
-             "de Shield (Add); se lo aplica a sí mismo. La duración la fuerza ChargeTime, así " +
-             "que no hace falta igualarla en el GE. Si lo interrumpen, se retira antes de tiempo.")]
-    public GameplayEffect ChargeShieldEffect;
-    public GameplayEffect DamageEffect;
-    public GameplayEffect StunEffect;
+    [Tooltip("Lo que recibe MIENTRAS carga (el escudo). GEs con duración que se aplica a sí " +
+             "mismo; la duración la fuerza ChargeTime, así que no hace falta igualarla en el GE. " +
+             "Si lo interrumpen, se retiran antes de tiempo.")]
+    public List<GameplayEffect> WhileChargingEffects = new List<GameplayEffect>();
 
-    [Header("Hitbox del Golpe")]
-    // Qué tan lejos del dueño está el centro de la caja de golpe.
+    [Section(AbilitySection.Shape)]
+    [Tooltip("Qué tan lejos del dueño está el centro de la caja de golpe.")]
     public float   HitboxOffsetZ     = 1.5f;
 
     [Tooltip("A qué ALTURA queda el centro de la caja, respecto del pivote del dueño — que está " +
@@ -34,10 +32,10 @@ public class GA_FinalBlow : GameplayAbility, IChanneledAbility
              "enterrada, así que el golpe apenas llega a la cintura del que tenés enfrente. " +
              "Subilo a la altura del pecho (1.2-1.5) para que conecte donde se lo ve.")]
     public float   HitboxOffsetY     = 0f;
-    // Mitad del tamaño de la caja de golpe en cada eje.
+    [Tooltip("Mitad del tamaño de la caja de golpe en cada eje (X ancho, Y alto, Z largo).")]
     public Vector3 HitboxHalfExtents = new Vector3(1f, 1f, 1f);
 
-    [Header("Animación de la carga")]
+    [Section(AbilitySection.Animation)]
     [Tooltip("Clip EN BUCLE mientras se carga el golpe: el arma sostenida en alto.\n\n" +
              "Sin esto la carga es muda — el personaje se queda plantado 1.5 s sin hacer nada y " +
              "recién ahí aparece el mandoble. El bucle se corta solo cuando termina la carga (o " +
@@ -82,12 +80,13 @@ public class GA_FinalBlow : GameplayAbility, IChanneledAbility
     {
         PlayerController pc = OwnerASC.GetComponent<PlayerController>();
 
-        // Escudo mientras carga: se lo aplica A SÍ MISMO como cualquier otro GE.
+        // Lo de mientras carga (el escudo): se lo aplica A SÍ MISMO como cualquier otro GE.
         // El sistema de escudos temporales lo otorga ahora y lo retira solo al
         // expirar; le pasamos ChargeTime como duración para tener una sola fuente
         // de verdad (no hay que igualar el Duration del GE).
-        if (ChargeShieldEffect != null)
-            OwnerASC.ApplyGameplayEffect(ChargeShieldEffect, OwnerASC, ChargeTime);
+        if (WhileChargingEffects != null)
+            foreach (GameplayEffect effect in WhileChargingEffects)
+                if (effect != null) OwnerASC.ApplyGameplayEffect(effect, OwnerASC, ChargeTime);
 
         OwnerASC.AddTag(EGameplayTag.State_Rooted);
 
@@ -131,17 +130,20 @@ public class GA_FinalBlow : GameplayAbility, IChanneledAbility
         if (wasInterrupted)
         {
             // Se cortó la carga: el escudo no debe sobrevivir al golpe fallido.
-            if (ChargeShieldEffect != null) OwnerASC.RemoveEffectsByDefinition(ChargeShieldEffect);
+            if (WhileChargingEffects != null)
+                foreach (GameplayEffect effect in WhileChargingEffects)
+                    if (effect != null) OwnerASC.RemoveEffectsByDefinition(effect);
             EndAbility();
             yield break;
         }
 
         if (pc != null) pc.PlayAnimation(this);
 
-        Vector3    hitboxCenter = pc.transform.position
-                                   + pc.transform.forward * HitboxOffsetZ
+        Transform  owner        = OwnerASC.transform;
+        Vector3    hitboxCenter = owner.position
+                                   + owner.forward * HitboxOffsetZ
                                    + Vector3.up * HitboxOffsetY;
-        Collider[] hitColliders = Physics.OverlapBox(hitboxCenter, HitboxHalfExtents, pc.transform.rotation, TargetLayer);
+        Collider[] hitColliders = Physics.OverlapBox(hitboxCenter, HitboxHalfExtents, owner.rotation, TargetLayer);
 
         HashSet<AbilitySystemComponent> enemiesHit = new HashSet<AbilitySystemComponent>();
 
@@ -156,14 +158,11 @@ public class GA_FinalBlow : GameplayAbility, IChanneledAbility
                 float targetMaxHealth = targetASC.GetAttributeValue(EAttributeType.MaxHealth);
 
                 if (targetMaxHealth > 0 && (targetHealth / targetMaxHealth) <= 0.05f)
-                {
-                    targetASC.SetCurrentAttributeValue(EAttributeType.Health, 0);
-                }
+                    targetASC.SetCurrentAttributeValue(EAttributeType.Health, 0);   // ejecución
                 else
-                {
-                    if (DamageEffect != null) targetASC.ApplyGameplayEffect(DamageEffect, OwnerASC);
-                    if (StunEffect   != null) targetASC.ApplyGameplayEffect(StunEffect,   OwnerASC);
-                }
+                    ApplyHitEffects(targetASC, firstHit: enemiesHit.Count == 1);
+
+                BroadcastHitVFX(targetASC);
             }
         }
 
@@ -187,5 +186,50 @@ public class GA_FinalBlow : GameplayAbility, IChanneledAbility
         Gizmos.DrawWireCube(Vector3.zero, HitboxHalfExtents * 2f);
 
         Gizmos.matrix = prevMatrix;
+    }
+
+#if UNITY_EDITOR
+    // La caja se arrastra cara por cara: la de adelante y la de atrás la alargan y la
+    // corren (Hitbox Offset Z), las de arriba y abajo cambian el alto y la altura (Hitbox
+    // Offset Y), las de los costados el ancho (siempre centrada en el dueño).
+    public override void DrawSceneHandles(Transform origin)
+    {
+        if (origin == null) return;
+
+        Vector3 center = origin.position + origin.forward * HitboxOffsetZ + Vector3.up * HitboxOffsetY;
+        Vector3 size   = HitboxHalfExtents * 2f;
+
+        if (AbilityHandles.Box(this, "Hitbox", center, origin.rotation, ref size, out Vector3 newCenter,
+                               AbilityHandles.BoxColor))
+        {
+            HitboxHalfExtents = size * 0.5f;
+            HitboxOffsetZ     = Vector3.Dot(newCenter - origin.position, origin.forward);
+            HitboxOffsetY     = newCenter.y - origin.position.y;
+        }
+    }
+#endif
+
+    // =========================================================
+    // DATOS VIEJOS (solo para pasarlos a las listas; ver GameplayAbility.UpgradeLegacyData)
+    // =========================================================
+
+    [SerializeField, HideInInspector] private GameplayEffect ChargeShieldEffect;
+    [SerializeField, HideInInspector] private GameplayEffect DamageEffect;
+    [SerializeField, HideInInspector] private GameplayEffect StunEffect;
+
+    protected override void OnUpgradeLegacyData(ref bool changed)
+    {
+        base.OnUpgradeLegacyData(ref changed);
+
+        UpgradeEffect(ref DamageEffect, EEffectWhen.OnHit, EEffectTarget.Enemies, ref changed);
+        UpgradeEffect(ref StunEffect, EEffectWhen.OnHit, EEffectTarget.Enemies, ref changed);
+
+        if (ChargeShieldEffect != null)
+        {
+            if (WhileChargingEffects == null) WhileChargingEffects = new List<GameplayEffect>();
+            WhileChargingEffects.Add(ChargeShieldEffect);
+            ChargeShieldEffect = null;
+            changed = true;
+        }
     }
 }

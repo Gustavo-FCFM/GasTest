@@ -14,7 +14,7 @@ using System.Collections.Generic;
 //   · Presencia conquistadora (Paladín/Conquista): aturde a un enemigo lejano.
 //   · La curación apuntada del Clérigo y su "Canalizar divinidad: Aturdir".
 //
-// QUÉ APLICA: su lista TargetEffects — los efectos que recibe el elegido, apunte a
+// QUÉ APLICA: las entradas "Al golpear" de su lista de efectos — lo que recibe el elegido, apunte a
 // un aliado o a un enemigo. Podés poner tantos GE como quieras (curación, escudo,
 // un debuff con tag, los tres).
 //
@@ -32,7 +32,7 @@ public class GA_Target : TargetImpactAbility
     // así que los assets ya configurados no cambian al agregar esto.
     public enum ETargetSide { Allies, Enemies }
 
-    [Header("Selección")]
+    [Section(AbilitySection.Targeting)]
     [Tooltip("A quién apunta. Allies: curaciones, escudos y protecciones. Enemies: marcas, " +
              "aturdimientos y debuffs de objetivo único (Enemigo jurado, Presencia conquistadora, " +
              "el 'Canalizar divinidad: Aturdir' del Clérigo).\n\n" +
@@ -47,6 +47,7 @@ public class GA_Target : TargetImpactAbility
              "Más alto = más fácil de enganchar, pero más fácil también de agarrar al que no querías.")]
     public float SelectionAngle = 30f;
 
+    [ShowIf(nameof(Targets), ETargetSide.Allies)]
     [Tooltip("Si no hay ningún aliado en la mira, ¿se lo aplica a SÍ MISMO? Es el " +
              "'si no hay aliado seleccionado, se selecciona a sí mismo' del diseño. " +
              "Apagado = sin objetivo la habilidad no se lanza y no gasta nada.")]
@@ -56,15 +57,11 @@ public class GA_Target : TargetImpactAbility
              "revivan; para una curación normal dejalo apagado o vas a desperdiciar el uso.")]
     public bool AllowDeadTargets = false;
 
-    [Header("Efectos")]
-    [Tooltip("Efectos que recibe el objetivo elegido, apunte a un aliado o a un enemigo: curación, " +
-             "escudo, inmunidad, un debuff con tag... los que quieras.\n\n" +
-             "Para una curación 'del total de la vida máxima del lanzador', el GE va con un Modifier " +
-             "sobre Health con UseAttributeScaling, SourceAttribute = MaxHealth y coeficiente 1: el " +
-             "escalado siempre mira los stats de QUIEN lanza, no los del objetivo.")]
-    // FormerlySerializedAs: se llamó "AllyEffects" y vivía en GameplayAbility.
-    [UnityEngine.Serialization.FormerlySerializedAs("AllyEffects")]
-    public List<GameplayEffect> TargetEffects;
+    // LOS EFECTOS van en la lista de la habilidad, "Al golpear" con el bando que se apunta
+    // (Aliados o Enemigos): curación, escudo, inmunidad, un debuff con tag... los que
+    // quieras. Para una curación "del total de la vida máxima del lanzador", el GE va con
+    // un Modifier sobre Health con UseAttributeScaling, SourceAttribute = MaxHealth y
+    // coeficiente 1: el escalado siempre mira los stats de QUIEN lanza.
 
     // =========================================================
     // ACTIVACIÓN
@@ -99,11 +96,11 @@ public class GA_Target : TargetImpactAbility
 
         CommitAbility();
 
-        if (TargetEffects == null || TargetEffects.Count == 0)
-            Debug.LogWarning($"[{AbilityName}] no tiene ningún TargetEffect configurado: " +
+        if (!HasEffects(EEffectWhen.OnHit))
+            Debug.LogWarning($"[{AbilityName}] no tiene ningún efecto 'Al golpear': " +
                              $"selecciona objetivo pero no le aplica nada.");
 
-        ApplyEffectsTo(TargetEffects, target);
+        ApplyHitEffects(target, firstHit: true);
 
         PlayerController pc = OwnerASC.GetComponent<PlayerController>();
         if (pc != null)
@@ -151,9 +148,27 @@ public class GA_Target : TargetImpactAbility
 
     // Vista previa del alcance de selección en el Editor.
     public override void DrawGizmos(Transform origin)
+        => DrawSelectionGizmo(origin, MaxRange, SelectionAngle, new Color(0.4f, 1f, 0.6f, 0.9f));
+
+#if UNITY_EDITOR
+    public override void DrawSceneHandles(Transform origin)
+        => AbilityHandles.Selection(this, origin, ref MaxRange, ref SelectionAngle);
+#endif
+
+    // =========================================================
+    // DATOS VIEJOS (solo para pasarlos a las listas; ver GameplayAbility.UpgradeLegacyData)
+    // =========================================================
+
+    // Se llamó "AllyEffects" y vivía en GameplayAbility.
+    [UnityEngine.Serialization.FormerlySerializedAs("AllyEffects")]
+    [SerializeField, HideInInspector] private List<GameplayEffect> TargetEffects;
+
+    protected override void OnUpgradeLegacyData(ref bool changed)
     {
-        if (origin == null) return;
-        Gizmos.color = new Color(0.4f, 1f, 0.6f, 0.9f);
-        Gizmos.DrawWireSphere(origin.position, MaxRange);
+        base.OnUpgradeLegacyData(ref changed);
+
+        // Los recibía el elegido, del bando que apunta la habilidad.
+        EEffectTarget side = Targets == ETargetSide.Enemies ? EEffectTarget.Enemies : EEffectTarget.Allies;
+        UpgradeEffects(TargetEffects, EEffectWhen.OnHit, side, ref changed);
     }
 }

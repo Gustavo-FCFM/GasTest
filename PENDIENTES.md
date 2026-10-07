@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 6 de octubre de 2026
+# Pendientes — actualizado el 7 de octubre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -43,6 +43,99 @@ rm -rf "Assets/FishNet" "Assets/FishNet.meta" "Assets/TextMesh Pro/Examples & Ex
       **29 de septiembre: a medias.** `TextMesh Pro/Examples & Extras` ya no está;
       `Assets/FishNet` sigue (solo `.csproj`/`.sln` viejos y sus `.meta`, ignorados por git).
       Falta borrar esa carpeta con Unity cerrado.
+
+---
+
+# ★ Inspector de habilidades nuevo — HECHO, falta probar (7 de octubre)
+
+Pedido de Gustavo: cada GA ordenado por secciones plegables, los daños/efectos y los VFX
+en listas con condiciones, sin perder lo ya cargado, y ajustar las formas desde la escena.
+Compila limpio (juego y editor).
+
+**Una vez, con Unity abierto (después de que recompile):**
+
+- [ ] `Mercenarios ▸ Guardar las habilidades en el formato nuevo`. Escribe en disco los
+      assets de habilidad (incluidos los 9 de `48toPlay`) con las listas nuevas. Sin esto
+      igual funcionan —cada uno se pasa solo al cargarse, en el editor y en la build—, pero
+      se irían guardando de a uno a medida que se tocan.
+- [ ] Mirar en git que los `.asset` cambiaron como se espera, y subir.
+
+**Qué cambió:**
+
+- **Secciones** en todos los GA, siempre con el mismo nombre y en el mismo orden: General ·
+  Costo y cooldown · Reglas de activación · Objetivo · Forma y alcance · Movimiento ·
+  Tiempos · (las propias de cada una: Proyectil, La marca, Tótems...) · Efectos (GE) · VFX ·
+  Animación · Sonido · Avanzado. Se pliegan con un clic y se recuerda cuáles; buscador
+  arriba y "Abrir todo / Cerrar todo". Arriba de todo, una tarjeta con ícono, cooldown,
+  cargas y cuántos efectos y VFX tiene.
+- **Efectos (GE)**: UNA lista por habilidad (`GameplayAbility.Effects`). Cada entrada:
+  cuándo (Al golpear / Al primer golpe / Al activarse / Al matar) · a quién (Enemigos /
+  Aliados / El lanzador / Todos) · el GE · condición opcional (solo si el objetivo tiene
+  un tag). Reemplaza a `DamageEffect`, `AdditionalEffects`, `TargetEffects`,
+  `FirstHitEffects`, `EffectsToApply`, `AllyEffects`, `BuffEffect`, `CrowdControlEffect`,
+  `InstantDamageEffect`, `DurationEffect`, `SelfEffects`... El orden de la lista es el
+  orden en que se aplican.
+- **VFX**: UNA lista (`GameplayAbility.Visuals`). Cada entrada: cuándo (Al lanzar / Al
+  golpear / En el impacto), prefab, espera, offset, rotación, escala, si lo sigue, cuánto
+  dura y "calzar con el área". Reemplaza a `HitVFX`, `ImpactVFX`, `VisualPrefab`,
+  `FlashVFX`, `SpawnVFX`, `TornadoVFXPrefab` y a la vieja Visuals Sequence (que eran todas
+  "Al lanzar").
+- Lo que nunca se aplicaría se marca en **rojo** con el motivo (un "al golpear" en un buff
+  propio, un "al activarse" para enemigos), y sale en los avisos de arriba.
+- **Campos que se esconden** cuando no aplican, y conservan su valor: Max Range sin
+  retícula, Follow Owner con retícula, los clips de apuntar sin Aim Before Throw, el
+  retroceso con Recoil Speed en 0, Self If No Target apuntando a enemigos, TargetLayer en
+  las que no buscan a nadie...
+- **Tótems del Chamán**: una lista de opciones (nombre, descripción, ícono, prefab,
+  cooldown) en vez de cinco listas en paralelo. Sirve igual para la rueda del Mago.
+- **Golpe final** y **ataque cargado**: lo de "mientras carga" es una lista. **Orden de
+  detenerse**: el castigo (`PunishEffects`) es una lista.
+- **Vista previa en escena**: elegir un GA en el Project lo dibuja sobre el muñeco de
+  prueba (`AbilityPreview`, ahora con silueta de 1.8 m y flecha hacia adelante) y se
+  ajusta ARRASTRANDO las manijas: alcance, radio, ángulo, cajas de golpe, desde dónde sale
+  el golpe, de qué mano sale el proyectil, a qué altura dispara. Con Ctrl+Z. Si no hay
+  muñeco en la escena, el inspector tiene un botón para ponerlo.
+
+**Lo que sale gratis:** cualquier GA acepta efectos "al activarse" (un buff propio al
+lanzar) y, las que golpean, "al primer golpe", "al matar" (la invisibilidad del Marcado
+para morir ahora es eso) y VFX "al golpear"; las de área y salto aceptan VFX "en el
+impacto" del tamaño del área. Los de objetivo único (Enemigo jurado, Orden de detenerse,
+Resurrección, Intercepción) aplican también sus efectos "al golpear" al elegido.
+
+**Qué probar:**
+
+- [ ] Que todo pegue igual que antes: daños, aturdidos, la estela que cura del Castigo
+      divino y del arco de luz, la Zona de verdad, la Luz del amanecer, la bandera del
+      Comandante, los tótems de la Furia elemental.
+- [ ] VFX de golpe e impacto en las DOS pantallas (cambió la RPC de "al golpear"; Unity
+      tiene que recompilar).
+- [ ] Rueda de tótems: nombres, descripciones y cooldowns como estaban.
+- [ ] Proyectil devuelto por el parry del Guardián: sigue haciendo el daño que traía.
+- [ ] Bots: siguen usando sus buffs (Comida de emergencia, Emboscada sombría) y sus aturdidos.
+
+**Detalles que cambian (a propósito):**
+
+- El sonido de impacto de un proyectil suena aunque no tenga VFX de impacto.
+- La Ira inmortal le pega una vez a cada enemigo (antes, una por collider).
+- La Furia elemental con Tick Rate 0 ya no se cuelga (mínimo 0.05 s).
+- Marcado para morir: un solo sonido de impacto, en el centro (antes uno por enemigo).
+- Conos y líneas eligen "el primer golpe" por cercanía (para "al primer golpe").
+
+**Lo mismo para GE, clases y ASDef (7 de octubre, tarde):** los tres usan ahora la misma base
+de inspector por secciones (`SectionedInspector`), sin renombrar ningún campo (los assets no
+cambian). GE: tarjeta con duración, acumulaciones, tags y la fórmula de cada modificador
+(`− 10 + 1.2 × Attack (del que lo aplica)`); lo que no aplica se esconde (el período en un
+instantáneo, el desplazamiento si no desplaza...). Clases: tarjeta con el rol en su color,
+los stats de partida y la fila del kit con los íconos de cada botón. ASDef: stats en una
+línea y qué clases lo usan. En los cuatro, "¿Quién lo usa?" abajo (y si está en el registro
+de red).
+
+**Monje:** los puñetazos ahora son `GA_LineAttack` desde los hombros, el desarme no bloquea
+sus golpes, y tiene íconos (habilidades, `GE_Ki`, `GE_MartialArts`, `GE_PatientDefense` y la
+clase). Sin usar todavía: `4_attacks_icon`, `Stunning_Strikes` y los de las subclases.
+
+**Más adelante:** cuando todos los assets estén guardados en el formato nuevo y subidos,
+se pueden borrar los bloques `DATOS VIEJOS` del final de cada GA.
 
 ---
 
