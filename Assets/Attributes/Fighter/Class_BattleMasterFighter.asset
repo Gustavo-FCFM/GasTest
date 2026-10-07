@@ -17,7 +17,7 @@ MonoBehaviour:
   Description: The fighter who lives for the duel. In offensive stance he grips his
     greatsword with both hands and charges devastating strikes; his blows expose
     weak points, and he can strip an enemy of their weapon.
-  Role: 2
+  Role: 1
   BaseAttributes: {fileID: 11400000, guid: 676c79869bb26d54baf2279001bfa954, type: 2}
   Abilities:
   - InputSlot: 1
@@ -52,3 +52,6 @@ MonoBehaviour:
   StowOffHandTag: 56
   StowedOffHandPositionOffset: {x: 0, y: 0, z: -0.2}
   StowedOffHandRotationOffset: {x: 0, y: 180, z: 0}
+  OffHandScale: 1
+  GrowTag: 0
+  GrowScale: 1.5

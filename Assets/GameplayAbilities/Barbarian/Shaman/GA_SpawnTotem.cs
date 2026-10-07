@@ -28,6 +28,33 @@ public class GA_SpawnTotem : GameplayAbility, IRadialMenuAbility
     public float   MaxRadialRange => MaxSpawnRange;
     public Sprite[] RadialIcons   => TotemIcons;
 
+    [Header("En la rueda")]
+    [Tooltip("Nombre de cada tótem en la rueda (lo ve el jugador: en inglés). Mismo orden que TotemPrefabs.")]
+    public string[] TotemNames = { "Bear Totem", "Eagle Totem", "Tiger Totem", "Wolf Totem" };
+
+    [Tooltip("Qué da cada tótem, debajo del nombre en la rueda. Mismo orden que TotemPrefabs.")]
+    public string[] TotemDescriptions =
+    {
+        "Nearby allies: more max health",
+        "Nearby allies: more movement speed",
+        "Nearby allies: more attack speed",
+        "Nearby allies: more damage",
+    };
+
+    public string[] RadialLabels       => TotemNames;
+    public string[] RadialDescriptions => TotemDescriptions;
+
+    // En la rueda, el tótem se ve apagado mientras corre su cooldown propio (el primer tag
+    // de su IndividualCooldownEffects). Corre en el dueño, con los tags sincronizados.
+    public bool IsRadialOptionAvailable(int index)
+    {
+        if (OwnerASC == null || IndividualCooldownEffects == null || index < 0 ||
+            index >= IndividualCooldownEffects.Length || IndividualCooldownEffects[index] == null) return true;
+
+        var tags = IndividualCooldownEffects[index].GrantedTags;
+        return tags == null || tags.Count == 0 || !OwnerASC.HasTag(tags[0]);
+    }
+
     // Tótems actualmente invocados por este jugador, en orden de
     // aparición (para despawnear el más viejo al pasar el límite).
     private Queue<GameObject> activeTotems = new Queue<GameObject>();

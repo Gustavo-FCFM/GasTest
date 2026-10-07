@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 749805704a6088741af34d91f0891ced, type: 3}
+  m_Name: Class_Monk
+  m_EditorClassIdentifier: 
+  ClassName: Monk
+  ClassIcon: {fileID: 21300000, guid: ae73fb56930f65d44858247c10d1c277, type: 3}
+  Description: 'A martial artist who fights with bare hands. Every hit that lands
+    makes him faster, and Ki empowers his next move: a flurry of blows, a defense
+    that guards him from every side, or a kick that stuns.'
+  Role: 2
+  BaseAttributes: {fileID: 11400000, guid: 424e24fdfc53e7d44941f495501fc1be, type: 2}
+  Abilities:
+  - InputSlot: 1
+    Ability: {fileID: 11400000, guid: 94e991fe4fc08a04a862b4745f7bee5a, type: 2}
+  - InputSlot: 2
+    Ability: {fileID: 11400000, guid: e7bb04f6d20cf5a40b94703f5af20640, type: 2}
+  - InputSlot: 3
+    Ability: {fileID: 11400000, guid: 686f962b53eab3e478265bd85dea8682, type: 2}
+  - InputSlot: 6
+    Ability: {fileID: 11400000, guid: aba3fbae50846ac49a7f7eef7666e9a0, type: 2}
+  PassiveBehaviorsPrefab: {fileID: 9026357972262154142, guid: 67389f31ecae8544db899d501a673944, type: 3}
+  PassiveEffects:
+  - {fileID: 11400000, guid: 5425dc3edd0320d4a8b0ad013919b6cc, type: 2}
+  StatGrowthPerLevel:
+  - Attribute: 2
+    AmountPerLevel: 50
+  - Attribute: 8
+    AmountPerLevel: 1
+  - Attribute: 14
+    AmountPerLevel: 100
+  AvailableSubclasses: []
+  ClassAnimatorOverride: {fileID: 22100000, guid: f175085a22aa728459655748dd969669, type: 2}
+  StanceAnimatorOverride: {fileID: 0}
+  StanceAnimatorTag: 0
+  MainHandWeaponPrefab: {fileID: 0}
+  OffHandWeaponPrefab: {fileID: 0}
+  MainHandRotationOffset: {x: 0, y: 0, z: 0}
+  MainHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandPose: {fileID: 0}
+  OffHandPoseRequiredTag: 0
+  StowOffHandTag: 0
+  StowedOffHandPositionOffset: {x: 0, y: 0, z: 0}
+  StowedOffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandScale: 1
+  GrowTag: 0
+  GrowScale: 1.5

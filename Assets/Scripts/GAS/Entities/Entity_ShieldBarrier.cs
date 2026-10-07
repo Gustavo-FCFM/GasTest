@@ -6,7 +6,7 @@ using System.Collections.Generic;
 //
 // La BARRERA de una habilidad de bloqueo (el escudo del Paladín, y más adelante
 // la postura del Guerrero o el escudo sobre un aliado de Juramento de la
-// conquista). Es un volumen —el BoxCollider de este GameObject— que se enciende
+// conquista). Es un volumen —el collider de este GameObject— que se enciende
 // mientras su dueño tenga el tag de bloqueo, y que reduce el daño de todo golpe
 // cuya TRAYECTORIA lo atraviese.
 //
@@ -29,12 +29,12 @@ using System.Collections.Generic;
 //
 // SETUP: este componente va en un HIJO del PassiveBehaviorsPrefab de la clase (que
 // PlayerController instancia en TODOS los peers, así que la barrera existe en
-// todos). Necesita un BoxCollider marcado como TRIGGER —para no empujar a nadie ni
+// todos). Necesita un collider marcado como TRIGGER —para no empujar a nadie ni
 // pelearse con el CharacterController— en una capa que colisione con la de los
 // proyectiles en la matriz de física. El mesh visual va como hijo de este objeto.
-// Ajustá el tamaño y el centro del BoxCollider: ESE es el escudo.
+// Ajustá el tamaño y el centro del collider: ESE es el escudo. Un escudo plano es un
+// BoxCollider; la cápsula de la Defensa paciente (Omnidirectional) es un CapsuleCollider.
 // ============================================================
-[RequireComponent(typeof(BoxCollider))]
 public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
 {
     [Header("Activación")]
@@ -111,7 +111,7 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
     [Header("Cápsula (Defensa paciente del Monje)")]
     [Tooltip("La barrera frena los golpes que le llegan al DUEÑO desde CUALQUIER lado, sin " +
              "mirar la geometría (una cápsula a su alrededor). No cubre aliados ni sigue la mira. " +
-             "El BoxCollider igual hace falta: que lo envuelva entero, para parar los proyectiles.")]
+             "El collider igual hace falta (un CapsuleCollider que lo envuelva): es lo que para los proyectiles.")]
     public bool Omnidirectional = false;
 
     [Tooltip("Solo con Omnidirectional: a qué distancia del pecho del dueño sale el destello del golpe.")]
@@ -163,7 +163,7 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
     public event System.Action<Vector3> OnFlash;
 
     private AbilitySystemComponent _ownerASC;
-    private BoxCollider            _box;
+    private Collider               _box;   // BoxCollider (escudo) o CapsuleCollider (cápsula)
     private Transform[]            _visuals;
 
     // ASCs en los que este modificador está registrado ahora mismo (el dueño +
@@ -196,14 +196,17 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
         // El ASC está en el jugador: este componente vive en un nieto (hijo del
         // PassiveBehaviorsPrefab, que a su vez es hijo del jugador).
         _ownerASC = GetComponentInParent<AbilitySystemComponent>();
-        _box      = GetComponent<BoxCollider>();
+        _box      = GetComponent<Collider>();
+        if (_box == null)
+            Debug.LogWarning($"[{name}] La barrera no tiene collider: no va a frenar nada. Agregale un " +
+                             $"BoxCollider (escudo) o un CapsuleCollider (cápsula) marcado como trigger.");
         _aim      = _ownerASC != null ? _ownerASC.GetComponentInChildren<UpperBodyAim>(true) : null;
 
         _baseLocalPosition = transform.localPosition;
         _baseLocalRotation = transform.localRotation;
 
         if (_box != null && !_box.isTrigger)
-            Debug.LogWarning($"[{name}] El BoxCollider de la barrera NO es trigger. Siendo sólido " +
+            Debug.LogWarning($"[{name}] El collider de la barrera NO es trigger. Siendo sólido " +
                              $"empuja a los jugadores y pelea con el CharacterController del dueño. " +
                              $"Marcalo como Is Trigger.");
 
@@ -628,10 +631,28 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
         => shooter != null && _ownerASC != null && _ownerASC.IsEnemyOf(shooter);
 
     // Vista previa del volumen real de bloqueo en el Editor, con los mismos
-    // valores del BoxCollider que usa Blocks().
+    // valores del collider que usa Blocks().
     private void OnDrawGizmosSelected()
     {
-        BoxCollider box = _box != null ? _box : GetComponent<BoxCollider>();
+        Collider col = _box != null ? _box : GetComponent<Collider>();
+        if (col is CapsuleCollider capsule)
+        {
+            // La cápsula: las dos esferas de las puntas (en Y) y las líneas que las unen.
+            Matrix4x4 old = Gizmos.matrix;
+            Gizmos.matrix = transform.localToWorldMatrix;
+            Gizmos.color  = new Color(0.3f, 0.7f, 1f, 1f);
+            float half = Mathf.Max(0f, capsule.height * 0.5f - capsule.radius);
+            Vector3 top = capsule.center + Vector3.up * half;
+            Vector3 bottom = capsule.center - Vector3.up * half;
+            Gizmos.DrawWireSphere(top, capsule.radius);
+            Gizmos.DrawWireSphere(bottom, capsule.radius);
+            foreach (Vector3 side in new[] { Vector3.right, Vector3.left, Vector3.forward, Vector3.back })
+                Gizmos.DrawLine(top + side * capsule.radius, bottom + side * capsule.radius);
+            Gizmos.matrix = old;
+            return;
+        }
+
+        BoxCollider box = col as BoxCollider;
         if (box == null) return;
 
         Matrix4x4 prev = Gizmos.matrix;

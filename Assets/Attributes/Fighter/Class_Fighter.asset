@@ -17,7 +17,7 @@ MonoBehaviour:
   Description: 'A frontline soldier who changes stance on the fly: a defensive one
     that holds the line behind his shield, and an offensive one that hits harder.
     A well-timed block becomes a parry that stuns whoever struck him.'
-  Role: 1
+  Role: 0
   BaseAttributes: {fileID: 11400000, guid: 0e2275220d36a2644b4d67e9d0f15715, type: 2}
   Abilities:
   - InputSlot: 1

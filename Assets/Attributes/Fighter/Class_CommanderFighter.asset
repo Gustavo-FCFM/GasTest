@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Class_CommanderFighter
   m_EditorClassIdentifier: 
   ClassName: Commander
-  ClassIcon: {fileID: 21300000, guid: 02bfef8aee3adcb4fab6ad83480d001d, type: 3}
+  ClassIcon: {fileID: 21300000, guid: 649d7f1106f7c844f854cf316999fbb8, type: 3}
   Description: The battlefield leader. His stance inspires every ally around him;
     in offensive stance he grips his spear with both hands, strikes from mid range
     and hurls it to stun enemies. He leaps into the fray and plants his banner.
@@ -52,3 +52,6 @@ MonoBehaviour:
   StowOffHandTag: 56
   StowedOffHandPositionOffset: {x: 0, y: 0, z: -0.2}
   StowedOffHandRotationOffset: {x: 0, y: 180, z: 0}
+  OffHandScale: 1
+  GrowTag: 0
+  GrowScale: 1.5

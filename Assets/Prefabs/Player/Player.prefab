@@ -843,6 +843,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 9704f66316c658c4d9e4fa5c7aa06d9c, type: 2}
   - {fileID: 11400000, guid: 985459ea0a3ec5a4caf8b1f84badcc5a, type: 2}
   - {fileID: 11400000, guid: a21d4d368c00b2340b6b78faed3e3b22, type: 2}
+  - {fileID: 11400000, guid: c2ea37ab2ac5bb7418974642d08d3cc8, type: 2}
   CharacterIcon: {fileID: 0}
   characterAnimator: {fileID: 219233451811076525}
   ActionClipSlotName: PLACEHOLDER_Action
@@ -890,6 +891,7 @@ MonoBehaviour:
   flapForce: 4
   featherFallMaxSpeed: 6
   aimTurnSpeed: 20
+  knockbackSteerControl: 0.6
   NetworkAimPoint: {x: 0, y: 0, z: 0}
   NetworkAimOrigin: {x: 0, y: 0, z: 0}
   NetworkMoveDirection: {x: 0, y: 0, z: 0}

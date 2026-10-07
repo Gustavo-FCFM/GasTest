@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6aed4d7a2672b499365b01c1bc63e599, type: 3}
+  m_Name: GA_FlyingKick
+  m_EditorClassIdentifier: 
+  AbilityName: Flying Kick
+  AbilityIcon: {fileID: 21300000, guid: 3774ee9bc98bd5f4ab2fc6fe1d74a76f, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 0}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 0
+  ActivationBlockedTags: 0100000002000000
+  ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  UsableWhileHolding: 0
+  AnimationClip: {fileID: 936647226563093748, guid: 235e406cef14178429ac3b733394b3aa, type: 3}
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  IsInterruptible: 0
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  VisualsSequence: []
+  MaxCharges: 1
+  Distance: 14
+  Speed: 9
+  TurnRate: 70
+  Cancelable: 1
+  ExcludePlayerLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  DamageEffect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
+  AdditionalEffects: []
+  FirstHitEffects: []
+  HitRadius: 1.2
+  StopAtFirstEnemy: 1
+  HitVFX: {fileID: 2944396702758532163, guid: e190bf97c041e58448af6b043116cba0, type: 3}
+  RushLoopClip: {fileID: 0}

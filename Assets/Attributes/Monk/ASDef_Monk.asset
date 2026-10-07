@@ -10,28 +10,30 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8cc6c149f30044a4ba0569027a995dd2, type: 3}
-  m_Name: ASDef_Paladin
+  m_Name: ASDef_Monk
   m_EditorClassIdentifier: 
   InitialAttributes:
   - Attribute: 7
-    BaseValue: 6
+    BaseValue: 4
   - Attribute: 1
-    BaseValue: 100
+    BaseValue: 80
+  - Attribute: 2
+    BaseValue: 80
   - Attribute: 8
-    BaseValue: 8
-  - Attribute: 17
-    BaseValue: 8
+    BaseValue: 4
   - Attribute: 9
-    BaseValue: 6
+    BaseValue: 6.5
   - Attribute: 10
     BaseValue: 1
-  - Attribute: 5
-    BaseValue: 100
-  - Attribute: 6
-    BaseValue: 100
   - Attribute: 13
     BaseValue: 0
   - Attribute: 14
     BaseValue: 100
   - Attribute: 15
     BaseValue: 1
+  - Attribute: 18
+    BaseValue: 2
+  - Attribute: 5
+    BaseValue: 50
+  - Attribute: 6
+    BaseValue: 50

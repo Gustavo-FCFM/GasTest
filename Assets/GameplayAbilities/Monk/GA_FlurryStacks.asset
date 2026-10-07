@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c883fe6eb270f64e8367b89db9052bc, type: 3}
+  m_Name: GA_FlurryStacks
+  m_EditorClassIdentifier: 
+  AbilityName: Flurry Stacks
+  AbilityIcon: {fileID: 0}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 0}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 0
+  ActivationBlockedTags: 
+  ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  UsableWhileHolding: 0
+  AnimationClip: {fileID: 0}
+  AnimationTriggerName: 
+  AnimationID: 1
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  IsInterruptible: 0
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  VisualsSequence: []
+  MaxCharges: 1
+  BuffEffect: {fileID: 11400000, guid: 767a36d983680ac4b878b223cd6cacf9, type: 2}
+  AdditionalEffects:
+  - {fileID: 11400000, guid: 767a36d983680ac4b878b223cd6cacf9, type: 2}
+  - {fileID: 11400000, guid: 767a36d983680ac4b878b223cd6cacf9, type: 2}
+  - {fileID: 11400000, guid: 767a36d983680ac4b878b223cd6cacf9, type: 2}
