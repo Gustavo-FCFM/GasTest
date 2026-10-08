@@ -191,9 +191,29 @@ con Excel: quien ayude a traducir no necesita Unity. Guardarla como **"CSV UTF-8
 
 **Lo que falta:**
 
-- [ ] **Etapa 3 — el contenido:** nombre y descripción de las 24 clases y nombre de las 184
-      habilidades, con un campo Español / English en el propio asset. Los nombres en español
-      ya están casi todos en el documento de diseño; los carga Claude y Gustavo los revisa.
+- [ ] **Etapa 3 — el contenido** (lo único que todavía sale en inglés). Qué entra:
+  - **Clases (24):** `ClassName` y `Description` de cada `Class_*`. Se ven en la sala (selector y
+    pestañas), en el menú de clases (C / V), en la elección de subclase, en el registro de bajas
+    y en la pantalla de muerte.
+  - **Habilidades (184):** `AbilityName`. Se ve en la barra de casteo (canalizados y cargas) y en
+    la rueda. **La barra de casteo hoy recibe el nombre ya escrito por red**
+    (`NetworkASC.ServerShowCastBar(AbilityName...)`): hay que mandar el índice de la habilidad en
+    `GameplayAbilityRegistry` y que cada pantalla escriba el nombre en su idioma.
+  - **Opciones de las ruedas:** nombre y descripción de cada opción (tótems del Chamán, la rueda
+    del Mago, las mascotas del Explorador, las trampas del Trampero): viven en la lista de
+    opciones de cada habilidad.
+  - **Cómo (propuesta):** un campo en español al lado del inglés en el propio asset
+    (`ClassNameEs`, `DescriptionEs`, `AbilityNameEs`...) y una propiedad que devuelve el del
+    idioma elegido, cayendo al inglés si está vacío. Es robusto a renombrar assets (Gustavo los
+    renombra), se edita donde se crea la habilidad y no cambia nada guardado. Alternativa: claves
+    en el mismo `Localization.csv` (todo en una tabla para quien traduzca), pero la clave saldría
+    del nombre del asset y se rompería al renombrarlo. **Decisión de Gustavo.** Con cualquiera de
+    las dos, una herramienta puede exportar e importar todos los nombres a un CSV para traducir
+    en Excel de una sola vez.
+  - **Los nombres en español ya existen casi todos** en el documento de diseño (Golpe mortal,
+    Emboscada sombría, Paz mental…): los carga Claude con la herramienta y Gustavo los revisa.
+  - [ ] Probar: elegir clase y subclase, morir, canalizar y abrir una rueda, en los dos idiomas;
+        con dos ventanas en idiomas distintos, la barra de casteo de cada uno en el suyo.
 - [ ] **El Inspector en español** (pedido de Gustavo: GA, ASDef, GE, clases y lo demás nuestro,
       para quienes le ayuden): etiquetas en español sobre cada campo (`[Label("...")]`), sin
       renombrar el código (renombrar borraría los valores guardados en los assets). Las dibuja el
