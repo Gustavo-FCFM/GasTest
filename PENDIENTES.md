@@ -54,11 +54,11 @@ Compila limpio (juego y editor).
 
 **Una vez, con Unity abierto (después de que recompile):**
 
-- [ ] `Mercenarios ▸ Guardar las habilidades en el formato nuevo`. Escribe en disco los
+- [x] `Mercenarios ▸ Guardar las habilidades en el formato nuevo`. Escribe en disco los
       assets de habilidad (incluidos los 9 de `48toPlay`) con las listas nuevas. Sin esto
       igual funcionan —cada uno se pasa solo al cargarse, en el editor y en la build—, pero
       se irían guardando de a uno a medida que se tocan.
-- [ ] Mirar en git que los `.asset` cambiaron como se espera, y subir.
+- [x] Mirar en git que los `.asset` cambiaron como se espera, y subir. *(7 de octubre de 2026: corrido y subido; ningún asset conserva datos en los campos viejos.)*
 
 **Qué cambió:**
 
