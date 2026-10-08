@@ -80,7 +80,9 @@ public class ConnectionHUD : MonoBehaviour
     // Texto editable en pantalla (arranca con los valores del inspector).
     private string _addressField;
     private string _portField;
-    private string _status = "";
+    // La línea de estado se guarda como una función y no como texto: así, si el jugador
+    // cambia de idioma con el recuadro abierto, se vuelve a escribir en el nuevo.
+    private System.Func<string> _status;
 
     // El recuadro estorba durante la partida: tapa una esquina y encima te obliga a
     // tener el mouse suelto. Con ESC se abre y se cierra, y mientras esta abierto pide
@@ -142,7 +144,7 @@ public class ConnectionHUD : MonoBehaviour
 
     private void StartHost()
     {
-        if (Nm == null) { _status = "There is no NetworkManager in the scene."; return; }
+        if (Nm == null) { _status = () => Loc.T("net.no_manager"); return; }
 
         ushort port = ParsePort();
         Nm.TransportManager.Transport.SetPort(port);
@@ -150,18 +152,18 @@ public class ConnectionHUD : MonoBehaviour
         // Servidor + cliente local (host): el cliente se conecta a sí mismo.
         Nm.ServerManager.StartConnection();
         Nm.ClientManager.StartConnection("127.0.0.1", port);
-        _status = "Host started. Waiting for your friends...";
+        _status = () => Loc.T("net.host_started");
     }
 
     private void StartClient()
     {
-        if (Nm == null) { _status = "There is no NetworkManager in the scene."; return; }
+        if (Nm == null) { _status = () => Loc.T("net.no_manager"); return; }
 
         ushort port    = ParsePort();
         string address = string.IsNullOrWhiteSpace(_addressField) ? "127.0.0.1" : _addressField.Trim();
 
         Nm.ClientManager.StartConnection(address, port);
-        _status = $"Connecting to {address}:{port}...";
+        _status = () => Loc.T("net.connecting", ("address", $"{address}:{port}"));
     }
 
     private void Disconnect()
@@ -169,7 +171,7 @@ public class ConnectionHUD : MonoBehaviour
         if (Nm == null) return;
         if (Nm.IsServerStarted) Nm.ServerManager.StopConnection(true);
         if (Nm.IsClientStarted) Nm.ClientManager.StopConnection();
-        _status = "Disconnected.";
+        _status = () => Loc.T("net.disconnected");
     }
 
     private ushort ParsePort()
@@ -201,7 +203,7 @@ public class ConnectionHUD : MonoBehaviour
         if (!_panelOpen)
         {
             GUILayout.BeginArea(new Rect(pad, pad, 190f, 30f), GUI.skin.box);
-            GUILayout.Label("<b>ESC</b> — menú de red", RichLabel());
+            GUILayout.Label(Loc.T("net.minimized"), RichLabel());
             GUILayout.EndArea();
             GUI.matrix = prev;
             return;
@@ -212,34 +214,34 @@ public class ConnectionHUD : MonoBehaviour
         // por debajo del borde sin ningún aviso.
         GUILayout.BeginArea(new Rect(pad, pad, 280f, 600f));
         GUILayout.BeginVertical(GUI.skin.box);
-        GUILayout.Label("<b>Network — Connection</b>", RichLabel());
+        GUILayout.Label("<b>" + Loc.T("net.title") + "</b>", RichLabel());
 
 
         if (!serverStarted && !clientStarted)
         {
             GUILayout.Space(4);
-            GUILayout.Label("Host IP:");
+            GUILayout.Label(Loc.T("net.host_ip"));
             _addressField = GUILayout.TextField(_addressField);
-            GUILayout.Label("Port:");
+            GUILayout.Label(Loc.T("net.port"));
             _portField = GUILayout.TextField(_portField);
             GUILayout.Space(6);
 
             // Botón de Host: solo en el editor (salvo que desactives HostOnlyInEditor),
             // o en una build abierta con el argumento -host (ver LaunchedAsHost).
             bool canHost = !HostOnlyInEditor || Application.isEditor || LaunchedAsHost;
-            if (canHost && GUILayout.Button("Start Host (me only)", GUILayout.Height(32)))
+            if (canHost && GUILayout.Button(Loc.T("net.start_host"), GUILayout.Height(32)))
                 StartHost();
 
-            if (GUILayout.Button("Connect (Client)", GUILayout.Height(32)))
+            if (GUILayout.Button(Loc.T("net.connect"), GUILayout.Height(32)))
                 StartClient();
         }
         else
         {
-            string rol = serverStarted && clientStarted ? "HOST"
-                       : serverStarted ? "SERVER" : "CLIENT";
-            GUILayout.Label($"Status: <b>{rol}</b>", RichLabel());
+            string rol = serverStarted && clientStarted ? Loc.T("net.role.host")
+                       : serverStarted ? Loc.T("net.role.server") : Loc.T("net.role.client");
+            GUILayout.Label(Loc.T("net.status", ("role", $"<b>{rol}</b>")), RichLabel());
             GUILayout.Space(6);
-            if (GUILayout.Button("Disconnect", GUILayout.Height(32)))
+            if (GUILayout.Button(Loc.T("net.disconnect"), GUILayout.Height(32)))
                 Disconnect();
 
             // DESATASCARSE. Vive acá y no en el HUD del juego a propósito: este recuadro
@@ -248,20 +250,20 @@ public class ConnectionHUD : MonoBehaviour
             // —que es uno de los estados de los que hay que poder salir—.
             GUILayout.Space(2);
             if (PlayerController.LocalPlayer != null &&
-                GUILayout.Button("Unstuck (can't move?)", GUILayout.Height(28)))
+                GUILayout.Button(Loc.T("net.unstuck"), GUILayout.Height(28)))
             {
                 PlayerController.LocalPlayer.RequestUnstuck();
-                _status = "Unstuck requested.";
+                _status = () => Loc.T("net.unstuck_requested");
             }
 
             GUILayout.Space(2);
-            GUILayout.Label("<i>ESC oculta este recuadro</i>", RichLabel());
+            GUILayout.Label("<i>" + Loc.T("net.hide_hint") + "</i>", RichLabel());
         }
 
-        if (!string.IsNullOrEmpty(_status))
+        if (_status != null)
         {
             GUILayout.Space(4);
-            GUILayout.Label(_status);
+            GUILayout.Label(_status());
         }
 
         // Ajustes y volver al menú: siempre, conectado o no. Volver corta la conexión
@@ -269,10 +271,10 @@ public class ConnectionHUD : MonoBehaviour
         // instalado en la escena, el botón no aparece.
         GUILayout.Space(6);
         GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Settings", GUILayout.Height(28)))
+        if (GUILayout.Button(Loc.T("menu.settings"), GUILayout.Height(28)))
             UI_SettingsPanel.GetOrCreate().Open();
         if (UI_MainMenu.Instance != null &&
-            GUILayout.Button("Main menu", GUILayout.Height(28)))
+            GUILayout.Button(Loc.T("net.main_menu"), GUILayout.Height(28)))
             UI_MainMenu.ReturnToMenu();
         GUILayout.EndHorizontal();
 

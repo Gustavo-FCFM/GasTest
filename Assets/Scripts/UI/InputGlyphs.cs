@@ -38,14 +38,14 @@ public static class InputGlyphs
     // pero mostrarlas confundiría: ahí se elige con el stick y el botón de confirmar.
     public static bool ShowKeyboardHints => Scheme == EInputScheme.KeyboardMouse;
 
-    // El nombre que se ve en el panel de ajustes.
+    // El nombre que se ve en el panel de ajustes, en el idioma elegido (Loc).
     public static string SchemeName(EInputScheme scheme)
     {
         switch (scheme)
         {
-            case EInputScheme.Xbox:        return "Xbox controller";
-            case EInputScheme.PlayStation: return "PlayStation controller";
-            default:                       return "Keyboard and mouse";
+            case EInputScheme.Xbox:        return Loc.T("input.xbox");
+            case EInputScheme.PlayStation: return Loc.T("input.playstation");
+            default:                       return Loc.T("input.keyboard_mouse");
         }
     }
 

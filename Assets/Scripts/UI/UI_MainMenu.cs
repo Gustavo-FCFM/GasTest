@@ -21,14 +21,15 @@ using UnityEngine.UI;
 //
 // Se dibuja solo por código, como el resto de la UI del modo. Lo instala
 // `Mercenarios ▸ Instalar el menú principal en la arena`.
+//
+// Los textos salen de Loc (claves menu.*), salvo el título: es el nombre del juego.
 // ============================================================
 public class UI_MainMenu : MonoBehaviour
 {
     [Header("Textos")]
+    [Tooltip("El nombre del juego: no se traduce. El subtítulo y los botones salen de " +
+             "Resources/Localization.csv (claves menu.*).")]
     public string Title    = "MERCENARIES";
-    // Se llama SubtitleText (no Subtitle) para que la escena no conserve el texto
-    // viejo en español que tenía guardado con el nombre anterior.
-    public string SubtitleText = "Demo · 3 vs 3 vs 3";
 
     [Header("Comportamiento")]
     [Tooltip("Mostrar el menú apenas arranca la escena. Apagalo para probar la arena directo.")]
@@ -162,21 +163,22 @@ public class UI_MainMenu : MonoBehaviour
         title.characterSpacing = 12f;
         MercUIFactory.AddShadow(title, 3f);
 
-        MercUIFactory.CreateText(root, "Subtitle", SubtitleText, 24f, DimTextColor,
-                                 TextAlignmentOptions.Center,
-                                 new Vector2(0f, 128f), new Vector2(900f, 34f),
-                                 center, center, center);
+        TextMeshProUGUI subtitle = MercUIFactory.CreateText(root, "Subtitle", "", 24f, DimTextColor,
+                                                            TextAlignmentOptions.Center,
+                                                            new Vector2(0f, 128f), new Vector2(900f, 34f),
+                                                            center, center, center);
+        LocalizedText.Bind(subtitle, "menu.subtitle");
 
         float y = 10f;
-        _playButton = MakeButton(root, "Play", "Play", PlayColor, new Vector2(0f, y));
+        _playButton = MakeButton(root, "Play", "menu.play", PlayColor, new Vector2(0f, y));
         _playButton.onClick.AddListener(Hide);
 
         y -= ButtonSize.y + ButtonGap;
-        Button settings = MakeButton(root, "Settings", "Settings", ButtonColor, new Vector2(0f, y));
+        Button settings = MakeButton(root, "Settings", "menu.settings", ButtonColor, new Vector2(0f, y));
         settings.onClick.AddListener(() => UI_SettingsPanel.GetOrCreate().Open());
 
         y -= ButtonSize.y + ButtonGap;
-        Button quit = MakeButton(root, "Quit", "Quit", ButtonColor, new Vector2(0f, y));
+        Button quit = MakeButton(root, "Quit", "menu.quit", ButtonColor, new Vector2(0f, y));
         quit.onClick.AddListener(Quit);
 
         Vector2 corner = new Vector2(1f, 0f);
@@ -186,7 +188,8 @@ public class UI_MainMenu : MonoBehaviour
                                  corner, corner, corner);
     }
 
-    private Button MakeButton(Transform parent, string name, string label, Color color, Vector2 position)
+    // 'labelKey' es la clave del texto en Loc: el botón se reescribe solo si cambia el idioma.
+    private Button MakeButton(Transform parent, string name, string labelKey, Color color, Vector2 position)
     {
         Vector2 center = new Vector2(0.5f, 0.5f);
         RectTransform rect = MercUIFactory.CreateRect(parent, name, center, center, center, position, ButtonSize);
@@ -205,11 +208,12 @@ public class UI_MainMenu : MonoBehaviour
         colors.pressedColor     = Color.Lerp(color, Color.black, 0.25f);
         button.colors = colors;
 
-        TextMeshProUGUI text = MercUIFactory.CreateText(rect, "Text", label, 24f, Color.white,
+        TextMeshProUGUI text = MercUIFactory.CreateText(rect, "Text", "", 24f, Color.white,
                                                         TextAlignmentOptions.Center,
                                                         Vector2.zero, new Vector2(ButtonSize.x - 8f, ButtonSize.y - 6f),
                                                         center, center, center);
         text.fontStyle = FontStyles.Bold;
+        LocalizedText.Bind(text, labelKey);
         return button;
     }
 }

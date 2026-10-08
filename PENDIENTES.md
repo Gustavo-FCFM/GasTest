@@ -141,6 +141,48 @@ se pueden borrar los bloques `DATOS VIEJOS` del final de cada GA.
 
 ---
 
+# ★ El juego en español e inglés — ETAPA 1 HECHA (menús), falta probar (8 de octubre, noche)
+
+Pedido en la prueba: poder jugar en español, y que las builds arranquen en español. "Mercenaries"
+(nombre provisional) no se traduce. Cómo funciona: ver CLAUDE.md ("Lo que ve el jugador va en
+ESPAÑOL e INGLÉS"). En corto: cada texto tiene una clave, y la tabla
+**`Assets/Resources/Localization.csv`** (columnas `key;es;en`) dice qué es en cada idioma. Se abre
+con Excel: quien ayude a traducir no necesita Unity. Guardarla como **"CSV UTF-8"**.
+
+**Etapa 1 — los menús (código hecho, compila limpio):**
+
+- `Loc` + `LocalizedText` (carpeta nueva `Scripts/Localization`), la tabla con ~90 textos, y
+  `GameSettings.Language` (**arranca en español**; se guarda como el resto de los ajustes).
+- Ajustes: fila nueva **"Idioma · Language"** arriba de todo (dice lo mismo en los dos idiomas,
+  para que la encuentre cualquiera). Al cambiarlo, todo lo que está en pantalla se reescribe en
+  el momento. Las etiquetas largas se achican solas si no entran. Los niveles de calidad del
+  proyecto (Mobile / PC) se muestran como Baja / Alta.
+- Menú principal, Ajustes, recuadro de red (ESC) y la sala de espera (pestañas de rol incluidas)
+  pasan por la tabla. "Restablecer" no cambia el idioma.
+- [ ] Probar: abrir el juego → todo en español; Ajustes ▸ Idioma → English cambia todo al momento
+      (menú de atrás, sala, recuadro de red); cerrar y volver a abrir → se acuerda.
+- [ ] Mirar que ningún texto en español se salga de su recuadro (botones, encabezados de la sala).
+- [ ] Una build: que arranque en español y que se lean las tildes, la ñ y ¿ ¡ (la fuente las
+      agrega sola con su fallback dinámico).
+- [-] Fuera de la etapa: la sala VIEJA de la escena de pruebas (`UI_LobbyMenu`, textos fijos en
+      su prefab) sigue en inglés. Si se usa, se le pone `LocalizedText` a cada texto.
+
+**Lo que falta:**
+
+- [ ] **Etapa 2 — la partida:** HUD de partida, anunciador, marcadores del Objetivo, registro de
+      bajas, pantalla de muerte, avisos cortos, menú de clases (C / V), elección de mejora. Ojo: el
+      registro de bajas y la pantalla de muerte hoy llegan del servidor con el nombre de la clase
+      ya escrito; hay que mandar QUÉ clase es y que cada pantalla la escriba en su idioma.
+- [ ] **Etapa 3 — el contenido:** nombre y descripción de las 24 clases y nombre de las 184
+      habilidades, con un campo Español / English en el propio asset. Los nombres en español
+      ya están casi todos en el documento de diseño; los carga Claude y Gustavo los revisa.
+- [ ] **El Inspector en español** (pedido de Gustavo: GA, ASDef, GE, clases y lo demás nuestro,
+      para quienes le ayuden): etiquetas en español sobre cada campo (`[Label("...")]`), sin
+      renombrar el código (renombrar borraría los valores guardados en los assets). Las dibuja el
+      inspector por secciones; se pueden sacar de los tooltips, que ya están en español.
+
+---
+
 # ★ Fuego del Monje en rojo y su quemadura aparte — HECHO Y PROBADO ✅ (8 de octubre, noche)
 
 Pedido de Gustavo: la quemadura del Monje (`GE_DragonBurn`) usaba el MISMO VFX que la del Clérigo

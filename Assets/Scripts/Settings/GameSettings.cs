@@ -18,6 +18,10 @@ using UnityEngine;
 //   · Pantalla completa, resolución, calidad y VSync se aplican solos en Apply().
 //   · InputScheme lo lee InputGlyphs, y de ahí sale cada botón que se dibuja en
 //     pantalla (el HUD de habilidades, los avisos de subclase).
+//   · Language lo lee Loc: el idioma de todos los textos. Arranca en ESPAÑOL (pedido de
+//     Gustavo, 8 de octubre de 2026). Se carga aparte del resto (LoadLanguage) para que
+//     preguntar el idioma —también desde el editor, fuera del Play— no aplique la
+//     pantalla ni la calidad.
 //
 // QUIÉN LOS ESCRIBE: UI_SettingsPanel, y nadie más. Cada cambio se aplica al momento
 // (para verlo mientras movés el slider) y se guarda al cerrar el panel.
@@ -40,6 +44,21 @@ public static class GameSettings
     // Qué está usando el jugador: decide los botones que se DIBUJAN (Q / RB / R1), no
     // los que se escuchan. Ver InputGlyphs.
     public static EInputScheme InputScheme { get { Load(); return _inputScheme; } set => Set(ref _inputScheme, value); }
+
+    // El idioma de los textos (ver Loc). Al cambiarlo avisa a Loc, que redibuja lo que esté
+    // en pantalla.
+    public static ELanguage Language
+    {
+        get { LoadLanguage(); return _language; }
+        set
+        {
+            LoadLanguage();
+            if (_language == value) return;
+            _language = value;
+            Loc.NotifyLanguageChanged();
+            OnChanged?.Invoke();
+        }
+    }
 
     public static FullScreenMode ScreenMode { get { Load(); return _screenMode; } set => Set(ref _screenMode, value); }
 
@@ -74,9 +93,13 @@ public static class GameSettings
     private static bool _vsync = true;
     private static EInputScheme _inputScheme = EInputScheme.KeyboardMouse;
 
+    private static bool      _languageLoaded;
+    private static ELanguage _language = ELanguage.Spanish;
+
     // Se llama solo la primera vez que alguien pregunta algo. Idempotente.
     public static void Load()
     {
+        LoadLanguage();
         if (_loaded) return;
         _loaded = true;
 
@@ -94,8 +117,18 @@ public static class GameSettings
         Apply();
     }
 
+    // Solo el idioma, sin aplicar nada más (ver arriba).
+    private static void LoadLanguage()
+    {
+        if (_languageLoaded) return;
+        _languageLoaded = true;
+        _language = (ELanguage)PlayerPrefs.GetInt(KeyPrefix + "Language", (int)ELanguage.Spanish);
+    }
+
     public static void Save()
     {
+        LoadLanguage();
+        PlayerPrefs.SetInt  (KeyPrefix + "Language", (int)_language);
         PlayerPrefs.SetFloat(KeyPrefix + "MouseSensitivity", _mouseSensitivity);
         PlayerPrefs.SetInt  (KeyPrefix + "InvertY", _invertY ? 1 : 0);
         PlayerPrefs.SetFloat(KeyPrefix + "MasterVolume", _masterVolume);
@@ -110,6 +143,7 @@ public static class GameSettings
     }
 
     // Vuelve a los valores de fábrica (sin guardar: eso lo decide el panel al cerrar).
+    // El idioma NO: a quien juega en inglés, Restablecer no tiene que cambiarle el idioma.
     public static void ResetToDefaults()
     {
         _mouseSensitivity = 1f;

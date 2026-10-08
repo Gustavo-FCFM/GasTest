@@ -45,15 +45,15 @@ public static class ClassRoleStyle
         }
     }
 
-    // El nombre del GRUPO en los menús ("Tanks", "Damage", "Supports").
+    // El nombre del GRUPO en los menús, en el idioma elegido (Loc: Tanques / Tanks...).
     public static string GroupName(EClassRole role)
     {
         switch (role)
         {
-            case EClassRole.Tank:    return "Tanks";
-            case EClassRole.Damage:  return "Damage";
-            case EClassRole.Support: return "Supports";
-            default:                 return "Other";
+            case EClassRole.Tank:    return Loc.T("role.tanks");
+            case EClassRole.Damage:  return Loc.T("role.damage");
+            case EClassRole.Support: return Loc.T("role.supports");
+            default:                 return Loc.T("role.other");
         }
     }
 }

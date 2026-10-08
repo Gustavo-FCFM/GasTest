@@ -1,0 +1,91 @@
+﻿key;es;en
+# ============================================================
+# Textos del juego (ver Assets/Scripts/Localization/Loc.cs).
+# Una fila por texto: la clave, el español y el inglés, separados por punto y coma.
+# Guardar en "CSV UTF-8" para no romper las tildes. Las {variables} no se traducen.
+# Las líneas que empiezan con # se ignoran.
+# ============================================================
+#
+# ---- Menú principal ----
+menu.subtitle;Demo · 3 contra 3 contra 3;Demo · 3 vs 3 vs 3
+menu.play;Jugar;Play
+menu.settings;Ajustes;Settings
+menu.quit;Salir;Quit
+#
+# ---- Ajustes ----
+settings.title;AJUSTES;SETTINGS
+settings.section.language;Idioma;Language
+settings.language;Idioma · Language;Language · Idioma
+settings.section.controls;Controles;Controls
+settings.input_scheme;¿Con qué juegas?;What are you playing with?
+settings.section.camera;Cámara;Camera
+settings.sensitivity;Sensibilidad del mouse;Mouse sensitivity
+settings.invert_y;Invertir el eje Y;Invert Y axis
+settings.section.sound;Sonido;Sound
+settings.master_volume;Volumen general;Master volume
+settings.music;Música;Music
+settings.effects;Efectos;Effects
+settings.section.display;Pantalla;Display
+settings.screen_mode;Modo;Mode
+settings.resolution;Resolución;Resolution
+settings.quality;Calidad;Quality
+settings.vsync;Sincronización vertical (VSync);Vertical sync (VSync)
+settings.reset;Restablecer;Reset
+settings.close;Cerrar;Close
+settings.hint;ESC también cierra · los cambios se aplican al instante;ESC also closes · changes apply immediately
+screen.fullscreen;Pantalla completa;Fullscreen
+screen.borderless;Ventana sin bordes;Borderless window
+screen.windowed;En ventana;Windowed
+# Los niveles de calidad del proyecto (Project Settings ▸ Quality): quality.<nombre del nivel>
+quality.Mobile;Baja;Low
+quality.PC;Alta;High
+input.keyboard_mouse;Teclado y mouse;Keyboard and mouse
+input.xbox;Control de Xbox;Xbox controller
+input.playstation;Control de PlayStation;PlayStation controller
+#
+# ---- Recuadro de red (ESC) ----
+net.title;Red — Conexión;Network — Connection
+net.minimized;<b>ESC</b> — menú de red;<b>ESC</b> — network menu
+net.host_ip;IP del host:;Host IP:
+net.port;Puerto:;Port:
+net.start_host;Iniciar host (solo yo);Start Host (me only)
+net.connect;Conectarse (cliente);Connect (Client)
+net.status;Estado: {role};Status: {role}
+net.role.host;HOST;HOST
+net.role.server;SERVIDOR;SERVER
+net.role.client;CLIENTE;CLIENT
+net.disconnect;Desconectar;Disconnect
+net.unstuck;Desatascarse (¿no te mueves?);Unstuck (can't move?)
+net.unstuck_requested;Listo: se pidió desatascarte.;Unstuck requested.
+net.hide_hint;ESC oculta este recuadro;ESC hides this box
+net.main_menu;Menú principal;Main menu
+net.no_manager;No hay un NetworkManager en la escena.;There is no NetworkManager in the scene.
+net.host_started;Host iniciado. Esperando a tus amigos...;Host started. Waiting for your friends...
+net.connecting;Conectando a {address}...;Connecting to {address}...
+net.disconnected;Desconectado.;Disconnected.
+#
+# ---- Sala de espera ----
+lobby.host_ip;IP del host: {ip};Host IP: {ip}
+lobby.start;Empezar;Start
+lobby.username;Nombre:;Username:
+lobby.default_name;Jugador;Player
+lobby.team;Equipo {team};Team {team}
+lobby.spectators;Espectadores;Spectators
+lobby.join;Unirse;Join
+lobby.spectate;Mirar;Spectate
+lobby.confirm;Confirmar;Confirm
+lobby.ready;Listo;Ready
+lobby.choose_class;{name}  ← elige una clase;{name}  ← choose a class
+lobby.status.nobody;Nadie se ha unido a un equipo todavía.;Nobody has joined a team yet.
+lobby.status.all_ready_host;Los {players} están listos: ya puedes empezar.;All {players} are ready — you can start.
+lobby.status.all_ready_wait;Los {players} están listos: esperando al host.;All {players} are ready — waiting for the host.
+lobby.status.one_missing;Falta que confirme 1 de {players}.;1 of {players} still has to confirm.
+lobby.status.missing;Faltan {missing} de {players} por confirmar.;{missing} of {players} still have to confirm.
+lobby.status.choose_class;Haz clic en tu lugar para elegir clase.;Click your slot to choose a class.
+lobby.status.spectating;(estás mirando: dale a Unirse para jugar);(you are spectating — click Join to play)
+#
+# ---- Roles (pestañas de clases) ----
+role.tanks;Tanques;Tanks
+role.damage;Daño;Damage
+role.supports;Soportes;Supports
+role.other;Otros;Other

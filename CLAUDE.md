@@ -11,11 +11,22 @@ Gustavo Pedraza. Todo el código está comentado en español.
 **Los nombres van en INGLÉS.** Prefabs, GameObjects, materiales, escenas, carpetas,
 clases y campos: `Objective_GoldBag`, `Base_Team1`, `Mat_ArenaSand`, `SpawnPoint_1`.
 Los **comentarios, los `Debug.Log` y los menús de editor siguen en español** — el
-proyecto entero está así. **Lo que el jugador ve DENTRO de la partida va en INGLÉS**
-(desde el 25 de septiembre de 2026, pedido de Gustavo): avisos del anunciador, marcador
-de partida, marcadores del Objetivo, pantalla de muerte, registro de bajas, avisos
-cortos, nombres y descripciones de clases. Desde la misma fecha, también los menús:
-inicio, ajustes, recuadro de red y sala de espera. Todo lo que ve el jugador, en inglés.
+proyecto entero está así.
+
+**Lo que ve el jugador va en ESPAÑOL e INGLÉS, por `Loc`** (desde el 8 de octubre de
+2026, pedido de Gustavo tras la prueba; antes era solo inglés). Ningún texto visible se
+escribe en el código: se pide por clave, `Loc.T("menu.play")`, y la tabla
+`Assets/Resources/Localization.csv` (columnas `key;es;en`, UTF-8, se abre con Excel) dice
+qué es en cada idioma. Las variables van con nombre: `Loc.T("lobby.team", ("team", 2))`
+con `Equipo {team}` en la tabla. Un texto fijo se ata con `LocalizedText` (se reescribe
+solo al cambiar de idioma); lo que se recalcula llama a `Loc.T` cada vez y escucha
+`Loc.OnLanguageChanged`. **El juego arranca en español**; el idioma se elige en Ajustes
+(`GameSettings.Language`). "Mercenaries" no se traduce. Lo que el SERVIDOR le manda a los
+clientes no puede ir como texto ya escrito (cada uno lo ve en su idioma): se manda qué es
+(un enum, un índice) y cada pantalla lo escribe. Va por etapas: 1) menús (inicio, ajustes,
+recuadro de red, sala) — hecha; 2) HUD de partida, anunciador, bajas, pantalla de muerte;
+3) nombres y descripciones de clases y habilidades (en el propio asset). Hasta que una
+etapa esté hecha, lo suyo sigue en inglés.
 
 **El trabajo dentro del editor de Unity lo hace Gustavo.** Armar escenas, crear y
 configurar prefabs, cablear referencias en el Inspector, acomodar geometría: eso es
@@ -84,12 +95,13 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
 | `Assets/Scripts/Network/` | Conexión y red: `NetworkAbilitySystemComponent`, `NetworkGameManager`, `ConnectionHUD` y `LobbyManager` (la sala de espera). |
 | `Assets/Scripts/Player/` | El jugador y sus cámaras: `PlayerController`, input, animación, `RagdollController`, `UpperBodyAim`, `ThirdPersonOrbitCam`, `SpectatorCamera`, `MenuOrbitCamera`. |
 | `Assets/Scripts/UI/` | Toda la UI que no es de un modo: HUD de clase, menú de clases, sala (`UI_LobbyPanel`), menú principal, ajustes, `MercUIFactory`, `InputGlyphs` (la ÚNICA tabla de qué botón se dibuja: Q / RB / R1) y `UICursor` — el único dueño del cursor y del modo de input. |
-| `Assets/Scripts/Settings/` | `GameSettings` (PlayerPrefs), incluido qué control eligió el jugador. |
+| `Assets/Scripts/Settings/` | `GameSettings` (PlayerPrefs), incluido qué control eligió el jugador y el idioma. |
+| `Assets/Scripts/Localization/` | `Loc` (los textos por clave, en español e inglés) y `LocalizedText`. La tabla es `Resources/Localization.csv`. |
 | `Assets/Scripts/Audio/` | Sonido: `AudioManager`, `MusicPlayer`, `AudioLibrary` y `SfxCue`. |
 | `Assets/Scripts/GameMode/` | Lo que sirve a CUALQUIER modo: `DeathZone`, `FloatingVisual`, `NPC_Target`, `HealthPack`. |
 | `Assets/Scripts/GameMode/Mercenaries/` | **El modo Mercenarios**, y solo él: el modo, la arena, bases, objetivo, NPCs, bots y su HUD (`UI/`). Ver su `LEEME_ModoMercenarios.md`. Un modo nuevo (FFA) va en su propia carpeta al lado. |
 | `Assets/Scripts/Editor/` | Todas las herramientas de editor (menú `Mercenarios ▸ …` y el inspector de habilidades). Tiene que llamarse `Editor` para que Unity no las meta en la build. |
-| `Assets/Resources/` | Lo que se carga por nombre: los dos registros de red, el catálogo de enemigos, la biblioteca de audio. |
+| `Assets/Resources/` | Lo que se carga por nombre: los dos registros de red, el catálogo de enemigos, la biblioteca de audio y la tabla de textos (`Localization.csv`). |
 | `Assets/48toPlay/` | Restos de la game jam: los fantasmas y sus stats. Se reusan como NPCs. |
 | `Assets/AssetsExtra/` | Packs comprados: FishNet, animaciones de Kevin Iglesias, Medieval Cute Series, Vefects, VFX. |
 | `DesignDocuments/` | Diseño en `.docx`: arquitectura del GAS, guía de habilidades, las 8 clases, glosario. |

@@ -167,10 +167,18 @@ public class UI_LobbyPanel : MonoBehaviour
         Refresh();
     }
 
-    private void OnEnable()  { LobbyManager.OnLobbyChanged += Refresh; }
+    // Cambiar de idioma (en Ajustes) redibuja lo que se calcula en Refresh; los textos fijos
+    // están atados con LocalizedText y se reescriben solos.
+    private void OnEnable()
+    {
+        LobbyManager.OnLobbyChanged += Refresh;
+        Loc.OnLanguageChanged      += Refresh;
+    }
+
     private void OnDisable()
     {
         LobbyManager.OnLobbyChanged -= Refresh;
+        Loc.OnLanguageChanged      -= Refresh;
         UICursor.Release(this);
     }
 
@@ -406,7 +414,7 @@ public class UI_LobbyPanel : MonoBehaviour
         if (_ipText != null)
         {
             if (_hud == null) _hud = FindFirstObjectByType<ConnectionHUD>();
-            _ipText.text = $"Host IP: {(_hud != null ? _hud.HostAddress : "—")}";
+            _ipText.text = Loc.T("lobby.host_ip", ("ip", _hud != null ? _hud.HostAddress : "—"));
         }
 
         // --- equipos ---
@@ -451,7 +459,7 @@ public class UI_LobbyPanel : MonoBehaviour
             Image bg = _confirmButton.GetComponent<Image>();
             if (bg != null) bg.color = me.Ready ? ReadyColor : IdleColor;
             if (_confirmLabel != null)
-                _confirmLabel.text = me.Ready ? "Ready" : "Confirm";
+                _confirmLabel.text = Loc.T(me.Ready ? "lobby.ready" : "lobby.confirm");
         }
 
         if (_startButton != null)
@@ -485,21 +493,21 @@ public class UI_LobbyPanel : MonoBehaviour
 
             if (players == 0)
             {
-                text  = "Nobody has joined a team yet.";
+                text  = Loc.T("lobby.status.nobody");
                 color = PendingColor;
             }
             else if (ready >= players)
             {
                 text  = LobbyManager.LocalIsHost
-                      ? $"All {players} are ready — you can start."
-                      : $"All {players} are ready — waiting for the host.";
+                      ? Loc.T("lobby.status.all_ready_host", ("players", players))
+                      : Loc.T("lobby.status.all_ready_wait", ("players", players));
                 color = ReadyColor;
             }
             else
             {
                 int missing = players - ready;
-                text  = missing == 1 ? $"1 of {players} still has to confirm."
-                                     : $"{missing} of {players} still have to confirm.";
+                text  = missing == 1 ? Loc.T("lobby.status.one_missing", ("players", players))
+                                     : Loc.T("lobby.status.missing", ("missing", missing), ("players", players));
                 color = PendingColor;
             }
 
@@ -507,12 +515,12 @@ public class UI_LobbyPanel : MonoBehaviour
             // texto del panel, y sirve mas como instruccion que como marcador.
             if (inTeam && !canReady)
             {
-                text  = "Click your slot to choose a class.";
+                text  = Loc.T("lobby.status.choose_class");
                 color = PendingColor;
             }
             else if (me.Spectator || me.Team <= 0)
             {
-                text += "   (you are spectating — click Join to play)";
+                text += "   " + Loc.T("lobby.status.spectating");
             }
 
             _statusText.text  = text;
@@ -565,7 +573,7 @@ public class UI_LobbyPanel : MonoBehaviour
 
             bool needsClass = entry.ClassIndex < 0 && inTeam;
             slot.Label.text = (isMine || (isBot && isHost)) && needsClass
-                            ? $"{entry.PlayerName}  ← choose a class"
+                            ? Loc.T("lobby.choose_class", ("name", entry.PlayerName))
                             : entry.PlayerName;
 
             // Los bots van en otro color aunque estén listos: en una captura conviene ver
@@ -579,7 +587,7 @@ public class UI_LobbyPanel : MonoBehaviour
         slot.JoinButton.interactable = true;
 
         TextMeshProUGUI joinLabel = slot.JoinButton.GetComponentInChildren<TextMeshProUGUI>();
-        if (joinLabel != null) joinLabel.text = inTeam ? "Join" : "Spectate";
+        if (joinLabel != null) joinLabel.text = Loc.T(inTeam ? "lobby.join" : "lobby.spectate");
     }
 
     private List<LobbyEntry> MembersOf(LobbyManager lobby, int team)
@@ -601,7 +609,7 @@ public class UI_LobbyPanel : MonoBehaviour
     private string CurrentName()
     {
         string n = _nameInput != null ? _nameInput.text : null;
-        return string.IsNullOrWhiteSpace(n) ? "Player" : n.Trim();
+        return string.IsNullOrWhiteSpace(n) ? Loc.T("lobby.default_name") : n.Trim();
     }
 
     // =========================================================
@@ -643,9 +651,10 @@ public class UI_LobbyPanel : MonoBehaviour
                                            new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
                                            new Vector2(0.5f, 1f));
 
-        _startButton = CreateButton(_root, "StartButton", "Start", IdleColor,
+        _startButton = CreateButton(_root, "StartButton", "", IdleColor,
                                     new Vector2(0.5f, 1f), new Vector2(420f, -40f),
                                     new Vector2(150f, 44f), out _startLabel);
+        LocalizedText.Bind(_startLabel, "lobby.start");
         _startButton.onClick.AddListener(RequestStart);
     }
 
@@ -664,11 +673,12 @@ public class UI_LobbyPanel : MonoBehaviour
         float labelX  = left + labelW * 0.5f;
         float inputX  = left + labelW + gap + inputW * 0.5f;
 
-        MercUIFactory.CreateText(_root, "NameLabel", "Username:", 22f, Color.white,
-                                 TextAlignmentOptions.Right,
-                                 new Vector2(labelX, rowY), new Vector2(labelW, 36f),
-                                 new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
-                                 new Vector2(0.5f, 1f));
+        TextMeshProUGUI nameLabel = MercUIFactory.CreateText(_root, "NameLabel", "", 22f, Color.white,
+                                                             TextAlignmentOptions.Right,
+                                                             new Vector2(labelX, rowY), new Vector2(labelW, 36f),
+                                                             new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
+                                                             new Vector2(0.5f, 1f));
+        LocalizedText.Bind(nameLabel, "lobby.username");
 
         RectTransform inputRect = MercUIFactory.CreateRect(
             _root, "NameInput", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
@@ -683,7 +693,7 @@ public class UI_LobbyPanel : MonoBehaviour
 
         _nameInput = inputRect.gameObject.AddComponent<TMP_InputField>();
         _nameInput.textComponent = text;
-        _nameInput.text          = "Player";
+        _nameInput.text          = Loc.T("lobby.default_name");
         _nameInput.characterLimit = 16;
 
         // Al TERMINAR de escribir, no en cada tecla: si no, cada letra sería un pedido
@@ -701,7 +711,8 @@ public class UI_LobbyPanel : MonoBehaviour
             int team = t + 1;
             float x = startX + ColumnWidth * t;
 
-            CreateColumnHeader($"Team {team}", MercUIFactory.TeamColor(team), x, headerY);
+            CreateColumnHeader($"Team{team}", () => Loc.T("lobby.team", ("team", team)),
+                               MercUIFactory.TeamColor(team), x, headerY);
 
             _teamSlots[t] = new List<Slot>();
             for (int s = 0; s < MaxPerTeam; s++)
@@ -720,7 +731,8 @@ public class UI_LobbyPanel : MonoBehaviour
         }
 
         float specX = startX + ColumnWidth * LobbyManager.TeamCount;
-        CreateColumnHeader("Spectators", new Color(0.55f, 0.57f, 0.62f, 1f), specX, headerY);
+        CreateColumnHeader("Spectators", () => Loc.T("lobby.spectators"),
+                           new Color(0.55f, 0.57f, 0.62f, 1f), specX, headerY);
 
         for (int s = 0; s < MinSpectatorRows; s++)
             AddSpectatorRow(specX, headerY - 56f - RowHeight * s);
@@ -746,20 +758,23 @@ public class UI_LobbyPanel : MonoBehaviour
         _spectatorSlots.Add(slot);
     }
 
-    private void CreateColumnHeader(string title, Color color, float x, float y)
+    // 'title' arma el texto en el idioma elegido (se vuelve a llamar si cambia); 'name' es
+    // solo el nombre del objeto en la jerarquía.
+    private void CreateColumnHeader(string name, System.Func<string> title, Color color, float x, float y)
     {
         RectTransform rect = MercUIFactory.CreateRect(
-            _root, $"Header_{title}", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
+            _root, $"Header_{name}", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
             new Vector2(0.5f, 1f), new Vector2(x, y), new Vector2(ColumnWidth - 40f, 40f));
 
         Image bg = rect.gameObject.AddComponent<Image>();
         bg.color = color;
 
-        MercUIFactory.CreateText(rect, "Text", title, 20f, Color.white,
-                                 TextAlignmentOptions.Center,
-                                 Vector2.zero, new Vector2(ColumnWidth - 44f, 36f),
-                                 new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-                                 new Vector2(0.5f, 0.5f));
+        TextMeshProUGUI text = MercUIFactory.CreateText(rect, "Text", "", 20f, Color.white,
+                                                        TextAlignmentOptions.Center,
+                                                        Vector2.zero, new Vector2(ColumnWidth - 44f, 36f),
+                                                        new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                                                        new Vector2(0.5f, 0.5f));
+        LocalizedText.Bind(text, title);
     }
 
     private Slot CreateSlot(string name, float x, float y)
@@ -910,10 +925,12 @@ public class UI_LobbyPanel : MonoBehaviour
             EClassRole role = _roleGroups[g];
             float x = -tabsWidth * 0.5f + tabW * 0.5f + g * (tabW + tabGap);
 
-            Button tab = CreateButton(_classPicker, $"Tab_{role}",
-                                      $"{ClassRoleStyle.GroupName(role)} ({_roleMembers[role].Count})",
+            int memberCount = _roleMembers[role].Count;
+            Button tab = CreateButton(_classPicker, $"Tab_{role}", "",
                                       ClassRoleStyle.Color(role), new Vector2(0.5f, 0.5f),
-                                      new Vector2(x, tabsY), new Vector2(tabW, RoleTabHeight), out _);
+                                      new Vector2(x, tabsY), new Vector2(tabW, RoleTabHeight),
+                                      out TextMeshProUGUI tabLabel);
+            LocalizedText.Bind(tabLabel, () => $"{ClassRoleStyle.GroupName(role)} ({memberCount})");
             tab.onClick.AddListener(() => OpenRoleGroup(capturedGroup));
             _roleTabs.Add(tab.targetGraphic as Image);
         }
@@ -968,9 +985,10 @@ public class UI_LobbyPanel : MonoBehaviour
             TextAlignmentOptions.Top, new Vector2(0f, descY),
             new Vector2(width - 40f, DescriptionHeight), mid, mid, mid);
 
-        _pickerConfirm = CreateButton(_classPicker, "ConfirmClass", "Confirm", SlotColor,
+        _pickerConfirm = CreateButton(_classPicker, "ConfirmClass", "", SlotColor,
                                       new Vector2(0.5f, 0f), new Vector2(0f, 14f),
-                                      new Vector2(200f, ConfirmHeight - 10f), out _);
+                                      new Vector2(200f, ConfirmHeight - 10f), out TextMeshProUGUI pickerConfirmLabel);
+        LocalizedText.Bind(pickerConfirmLabel, "lobby.confirm");
         _pickerConfirm.onClick.AddListener(ConfirmClassSelection);
 
         _classPicker.gameObject.SetActive(false);
