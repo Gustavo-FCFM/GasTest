@@ -167,7 +167,7 @@ Pedido de Gustavo: la quemadura del Monje (`GE_DragonBurn`) usaba el MISMO VFX q
 
 ---
 
-# ★ Quemadura santa con zonas de fuego sagrado — HECHO, falta probar (8 de octubre, noche)
+# ★ Quemadura santa con zonas de fuego sagrado — HECHO Y PROBADO ✅ (8 de octubre, noche: "funciona")
 
 Pedido de Gustavo: la definitiva del Clérigo de la Luz deja 3 zonas de fuego como las del Aliento
 del dragón rojo, pero sagrado y amarillo. Compila limpio (juego y editor).
@@ -213,10 +213,10 @@ Las piezas para soltar zonas desde otra habilidad quedaron en `GA_ContinuousAoE`
 
 **Qué probar:**
 
-- [ ] La Quemadura santa rellena el cono de zonas amarillas (o, en fila, donde apuntás).
-- [ ] Un enemigo adentro suma quemaduras sagradas (hasta 5); un aliado adentro se sigue curando.
+- [x] La Quemadura santa rellena el cono de zonas amarillas (o, en fila, donde apuntás).
+- [x] Un enemigo adentro suma quemaduras sagradas (hasta 5); un aliado adentro se sigue curando.
 - [ ] En un cliente: las zonas caen donde mira él y se ven en las dos ventanas.
-- [ ] ¿Se ve amarillo el fuego? (si las fogatas amarillas de Hovl no alcanzan, se le cambia el color).
+- [x] ¿Se ve amarillo el fuego? (si las fogatas amarillas de Hovl no alcanzan, se le cambia el color).
 
 ---
 

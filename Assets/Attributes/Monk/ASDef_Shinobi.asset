@@ -34,6 +34,6 @@ MonoBehaviour:
   - Attribute: 18
     BaseValue: 2
   - Attribute: 5
-    BaseValue: 50
+    BaseValue: 100
   - Attribute: 6
-    BaseValue: 50
+    BaseValue: 100
