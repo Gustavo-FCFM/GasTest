@@ -19,7 +19,7 @@ julio y un pull normal recrea ese merge conflictivo. Ver `CLAUDE.md`.
 
 ---
 
-# ★ EN LA MÁQUINA DE CASA: borrar dos carpetas viejas (una sola vez)
+# ★ EN LA MÁQUINA DE CASA: borrar dos carpetas viejas (una sola vez) — HECHO (8 de octubre)
 
 **Para Claude, si lee esto en la máquina de casa: hazlo tú antes de cualquier otra
 cosa, con Unity CERRADO, y confírmaselo a Gustavo.**
@@ -39,7 +39,9 @@ git fetch origin && git reset --hard origin/main
 rm -rf "Assets/FishNet" "Assets/FishNet.meta" "Assets/TextMesh Pro/Examples & Extras" "Assets/TextMesh Pro/Examples & Extras.meta"
 ```
 
-- [ ] Hecho en la máquina de casa (el trabajo ya lo hizo esta máquina el 28).
+- [x] Hecho en la máquina de casa (el trabajo ya lo hizo esta máquina el 28).
+      **8 de octubre: Gustavo borró `Assets/FishNet` en la casa.** Si Unity la vuelve a
+      mostrar ahí, borrarla otra vez con Unity cerrado.
       **29 de septiembre: a medias.** `TextMesh Pro/Examples & Extras` ya no está;
       `Assets/FishNet` sigue (solo `.csproj`/`.sln` viejos y sus `.meta`, ignorados por git).
       Falta borrar esa carpeta con Unity cerrado.
@@ -151,7 +153,7 @@ marcados "Pospuesto".
 **Estado al 5 de octubre:** Clérigo completo y probado. Guerrero: kit base, Maestro de
 batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 9).
 **Guardián: hecho y probado ✅** (5 de octubre). **El Guerrero queda completo** (kit base y las 3 subclases).
-**6 de octubre:** barra de carga por etapas del ataque cargado (`UI_ChargeBar`), repeler / atraer y vuelo libre: hechos y probados. **Monje: el código del kit base está (falta correr `MercMonkSetup` y probar) y la barra de canalizar (`UI_CastBar`).** Queda la mascota con IA en red.
+**6 de octubre:** barra de carga por etapas del ataque cargado (`UI_ChargeBar`), repeler / atraer y vuelo libre: hechos y probados. **Monje: kit base hecho y probado (8 de octubre). Barra de canalizar (`UI_CastBar`): hecha.** Queda la mascota con IA en red.
 
 1. **Clases nuevas — DECIDIDO (28 de septiembre): Clérigo + Guerrero completos**, en ese
    orden. Detalle y estimación en la sección 6.
@@ -351,7 +353,7 @@ batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 
      `Effects/Buffs` todos menos `GE_SwornEnemy`, que va a `Effects/Debuffs`. También
      `GE_Fly`, que estaba suelto en `GameplayAbilities/`. `GE_AvenginAngelBuffs` se llama
      ahora **`GE_AvengingAngelBuffs`**.
-   - [ ] Ver en juego el Frenesí, el Invencible conquistador y el Ángel vengador (las alas
+   - [x] **Visto ✅ (8 de octubre).** Ver en juego el Frenesí, el Invencible conquistador y el Ángel vengador (las alas
          a la altura de antes, y que se vayan al terminar).
 
    **Arreglos del 30 de septiembre, PROBADOS ✅:**
@@ -570,7 +572,8 @@ batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 
          escudo, el alcance). La energía tarda más en llenarse (la regeneración es la misma
          para 400).
 
-   **Monje — kit base: CÓDIGO HECHO (6 de octubre), falta correr la herramienta y probar.**
+   **Monje — kit base: HECHO Y PROBADO ✅ (8 de octubre).** Los clips de los puños ya
+   tienen su `AnimationEvent_HitFrame`.
    Daño, a puño limpio. Decisiones de Gustavo (6 de octubre); los números que no vinieron
    los puso Claude (⚙).
 
@@ -593,14 +596,14 @@ batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 
          actualiza los registros. Busca íconos por nombre (`Class_Monk_Icon`, `Ki_Icon`,
          `Martial_Arts_Icon`, `Patient_Defense_Icon`, `Strikes_Icon`, `Flurry_Of_Blows_Icon`,
          `Monk_Block_Icon`, `Flying_Kick_Icon`, `Dragon_Kick_Icon`); los que no estén, a mano.
-   - [ ] Probar: los puños y las acumulaciones (íconos con su número); Ki → clic izq. sale
+   - [x] **PROBADO ✅ (8 de octubre).** Probar: los puños y las acumulaciones (íconos con su número); Ki → clic izq. sale
          con las 4 de una; Ki → clic der. prende la cápsula 6 s y se puede atacar dentro;
          la cápsula frena desde la espalda y gasta energía; Ki → Shift aturde; la Patada
          voladora se tuerce con A/D y se corta con Shift; choca con una pared y termina.
    - [ ] Los clips: la pose del bloqueo es la del escudo del Guerrero (no hay una de guardia
          a puño limpio); la patada es `AttackKick01_R` suelta (si se quiere una pose
          sostenida mientras vuela, va en `Rush Loop Clip` de la patada).
-   - [ ] Revisar con dos jugadores: que los demás vean los puñetazos de la Ráfaga (un combo
+   - [x] **PROBADO ✅ (8 de octubre).** Revisar con dos jugadores: que los demás vean los puñetazos de la Ráfaga (un combo
          dentro de un `GA_TagSwitch` es nuevo: el switch ahora deja que el combo mande sus
          animaciones).
    - Lo que cambió del documento: la Ráfaga ya no son "2 golpes extra por ataque" sino las 4
@@ -612,7 +615,7 @@ batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 
    - `GA_RushAttack`: el giro (`TurnRate`) se reemplazó por **`StrafeSpeed`** (izquierda/derecha
      corren de costado, la patada sigue mirando y avanzando al mismo lado) y la casilla
      **`AimVertical`** (+ `MaxPitch`): sale con el ángulo de la mira. Prendida en las dos patadas.
-   - [ ] Probar: patada mirando a alguien en el aire (sube y le pega); A/D durante la patada
+   - [x] **PROBADO ✅ (8 de octubre).** Probar: patada mirando a alguien en el aire (sube y le pega); A/D durante la patada
          (se corre sin girar); mirando al piso (que no se trabe); cómo cae al terminar arriba.
    - **Maestro de batalla:** el clic izquierdo hacía siempre el tajo a dos manos. En el commit
      del Comandante (`f1aa49d`, 1 de octubre) la ranura de `Class_BattleMasterFighter` había
@@ -626,8 +629,8 @@ batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 
    con `ShowCastBar(duración, channel)` / `HideCastBar(interrumpida)`.
    - [ ] Probar con el Golpe final (y cortarlo con un aturdido) y con el molinete.
 
-   **El molinete solo se veía en la pantalla del que lo usaba (8 de octubre) — ARREGLADO, falta
-   probar.** Después de `Activate()` el servidor manda a los demás el clip suelto de la
+   **El molinete solo se veía en la pantalla del que lo usaba (8 de octubre) — ARREGLADO Y
+   PROBADO ✅.** Después de `Activate()` el servidor manda a los demás el clip suelto de la
    habilidad; con el molinete llegaba justo DESPUÉS de la pose sostenida (el canalizado) y
    la pisaba. Al dueño no le pasaba porque ese RPC se lo saltea. Ahora `GA_Whirlwind` dice
    que manda su propia animación (`BroadcastsOwnAnimation`) cuando tiene clip de bucle.
@@ -635,7 +638,7 @@ batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 
    host. Ahora el dueño no lo anticipa al apretar, nadie lo recibe al activar, y al
    terminar la carga va a TODAS las pantallas (RPC nueva
    `ServerPlayAbilityAnimationOnAll`; Unity tiene que recompilar).
-   - [ ] Con dos ventanas: el molinete gira y sostiene la pose en la del otro; el Golpe final
+   - [x] **PROBADO ✅ (8 de octubre).** Con dos ventanas: el molinete gira y sostiene la pose en la del otro; el Golpe final
          levanta el arma, la sostiene y baja el mandoble, en las dos (también cortado con un
          aturdido: baja el arma sin mandoble).
    - [ ] Canalizar como MECÁNICA genérica (un tiempo de lanzamiento antes de que salga
