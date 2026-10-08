@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ClassName: Pirate
   ClassIcon: {fileID: 21300000, guid: f8781bcf6ee31544c93d046f2471bd70, type: 3}
-  Description: The ranged rogue. A pistol instead of a dagger, food to heal, and a rain of cannon fire. The only rogue who fights from a distance.
+  Description: The ranged rogue. A pistol instead of a dagger, food to heal, and
+    a rain of cannon fire. The only rogue who fights from a distance.
   Role: 2
   BaseAttributes: {fileID: 11400000, guid: 4568fbd577293b241b798a4ed81d6af7, type: 2}
   Abilities:
@@ -32,8 +33,23 @@ MonoBehaviour:
     Ability: {fileID: 11400000, guid: 2bfe0b6ac89ecfe4286e8ee01d24a4dd, type: 2}
   PassiveBehaviorsPrefab: {fileID: 5050769150704488624, guid: 01914ede8838b8645bf8820765675b0e, type: 3}
   PassiveEffects: []
+  WallMovement: {fileID: 11400000, guid: 044eeb0e224fc5141a38a70176c37b86, type: 2}
   StatGrowthPerLevel: []
   AvailableSubclasses: []
   ClassAnimatorOverride: {fileID: 22100000, guid: f175085a22aa728459655748dd969669, type: 2}
+  StanceAnimatorOverride: {fileID: 0}
+  StanceAnimatorTag: 0
   MainHandWeaponPrefab: {fileID: 5350318134101461513, guid: e1afdd18cd0f53640bee5855f33dac40, type: 3}
   OffHandWeaponPrefab: {fileID: 5822899519971928179, guid: a7334e93e9f06d7479fa097474e90b57, type: 3}
+  MainHandRotationOffset: {x: 0, y: 0, z: 0}
+  MainHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandPose: {fileID: 0}
+  OffHandPoseRequiredTag: 0
+  StowOffHandTag: 0
+  StowedOffHandPositionOffset: {x: 0, y: 0, z: 0}
+  StowedOffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandScale: 1
+  GrowTag: 0
+  GrowScale: 1.5

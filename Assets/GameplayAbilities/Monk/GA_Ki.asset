@@ -46,6 +46,6 @@ MonoBehaviour:
   TargetLayer:
     serializedVersion: 2
     m_Bits: 0
-  MaxCharges: 3
+  MaxCharges: 2
   BuffEffect: {fileID: 0}
   AdditionalEffects: []

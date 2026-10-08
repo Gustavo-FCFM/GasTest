@@ -141,6 +141,69 @@ se pueden borrar los bloques `DATOS VIEJOS` del final de cada GA.
 
 ---
 
+# ★ Paredes (Pícaro y Monje), Ki, Ráfaga y escudos — HECHO, falta probar (8 de octubre)
+
+Compila limpio (juego y editor, con el Roslyn de Unity; el codegen de FishNet lo corre Unity
+al recompilar: hay dos RPC que cambiaron).
+
+**Una vez, con Unity abierto (después de que recompile):**
+
+- [x] `Mercenarios ▸ Paredes, Ki, Ráfaga y costo de los escudos (una sola vez)` y después
+      **borrar `Assets/Scripts/Editor/MercWallAndShieldSetup.cs`**. *(8 de octubre: corrida y
+      borrada; revisados los assets.)* Hizo todo esto:
+  - Crea `Attributes/Rogue/WallMove_Rogue` y `Attributes/Monk/WallMove_Monk` y se los pone
+    a `Class_Rogue`, `Class_Monk` y a todas sus subclases (si ya existen, no les toca los números).
+  - `GA_Ki`: 2 cargas (antes 3).
+  - `GA_FlurryOfBlows`: 4 puñetazos (der., izq., der., izq.) después de las 4 acumulaciones;
+    antes eran 2. El combo entero se comprime al ritmo de ataque, así que sale más rápido.
+  - `GE_Cost_Shield` nuevo (`Effects/Costs`, −5 de energía) como costo de los tres escudos
+    (`GA_PaladinShieldBlock`, `GA_FighterShieldBlock`, `GA_MonkBlock`: los usan también sus
+    subclases), y el mínimo para levantarlos baja de 10 a 5: con 5 o menos no se levanta.
+  - Actualiza los registros de red.
+
+**Cómo funciona (decisiones de Gustavo, 8 de octubre):**
+
+- Se engancha solo **en el aire**, yendo con el WASD contra una pared casi vertical. No a menos
+  de 0.8 m del piso (para no pegarse al saltar al lado de una pared).
+- **Pícaro (pegarse):** se frena y queda pegado 1 s; después resbala 0.5 s y se suelta.
+- **Monje (correr):** WASD lo lleva a lo largo de la pared (solo de costado), bajando de a poco
+  hasta tocar el piso. Si la pared se acaba, cae con el impulso que traía. Se ven las piernas
+  corriendo y el modelo inclinado 20° hacia afuera (en todas las pantallas).
+- **Espacio** salta hacia AFUERA de la pared (7 m/s) y hacia arriba (7 m/s). Un cuarto de
+  segundo el WASD no puede empujar de vuelta contra ella. **Empujar hacia afuera** lo suelta.
+- **Saltos encadenados sin límite**, pero a la pared de la que se acaba de soltar no se vuelve
+  a pegar hasta tocar el piso.
+- Pegado **se pueden usar las habilidades**; las de movimiento (dash, Blink, la patada) salen
+  desde la pared y lo sueltan. **Con la bolsa del objetivo también se puede.**
+- Lo sueltan: aturdido, enraizado, repelido, volando, morir, cambiar de clase.
+- No cuentan como pared: las paredes invisibles (Ignore Raycast, los límites de la arena), los
+  personajes, tótems y NPCs (todo lo que tiene ASC), lo que tiene Rigidbody y los triggers.
+- Los números están en los perfiles `WallMove_*` (inspector con secciones), y la clase muestra
+  en su tarjeta si se pega o corre. Los bots no lo usan.
+
+Por dentro: sección "MOVIMIENTO EN PAREDES" de `PlayerController` (todo en el dueño, como el
+dash); `WallMovementProfile` + `CharacterClassDefinition.WallMovement` (sección Movimiento). La
+inclinación viaja en la RPC de locomoción (dos bytes más) y se aplica al modelo en
+`LateUpdate`, junto con el giro del molinete.
+
+**Qué probar:**
+
+- [ ] Pícaro: saltar contra una pared → se pega 1 s, resbala y se suelta; Espacio pegado →
+      salta hacia afuera; entre dos paredes enfrentadas, subir saltando de una a otra; que no
+      se vuelva a pegar a la misma sin tocar el piso.
+- [ ] Monje: correr a lo largo de una pared, que baje de a poco y termine en el piso; que la
+      pared se acabe a mitad de camino; saltar hacia afuera; la patada desde la pared.
+- [ ] Que NO se pegue a: los límites invisibles de la arena, otros jugadores, tótems, la barrera
+      de un escudo.
+- [ ] Atacar pegado (dagas, puños, el escudo); aturdido o empujado pegado → se cae.
+- [ ] Con dos ventanas: que el otro vea la pose (Monje corriendo inclinado, Pícaro pegado).
+- [ ] La Ráfaga con 4 golpes (¿se ve bien a esa velocidad?) y el Ki con 2 cargas.
+- [ ] Escudos: levantar cobra 5 de energía; con 5 o menos no se levanta.
+- [-] Animaciones de pared propias: no hay en el pack de Kevin Iglesias (se usan caer y correr);
+      del artista si las hace.
+
+---
+
 # ★ QUÉ SIGUE (rumbo al showcase de diciembre, ~9 semanas)
 
 En orden de lo que más mueve la demo:
@@ -580,7 +643,7 @@ batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 
    | Ranura | Habilidad | Pieza |
    |---|---|---|
    | Pasiva | Artes marciales: cada ataque que pega (uno por ataque, no por enemigo) suma 5 % de velocidad de ataque, hasta 4 acumulaciones, 8 s. ⚙ También 5 % de movimiento (lo decía el documento) | `MartialArtsPassive` (nueva) + `GE_MartialArts` (Stack 4, AtkSpeed × 0.95, MovSpeed × 1.05) |
-   | Q | Ki: 3 cargas (⚙ 8 s cada una). Deja el Ki preparado (⚙ 10 s): la PRÓXIMA acción sale con Ki y lo gasta. Con Ki ya preparado no se gasta otra carga | `GA_Ki` (`GA_SelfBuff`, MaxCharges 3) + `GE_Ki` (tag nuevo `Status_Ki`) |
+   | Q | Ki: 2 cargas (8 de octubre; antes 3) (⚙ 8 s cada una). Deja el Ki preparado (⚙ 10 s): la PRÓXIMA acción sale con Ki y lo gasta. Con Ki ya preparado no se gasta otra carga | `GA_Ki` (`GA_SelfBuff`, MaxCharges 2) + `GE_Ki` (tag nuevo `Status_Ki`) |
    | Clic izq. | Dos puñetazos (`AttackPunch01_R` y `_L`, cono de 2 m y ⚙ 90°), 1 s entre ataques. Con Ki, **Ráfaga de golpes**: primero se pone las 4 acumulaciones de una y después pega | `GA_MonkAttack` (`GA_TagSwitch`, ConsumeTag) → `GA_MonkStrikes` / `GA_FlurryOfBlows` (combo: `GA_FlurryStacks` + los dos puños) |
    | Clic der. | Bloqueo frontal, más chico que los escudos: ⚙ frena el 40 % por energía según el daño frenado. Con Ki, **Defensa paciente**: 6 s de una cápsula alrededor que frena el 40 % desde cualquier lado con la misma energía, SIN mantener el botón (puede atacar a la vez) | `GA_MonkGuard` (`GA_HoldTagSwitch`: ahora acepta una variante que no es de mantener y consume el tag) → `GA_MonkBlock` / `GA_PatientDefense` + `GE_PatientDefense` (tag nuevo `Status_PatientDefense`). La cápsula es una segunda barrera en `MonkBehaviours` con la casilla nueva `Omnidirectional` y una esfera con el material del escudo |
    | Shift | **Patada voladora**: embestida larga (20 m a 20 m/s, valores de Gustavo); izquierda/derecha la **corren de costado sin girarla** (`StrafeSpeed` ⚙ 5 m/s), sale con el **ángulo vertical de la mira** como el dash (`AimVertical`, tope `MaxPitch` ⚙ 45°: mirando arriba alcanza al que está en el aire), **volver a apretar Shift la corta** (por el precipicio), choca con paredes y frena en el primer enemigo. Con Ki, **Patada del dragón**: 20 m a 20 m/s y aturde al primero | `GA_MonkKick` (`GA_TagSwitch`) → `GA_FlyingKick` / `GA_DragonKick`: genérico nuevo **`GA_RushAttack`** (Create ▸ GAS ▸ Generics ▸ Rush Attack), como la carga de Reinhardt |
@@ -608,7 +671,7 @@ batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 
          animaciones).
    - Lo que cambió del documento: la Ráfaga ya no son "2 golpes extra por ataque" sino las 4
      acumulaciones de una; la Defensa paciente no es "bloquear todo" sino la cápsula al 40 %.
-   - Subclases (después): Samurái, Shinobi y Maestro elemental (ver sección 6).
+   - Subclases: lo decidido el 8 de octubre está abajo ("Subclases del Monje").
 
    **7 de octubre, después de probar el Monje:**
    - Gustavo subió la velocidad de ataque y dejó las dos patadas en 20 m a 20 m/s.
@@ -621,6 +684,55 @@ batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 
      del Comandante (`f1aa49d`, 1 de octubre) la ranura de `Class_BattleMasterFighter` había
      quedado en `GA_GreatswordSlash` en vez de la elección por postura (`GA_BattleMasterPrimary`).
      Arreglado por Gustavo; revisadas las demás clases y subclases: ninguna más tenía eso.
+
+   **Subclases del Monje — LO DECIDIDO (8 de octubre), sin empezar.** Diseño de Gustavo; los
+   números que no vinieron los pone Claude (⚙). Orden: **Samurái → Maestro elemental →
+   Shinobi** (de la que más reusa a la más arriesgada), después de las paredes. Estimación:
+   ~4 semanas las tres.
+
+   **Primero, una pieza que usan las tres (1–2 días):** gastar las acumulaciones de Artes
+   marciales desde la lista de efectos (`AbilityEffect`). Cada entrada podrá escalar con las
+   acumulaciones de un GE —la duración, la cantidad o las repeticiones— y gastarlas (una vez
+   por golpe).
+
+   **La regla (Gustavo, 8 de octubre): lo que gasta acumulaciones, SIN ellas no hace nada
+   extra; cada acumulación suma.** Premia al que las junta. Con 0 acumulaciones el efecto
+   que escala no se aplica (0 s de aturdido, 0 % de daño extra, ningún corte extra).
+
+   *Samurái:*
+
+   | Pieza | Qué hace | Cómo |
+   |---|---|---|
+   | Arma | Katana: más alcance, ataques en arco | La espada del Guerrero (sin modelos nuevos) |
+   | Clic izq. | Los 2 golpes (4 con la Ráfaga), en arco; cada golpe pone una herida | Conos + `GE_Wounds` del Pícaro (DoT, ya tiene tope de 10) en sus Effects |
+   | Clic der. | Bloqueo: por cada ataque que frena, una herida al ATACANTE (hasta 10). Reemplaza al "devuelve un golpe" del documento | La barrera aplica un GE al atacante por golpe frenado (nuevo, chico) |
+   | Pasiva extra — Afilar | Las acumulaciones también suben el ataque: +1 cada una (6 + 1 por acumulación) | Otro GE de acumulaciones con +1 de ataque; `MartialArtsPassive` ya acepta el GE. Sin código |
+   | E — Corte giratorio | Área alrededor que pone heridas. Con Ki (Cortes devastadores): 1 corte + 1 por acumulación (0 → 1 corte y no se cura; 4 → 5 cortes). Con acumulaciones, CADA corte lo cura igual a su ataque de antes de gastarlas (6 + 1 por acumulación: con 4, 5 curaciones de 10). Las gasta todas | `GA_InstantAoE` + la pieza compartida (repetir por acumulación y gastar) |
+   | R — Corte final | Se apunta un rectángulo (un ataque en línea con desplazamiento); **mientras apunta, se marca a quién va a alcanzar**. Viaja hasta el final golpeando a todos y les pone un GE (⚙ 4 s): si su vida baja al 5 %, muere. Heridas según las acumulaciones que tenga | `GA_RushAttack` sin frenar en el primero + marcador rectangular y resaltado de objetivos (nuevo) + "ejecutar al 5 %" en el pipeline de daño (nuevo) |
+
+   *Maestro elemental:*
+
+   | Pieza | Qué hace | Cómo |
+   |---|---|---|
+   | Clic izq. | Cada puñetazo es un combo: el golpe + un ORBE mágico (un lanzamiento sin caída, con más alcance que el golpe). Un combo de combos. Reemplaza a los 4 orbes que giraban (como arma se pegaban a las manos) | `GA_ComboSequence` cuyos pasos son `GA_ComboSequence` (golpe + `GA_ProjectileShoot` mágico, con un VFX que ya exista). Verificar que anide bien en red |
+   | Ráfaga aturdidora (Sobrecarga) | Con Ki, la Ráfaga gasta las acumulaciones que tiene y aturde 0.5 s por cada una: 0 → no aturde, 1 → 0.5 s, 2 → 1 s, 3 → 1.5 s, 4 → 2 s. Después le vuelven las 4 de la Ráfaga | Pieza compartida (duración por acumulación + gastar) ANTES de `GA_FlurryStacks` |
+   | Defensa de agua (Sobrecarga) | Los primeros segundos de la Defensa paciente convierten el daño en curación | Nuevo |
+   | Patada del viento (Sobrecarga) | La Patada del dragón atraviesa, repele y aturde | `GA_RushAttack` sin `StopAtFirstEnemy` + GE con desplazamiento + aturdido: ya existe todo |
+   | E — Aliento de fuego | Cono amplio que quema. Con Ki (Aliento de dragón rojo): se mantiene y quema el piso donde apunta; quien lo pisa se prende | Cono + quemadura; mantenido como el molinete; la zona con `GA_ContinuousAoE.ActivateAt`. **El VFX de la zona lo arma Claude** (pedido de Gustavo): un prefab nuevo con el fuego de Hovl (`Procedural fire`), que se ajusta al tamaño del área |
+   | R — Paz mental | Resistente al daño y todo sale con Ki sin gastarlo | GE de resistencia + un tag que hace salir las variantes con Ki sin gastar el Ki (nuevo, chico) |
+
+   *Shinobi:*
+
+   | Pieza | Qué hace | Cómo |
+   |---|---|---|
+   | Clic izq. | Kunais: proyectiles, la misma secuencia de 2 (4 con la Ráfaga); crítico por la espalda | `GA_ProjectileShoot` en el combo; el backstab del Pícaro (`BackstabDamageModifier`) en su prefab de pasivas |
+   | Clic der. | El bloqueo y la Defensa paciente esquivan CUALQUIER proyectil: no le hacen daño | Nuevo: los proyectiles lo atraviesan mientras tiene el tag |
+   | Pasiva extra — Artes oscuras | Las habilidades con Ki gastan las acumulaciones: 5 % de la vida faltante del objetivo por acumulación (0 → nada, 4 → 20 %) | Pieza compartida + la escala con vida faltante que ya tiene el `Modifier` |
+   | E — Manto de oscuridad | Invisible y mucho más rápido; el próximo golpe es crítico; 2 cargas. Con Ki (Paso de las sombras): además se teletransporta | Invisibilidad del Asesino, `Status_GuaranteedCrit`, cargas. El teletransporte es el Destello del Clérigo con el DOBLE de alcance, que también puede apuntar a una PARED (queda enganchado, por las paredes), revisando primero que la cápsula quepa |
+   | R — Muerte silenciosa | Elige un enemigo: le hace 30 % de su vida faltante + su daño normal y queda intocable encima de él 0.5 s. Busca otro enemigo cerca (primero JUGADORES, el que más vida le falta), se teletransporta a él y repite, hasta que no quede ninguno sin golpear (a cada uno, una vez) | Nuevo: el servidor elige el siguiente y le manda el teletransporte al dueño; un tag de intocable |
+
+   Falta definir: a qué distancia busca al siguiente la Muerte silenciosa (⚙ 10 m), y los
+   números de daño de cada cosa (Claude los pone ⚙ y Gustavo los ajusta).
 
    **Barra de canalizar (6 de octubre), CÓDIGO HECHO, falta probar.** `UI_CastBar`, bajo la
    barra de carga, solo para el que la usa, como la del WoW: amarilla y se LLENA en una

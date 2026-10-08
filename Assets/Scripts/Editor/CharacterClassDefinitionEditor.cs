@@ -12,8 +12,8 @@ using UnityEditor;
 //    verde), los stats de partida y una FILA CON EL KIT: el ícono de la habilidad de cada
 //    botón (clic izq., clic der., Q, E, R, Shift). Clic en un ícono = ir a esa
 //    habilidad.
-//  · Secciones: Identidad · Stats y progresión · Habilidades · Pasivas · Evolución ·
-//    Animación · Armas · Crecer (Avatar).
+//  · Secciones: Identidad · Stats y progresión · Habilidades · Pasivas · Movimiento
+//    (paredes) · Evolución · Animación · Armas · Crecer (Avatar).
 //  · Se esconde lo que no aplica: los ajustes del arma secundaria sin arma secundaria, la
 //    posición a la espalda sin tag para guardarla, la escala del Avatar sin tag...
 //  · Avisos: dos habilidades en el mismo botón, una entrada vacía, una habilidad que no
@@ -64,8 +64,12 @@ public class CharacterClassDefinitionEditor : SectionedInspector
     {
         CharacterClassDefinition c = Class;
 
+        string walls = c.WallMovement == null ? "Paredes: no se engancha"
+                     : c.WallMovement.Mode == WallMovementProfile.EWallMode.Cling ? $"Paredes: se pega y salta ({c.WallMovement.name})"
+                     : $"Paredes: corre por ellas ({c.WallMovement.name})";
+
         HeaderCard(c.ClassIcon, string.IsNullOrEmpty(c.ClassName) ? c.name : c.ClassName,
-                   RoleName(c.Role), AttributeSetDefinitionEditor.StatsLine(c.BaseAttributes));
+                   RoleName(c.Role), AttributeSetDefinitionEditor.StatsLine(c.BaseAttributes), walls);
 
         // La rayita del color del rol, debajo de la tarjeta.
         Rect stripe = GUILayoutUtility.GetRect(1f, 3f, GUILayout.ExpandWidth(true));
@@ -151,6 +155,7 @@ public class CharacterClassDefinitionEditor : SectionedInspector
             case ClassSection.Stats:     return new Color(0.35f, 0.65f, 1f);
             case ClassSection.Abilities: return new Color(1f, 0.55f, 0.15f);
             case ClassSection.Passives:  return new Color(1f, 0.85f, 0.2f);
+            case ClassSection.Movement:  return new Color(0.3f, 0.85f, 0.95f);
             case ClassSection.Evolution: return new Color(0.85f, 0.45f, 1f);
             case ClassSection.Animation: return new Color(0.45f, 0.85f, 0.45f);
             case ClassSection.Weapons:   return new Color(0.7f, 0.7f, 0.7f);

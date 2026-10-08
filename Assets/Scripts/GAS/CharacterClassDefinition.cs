@@ -53,6 +53,12 @@ public class CharacterClassDefinition : ScriptableObject
              "Se aplican con autoridad de servidor y se resincronizan a los clientes por los canales normales.")]
     public List<GameplayEffect> PassiveEffects;
 
+    [Section(ClassSection.Movement)]
+    [Tooltip("Cómo se mueve en las paredes (WallMove_*): pegarse y saltar (Pícaro) o correr por " +
+             "ellas (Monje). Las subclases apuntan al mismo perfil que su clase base. None = no se " +
+             "engancha a las paredes.")]
+    public WallMovementProfile WallMovement;
+
     [Section(ClassSection.Stats)]
     [Tooltip("Cuánto sube cada stat por cada nivel ganado.")]
     public List<AttributeGrowth> StatGrowthPerLevel;

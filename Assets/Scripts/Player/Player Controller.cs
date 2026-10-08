@@ -416,6 +416,42 @@ public class PlayerController : NetworkBehaviour
     private float   _knockbackElapsed;
     private float   _knockbackProgress;
 
+    // PAREDES (WallMovementProfile de la clase): el Pícaro se pega y salta, el Monje corre
+    // por ellas. Corre en el DUEÑO, como todo el movimiento. Ver "MOVIMIENTO EN PAREDES".
+    private WallMovementProfile WallProfile => CurrentClassDef != null ? CurrentClassDef.WallMovement : null;
+
+    private const int InvisibleWallsMask = 1 << 2;   // Ignore Raycast: límites de la arena y de las salas
+
+    private bool     _wallActive;
+    private Vector3  _wallNormal;          // hacia AFUERA de la pared, siempre horizontal
+    private Collider _wallCollider;
+    private Vector3  _wallPoint;
+    private float    _wallStartTime;
+    private float    _wallVertical;        // velocidad vertical mientras está enganchado
+    private Vector3  _wallAlongVelocity;   // lo que corre a lo largo (Monje): lo conserva al soltarse
+
+    // La última pared de la que se soltó: a ESA no se vuelve a pegar hasta tocar el piso.
+    private bool     _hasLastWall;
+    private Collider _lastWallCollider;
+    private Vector3  _lastWallNormal;
+    private Vector3  _lastWallPoint;
+
+    // Después de saltar de una pared, el WASD no puede empujar de vuelta contra ella un rato.
+    private Vector3  _wallJumpAwayNormal;
+    private float    _wallJumpLockUntil;
+
+    // El último roce de COSTADO que avisó el CharacterController (ver OnControllerColliderHit).
+    private int      _sideHitFrame = -1;
+    private Vector3  _sideHitNormal;
+    private Vector3  _sideHitPoint;
+    private Collider _sideHitCollider;
+
+    // Inclinación del modelo hacia afuera de la pared: hacia dónde apunta el "arriba" del
+    // modelo, en el espacio de la raíz. La calcula el dueño y viaja con la locomoción.
+    private Vector3 _leanTargetLocal = Vector3.up;
+    private Vector3 _leanUpLocal     = Vector3.up;
+    private bool    _modelLeaned;
+
     // Resto de velocidad que deja un dash al TERMINAR (ver ClearDashVelocity). No es
     // lo mismo que _abilityVelocity: acá el jugador conserva el control normal —gira,
     // frena y SALTA— y esto solo se suma a su movimiento mientras se disipa. Es lo que
@@ -739,6 +775,7 @@ public class PlayerController : NetworkBehaviour
 
         if (ASC.HasTag(EGameplayTag.State_Dead))
         {
+            if (_wallActive) StopWall();
             if (_input.Ability3.WasPressedThisFrame() && AbilityR != null && AbilityR.CanActivate())
                 RequestAbility(EAbilityInput.Action3);
             return;
@@ -760,6 +797,7 @@ public class PlayerController : NetworkBehaviour
         if (ASC.HasTag(EGameplayTag.State_Stunned))
         {
             if (_rushActive) StopRush(false);   // el servidor también la corta
+            if (_wallActive) StopWall();        // aturdido, se cae de la pared
             if (IsFlying || _flightFalling) SlowFall();
             return;
         }
@@ -767,6 +805,16 @@ public class PlayerController : NetworkBehaviour
         // Embestida: avanza sola; el input solo la tuerce o la corta (ver TickRush).
         if (TickRush())
         {
+            UpdateAnimations();
+            return;
+        }
+
+        // Enganchado a una pared: se mueve distinto, pero las habilidades se siguen usando
+        // (las de movimiento lo despegan al arrancar). Ver "MOVIMIENTO EN PAREDES".
+        if (TickWall())
+        {
+            HandleAbilityInput();
+            UpdateGroundTargetIndicator();
             UpdateAnimations();
             return;
         }
@@ -793,6 +841,7 @@ public class PlayerController : NetworkBehaviour
     {
         if (characterController == null || !characterController.enabled) return;
 
+        if (_wallActive) StopWall();
         _inertiaVelocity = Vector3.zero;
         _knockbackActive = false;
 
@@ -918,6 +967,14 @@ public class PlayerController : NetworkBehaviour
         }
         else
         {
+            // Recién saltó de una pared: el WASD no puede empujar de vuelta contra ella (de
+            // costado sí). Sin esto, con W apretado hacia la pared el salto se anulaba.
+            if (Time.time < _wallJumpLockUntil)
+            {
+                float into = Vector3.Dot(inputVec, -_wallJumpAwayNormal);
+                if (into > 0f) inputVec += _wallJumpAwayNormal * into;
+            }
+
             horizontal = inputVec * baseSpeed + _inertiaVelocity;
 
             // En el piso es un salto normal; en el aire, solo con la caída de pluma
@@ -939,6 +996,11 @@ public class PlayerController : NetworkBehaviour
         Vector3 finalMove = new Vector3(horizontal.x, 0, horizontal.z)
                             + Vector3.up * verticalVelocity;
         characterController.Move(finalMove * Time.deltaTime);
+
+        // En el aire, yendo contra una pared: el Pícaro se pega, el Monje corre por ella.
+        // Tocar el piso habilita volver a pegarse a cualquier pared.
+        if (characterController.isGrounded) _hasLastWall = false;
+        else if (!_abilityVelocityActive)    TryStartWall(inputVec);
     }
 
     // Cámara del dueño, cacheada. Camera.main busca por TAG cada vez que se llama, y
@@ -1009,6 +1071,7 @@ public class PlayerController : NetworkBehaviour
     // en el piso (se puede usar en el aire — ej. el Salto Furioso o el dash).
     public bool ApplyAbilityVelocity(Vector3 horizontalVelocity, float verticalImpulse)
     {
+        if (_wallActive) StopWall();   // un salto de habilidad lo despega de la pared
         _abilityVelocity       = horizontalVelocity;
         verticalVelocity       = verticalImpulse;
         _abilityVelocityActive = true;
@@ -1032,6 +1095,7 @@ public class PlayerController : NetworkBehaviour
     // ClearDashVelocity (ver NetworkAbilitySystemComponent.DashRoutine).
     public void ApplyDashVelocity(Vector3 velocity, bool faceVelocity = true)
     {
+        if (_wallActive) StopWall();   // el dash sale desde la pared y la suelta
         _dashVelocity    = velocity;
         _dashActive      = true;
         _inertiaVelocity = Vector3.zero;   // el impulso nuevo pisa el resto del anterior
@@ -1074,6 +1138,7 @@ public class PlayerController : NetworkBehaviour
     public void ApplyKnockback(Vector3 displacement, float duration, float upVelocity)
     {
         if (_rushActive) StopRush(true);   // empujado, la embestida se corta
+        if (_wallActive) StopWall();       // y se cae de la pared
 
         _knockbackDisplacement = new Vector3(displacement.x, 0f, displacement.z);
         _knockbackDuration     = Mathf.Max(0.05f, duration);
@@ -1142,6 +1207,7 @@ public class PlayerController : NetworkBehaviour
     public void StartRush(Vector3 velocity, float duration, float strafeSpeed, int excludeMask, bool cancelable)
     {
         if (_rushActive) StopRush(false);
+        if (_wallActive) StopWall();   // la patada sale desde la pared y la suelta
 
         _rushVelocity    = velocity;
         _rushEndsAt      = Time.time + Mathf.Max(0.05f, duration);
@@ -1227,6 +1293,279 @@ public class PlayerController : NetworkBehaviour
     }
 
     // =========================================================
+    // MOVIMIENTO EN PAREDES (WallMovementProfile de la clase)
+    //
+    // En el aire, yendo con el WASD contra una pared, se engancha:
+    //  · Pegarse (Pícaro): se frena y queda quieto ClingTime; después resbala SlideTime y
+    //    se suelta solo.
+    //  · Correr (Monje): WASD lo lleva a lo largo de la pared (solo de costado), bajando de
+    //    a poco hasta tocar el piso. Si la pared se acaba, cae con el impulso que traía.
+    // En los dos, Espacio salta hacia AFUERA de la pared y un poco hacia arriba; empujar
+    // hacia afuera lo suelta. Los saltos se encadenan sin límite, pero a la pared de la que
+    // se acaba de soltar no se vuelve a pegar hasta tocar el piso.
+    //
+    // Pegado se pueden usar las habilidades (Update sigue leyéndolas); las de movimiento
+    // lo despegan al arrancar (ApplyDashVelocity, StartRush, TeleportTo...). Aturdido,
+    // enraizado, repelido, volando o muerto, se suelta.
+    //
+    // Todo en el DUEÑO, como el resto del movimiento: los demás ven la posición por el
+    // NetworkTransform, y la pose (correr en vez de caer, la inclinación del modelo) por la
+    // locomoción en red.
+    // =========================================================
+
+    // El CharacterController avisa acá cada cosa con la que choca durante Move(). Solo se
+    // guardan los roces de COSTADO: son los candidatos a pared.
+    private void OnControllerColliderHit(ControllerColliderHit hit)
+    {
+        if (Mathf.Abs(hit.normal.y) > 0.7f) return;   // piso o techo
+        _sideHitFrame    = Time.frameCount;
+        _sideHitNormal   = hit.normal;
+        _sideHitPoint    = hit.point;
+        _sideHitCollider = hit.collider;
+    }
+
+    // ¿Se puede estar en una pared ahora? Lo que suelta a cualquiera (aturdido, enraizado,
+    // volando, un impulso en curso) más los tags que bloquean en el perfil.
+    private bool CanUseWalls(WallMovementProfile p)
+    {
+        if (ASC == null || p == null) return false;
+        if (ASC.HasTag(EGameplayTag.State_Dead) || ASC.HasTag(EGameplayTag.State_Stunned) ||
+            ASC.HasTag(EGameplayTag.State_Rooted) || IsFlying) return false;
+        if (_dashActive || _rushActive || _knockbackActive || _abilityVelocityActive) return false;
+
+        if (p.BlockedByTags != null)
+            foreach (EGameplayTag tag in p.BlockedByTags)
+                if (tag != EGameplayTag.None && ASC.HasTag(tag)) return false;
+
+        return true;
+    }
+
+    // ¿Esto cuenta como pared? Las invisibles (límites de la arena) no; tampoco nada que
+    // tenga ASC (jugadores, NPCs, tótems), ni lo que tiene Rigidbody, ni los triggers.
+    private static bool IsWallCollider(Collider col, WallMovementProfile p)
+    {
+        if (col == null || col.isTrigger) return false;
+
+        int bit = 1 << col.gameObject.layer;
+        if ((bit & p.WallLayers.value) == 0 || (bit & InvisibleWallsMask) != 0) return false;
+        if (col.attachedRigidbody != null) return false;
+
+        return col.GetComponentInParent<AbilitySystemComponent>() == null;
+    }
+
+    // ¿Es la misma pared de la que se acaba de soltar? Mismo collider, misma cara (menos
+    // de ~30° de diferencia) y el mismo plano. Un mapa armado con UN solo collider tiene
+    // muchas paredes: por eso no alcanza con comparar el collider.
+    private bool IsLastWall(Collider col, Vector3 normal, Vector3 point)
+    {
+        if (!_hasLastWall || col != _lastWallCollider) return false;
+        if (Vector3.Dot(normal, _lastWallNormal) < 0.85f) return false;
+        return Mathf.Abs(Vector3.Dot(point - _lastWallPoint, _lastWallNormal)) < 0.5f;
+    }
+
+    // ¿Hay piso a menos de 'distance' debajo de los pies?
+    private bool GroundWithin(float distance)
+    {
+        if (distance <= 0f) return false;
+
+        Vector3 feet = transform.TransformPoint(characterController.center)
+                     - Vector3.up * (characterController.height * 0.5f);
+        int mask = ~((1 << 7) | InvisibleWallsMask);   // ni personajes ni paredes invisibles
+        return Physics.Raycast(feet + Vector3.up * 0.05f, Vector3.down, distance + 0.05f, mask,
+                               QueryTriggerInteraction.Ignore);
+    }
+
+    // Después de moverse en el aire: si chocó de costado con una pared válida yendo contra
+    // ella, se engancha.
+    private void TryStartWall(Vector3 inputVec)
+    {
+        WallMovementProfile p = WallProfile;
+        if (p == null || _sideHitFrame != Time.frameCount || !CanUseWalls(p)) return;
+        if (Mathf.Abs(_sideHitNormal.y) > p.MaxNormalY) return;
+
+        Vector3 n = new Vector3(_sideHitNormal.x, 0f, _sideHitNormal.z);
+        if (n.sqrMagnitude < 0.0001f) return;
+        n.Normalize();
+
+        // Tiene que ir CONTRA la pared con el WASD, no solo rozarla.
+        if (inputVec.sqrMagnitude < 0.01f || Vector3.Dot(inputVec, -n) < p.MinInputIntoWall) return;
+
+        if (!IsWallCollider(_sideHitCollider, p)) return;
+        if (IsLastWall(_sideHitCollider, n, _sideHitPoint)) return;
+        if (GroundWithin(p.MinHeightAboveGround)) return;
+
+        _wallActive        = true;
+        _wallNormal        = n;
+        _wallCollider      = _sideHitCollider;
+        _wallPoint         = _sideHitPoint;
+        _wallStartTime     = Time.time;
+        _wallAlongVelocity = Vector3.zero;
+        _inertiaVelocity   = Vector3.zero;
+
+        // Pegarse frena en seco; correr conserva parte de la subida (si llegó saltando sigue
+        // subiendo un poco antes de empezar a bajar).
+        _wallVertical = p.Mode == WallMovementProfile.EWallMode.Cling
+            ? 0f
+            : Mathf.Max(0f, verticalVelocity) * p.KeepUpwardSpeed;
+        verticalVelocity = 0f;
+    }
+
+    // Avanza un frame enganchado. false = no está en ninguna pared (o se acaba de soltar
+    // y el movimiento normal tiene que correr en este mismo frame).
+    private bool TickWall()
+    {
+        if (!_wallActive) return false;
+
+        WallMovementProfile p = WallProfile;
+        if (p == null || characterController == null || !characterController.enabled || !CanUseWalls(p))
+        {
+            StopWall();
+            return false;
+        }
+
+        // Espacio: salta hacia afuera de la pared.
+        if (_input.Jump.WasPressedThisFrame())
+        {
+            WallJump(p);
+            return false;
+        }
+
+        Vector2 move     = _input.MoveValue;
+        Vector3 inputVec = GetWASDInputVector(move.x, move.y);
+
+        // Empujar hacia AFUERA de la pared la suelta (cae).
+        if (Vector3.Dot(inputVec, _wallNormal) > 0.6f)
+        {
+            StopWall();
+            return false;
+        }
+
+        if (!isAttacking || IsHoldingAbility) FaceCameraForward();
+
+        float elapsed = Time.time - _wallStartTime;
+        Vector3 along = Vector3.zero;
+
+        if (p.Mode == WallMovementProfile.EWallMode.Cling)
+        {
+            if (elapsed >= p.ClingTime + p.SlideTime)
+            {
+                StopWall();
+                return false;
+            }
+            _wallVertical = elapsed < p.ClingTime ? 0f : -p.SlideSpeed;
+        }
+        else
+        {
+            float speed = ASC.GetAttributeValue(EAttributeType.MovSpeed);
+            if (speed <= 0f) speed = 5f;
+
+            Vector3 tangent = Vector3.Cross(Vector3.up, _wallNormal);   // a lo largo de la pared
+            along = tangent * (Vector3.Dot(inputVec, tangent) * speed * p.RunSpeedMultiplier);
+            _wallVertical = Mathf.Max(_wallVertical - p.SlideGravity * Time.deltaTime, -p.MaxSlideSpeed);
+        }
+        _wallAlongVelocity = along;
+
+        // Un poco contra la pared, para seguir tocándola.
+        Vector3 stick = -_wallNormal;
+        CollisionFlags flags = characterController.Move((along + stick + Vector3.up * _wallVertical) * Time.deltaTime);
+
+        // Llegó al piso: se terminó, y puede volver a pegarse a cualquier pared.
+        if ((flags & CollisionFlags.Below) != 0 || characterController.isGrounded)
+        {
+            StopWall();
+            _hasLastWall = false;
+            return true;
+        }
+
+        // Un techo: deja de subir.
+        if ((flags & CollisionFlags.Above) != 0 && _wallVertical > 0f) _wallVertical = 0f;
+
+        // ¿Sigue la pared ahí? Si se acabó (o dio la vuelta a una esquina), se suelta.
+        if (!ProbeWall(p)) StopWall();
+
+        return true;
+    }
+
+    // Busca la pared justo detrás de la cápsula y actualiza su normal (sigue paredes
+    // curvas). false = ya no hay pared a StickDistance.
+    private bool ProbeWall(WallMovementProfile p)
+    {
+        Vector3 center = transform.TransformPoint(characterController.center);
+        float   r      = characterController.radius * 0.5f;
+        float   reach  = r + p.StickDistance + characterController.skinWidth;
+        int     mask   = p.WallLayers.value & ~InvisibleWallsMask;
+
+        if (!Physics.SphereCast(center, r, -_wallNormal, out RaycastHit hit, reach, mask, QueryTriggerInteraction.Ignore))
+            return false;
+        if (Mathf.Abs(hit.normal.y) > p.MaxNormalY) return false;
+        if (hit.collider != _wallCollider && !IsWallCollider(hit.collider, p)) return false;
+
+        Vector3 n = new Vector3(hit.normal.x, 0f, hit.normal.z);
+        if (n.sqrMagnitude < 0.0001f) return false;
+        n.Normalize();
+        if (Vector3.Dot(n, _wallNormal) < 0.5f) return false;   // esquina de más de 60°
+
+        _wallNormal   = n;
+        _wallCollider = hit.collider;
+        _wallPoint    = hit.point;
+        return true;
+    }
+
+    // Salto desde la pared: hacia afuera (la normal) y hacia arriba. El impulso horizontal
+    // va por la inercia —se disipa sola y se suma al WASD—, y un rato el WASD no puede
+    // empujar de vuelta contra la pared.
+    private void WallJump(WallMovementProfile p)
+    {
+        Vector3 away = _wallNormal;
+        StopWall();
+
+        verticalVelocity    = p.JumpOffUp;
+        _inertiaVelocity    = away * p.JumpOffSpeed;
+        _inertiaDamping     = Mathf.Max(0.01f, p.JumpOffDamping);
+        _wallJumpAwayNormal = away;
+        _wallJumpLockUntil  = Time.time + p.JumpOffLockTime;
+
+        if (AudioLibrary.Instance != null) AudioManager.Play(AudioLibrary.Instance.Jump, transform.position);
+    }
+
+    // Suelta la pared: cae con lo que traía (y el Monje conserva lo que corría a lo largo).
+    // Queda anotada como "la última": a esa no se vuelve a pegar hasta tocar el piso.
+    private void StopWall()
+    {
+        if (!_wallActive) return;
+        _wallActive = false;
+
+        _hasLastWall      = true;
+        _lastWallCollider = _wallCollider;
+        _lastWallNormal   = _wallNormal;
+        _lastWallPoint    = _wallPoint;
+
+        verticalVelocity = _wallVertical;
+        _inertiaVelocity = _wallAlongVelocity;
+        _inertiaDamping  = 3f;
+        _leanTargetLocal = Vector3.up;   // aturdido o empujado no pasa por UpdateAnimations
+    }
+
+    // Hacia dónde apunta el "arriba" del modelo, en el espacio de la raíz: inclinado hacia
+    // afuera de la pared mientras está enganchado, derecho si no.
+    private Vector3 WallLeanUpLocal()
+    {
+        WallMovementProfile p = WallProfile;
+        if (!_wallActive || p == null || p.LeanAngle <= 0f) return Vector3.up;
+
+        Vector3 up = (Vector3.up + _wallNormal * Mathf.Tan(p.LeanAngle * Mathf.Deg2Rad)).normalized;
+        return transform.InverseTransformDirection(up);
+    }
+
+    // Lleva la inclinación del modelo hacia la pedida, suave. Corre en TODAS las copias
+    // (desde LateUpdate): el dueño la calcula y los demás la reciben con la locomoción.
+    private void TickModelLean()
+    {
+        _leanUpLocal = Vector3.Slerp(_leanUpLocal, _leanTargetLocal, 1f - Mathf.Exp(-12f * Time.deltaTime));
+        if ((_leanUpLocal - _leanTargetLocal).sqrMagnitude < 0.00001f) _leanUpLocal = _leanTargetLocal;
+    }
+
+    // =========================================================
     // VUELO LIBRE
     // =========================================================
 
@@ -1288,6 +1627,7 @@ public class PlayerController : NetworkBehaviour
         characterController.enabled = false;
         transform.position          = position;
         characterController.enabled = true;
+        if (_wallActive) StopWall();   // antes de poner en cero: StopWall deja la velocidad que traía
         verticalVelocity            = 0f;
         _knockbackActive            = false;
         _flightFalling              = false;
@@ -1947,6 +2287,7 @@ public class PlayerController : NetworkBehaviour
     public void TeleportToSpawn()
     {
         characterController.enabled = false;
+        if (_wallActive) StopWall();
         transform.position = new Vector3(spawnPosition.x, 3f, spawnPosition.z);
         verticalVelocity   = 0f;
         _inertiaVelocity   = Vector3.zero;
@@ -2147,6 +2488,7 @@ public class PlayerController : NetworkBehaviour
         float previousCharge = serverSide && hadUltimate ? ASC.GetUltimateCharge() : 0f;
 
         ASC.RemoveAllActiveEffects();
+        if (_wallActive) StopWall();   // la clase nueva puede no engancharse a las paredes
         CurrentClassDef  = newClass;
         ASC.CurrentClass = newClass;
         CharacterIcon    = newClass.ClassIcon;
@@ -2461,6 +2803,10 @@ public class PlayerController : NetworkBehaviour
             else                                              airborne = true;
         }
 
+        // Corriendo por una pared (Monje) se ven las piernas corriendo, no la pose del aire.
+        WallMovementProfile wall = WallProfile;
+        if (_wallActive && wall != null && wall.Mode == WallMovementProfile.EWallMode.Run) airborne = false;
+
         characterAnimator.SetBool("IsJumping", airborne);
 
         // VELOCIDAD VERTICAL, para que el Animator pueda distinguir SUBIR de CAER.
@@ -2472,19 +2818,22 @@ public class PlayerController : NetworkBehaviour
         // Durante un dash la componente vertical NO vive en verticalVelocity (se pone en
         // cero y la gravedad se apaga): vive en _dashVelocity. Por eso se reporta la que
         // de verdad esta moviendo al personaje en cada momento.
+        float verticalNow = IsFlying ? _flightVerticalNow : _dashActive ? _dashVelocity.y
+                          : _wallActive ? _wallVertical : verticalVelocity;
+
         if (!string.IsNullOrEmpty(VerticalSpeedParam))
-        {
-            float vertical = IsFlying ? _flightVerticalNow : _dashActive ? _dashVelocity.y : verticalVelocity;
-            characterAnimator.SetFloat(VerticalSpeedParam, vertical);
-        }
+            characterAnimator.SetFloat(VerticalSpeedParam, verticalNow);
 
         float spd = ASC.GetAttributeValue(EAttributeType.AtkSpeed);
         if (spd > 0)
             characterAnimator.SetFloat("AttackSpeedMult", 1f / spd);
 
+        // Inclinado hacia afuera de la pared (lo aplica LateUpdate, suave).
+        _leanTargetLocal = WallLeanUpLocal();
+
         // Y que lo vean los demás (ver "LOCOMOCIÓN EN RED").
-        BroadcastLocomotion(speed, localVel.x, localVel.z, airborne,
-                            IsFlying ? _flightVerticalNow : _dashActive ? _dashVelocity.y : verticalVelocity);
+        BroadcastLocomotion(speed, localVel.x, localVel.z, airborne, verticalNow,
+                            _leanTargetLocal.x, _leanTargetLocal.z);
     }
 
     // =========================================================
@@ -2522,53 +2871,75 @@ public class PlayerController : NetworkBehaviour
     private bool  _locomotionSent;
     private float _sentSpeed, _sentMoveX, _sentMoveY, _sentVertical;
     private bool  _sentJumping;
+    private sbyte _sentLeanX, _sentLeanZ;
 
     private float _netSpeed, _netMoveX, _netMoveY, _netVertical;
     private bool  _netJumping;
+    private sbyte _netLeanX, _netLeanZ;
 
-    public void BroadcastLocomotion(float speed, float moveX, float moveY, bool jumping, float verticalSpeed)
+    // leanX / leanZ: hacia dónde apunta el "arriba" del modelo en el espacio de la raíz (la
+    // inclinación en una pared, ver "MOVIMIENTO EN PAREDES"). 0 y 0 = derecho. Viajan en un
+    // byte cada uno (−1..1 → −127..127): sobra para unos grados de inclinación.
+    public void BroadcastLocomotion(float speed, float moveX, float moveY, bool jumping, float verticalSpeed,
+                                    float leanX = 0f, float leanZ = 0f)
     {
         if (!IsSpawned || !DrivesOwnAnimator) return;
         if (Time.time < _nextLocomotionSend) return;
 
+        sbyte lx = LeanToByte(leanX), lz = LeanToByte(leanZ);
+
         // Nada que contar: quieto y en el piso no se manda nada.
         bool changed = !_locomotionSent
                     || jumping != _sentJumping
+                    || lx != _sentLeanX || lz != _sentLeanZ
                     || Mathf.Abs(speed    - _sentSpeed)    > 0.05f
                     || Mathf.Abs(moveX    - _sentMoveX)    > 0.02f
                     || Mathf.Abs(moveY    - _sentMoveY)    > 0.02f
                     || Mathf.Abs(verticalSpeed - _sentVertical) > 0.25f;
         if (!changed) return;
 
-        if (IsOwner) ServerSetLocomotion(speed, moveX, moveY, jumping, verticalSpeed, Channel.Unreliable);
-        else         ObserversSetLocomotion(speed, moveX, moveY, jumping, verticalSpeed, Channel.Unreliable);
+        if (IsOwner) ServerSetLocomotion(speed, moveX, moveY, jumping, verticalSpeed, lx, lz, Channel.Unreliable);
+        else         ObserversSetLocomotion(speed, moveX, moveY, jumping, verticalSpeed, lx, lz, Channel.Unreliable);
 
         _sentSpeed = speed; _sentMoveX = moveX; _sentMoveY = moveY;
         _sentJumping = jumping; _sentVertical = verticalSpeed;
+        _sentLeanX = lx; _sentLeanZ = lz;
         _locomotionSent = true;
         _nextLocomotionSend = Time.time + 1f / LocomotionSendRate;
     }
 
+    private static sbyte LeanToByte(float v) => (sbyte)Mathf.Clamp(Mathf.RoundToInt(v * 127f), -127, 127);
+
+    // El "arriba" del modelo a partir de los dos bytes: la componente vertical se deduce.
+    private static Vector3 LeanFromBytes(sbyte x, sbyte z)
+    {
+        if (x == 0 && z == 0) return Vector3.up;
+        float fx = x / 127f, fz = z / 127f;
+        return new Vector3(fx, Mathf.Sqrt(Mathf.Max(0f, 1f - fx * fx - fz * fz)), fz).normalized;
+    }
+
     [ServerRpc]
     private void ServerSetLocomotion(float speed, float moveX, float moveY, bool jumping, float verticalSpeed,
-                                     Channel channel = Channel.Unreliable)
+                                     sbyte leanX, sbyte leanZ, Channel channel = Channel.Unreliable)
     {
-        StoreLocomotion(speed, moveX, moveY, jumping, verticalSpeed);
-        ObserversSetLocomotion(speed, moveX, moveY, jumping, verticalSpeed, Channel.Unreliable);
+        StoreLocomotion(speed, moveX, moveY, jumping, verticalSpeed, leanX, leanZ);
+        ObserversSetLocomotion(speed, moveX, moveY, jumping, verticalSpeed, leanX, leanZ, Channel.Unreliable);
     }
 
     // Al dueño se lo salteamos: su Animator ya lo escribe él mismo.
     [ObserversRpc(ExcludeOwner = true)]
     private void ObserversSetLocomotion(float speed, float moveX, float moveY, bool jumping, float verticalSpeed,
-                                        Channel channel = Channel.Unreliable)
+                                        sbyte leanX, sbyte leanZ, Channel channel = Channel.Unreliable)
     {
-        StoreLocomotion(speed, moveX, moveY, jumping, verticalSpeed);
+        StoreLocomotion(speed, moveX, moveY, jumping, verticalSpeed, leanX, leanZ);
     }
 
-    private void StoreLocomotion(float speed, float moveX, float moveY, bool jumping, float verticalSpeed)
+    private void StoreLocomotion(float speed, float moveX, float moveY, bool jumping, float verticalSpeed,
+                                 sbyte leanX, sbyte leanZ)
     {
         _netSpeed = speed; _netMoveX = moveX; _netMoveY = moveY;
         _netJumping = jumping; _netVertical = verticalSpeed;
+        _netLeanX = leanX; _netLeanZ = leanZ;
     }
 
     // En las copias que NO escriben su Animator, lleva los valores recibidos al Animator
@@ -2585,6 +2956,9 @@ public class PlayerController : NetworkBehaviour
 
         if (!string.IsNullOrEmpty(VerticalSpeedParam))
             characterAnimator.SetFloat(VerticalSpeedParam, _netVertical);
+
+        // La inclinación en una pared (la aplica LateUpdate, suave).
+        _leanTargetLocal = LeanFromBytes(_netLeanX, _netLeanZ);
 
         // La velocidad de ataque NO viaja acá: el atributo ya está sincronizado por el
         // NetworkASC, así que cada copia lo lee de su propio ASC. Sin esto, los ataques
@@ -3998,10 +4372,20 @@ public class PlayerController : NetworkBehaviour
         if (_orbitCam != null)
             _orbitCam.Aiming = _holdAbility != null && _holdAbility.AimsCameraWhileHeld;
 
-        if (Mathf.Approximately(_modelSpinSpeed, 0f) || characterAnimator == null) return;
+        // Rotación del MODELO: la inclinación en una pared y el giro del molinete, juntos.
+        TickModelLean();
+        if (characterAnimator == null) return;
 
-        _modelSpinAngle += _modelSpinSpeed * Time.deltaTime;
-        characterAnimator.transform.localRotation = Quaternion.Euler(0f, _modelSpinAngle, 0f);
+        bool spinning = !Mathf.Approximately(_modelSpinSpeed, 0f);
+        bool leaning  = _leanUpLocal != Vector3.up;
+        if (!spinning && !leaning && !_modelLeaned) return;   // derecho y quieto: no se toca
+
+        if (spinning) _modelSpinAngle += _modelSpinSpeed * Time.deltaTime;
+        characterAnimator.transform.localRotation =
+            Quaternion.FromToRotation(Vector3.up, _leanUpLocal) * Quaternion.Euler(0f, _modelSpinAngle, 0f);
+
+        // Un frame más después de enderezarse, para dejarlo exactamente derecho.
+        _modelLeaned = leaning;
     }
 
     // Anima un CANALIZADO (una habilidad que se sostiene un rato: el molinete del

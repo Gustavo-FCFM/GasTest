@@ -31,6 +31,7 @@ MonoBehaviour:
   PassiveBehaviorsPrefab: {fileID: 9026357972262154142, guid: 67389f31ecae8544db899d501a673944, type: 3}
   PassiveEffects:
   - {fileID: 11400000, guid: 5425dc3edd0320d4a8b0ad013919b6cc, type: 2}
+  WallMovement: {fileID: 11400000, guid: 3cf9a185a9e8b3a439593589183dd388, type: 2}
   StatGrowthPerLevel:
   - Attribute: 2
     AmountPerLevel: 50

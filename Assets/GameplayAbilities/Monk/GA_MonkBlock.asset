@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Block
   AbilityIcon: {fileID: 21300000, guid: 93439de347048124db42b8744001167a, type: 3}
-  CostEffect: {fileID: 0}
+  CostEffect: {fileID: 11400000, guid: e8bed156069bf9e4facb205f09791aca, type: 2}
   CooldownEffect: {fileID: 0}
   CooldownDuration: 0
   UseAttackSpeedAsCooldown: 0
@@ -44,7 +44,7 @@ MonoBehaviour:
     m_Bits: 128
   MaxCharges: 1
   BlockEffect: {fileID: 11400000, guid: 1054c3ec700fed144bdc881c3366fd5d, type: 2}
-  MinEnergyToActivate: 10
+  MinEnergyToActivate: 5
   EnergyDrainPerSecond: 0
   MaxHoldTime: 0
   HoldSafetyTimeout: 20

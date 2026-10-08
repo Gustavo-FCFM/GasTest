@@ -111,12 +111,13 @@ public static class ClassSection
     public const string Stats     = "Stats y progresión";
     public const string Abilities = "Habilidades";
     public const string Passives  = "Pasivas";
+    public const string Movement  = "Movimiento";
     public const string Evolution = "Evolución";
     public const string Animation = "Animación";
     public const string Weapons   = "Armas";
     public const string Grow      = "Crecer (Avatar)";
 
-    public static readonly string[] Order = { Identity, Stats, Abilities, Passives, Evolution, Animation, Weapons, Grow, "*" };
+    public static readonly string[] Order = { Identity, Stats, Abilities, Passives, Movement, Evolution, Animation, Weapons, Grow, "*" };
 }
 
 // =========================================================

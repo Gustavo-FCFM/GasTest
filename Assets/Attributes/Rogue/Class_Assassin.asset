@@ -33,6 +33,7 @@ MonoBehaviour:
     Ability: {fileID: 11400000, guid: 66be1fd7369d74e40834def8e6f6ad57, type: 2}
   PassiveBehaviorsPrefab: {fileID: 3909173908971479584, guid: e34019ac3ea5f4541bf6696486c919fd, type: 3}
   PassiveEffects: []
+  WallMovement: {fileID: 11400000, guid: 044eeb0e224fc5141a38a70176c37b86, type: 2}
   StatGrowthPerLevel: []
   AvailableSubclasses: []
   ClassAnimatorOverride: {fileID: 22100000, guid: f175085a22aa728459655748dd969669, type: 2}
@@ -49,3 +50,6 @@ MonoBehaviour:
   StowOffHandTag: 0
   StowedOffHandPositionOffset: {x: 0, y: 0, z: 0}
   StowedOffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandScale: 1
+  GrowTag: 0
+  GrowScale: 1.5
