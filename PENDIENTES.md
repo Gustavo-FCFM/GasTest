@@ -141,7 +141,7 @@ se pueden borrar los bloques `DATOS VIEJOS` del final de cada GA.
 
 ---
 
-# ★ Fuego del Monje en rojo y su quemadura aparte — HECHO, falta mirarlo en juego (8 de octubre, noche)
+# ★ Fuego del Monje en rojo y su quemadura aparte — HECHO Y PROBADO ✅ (8 de octubre, noche)
 
 Pedido de Gustavo: la quemadura del Monje (`GE_DragonBurn`) usaba el MISMO VFX que la del Clérigo
 (`Radiant Aura Burn`, el "aura burn"), y todo el fuego del Monje tiene que ser muy rojo.
@@ -159,7 +159,7 @@ Pedido de Gustavo: la quemadura del Monje (`GE_DragonBurn`) usaba el MISMO VFX q
   - "Rojo intenso": cada color de las partículas, luces y estelas pasa al tono rojo con mucha
     saturación (hasta el centro blanco del fuego), conservando brillo y transparencia. Los
     materiales no se tocan.
-- [x] **El orbe es un objeto de red** *(quedó en DefaultPrefabObjects; falta verlo en un cliente)*: la herramienta revisa que haya quedado en
+- [x] **El orbe es un objeto de red** *(quedó en DefaultPrefabObjects; PROBADO ✅ en un cliente: los orbes se ven rojos)*: la herramienta revisa que haya quedado en
       `DefaultPrefabObjects` y avisa en la consola si no. Si avisa: `Tools ▸ Fish-Networking ▸
       Utility ▸ Refresh Default Prefabs`. Probar en un cliente que los orbes se ven.
 - [ ] Mirar: la quemadura del Monje roja y la del Clérigo como siempre; las zonas, los orbes y su
