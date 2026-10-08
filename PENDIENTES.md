@@ -141,7 +141,7 @@ se pueden borrar los bloques `DATOS VIEJOS` del final de cada GA.
 
 ---
 
-# ★ El juego en español e inglés — ETAPA 1 HECHA (menús), falta probar (8 de octubre, noche)
+# ★ El juego en español e inglés — ETAPAS 1 Y 2 HECHAS (menús y partida), falta probar (8 de octubre, noche)
 
 Pedido en la prueba: poder jugar en español, y que las builds arranquen en español. "Mercenaries"
 (nombre provisional) no se traduce. Cómo funciona: ver CLAUDE.md ("Lo que ve el jugador va en
@@ -155,8 +155,7 @@ con Excel: quien ayude a traducir no necesita Unity. Guardarla como **"CSV UTF-8
   `GameSettings.Language` (**arranca en español**; se guarda como el resto de los ajustes).
 - Ajustes: fila nueva **"Idioma · Language"** arriba de todo (dice lo mismo en los dos idiomas,
   para que la encuentre cualquiera). Al cambiarlo, todo lo que está en pantalla se reescribe en
-  el momento. Las etiquetas largas se achican solas si no entran. Los niveles de calidad del
-  proyecto (Mobile / PC) se muestran como Baja / Alta.
+  el momento. Las etiquetas largas se achican solas si no entran.
 - Menú principal, Ajustes, recuadro de red (ESC) y la sala de espera (pestañas de rol incluidas)
   pasan por la tabla. "Restablecer" no cambia el idioma.
 - [ ] Probar: abrir el juego → todo en español; Ajustes ▸ Idioma → English cambia todo al momento
@@ -167,12 +166,31 @@ con Excel: quien ayude a traducir no necesita Unity. Guardarla como **"CSV UTF-8
 - [-] Fuera de la etapa: la sala VIEJA de la escena de pruebas (`UI_LobbyMenu`, textos fijos en
       su prefab) sigue en inglés. Si se usa, se le pone `LocalizedText` a cada texto.
 
+**Etapa 2 — la partida (código hecho; compila con Unity y con el codegen de red):**
+
+- Pasan por la tabla: el marcador de arriba (equipos, nivel, reloj, "PREPÁRATE", quién gana,
+  la línea del Objetivo), el anunciador (todos los avisos grandes), el marcador del Objetivo en
+  pantalla, el registro de bajas, la pantalla de muerte, los avisos del menú de clases, "¡NIVEL
+  MÁXIMO!", la rueda (Cancelar / En recarga), "Interrumpido" de la barra de casteo, la definitiva
+  ("LISTA", "¡DEFINITIVA LISTA!"), la etiqueta de los botiquines (+75 vida), los motivos del
+  desatascarse, la ayuda del espectador y los botones de teclado que se dibujan (Clic I / Clic D,
+  Espacio, Clic). Los de control (RB, R1, VIEW...) se quedan igual en los dos idiomas.
+- **El servidor ya no manda textos escritos** en lo que es de la partida: el registro de bajas y
+  la pantalla de muerte mandan el nombre del jugador, el índice de su clase y qué NPC es (el
+  Jefe, un Mago...); el desatascarse manda la clave del motivo. Cada pantalla lo escribe en SU
+  idioma: en una partida mezclada, cada uno lo ve en el suyo. (Cambiaron tres RPC.)
+- Quitada la fila de **Calidad** de Ajustes (pedido de Gustavo: no hay niveles de calidad
+  pensados para elegir).
+- [ ] Probar en partida, en español y en inglés: el marcador, los avisos, el Objetivo, morir
+      (contra un jugador y contra un NPC), el registro de bajas, la definitiva lista, la rueda.
+- [ ] Con dos ventanas en idiomas distintos: cada una ve las bajas en el suyo.
+- [ ] Que "EQUIPO 1 (TÚ)" entre en el marcador (se achica solo si no).
+- [-] Lo que todavía sale en inglés es CONTENIDO (etapa 3): los nombres de clases (en las bajas,
+      las tarjetas, la sala), los nombres de habilidades (la barra de casteo) y las opciones de
+      la rueda (las mascotas del Explorador...).
+
 **Lo que falta:**
 
-- [ ] **Etapa 2 — la partida:** HUD de partida, anunciador, marcadores del Objetivo, registro de
-      bajas, pantalla de muerte, avisos cortos, menú de clases (C / V), elección de mejora. Ojo: el
-      registro de bajas y la pantalla de muerte hoy llegan del servidor con el nombre de la clase
-      ya escrito; hay que mandar QUÉ clase es y que cada pantalla la escriba en su idioma.
 - [ ] **Etapa 3 — el contenido:** nombre y descripción de las 24 clases y nombre de las 184
       habilidades, con un campo Español / English en el propio asset. Los nombres en español
       ya están casi todos en el documento de diseño; los carga Claude y Gustavo los revisa.

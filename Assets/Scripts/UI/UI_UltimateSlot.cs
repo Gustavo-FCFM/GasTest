@@ -107,7 +107,7 @@ public class UI_UltimateSlot : MonoBehaviour
         {
             // Sin cooldown activo = lista para usar
             if(iconFill) iconFill.fillAmount = 1f;
-            if(percentageText) percentageText.text = "READY";
+            if(percentageText) percentageText.text = Loc.T("ultimate.ready_short");
             if(readyEffects) readyEffects.SetActive(true);
             UpdateReadyState(true);
         }
@@ -125,7 +125,7 @@ public class UI_UltimateSlot : MonoBehaviour
         if (_readyKnown && ready && !_wasReady)
         {
             string key = UI_AbilitySlot.GetKeyLabel(slotInput);
-            UI_ScreenFeedback.Get().ShowToast($"ULTIMATE READY!  [{key}]", ReadyToastColor);
+            UI_ScreenFeedback.Get().ShowToast(Loc.T("ultimate.ready_toast", ("key", key)), ReadyToastColor);
         }
         _readyKnown = true;
         _wasReady   = ready;

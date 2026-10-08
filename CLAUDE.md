@@ -23,9 +23,12 @@ solo al cambiar de idioma); lo que se recalcula llama a `Loc.T` cada vez y escuc
 `Loc.OnLanguageChanged`. **El juego arranca en español**; el idioma se elige en Ajustes
 (`GameSettings.Language`). "Mercenaries" no se traduce. Lo que el SERVIDOR le manda a los
 clientes no puede ir como texto ya escrito (cada uno lo ve en su idioma): se manda qué es
-(un enum, un índice) y cada pantalla lo escribe. Va por etapas: 1) menús (inicio, ajustes,
-recuadro de red, sala) — hecha; 2) HUD de partida, anunciador, bajas, pantalla de muerte;
-3) nombres y descripciones de clases y habilidades (en el propio asset). Hasta que una
+(un enum, un índice) y cada pantalla lo escribe: el registro de bajas manda el índice de
+la clase y qué NPC es (`ENpcLabel`), el desatascarse manda la CLAVE del motivo. Va por
+etapas: 1) menús (inicio, ajustes, recuadro de red, sala) — hecha; 2) la partida (marcador,
+anunciador, Objetivo, bajas, muerte, menú de clases, rueda, barras, botones dibujados,
+espectador) — hecha; 3) nombres y descripciones de clases y habilidades (en el propio
+asset), incluida la barra de casteo, que hoy recibe el AbilityName escrito. Hasta que una
 etapa esté hecha, lo suyo sigue en inglés.
 
 **El trabajo dentro del editor de Unity lo hace Gustavo.** Armar escenas, crear y

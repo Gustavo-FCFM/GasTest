@@ -237,14 +237,14 @@ public class UI_RadialMenu : MonoBehaviour
         if (inCenter)
         {
             _center.color = Color.Lerp(CenterColor, CancelColor, 0.35f);
-            SetText("Cancel", "", CancelColor);
+            SetText(Loc.T("radial.cancel"), "", CancelColor);
         }
         else
         {
             _center.color = CenterColor;
             Slice s = _slices[_selected];
             string name = Label(_selected);
-            string desc = s.Available ? Description(_selected) : "On cooldown";
+            string desc = s.Available ? Description(_selected) : Loc.T("radial.on_cooldown");
             SetText(name, desc, s.Available ? Color.white : new Color(1f, 0.55f, 0.5f));
         }
 
@@ -315,7 +315,7 @@ public class UI_RadialMenu : MonoBehaviour
     private string Label(int i)
     {
         if (_labels != null && i < _labels.Length && !string.IsNullOrEmpty(_labels[i])) return _labels[i];
-        return $"Option {i + 1}";
+        return Loc.T("radial.option", ("number", i + 1));
     }
 
     private string Description(int i)

@@ -94,7 +94,7 @@ public class UI_KillFeed : MonoBehaviour
     {
         string victim = Name(victimName, victimClass, victimTeam);
         string text   = string.IsNullOrEmpty(killerName)
-            ? $"{victim}  <color=#BBBBBB>died</color>"
+            ? $"{victim}  <color=#BBBBBB>{Loc.T("killfeed.died")}</color>"
             : $"{Name(killerName, killerClass, killerTeam)}  <color=#BBBBBB>»</color>  {victim}";
 
         Entry entry = BuildEntry(text, involvesLocal);

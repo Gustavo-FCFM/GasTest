@@ -111,7 +111,7 @@ public class LevelUpSelectionSystem : MonoBehaviour
         // no hay tecla, así que no se muestra: ahí se navega y se confirma.
         bool showNumbers = InputGlyphs.ShowKeyboardHints;
 
-        string text = "MAX LEVEL!\n";
+        string text = Loc.T("levelup.max_level") + "\n";
         for (int i = 0; i < _subs.Count; i++)
         {
             string marker = (i == _selectedIndex) ? "> " : "   ";

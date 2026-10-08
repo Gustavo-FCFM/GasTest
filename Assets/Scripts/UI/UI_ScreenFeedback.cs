@@ -120,13 +120,13 @@ public class UI_ScreenFeedback : MonoBehaviour
         string title;
         if (string.IsNullOrEmpty(killerName))
         {
-            title = "YOU DIED";
+            title = Loc.T("death.you_died");
         }
         else
         {
             string hex   = ColorUtility.ToHtmlStringRGB(MercUIFactory.TeamColor(killerTeam));
             string klass = string.IsNullOrEmpty(killerClass) ? "" : $" <size=70%>({killerClass})</size>";
-            title = $"KILLED BY <color=#{hex}>{killerName}</color>{klass}";
+            title = Loc.T("death.killed_by", ("killer", $"<color=#{hex}>{killerName}</color>{klass}"));
         }
 
         _deathTitle.text   = title;
@@ -241,7 +241,7 @@ public class UI_ScreenFeedback : MonoBehaviour
 
         if (_deathHasCountdown)
         {
-            string text = $"Respawning in {Mathf.CeilToInt(remaining)}";
+            string text = Loc.T("death.respawning", ("seconds", Mathf.CeilToInt(remaining)));
             if (_deathCountdown.text != text) _deathCountdown.text = text;
         }
     }

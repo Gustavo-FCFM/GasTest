@@ -88,8 +88,8 @@ public static class InputGlyphs
             default:
                 switch (slot)
                 {
-                    case EAbilityInput.PrimaryAttack:   return "LMB";
-                    case EAbilityInput.SecondaryAttack: return "RMB";
+                    case EAbilityInput.PrimaryAttack:   return Loc.T("glyph.lmb");
+                    case EAbilityInput.SecondaryAttack: return Loc.T("glyph.rmb");
                     case EAbilityInput.Action1:         return "Q";
                     case EAbilityInput.Action2:         return "E";
                     case EAbilityInput.Action3:         return "R";
@@ -121,7 +121,7 @@ public static class InputGlyphs
             switch (Scheme)
             {
                 case EInputScheme.Xbox:
-                case EInputScheme.PlayStation: return "D-PAD UP";   // dpad/up
+                case EInputScheme.PlayStation: return Loc.T("glyph.dpad_up");   // dpad/up
                 default:                       return "C";
             }
         }
@@ -136,7 +136,7 @@ public static class InputGlyphs
             {
                 case EInputScheme.Xbox:        return "A";   // buttonSouth
                 case EInputScheme.PlayStation: return "X";   // Cruz
-                default:                       return "Space";
+                default:                       return Loc.T("glyph.space");
             }
         }
     }
@@ -150,7 +150,7 @@ public static class InputGlyphs
             {
                 case EInputScheme.Xbox:        return "A";
                 case EInputScheme.PlayStation: return "X";
-                default:                       return "Click";
+                default:                       return Loc.T("glyph.click");
             }
         }
     }

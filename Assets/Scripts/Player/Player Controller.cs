@@ -2263,10 +2263,25 @@ public class PlayerController : NetworkBehaviour
     // AVISOS DE UNA MUERTE: registro de bajas y pantalla de muerte
     //
     // Solo el servidor sabe quién dio el golpe final (ASC.LastAttacker), así que él
-    // arma los textos y los manda: a TODOS la línea del registro de bajas, y al que
-    // murió su pantalla con la cuenta regresiva. Va con nombres y colores ya resueltos
-    // para que el cliente no tenga que buscar a nadie.
+    // manda los datos: a TODOS la línea del registro de bajas, y al que murió su
+    // pantalla con la cuenta regresiva.
+    //
+    // Manda QUÉ es cada uno y no un texto ya escrito (8 de octubre de 2026, el juego en
+    // dos idiomas): el nombre del jugador (un nombre no se traduce), el índice de su
+    // clase y, si es un NPC, qué NPC es. Cada pantalla lo escribe en su idioma
+    // (ResolveCharacterName / ResolveClassName).
     // =========================================================
+
+    // Qué NPC es, para nombrarlo en el idioma de cada pantalla. 0 = un personaje (jugador
+    // o bot: va su nombre). Se manda por número: se amplía SOLO al final.
+    private enum ENpcLabel
+    {
+        None  = 0,
+        Boss  = 1,
+        Mage  = 2,
+        Totem = 3,
+        Ghost = 4,
+    }
 
     [Server]
     private void ServerAnnounceDeath(bool showDeathScreen)
@@ -2274,28 +2289,31 @@ public class PlayerController : NetworkBehaviour
         AbilitySystemComponent killerAsc = ASC.LastAttacker;
         if (ReferenceEquals(killerAsc, ASC)) killerAsc = null;   // matarse solo no tiene autor
 
-        string killerName = DescribeCharacter(killerAsc, out string killerClass, out int killerTeam, out int killerId);
-        string victimName = DescribeCharacter(ASC, out string victimClass, out int victimTeam, out int victimId);
+        string killerName = DescribeCharacter(killerAsc, out int killerNpc, out int killerClass,
+                                              out int killerTeam, out int killerId);
+        string victimName = DescribeCharacter(ASC, out int victimNpc, out int victimClass,
+                                              out int victimTeam, out int victimId);
 
-        ObserversKillFeed(killerName, killerClass, killerTeam, killerId,
-                          victimName, victimClass, victimTeam, victimId);
+        ObserversKillFeed(killerName, killerNpc, killerClass, killerTeam, killerId,
+                          victimName, victimNpc, victimClass, victimTeam, victimId);
 
         // Un bot no tiene pantalla; a una persona se le avisa por su conexión.
         if (!showDeathScreen || IsBot || Owner == null || !Owner.IsValid) return;
 
         float respawn = MercenariesGameMode.Instance != null ? MercenariesGameMode.Instance.RespawnSeconds : 3f;
-        TargetShowDeath(Owner, killerName, killerClass, killerTeam, respawn);
+        TargetShowDeath(Owner, killerName, killerNpc, killerClass, killerTeam, respawn);
     }
 
-    // Nombre, clase y equipo para mostrar. Un jugador o bot da su nombre y su clase; un
-    // NPC da qué es ("un Fantasma"); sin nadie, texto vacío. objectId sirve para que cada
-    // pantalla sepa si la baja la involucra (-1 si no es un personaje).
-    private static string DescribeCharacter(AbilitySystemComponent asc, out string className,
+    // Nombre, clase y equipo de quien aparece en la baja. Un jugador o bot da su nombre y
+    // el índice de su clase; un NPC da qué es (npc); sin nadie, nombre vacío. objectId
+    // sirve para que cada pantalla sepa si la baja la involucra (-1 si no es un personaje).
+    private static string DescribeCharacter(AbilitySystemComponent asc, out int npc, out int classIndex,
                                             out int team, out int objectId)
     {
-        className = "";
-        team      = 0;
-        objectId  = -1;
+        npc        = (int)ENpcLabel.None;
+        classIndex = -1;
+        team       = 0;
+        objectId   = -1;
         if (asc == null) return "";
 
         team = asc.TeamID;
@@ -2303,8 +2321,8 @@ public class PlayerController : NetworkBehaviour
         PlayerController pc = asc.GetComponent<PlayerController>();
         if (pc != null)
         {
-            objectId  = pc.ObjectId;
-            className = pc.CurrentClassDef != null ? pc.CurrentClassDef.ClassName : "";
+            objectId   = pc.ObjectId;
+            classIndex = pc.CurrentClassDef != null ? pc.GetClassIndex(pc.CurrentClassDef) : -1;
 
             NetworkAbilitySystemComponent net = asc.GetComponent<NetworkAbilitySystemComponent>();
             string name = net != null ? net.PlayerName : "";
@@ -2313,28 +2331,51 @@ public class PlayerController : NetworkBehaviour
 
         // NPCs: no guardan su tipo, pero sus prefabs se llaman por lo que son.
         string go = asc.gameObject.name;
-        if (go.Contains("Boss"))  return "the Boss";
-        if (go.Contains("Mage"))  return "a Mage";
-        if (go.Contains("Totem")) return "a Totem";
-        return "a Ghost";
+        npc = (int)(go.Contains("Boss")  ? ENpcLabel.Boss
+                  : go.Contains("Mage")  ? ENpcLabel.Mage
+                  : go.Contains("Totem") ? ENpcLabel.Totem
+                                         : ENpcLabel.Ghost);
+        return "";
+    }
+
+    // Del lado de cada pantalla: el nombre a mostrar (el del jugador, o el NPC en su idioma).
+    private static string ResolveCharacterName(string name, int npc)
+    {
+        switch ((ENpcLabel)npc)
+        {
+            case ENpcLabel.Boss:  return Loc.T("npc.boss");
+            case ENpcLabel.Mage:  return Loc.T("npc.mage");
+            case ENpcLabel.Totem: return Loc.T("npc.totem");
+            case ENpcLabel.Ghost: return Loc.T("npc.ghost");
+            default:              return name;
+        }
+    }
+
+    // El nombre de la clase a partir de su índice (AllClasses es igual en todos los peers).
+    private string ResolveClassName(int classIndex)
+    {
+        CharacterClassDefinition def = GetClassByIndex(classIndex);
+        return def != null ? def.ClassName : "";
     }
 
     [ObserversRpc]
-    private void ObserversKillFeed(string killerName, string killerClass, int killerTeam, int killerId,
-                                   string victimName, string victimClass, int victimTeam, int victimId)
+    private void ObserversKillFeed(string killerName, int killerNpc, int killerClass, int killerTeam, int killerId,
+                                   string victimName, int victimNpc, int victimClass, int victimTeam, int victimId)
     {
         int localId = LocalPlayer != null ? LocalPlayer.ObjectId : -2;
         bool involvesLocal = localId == killerId || localId == victimId;
 
-        UI_KillFeed.Get().AddKill(killerName, killerClass, killerTeam,
-                                  victimName, victimClass, victimTeam, involvesLocal);
+        UI_KillFeed.Get().AddKill(ResolveCharacterName(killerName, killerNpc), ResolveClassName(killerClass), killerTeam,
+                                  ResolveCharacterName(victimName, victimNpc), ResolveClassName(victimClass), victimTeam,
+                                  involvesLocal);
     }
 
     [TargetRpc]
-    private void TargetShowDeath(FishNet.Connection.NetworkConnection conn, string killerName,
-                                 string killerClass, int killerTeam, float respawnSeconds)
+    private void TargetShowDeath(FishNet.Connection.NetworkConnection conn, string killerName, int killerNpc,
+                                 int killerClass, int killerTeam, float respawnSeconds)
     {
-        UI_ScreenFeedback.Get().ShowDeath(killerName, killerClass, killerTeam, respawnSeconds);
+        UI_ScreenFeedback.Get().ShowDeath(ResolveCharacterName(killerName, killerNpc), ResolveClassName(killerClass),
+                                          killerTeam, respawnSeconds);
     }
 
     // Pide el respawn al NetworkGameManager de la escena (o hace un
@@ -3404,10 +3445,10 @@ public class PlayerController : NetworkBehaviour
     [ServerRpc]
     private void ServerUnstuck()
     {
-        string rejection = UnstuckRejection();
+        string rejection = UnstuckRejection(out int seconds);
         if (rejection != null)
         {
-            TargetUnstuckRejected(Owner, rejection);
+            TargetUnstuckRejected(Owner, rejection, seconds, Mathf.RoundToInt(UnstuckStillSeconds));
             return;
         }
 
@@ -3453,26 +3494,35 @@ public class PlayerController : NetworkBehaviour
         EGameplayTag.State_Stunned, EGameplayTag.State_Rooted, EGameplayTag.State_Silenced,
     };
 
-    // Motivo para NO aceptar el pedido (en inglés: lo lee el jugador), o null si se acepta.
+    // Motivo para NO aceptar el pedido, o null si se acepta. Es la CLAVE del texto en Loc
+    // (lo escribe la pantalla del jugador, en su idioma); 'seconds' es el número que va
+    // adentro cuando hace falta (cuánto falta).
     [Server]
-    private string UnstuckRejection()
+    private string UnstuckRejection(out int seconds)
     {
-        if (ASC == null || Owner == null || !Owner.IsValid) return "Can't do that right now.";
-        if (ASC.HasTag(EGameplayTag.State_Dead)) return "You can't use Unstuck while dead.";
+        seconds = 0;
+        if (ASC == null || Owner == null || !Owner.IsValid) return "unstuck.not_now";
+        if (ASC.HasTag(EGameplayTag.State_Dead)) return "unstuck.dead";
 
         if (_unstuckReadyAt.TryGetValue(Owner.ClientId, out float readyAt) && Time.time < readyAt)
-            return $"Unstuck is on cooldown ({Mathf.CeilToInt(readyAt - Time.time)} s).";
+        {
+            seconds = Mathf.CeilToInt(readyAt - Time.time);
+            return "unstuck.cooldown";
+        }
 
         if (Time.time - _lastDamagedAt < UnstuckCombatLockSeconds)
-            return "You can't use Unstuck in combat.";
+            return "unstuck.combat";
 
         foreach (EGameplayTag tag in ControlTags)
             if (ASC.HasTag(tag) && HasEffectGranting(tag))
-                return "Wait until the effect on you wears off.";
+                return "unstuck.wait_effect";
 
         float still = Time.time - _stillSince;
         if (still < UnstuckStillSeconds)
-            return $"Stand still for {UnstuckStillSeconds:0} s first ({Mathf.CeilToInt(UnstuckStillSeconds - still)} s left).";
+        {
+            seconds = Mathf.CeilToInt(UnstuckStillSeconds - still);
+            return "unstuck.stand_still";
+        }
 
         return null;
     }
@@ -3489,10 +3539,12 @@ public class PlayerController : NetworkBehaviour
     }
 
     [TargetRpc]
-    private void TargetUnstuckRejected(FishNet.Connection.NetworkConnection conn, string reason)
+    private void TargetUnstuckRejected(FishNet.Connection.NetworkConnection conn, string reasonKey,
+                                       int seconds, int stillSeconds)
     {
+        string reason = Loc.T(reasonKey, ("seconds", seconds), ("total", stillSeconds));
         UI_ScreenFeedback.Get().ShowToast(reason, new Color(1f, 0.75f, 0.3f, 1f));
-        Debug.Log($"[Unstuck] Rechazado: {reason}");
+        Debug.Log($"[Unstuck] Rechazado: {reasonKey}");
     }
 
     // El personaje nuevo del desatascarse equipa la clase del anterior apenas le llega.

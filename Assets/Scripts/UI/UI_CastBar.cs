@@ -145,7 +145,7 @@ public class UI_CastBar : MonoBehaviour
             _state       = EState.Interrupted;
             _fill.color  = InterruptedColor;
             _fill.rectTransform.anchorMax = new Vector2(1f, 1f);
-            _label.text  = "Interrupted";
+            _label.text  = Loc.T("castbar.interrupted");
         }
         else
         {

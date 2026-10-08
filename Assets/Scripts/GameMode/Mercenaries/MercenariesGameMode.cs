@@ -217,8 +217,9 @@ public class MercenariesGameMode : NetworkBehaviour
         return TeamColors[i];
     }
 
-    // Nombre visible de un equipo. Un solo lugar para cambiarlo.
-    public static string TeamName(int team) => $"TEAM {team}";
+    // Nombre visible de un equipo, en el idioma de esta pantalla (Loc). Un solo lugar para
+    // cambiarlo. Es para MOSTRAR: el servidor nunca lo manda escrito, manda el número.
+    public static string TeamName(int team) => Loc.T("match.team", ("team", team));
 
     public static bool IsValidTeam(int team) => team >= 1 && team <= TeamCount;
 

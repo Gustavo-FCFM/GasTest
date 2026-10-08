@@ -142,20 +142,20 @@ public class UI_ObjectiveMarker : MonoBehaviour
             if (objective.IsCarried)
             {
                 color  = gm.GetTeamColor(objective.CarrierTeam);
-                prefix = objective.CarrierTeam == MercUIFactory.LocalTeam() ? "OBJECTIVE (ally)" : "OBJECTIVE";
+                prefix = Loc.T(objective.CarrierTeam == MercUIFactory.LocalTeam() ? "marker.objective_ally" : "marker.objective");
 
                 // Entregando: lo ven TODOS, que es la gracia — los rivales tienen hasta
                 // que se llene la barra para cortarla con un golpe.
                 if (_shownDelivery > 0f)
                 {
                     float remaining = (1f - _shownDelivery) * objective.DeliverSeconds;
-                    prefix = $"DELIVERING {remaining:0.0}s";
+                    prefix = Loc.T("marker.delivering_time", ("seconds", remaining.ToString("0.0")));
                 }
             }
             else
             {
                 color  = ObjectiveColor;
-                prefix = "OBJECTIVE";
+                prefix = Loc.T("marker.objective");
             }
         }
         else if (gm.ObjectiveSpawnPoint != null && gm.State != EMatchState.Ended)
@@ -164,7 +164,7 @@ public class UI_ObjectiveMarker : MonoBehaviour
             worldPos = gm.ObjectiveSpawnPoint.position;
             color    = new Color(ObjectiveColor.r, ObjectiveColor.g, ObjectiveColor.b, 0.55f);
             float eta = gm.ObjectiveEta;
-            prefix   = eta > 0f ? $"OBJECTIVE IN {MercUIFactory.FormatTime(eta)}" : "OBJECTIVE";
+            prefix   = eta > 0f ? Loc.T("marker.objective_in", ("time", MercUIFactory.FormatTime(eta))) : Loc.T("marker.objective");
         }
         else
         {
@@ -222,7 +222,7 @@ public class UI_ObjectiveMarker : MonoBehaviour
         if (teamBase == null) { Hide(_deliveryMarker); return; }
 
         Place(_deliveryMarker, teamBase.DeliveryWorldPoint, cam, gm.GetTeamColor(localTeam),
-              _shownDelivery > 0f ? "DELIVERING" : "DELIVER");
+              Loc.T(_shownDelivery > 0f ? "marker.delivering" : "marker.deliver"));
     }
 
     // Coloca un marcador en la pantalla a partir de un punto del mundo. Si el punto

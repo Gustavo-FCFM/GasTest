@@ -54,7 +54,11 @@ public class HealthPackVisual : MonoBehaviour
         // Sin esto el botiquín es "un piso verde": en la prueba de 9 nadie supo qué
         // era, ni siquiera quienes lo levantaron. Un cartel con la cantidad lo explica
         // solo, y de paso se lee desde lejos, que es cuando decidís si vale el desvío.
-        _label = MakeLabel(_cross, $"+{pack.HealAmount:F0} HP", pack.Tint).transform;
+        float heal = pack.HealAmount;
+        GameObject label = MakeLabel(_cross, "", pack.Tint);
+        LocalizedText.Bind(label.GetComponentInChildren<TextMeshProUGUI>(),
+                           () => Loc.T("healthpack.label", ("amount", heal.ToString("F0"))));
+        _label = label.transform;
 
         // --- el disco del piso ---
         GameObject canvasGo = new GameObject("Disc", typeof(Canvas), typeof(CanvasScaler));

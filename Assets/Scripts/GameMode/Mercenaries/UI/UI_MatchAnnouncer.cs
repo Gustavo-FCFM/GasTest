@@ -78,6 +78,8 @@ public class UI_MatchAnnouncer : MonoBehaviour
         Push(text, color, ResolveSize(type));
     }
 
+    // El aviso llega como QUÉ pasó (el enum, el equipo y un número), nunca como texto: así
+    // cada pantalla lo escribe en su idioma (ver Loc, claves announce.*).
     private string BuildText(EMatchAnnouncement type, int team, int extra)
     {
         string teamName = MercenariesGameMode.TeamName(team);
@@ -85,29 +87,30 @@ public class UI_MatchAnnouncer : MonoBehaviour
         switch (type)
         {
             case EMatchAnnouncement.MatchStarted:
-                return "LET THE HUNT BEGIN!";
+                return Loc.T("announce.match_started");
 
             case EMatchAnnouncement.ObjectiveSpawned:
-                return "THE OBJECTIVE HAS APPEARED IN THE CENTER!";
+                return Loc.T("announce.objective_spawned");
 
             case EMatchAnnouncement.ObjectiveTaken:
                 return team == MercUIFactory.LocalTeam()
-                    ? "YOUR TEAM HAS THE OBJECTIVE!"
-                    : $"{teamName} picked up the Objective";
+                    ? Loc.T("announce.objective_taken_yours")
+                    : Loc.T("announce.objective_taken", ("team", teamName));
 
             case EMatchAnnouncement.ObjectiveDropped:
-                return $"{teamName} dropped the Objective";
+                return Loc.T("announce.objective_dropped", ("team", teamName));
 
             case EMatchAnnouncement.ObjectiveDelivered:
-                return $"{teamName} DELIVERED THE OBJECTIVE!  ({extra}/{ResolvePointsToWin()})";
+                return Loc.T("announce.objective_delivered", ("team", teamName), ("points", extra),
+                             ("goal", ResolvePointsToWin()));
 
             case EMatchAnnouncement.ObjectiveReturning:
-                return extra > 0 ? $"Next Objective in {extra}s" : "";
+                return extra > 0 ? Loc.T("announce.next_objective", ("seconds", extra)) : "";
 
             case EMatchAnnouncement.TeamWiped:
                 return team == MercUIFactory.LocalTeam()
-                    ? "YOUR TEAM WAS WIPED OUT!"
-                    : $"{teamName} WAS WIPED OUT!";
+                    ? Loc.T("announce.wiped_yours")
+                    : Loc.T("announce.wiped", ("team", teamName));
 
             case EMatchAnnouncement.TeamLevelUp:
                 // El nivel de los OTROS equipos ya se ve en el marcador; no lo gritamos.
@@ -122,11 +125,11 @@ public class UI_MatchAnnouncer : MonoBehaviour
                     ? MercenariesGameMode.Instance.MaxTeamLevel : 0;
 
                 return (maxLevel > 0 && extra >= maxLevel)
-                    ? $"YOUR TEAM REACHED LEVEL {extra}! — Press {InputGlyphs.Subclass} to choose a Subclass"
-                    : $"YOUR TEAM REACHED LEVEL {extra}!";
+                    ? Loc.T("announce.level_up_max", ("level", extra), ("key", InputGlyphs.Subclass))
+                    : Loc.T("announce.level_up", ("level", extra));
 
             case EMatchAnnouncement.MatchEnded:
-                return team > 0 ? $"{teamName} WINS" : "DRAW";
+                return team > 0 ? Loc.T("match.wins", ("team", teamName)) : Loc.T("match.draw");
         }
         return "";
     }

@@ -214,12 +214,9 @@ public class UI_SettingsPanel : MonoBehaviour
                   () => GameSettings.ResolutionIndex < 0 ? GameSettings.CurrentResolutionIndex() : GameSettings.ResolutionIndex,
                   i => GameSettings.ResolutionIndex = i,
                   i => $"{GameSettings.Resolutions[i].width} × {GameSettings.Resolutions[i].height}");
-        // Los niveles de calidad se llaman como en el proyecto (Mobile, PC): si la tabla
-        // tiene quality.<nombre>, se muestra eso.
-        CyclerRow(ref y, "settings.quality", QualitySettings.names.Length,
-                  () => GameSettings.QualityLevel,
-                  i => GameSettings.QualityLevel = i,
-                  i => Loc.TOr("quality." + QualitySettings.names[i], QualitySettings.names[i]));
+        // Sin fila de calidad (8 de octubre, pedido de Gustavo): el proyecto no tiene niveles
+        // pensados para elegir (eran los de fábrica, Mobile y PC). GameSettings.QualityLevel
+        // sigue existiendo por si algún día se arman.
         ToggleRow(ref y, "settings.vsync", () => GameSettings.VSync, v => GameSettings.VSync = v);
 
         // El alto lo dicta el contenido: las filas de arriba más el pie con los botones.

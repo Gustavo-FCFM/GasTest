@@ -28,7 +28,6 @@ settings.effects;Efectos;Effects
 settings.section.display;Pantalla;Display
 settings.screen_mode;Modo;Mode
 settings.resolution;Resolución;Resolution
-settings.quality;Calidad;Quality
 settings.vsync;Sincronización vertical (VSync);Vertical sync (VSync)
 settings.reset;Restablecer;Reset
 settings.close;Cerrar;Close
@@ -36,9 +35,6 @@ settings.hint;ESC también cierra · los cambios se aplican al instante;ESC also
 screen.fullscreen;Pantalla completa;Fullscreen
 screen.borderless;Ventana sin bordes;Borderless window
 screen.windowed;En ventana;Windowed
-# Los niveles de calidad del proyecto (Project Settings ▸ Quality): quality.<nombre del nivel>
-quality.Mobile;Baja;Low
-quality.PC;Alta;High
 input.keyboard_mouse;Teclado y mouse;Keyboard and mouse
 input.xbox;Control de Xbox;Xbox controller
 input.playstation;Control de PlayStation;PlayStation controller
@@ -89,3 +85,79 @@ role.tanks;Tanques;Tanks
 role.damage;Daño;Damage
 role.supports;Soportes;Supports
 role.other;Otros;Other
+#
+# ---- Partida: marcador ----
+match.team;EQUIPO {team};TEAM {team}
+match.team_you;{team} (TÚ);{team} (YOU)
+match.level_short;Nv. {level};Lv. {level}
+match.get_ready;PREPÁRATE  {time};GET READY  {time}
+match.wins;{team} GANA;{team} WINS
+match.draw;EMPATE;DRAW
+match.choose_class_in_base;Elige tu clase en tu base. Afuera no se puede cambiar.;Choose your class in your base. It can't be changed outside.
+match.objective_carried;OBJETIVO · lo lleva {team};OBJECTIVE · carried by {team}
+match.objective_on_map;OBJETIVO · en el mapa;OBJECTIVE · on the map
+match.next_objective;Siguiente Objetivo en {time};Next Objective in {time}
+#
+# ---- Partida: anunciador (los avisos grandes) ----
+announce.match_started;¡QUE EMPIECE LA CACERÍA!;LET THE HUNT BEGIN!
+announce.objective_spawned;¡EL OBJETIVO APARECIÓ EN EL CENTRO!;THE OBJECTIVE HAS APPEARED IN THE CENTER!
+announce.objective_taken_yours;¡TU EQUIPO TIENE EL OBJETIVO!;YOUR TEAM HAS THE OBJECTIVE!
+announce.objective_taken;{team} tomó el Objetivo;{team} picked up the Objective
+announce.objective_dropped;{team} soltó el Objetivo;{team} dropped the Objective
+announce.objective_delivered;¡{team} ENTREGÓ EL OBJETIVO!  ({points}/{goal});{team} DELIVERED THE OBJECTIVE!  ({points}/{goal})
+announce.next_objective;Siguiente Objetivo en {seconds} s;Next Objective in {seconds}s
+announce.wiped_yours;¡TU EQUIPO FUE ELIMINADO!;YOUR TEAM WAS WIPED OUT!
+announce.wiped;¡{team} FUE ELIMINADO!;{team} WAS WIPED OUT!
+announce.level_up;¡TU EQUIPO LLEGÓ AL NIVEL {level}!;YOUR TEAM REACHED LEVEL {level}!
+announce.level_up_max;¡TU EQUIPO LLEGÓ AL NIVEL {level}! — Presiona {key} para elegir una subclase;YOUR TEAM REACHED LEVEL {level}! — Press {key} to choose a Subclass
+#
+# ---- Partida: marcador del Objetivo en pantalla ----
+marker.objective;OBJETIVO;OBJECTIVE
+marker.objective_ally;OBJETIVO (aliado);OBJECTIVE (ally)
+marker.objective_in;OBJETIVO EN {time};OBJECTIVE IN {time}
+marker.delivering;ENTREGANDO;DELIVERING
+marker.delivering_time;ENTREGANDO {seconds} s;DELIVERING {seconds}s
+marker.deliver;ENTREGAR;DELIVER
+#
+# ---- Partida: bajas y muerte ----
+killfeed.died;murió;died
+death.you_died;MORISTE;YOU DIED
+death.killed_by;TE MATÓ {killer};KILLED BY {killer}
+death.respawning;Reapareces en {seconds};Respawning in {seconds}
+npc.boss;el Jefe;the Boss
+npc.mage;un Mago;a Mage
+npc.totem;un Tótem;a Totem
+npc.ghost;un Fantasma;a Ghost
+#
+# ---- Partida: desatascarse (ESC ▸ recuadro de red) ----
+unstuck.not_now;Ahora no se puede.;Can't do that right now.
+unstuck.dead;No puedes desatascarte estando muerto.;You can't use Unstuck while dead.
+unstuck.cooldown;Desatascarse está en recarga ({seconds} s).;Unstuck is on cooldown ({seconds} s).
+unstuck.combat;No puedes desatascarte en combate.;You can't use Unstuck in combat.
+unstuck.wait_effect;Espera a que se te pase el efecto.;Wait until the effect on you wears off.
+unstuck.stand_still;Primero quédate quieto {total} s (faltan {seconds} s).;Stand still for {total} s first ({seconds} s left).
+#
+# ---- Partida: menú de clases, subclases, rueda, barras ----
+classmenu.only_in_base;Solo puedes cambiar de clase dentro de tu base;You can only change class inside your base
+classmenu.land_first;Primero aterriza;Land first
+classmenu.outside_base;Estás fuera de tu base: si te golpean, el menú se cierra;You're outside your base: if you get hit, the menu closes
+classmenu.hit_cancelled;Te golpearon: se canceló la elección. Vuelve a tu base y presiona {key};You got hit: the choice was cancelled. Go back to your base and press {key}
+levelup.max_level;¡NIVEL MÁXIMO!;MAX LEVEL!
+radial.cancel;Cancelar;Cancel
+radial.on_cooldown;En recarga;On cooldown
+radial.option;Opción {number};Option {number}
+castbar.interrupted;Interrumpido;Interrupted
+ultimate.ready_short;LISTA;READY
+ultimate.ready_toast;¡DEFINITIVA LISTA!  [{key}];ULTIMATE READY!  [{key}]
+healthpack.label;+{amount} vida;+{amount} HP
+#
+# ---- Partida: botones que se dibujan (teclado; los de control van igual en los dos) ----
+glyph.lmb;Clic I;LMB
+glyph.rmb;Clic D;RMB
+glyph.space;Espacio;Space
+glyph.click;Clic;Click
+glyph.dpad_up;CRUCETA ARRIBA;D-PAD UP
+#
+# ---- Espectador ----
+spectator.hint_following;Clic: cambiar de jugador · {free}: cámara libre · {info}: info · {scoreboard}: marcador;Click: switch player · {free}: free camera · {info}: info · {scoreboard}: scoreboard
+spectator.hint_free;WASD + Espacio/Ctrl · Shift: rápido · Clic: seguir a un jugador · {scoreboard}: marcador;WASD + Space/Ctrl · Shift: fast · Click: follow a player · {scoreboard}: scoreboard
