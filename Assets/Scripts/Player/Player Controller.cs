@@ -440,6 +440,11 @@ public class PlayerController : NetworkBehaviour
     private Vector3  _wallJumpAwayNormal;
     private float    _wallJumpLockUntil;
 
+    // Recién teletransportado (TeleportTo): un instante en el que se engancha solo a la
+    // pared que tiene enfrente, sin empujar (el Paso de las sombras del Shinobi llega así).
+    private float    _wallGraceUntil;
+    private Vector3  _wallGraceDir;
+
     // El último roce de COSTADO que avisó el CharacterController (ver OnControllerColliderHit).
     private int      _sideHitFrame = -1;
     private Vector3  _sideHitNormal;
@@ -458,6 +463,11 @@ public class PlayerController : NetworkBehaviour
     // evita que un dash termine en una frenada seca.
     private Vector3 _inertiaVelocity;
     private float   _inertiaDamping = 3f;
+
+    // La inercia de ahora la dejó una PARED (el salto desde ella, o lo que corría a lo
+    // largo): al tocar el piso se corta. Es un impulso de aire; sin esto, al aterrizar
+    // seguía resbalando en la dirección del salto (8 de octubre, reporte de Gustavo).
+    private bool    _inertiaFromWall;
 
     // Último punto de mira que el dueño calculó con SU cámara y envió al
     // servidor junto con el input de habilidad. El servidor (y por lo tanto
@@ -729,6 +739,9 @@ public class PlayerController : NetworkBehaviour
 
         if (!IsOwner) return;
 
+        // Un canalizado que apunta mientras dura le pidió la mira (ver "MIRA EN VIVO").
+        TickAimStream();
+
         // El input del dueño todavía no está listo (se habilita en OnStartClient).
         if (_input == null || !_input.IsReady) return;
 
@@ -981,8 +994,10 @@ public class PlayerController : NetworkBehaviour
             // activa, y con el impulso más chico del aleteo.
             if (_input.Jump.WasPressedThisFrame() && (characterController.isGrounded || feathered))
             {
-                verticalVelocity = characterController.isGrounded ? jumpForce : flapForce;
+                bool fromGround = characterController.isGrounded;
+                verticalVelocity = fromGround ? jumpForce : flapForce;
                 if (AudioLibrary.Instance != null) AudioManager.Play(AudioLibrary.Instance.Jump, transform.position);
+                if (fromGround) OnOwnerJumped();
             }
         }
 
@@ -998,9 +1013,18 @@ public class PlayerController : NetworkBehaviour
         characterController.Move(finalMove * Time.deltaTime);
 
         // En el aire, yendo contra una pared: el Pícaro se pega, el Monje corre por ella.
-        // Tocar el piso habilita volver a pegarse a cualquier pared.
-        if (characterController.isGrounded) _hasLastWall = false;
-        else if (!_abilityVelocityActive)    TryStartWall(inputVec);
+        // Tocar el piso habilita volver a pegarse a cualquier pared, y corta el impulso que
+        // dejó la pared (ver _inertiaFromWall).
+        if (characterController.isGrounded)
+        {
+            _hasLastWall = false;
+            if (_inertiaFromWall)
+            {
+                _inertiaFromWall = false;
+                _inertiaVelocity = Vector3.zero;
+            }
+        }
+        else if (!_abilityVelocityActive) TryStartWall(inputVec);
     }
 
     // Cámara del dueño, cacheada. Camera.main busca por TAG cada vez que se llama, y
@@ -1129,6 +1153,7 @@ public class PlayerController : NetworkBehaviour
 
         _inertiaDamping  = Mathf.Max(0.01f, damping);
         _inertiaVelocity = new Vector3(leftover.x, 0f, leftover.z);
+        _inertiaFromWall = false;
         verticalVelocity = leftover.y;
     }
 
@@ -1235,6 +1260,7 @@ public class PlayerController : NetworkBehaviour
         SetCollisionExclusion(_rushExcludeMask, false);
         _inertiaVelocity = new Vector3(_rushVelocity.x, 0f, _rushVelocity.z) * 0.2f;   // no frena en seco
         _inertiaDamping  = 4f;
+        _inertiaFromWall = false;
 
         if (notifyServer && NetASC != null) NetASC.ServerRequestStopRush();
     }
@@ -1380,7 +1406,12 @@ public class PlayerController : NetworkBehaviour
     private void TryStartWall(Vector3 inputVec)
     {
         WallMovementProfile p = WallProfile;
-        if (p == null || _sideHitFrame != Time.frameCount || !CanUseWalls(p)) return;
+        if (p == null || !CanUseWalls(p)) return;
+
+        // Recién teletransportado frente a una pared: se engancha solo, sin empujar.
+        if (Time.time < _wallGraceUntil && TryGraceAttach(p)) return;
+
+        if (_sideHitFrame != Time.frameCount) return;
         if (Mathf.Abs(_sideHitNormal.y) > p.MaxNormalY) return;
 
         Vector3 n = new Vector3(_sideHitNormal.x, 0f, _sideHitNormal.z);
@@ -1394,10 +1425,37 @@ public class PlayerController : NetworkBehaviour
         if (IsLastWall(_sideHitCollider, n, _sideHitPoint)) return;
         if (GroundWithin(p.MinHeightAboveGround)) return;
 
+        StartWall(p, n, _sideHitCollider, _sideHitPoint);
+    }
+
+    // Engancharse a la pared que tiene enfrente justo después de un teletransporte (la
+    // dirección es hacia donde llegó mirando). true = se enganchó.
+    private bool TryGraceAttach(WallMovementProfile p)
+    {
+        if (_wallGraceDir.sqrMagnitude < 0.0001f) return false;
+
+        Vector3 center = transform.TransformPoint(characterController.center);
+        float   r      = characterController.radius * 0.5f;
+        int     mask   = p.WallLayers.value & ~InvisibleWallsMask;
+        if (!Physics.SphereCast(center, r, _wallGraceDir, out RaycastHit hit, r + 0.6f, mask,
+                                QueryTriggerInteraction.Ignore))
+            return false;
+        if (Mathf.Abs(hit.normal.y) > p.MaxNormalY || !IsWallCollider(hit.collider, p)) return false;
+
+        Vector3 n = new Vector3(hit.normal.x, 0f, hit.normal.z);
+        if (n.sqrMagnitude < 0.0001f || GroundWithin(p.MinHeightAboveGround)) return false;
+
+        _wallGraceUntil = 0f;
+        StartWall(p, n.normalized, hit.collider, hit.point);
+        return true;
+    }
+
+    private void StartWall(WallMovementProfile p, Vector3 n, Collider wall, Vector3 point)
+    {
         _wallActive        = true;
         _wallNormal        = n;
-        _wallCollider      = _sideHitCollider;
-        _wallPoint         = _sideHitPoint;
+        _wallCollider      = wall;
+        _wallPoint         = point;
         _wallStartTime     = Time.time;
         _wallAlongVelocity = Vector3.zero;
         _inertiaVelocity   = Vector3.zero;
@@ -1511,21 +1569,38 @@ public class PlayerController : NetworkBehaviour
         return true;
     }
 
-    // Salto desde la pared: hacia afuera (la normal) y hacia arriba. El impulso horizontal
-    // va por la inercia —se disipa sola y se suma al WASD—, y un rato el WASD no puede
-    // empujar de vuelta contra la pared.
+    // Salto desde la pared: hacia afuera y hacia arriba. "Afuera" es la normal de la pared
+    // girada hacia donde mira la cámara, hasta JumpAimMaxAngle a cada lado (8 de octubre,
+    // pedido de Gustavo): se puede elegir para qué lado sale, pero nunca derecho a donde
+    // mira. El impulso horizontal va por la inercia —se disipa sola y se suma al WASD—, y un
+    // rato el WASD no puede empujar de vuelta contra la pared.
     private void WallJump(WallMovementProfile p)
     {
         Vector3 away = _wallNormal;
+        Camera cam = MainCamera;
+        if (cam != null && p.JumpAimMaxAngle > 0f)
+        {
+            Vector3 look = cam.transform.forward;
+            look.y = 0f;
+            if (look.sqrMagnitude > 0.0001f)
+            {
+                float angle = Mathf.Clamp(Vector3.SignedAngle(_wallNormal, look.normalized, Vector3.up),
+                                          -p.JumpAimMaxAngle, p.JumpAimMaxAngle);
+                away = Quaternion.AngleAxis(angle, Vector3.up) * _wallNormal;
+            }
+        }
+        Vector3 wallNormal = _wallNormal;
         StopWall();
 
         verticalVelocity    = p.JumpOffUp;
         _inertiaVelocity    = away * p.JumpOffSpeed;
         _inertiaDamping     = Mathf.Max(0.01f, p.JumpOffDamping);
-        _wallJumpAwayNormal = away;
+        _inertiaFromWall    = true;         // al tocar el piso se corta
+        _wallJumpAwayNormal = wallNormal;   // el WASD no empuja de vuelta contra ESTA pared
         _wallJumpLockUntil  = Time.time + p.JumpOffLockTime;
 
         if (AudioLibrary.Instance != null) AudioManager.Play(AudioLibrary.Instance.Jump, transform.position);
+        OnOwnerJumped();
     }
 
     // Suelta la pared: cae con lo que traía (y el Monje conserva lo que corría a lo largo).
@@ -1543,6 +1618,7 @@ public class PlayerController : NetworkBehaviour
         verticalVelocity = _wallVertical;
         _inertiaVelocity = _wallAlongVelocity;
         _inertiaDamping  = 3f;
+        _inertiaFromWall = true;
         _leanTargetLocal = Vector3.up;   // aturdido o empujado no pasa por UpdateAnimations
     }
 
@@ -1638,6 +1714,11 @@ public class PlayerController : NetworkBehaviour
             transform.rotation = Quaternion.LookRotation(faceDir.normalized);
 
         if (turnCamera && _orbitCam != null) _orbitCam.FaceDirection(faceDir);
+
+        // Si llegó en el aire frente a una pared (el Paso de las sombras apunta a paredes),
+        // se engancha solo en los próximos frames. Ver TryGraceAttach.
+        _wallGraceDir   = faceDir.sqrMagnitude > 0.0001f ? faceDir.normalized : Vector3.zero;
+        _wallGraceUntil = Time.time + 0.3f;
     }
 
     // Excluye (o restaura) capas de colisión del CharacterController. Lo usa el
@@ -1838,8 +1919,11 @@ public class PlayerController : NetworkBehaviour
             _groundTargetAbility = ability;
             _groundTargetSlot    = slot;
 
-            if (UI_GroundTargetIndicator.Instance != null)
-                UI_GroundTargetIndicator.Instance.Show(ground.TargetRadius);
+            // Una franja (el Corte final) en vez de la zona en el piso. Get() crea el
+            // marcador la primera vez: no está puesto en ninguna escena.
+            UI_GroundTargetIndicator indicator = UI_GroundTargetIndicator.Get();
+            if (ability is ILineTargetAbility) indicator.ShowLine();
+            else                               indicator.Show(ground.TargetRadius);
         }
         else
         {
@@ -1994,6 +2078,15 @@ public class PlayerController : NetworkBehaviour
     {
         if (_groundTargetAbility is not IGroundTargetAbility ground) return;
         if (UI_GroundTargetIndicator.Instance == null) return;
+
+        // La franja sale de los pies hacia la mira (la misma dirección con la que el
+        // servidor va a salir: la del punto de mira que se le manda al soltar).
+        if (_groundTargetAbility is ILineTargetAbility line)
+        {
+            UI_GroundTargetIndicator.Instance.UpdateLine(transform.position, GetAimPoint() - transform.position,
+                                                         line.LineLength, line.LineWidth, line.LineTargetLayer, ASC);
+            return;
+        }
 
         UI_GroundTargetIndicator.Instance.UpdatePosition(GetClampedAimPoint(ground.MaxTargetRange));
     }
@@ -3008,6 +3101,104 @@ public class PlayerController : NetworkBehaviour
     private void ObserversSetAimPitch(sbyte pitch, Channel channel = Channel.Unreliable)
     {
         NetworkAimPitch = pitch;
+    }
+
+    // =========================================================
+    // MIRA EN VIVO (canalizados que apuntan mientras duran)
+    //
+    // El servidor conoce la mira del dueño solo en el instante de activar: NetworkAimPoint
+    // viaja con el pedido de la habilidad. Un canalizado que apunta MIENTRAS dura (el
+    // Aliento del dragón rojo deja una zona de fuego donde mirás en cada tick) necesita la
+    // mira de AHORA. El servidor le pide al dueño que se la mande un rato
+    // (ServerStreamAimFor), y el dueño la manda ~10 veces por segundo por canal no
+    // confiable: un punto perdido lo reemplaza el siguiente. En el host no hace falta:
+    // ahí GetAimPoint lee su cámara en vivo.
+    // =========================================================
+
+    private const float AimStreamRate = 10f;
+    private float _aimStreamUntil;
+    private float _nextAimStreamAt;
+
+    [Server]
+    public void ServerStreamAimFor(float seconds)
+    {
+        // El host lee su cámara en vivo; un bot no tiene dueño (su IA escribe la mira).
+        if (IsOwner || !Owner.IsValid) return;
+        TargetStreamAim(Owner, seconds);
+    }
+
+    [TargetRpc]
+    private void TargetStreamAim(FishNet.Connection.NetworkConnection conn, float seconds)
+    {
+        _aimStreamUntil  = Time.time + seconds;
+        _nextAimStreamAt = 0f;
+    }
+
+    private void TickAimStream()
+    {
+        if (Time.time >= _aimStreamUntil || Time.time < _nextAimStreamAt) return;
+        _nextAimStreamAt = Time.time + 1f / AimStreamRate;
+        ServerSetStreamedAim(GetAimPoint(), Channel.Unreliable);
+    }
+
+    [ServerRpc]
+    private void ServerSetStreamedAim(Vector3 aimPoint, Channel channel = Channel.Unreliable)
+    {
+        NetworkAimPoint = aimPoint;
+    }
+
+    // =========================================================
+    // VFX AL SALTAR (GameplayEffect.JumpVFX)
+    //
+    // Un efecto puede dejar algo cada vez que su portador salta: el humo del Manto de
+    // oscuridad del Shinobi, del piso o de una pared. El salto lo hace el DUEÑO (el
+    // movimiento es suyo), y el dueño también sabe qué efectos tiene: le llegan por
+    // NetworkASC.NetActiveEffectDuration, el diccionario de la barra de buffs. Así que el
+    // dueño decide, lo dibuja en el acto y le pide al servidor que lo repita en las demás
+    // pantallas. Solo viaja algo si de verdad tiene puesto un efecto con humo.
+    // =========================================================
+
+    private const float JumpVFXLifetime = 4f;
+
+    private void OnOwnerJumped()
+    {
+        if (!IsOwner || NetASC == null) return;
+
+        GameplayEffectRegistry registry = GameplayEffectRegistry.Instance;
+        if (registry == null) return;
+
+        foreach (int index in NetASC.GetActiveEffectIndices())
+        {
+            GameplayEffect effect = registry.GetEffect(index);
+            if (effect == null || effect.JumpVFX == null) continue;
+
+            Vector3 at = transform.position;
+            SpawnJumpVFX(effect, at);
+            ServerJumpVFX(index, at);
+            return;   // uno por salto: dos humos encimados no dicen nada más
+        }
+    }
+
+    [ServerRpc]
+    private void ServerJumpVFX(int effectIndex, Vector3 position)
+    {
+        // Solo si el servidor también le ve el efecto puesto.
+        if (NetASC == null || !NetASC.NetActiveEffectDuration.ContainsKey(effectIndex)) return;
+        ObserversJumpVFX(effectIndex, position);
+    }
+
+    [ObserversRpc(ExcludeOwner = true)]
+    private void ObserversJumpVFX(int effectIndex, Vector3 position)
+    {
+        GameplayEffectRegistry registry = GameplayEffectRegistry.Instance;
+        GameplayEffect effect = registry != null ? registry.GetEffect(effectIndex) : null;
+        if (effect != null) SpawnJumpVFX(effect, position);
+    }
+
+    private static void SpawnJumpVFX(GameplayEffect effect, Vector3 position)
+    {
+        if (effect.JumpVFX == null) return;
+        Destroy(Instantiate(effect.JumpVFX, position, Quaternion.identity), JumpVFXLifetime);
     }
 
     // (Re)arma la copia de runtime del Animator: parte del controller BASE y le

@@ -74,6 +74,7 @@ public static class AbilitySection
     public const string Shape        = "Forma y alcance";
     public const string Movement     = "Movimiento";
     public const string Timing       = "Tiempos";
+    public const string Stacks       = "Acumulaciones";
     public const string Effects      = "Efectos (GE)";
     public const string Visuals      = "VFX";
     public const string Animation    = "Animación";
@@ -85,8 +86,34 @@ public static class AbilitySection
     public static readonly string[] Order =
     {
         General, CostCooldown, Rules, Targeting, Shape, Movement, Timing, "*",
-        Effects, Visuals, Animation, Sound, Advanced,
+        Stacks, Effects, Visuals, Animation, Sound, Advanced,
     };
+}
+
+// =========================================================
+// ACUMULACIONES (las de Artes marciales del Monje)
+//
+// Una habilidad puede LEER al activarse cuántas acumulaciones tiene el lanzador (las
+// cuenta por un tag: cada acumulación da el tag una vez) y gastarlas. Las entradas de
+// su lista de efectos pueden escalar con ese número. LA REGLA (Gustavo, 8 de octubre):
+// lo que escala, SIN acumulaciones no se aplica; cada acumulación suma.
+// =========================================================
+
+// Si la habilidad gasta las acumulaciones que leyó, y cuándo.
+public enum EStackConsume
+{
+    [InspectorName("No las gasta")]                Never      = 0,
+    [InspectorName("Al activarse")]                OnActivate = 1,
+    [InspectorName("Al terminar")]                 OnEnd      = 2,
+}
+
+// Cómo escala UNA entrada de efectos con las acumulaciones que leyó la habilidad.
+public enum EStackScaling
+{
+    [InspectorName("No escala")]                          None             = 0,
+    [InspectorName("Solo con acumulaciones (una vez)")]   OnlyWithStacks   = 1,
+    [InspectorName("Una vez por acumulación")]            OncePerStack     = 2,
+    [InspectorName("Duración: segundos por acumulación")] DurationPerStack = 3,
 }
 
 // Las secciones de un GameplayEffect, en el orden en que se muestran.
@@ -167,6 +194,16 @@ public struct AbilityEffect
              "Con 'Al activarse' se mira al lanzador. None = siempre.")]
     public EGameplayTag OnlyIfTargetHas;
 
+    [Tooltip("ESCALA con las acumulaciones que la habilidad leyó al activarse (su sección " +
+             "Acumulaciones). Con 0 acumulaciones, una entrada que escala NO se aplica.\n\n" +
+             "· Solo con acumulaciones: una vez, si había alguna.\n" +
+             "· Una vez por acumulación: 4 acumulaciones = 4 veces (4 heridas).\n" +
+             "· Duración: el efecto dura 'Por acumulación' segundos por cada una (0.5 → 4 = 2 s).")]
+    public EStackScaling StackScaling;
+
+    [Tooltip("Con 'Duración': cuántos segundos suma cada acumulación.")]
+    public float PerStack;
+
     public AbilityEffect(GameplayEffect effect, EEffectWhen when = EEffectWhen.OnHit,
                          EEffectTarget applyTo = EEffectTarget.Enemies)
     {
@@ -174,6 +211,8 @@ public struct AbilityEffect
         When            = when;
         ApplyTo         = applyTo;
         OnlyIfTargetHas = EGameplayTag.None;
+        StackScaling    = EStackScaling.None;
+        PerStack        = 0f;
     }
 }
 

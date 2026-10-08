@@ -102,6 +102,17 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
              "proyectil.")]
     public bool ReflectProjectilesOnParry = false;
 
+    [Header("Castigar al atacante (Samurái)")]
+    [Tooltip("Se le aplica al ATACANTE por cada golpe que frena esta barrera: cuerpo a cuerpo o a " +
+             "distancia, también en el parry. El Samurái pone las heridas del Pícaro (GE_Wounds, " +
+             "hasta 10). El mismo golpe frenado para varios a la vez cuenta una vez. Vacío = nada.")]
+    public GameplayEffect OnBlockAttackerEffect;
+
+    // Mismo criterio que la carga de la definitiva: un golpe que frena para varios a la vez
+    // (un barrido contra él y dos aliados detrás) castiga una sola vez.
+    private AbilitySystemComponent _lastPunishedAttacker;
+    private int _lastPunishedFrame = -1;
+
     // Candado de la devolución: mientras se aplica un daño devuelto, ninguna barrera lo
     // vuelve a devolver (sí lo puede frenar). Todo corre en el hilo principal, de forma
     // sincrónica, así que alcanza con un estático.
@@ -398,6 +409,7 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
             {
                 ChargeUltimateForBlock(ctx.Source);
                 ReflectToAttacker(ctx.Source, incoming);
+                PunishAttacker(ctx.Source);
             }
             return;
         }
@@ -429,7 +441,21 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
         {
             ChargeUltimateForBlock(ctx.Source);
             ReflectToAttacker(ctx.Source, blocked);
+            PunishAttacker(ctx.Source);
         }
+    }
+
+    // Le aplica OnBlockAttackerEffect al atacante de un golpe frenado (las heridas del
+    // Samurái). Corre en el servidor, donde se resuelven los bloqueos.
+    private void PunishAttacker(AbilitySystemComponent attacker)
+    {
+        if (OnBlockAttackerEffect == null || attacker == null || _ownerASC == null) return;
+        if (attacker.HasTag(EGameplayTag.State_Dead) || !_ownerASC.IsEnemyOf(attacker)) return;
+        if (ReferenceEquals(attacker, _lastPunishedAttacker) && Time.frameCount == _lastPunishedFrame) return;
+
+        _lastPunishedAttacker = attacker;
+        _lastPunishedFrame    = Time.frameCount;
+        attacker.ApplyGameplayEffect(OnBlockAttackerEffect, _ownerASC);
     }
 
     // Le adelanta la definitiva al dueño por un golpe frenado (ver UltimateSecondsPerBlock).
@@ -622,6 +648,7 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
 
         BroadcastFlash(hitPoint);
         ChargeUltimateForBlock(shooter);
+        PunishAttacker(shooter);
         return blocked;
     }
 

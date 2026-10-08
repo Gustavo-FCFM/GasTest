@@ -27,10 +27,27 @@ using System.Collections.Generic;
 // ANIMACIÓN: AnimationClip suelto al salir, como cualquier habilidad. Si además tiene
 // RushLoopClip, esa pose se sostiene mientras dura (ranuras del canalizado: no hay
 // estados nuevos que crear en el Animator).
+//
+// APUNTAR ANTES (AimFirst, el Corte final del Samurái): mantener el botón muestra en el
+// piso la franja que va a recorrer —Distance de largo, el ancho de golpe, recortada en la
+// primera pared— y marca con un contorno a los enemigos que alcanzaría; soltar sale.
 // ============================================================
 [CreateAssetMenu(fileName = "GA_RushAttack", menuName = "GAS/Generics/Rush Attack")]
-public class GA_RushAttack : GameplayAbility, IChanneledAbility
+public class GA_RushAttack : GameplayAbility, IChanneledAbility, IGroundTargetAbility, ILineTargetAbility
 {
+    [Section(AbilitySection.Targeting)]
+    [Tooltip("Se apunta antes de salir: mantener el botón muestra la franja que va a recorrer y " +
+             "marca a los enemigos que alcanzaría; soltar sale. Apagado = sale al apretar.")]
+    public bool AimFirst = false;
+
+    // La franja de apuntar (ver AimFirst).
+    public float     MaxTargetRange   => Distance;
+    public float     TargetRadius     => HitRadius;
+    public bool      UsesGroundTarget => AimFirst;
+    public float     LineLength       => Distance;
+    public float     LineWidth        => HitRadius * 2f;
+    public LayerMask LineTargetLayer  => TargetLayer;
+
     [Section(AbilitySection.Movement)]
     [Tooltip("Metros que recorre si nada la corta.")]
     public float Distance = 14f;

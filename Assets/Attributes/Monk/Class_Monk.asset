@@ -18,6 +18,7 @@ MonoBehaviour:
     makes him faster, and Ki empowers his next move: a flurry of blows, a defense
     that guards him from every side, or a kick that stuns.'
   Role: 0
+  MenuRole: 2
   BaseAttributes: {fileID: 11400000, guid: 424e24fdfc53e7d44941f495501fc1be, type: 2}
   Abilities:
   - InputSlot: 1
@@ -39,7 +40,12 @@ MonoBehaviour:
     AmountPerLevel: 1
   - Attribute: 14
     AmountPerLevel: 100
-  AvailableSubclasses: []
+  - Attribute: 6
+    AmountPerLevel: 25
+  AvailableSubclasses:
+  - {fileID: 11400000, guid: e82bbcba1d1c15146867c01e03546e8f, type: 2}
+  - {fileID: 11400000, guid: d93cd898780fd0949a8cab0ea13f3392, type: 2}
+  - {fileID: 11400000, guid: 5ee5b7ae34ae986468b5ec92f4756058, type: 2}
   ClassAnimatorOverride: {fileID: 22100000, guid: f175085a22aa728459655748dd969669, type: 2}
   StanceAnimatorOverride: {fileID: 0}
   StanceAnimatorTag: 0

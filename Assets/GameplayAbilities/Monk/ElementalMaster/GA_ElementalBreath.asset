@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c273186160e84441a7e43da8ed5284e, type: 3}
+  m_Name: GA_ElementalBreath
+  m_EditorClassIdentifier: 
+  AbilityName: Fire Breath
+  AbilityIcon: {fileID: 21300000, guid: a8f5c32405815f94fa9013f6c921b362, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: bd07a782525833e47889b22896900f13, type: 2}
+  CooldownDuration: 8
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 0
+  ActivationBlockedTags: 0100000003000000
+  ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  UsableWhileHolding: 0
+  AnimationClip: {fileID: 0}
+  AnimationTriggerName: 
+  AnimationID: 1
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  StacksTag: 0
+  ConsumeStacks: 0
+  Effects: []
+  Visuals: []
+  IsInterruptible: 0
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  MaxCharges: 1
+  ShowVariantIcon: 1
+  DefaultIcon: {fileID: 0}
+  DefaultAbility: {fileID: 11400000, guid: 490b809c583c23f42bbb904ba134a1b5, type: 2}
+  Variants:
+  - RequiredTag: 63
+    Ability: {fileID: 11400000, guid: 36244544d8e145b45ab64f06b10c35db, type: 2}
+    ConsumeTag: 1
+    Icon: {fileID: 0}
+    AlsoActiveWithTag: 68

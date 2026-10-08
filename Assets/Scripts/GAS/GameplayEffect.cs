@@ -161,6 +161,12 @@ public class GameplayEffect : ScriptableObject
     [Tooltip("Solo al ATRAER: a cuántos metros de quien lo aplicó se detiene, para que no lo atraviese.")]
     public float PullStopDistance = 1.5f;
 
+    [Tooltip("EJECUTAR: mientras tenga este efecto, si su vida queda en esta fracción de su vida " +
+             "máxima o menos, muere (0.05 = al 5 %). Se mira al recibir el efecto y en cada daño " +
+             "mientras dura. La baja es de quien le puso el efecto. No mata a un inmortal (Preservar " +
+             "vida) ni a un inmune. 0 = no ejecuta (el Corte final del Samurái).")]
+    [Range(0f, 1f)] public float ExecuteBelowHealth = 0f;
+
     [Section(EffectSection.Visuals)]
     [Tooltip("VFX que aparece sobre QUIEN RECIBE este efecto y vive lo que viva el efecto. " +
              "Pensado para que un debuff importante se vea encima del jugador afectado (las " +
@@ -192,6 +198,11 @@ public class GameplayEffect : ScriptableObject
              "emitir y las partículas que quedan se desvanecen solas en vez de cortarse de golpe. " +
              "Apagalo si el VFX está pensado para verse UNA vez al aplicarse.")]
     public bool TargetVFXLoop = true;
+
+    [Tooltip("Mientras dura, cada SALTO de quien lo tiene (del piso o desde una pared) deja este " +
+             "VFX en el lugar donde saltó: el humo del Manto de oscuridad del Shinobi. Se ve en " +
+             "todas las pantallas, también en las de los enemigos. Vacío = nada.")]
+    public GameObject JumpVFX;
 
     [Section(EffectSection.Sound)]
     [Tooltip("Suena en el personaje cuando el efecto se le aplica (solo efectos CON duración: " +

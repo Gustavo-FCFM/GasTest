@@ -102,6 +102,11 @@ public class WallMovementProfile : ScriptableObject
     [Tooltip("Velocidad hacia ARRIBA al saltar (m/s). El salto normal del piso es 8.")]
     public float JumpOffUp = 7f;
 
+    [Tooltip("Cuánto se puede desviar el salto hacia donde mira la cámara, en grados a cada lado " +
+             "de la dirección opuesta a la pared. 30 = sale hasta 30° hacia el lado que mira, nunca " +
+             "derecho a donde mira. 0 = siempre perpendicular a la pared.")]
+    [Range(0f, 90f)] public float JumpAimMaxAngle = 30f;
+
     [Tooltip("Segundos después del salto en los que el WASD no puede empujar de vuelta contra la " +
              "pared (de costado sí). Sin esto, apretando W hacia la pared el salto se anularía.")]
     public float JumpOffLockTime = 0.25f;

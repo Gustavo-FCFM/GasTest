@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c883fe6eb270f64e8367b89db9052bc, type: 3}
+  m_Name: GA_WaterDefense
+  m_EditorClassIdentifier: 
+  AbilityName: Water Defense
+  AbilityIcon: {fileID: 21300000, guid: 7ab079a1675316540b31a853504792eb, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 0}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 0
+  ActivationBlockedTags: 01000000
+  ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  UsableWhileHolding: 0
+  AnimationClip: {fileID: 0}
+  AnimationTriggerName: 
+  AnimationID: 1
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  StacksTag: 0
+  ConsumeStacks: 0
+  Effects:
+  - When: 2
+    ApplyTo: 2
+    Effect: {fileID: 11400000, guid: 64001fd1609d5d14ab511686a6479c06, type: 2}
+    OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
+  - When: 2
+    ApplyTo: 2
+    Effect: {fileID: 11400000, guid: 4efe8f9def922ef4f8a77de9f1702991, type: 2}
+    OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
+  Visuals: []
+  IsInterruptible: 0
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  MaxCharges: 1
+  BuffEffect: {fileID: 0}
+  AdditionalEffects: []

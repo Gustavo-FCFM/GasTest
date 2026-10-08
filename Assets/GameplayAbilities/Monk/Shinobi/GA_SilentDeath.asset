@@ -1,0 +1,87 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df2802c53b681513f8e15a4b4f2f504a, type: 3}
+  m_Name: GA_SilentDeath
+  m_EditorClassIdentifier: 
+  AbilityName: Silent Death
+  AbilityIcon: {fileID: 21300000, guid: b00f07b8e9ae3794d8fd15a588bcf6f7, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: 4165da9d9de274a4aa511261df047340, type: 2}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 0
+  ActivationBlockedTags: 0100000002000000
+  ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  UsableWhileHolding: 0
+  AnimationClip: {fileID: 3094330708855449807, guid: c2f07439e693fa44aafbe0e6acebb19c, type: 3}
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  StacksTag: 0
+  ConsumeStacks: 0
+  Effects:
+  - When: 0
+    ApplyTo: 0
+    Effect: {fileID: 11400000, guid: 653681b2ea5c91d47aa050608c8806ff, type: 2}
+    OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
+  Visuals:
+  - When: 0
+    VFXPrefab: {fileID: 4809171458859421548, guid: 4e91ed1a8efe7044785b9bd97a47d87f, type: 3}
+    Delay: 0
+    Offset: {x: 0, y: 0, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    Attach: 0
+    MatchAreaSize: 0
+    AreaSizeMultiplier: 0
+    DestroyTime: 0.5
+    EndWithTag: 0
+    EndWhenAttributeDepleted: 0
+    DepletedAttribute: 0
+  - When: 1
+    VFXPrefab: {fileID: 1758473627833946668, guid: 9b21333b068a5084ba09535839bee3c8, type: 3}
+    Delay: 0
+    Offset: {x: 0, y: 1, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    Attach: 0
+    MatchAreaSize: 0
+    AreaSizeMultiplier: 0
+    DestroyTime: 2
+    EndWithTag: 0
+    EndWhenAttributeDepleted: 0
+    DepletedAttribute: 0
+  IsInterruptible: 0
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  MaxCharges: 1
+  MaxRange: 10
+  SelectionAngle: 25
+  JumpRange: 10
+  StayTime: 0.5
+  PrioritizePlayers: 1
+  MaxTargets: 0
+  WhileActiveEffect: {fileID: 11400000, guid: 0d38787c89e152946a7f253c076475b3, type: 2}
+  BehindDistance: 1.2

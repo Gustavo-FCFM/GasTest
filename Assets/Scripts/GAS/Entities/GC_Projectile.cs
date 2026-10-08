@@ -216,6 +216,10 @@ public class GC_Projectile : NetworkBehaviour
         {
             if (!barrier.IsRaised || !barrier.IsHostile(sourceASC)) return;
 
+            // El dueño ESQUIVA proyectiles (el bloqueo del Shinobi): su barrera no los para,
+            // lo atraviesan a él también (ver abajo) y siguen de largo.
+            if (barrier.Owner != null && barrier.Owner.HasTag(EGameplayTag.Status_DodgeProjectiles)) return;
+
             // PARRY QUE DEVUELVE (Guardián): el proyectil no se para, cambia de dueño y sale
             // hacia donde apunta el dueño de la barrera. Una sola vez por proyectil.
             if (barrier.ReflectsProjectilesNow && !_reflected)
@@ -236,6 +240,12 @@ public class GC_Projectile : NetworkBehaviour
         if (other.isTrigger) return;
 
         AbilitySystemComponent targetASC = other.GetComponentInParent<AbilitySystemComponent>();
+
+        // ESQUIVA (Status_DodgeProjectiles, el bloqueo del Shinobi): un enemigo que esquiva no
+        // recibe nada; el proyectil lo atraviesa como si no estuviera, sin impacto ni VFX.
+        if (targetASC != null && sourceASC != null && targetASC.HasTag(EGameplayTag.Status_DodgeProjectiles) &&
+            sourceASC.IsEnemyOf(targetASC))
+            return;
 
         // 1. VFX de impacto, sea lo que sea lo que golpeamos.
         PlayImpactVFXEverywhere();

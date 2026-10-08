@@ -3984,6 +3984,12 @@ PrefabInstance:
     - {fileID: 1128324269846626012, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
     - {fileID: 6482242798199721559, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
     - {fileID: 3739026311045787732, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
+    - {fileID: 8934808180543467520, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
+    - {fileID: 2841462891529395308, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
+    - {fileID: 9206207406307983198, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
+    - {fileID: 3680517820586126037, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
+    - {fileID: 1584708479682732095, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
+    - {fileID: 5257749945070451020, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
@@ -7009,6 +7015,7 @@ MonoBehaviour:
   NameHeight: 30
   DescriptionHeight: 72
   ConfirmHeight: 56
+  RoleTabHeight: 34
   PanelColor: {r: 0.09, g: 0.09, b: 0.11, a: 0.39215687}
   SlotColor: {r: 0.2, g: 0.24, b: 0.32, a: 1}
   ReadyColor: {r: 0.55, g: 0.95, b: 0.55, a: 1}

@@ -49,6 +49,7 @@ MonoBehaviour:
   KnockbackDuration: 0.3
   KnockbackUpVelocity: 0
   PullStopDistance: 1.5
+  ExecuteBelowHealth: 0
   TargetVFX: {fileID: 0}
   TargetVFXOffset: {x: 0, y: 0, z: 0}
   TargetVFXRotation: {x: 0, y: 0, z: 0}
@@ -59,4 +60,4 @@ MonoBehaviour:
     Volume: 1
     PitchVariance: 0.08
     MaxDistance: 35
-  GrantedTags: 
+  GrantedTags: 41000000

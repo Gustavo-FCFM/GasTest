@@ -210,6 +210,10 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   Los campos nuevos de un GA llevan **`[Section]`** (con las constantes de
   `AbilitySection`) y, si dependen de otro, **`[ShowIf]`**; si tiene forma, que
   sobreescriba `DrawGizmos` y `DrawSceneHandles` (manijas con `AbilityHandles`).
+  **Lo que gasta acumulaciones** (las de Artes marciales del Monje: cada una da
+  `Status_MartialArts`) va por la sección **Acumulaciones** del GA (`StacksTag` +
+  `ConsumeStacks`) y el "Con las acumulaciones" de cada entrada de efectos — nada de código
+  por habilidad. La regla de Gustavo: sin acumulaciones, lo que escala no se aplica.
   **Cambiar el tipo de un campo ya cargado en assets** (uno suelto a lista, etc.): dejar
   el viejo como `[SerializeField, HideInInspector] private` con su mismo nombre y pasarlo
   en `OnUpgradeLegacyData` — así los assets no pierden lo cargado.

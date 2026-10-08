@@ -1,0 +1,83 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 585558b3a0a0b5d43b362bc0f55d4d58, type: 3}
+  m_Name: GA_ShadowStep
+  m_EditorClassIdentifier: 
+  AbilityName: Shadow Step
+  AbilityIcon: {fileID: 21300000, guid: 008268c7ebf1932418f68523136f8635, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: 10f0981bf286ed844b33e0f4b4b974e3, type: 2}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 0
+  ActivationBlockedTags: 010000000300000002000000
+  ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  UsableWhileHolding: 0
+  AnimationClip: {fileID: 3094330708855449807, guid: 39e2b573902399d4fbd58117e24ea1d2, type: 3}
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  StacksTag: 0
+  ConsumeStacks: 0
+  Effects:
+  - When: 2
+    ApplyTo: 2
+    Effect: {fileID: 11400000, guid: 175592601d75051419d552c791426484, type: 2}
+    OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
+  Visuals:
+  - When: 2
+    VFXPrefab: {fileID: 4809171458859421548, guid: 4e91ed1a8efe7044785b9bd97a47d87f, type: 3}
+    Delay: 0
+    Offset: {x: 0, y: 0, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    Attach: 0
+    MatchAreaSize: 0
+    AreaSizeMultiplier: 0
+    DestroyTime: 1
+    EndWithTag: 0
+    EndWhenAttributeDepleted: 0
+    DepletedAttribute: 0
+  IsInterruptible: 0
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  MaxCharges: 1
+  MaxRange: 12
+  MarkerRadius: 1
+  DirectionalTeleport: 1
+  ForwardDot: 0.5
+  EnvironmentMask:
+    serializedVersion: 2
+    m_Bits: 4294967167
+  BodyRadius: 0.4
+  BodyHeight: 1.8
+  WalkableNormalY: 0.6
+  LedgeSearchUp: 3
+  FloorSearchDown: 25
+  BackoffStep: 0.5
+  MaxDrop: 4
+  AllowWallLanding: 1
+  WallMaxNormalY: 0.3
+  FlashVFX: {fileID: 0}

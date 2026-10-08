@@ -120,4 +120,8 @@ public enum EGameplayTag
     // --- MONJE ---
     Status_Ki,                 // Ki preparado: la PRÓXIMA acción (Disparo, Apuntado o Patada) sale en su versión con Ki y lo gasta (GA_TagSwitch / GA_HoldTagSwitch con ConsumeTag). Lo da GE_Ki
     Status_PatientDefense,     // Defensa paciente: la barrera en cápsula del Monje (Entity_ShieldBarrier con Omnidirectional) está arriba sin mantener el botón. Lo da GE_PatientDefense
+    Status_MartialArts,        // UNA por acumulación de Artes marciales (GE_MartialArts y sus variantes de subclase, como GE_MartialArtsSharpen del Samurái). Las habilidades que GASTAN acumulaciones las cuentan y las quitan por este tag (sección Acumulaciones del GA)
+    Status_DodgeProjectiles,   // Esquiva proyectiles: los enemigos lo atraviesan sin hacerle nada, y su barrera no los para (el bloqueo y la Defensa paciente del Shinobi). Ver GC_Projectile
+    Status_DamageToHeal,       // El daño que recibe lo CURA en vez de dañarlo (los primeros segundos de la Defensa de agua del Maestro elemental). Ver AbilitySystemComponent.ExecuteInstantEffect
+    Status_PeaceOfMind,        // Paz mental del Maestro elemental: sus variantes con Ki salen sin gastar el Ki (GA_TagSwitch.TagVariant.AlsoActiveWithTag)
 }

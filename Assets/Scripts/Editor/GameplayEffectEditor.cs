@@ -39,6 +39,7 @@ public class GameplayEffectEditor : SectionedInspector
                                             e.StackingPolicy == GameplayEffect.EStackingType.Refresh ? "se refresca" : "se reemplaza");
         if (e.CountsAsCrowdControl) facts.Add("es control");
         if (e.KnockbackDistance > 0f) facts.Add($"desplaza {e.KnockbackDistance:0.##} m");
+        if (e.ExecuteBelowHealth > 0f) facts.Add($"ejecuta al {e.ExecuteBelowHealth * 100f:0.#} % de vida");
 
         string tags = e.GrantedTags != null && e.GrantedTags.Count > 0 ? "Da: " + string.Join(", ", e.GrantedTags) : null;
 

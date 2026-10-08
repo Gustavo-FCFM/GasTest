@@ -92,6 +92,20 @@ public class GA_Teleport : GameplayAbility, IGroundTargetAbility
     public override bool UsesHitEffects  => false;
     public override bool SupportsVisualTiming(EVisualWhen when) => when != EVisualWhen.OnHit || UsesHitEffects;
 
+    [Tooltip("Mirando una pared VERTICAL a su alcance, aparece contra ella (el pecho a la altura " +
+             "del punto apuntado), si el cuerpo cabe ahí; y si su clase se engancha a las paredes, " +
+             "queda enganchado. Es el Paso de las sombras del Shinobi. Apagado = una pared lo manda " +
+             "al piso de encima o al de abajo, como siempre.")]
+    public bool AllowWallLanding = false;
+
+    [ShowIf(nameof(AllowWallLanding))]
+    [Tooltip("Qué tan vertical tiene que ser la pared (0.3 = hasta ~17° de inclinación).")]
+    [Range(0f, 0.7f)] public float WallMaxNormalY = 0.3f;
+
+    // La pared en la que va a aparecer en esta activación (cero = en un piso). La usa
+    // Activate para que llegue mirándola.
+    private Vector3 _wallLandingNormal;
+
     private const int InvisibleWalls = 1 << 2;   // Ignore Raycast: límites y paredes de salas
     private int FloorMask => EnvironmentMask & ~InvisibleWalls;
     private int BlockMask => EnvironmentMask | InvisibleWalls;
@@ -131,6 +145,7 @@ public class GA_Teleport : GameplayAbility, IGroundTargetAbility
             }
         }
 
+        _wallLandingNormal = Vector3.zero;
         bool found = towardAim
             ? TryResolveAimLanding(origin, chest, eye, aimDir, out Vector3 landing)
             : TryWalkBack(origin, origin + moveDir * MaxRange, out landing);
@@ -147,6 +162,11 @@ public class GA_Teleport : GameplayAbility, IGroundTargetAbility
         // Hacia la mira: se encara hacia donde se fue. De lado o hacia atrás: se sigue
         // mirando al frente (a quien te pegaba), como la esquiva del dash.
         Vector3 faceDir = towardAim ? landing - origin : aimFlat;
+
+        // Contra una pared: llega MIRÁNDOLA. El dueño se engancha a la pared que tiene
+        // enfrente al llegar (PlayerController.TeleportTo).
+        if (_wallLandingNormal != Vector3.zero) faceDir = -_wallLandingNormal;
+
         faceDir.y = 0f;
         if (faceDir.sqrMagnitude < 0.0001f) faceDir = OwnerASC.transform.forward;
 
@@ -211,6 +231,14 @@ public class GA_Teleport : GameplayAbility, IGroundTargetAbility
                 hasCandidate = false;
                 candidate    = hit.point;
 
+                // Contra la pared misma (AllowWallLanding, el Paso de las sombras).
+                if (!invisible && AllowWallLanding && Mathf.Abs(hit.normal.y) <= WallMaxNormalY &&
+                    TryWallLanding(origin, chest, hit, out Vector3 onWall))
+                {
+                    landing = onWall;
+                    return true;
+                }
+
                 if (!invisible)
                 {
                     Vector3 into = new Vector3(aimDir.x, 0f, aimDir.z).normalized * (BodyRadius + 0.2f);
@@ -258,6 +286,27 @@ public class GA_Teleport : GameplayAbility, IGroundTargetAbility
         // No sirve tal cual (no cabe, o habría que cruzar una pared invisible): lo más
         // cerca que se pueda en esa dirección.
         return TryWalkBack(origin, candidate + Vector3.up * 0.5f, out landing);
+    }
+
+    // Aparecer contra una pared: el cuerpo pegado a ella, con el pecho a la altura del punto
+    // apuntado. Vale si está a su alcance, si el cuerpo cabe ahí (nada de meterse en un
+    // techo ni en otra pared) y si no hay una pared invisible en el camino.
+    private bool TryWallLanding(Vector3 origin, Vector3 chest, RaycastHit wall, out Vector3 feet)
+    {
+        Vector3 n = new Vector3(wall.normal.x, 0f, wall.normal.z);
+        feet = origin;
+        if (n.sqrMagnitude < 0.0001f) return false;
+        n.Normalize();
+
+        feet = wall.point + n * (BodyRadius + 0.1f) - Vector3.up * (BodyHeight * 0.5f);
+
+        Vector3 flat = feet - origin; flat.y = 0f;
+        if (flat.magnitude > MaxRange) return false;
+
+        if (!IsValidLanding(origin, chest, feet)) return false;
+
+        _wallLandingNormal = n;
+        return true;
     }
 
     // =========================================================

@@ -124,6 +124,23 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // BroadcastImpactVFX; "al activarse" y "al lanzar" los resuelve CommitAbility para todas.
     // =========================================================
 
+    [Section(AbilitySection.Stacks, startCollapsed: true)]
+    [Tooltip("Acumulaciones que esta habilidad LEE al activarse, contadas por este tag (cada " +
+             "acumulación lo da una vez: las Artes marciales dan Status_MartialArts). Las entradas " +
+             "de Efectos que escalan con acumulaciones usan cuántas había. None = no lee ninguna.")]
+    public EGameplayTag StacksTag = EGameplayTag.None;
+
+    [ShowIf(nameof(StacksTag), EGameplayTag.None, true)]
+    [Tooltip("Si gasta las acumulaciones que leyó, y cuándo. 'Al terminar' conserva lo que dan " +
+             "mientras dura la habilidad: el +1 de ataque por acumulación del Samurái, con el que " +
+             "curan los Cortes devastadores.")]
+    public EStackConsume ConsumeStacks = EStackConsume.Never;
+
+    // Cuántas acumulaciones había al activarse (las lee CommitAbility). -1 = no leyó. Un
+    // combo se la pasa a sus pasos, así un golpe del combo escala con lo que leyó el combo.
+    [System.NonSerialized] public int StackSnapshot = -1;
+    [System.NonSerialized] private bool _consumeStacksOnEnd;
+
     [Section(AbilitySection.Effects)]
     [Tooltip("Los GameplayEffect de la habilidad. Cada entrada dice CUÁNDO (al golpear, al " +
              "primer golpe, al activarse, al matar), A QUIÉN (enemigos, aliados, el lanzador, " +
@@ -558,6 +575,9 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
 
         CommittedThisActivation = true;
 
+        // Las acumulaciones, ANTES de los efectos "al activarse": esos ya pueden escalar.
+        ReadStacks();
+
         // Gasta una carga y arranca la recarga. Con MaxCharges <= 1 no hace nada:
         // la habilidad se comporta como siempre (cooldown en cada uso).
         bool spentLastCharge = ConsumeCharge();
@@ -780,6 +800,13 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // la llama al finalizar su secuencia (con o sin delay).
     public virtual void EndAbility()
     {
+        // Las acumulaciones que se gastan "al terminar" (ver ReadStacks).
+        if (_consumeStacksOnEnd)
+        {
+            _consumeStacksOnEnd = false;
+            if (OwnerASC != null) OwnerASC.RemoveEffectsWithTag(StacksTag);
+        }
+
         // Esto corre en el servidor (Activate() ya lo garantiza). Si el dueño
         // es un cliente remoto (no el host), pc.FinishAttack() de acá solo
         // resetea isAttacking en la copia del servidor — la copia real del
@@ -960,6 +987,50 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     private static bool IsHitTiming(EEffectWhen when)
         => when == EEffectWhen.OnHit || when == EEffectWhen.OnFirstHit;
 
+    // =========================================================
+    // ACUMULACIONES (sección Acumulaciones)
+    // =========================================================
+
+    // Al activarse (CommitAbility): cuántas acumulaciones hay, y si se gastan ya o al
+    // terminar. Sin StacksTag no lee nada y conserva lo que le haya pasado un combo.
+    private void ReadStacks()
+    {
+        _consumeStacksOnEnd = false;
+        if (StacksTag == EGameplayTag.None || OwnerASC == null) return;
+
+        StackSnapshot = OwnerASC.GetTagCount(StacksTag);
+        if (StackSnapshot <= 0) return;
+
+        if (ConsumeStacks == EStackConsume.OnActivate) OwnerASC.RemoveEffectsWithTag(StacksTag);
+        else if (ConsumeStacks == EStackConsume.OnEnd) _consumeStacksOnEnd = true;
+    }
+
+    // Cuántas veces se aplica una entrada según las acumulaciones leídas, y con qué
+    // duración (-1 = la del GE). La regla: lo que escala, sin acumulaciones no se aplica.
+    private int StackApplications(AbilityEffect e, out float duration)
+    {
+        duration = -1f;
+        int stacks = Mathf.Max(0, StackSnapshot);
+
+        switch (e.StackScaling)
+        {
+            case EStackScaling.OnlyWithStacks:   return stacks > 0 ? 1 : 0;
+            case EStackScaling.OncePerStack:     return stacks;
+            case EStackScaling.DurationPerStack:
+                if (stacks <= 0 || e.PerStack <= 0f) return 0;
+                duration = e.PerStack * stacks;
+                return 1;
+            default:                             return 1;
+        }
+    }
+
+    // Aplica una entrada a 'to' tantas veces como diga su escalado.
+    private static void ApplyScaled(AbilitySystemComponent to, GameplayEffect effect, object source,
+                                    int times, float duration)
+    {
+        for (int i = 0; i < times; i++) to.ApplyGameplayEffect(effect, source, duration);
+    }
+
     // ¿Se cumple la condición de la entrada? 'subject' es el objetivo alcanzado (o el
     // lanzador, en los efectos al activarse).
     private static bool PassesCondition(AbilityEffect e, AbilitySystemComponent subject)
@@ -980,7 +1051,8 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
             if (e.Effect == null || e.When != EEffectWhen.OnActivate || e.ApplyTo != EEffectTarget.Self) continue;
             if (!PassesCondition(e, OwnerASC)) continue;
 
-            OwnerASC.ApplyGameplayEffect(e.Effect, OwnerASC);
+            int times = StackApplications(e, out float duration);
+            ApplyScaled(OwnerASC, e.Effect, OwnerASC, times, duration);
         }
     }
 
@@ -1039,6 +1111,10 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
             }
             if (!reaches || !PassesCondition(e, target)) continue;
 
+            // Con las acumulaciones leídas: sin ellas, lo que escala no se aplica.
+            int times = StackApplications(e, out float duration);
+            if (times <= 0) continue;
+
             // El filtro del primer golpe va al final: puede ANOTAR algo (el proyectil anota
             // cuándo se puede volver a aturdir a ese enemigo), y no tiene que anotar nada que
             // después no se aplique.
@@ -1052,8 +1128,8 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
                 primaryReplaced = true;
             }
 
-            if (e.ApplyTo == EEffectTarget.Self) source.ApplyGameplayEffect(effect, source);
-            else                                 target.ApplyGameplayEffect(effect, source);
+            if (e.ApplyTo == EEffectTarget.Self) ApplyScaled(source, effect, source, times, duration);
+            else                                 ApplyScaled(target, effect, source, times, duration);
         }
 
         if (enemy && !onlyHostile && wasAlive && target.HasTag(EGameplayTag.State_Dead))
@@ -1070,7 +1146,9 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         {
             if (e.Effect == null || e.When != EEffectWhen.OnKill || e.ApplyTo != EEffectTarget.Self) continue;
             if (!PassesCondition(e, victim)) continue;
-            source.ApplyGameplayEffect(e.Effect, source);
+
+            int times = StackApplications(e, out float duration);
+            ApplyScaled(source, e.Effect, source, times, duration);
         }
     }
 

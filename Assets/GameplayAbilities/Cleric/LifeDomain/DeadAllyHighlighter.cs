@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 // ============================================================
 // DeadAllyHighlighter  (contorno de los aliados muertos — Dominio de la vida)
@@ -147,37 +146,7 @@ public class DeadAllyHighlighter : MonoBehaviour
     // =========================================================
 
     private List<SkinnedMeshRenderer> CreateOutline(PlayerController body)
-    {
-        var created = new List<SkinnedMeshRenderer>();
-        Material material = GetMaterial();
-        if (material == null) return created;
-
-        foreach (SkinnedMeshRenderer source in body.GetComponentsInChildren<SkinnedMeshRenderer>())
-        {
-            if (!source.enabled || source.sharedMesh == null || source.name == OutlineName) continue;
-
-            var go = new GameObject(OutlineName);
-            go.layer = source.gameObject.layer;
-            go.transform.SetParent(source.transform, false);
-
-            // Mismos huesos que el cuerpo: se deforma y cae con él (ragdoll incluido).
-            SkinnedMeshRenderer outline = go.AddComponent<SkinnedMeshRenderer>();
-            outline.sharedMesh          = source.sharedMesh;
-            outline.rootBone            = source.rootBone;
-            outline.bones               = source.bones;
-            outline.updateWhenOffscreen = true;   // el ragdoll lo saca de sus límites
-            outline.shadowCastingMode   = ShadowCastingMode.Off;
-            outline.receiveShadows      = false;
-
-            // Un material por submalla: si no, solo se contornea la primera.
-            var mats = new Material[source.sharedMesh.subMeshCount];
-            for (int i = 0; i < mats.Length; i++) mats[i] = material;
-            outline.sharedMaterials = mats;
-
-            created.Add(outline);
-        }
-        return created;
-    }
+        => CharacterOutline.Create(body, GetMaterial(), OutlineName);
 
     private void RemoveOutline(PlayerController key)
     {
@@ -203,17 +172,8 @@ public class DeadAllyHighlighter : MonoBehaviour
     {
         if (_material != null) return _material;
 
-        Shader shader = Resources.Load<Shader>("MercOutline");
-        if (shader == null)
-        {
-            Debug.LogWarning("[DeadAllyHighlighter] No encontré el shader MercOutline (Assets/Shaders/Resources): " +
-                             "sin contorno.");
-            enabled = false;
-            return null;
-        }
-
-        _material = new Material(shader);
-        _material.SetFloat("_Width", Width);
+        _material = CharacterOutline.CreateMaterial(Width);
+        if (_material == null) enabled = false;   // sin el shader no hay contorno (ya avisó)
         return _material;
     }
 }

@@ -108,6 +108,12 @@ public class AbilitySystemComponent : MonoBehaviour
     public event Action<AbilitySystemComponent> OnTookDamage;
     public void NotifyTookDamage(AbilitySystemComponent attacker) => OnTookDamage?.Invoke(attacker);
 
+    // Se dispara cuando ESTE personaje MATA a alguien (el parámetro es la víctima): el que
+    // le dio el golpe final, o el dueño del veneno que lo terminó (LastAttacker). Cualquier
+    // cosa con ASC cuenta: jugadores, NPCs, tótems. Server-side; lo dispara la víctima en
+    // Die(). Lo usa la pasiva del Asesino que reinicia la Emboscada al matar.
+    public event Action<AbilitySystemComponent> OnKilledTarget;
+
     // --- Lo que carga la definitiva según el ROL (ver EClassRole) ---
     //
     // A diferencia de los dos de arriba, estos SÍ cuentan los ticks periódicos:
@@ -629,6 +635,9 @@ public class AbilitySystemComponent : MonoBehaviour
             }
 
             OnActiveEffectAddedCallback?.Invoke(effect, finalDuration);
+
+            // Un efecto que ejecuta remata en el acto al que ya estaba por debajo del umbral.
+            if (effect.ExecuteBelowHealth > 0f) CheckExecute();
         }
     }
 
@@ -1024,6 +1033,17 @@ public class AbilitySystemComponent : MonoBehaviour
                 // ralentizando. Lo que la inmunidad niega es el DAÑO.
                 if (HasTag(EGameplayTag.Status_Immunity)) continue;
 
+                // DEFENSA DE AGUA (Status_DamageToHeal, el Maestro elemental): el golpe no daña,
+                // cura lo mismo que iba a hacer. No cuenta como golpe recibido.
+                if (HasTag(EGameplayTag.Status_DamageToHeal))
+                {
+                    float before = GetAttributeValue(EAttributeType.Health);
+                    SetCurrentAttributeValue(EAttributeType.Health, before + Mathf.Abs(calculatedMagnitude));
+                    float healed = GetAttributeValue(EAttributeType.Health) - before;
+                    if (healed > 0f) ShowCombatNumber(healed, ECombatNumber.Heal);
+                    continue;
+                }
+
                 wasDamagingHit = true;
 
                 // Registrar al atacante para atribuir la baja (EXP al matador). Se
@@ -1175,6 +1195,42 @@ public class AbilitySystemComponent : MonoBehaviour
                 if (damageToHealth > 0f) ReportCombatFeedback(sourceASC, anyCritical);
             }
         }
+
+        // Con un efecto que ejecuta encima (el Corte final), este golpe puede rematarlo.
+        if (wasDamagingHit) CheckExecute();
+    }
+
+    // =========================================================
+    // EJECUTAR (GameplayEffect.ExecuteBelowHealth — el Corte final del Samurái)
+    // =========================================================
+
+    // Mientras tenga un efecto que ejecuta, si su vida quedó en ese porcentaje de su vida
+    // máxima o menos, muere. Se mira al recibir el efecto y después de cada golpe. La baja
+    // es de quien le puso el efecto (LastAttacker). No mata a un inmune, y a un inmortal
+    // (Preservar vida) SetCurrentAttributeValue lo deja en 1.
+    private void CheckExecute()
+    {
+        if (HasTag(EGameplayTag.State_Dead) || HasTag(EGameplayTag.Status_Immunity)) return;
+
+        float max    = GetAttributeValue(EAttributeType.MaxHealth);
+        float health = GetAttributeValue(EAttributeType.Health);
+        if (max <= 0f || health <= 0f) return;
+
+        bool execute = false;
+        AbilitySystemComponent executor = null;
+        foreach (ActiveGameplayEffect active in ActiveEffects)
+        {
+            float threshold = active.Definition != null ? active.Definition.ExecuteBelowHealth : 0f;
+            if (threshold <= 0f || health > max * threshold) continue;
+
+            execute  = true;
+            executor = active.Source as AbilitySystemComponent;
+            break;
+        }
+        if (!execute) return;
+
+        if (executor != null && !ReferenceEquals(executor, this)) LastAttacker = executor;
+        SetCurrentAttributeValue(EAttributeType.Health, 0f);
     }
 
     // =========================================================
@@ -1486,6 +1542,14 @@ public class AbilitySystemComponent : MonoBehaviour
         RemoveAllBuffsAndDebuffs();
 
         AddTag(EGameplayTag.State_Dead);
+
+        // El que lo mató se entera (OnKilledTarget). Solo en el servidor: es el único que
+        // sabe quién dio el golpe final. Va antes de OnDeath, que puede reaparecerlo.
+        AbilitySystemComponent killer = LastAttacker;
+        NetworkAbilitySystemComponent netAsc = GetComponent<NetworkAbilitySystemComponent>();
+        if (killer != null && !ReferenceEquals(killer, this) && (netAsc == null || netAsc.IsServerInitialized))
+            killer.OnKilledTarget?.Invoke(this);
+
         OnDeath?.Invoke();
     }
 

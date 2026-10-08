@@ -26,8 +26,15 @@ using System.Collections.Generic;
 // aplicar y no se ejecuta, en silencio).
 // ============================================================
 [CreateAssetMenu(fileName = "GA_TagSwitch", menuName = "GAS/Generics/Tag Switch")]
-public class GA_TagSwitch : GameplayAbility
+public class GA_TagSwitch : GameplayAbility, IGroundTargetAbility
 {
+    // Si la variante que se dispararía AHORA se apunta en el piso (el Aliento de dragón rojo
+    // del Maestro elemental: una zona en la retícula), el switch también: mantener → apuntar
+    // → soltar. Con una variante que no se apunta, nada cambia.
+    public float MaxTargetRange   => ResolveTemplate(out _, out _) is IGroundTargetAbility g ? g.MaxTargetRange : 0f;
+    public float TargetRadius     => ResolveTemplate(out _, out _) is IGroundTargetAbility g ? g.TargetRadius : 0f;
+    public bool  UsesGroundTarget => ResolveTemplate(out _, out _) is IGroundTargetAbility g && g.UsesGroundTarget;
+
     // Una variante: qué tag la activa y qué habilidad se ejecuta en su lugar.
     [System.Serializable]
     public struct TagVariant
@@ -46,6 +53,18 @@ public class GA_TagSwitch : GameplayAbility
         [Tooltip("Solo con ShowVariantIcon: el ícono del botón mientras esta variante sea la que " +
                  "se dispararía. Vacío = el ícono de su habilidad.")]
         public Sprite Icon;
+
+        [Tooltip("OPCIONAL: con este tag la variante también se dispara, y SIN gastar nada (la " +
+                 "Paz mental del Maestro elemental: mientras dura, todo sale con Ki y el Ki no se " +
+                 "gasta). None = solo con RequiredTag.")]
+        public EGameplayTag AlsoActiveWithTag;
+    }
+
+    // ¿Esta variante se dispararía ahora? 'free' = por AlsoActiveWithTag: no gasta el tag.
+    private bool IsVariantActive(TagVariant variant, out bool free)
+    {
+        free = variant.AlsoActiveWithTag != EGameplayTag.None && OwnerASC.HasTag(variant.AlsoActiveWithTag);
+        return free || OwnerASC.HasTag(variant.RequiredTag);
     }
 
     [Section(AbilitySection.General)]
@@ -157,7 +176,7 @@ public class GA_TagSwitch : GameplayAbility
                 foreach (var variant in Variants)
                 {
                     if (variant.Ability == null || variant.RequiredTag == EGameplayTag.None) continue;
-                    if (!OwnerASC.HasTag(variant.RequiredTag)) continue;
+                    if (!IsVariantActive(variant, out _)) continue;
                     return variant.Icon != null ? variant.Icon
                          : variant.Ability.AbilityIcon != null ? variant.Ability.AbilityIcon : AbilityIcon;
                 }
@@ -191,9 +210,9 @@ public class GA_TagSwitch : GameplayAbility
             foreach (var variant in Variants)
             {
                 if (variant.Ability == null || variant.RequiredTag == EGameplayTag.None) continue;
-                if (!OwnerASC.HasTag(variant.RequiredTag)) continue;
+                if (!IsVariantActive(variant, out bool free)) continue;
 
-                consumeTag = variant.ConsumeTag;
+                consumeTag = variant.ConsumeTag && !free;
                 usedTag    = variant.RequiredTag;
                 return variant.Ability;
             }

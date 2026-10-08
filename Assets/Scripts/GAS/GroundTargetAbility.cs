@@ -29,3 +29,21 @@ public interface IGroundTargetAbility
     // (ej. Marcado para morir) devuelven true fijo.
     bool UsesGroundTarget { get; }
 }
+
+// ============================================================
+// ILineTargetAbility
+//
+// Una habilidad de apuntar (IGroundTargetAbility) cuyo marcador no es una zona sino una
+// FRANJA que sale del jugador hacia la mira: un rectángulo de LineLength × LineWidth en el
+// piso, recortado en la primera pared, y los enemigos que quedan adentro se marcan con un
+// contorno. Es el Corte final del Samurái (un GA_RushAttack con AimFirst). Solo es la
+// vista previa del dueño: lo que pasa de verdad lo decide el servidor como siempre.
+// ============================================================
+public interface ILineTargetAbility
+{
+    float LineLength { get; }
+    float LineWidth  { get; }
+
+    // Qué se marca adentro de la franja (los mismos que la habilidad puede golpear).
+    UnityEngine.LayerMask LineTargetLayer { get; }
+}

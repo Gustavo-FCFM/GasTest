@@ -1,0 +1,92 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d7b10a5bff65714b92132ef46073a0c, type: 3}
+  m_Name: GA_KunaiDarkArts
+  m_EditorClassIdentifier: 
+  AbilityName: Kunai
+  AbilityIcon: {fileID: 21300000, guid: ff995f2203e08024b87cb8441d8c75dd, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 0}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 1
+  ActivationBlockedTags: 0100000035000000
+  ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  UsableWhileHolding: 0
+  AnimationClip: {fileID: 3094330708855449807, guid: c25522e533a3f5149b1926cb6ee3c8f1, type: 3}
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 2
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  StacksTag: 0
+  ConsumeStacks: 0
+  Effects:
+  - When: 0
+    ApplyTo: 0
+    Effect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
+    OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
+  - When: 0
+    ApplyTo: 0
+    Effect: {fileID: 11400000, guid: 43bac101fbdd4b84b854c88be6c16a0d, type: 2}
+    OnlyIfTargetHas: 0
+    StackScaling: 2
+    PerStack: 0
+  Visuals:
+  - When: 2
+    VFXPrefab: {fileID: 1758473627833946668, guid: 9b21333b068a5084ba09535839bee3c8, type: 3}
+    Delay: 0
+    Offset: {x: 0, y: 0, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    Attach: 0
+    MatchAreaSize: 0
+    AreaSizeMultiplier: 0
+    DestroyTime: 1
+    EndWithTag: 0
+    EndWhenAttributeDepleted: 0
+    DepletedAttribute: 0
+  IsInterruptible: 1
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  MaxCharges: 1
+  ProjectilePrefab: {fileID: 406129108226925510, guid: 8c21a3df091c8204ea5a34229c270862, type: 3}
+  LaunchForce: 30
+  SpawnOffset: {x: 0, y: 1.5, z: 1}
+  AddSpin: 1
+  HideWeaponWhileFlying: 1
+  LifeTime: 0.5
+  MinConvergeDistance: 4
+  SpawnDelay: 0.25
+  FirstHitCooldownPerTarget: 3
+  AimBeforeThrow: 0
+  AimHoldClip: {fileID: 3094330708855449807, guid: c6394379fdb70c24ea2b1eddb8fba34f, type: 3}
+  AimReleaseClip: {fileID: -5060625908618555442, guid: c25522e533a3f5149b1926cb6ee3c8f1, type: 3}
+  AimReleaseDelay: 0.1
+  AimSafetyTimeout: 30
+  InstantDamageEffect: {fileID: 0}
+  DurationEffect: {fileID: 0}
+  AdditionalEffects: []
+  TargetEffects: []
+  FirstHitEffects: []
+  ImpactVFX: {fileID: 0}

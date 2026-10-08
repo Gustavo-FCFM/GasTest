@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 749805704a6088741af34d91f0891ced, type: 3}
+  m_Name: Class_Samurai
+  m_EditorClassIdentifier: 
+  ClassName: Samurai
+  ClassIcon: {fileID: 21300000, guid: 18cfa7668e0b1cd49b01cb5817a062a9, type: 3}
+  Description: 'A monk with a katana: wide, long cuts that leave bleeding wounds,
+    and Martial Arts stacks that also sharpen his blade. Whoever strikes his guard
+    bleeds for it. Ultimate: Final Cut, a dash through a line of enemies that finishes
+    anyone left below 5% health.'
+  Role: 2
+  MenuRole: 0
+  BaseAttributes: {fileID: 11400000, guid: dc8c735f89e9c8c4f9831e920b5fa498, type: 2}
+  Abilities:
+  - InputSlot: 1
+    Ability: {fileID: 11400000, guid: 7c6d8484827a1c64c8e82bbd752bf137, type: 2}
+  - InputSlot: 2
+    Ability: {fileID: 11400000, guid: e7bb04f6d20cf5a40b94703f5af20640, type: 2}
+  - InputSlot: 6
+    Ability: {fileID: 11400000, guid: 56cd959e46fa5784ebbf9f8dbec7e50b, type: 2}
+  - InputSlot: 3
+    Ability: {fileID: 11400000, guid: 686f962b53eab3e478265bd85dea8682, type: 2}
+  - InputSlot: 4
+    Ability: {fileID: 11400000, guid: b981f7ca1dae46f44b3771a2724522ad, type: 2}
+  - InputSlot: 5
+    Ability: {fileID: 11400000, guid: 34c2ad41bdd9b3c4dbb588e66b1d8eea, type: 2}
+  PassiveBehaviorsPrefab: {fileID: 9026357972262154142, guid: 928b4f47b6c961440a4fac33577bc5cb, type: 3}
+  PassiveEffects:
+  - {fileID: 11400000, guid: 5425dc3edd0320d4a8b0ad013919b6cc, type: 2}
+  WallMovement: {fileID: 11400000, guid: 3cf9a185a9e8b3a439593589183dd388, type: 2}
+  StatGrowthPerLevel: []
+  AvailableSubclasses: []
+  ClassAnimatorOverride: {fileID: 22100000, guid: e47a346ec4e5aa9448604654217f459b, type: 2}
+  StanceAnimatorOverride: {fileID: 0}
+  StanceAnimatorTag: 0
+  MainHandWeaponPrefab: {fileID: 1309212752354464438, guid: 92948b840284b93478272de155a25eda, type: 3}
+  OffHandWeaponPrefab: {fileID: 0}
+  MainHandRotationOffset: {x: 0, y: 0, z: 0}
+  MainHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandPose: {fileID: 0}
+  OffHandPoseRequiredTag: 0
+  StowOffHandTag: 0
+  StowedOffHandPositionOffset: {x: 0, y: 0, z: 0}
+  StowedOffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandScale: 1
+  GrowTag: 0
+  GrowScale: 1.5

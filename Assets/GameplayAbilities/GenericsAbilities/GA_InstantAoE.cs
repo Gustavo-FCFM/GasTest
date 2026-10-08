@@ -22,6 +22,10 @@ using System.Collections.Generic;
 // del estallido es una entrada "En el impacto" de la lista de VFX, con "Calzar con el
 // área" para que mida lo mismo que el radio.
 //
+// GOLPES EXTRA POR ACUMULACIÓN (ExtraHitsPerStack): con las acumulaciones que leyó al
+// activarse (sección Acumulaciones), repite el golpe — los Cortes devastadores del Samurái
+// cortan una vez más por cada acumulación de Artes marciales.
+//
 // Si en cambio querés una zona que PERSISTA aplicando efectos cada tanto (charco de
 // veneno, aura, la zona de los Cañones del Pirata), usá GA_ContinuousAoE.
 // ============================================================
@@ -51,6 +55,16 @@ public class GA_InstantAoE : GameplayAbility, IGroundTargetAbility
              "por la velocidad de ataque, igual que en las demás habilidades.")]
     public float StartDelay = 0f;
 
+    [Tooltip("Golpes EXTRA por cada acumulación leída (sección Acumulaciones). Con 1: sin " +
+             "acumulaciones, un golpe; con 4, cinco (los Cortes devastadores del Samurái). Cada " +
+             "golpe extra repite la animación y vuelve a aplicar los efectos 'al activarse' (la " +
+             "curación por corte). 0 = siempre un solo golpe.")]
+    public int ExtraHitsPerStack = 0;
+
+    [ShowIf(nameof(ExtraHitsPerStack), ShowIfAttribute.Positive)]
+    [Tooltip("Segundos entre un golpe y el siguiente (se ajusta con la velocidad de ataque).")]
+    public float RepeatInterval = 0.3f;
+
     public override float VisualAreaRadius => Radius;
     public override bool SupportsVisualTiming(EVisualWhen when) => true;
 
@@ -71,8 +85,11 @@ public class GA_InstantAoE : GameplayAbility, IGroundTargetAbility
 
         if (pc != null) pc.PlayAnimation(this);
 
-        if (StartDelay > 0f) OwnerASC.StartAbilityCoroutine(ImpactRoutine(center));
-        else                 { Detonate(center); EndAbility(); }
+        // Un golpe, más los extra por las acumulaciones que leyó CommitAbility.
+        int hits = 1 + Mathf.Max(0, StackSnapshot) * Mathf.Max(0, ExtraHitsPerStack);
+
+        if (StartDelay > 0f || hits > 1) OwnerASC.StartAbilityCoroutine(ImpactRoutine(center, hits));
+        else                             { Detonate(center); EndAbility(); }
     }
 
     // Punto donde cae el área: el dueño, o la zona apuntada (recortada a MaxRange
@@ -90,16 +107,39 @@ public class GA_InstantAoE : GameplayAbility, IGroundTargetAbility
         return center;
     }
 
-    // Espera StartDelay (ajustado por velocidad de ataque) y detona.
-    private IEnumerator ImpactRoutine(Vector3 center)
+    // Espera StartDelay (ajustado por velocidad de ataque) y detona; si hay golpes extra
+    // (ExtraHitsPerStack), los encadena cada RepeatInterval. Sobre el dueño, cada golpe sale
+    // de donde está AHORA (se puede mover entre corte y corte). Aturdido o muerto, corta.
+    private IEnumerator ImpactRoutine(Vector3 center, int hits)
     {
         float speedMultiplier = 1f;
         float atkSpeedStat = OwnerASC.GetAttributeValue(EAttributeType.AtkSpeed);
         if (atkSpeedStat > 0) speedMultiplier = 1f / atkSpeedStat;
 
-        yield return new WaitForSeconds(StartDelay / speedMultiplier);
+        if (StartDelay > 0f) yield return new WaitForSeconds(StartDelay / speedMultiplier);
 
-        Detonate(center);
+        NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
+
+        for (int i = 0; i < hits; i++)
+        {
+            if (i > 0)
+            {
+                yield return new WaitForSeconds(RepeatInterval / speedMultiplier);
+
+                if (OwnerASC == null) yield break;
+                if (OwnerASC.HasTag(EGameplayTag.State_Dead) || OwnerASC.HasTag(EGameplayTag.State_Stunned)) break;
+
+                if (DeployMode == GA_ContinuousAoE.EAoEDeploy.AtOwner) center = OwnerASC.transform.position;
+
+                // Cada golpe extra: su animación (en todas las pantallas, también el dueño:
+                // no lo pudo anticipar) y sus efectos "al activarse" (la curación por corte).
+                if (netAsc != null) netAsc.ServerPlayAbilityAnimationOnAll(this);
+                ApplyActivationEffects();
+            }
+
+            Detonate(center);
+        }
+
         EndAbility();
     }
 

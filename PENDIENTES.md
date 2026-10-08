@@ -141,6 +141,78 @@ se pueden borrar los bloques `DATOS VIEJOS` del final de cada GA.
 
 ---
 
+# ★ Después de probar el Maestro elemental y el Shinobi — HECHO, falta probar (8 de octubre, tarde)
+
+Pedidos de Gustavo. Compila limpio (juego y editor); Unity ya recompiló el código con el codegen
+de FishNet (hay RPC nuevas en `PlayerController`).
+
+**Una vez, con Unity abierto:**
+
+- [x] `Mercenarios ▸ Aliento del dragón, humo del Shinobi y Emboscada (una sola vez)` y después
+      **borrar `Assets/Scripts/Editor/MercBreathAndStealthSetup.cs`**. Hace todo lo de assets de
+      abajo y actualiza los registros de red. *(Corrida por Gustavo; revisados los assets y
+      borrada la herramienta.)*
+- [x] **El fuego de la zona se veía magenta** (y las chispas). El paquete *Procedural fire* de
+      Hovl viene para el pipeline viejo: `FireSphere2`, `SparkSphere` y `Trail67` usaban el
+      `.shader` de superficie, que URP no dibuja. Gustavo los pasó a `Shader Graphs/FireSphere`
+      (lo que pide la imagen del paquete); **ya se ve el fuego**. `Smoke26` sigue con un shader
+      viejo, pero no se usa.
+
+**Qué cambió:**
+
+- **Wall jump: al aterrizar seguía resbalando.** El impulso del salto desde la pared (y lo que
+  el Monje corría a lo largo de ella) ahora se corta al tocar el piso. El de un dash no cambia.
+- **Defensa de agua apilada sin tope con la Paz mental.** `GE_WaterDefense`, `GE_PeaceOfMind`,
+  `GE_ShadowCloak` y `GE_SilentDeathUntouchable` pasan a Refresh: uno solo, volver a lanzarlo
+  reinicia la duración. *(Herramienta.)*
+- **Aliento de dragón rojo, ahora sostenido:** con Ki, E echa fuego en cono (⚙ 6 m, 60°) durante
+  3 s; un golpe por segundo (3 golpes, daño mágico) y en cada uno **quema el piso donde apunta
+  la mira** (⚙ hasta 6 m). Mientras sale se puede mover y girar (el cono sigue a la mira), pero
+  no usar otras habilidades; aturdido o silenciado se corta. Animación de prueba: CastingEnter /
+  CastingIdle / CastingExit de Kevin Iglesias. **No tiene VFX del fuego del cono** (no hay un
+  lanzallamas en los packs): se ven las zonas que va dejando; si aparece uno, va en la lista VFX
+  de `GA_RedDragonBreath` "al lanzar" con Destroy Time 0 (dura lo que el aliento).
+- **La zona de fuego (quemadura del piso):** dura 5 s y cada segundo le pone una acumulación de
+  quemadura a quien la pisa. `GE_DragonBurn` pasa a acumularse (⚙ hasta 5); el Aliento de fuego
+  sin Ki también suma de a una. *(Herramienta.)*
+- **Asesino: crítico mejorado más rápido estando invisible.** Mientras está invisible, la
+  ventana por objetivo (6 s) y la reutilización (2 s) corren ⚙ 3 veces más rápido.
+  `Invisible Recovery Multiplier` en el `FirstStrikeCritModifier` de `Assassin_Behaviour`.
+- **Asesino: ventana de 6 s al salir de la invisibilidad.** Si mata algo en ese rato (jugador,
+  NPC, cualquier cosa con vida), la Emboscada sombría vuelve a estar lista. Mientras dura la
+  ventana tiene un buff con el ícono de la Emboscada (`GE_AmbushKillWindow`). El golpe que mata
+  desde la invisibilidad también cuenta. Un reinicio por cada salida. *(Herramienta: agrega
+  `AmbushKillReset` a `Assassin_Behaviour`.)*
+- **Shinobi: humo.** El mismo humo de la Emboscada del Asesino al ocultarse (Manto), al salir y
+  al llegar del Paso de las sombras, y **en cada salto mientras está oculto** (del piso o de una
+  pared). El humo de los saltos lo ven todos, también los enemigos: delata por dónde va. Si no
+  lo querés así, se puede hacer que solo lo vean los aliados. *(Herramienta.)*
+
+**Piezas nuevas de código:**
+
+- `GA_ChanneledCone` (genérica): cono sostenido con ticks, que puede soltar una zona por tick
+  (`TickZone`, un `GA_ContinuousAoE` que se reusa tal cual con `DeployZoneAt`).
+- `PlayerController` → "MIRA EN VIVO": el servidor le pide al dueño que le mande la mira mientras
+  dura un canalizado (en el host no hace falta).
+- `GameplayEffect.JumpVFX`: un VFX en cada salto mientras dura el efecto (sección VFX).
+- `AbilitySystemComponent.OnKilledTarget`: el que mató se entera (server-side).
+- `AmbushKillReset` (pasiva del Asesino).
+
+**Qué probar:**
+
+- [ ] Wall jump con Pícaro y Monje: al aterrizar se frena ahí, sin resbalar.
+- [ ] Paz mental + Defensa de agua varias veces: un solo buff en la barra, que se reinicia.
+- [ ] Aliento de dragón rojo: 3 golpes en 3 s, una zona por golpe donde mirás; girando, el cono y
+      las zonas siguen la mira; cada zona dura 5 s y suma una quemadura por segundo (hasta 5).
+      En un cliente (no el host) también: que las zonas caigan donde mira ÉL.
+- [ ] Aturdido o silenciado a mitad del aliento: se corta (barra roja) y puede volver a usar todo.
+- [ ] Asesino: invisible, el aviso del crítico mejorado vuelve antes; salir de la invisibilidad
+      y matar a alguien (o un NPC) en 6 s → la Emboscada lista; pasados los 6 s, no.
+- [ ] Shinobi: humo al ocultarse, en las dos puntas del Paso de las sombras y en cada salto
+      oculto (piso y pared), en las dos ventanas.
+
+---
+
 # ★ Paredes (Pícaro y Monje), Ki, Ráfaga y escudos — HECHO, falta probar (8 de octubre)
 
 Compila limpio (juego y editor, con el Roslyn de Unity; el codegen de FishNet lo corre Unity
@@ -171,6 +243,9 @@ al recompilar: hay dos RPC que cambiaron).
   corriendo y el modelo inclinado 20° hacia afuera (en todas las pantallas).
 - **Espacio** salta hacia AFUERA de la pared (7 m/s) y hacia arriba (7 m/s). Un cuarto de
   segundo el WASD no puede empujar de vuelta contra ella. **Empujar hacia afuera** lo suelta.
+  **El salto se desvía hacia donde mira la cámara, hasta 30° a cada lado** (pedido de Gustavo,
+  8 de octubre): nunca sale derecho a donde mira. `Jump Aim Max Angle` en los perfiles.
+  - [ ] Probar: pegado, mirar a la izquierda o la derecha y saltar → sale torcido hacia ese lado.
 - **Saltos encadenados sin límite**, pero a la pared de la que se acaba de soltar no se vuelve
   a pegar hasta tocar el piso.
 - Pegado **se pueden usar las habilidades**; las de movimiento (dash, Blink, la patada) salen
@@ -201,6 +276,121 @@ inclinación viaja en la RPC de locomoción (dos bytes más) y se aplica al mode
 - [ ] Escudos: levantar cobra 5 de energía; con 5 o menos no se levanta.
 - [-] Animaciones de pared propias: no hay en el pack de Kevin Iglesias (se usan caer y correr);
       del artista si las hace.
+
+---
+
+# ★ Samurái (subclase del Monje) — HECHO Y PROBADO ✅ (8 de octubre), salvo la franja del Corte final
+
+Diseño de Gustavo (ver "Subclases del Monje — LO DECIDIDO" más abajo); los números ⚙ los puso
+Claude. Compila limpio (juego y editor).
+
+**Una vez, con Unity abierto (después de que recompile):**
+
+- [x] *(Corrida por Gustavo; herramienta borrada.)* `Mercenarios ▸ Crear el Samurái (subclase del Monje, una sola vez)` y después **borrar
+      `Assets/Scripts/Editor/MercSamuraiSetup.cs`**. Crea todo en `GameplayAbilities/Monk/Samurai`,
+      los GE en `Effects/`, `ASDef_Samurai` y `Class_Samurai` en `Attributes/Monk`, la cuelga de
+      `Class_Monk` y actualiza los registros. Busca los íconos por nombre (`Samurai_Attack`,
+      `Samurai_Slash`, `4_attacks_icon`, `Final_slash_monk`, `Class_Monk_Samurai_Icon`).
+
+**El kit:**
+
+| Ranura | Qué hace | Pieza |
+|---|---|---|
+| Stats | Los del Monje a nivel 3: 180 de vida, 6 de ataque. Rol: Daño. La espada del Guerrero en la mano (la "katana") | `ASDef_Samurai`, `Class_Samurai` |
+| Clic izq. | Dos cortes en arco (⚙ 3 m, 120°), daño de clase y una herida cada uno (`GE_Wounds` del Pícaro, hasta 10). Con Ki, la Ráfaga: las 4 acumulaciones y 4 cortes | `GA_SamuraiAttack` → `GA_SamuraiStrikes` / `GA_SamuraiFlurry` (+ `GA_SamuraiFlurryStacks`), cortes `GA_SamuraiSlash` con los clips del combo del Guerrero |
+| Clic der. | El bloqueo y la Defensa paciente del Monje, pero cada golpe que frenan le pone una herida al atacante (también a distancia y en el parry) | `SamuraiBehaviours` (copia de `MonkBehaviours`): `Entity_ShieldBarrier.OnBlockAttackerEffect` = `GE_Wounds` |
+| Pasiva extra — Afilar | Cada acumulación de Artes marciales también da +1 de ataque | `GE_MartialArtsSharpen` en su `MartialArtsPassive` |
+| Q | Ki, como el Monje | `GA_Ki` |
+| Shift | La Patada voladora y la del dragón, y las dos ponen una herida (pedido de Gustavo, 8 de octubre) | `GA_SamuraiKick` → `GA_SamuraiFlyingKick` / `GA_SamuraiDragonKick` |
+| E — Corte giratorio | Área alrededor (⚙ 3.5 m, 1.5 × ataque) con heridas; ⚙ 8 s. Con Ki, **Cortes devastadores**: 1 corte + 1 por acumulación; con acumulaciones, CADA corte lo cura igual a su ataque de antes de gastarlas (6 + 1 por acumulación); al terminar las gasta | `GA_SamuraiSpin` → `GA_SpinningSlash` / `GA_DevastatingCuts` (`GA_InstantAoE` con `ExtraHitsPerStack`) + `GE_SpinningSlashDamage`, `GE_SamuraiCutHeal` |
+| R — Corte final | Mantener R muestra una franja en el piso (⚙ 12 m, recortada en la primera pared) y **marca con un contorno rojo a los enemigos que va a alcanzar**; soltar la recorre a ⚙ 30 m/s golpeando a todos (⚙ 2 × ataque), les pone una marca de ⚙ 4 s (**con la marca, al 5 % de vida mueren**) y una herida por acumulación; al terminar las gasta | `GA_FinalCut` (`GA_RushAttack` con `AimFirst`) + `GE_FinalCutDamage`, `GE_FinalCutMark` |
+
+**Piezas nuevas de código (sirven para las tres subclases):**
+
+- **Acumulaciones** (sección nueva en cada GA): `StacksTag` (qué cuenta: `Status_MartialArts`, tag
+  nuevo al final del enum que da cada acumulación) y `ConsumeStacks` (no / al activarse / al
+  terminar). Cada entrada de Efectos tiene "Con las acumulaciones": solo con acumulaciones, una
+  vez por acumulación, o duración por acumulación. Sin acumulaciones, lo que escala no se aplica.
+  Un combo le pasa lo que leyó a sus pasos (para la Ráfaga aturdidora del Maestro elemental).
+- `GA_InstantAoE.ExtraHitsPerStack` + `RepeatInterval`: golpes extra por acumulación.
+- `GameplayEffect.ExecuteBelowHealth`: con el efecto encima, al quedar en ese % de vida muere (la
+  baja es de quien lo puso). No mata a un inmune ni a un inmortal.
+- `Entity_ShieldBarrier.OnBlockAttackerEffect`: un GE al atacante por cada golpe frenado.
+- `GA_RushAttack.AimFirst` + `ILineTargetAbility`: la franja de apuntar en `UI_GroundTargetIndicator`
+  y el contorno de los objetivos (`CharacterOutline`, sacado de `DeadAllyHighlighter`, que ahora lo usa).
+
+**Qué probar:**
+
+- [x] **PROBADO ✅ (8 de octubre, "está bien").** Los cortes ponen heridas; bloquear hiere al
+      atacante; Afilar; los Cortes devastadores con y sin acumulaciones; los cortes extra en red.
+- [ ] **R: la franja NO se veía** (8 de octubre). No era la franja: el marcador del piso
+      (`UI_GroundTargetIndicator`) no estaba puesto en NINGUNA escena ni prefab, así que ninguna
+      habilidad de zona mostró nunca nada. Ahora se crea solo y dibuja una caja rellena con borde
+      (la franja) o un círculo relleno con borde (las zonas). Probar: la franja sigue la mira, se
+      corta en las paredes, marca a los enemigos de adentro (y no a un invisible); al soltar los
+      atraviesa a todos. Un enemigo con la marca que baja al 5 % muere y la baja es del Samurái.
+- [ ] De paso, ahora SÍ se ve el círculo de las demás habilidades de zona: Marcado para morir del
+      Asesino, Salto heroico del Comandante, las áreas "en la retícula".
+- [ ] Las patadas del Samurái ponen herida.
+- [-] ⚙ Animaciones: el corte giratorio usa el clip del molinete (`MagicAttackOmni01`) y el Corte
+      final el corte del Guerrero; cambiarlos si hay algo mejor.
+
+---
+
+# ★ Maestro elemental y Shinobi (subclases del Monje) — CREADOS, falta probar (8 de octubre)
+
+Los creó una herramienta corrida en batch con Unity cerrado (ya borrada); compila con Unity, con el
+codegen de FishNet. Diseño de Gustavo (ver "Subclases del Monje — LO DECIDIDO"); números ⚙ de
+Claude. Las tres subclases ya cuelgan de `Class_Monk`.
+
+**Maestro elemental** (`Class_ElementalMaster`: 180 de vida, 6 de ataque, ⚙ 5 de daño mágico, rol Daño):
+
+| Ranura | Qué hace | Pieza |
+|---|---|---|
+| Clic izq. | Cada puñetazo lanza además un ORBE mágico: un proyectil recto (la bola de fuego), ⚙ 10 m, 1 × daño mágico. Los orbes no tienen animación propia: anima el puño | `GA_ElementalAttack` → `GA_ElementalStrikes` (puño, orbe, puño, orbe) con `GA_ElementalOrbRight/Left` |
+| Clic izq. con Ki | **Ráfaga aturdidora**: gasta las acumulaciones, le vuelven las 4 de la Ráfaga, y cada puñetazo aturde 0.5 s por cada acumulación gastada (0 = no aturde). 4 puñetazos con sus orbes | `GA_StunningFlurry` (Acumulaciones: gastar al activarse) + `GA_StunningPunchRight/Left` (aturdido "duración por acumulación") |
+| Clic der. con Ki | **Defensa de agua**: la Defensa paciente, y sus primeros ⚙ 2 s el daño que recibe lo CURA | `GA_ElementalGuard` → `GA_WaterDefense` + `GE_WaterDefense` (tag nuevo `Status_DamageToHeal`) |
+| Shift con Ki | **Patada del viento**: atraviesa, repele ⚙ 4 m y aturde a todos los que toca | `GA_ElementalKick` → `GA_WindKick` + `GE_WindKickPush` |
+| E — Aliento de fuego | Cono (⚙ 5 m, 70°) de daño mágico que quema ⚙ 3 s; ⚙ 8 s. Con Ki, **Aliento de dragón rojo** (cambiado el 8 de octubre a la tarde, ver arriba): 3 s de fuego sostenido en cono, un golpe por segundo, y cada golpe deja una zona de fuego donde apunta la mira (5 s, una quemadura por segundo) | `GA_ElementalBreath` → `GA_FireBreath` / `GA_RedDragonBreath` (`GA_ChanneledCone`) con la zona `GA_DragonFireZone` (`GA_ContinuousAoE`) + `GE_DragonBurn`. **VFX nuevo `Art/VFX/VFX_FireZone`**: 7 fogatas de Hovl en un círculo, se estira al tamaño de la zona |
+| R — Paz mental | ⚙ 6 s: +30 % de resistencia al daño y TODO sale con Ki sin gastarlo | `GA_PeaceOfMind` + `GE_PeaceOfMind` (tag nuevo `Status_PeaceOfMind`); las variantes con Ki tienen `Also Active With Tag` |
+
+**Shinobi** (`Class_Shinobi`: 180 de vida, 6 de ataque, la daga del Pícaro en la mano, rol Daño):
+
+| Ranura | Qué hace | Pieza |
+|---|---|---|
+| Clic izq. | Dos KUNAIS (el lanzamiento de dagas del Pícaro, sin apuntar), ⚙ 15 m; **crítico por la espalda** (el `BackstabDamageModifier` del Pícaro). Con Ki, la Ráfaga: 4 kunais, y el primero gasta las acumulaciones: **Artes oscuras**, 5 % de la vida faltante por cada una | `GA_ShinobiAttack` → `GA_ShinobiStrikes` / `GA_ShinobiFlurry`; `GA_Kunai`, `GA_KunaiDarkArts` + `GE_DarkArtsDamage` |
+| Clic der. | El bloqueo y la Defensa paciente **esquivan cualquier proyectil**: lo atraviesan sin hacerle nada (y la barrera no los para); el cuerpo a cuerpo lo frenan como siempre | `GA_ShinobiGuard` → `GA_ShinobiBlock` / `GA_ShinobiPatientDefense` + `GE_ShinobiBlock`, `GE_ShinobiPatientDefense` (tag nuevo `Status_DodgeProjectiles`) |
+| Shift con Ki | La Patada del dragón, y su golpe gasta las acumulaciones (Artes oscuras) | `GA_ShinobiKick` → `GA_ShinobiDragonKick` |
+| E — Manto de oscuridad | 2 cargas (⚙ 10 s): invisible ⚙ 5 s, más rápido, el próximo golpe es crítico (el de la Emboscada del Asesino). Con Ki, **Paso de las sombras**: además se teletransporta, el Destello del Clérigo con el DOBLE de alcance; mirando una pared aparece contra ella (si cabe) y queda enganchado. Humo al ocultarse, en las dos puntas del Paso y en cada salto oculto (8 de octubre a la tarde) | `GA_ShinobiCloak` → `GA_ShadowCloak` / `GA_ShadowStep` (`GA_Teleport` con `AllowWallLanding`) + `GE_ShadowCloak` (`JumpVFX`) |
+| R — Muerte silenciosa | Elige al enemigo de la mira (⚙ 15 m), aparece a su espalda: su daño + 30 % de su vida faltante. Intocable (inmune e imparable) toda la cadena; a los 0.5 s salta al siguiente a ⚙ 10 m (primero JUGADORES, el que más vida le falta), hasta que no quede ninguno sin golpear | `GA_SilentDeath` (genérico nuevo **`GA_ChainStrike`**) + `GE_SilentDeathDamage`, `GE_SilentDeathUntouchable` |
+
+**Piezas nuevas de código:** `GA_ChainStrike`; `GA_TagSwitch.TagVariant.AlsoActiveWithTag` (la
+variante sale con ese tag sin gastar nada) y el switch se APUNTA si la variante de ahora se apunta;
+`Status_DamageToHeal` en el pipeline de daño; `Status_DodgeProjectiles` en `GC_Projectile`;
+`GA_Teleport.AllowWallLanding` + el enganche a la pared al llegar (`PlayerController.TeleportTo`).
+Los tres tags nuevos, al final del enum.
+
+**Qué probar:**
+
+- [ ] Maestro elemental: los orbes salen con cada puñetazo y pegan de lejos (daño mágico).
+- [ ] Ráfaga aturdidora con 0, 2 y 4 acumulaciones: no aturde / 1 s / 2 s; después tiene 4.
+- [ ] Defensa de agua: los primeros 2 s los golpes curan (número verde); después frena como siempre.
+- [ ] Patada del viento: atraviesa a varios, los empuja y los aturde.
+- [ ] Aliento de fuego: el cono quema. Con Ki: ver el Aliento de dragón rojo sostenido arriba
+      (¿se ve bien el VFX de la zona y del tamaño correcto?).
+- [ ] Paz mental: 6 s en los que clic izq./der., Shift y E salen con Ki sin gastar el Ki.
+- [ ] Shinobi: kunais por la espalda hacen crítico (número amarillo). Con Ki, el primero de la
+      Ráfaga hace más daño con más acumulaciones.
+- [ ] Bloqueo / Defensa paciente: un hacha, una daga o un arco lo atraviesan sin dañarlo (y
+      siguen); un golpe cuerpo a cuerpo se frena normal.
+- [ ] Manto: invisible, rápido, el primer golpe crítico; 2 cargas. Con Ki, Paso de las sombras:
+      el doble de lejos; mirando una pared, aparece pegado a ella.
+- [ ] Muerte silenciosa con 3+ enemigos: salta de uno a otro, primero jugadores y el más herido,
+      a cada uno una vez; nadie le hace daño mientras dura.
+- [ ] En red (dos ventanas): los orbes y kunais se ven, los saltos de la Muerte silenciosa, la zona
+      de fuego.
+- [-] ⚙ Animaciones: el Aliento usa `MagicAttackDirect1H01_R` y la Muerte silenciosa el golpe del
+      cono de dagas; los kunais, el lanzamiento de dagas (el mismo clip para los dos).
 
 ---
 
@@ -719,7 +909,9 @@ batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 
      quedado en `GA_GreatswordSlash` en vez de la elección por postura (`GA_BattleMasterPrimary`).
      Arreglado por Gustavo; revisadas las demás clases y subclases: ninguna más tenía eso.
 
-   **Subclases del Monje — LO DECIDIDO (8 de octubre), sin empezar.** Diseño de Gustavo; los
+   **Subclases del Monje — LO DECIDIDO (8 de octubre). Las tres hechas: Samurái probado, Maestro
+   elemental y Shinobi falta probar (ver arriba, "★ Samurái" y "★ Maestro elemental y Shinobi").**
+   Diseño de Gustavo; los
    números que no vinieron los pone Claude (⚙). Orden: **Samurái → Maestro elemental →
    Shinobi** (de la que más reusa a la más arriesgada), después de las paredes. Estimación:
    ~4 semanas las tres.

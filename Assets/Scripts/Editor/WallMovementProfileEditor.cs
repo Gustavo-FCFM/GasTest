@@ -44,7 +44,8 @@ public class WallMovementProfileEditor : SectionedInspector
         HeaderCard(null, p.name,
                    p.Mode == WallMovementProfile.EWallMode.Cling ? "Pegarse a las paredes" : "Correr por las paredes",
                    what,
-                   $"Salto: {p.JumpOffSpeed:0.##} m/s hacia afuera y {p.JumpOffUp:0.##} hacia arriba",
+                   $"Salto: {p.JumpOffSpeed:0.##} m/s hacia afuera y {p.JumpOffUp:0.##} hacia arriba, " +
+                   $"hasta {p.JumpAimMaxAngle:0}° hacia donde mira",
                    _users.Count > 0 ? "Lo usan: " + string.Join(", ", _users) : "No lo usa ninguna clase.");
     }
 

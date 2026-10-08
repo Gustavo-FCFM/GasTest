@@ -1,0 +1,83 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac50c65172ac2b54d9127395b05455b7, type: 3}
+  m_Name: GA_SpinningSlash
+  m_EditorClassIdentifier: 
+  AbilityName: Spinning Slash
+  AbilityIcon: {fileID: 21300000, guid: efea2816bc86a2349ae86cc0bad072f5, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 0}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 1
+  ActivationBlockedTags: 0100000035000000
+  ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  UsableWhileHolding: 0
+  AnimationClip: {fileID: 3094330708855449807, guid: b98582042c1292a4e81193a2e417a4d2, type: 3}
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  StacksTag: 0
+  ConsumeStacks: 0
+  Effects:
+  - When: 0
+    ApplyTo: 0
+    Effect: {fileID: 11400000, guid: cce182ad99a870c42bbde342ae251757, type: 2}
+    OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
+  - When: 0
+    ApplyTo: 0
+    Effect: {fileID: 11400000, guid: 16573965ce339a749892bca518120f2b, type: 2}
+    OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
+  Visuals:
+  - When: 1
+    VFXPrefab: {fileID: 1758473627833946668, guid: 9b21333b068a5084ba09535839bee3c8, type: 3}
+    Delay: 0
+    Offset: {x: 0, y: 1, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    Attach: 0
+    MatchAreaSize: 0
+    AreaSizeMultiplier: 0
+    DestroyTime: 2
+    EndWithTag: 0
+    EndWhenAttributeDepleted: 0
+    DepletedAttribute: 0
+  IsInterruptible: 0
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  MaxCharges: 1
+  Radius: 3.5
+  DeployMode: 0
+  MaxRange: 15
+  StartDelay: 0.2
+  ExtraHitsPerStack: 0
+  RepeatInterval: 0.3
+  Targets: 0
+  EffectsToApply: []
+  VisualPrefab: {fileID: 0}
+  VisualScaleMultiplier: 2
+  VisualLifetime: 2

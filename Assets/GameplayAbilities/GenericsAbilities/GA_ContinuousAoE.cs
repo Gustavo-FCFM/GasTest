@@ -109,6 +109,26 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
         Activate();
     }
 
+    // Solo la ZONA, fija en 'center', sin el ciclo de vida de una habilidad: ni costo, ni
+    // cooldown, ni animación, ni EndAbility. Para las que van dejando zonas mientras duran
+    // (el Aliento del dragón rojo suelta una por tick): EndAbility le avisaría al dueño
+    // que terminó su ataque en plena canalización. Se puede llamar varias veces seguidas
+    // sobre la misma instancia: cada zona corre su propia corutina. Server-side.
+    public void DeployZoneAt(Vector3 center)
+    {
+        if (!IsServer || OwnerASC == null) return;
+
+        _hasCenterOverride = true;   // fija donde cae: no sigue al dueño
+        _centerOverride    = center;
+        OwnerASC.StartAbilityCoroutine(DeployedZone(center));
+    }
+
+    private IEnumerator DeployedZone(Vector3 center)
+    {
+        if (StartDelay > 0f) yield return new WaitForSeconds(StartDelay);
+        yield return AreaRoutine(center);
+    }
+
     // Valida, cobra costo/cooldown y arranca la secuencia del área.
     public override void Activate()
     {

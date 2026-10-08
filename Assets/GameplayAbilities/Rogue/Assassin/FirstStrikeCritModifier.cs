@@ -15,6 +15,11 @@ using System.Collections.Generic;
 //
 // La presencia de este componente = la pasiva activa; no hace falta ningún tag.
 //
+// INVISIBLE SE RECARGA MÁS RÁPIDO (8 de octubre de 2026, pedido de Gustavo): las dos
+// esperas corren con un reloj propio que, mientras tiene Status_Invisible (la Emboscada
+// sombría), avanza InvisibleRecoveryMultiplier veces más rápido. Esconderse es preparar
+// el próximo crítico mejorado.
+//
 // SETUP: va en el PassiveBehaviorsPrefab del Asesino. Como vive en un hijo del
 // jugador, busca el ASC en el PADRE.
 // ============================================================
@@ -25,8 +30,14 @@ public class FirstStrikeCritModifier : MonoBehaviour, IDamageModifier
     public float FirstStrikeWindow = 6f;
     [Tooltip("Reutilización global: mínimo de segundos entre dos críticos mejorados (contra cualquiera).")]
     public float FirstStrikeCooldown = 2f;
+    [Tooltip("Mientras está invisible, las dos esperas de arriba corren este tanto más rápido " +
+             "(3 = la ventana de 6 s se cumple en 2 s). 1 = igual que visible.")]
+    [Min(1f)] public float InvisibleRecoveryMultiplier = 3f;
 
     private AbilitySystemComponent _asc;
+
+    // Reloj propio de las esperas: avanza más rápido estando invisible (ver arriba).
+    private float _clock;
 
     // Última vez que ESTE personaje golpeó a cada enemigo (para la ventana por objetivo).
     private readonly Dictionary<AbilitySystemComponent, float> _lastStrikeTime
@@ -38,6 +49,12 @@ public class FirstStrikeCritModifier : MonoBehaviour, IDamageModifier
 
     private void OnEnable()  { if (_asc != null) _asc.RegisterDamageModifier(this); }
     private void OnDisable() { if (_asc != null) _asc.UnregisterDamageModifier(this); }
+
+    private void Update()
+    {
+        bool invisible = _asc != null && _asc.HasTag(EGameplayTag.Status_Invisible);
+        _clock += Time.deltaTime * (invisible ? InvisibleRecoveryMultiplier : 1f);
+    }
 
     // Marca "crítico mejorado" en el primer golpe fresco (y consume el cooldown).
     // No aplica a ticks de DoT.
@@ -51,7 +68,7 @@ public class FirstStrikeCritModifier : MonoBehaviour, IDamageModifier
     // mejorado: primer golpe dentro de la ventana Y pasado el cooldown global.
     private bool Consume(AbilitySystemComponent target)
     {
-        float now = Time.time;
+        float now = _clock;
         bool  isFresh = !_lastStrikeTime.TryGetValue(target, out float last) ||
                         (now - last) >= FirstStrikeWindow;
 
@@ -66,7 +83,7 @@ public class FirstStrikeCritModifier : MonoBehaviour, IDamageModifier
 
     // ¿Está disponible el crítico mejorado (pasó la reutilización global)? Lo usa el
     // feedback del HUD a través del ASC.
-    public bool IsReady => Time.time - _lastCrit >= FirstStrikeCooldown;
+    public bool IsReady => _clock - _lastCrit >= FirstStrikeCooldown;
 
     // ¿Le puedo clavar un crítico mejorado a ESTE enemigo ahora? Reutilización
     // global + "frescura" del objetivo (que no lo hayas golpeado en FirstStrikeWindow).
@@ -79,6 +96,6 @@ public class FirstStrikeCritModifier : MonoBehaviour, IDamageModifier
     {
         if (target == null || !IsReady) return false;
         return !_lastStrikeTime.TryGetValue(target, out float last) ||
-               (Time.time - last >= FirstStrikeWindow);
+               (_clock - last >= FirstStrikeWindow);
     }
 }

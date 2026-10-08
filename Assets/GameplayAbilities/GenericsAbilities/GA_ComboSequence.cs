@@ -178,6 +178,7 @@ public class GA_ComboSequence : GameplayAbility
                 stepInstance.DisableCharges();
 
                 stepInstance.IsInterruptible = IsInterruptible; // el paso se corta con el combo
+                stepInstance.StackSnapshot   = StackSnapshot;   // escala con las acumulaciones que leyó el combo
 
                 if (step.AnimationClipOverride != null)
                     stepInstance.AnimationClip = step.AnimationClipOverride;

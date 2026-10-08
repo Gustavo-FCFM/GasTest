@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 2838261589704826688}
   - component: {fileID: 9207272583520995457}
   - component: {fileID: 900910980805463459}
+  - component: {fileID: 6841989307375357600}
   m_Layer: 0
   m_Name: Assassin_Behaviour
   m_TagString: Untagged
@@ -59,3 +60,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   FirstStrikeWindow: 6
   FirstStrikeCooldown: 2
+  InvisibleRecoveryMultiplier: 3
+--- !u!114 &6841989307375357600
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3909173908971479584}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22a06f57829e8004f9f837d72d61cbe4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Ability: {fileID: 11400000, guid: 7fb7d8935fcfbb946921778d62635f8b, type: 2}
+  WindowTag: 32
+  KillWindow: 6
+  WindowEffect: {fileID: 11400000, guid: 257b8612321ec3b489f597343f0e62c6, type: 2}

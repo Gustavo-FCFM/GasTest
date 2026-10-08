@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c79a6ef63759774f8125f583fee8f7e, type: 3}
+  m_Name: GA_ShinobiFlurry
+  m_EditorClassIdentifier: 
+  AbilityName: Kunai Flurry
+  AbilityIcon: {fileID: 21300000, guid: c9a40fd3fb602f24bad4fa052ec1cc8a, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: 45327044be4f41c4d8f5289bc6f9b3be, type: 2}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 1
+  UltimateChargeAmount: 2
+  ActivationBlockedTags: 0100000035000000
+  ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  UsableWhileHolding: 0
+  AnimationClip: {fileID: 3094330708855449807, guid: 2c2c84ffdf3b64f4195f0b9a4931e399, type: 3}
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 99
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  StacksTag: 65
+  ConsumeStacks: 1
+  Effects: []
+  Visuals: []
+  IsInterruptible: 0
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  MaxCharges: 1
+  Sequence:
+  - AbilityToCast: {fileID: 11400000, guid: 8926eb5ee8684ec4fbba3620945ec79f, type: 2}
+    DelayAfter: 0
+    AnimationClipOverride: {fileID: 0}
+    AnimationIDOverride: 0
+  - AbilityToCast: {fileID: 11400000, guid: 823557918a0a6fe44b371ad11ef6efeb, type: 2}
+    DelayAfter: 0.4
+    AnimationClipOverride: {fileID: 3094330708855449807, guid: 8ab57abc06f7ffd47ae8d91e99f41fa2, type: 3}
+    AnimationIDOverride: 0
+  - AbilityToCast: {fileID: 11400000, guid: 8d560bf89e4620d45bef21243c33d8fc, type: 2}
+    DelayAfter: 0.4
+    AnimationClipOverride: {fileID: 3094330708855449807, guid: c2160d1a58a158543817a3f1c504dc91, type: 3}
+    AnimationIDOverride: 0
+  - AbilityToCast: {fileID: 11400000, guid: 8d560bf89e4620d45bef21243c33d8fc, type: 2}
+    DelayAfter: 0.4
+    AnimationClipOverride: {fileID: 3094330708855449807, guid: 8ab57abc06f7ffd47ae8d91e99f41fa2, type: 3}
+    AnimationIDOverride: 0
+  - AbilityToCast: {fileID: 11400000, guid: 8d560bf89e4620d45bef21243c33d8fc, type: 2}
+    DelayAfter: 0
+    AnimationClipOverride: {fileID: 3094330708855449807, guid: c2160d1a58a158543817a3f1c504dc91, type: 3}
+    AnimationIDOverride: 0
