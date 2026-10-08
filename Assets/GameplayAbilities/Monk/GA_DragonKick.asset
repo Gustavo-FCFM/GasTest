@@ -64,9 +64,11 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   MaxCharges: 1
-  Distance: 16
-  Speed: 16
-  TurnRate: 70
+  Distance: 20
+  Speed: 20
+  StrafeSpeed: 5
+  AimVertical: 1
+  MaxPitch: 45
   Cancelable: 1
   ExcludePlayerLayer:
     serializedVersion: 2

@@ -45,7 +45,7 @@ MonoBehaviour:
   MaxCharges: 1
   Sequence:
   - AbilityToCast: {fileID: 11400000, guid: f1288359b63abd74aa55312321eb1f87, type: 2}
-    DelayAfter: 0.2
+    DelayAfter: 0.15
     AnimationClipOverride: {fileID: 0}
     AnimationIDOverride: 0
   - AbilityToCast: {fileID: 11400000, guid: 5f9d38fb79ae5954980caabbeb75160d, type: 2}

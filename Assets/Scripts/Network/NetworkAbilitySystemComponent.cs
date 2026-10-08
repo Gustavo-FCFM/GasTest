@@ -1765,19 +1765,19 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     private bool _rushStopRequested;
 
     [Server]
-    public void ServerStartRush(Vector3 velocity, float duration, float turnRate, int excludeMask, bool cancelable)
+    public void ServerStartRush(Vector3 velocity, float duration, float strafeSpeed, int excludeMask, bool cancelable)
     {
         _rushStopRequested = false;
         if (!HasOwnerConnection()) return;
-        TargetStartRush(Owner, velocity, duration, turnRate, excludeMask, cancelable);
+        TargetStartRush(Owner, velocity, duration, strafeSpeed, excludeMask, cancelable);
     }
 
     [TargetRpc]
-    private void TargetStartRush(NetworkConnection conn, Vector3 velocity, float duration, float turnRate,
+    private void TargetStartRush(NetworkConnection conn, Vector3 velocity, float duration, float strafeSpeed,
                                  int excludeMask, bool cancelable)
     {
         PlayerController pc = GetComponent<PlayerController>();
-        if (pc != null) pc.StartRush(velocity, duration, turnRate, excludeMask, cancelable);
+        if (pc != null) pc.StartRush(velocity, duration, strafeSpeed, excludeMask, cancelable);
     }
 
     [Server]

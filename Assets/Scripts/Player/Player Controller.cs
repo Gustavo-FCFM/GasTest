@@ -402,7 +402,7 @@ public class PlayerController : NetworkBehaviour
     private bool          _rushActive;
     private Vector3       _rushVelocity;
     private float         _rushEndsAt;
-    private float         _rushTurnRate;
+    private float         _rushStrafeSpeed;
     private int           _rushExcludeMask;
     private bool          _rushCancelable;
     private EAbilityInput _rushSlot;
@@ -1137,14 +1137,15 @@ public class PlayerController : NetworkBehaviour
     // =========================================================
 
     // Lo llama NetworkAbilitySystemComponent.TargetStartRush en el DUEÑO. velocity es la
-    // horizontal entera (dirección × velocidad).
-    public void StartRush(Vector3 velocity, float duration, float turnRate, int excludeMask, bool cancelable)
+    // entera (dirección × velocidad); trae componente vertical si la habilidad apunta arriba
+    // o abajo (GA_RushAttack.AimVertical).
+    public void StartRush(Vector3 velocity, float duration, float strafeSpeed, int excludeMask, bool cancelable)
     {
         if (_rushActive) StopRush(false);
 
-        _rushVelocity    = new Vector3(velocity.x, 0f, velocity.z);
+        _rushVelocity    = velocity;
         _rushEndsAt      = Time.time + Mathf.Max(0.05f, duration);
-        _rushTurnRate    = turnRate;
+        _rushStrafeSpeed = strafeSpeed;
         _rushExcludeMask = excludeMask;
         _rushCancelable  = cancelable;
         _rushSlot        = _runningSlot != EAbilityInput.None ? _runningSlot : EAbilityInput.Movement;
@@ -1154,7 +1155,8 @@ public class PlayerController : NetworkBehaviour
         _inertiaVelocity = Vector3.zero;
         SetCollisionExclusion(excludeMask, true);
 
-        if (_rushVelocity.sqrMagnitude > 0.0001f) transform.forward = _rushVelocity.normalized;
+        Vector3 face = new Vector3(_rushVelocity.x, 0f, _rushVelocity.z);
+        if (face.sqrMagnitude > 0.0001f) transform.forward = face.normalized;
     }
 
     // Termina la embestida. notifyServer: la cortó el dueño (volvió a apretar o chocó con
@@ -1165,7 +1167,7 @@ public class PlayerController : NetworkBehaviour
         _rushActive = false;
 
         SetCollisionExclusion(_rushExcludeMask, false);
-        _inertiaVelocity = _rushVelocity * 0.2f;   // no frena en seco
+        _inertiaVelocity = new Vector3(_rushVelocity.x, 0f, _rushVelocity.z) * 0.2f;   // no frena en seco
         _inertiaDamping  = 4f;
 
         if (notifyServer && NetASC != null) NetASC.ServerRequestStopRush();
@@ -1190,16 +1192,20 @@ public class PlayerController : NetworkBehaviour
             return true;
         }
 
-        // Izquierda / derecha la tuercen un poco.
-        if (_rushTurnRate > 0f)
+        // Izquierda / derecha la corren de costado, sin girarla: sigue mirando y avanzando
+        // hacia el mismo lado.
+        Vector3 forward = new Vector3(_rushVelocity.x, 0f, _rushVelocity.z);
+        Vector3 step = _rushVelocity;
+        if (forward.sqrMagnitude > 0.0001f)
         {
-            float turn = _input.MoveValue.x * _rushTurnRate * Time.deltaTime;
-            _rushVelocity = Quaternion.Euler(0f, turn, 0f) * _rushVelocity;
+            forward.Normalize();
+            transform.forward = forward;
+            if (_rushStrafeSpeed > 0f)
+                step += Vector3.Cross(Vector3.up, forward) * (_input.MoveValue.x * _rushStrafeSpeed);
         }
-        if (_rushVelocity.sqrMagnitude > 0.0001f) transform.forward = _rushVelocity.normalized;
 
         // Sin gravedad mientras dura, como el dash. Una pared la termina.
-        CollisionFlags flags = characterController.Move(_rushVelocity * Time.deltaTime);
+        CollisionFlags flags = characterController.Move(step * Time.deltaTime);
         if ((flags & CollisionFlags.Sides) != 0) StopRush(true);
 
         return true;

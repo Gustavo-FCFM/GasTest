@@ -6,9 +6,11 @@ using System.Collections.Generic;
 // GA_RushAttack  (genérico — embestida larga que se puede guiar y cortar)
 //
 // Como la Carga de Reinhardt (Overwatch): sale disparado hacia donde mira, a velocidad
-// CONSTANTE y una distancia larga; mientras dura, izquierda/derecha la tuercen un poco
-// (TurnRate) y volver a apretar el botón la corta en el acto (por si apuntaste a un
-// precipicio). Choca con las paredes, y ahí termina. La usa la Patada voladora del Monje.
+// CONSTANTE y una distancia larga; mientras dura, izquierda/derecha la corren de costado
+// sin girarla (StrafeSpeed: sigue mirando y avanzando hacia el mismo lado) y volver a
+// apretar el botón la corta en el acto (por si apuntaste a un precipicio). Con AimVertical
+// sale con el ángulo de la mira, como el dash: mirando arriba se eleva y alcanza a quien
+// está en el aire. Choca con las paredes, y ahí termina. La usa la Patada voladora del Monje.
 //
 // DIFERENCIA CON GA_Dash: el dash resuelve el daño de TODO el trayecto al activar (es
 // corto y rápido, no hay tiempo de cambiar nada). Acá el trayecto no se conoce de
@@ -18,7 +20,7 @@ using System.Collections.Generic;
 // embestida termina ahí; sin eso atraviesa y le pega a todos una vez.
 //
 // RED: el movimiento lo hace el dueño (el transform es suyo): NetworkASC.ServerStartRush
-// le manda la velocidad, la duración y el giro; él avisa si la cortó o chocó con una
+// le manda la velocidad, la duración y el corrimiento lateral; él avisa si la cortó o chocó con una
 // pared (ServerRequestStopRush), y el servidor le avisa si frenó en un enemigo.
 // Los bots no la usan (MovesThroughOwner).
 //
@@ -36,8 +38,17 @@ public class GA_RushAttack : GameplayAbility, IChanneledAbility
     [Tooltip("Metros por segundo, constantes. Más bajo = más larga y más fácil de guiar.")]
     public float Speed = 10f;
 
-    [Tooltip("Grados por segundo que la tuercen izquierda/derecha mientras dura. 0 = recta.")]
-    public float TurnRate = 70f;
+    [Tooltip("Metros por segundo que la corren de costado izquierda/derecha mientras dura, SIN " +
+             "girarla: sigue mirando y avanzando hacia el mismo lado. 0 = recta.")]
+    public float StrafeSpeed = 5f;
+
+    [Tooltip("Sale con el ángulo vertical de la mira, como el dash: mirando arriba se eleva (para " +
+             "alcanzar a alguien en el aire) y mirando abajo baja. Apagado = siempre horizontal.")]
+    public bool AimVertical = false;
+
+    [ShowIf(nameof(AimVertical))]
+    [Tooltip("Ángulo máximo, en grados, hacia arriba o hacia abajo.")]
+    [Range(0f, 89f)] public float MaxPitch = 45f;
 
     [Tooltip("Volver a apretar el botón la corta en el acto.")]
     public bool Cancelable = true;
@@ -82,17 +93,26 @@ public class GA_RushAttack : GameplayAbility, IChanneledAbility
 
         CommitAbility();
 
-        // Hacia donde mira, en el plano: una embestida no sube ni baja.
-        Vector3 origin = OwnerASC.transform.position;
+        // Hacia donde mira. Sin AimVertical, en el plano; con AimVertical, con el ángulo de
+        // la mira topeado a MaxPitch. Se mide desde el pecho, como el dash.
+        Vector3 origin = OwnerASC.transform.position + Vector3.up;
         Vector3 dir = pc != null ? pc.GetAimPoint() - origin : OwnerASC.transform.forward;
-        dir.y = 0f;
-        if (dir.sqrMagnitude < 0.0001f) dir = OwnerASC.transform.forward;
-        dir.Normalize();
+        Vector3 flat = new Vector3(dir.x, 0f, dir.z);
+        if (flat.sqrMagnitude < 0.0001f) flat = OwnerASC.transform.forward;
+        flat.Normalize();
+
+        if (AimVertical && dir.sqrMagnitude > 0.0001f)
+        {
+            float pitch = Mathf.Atan2(dir.y, new Vector2(dir.x, dir.z).magnitude) * Mathf.Rad2Deg;
+            pitch = Mathf.Clamp(pitch, -MaxPitch, MaxPitch);
+            dir = Quaternion.AngleAxis(-pitch, Vector3.Cross(Vector3.up, flat)) * flat;
+        }
+        else dir = flat;
 
         float speed    = Mathf.Max(1f, Speed);
         float duration = Mathf.Max(0.1f, Distance / speed);
 
-        netAsc.ServerStartRush(dir * speed, duration, TurnRate, ExcludePlayerLayer.value, Cancelable);
+        netAsc.ServerStartRush(dir * speed, duration, StrafeSpeed, ExcludePlayerLayer.value, Cancelable);
 
         if (RushLoopClip != null) netAsc.ServerPlayChannelAnimation(this, true);
         if (pc != null) pc.PlayAnimation(this);

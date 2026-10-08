@@ -23,7 +23,7 @@ MonoBehaviour:
   ActivationRequiredTags: 
   UsableWhileChanneling: 0
   UsableWhileHolding: 0
-  AnimationClip: {fileID: 992911294148604404, guid: dddab171c4921bd4aa92cfec58cc6a53, type: 3}
+  AnimationClip: {fileID: -4725277914571804601, guid: 8d02e449ac9268746afba23edc429e9e, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 1
   CastSound:
@@ -60,7 +60,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   MaxCharges: 1
-  Length: 2
+  Length: 1.5
   Width: 0.8
   Height: 1
   OriginOffset: {x: 0.2, y: 1.4, z: 0}

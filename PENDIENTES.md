@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 7 de octubre de 2026
+# Pendientes — actualizado el 7 de octubre de 2026 (noche)
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -560,13 +560,13 @@ batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 
    | Q | Ki: 3 cargas (⚙ 8 s cada una). Deja el Ki preparado (⚙ 10 s): la PRÓXIMA acción sale con Ki y lo gasta. Con Ki ya preparado no se gasta otra carga | `GA_Ki` (`GA_SelfBuff`, MaxCharges 3) + `GE_Ki` (tag nuevo `Status_Ki`) |
    | Clic izq. | Dos puñetazos (`AttackPunch01_R` y `_L`, cono de 2 m y ⚙ 90°), 1 s entre ataques. Con Ki, **Ráfaga de golpes**: primero se pone las 4 acumulaciones de una y después pega | `GA_MonkAttack` (`GA_TagSwitch`, ConsumeTag) → `GA_MonkStrikes` / `GA_FlurryOfBlows` (combo: `GA_FlurryStacks` + los dos puños) |
    | Clic der. | Bloqueo frontal, más chico que los escudos: ⚙ frena el 40 % por energía según el daño frenado. Con Ki, **Defensa paciente**: 6 s de una cápsula alrededor que frena el 40 % desde cualquier lado con la misma energía, SIN mantener el botón (puede atacar a la vez) | `GA_MonkGuard` (`GA_HoldTagSwitch`: ahora acepta una variante que no es de mantener y consume el tag) → `GA_MonkBlock` / `GA_PatientDefense` + `GE_PatientDefense` (tag nuevo `Status_PatientDefense`). La cápsula es una segunda barrera en `MonkBehaviours` con la casilla nueva `Omnidirectional` y una esfera con el material del escudo |
-   | Shift | **Patada voladora**: embestida larga y LENTA (⚙ 14 m a 9 m/s); izquierda/derecha la tuercen (⚙ 70°/s), **volver a apretar Shift la corta** (por el precipicio), choca con paredes y frena en el primer enemigo. Con Ki, **Patada del dragón**: ⚙ 16 m a 16 m/s y aturde al primero | `GA_MonkKick` (`GA_TagSwitch`) → `GA_FlyingKick` / `GA_DragonKick`: genérico nuevo **`GA_RushAttack`** (Create ▸ GAS ▸ Generics ▸ Rush Attack), como la carga de Reinhardt |
+   | Shift | **Patada voladora**: embestida larga (20 m a 20 m/s, valores de Gustavo); izquierda/derecha la **corren de costado sin girarla** (`StrafeSpeed` ⚙ 5 m/s), sale con el **ángulo vertical de la mira** como el dash (`AimVertical`, tope `MaxPitch` ⚙ 45°: mirando arriba alcanza al que está en el aire), **volver a apretar Shift la corta** (por el precipicio), choca con paredes y frena en el primer enemigo. Con Ki, **Patada del dragón**: 20 m a 20 m/s y aturde al primero | `GA_MonkKick` (`GA_TagSwitch`) → `GA_FlyingKick` / `GA_DragonKick`: genérico nuevo **`GA_RushAttack`** (Create ▸ GAS ▸ Generics ▸ Rush Attack), como la carga de Reinhardt |
 
    Estadísticas (`ASDef_Monk`): 80 de vida (+50 por nivel), 4 de ataque (+1 por nivel), 4 de
    armadura, 50 de energía, 1 s entre ataques, la velocidad del Pícaro (6.5). Sin arma. Por
    ahora usa el AOC del Pícaro.
 
-   - [ ] **Correr `Mercenarios ▸ Crear el Monje (kit base, una sola vez)`** (con Unity
+   - [x] (Hecho el 7 de octubre: assets creados y herramienta borrada.) **Correr `Mercenarios ▸ Crear el Monje (kit base, una sola vez)`** (con Unity
          abierto, o en batch con Unity cerrado: `-executeMethod MercMonkSetup.Create`) y
          borrar `Assets/Scripts/Editor/MercMonkSetup.cs`. Crea todo en
          `GameplayAbilities/Monk` y `Attributes/Monk`, lo agrega al jugador y a la sala, y
@@ -586,6 +586,18 @@ batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 
    - Lo que cambió del documento: la Ráfaga ya no son "2 golpes extra por ataque" sino las 4
      acumulaciones de una; la Defensa paciente no es "bloquear todo" sino la cápsula al 40 %.
    - Subclases (después): Samurái, Shinobi y Maestro elemental (ver sección 6).
+
+   **7 de octubre, después de probar el Monje:**
+   - Gustavo subió la velocidad de ataque y dejó las dos patadas en 20 m a 20 m/s.
+   - `GA_RushAttack`: el giro (`TurnRate`) se reemplazó por **`StrafeSpeed`** (izquierda/derecha
+     corren de costado, la patada sigue mirando y avanzando al mismo lado) y la casilla
+     **`AimVertical`** (+ `MaxPitch`): sale con el ángulo de la mira. Prendida en las dos patadas.
+   - [ ] Probar: patada mirando a alguien en el aire (sube y le pega); A/D durante la patada
+         (se corre sin girar); mirando al piso (que no se trabe); cómo cae al terminar arriba.
+   - **Maestro de batalla:** el clic izquierdo hacía siempre el tajo a dos manos. En el commit
+     del Comandante (`f1aa49d`, 1 de octubre) la ranura de `Class_BattleMasterFighter` había
+     quedado en `GA_GreatswordSlash` en vez de la elección por postura (`GA_BattleMasterPrimary`).
+     Arreglado por Gustavo; revisadas las demás clases y subclases: ninguna más tenía eso.
 
    **Barra de canalizar (6 de octubre), CÓDIGO HECHO, falta probar.** `UI_CastBar`, bajo la
    barra de carga, solo para el que la usa, como la del WoW: amarilla y se LLENA en una
