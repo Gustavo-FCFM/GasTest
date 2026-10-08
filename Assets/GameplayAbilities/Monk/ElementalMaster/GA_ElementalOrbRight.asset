@@ -47,7 +47,7 @@ MonoBehaviour:
     PerStack: 0
   Visuals:
   - When: 2
-    VFXPrefab: {fileID: 2944396702758532163, guid: e190bf97c041e58448af6b043116cba0, type: 3}
+    VFXPrefab: {fileID: 2944396702758532163, guid: 0368766f6e316a544aa0b35bc0cbc074, type: 3}
     Delay: 0
     Offset: {x: 0, y: 0, z: 0}
     RotationOffset: {x: 0, y: 0, z: 0}
@@ -64,9 +64,9 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   MaxCharges: 1
-  ProjectilePrefab: {fileID: 406129108226925510, guid: a08202d5fe7dac94e81bd9893f3f35ca, type: 3}
+  ProjectilePrefab: {fileID: 406129108226925510, guid: 0cc11c82291d3fb47a27e1dcfc4e87f4, type: 3}
   LaunchForce: 25
-  SpawnOffset: {x: 0.4, y: 1.4, z: 0.8}
+  SpawnOffset: {x: 0.4, y: 1.4, z: 1}
   AddSpin: 1
   HideWeaponWhileFlying: 0
   LifeTime: 0.2

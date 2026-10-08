@@ -109,11 +109,19 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
         Activate();
     }
 
+    // =========================================================
+    // ZONAS QUE SUELTA OTRA HABILIDAD
+    //
+    // El Aliento del dragón rojo deja una por tick y la Quemadura santa del Clérigo deja una
+    // fila donde apunta: las dos reusan una zona de estas tal cual (radio, duración, ticks,
+    // efectos y VFX). La habilidad que las suelta se queda una copia con Deployable y la
+    // despliega con DeployZoneAt donde caiga (ClampAimPoint + TryGroundPoint).
+    // =========================================================
+
     // Solo la ZONA, fija en 'center', sin el ciclo de vida de una habilidad: ni costo, ni
-    // cooldown, ni animación, ni EndAbility. Para las que van dejando zonas mientras duran
-    // (el Aliento del dragón rojo suelta una por tick): EndAbility le avisaría al dueño
-    // que terminó su ataque en plena canalización. Se puede llamar varias veces seguidas
-    // sobre la misma instancia: cada zona corre su propia corutina. Server-side.
+    // cooldown, ni animación, ni EndAbility (que le avisaría al dueño que terminó su ataque
+    // en plena canalización). Se puede llamar varias veces seguidas sobre la misma
+    // instancia: cada zona corre su propia corutina. Server-side.
     public void DeployZoneAt(Vector3 center)
     {
         if (!IsServer || OwnerASC == null) return;
@@ -127,6 +135,154 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
     {
         if (StartDelay > 0f) yield return new WaitForSeconds(StartDelay);
         yield return AreaRoutine(center);
+    }
+
+    // Una copia de 'template' con este dueño, lista para DeployZoneAt. Devuelve 'cached' si
+    // ya era eso (la habilidad que suelta zonas la guarda y la reusa en cada lanzamiento).
+    public static GA_ContinuousAoE Deployable(GA_ContinuousAoE template, AbilitySystemComponent owner,
+                                              GA_ContinuousAoE cached)
+    {
+        if (cached != null && cached.SourceTemplate == template && cached.OwnerASC == owner) return cached;
+
+        GA_ContinuousAoE zone = Instantiate(template);
+        zone.Initialize(owner);
+        zone.SourceTemplate = template;   // su identidad en la red (el VFX de la zona)
+        zone.CooldownEffect = null;
+        zone.CostEffect     = null;
+        zone.DisableCharges();
+        return zone;
+    }
+
+    // Dónde cae una zona apuntada: el punto de mira recortado a maxRange del lanzador (en el
+    // plano). Sin mira (Vector3.zero, nunca llegó), maxRange hacia adelante.
+    public static Vector3 ClampAimPoint(Transform caster, Vector3 aimPoint, float maxRange)
+    {
+        Vector3 from  = caster.position;
+        Vector3 point = aimPoint != Vector3.zero ? aimPoint : from + caster.forward * maxRange;
+
+        Vector3 flat = point - from;
+        flat.y = 0f;
+        if (flat.magnitude > maxRange)
+        {
+            Vector3 clamped = from + flat.normalized * maxRange;
+            point = new Vector3(clamped.x, point.y, clamped.z);
+        }
+        return point;
+    }
+
+    // Cómo reparte sus zonas un golpe en cono (GA_ConeAttack, GA_ChanneledCone). Row es el
+    // valor 0: lo que ya estaba cargado no cambia.
+    public enum EZoneLayout
+    {
+        [InspectorName("Fila donde apunta")] Row      = 0,
+        [InspectorName("Rellenar el cono")]  FillCone = 1,
+    }
+
+    // Las zonas de un golpe en cono, sobre esta copia (ver Deployable):
+    //  · Row: 'count' en fila, de costado a la mira y centradas en el punto apuntado
+    //    (recortado a maxRange), a 'spacing' entre centros.
+    //  · FillCone: las que rellenan el cono (ConeFillPoints), desde los pies del lanzador
+    //    hacia 'coneForward'. Se bajan al piso desde un poco más arriba, por si sube adelante.
+    // Cada una cae al piso que tenga debajo; la que cae al vacío no sale. Server-side.
+    public void DeployConeZones(EZoneLayout layout, Vector3 aimPoint, Vector3 coneForward, float coneRange,
+                                float coneAngle, int count, float spacing, float maxRange)
+    {
+        if (OwnerASC == null) return;
+        Transform caster = OwnerASC.transform;
+        Vector3   feet   = caster.position;
+
+        if (layout == EZoneLayout.FillCone)
+        {
+            foreach (Vector3 p in ConeFillPoints(feet, coneForward, coneRange, coneAngle, Radius, spacing))
+                if (TryGroundPoint(p + Vector3.up * 3f, feet.y, out Vector3 ground)) DeployZoneAt(ground);
+            return;
+        }
+
+        Vector3 center  = ClampAimPoint(caster, aimPoint, maxRange);
+        Vector3 forward = center - feet;
+        forward.y = 0f;
+        if (forward.sqrMagnitude < 0.01f) forward = new Vector3(caster.forward.x, 0f, caster.forward.z);
+        Vector3 side = Vector3.Cross(Vector3.up, forward.normalized);
+
+        for (int i = 0; i < count; i++)
+        {
+            float offset = (i - (count - 1) * 0.5f) * spacing;
+            if (TryGroundPoint(center + side * offset, feet.y, out Vector3 ground)) DeployZoneAt(ground);
+        }
+    }
+
+    // Los centros de las zonas que rellenan un cono, en el plano de 'origin'. Arcos desde el
+    // borde de afuera (a un radio de zona del final, para no salirse) hacia el lanzador,
+    // cada 'spacing' metros; en cada arco, tantas como entren a 'spacing' entre sí,
+    // repartidas parejo en la apertura. Lo usan el golpe y el gizmo: lo que se ve en la
+    // escena es lo que sale.
+    public static List<Vector3> ConeFillPoints(Vector3 origin, Vector3 forward, float range, float angle,
+                                               float zoneRadius, float spacing)
+    {
+        var points = new List<Vector3>();
+
+        forward.y = 0f;
+        if (forward.sqrMagnitude < 0.0001f) return points;
+        forward.Normalize();
+
+        spacing = Mathf.Max(0.5f, spacing);
+        float theta = Mathf.Clamp(angle, 0f, 360f) * Mathf.Deg2Rad;
+        float inner = zoneRadius * 0.5f;   // más cerca que esto, el lanzador ya está adentro de la anterior
+
+        float d = Mathf.Max(range - zoneRadius, inner);
+        while (true)
+        {
+            int n = Mathf.Max(1, Mathf.CeilToInt(d * theta / spacing));
+            for (int i = 0; i < n; i++)
+            {
+                float a = (-theta / 2f + (i + 0.5f) * theta / n) * Mathf.Rad2Deg;
+                points.Add(origin + Quaternion.AngleAxis(a, Vector3.up) * forward * d);
+            }
+
+            d -= spacing;
+            if (d < inner) break;
+        }
+        return points;
+    }
+
+    // El gizmo de DeployConeZones: rellenando, las mismas que van a salir; en fila, dibujada
+    // en el tope de su alcance hacia adelante.
+    public void DrawConeZoneGizmos(Transform origin, EZoneLayout layout, float coneRange, float coneAngle,
+                                   int count, float spacing, float maxRange)
+    {
+        Gizmos.color = new Color(1f, 0.85f, 0.2f, 0.6f);
+
+        if (layout == EZoneLayout.FillCone)
+        {
+            foreach (Vector3 p in ConeFillPoints(origin.position, origin.forward, coneRange, coneAngle, Radius, spacing))
+                Gizmos.DrawWireSphere(p, Radius);
+            return;
+        }
+
+        Vector3 row = origin.position + origin.forward * maxRange;
+        for (int i = 0; i < count; i++)
+        {
+            float offset = (i - (count - 1) * 0.5f) * spacing;
+            Gizmos.DrawWireSphere(row + origin.right * offset, Radius);
+        }
+    }
+
+    // Ni personajes ni paredes invisibles: el piso donde cae una zona.
+    private const int GroundMask = ~((1 << 7) | (1 << 2));
+
+    // El piso bajo 'point'. Mirando al cielo el punto queda muy alto: se baja desde una
+    // altura razonable sobre el lanzador para no chocar con un techo o una plataforma de
+    // arriba. False si debajo no hay piso (mira al vacío).
+    public static bool TryGroundPoint(Vector3 point, float casterHeight, out Vector3 ground)
+    {
+        Vector3 start = new Vector3(point.x, Mathf.Min(point.y, casterHeight + 4f) + 0.5f, point.z);
+        if (Physics.Raycast(start, Vector3.down, out RaycastHit hit, 50f, GroundMask, QueryTriggerInteraction.Ignore))
+        {
+            ground = hit.point;
+            return true;
+        }
+        ground = point;
+        return false;
     }
 
     // Valida, cobra costo/cooldown y arranca la secuencia del área.

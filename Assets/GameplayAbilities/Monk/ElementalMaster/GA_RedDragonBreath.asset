@@ -52,14 +52,17 @@ MonoBehaviour:
     m_Bits: 128
   MaxCharges: 1
   Range: 6
-  ConeAngle: 60
+  ConeAngle: 120
   UseVerticalAim: 1
   OriginOffset: {x: 0, y: 1.5, z: 0}
   ChannelDuration: 3
   TickInterval: 1
   BlockOtherAbilities: 1
   TickZone: {fileID: 11400000, guid: 517e2538c06660b45a5c393475cb7a78, type: 2}
-  ZoneMaxRange: 6
-  ChannelLoopAnimation: {fileID: 3094330708855449807, guid: e3e6bf58062e7b142a3ac6cda8eda124, type: 3}
-  ChannelStartAnimation: {fileID: 3094330708855449807, guid: 2f6016e9e7e6ff247b2c268a733fe053, type: 3}
-  ChannelEndAnimation: {fileID: 3094330708855449807, guid: db4aa50da8cea2546983359c3799bb26, type: 3}
+  ZoneLayout: 1
+  ZoneCount: 1
+  ZoneSpacing: 3
+  ZoneMaxRange: 8.38
+  ChannelLoopAnimation: {fileID: 3094330708855449807, guid: bc8cbcd09bf81b646b58bf68f9f55d95, type: 3}
+  ChannelStartAnimation: {fileID: 3094330708855449807, guid: 8f2199c73306dcc439cb3d6c3a6b920b, type: 3}
+  ChannelEndAnimation: {fileID: 3094330708855449807, guid: 8f2199c73306dcc439cb3d6c3a6b920b, type: 3}

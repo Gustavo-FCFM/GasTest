@@ -9,21 +9,21 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 636f4f13857926149bb632c6a7a4371c, type: 3}
-  m_Name: GA_RadiantHealingWord
+  m_Script: {fileID: 11500000, guid: b6bb5562b5ea8394f8a1925c1d716fda, type: 3}
+  m_Name: GA_HolyFireZone
   m_EditorClassIdentifier: 
-  AbilityName: Radiant Healing Word
-  AbilityIcon: {fileID: 21300000, guid: 7cb8b00857ad5674682c2d2af3de3b57, type: 3}
+  AbilityName: Holy Fire Zone
+  AbilityIcon: {fileID: 21300000, guid: 7201ce93f2ad9bb499f5ac43bf49bf1c, type: 3}
   CostEffect: {fileID: 0}
-  CooldownEffect: {fileID: 11400000, guid: ecfe07a06c63704479a331a9bae55086, type: 2}
-  CooldownDuration: 3
+  CooldownEffect: {fileID: 0}
+  CooldownDuration: 0
   UseAttackSpeedAsCooldown: 0
-  UltimateChargeAmount: 1
+  UltimateChargeAmount: 0
   ActivationBlockedTags: 0100000003000000
   ActivationRequiredTags: 
   UsableWhileChanneling: 0
   UsableWhileHolding: 0
-  AnimationClip: {fileID: 3094330708855449807, guid: 8d3c95e724e453047940371ad39c4153, type: 3}
+  AnimationClip: {fileID: 3094330708855449807, guid: 0ec27b2ee6dda6d459311de3c0df0adb, type: 3}
   AnimationTriggerName: AttackTrigger
   AnimationID: 1
   CastSound:
@@ -40,22 +40,28 @@ MonoBehaviour:
   ConsumeStacks: 0
   Effects:
   - When: 0
+    ApplyTo: 0
+    Effect: {fileID: 11400000, guid: b4387378747dcb24085cc6d664a0952b, type: 2}
+    OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
+  - When: 0
     ApplyTo: 1
     Effect: {fileID: 11400000, guid: ce3ce39dccc9cbf4bbccea79394b8fd2, type: 2}
     OnlyIfTargetHas: 0
     StackScaling: 0
     PerStack: 0
   Visuals:
-  - When: 1
-    VFXPrefab: {fileID: 1374770465800164, guid: d0e33492ce1ba064291b3ff95ce32e4e, type: 3}
+  - When: 2
+    VFXPrefab: {fileID: 2749918920112621781, guid: 5f5c0cf6b778f764ca4729dda4767489, type: 3}
     Delay: 0
     Offset: {x: 0, y: 0, z: 0}
     RotationOffset: {x: 0, y: 0, z: 0}
     Scale: {x: 0, y: 0, z: 0}
-    Attach: 1
-    MatchAreaSize: 0
-    AreaSizeMultiplier: 0
-    DestroyTime: 1
+    Attach: 0
+    MatchAreaSize: 1
+    AreaSizeMultiplier: 1
+    DestroyTime: 0
     EndWithTag: 0
     EndWhenAttributeDepleted: 0
     DepletedAttribute: 0
@@ -63,14 +69,16 @@ MonoBehaviour:
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  MaxCharges: 4
-  ImpactVFX: {fileID: 0}
-  AttachImpactVFX: 1
-  ImpactVFXOffset: {x: 0, y: 0, z: 0}
-  ImpactVFXLifetime: 1
+  MaxCharges: 1
+  Radius: 2.5
+  DeployMode: 0
+  MaxRange: 12
+  FollowOwner: 0
+  StartDelay: 0
+  TotalDuration: 5
+  TickInterval: 1
   Targets: 0
-  MaxRange: 10
-  SelectionAngle: 25
-  SelfIfNoTarget: 1
-  AllowDeadTargets: 0
-  TargetEffects: []
+  EffectsToApply: []
+  AllyEffects: []
+  VisualPrefab: {fileID: 0}
+  VisualScaleMultiplier: 2

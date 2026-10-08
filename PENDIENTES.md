@@ -141,6 +141,85 @@ se pueden borrar los bloques `DATOS VIEJOS` del final de cada GA.
 
 ---
 
+# ★ Fuego del Monje en rojo y su quemadura aparte — HECHO, falta mirarlo en juego (8 de octubre, noche)
+
+Pedido de Gustavo: la quemadura del Monje (`GE_DragonBurn`) usaba el MISMO VFX que la del Clérigo
+(`Radiant Aura Burn`, el "aura burn"), y todo el fuego del Monje tiene que ser muy rojo.
+
+- [x] `Mercenarios ▸ Fuego rojo del Monje y su quemadura aparte (una sola vez)` y después
+      **borrar `Assets/Scripts/Editor/MercMonkRedFireSetup.cs`**. *(Corrida por Gustavo; revisados los assets y borrada la herramienta.)* Hace:
+  - `Art/VFX/VFX_DragonBurnAura`: copia de `Radiant Aura Burn` en rojo; `GE_DragonBurn` la usa.
+    `GE_RadiantBurn` y `GE_HolyFireBurn` (Clérigo) siguen con la suya.
+  - `VFX_FireZone` (las zonas del Dragón rojo): las fogatas pasan a `Magic fire pro red` de Hovl
+    y además en rojo intenso.
+  - Orbes del Maestro elemental: proyectil propio `Prefabs/Projectiles/PF_DragonOrb` (copia de
+    `PF_Fireball` en rojo; `PF_Fireball` no se toca, lo usan otras bolas de fuego) y golpe propio
+    `Art/VFX/VFX_DragonOrbHit` (copia del "Holy hit" en rojo). La Patada del viento sigue con el
+    suyo: no es fuego.
+  - "Rojo intenso": cada color de las partículas, luces y estelas pasa al tono rojo con mucha
+    saturación (hasta el centro blanco del fuego), conservando brillo y transparencia. Los
+    materiales no se tocan.
+- [x] **El orbe es un objeto de red** *(quedó en DefaultPrefabObjects; falta verlo en un cliente)*: la herramienta revisa que haya quedado en
+      `DefaultPrefabObjects` y avisa en la consola si no. Si avisa: `Tools ▸ Fish-Networking ▸
+      Utility ▸ Refresh Default Prefabs`. Probar en un cliente que los orbes se ven.
+- [ ] Mirar: la quemadura del Monje roja y la del Clérigo como siempre; las zonas, los orbes y su
+      golpe bien rojos. Si algo queda "demasiado" rojo o apagado, se ajusta a mano en su prefab.
+
+---
+
+# ★ Quemadura santa con zonas de fuego sagrado — HECHO, falta probar (8 de octubre, noche)
+
+Pedido de Gustavo: la definitiva del Clérigo de la Luz deja 3 zonas de fuego como las del Aliento
+del dragón rojo, pero sagrado y amarillo. Compila limpio (juego y editor).
+
+**Una vez, con Unity abierto (después de que recompile):**
+
+- [x] `Mercenarios ▸ Zonas de fuego sagrado de la Quemadura santa (una sola vez)` y después
+      **borrar `Assets/Scripts/Editor/MercHolyFireZonesSetup.cs`**. *(Corrida por Gustavo, que
+      subió la fila a 5 zonas; herramienta borrada.)* Crea:
+  - `Art/VFX/VFX_HolyFireZone`: el `VFX_FireZone` con las fogatas amarillas de Hovl
+    (`Magic fire pro yellow`) en lugar de las naranjas.
+  - `GE_HolyFireBurn` (`Effects/Damage`): la quemadura de la Luz, pero de 3 s y acumulable, una
+    por tick (⚙ hasta 5). `GE_RadiantBurn` no se toca: la usan la Luz del amanecer y otras.
+  - `GA_HolyFireZone` (`Cleric/LightDomain`): 5 s, un tick por segundo. A los enemigos les suma
+    una quemadura sagrada; **a los aliados (y al Clérigo) les renueva la curación de la Luz**
+    (`GE_RadiantHeal`), lo mismo que hace el cono. Si no la querés, es una entrada de su lista de
+    efectos. No carga la definitiva.
+  - En `GA_HolyFire`, sección nueva "Zonas donde apunta": 3 zonas en FILA, de costado a la mira y
+    centradas donde apuntás (⚙ 5 m entre centros: se tocan), hasta 10 m (el alcance del cono).
+  - Actualiza los registros de red.
+
+- [x] **Rellenar el cono** (pedido de Gustavo, al ver la fila en el gizmo): `Zone Layout` nuevo en
+      la sección "Zonas donde apunta". En `GA_HolyFire` ponerle **`Rellenar el cono`** y
+      **`Zone Spacing` ⚙ 4.3** (≈ 1.7 × el radio: sin huecos). Con el cono de 10 m y 120° salen
+      6 zonas: 4 en el arco de afuera y 2 cerca del Clérigo. El gizmo dibuja exactamente las que
+      van a salir; más separación = menos zonas. En este modo `Zone Count` y `Zone Max Range` se
+      esconden (no se usan): el cono manda, y sale hacia donde mira el cuerpo, como el golpe.
+
+- [x] **Lo mismo para el Aliento de dragón rojo** (pedido de Gustavo): `GA_RedDragonBreath` tiene
+      ahora la misma sección ("Zona por tick": `Zone Layout`, `Zone Count`, `Zone Spacing`). Por
+      defecto sigue igual (una zona donde mira). Para rellenar: **`Rellenar el cono`** y
+      **`Zone Spacing` ⚙ 3**: con su cono de 6 m y 120° y la zona de 2.5 m salen 3 por tick (a
+      3.5 m, repartidas en la apertura), o sea hasta 9 vivas en los 3 s. Mirando siempre al mismo
+      lado se encienden encima (la quemadura topa en 5); barriendo con la mira, pinta el piso.
+      Si se ve pesado (cada zona son 7 fogatas), subir la separación o achicar el radio de
+      `GA_DragonFireZone`.
+
+Por dentro: los dos (`GA_ConeAttack.ImpactZone` y `GA_ChanneledCone.TickZone`) reparten con lo
+mismo, en `GA_ContinuousAoE`: `EZoneLayout`, `DeployConeZones` y `ConeFillPoints` (el gizmo usa
+los mismos puntos). Salen con el primer impacto; la fila, con la mira del instante.
+Las piezas para soltar zonas desde otra habilidad quedaron en `GA_ContinuousAoE` (`Deployable`,
+`ClampAimPoint`, `TryGroundPoint`) y el Aliento del dragón rojo usa las mismas.
+
+**Qué probar:**
+
+- [ ] La Quemadura santa rellena el cono de zonas amarillas (o, en fila, donde apuntás).
+- [ ] Un enemigo adentro suma quemaduras sagradas (hasta 5); un aliado adentro se sigue curando.
+- [ ] En un cliente: las zonas caen donde mira él y se ven en las dos ventanas.
+- [ ] ¿Se ve amarillo el fuego? (si las fogatas amarillas de Hovl no alcanzan, se le cambia el color).
+
+---
+
 # ★ Después de probar el Maestro elemental y el Shinobi — HECHO, falta probar (8 de octubre, tarde)
 
 Pedidos de Gustavo. Compila limpio (juego y editor); Unity ya recompiló el código con el codegen
@@ -202,9 +281,10 @@ de FishNet (hay RPC nuevas en `PlayerController`).
 
 - [ ] Wall jump con Pícaro y Monje: al aterrizar se frena ahí, sin resbalar.
 - [ ] Paz mental + Defensa de agua varias veces: un solo buff en la barra, que se reinicia.
-- [ ] Aliento de dragón rojo: 3 golpes en 3 s, una zona por golpe donde mirás; girando, el cono y
+- [x] Aliento de dragón rojo: 3 golpes en 3 s, una zona por golpe donde mirás; girando, el cono y
       las zonas siguen la mira; cada zona dura 5 s y suma una quemadura por segundo (hasta 5).
-      En un cliente (no el host) también: que las zonas caigan donde mira ÉL.
+      En un cliente (no el host) también: que las zonas caigan donde mira ÉL. **PROBADO ✅ en el
+      cliente (8 de octubre).**
 - [ ] Aturdido o silenciado a mitad del aliento: se corta (barra roja) y puede volver a usar todo.
 - [ ] Asesino: invisible, el aviso del crítico mejorado vuelve antes; salir de la invisibilidad
       y matar a alguien (o un NPC) en 6 s → la Emboscada lista; pasados los 6 s, no.

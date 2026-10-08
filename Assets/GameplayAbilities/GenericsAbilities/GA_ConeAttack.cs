@@ -43,6 +43,43 @@ public class GA_ConeAttack : GameplayAbility
              "En CERO (el default) sale del pivote, como se comportó siempre.")]
     public Vector3 OriginOffset = Vector3.zero;
 
+    [Section("Zonas donde apunta")]
+    [Tooltip("OPCIONAL: al golpear, deja esta zona en el piso (la Quemadura santa del Clérigo deja " +
+             "fuego sagrado). Se usa esa habilidad tal cual —radio, duración, ticks, efectos y VFX— " +
+             "sin su costo, su cooldown ni su animación.")]
+    public GA_ContinuousAoE ImpactZone;
+
+    [ShowIf(nameof(ImpactZone))]
+    [Tooltip("· Fila donde apunta: Zone Count zonas en fila, de costado a la mira y centradas en el " +
+             "punto apuntado.\n" +
+             "· Rellenar el cono: las que hagan falta para cubrir el cono entero (el Range y el Cone " +
+             "Angle de arriba), en arcos desde el borde de afuera hacia el lanzador. Cuántas salen lo " +
+             "deciden el cono, el radio de la zona y la separación: el gizmo las muestra.")]
+    public GA_ContinuousAoE.EZoneLayout ZoneLayout = GA_ContinuousAoE.EZoneLayout.Row;
+
+    [ShowIf(nameof(ImpactZone))]
+    [ShowIf(nameof(ZoneLayout), GA_ContinuousAoE.EZoneLayout.Row)]
+    [Min(1)]
+    [Tooltip("Cuántas zonas. Van en FILA, de costado a la mira y centradas en el punto apuntado.")]
+    public int ZoneCount = 1;
+
+    [ShowIf(nameof(ImpactZone))]
+    [Tooltip("Distancia entre los centros de dos zonas vecinas, en metros. En fila, el doble del radio " +
+             "de la zona = se tocan. Rellenando el cono, ~1.7 veces el radio no deja huecos; más " +
+             "grande = menos zonas.")]
+    public float ZoneSpacing = 5f;
+
+    [ShowIf(nameof(ImpactZone))]
+    [ShowIf(nameof(ZoneLayout), GA_ContinuousAoE.EZoneLayout.Row)]
+    [Tooltip("Hasta qué distancia del lanzador puede caer la fila. Mirando más lejos, cae a esta " +
+             "distancia en esa dirección.")]
+    public float ZoneMaxRange = 10f;
+
+    // Las zonas salen con el PRIMER frame de impacto de cada lanzamiento (no con cada uno
+    // de un barrido escalonado); si lo cortan antes de pegar, no salen.
+    [System.NonSerialized] private bool             _zonesPending;
+    [System.NonSerialized] private GA_ContinuousAoE _zone;
+
     // Valida, rota al dueño hacia el punto de mira, cobra costo/cooldown
     // y arranca la secuencia de ataque.
     public override void Activate()
@@ -51,6 +88,7 @@ public class GA_ConeAttack : GameplayAbility
         if (!CanActivate()) return;
 
         CommitAbility();
+        _zonesPending = ImpactZone != null;
 
         if (OwnerASC != null)
         {
@@ -93,6 +131,12 @@ public class GA_ConeAttack : GameplayAbility
     // del mismo swing: así un barrido escalonado no le pega dos veces al mismo objetivo.
     private void PerformDetectionAndDamage(HashSet<AbilitySystemComponent> targetsHit)
     {
+        if (_zonesPending)
+        {
+            _zonesPending = false;
+            DropZones();
+        }
+
         Vector3 origin = OwnerASC.transform.TransformPoint(OriginOffset);
 
         // El alcance crece con MeleeRangeBonus (el Avatar del Guardián).
@@ -153,6 +197,19 @@ public class GA_ConeAttack : GameplayAbility
     // Quemadura santa del Clérigo de la Luz lo marca). Corre en el servidor.
     protected virtual void OnEnemyHit(AbilitySystemComponent enemy) { }
 
+    // Las zonas al golpear (ver GA_ContinuousAoE.DeployConeZones). Rellenando, el cono sale
+    // de los pies hacia el frente del cuerpo, como el golpe; la fila va hacia la mira del
+    // instante de lanzar (la que viaja con el pedido de la habilidad; en el host, su cámara).
+    private void DropZones()
+    {
+        PlayerController pc = OwnerASC.GetComponent<PlayerController>();
+        Vector3 aim = pc != null ? pc.GetAimPoint() : Vector3.zero;
+
+        _zone = GA_ContinuousAoE.Deployable(ImpactZone, OwnerASC, _zone);
+        _zone.DeployConeZones(ZoneLayout, aim, ResolveAttackDirection(false), Range, ConeAngle,
+                              ZoneCount, ZoneSpacing, ZoneMaxRange);
+    }
+
     // Dibuja el cono real: mismo Range/ConeAngle que usa
     // PerformDetectionAndDamage() (OverlapSphere + filtro de ángulo).
     public override void DrawGizmos(Transform origin)
@@ -177,6 +234,11 @@ public class GA_ConeAttack : GameplayAbility
         }
 
         Gizmos.DrawLine(center, prevPoint);
+
+        // Las zonas que va a dejar.
+        if (ImpactZone != null)
+            ImpactZone.DrawConeZoneGizmos(origin, ZoneLayout, Range, ConeAngle, ZoneCount, ZoneSpacing,
+                                          ZoneMaxRange);
     }
 
 #if UNITY_EDITOR
@@ -188,6 +250,9 @@ public class GA_ConeAttack : GameplayAbility
         AbilityHandles.Distance(this, "Range", center, origin.forward, ref Range, AbilityHandles.DistanceColor);
         AbilityHandles.Angle(this, "Cone Angle", center, origin.forward, Range, ref ConeAngle, AbilityHandles.AngleColor);
         AbilityHandles.Offset(this, "Origin Offset", origin, ref OriginOffset, AbilityHandles.OffsetColor);
+        if (ImpactZone != null && ZoneLayout == GA_ContinuousAoE.EZoneLayout.Row)
+            AbilityHandles.Distance(this, "Zone Max Range", origin.position, origin.forward, ref ZoneMaxRange,
+                                    AbilityHandles.DistanceColor);
     }
 #endif
 

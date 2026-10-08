@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 923ea9fbcde13614b8da2b7689d349ea, type: 3}
-  m_Name: GE_DragonBurn
+  m_Name: GE_HolyFireBurn
   m_EditorClassIdentifier: 
   Duration: 3
   Period: 1
@@ -40,7 +40,7 @@ MonoBehaviour:
   KnockbackUpVelocity: 0
   PullStopDistance: 1.5
   ExecuteBelowHealth: 0
-  TargetVFX: {fileID: 7455372202216957759, guid: 9333122cca9df3c4694d67ddc0ec7b5d, type: 3}
+  TargetVFX: {fileID: 7455372202216957759, guid: f007996c21c0fc9439fc0c16efa293a2, type: 3}
   TargetVFXOffset: {x: 0, y: 0, z: 0}
   TargetVFXRotation: {x: 0, y: 0, z: 0}
   TargetVFXScale: {x: 0, y: 0, z: 0}

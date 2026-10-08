@@ -10,10 +10,10 @@ using System.Collections.Generic;
 // del Dragón rojo del Maestro elemental (8 de octubre de 2026, pedido de Gustavo), 3 s y un
 // golpe por segundo.
 //
-// En cada tick puede además dejar una ZONA donde apunta la mira (TickZone): un
-// GA_ContinuousAoE que se reusa tal cual —su radio, su duración, sus ticks, sus efectos y
-// su VFX—, sin su costo, su cooldown ni su animación (ver GA_ContinuousAoE.DeployZoneAt).
-// La zona cae al piso bajo el punto de mira, a no más de ZoneMaxRange del lanzador.
+// En cada tick puede además dejar ZONAS (TickZone): un GA_ContinuousAoE que se reusa tal
+// cual —su radio, su duración, sus ticks, sus efectos y su VFX—, sin su costo, su cooldown
+// ni su animación (ver GA_ContinuousAoE.DeployConeZones). Se reparten igual que las de un
+// GA_ConeAttack: en fila donde apunta la mira (una sola, por defecto), o rellenando el cono.
 //
 // El jugador queda LIBRE: se mueve, el cuerpo sigue a la cámara y el cono con él. Lo que
 // no puede es usar otras habilidades mientras dura (Status_Channeling, como el molinete;
@@ -56,12 +56,33 @@ public class GA_ChanneledCone : GameplayAbility, IChanneledAbility
     public bool BlockOtherAbilities = true;
 
     [Section("Zona por tick")]
-    [Tooltip("OPCIONAL: zona que deja en cada tick donde apunta la mira. Se usa esa habilidad tal " +
-             "cual (radio, duración, ticks, efectos y VFX) pero sin su costo, cooldown ni animación.")]
+    [Tooltip("OPCIONAL: zona que deja en cada tick. Se usa esa habilidad tal cual (radio, duración, " +
+             "ticks, efectos y VFX) pero sin su costo, cooldown ni animación.")]
     public GA_ContinuousAoE TickZone;
 
     [ShowIf(nameof(TickZone))]
-    [Tooltip("Hasta qué distancia del lanzador puede caer la zona. Mirando más lejos, cae a esta " +
+    [Tooltip("· Fila donde apunta: Zone Count zonas en fila, de costado a la mira y centradas en el " +
+             "punto apuntado (con 1, una zona justo donde mira).\n" +
+             "· Rellenar el cono: las que hagan falta para cubrir el cono de ese tick (Range y Cone " +
+             "Angle), en arcos desde el borde de afuera hacia el lanzador. Cuántas salen lo deciden el " +
+             "cono, el radio de la zona y la separación: el gizmo las muestra.")]
+    public GA_ContinuousAoE.EZoneLayout ZoneLayout = GA_ContinuousAoE.EZoneLayout.Row;
+
+    [ShowIf(nameof(TickZone))]
+    [ShowIf(nameof(ZoneLayout), GA_ContinuousAoE.EZoneLayout.Row)]
+    [Min(1)]
+    [Tooltip("Cuántas zonas por tick, en FILA de costado a la mira.")]
+    public int ZoneCount = 1;
+
+    [ShowIf(nameof(TickZone))]
+    [Tooltip("Distancia entre los centros de dos zonas vecinas, en metros. En fila, el doble del radio " +
+             "de la zona = se tocan. Rellenando el cono, ~1.7 veces el radio no deja huecos; más " +
+             "grande = menos zonas.")]
+    public float ZoneSpacing = 5f;
+
+    [ShowIf(nameof(TickZone))]
+    [ShowIf(nameof(ZoneLayout), GA_ContinuousAoE.EZoneLayout.Row)]
+    [Tooltip("Hasta qué distancia del lanzador puede caer la fila. Mirando más lejos, cae a esta " +
              "distancia en esa dirección.")]
     public float ZoneMaxRange = 6f;
 
@@ -89,12 +110,8 @@ public class GA_ChanneledCone : GameplayAbility, IChanneledAbility
     // Un VFX "al lanzar" con Destroy Time en 0 dura lo que el canalizado (el aliento en sí).
     protected override float VisualDefaultLifetime => ChannelDuration;
 
-    // Ni personajes ni paredes invisibles: el piso donde cae la zona.
-    private const int GroundMask = ~((1 << 7) | (1 << 2));
-
     // La copia de la zona para este dueño: cada tick la vuelve a desplegar.
-    [System.NonSerialized] private GA_ContinuousAoE       _zone;
-    [System.NonSerialized] private AbilitySystemComponent _zoneOwner;
+    [System.NonSerialized] private GA_ContinuousAoE _zone;
 
     public override void Activate()
     {
@@ -217,39 +234,14 @@ public class GA_ChanneledCone : GameplayAbility, IChanneledAbility
         }
     }
 
-    // Suelta la zona en el piso bajo la mira, recortada a ZoneMaxRange. Si debajo no hay
-    // piso (mira al vacío), ese tick no deja zona.
+    // Las zonas de este tick (ver GA_ContinuousAoE.DeployConeZones): en fila, hacia la mira de
+    // ahora; rellenando, el cono de ahora, desde los pies hacia el frente del cuerpo. La que
+    // cae al vacío no sale.
     private void DropZone(Vector3 aimPoint)
     {
-        Vector3 from  = OwnerASC.transform.position;
-        Vector3 point = aimPoint != Vector3.zero ? aimPoint : from + OwnerASC.transform.forward * ZoneMaxRange;
-
-        Vector3 flat = point - from;
-        flat.y = 0f;
-        if (flat.magnitude > ZoneMaxRange)
-        {
-            Vector3 clamped = from + flat.normalized * ZoneMaxRange;
-            point = new Vector3(clamped.x, point.y, clamped.z);
-        }
-
-        // Mirando al cielo, el punto queda muy alto: se baja desde una altura razonable para
-        // no chocar con un techo o una plataforma de arriba.
-        Vector3 start = new Vector3(point.x, Mathf.Min(point.y, from.y + 4f) + 0.5f, point.z);
-        if (!Physics.Raycast(start, Vector3.down, out RaycastHit ground, 50f, GroundMask,
-                             QueryTriggerInteraction.Ignore))
-            return;
-
-        if (_zone == null || _zoneOwner != OwnerASC)
-        {
-            _zone = Instantiate(TickZone);
-            _zone.Initialize(OwnerASC);
-            _zone.SourceTemplate = TickZone;   // su identidad en la red (el VFX de la zona)
-            _zone.CooldownEffect = null;
-            _zone.CostEffect     = null;
-            _zone.DisableCharges();
-            _zoneOwner = OwnerASC;
-        }
-        _zone.DeployZoneAt(ground.point);
+        _zone = GA_ContinuousAoE.Deployable(TickZone, OwnerASC, _zone);
+        _zone.DeployConeZones(ZoneLayout, aimPoint, OwnerASC.transform.forward, Range, ConeAngle,
+                              ZoneCount, ZoneSpacing, ZoneMaxRange);
     }
 
     // Vista previa: el cono y, con zona, hasta dónde puede caer.
@@ -274,11 +266,9 @@ public class GA_ChanneledCone : GameplayAbility, IChanneledAbility
         }
         Gizmos.DrawLine(center, prev);
 
+        // Las zonas que deja en cada tick.
         if (TickZone != null)
-        {
-            Gizmos.color = new Color(1f, 0.5f, 0.1f, 0.35f);
-            Gizmos.DrawWireSphere(origin.position + origin.forward * ZoneMaxRange, TickZone.Radius);
-        }
+            TickZone.DrawConeZoneGizmos(origin, ZoneLayout, Range, ConeAngle, ZoneCount, ZoneSpacing, ZoneMaxRange);
     }
 
 #if UNITY_EDITOR
@@ -290,7 +280,7 @@ public class GA_ChanneledCone : GameplayAbility, IChanneledAbility
         AbilityHandles.Distance(this, "Range", center, origin.forward, ref Range, AbilityHandles.DistanceColor);
         AbilityHandles.Angle(this, "Cone Angle", center, origin.forward, Range, ref ConeAngle, AbilityHandles.AngleColor);
         AbilityHandles.Offset(this, "Origin Offset", origin, ref OriginOffset, AbilityHandles.OffsetColor);
-        if (TickZone != null)
+        if (TickZone != null && ZoneLayout == GA_ContinuousAoE.EZoneLayout.Row)
             AbilityHandles.Distance(this, "Zone Max Range", origin.position, origin.forward, ref ZoneMaxRange,
                                     AbilityHandles.DistanceColor);
     }
