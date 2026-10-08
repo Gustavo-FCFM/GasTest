@@ -56,6 +56,16 @@ public class UI_WorldHealthbar : MonoBehaviour
     [Tooltip("Capas del entorno que TAPAN la barra de un enemigo (paredes/piso). Los aliados no se ocultan.")]
     public LayerMask ObstacleLayer;
 
+    [Header("Ícono de clase")]
+    [Tooltip("El ícono de la clase del personaje a la derecha de su barra de vida, para saber " +
+             "quién es cada uno mientras no hay modelos por clase. Solo jugadores y bots (los " +
+             "NPCs no tienen clase). Se crea solo: no hay que armar nada en el prefab.")]
+    public bool ShowClassIcon = true;
+    [Tooltip("Lado del ícono, en unidades del canvas del nameplate (la barra mide 100 × 10).")]
+    public float ClassIconSize = 26f;
+    [Tooltip("Corrimiento del ícono desde el borde DERECHO de la barra (a la izquierda están los buffs).")]
+    public Vector2 ClassIconOffset = new Vector2(4f, 0f);
+
     private AbilitySystemComponent        _asc;
     private NetworkAbilitySystemComponent _netAsc;
     private PlayerController               _pc;
@@ -75,6 +85,10 @@ public class UI_WorldHealthbar : MonoBehaviour
     private AbilitySystemComponent        _cachedLocalASC;
     private NetworkAbilitySystemComponent _cachedLocalNet;
 
+    // El ícono de la clase (ver CreateClassIcon) y el sprite que muestra ahora.
+    private Image  _classIcon;
+    private Sprite _shownClassSprite;
+
     private void Awake()
     {
         _asc    = GetComponent<AbilitySystemComponent>();
@@ -89,7 +103,46 @@ public class UI_WorldHealthbar : MonoBehaviour
             if (s != null) _xrayMaterial = new Material(s);
         }
 
+        // Antes de juntar los gráficos: así el ícono también recibe el X-ray de los aliados.
+        CreateClassIcon();
         RefreshGraphics();
+    }
+
+    // Un Image a la DERECHA de la barra (a la izquierda, arriba de la barra, van los buffs),
+    // hijo del nameplate: se prende, se apaga y se orienta con él. Solo en jugadores y
+    // bots: un NPC no tiene clase.
+    private void CreateClassIcon()
+    {
+        if (!ShowClassIcon || _pc == null || BarRoot == null) return;
+
+        var go = new GameObject("ClassIcon", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        go.layer = BarRoot.gameObject.layer;
+
+        var rect = (RectTransform)go.transform;
+        rect.SetParent(BarRoot, false);
+        rect.anchorMin = rect.anchorMax = new Vector2(1f, 0.5f);   // borde derecho de la barra
+        rect.pivot            = new Vector2(0f, 0.5f);             // crece hacia la derecha
+        rect.anchoredPosition = ClassIconOffset;
+        rect.sizeDelta        = new Vector2(ClassIconSize, ClassIconSize);
+
+        _classIcon = go.GetComponent<Image>();
+        _classIcon.preserveAspect = true;
+        _classIcon.raycastTarget  = false;
+        _classIcon.enabled        = false;   // hasta que haya clase
+    }
+
+    // La clase puede cambiar en cualquier momento (cambio de clase, evolución): se mira
+    // cada frame, pero el sprite solo se reescribe si cambió.
+    private void UpdateClassIcon()
+    {
+        if (_classIcon == null) return;
+
+        Sprite sprite = _pc.CurrentClassDef != null ? _pc.CurrentClassDef.ClassIcon : null;
+        if (sprite == _shownClassSprite) return;
+
+        _shownClassSprite  = sprite;
+        _classIcon.sprite  = sprite;
+        _classIcon.enabled = sprite != null;
     }
 
     // LateUpdate: después de que la cámara se movió, para que el billboard no
@@ -149,6 +202,7 @@ public class UI_WorldHealthbar : MonoBehaviour
 
         ApplyXray(!isEnemy);
         UpdateHealth(isEnemy);
+        UpdateClassIcon();
         UpdateFirstStrikeMarker(localASC, isEnemy);
     }
 

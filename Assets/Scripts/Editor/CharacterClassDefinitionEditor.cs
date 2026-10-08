@@ -38,16 +38,7 @@ public class CharacterClassDefinitionEditor : SectionedInspector
         (EAbilityInput.Movement,        "Shift"),
     };
 
-    public static Color RoleColor(EClassRole role)
-    {
-        switch (role)
-        {
-            case EClassRole.Tank:    return new Color(0.35f, 0.6f, 1f);
-            case EClassRole.Damage:  return new Color(1f, 0.4f, 0.4f);
-            case EClassRole.Support: return new Color(0.4f, 0.9f, 0.45f);
-            default:                 return new Color(0.7f, 0.7f, 0.7f);
-        }
-    }
+    public static Color RoleColor(EClassRole role) => ClassRoleStyle.Color(role);
 
     private static string RoleName(EClassRole role)
     {
@@ -68,12 +59,18 @@ public class CharacterClassDefinitionEditor : SectionedInspector
                      : c.WallMovement.Mode == WallMovementProfile.EWallMode.Cling ? $"Paredes: se pega y salta ({c.WallMovement.name})"
                      : $"Paredes: corre por ellas ({c.WallMovement.name})";
 
+        // Una clase base no tiene rol (no tiene definitiva), pero en los menús se la agrupa
+        // con el de sus subclases: se dice cuál.
+        EClassRole shown = c.DisplayRole;
+        string role = RoleName(c.Role);
+        if (shown != c.Role) role += $" · en los menús: {RoleName(shown)}";
+
         HeaderCard(c.ClassIcon, string.IsNullOrEmpty(c.ClassName) ? c.name : c.ClassName,
-                   RoleName(c.Role), AttributeSetDefinitionEditor.StatsLine(c.BaseAttributes), walls);
+                   role, AttributeSetDefinitionEditor.StatsLine(c.BaseAttributes), walls);
 
         // La rayita del color del rol, debajo de la tarjeta.
         Rect stripe = GUILayoutUtility.GetRect(1f, 3f, GUILayout.ExpandWidth(true));
-        EditorGUI.DrawRect(stripe, RoleColor(c.Role));
+        EditorGUI.DrawRect(stripe, RoleColor(shown));
 
         DrawKitRow(c);
     }
@@ -143,6 +140,10 @@ public class CharacterClassDefinitionEditor : SectionedInspector
         if (hasUltimate && c.Role == EClassRole.None)
             into.Add("• Tiene definitiva (R) pero no tiene rol: la definitiva no va a cargar por rol.");
 
+        if (c.DisplayRole == EClassRole.None)
+            into.Add("• No tiene rol para los menús (ni propio ni de sus subclases): en la sala sale en " +
+                     "\"Other\". Ponele Menu Role (Identidad).");
+
         if (c.AvailableSubclasses != null && c.AvailableSubclasses.Contains(c))
             into.Add("• Está en su propia lista de subclases.");
     }
@@ -151,7 +152,7 @@ public class CharacterClassDefinitionEditor : SectionedInspector
     {
         switch (title)
         {
-            case ClassSection.Identity:  return RoleColor(Class.Role);
+            case ClassSection.Identity:  return RoleColor(Class.DisplayRole);
             case ClassSection.Stats:     return new Color(0.35f, 0.65f, 1f);
             case ClassSection.Abilities: return new Color(1f, 0.55f, 0.15f);
             case ClassSection.Passives:  return new Color(1f, 0.85f, 0.2f);

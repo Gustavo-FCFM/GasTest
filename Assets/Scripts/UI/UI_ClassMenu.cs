@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 // ============================================================
 // UI_ClassMenu
@@ -50,6 +51,24 @@ public class UI_ClassMenu : MonoBehaviour
              "es un momento de invulnerabilidad: el que lo abre en medio de una pelea se " +
              "lleva los golpes igual, así que lo sano es que vuelva a su base y lo abra ahí.")]
     public bool CloseOnDamage = true;
+
+    [Header("Tarjetas (grilla)")]
+    [Tooltip("Desde cuántas clases se reparten en DOS filas. Con menos, una sola fila.")]
+    public int TwoRowsFrom = 5;
+    [Tooltip("Tamaño MÁXIMO de cada tarjeta, en unidades del canvas. Si no entran en el panel, se achican solas.")]
+    public Vector2 MaxCardSize = new Vector2(230f, 170f);
+    [Tooltip("Espacio entre tarjetas (horizontal, vertical).")]
+    public Vector2 CardSpacing = new Vector2(20f, 16f);
+    [Tooltip("Lado del ícono de clase en cada tarjeta.")]
+    public float CardIconSize = 56f;
+    [Tooltip("Tamaño del nombre de la clase (se achica si no entra en un renglón).")]
+    public float CardTitleSize = 16f;
+    [Tooltip("Tamaño de la descripción. Si no entra en la tarjeta, se achica sola hasta el mínimo.")]
+    public float CardDescriptionSize = 10f;
+    public float CardDescriptionMinSize = 6f;
+
+    // La grilla donde van las tarjetas (ver EnsureGrid).
+    private RectTransform _grid;
 
     // Última vida conocida mientras el menú está abierto. Bajar de ahí = daño.
     private float _lastHealth;
@@ -219,20 +238,79 @@ public class UI_ClassMenu : MonoBehaviour
 
         if (_classes.Count == 0) return false;
 
-        foreach (Transform child in CardsParent) Destroy(child.gameObject);
+        RectTransform grid = EnsureGrid(_classes.Count);
+
+        // Las de la vez anterior. Se APAGAN además de destruirse: Destroy espera al fin del
+        // frame, y mientras tanto la grilla las seguiría contando al acomodar.
+        foreach (Transform child in grid)
+        {
+            child.gameObject.SetActive(false);
+            Destroy(child.gameObject);
+        }
 
         for (int i = 0; i < _classes.Count; i++)
         {
-            GameObject cardObj = Instantiate(ClassCardPrefab, CardsParent);
+            GameObject cardObj = Instantiate(ClassCardPrefab, grid);
             UI_ClassCard cardUI = cardObj.GetComponent<UI_ClassCard>();
             if (cardUI != null)
             {
                 cardUI.SetupCard(_classes[i], i + 1);    // el número = la tecla que la elige
+                cardUI.ApplyCompact(CardIconSize, CardTitleSize, CardDescriptionSize, CardDescriptionMinSize);
                 cardUI.OnCardClicked = ConfirmSelection; // clic → elegir
             }
             _cards.Add(cardUI); // en paralelo a _classes (misma posición = misma clase)
         }
         return true;
+    }
+
+    // La grilla de tarjetas (8 de octubre, pedido de Gustavo: con 6 clases todo se
+    // estiraba). El panel del prefab las acomodaba en UNA fila estirada a todo el alto
+    // (HorizontalLayoutGroup con expandir): quedaban angostas y altas y el nombre se
+    // partía en tres renglones. Ahora van en una grilla centrada con tarjetas de tamaño
+    // fijo: una fila con pocas clases (las subclases), dos desde TwoRowsFrom. Se arma por
+    // código para no tocar el prefab: se apaga ese layout y las tarjetas van a un hijo nuevo.
+    private RectTransform EnsureGrid(int count)
+    {
+        if (_grid == null)
+        {
+            HorizontalOrVerticalLayoutGroup oldLayout = CardsParent.GetComponent<HorizontalOrVerticalLayoutGroup>();
+            if (oldLayout != null) oldLayout.enabled = false;
+
+            // Lo que quedó del layout viejo (tarjetas sueltas de antes) se va.
+            foreach (Transform child in CardsParent) Destroy(child.gameObject);
+
+            var go = new GameObject("CardsGrid", typeof(RectTransform), typeof(GridLayoutGroup));
+            go.layer = CardsParent.gameObject.layer;
+            _grid = (RectTransform)go.transform;
+            _grid.SetParent(CardsParent, false);
+            _grid.anchorMin = _grid.anchorMax = _grid.pivot = new Vector2(0.5f, 0.5f);
+            _grid.anchoredPosition = Vector2.zero;
+        }
+
+        int columns = count >= Mathf.Max(2, TwoRowsFrom) ? Mathf.CeilToInt(count / 2f) : count;
+        columns = Mathf.Max(1, columns);
+        int rows = Mathf.CeilToInt(count / (float)columns);
+
+        // Las tarjetas entran en el panel: si el máximo no entra, se achican.
+        Vector2 area = ((RectTransform)CardsParent).rect.size;
+        float w = MaxCardSize.x, h = MaxCardSize.y;
+        if (area.x > 1f) w = Mathf.Min(w, (area.x - CardSpacing.x * (columns - 1)) / columns);
+        if (area.y > 1f) h = Mathf.Min(h, (area.y - CardSpacing.y * (rows - 1)) / rows);
+        w = Mathf.Max(60f, w);
+        h = Mathf.Max(60f, h);
+
+        GridLayoutGroup grid = _grid.GetComponent<GridLayoutGroup>();
+        grid.cellSize        = new Vector2(w, h);
+        grid.spacing         = CardSpacing;
+        grid.startCorner     = GridLayoutGroup.Corner.UpperLeft;
+        grid.startAxis       = GridLayoutGroup.Axis.Horizontal;
+        grid.childAlignment  = TextAnchor.MiddleCenter;
+        grid.constraint      = GridLayoutGroup.Constraint.FixedColumnCount;
+        grid.constraintCount = columns;
+
+        _grid.sizeDelta = new Vector2(columns * w + (columns - 1) * CardSpacing.x,
+                                      rows * h + (rows - 1) * CardSpacing.y);
+        return _grid;
     }
 
     // =========================================================

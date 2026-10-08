@@ -72,6 +72,9 @@ public class UI_LobbyPanel : MonoBehaviour
     [Tooltip("Alto que se reserva abajo para el botón Confirm del selector.")]
     public float ConfirmHeight     = 56f;
 
+    [Tooltip("Alto de las pestañas de rol (Tanks / Damage / Supports) arriba del selector.")]
+    public float RoleTabHeight     = 34f;
+
     [Tooltip("Fondo del panel. La grilla de clases usa este mismo color pero SIN " +
              "transparencia, para que no se lea el panel de atrás mientras elegís.")]
     public Color PanelColor   = new Color(0.09f, 0.09f, 0.11f, 0.97f);
@@ -112,6 +115,12 @@ public class UI_LobbyPanel : MonoBehaviour
     private TextMeshProUGUI _classDescLabel;
     private Button          _pickerConfirm;
     private int             _pickerSelection = -1;
+
+    // Los grupos por rol del selector: qué clases van en cada uno (índices de
+    // SelectableClasses), la pestaña de cada grupo, y cuál está abierto.
+    private readonly List<EClassRole> _roleGroups = new List<EClassRole>();
+    private readonly Dictionary<EClassRole, List<int>> _roleMembers = new Dictionary<EClassRole, List<int>>();
+    private readonly List<Image> _roleTabs = new List<Image>();
     private TextMeshProUGUI _statusText;
 
     // Un lugar de equipo dibujado: su fondo, su ícono de clase y su etiqueta.
@@ -841,15 +850,43 @@ public class UI_LobbyPanel : MonoBehaviour
     // El nombre sigue al MOUSE (pasar por encima alcanza, sin tocar nada) y la
     // descripción sigue a la SELECCIÓN. Así se puede recorrer los íconos leyendo nombres
     // sin perder la descripción de la que estás por elegir.
+    //
+    // AGRUPADAS POR ROL (8 de octubre, pedido de Gustavo: con más clases la fila se
+    // estiraba demasiado). Arriba, una pestaña por rol —Tanks, Damage, Supports, y Other
+    // si alguna clase no tiene— y debajo solo las clases del rol abierto. Una clase base no
+    // tiene rol: va con el de sus subclases (CharacterClassDefinition.DisplayRole). El
+    // índice que se manda a la sala sigue siendo la posición en SelectableClasses: agrupar
+    // solo cambia dónde se DIBUJA cada ícono.
     private void BuildClassPicker()
     {
         int count = SelectableClasses != null ? SelectableClasses.Length : 0;
+
+        // Los grupos, en el orden de los menús; solo los que tienen alguna clase.
+        _roleGroups.Clear();
+        _roleMembers.Clear();
+        _roleTabs.Clear();
+        for (int i = 0; i < count; i++)
+        {
+            EClassRole role = RoleOf(i);
+            if (!_roleMembers.TryGetValue(role, out List<int> members))
+                _roleMembers[role] = members = new List<int>();
+            members.Add(i);
+        }
+        foreach (EClassRole role in ClassRoleStyle.MenuOrder)
+            if (_roleMembers.ContainsKey(role)) _roleGroups.Add(role);
+
+        int widest = 1;
+        foreach (List<int> members in _roleMembers.Values) widest = Mathf.Max(widest, members.Count);
+
         // La grilla se dimensiona a partir del ícono: paso = ícono + aire, y el recuadro
-        // deja un margen alrededor. Así subir ClassIconSize agranda todo junto.
-        float iconSize = Mathf.Max(24f, ClassIconSize);
-        float step     = iconSize + 12f;
-        float width    = Mathf.Max(360f, count * step + 32f);
-        float height   = iconSize + 46f + NameHeight + DescriptionHeight + ConfirmHeight;
+        // deja un margen alrededor. Así subir ClassIconSize agranda todo junto. El ancho
+        // es el del grupo MÁS grande, para que el recuadro no cambie al cambiar de pestaña.
+        const float tabW = 150f, tabGap = 8f;
+        float iconSize  = Mathf.Max(24f, ClassIconSize);
+        float step      = iconSize + 12f;
+        float tabsWidth = _roleGroups.Count * tabW + Mathf.Max(0, _roleGroups.Count - 1) * tabGap;
+        float width     = Mathf.Max(360f, Mathf.Max(widest * step, tabsWidth) + 32f);
+        float height    = RoleTabHeight + 12f + iconSize + 46f + NameHeight + DescriptionHeight + ConfirmHeight;
 
         _classPicker = MercUIFactory.CreateRect(
             _root, "ClassPicker", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
@@ -865,8 +902,25 @@ public class UI_LobbyPanel : MonoBehaviour
         close.transition    = Selectable.Transition.None;
         close.onClick.AddListener(() => ShowClassPicker(false));
 
-        // Los íconos van arriba del todo, dejando abajo el espacio del texto y el botón.
-        float iconsY = (height - iconSize) * 0.5f - 16f;
+        // Las pestañas de rol, arriba del todo, del color de su rol.
+        float tabsY = height * 0.5f - 12f - RoleTabHeight * 0.5f;
+        for (int g = 0; g < _roleGroups.Count; g++)
+        {
+            int capturedGroup = g;
+            EClassRole role = _roleGroups[g];
+            float x = -tabsWidth * 0.5f + tabW * 0.5f + g * (tabW + tabGap);
+
+            Button tab = CreateButton(_classPicker, $"Tab_{role}",
+                                      $"{ClassRoleStyle.GroupName(role)} ({_roleMembers[role].Count})",
+                                      ClassRoleStyle.Color(role), new Vector2(0.5f, 0.5f),
+                                      new Vector2(x, tabsY), new Vector2(tabW, RoleTabHeight), out _);
+            tab.onClick.AddListener(() => OpenRoleGroup(capturedGroup));
+            _roleTabs.Add(tab.targetGraphic as Image);
+        }
+
+        // Los íconos van debajo de las pestañas, dejando abajo el espacio del texto y el
+        // botón. Cada uno se centra dentro de SU grupo: solo se ve el grupo abierto.
+        float iconsY = tabsY - RoleTabHeight * 0.5f - 16f - iconSize * 0.5f;
 
         _classIcons = new Image[count];
 
@@ -875,10 +929,13 @@ public class UI_LobbyPanel : MonoBehaviour
             int captured = i;
             CharacterClassDefinition cls = SelectableClasses[i];
 
+            List<int> group = _roleMembers[RoleOf(i)];
+            int slot = group.IndexOf(i);
+
             RectTransform iconRect = MercUIFactory.CreateRect(
                 _classPicker, $"Class_{i}", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
                 new Vector2(0.5f, 0.5f),
-                new Vector2((i - (count - 1) * 0.5f) * step, iconsY), new Vector2(iconSize, iconSize));
+                new Vector2((slot - (group.Count - 1) * 0.5f) * step, iconsY), new Vector2(iconSize, iconSize));
 
             Image icon = iconRect.gameObject.AddComponent<Image>();
             icon.sprite = cls != null ? cls.ClassIcon : null;
@@ -926,6 +983,32 @@ public class UI_LobbyPanel : MonoBehaviour
         trigger.triggers.Add(entry);
     }
 
+    // El rol con el que se agrupa la clase en esa posición de SelectableClasses.
+    private EClassRole RoleOf(int index)
+    {
+        CharacterClassDefinition cls = ClassAt(index);
+        return cls != null ? cls.DisplayRole : EClassRole.None;
+    }
+
+    // Abre la pestaña de un rol: muestra solo sus clases y resalta la pestaña (las otras
+    // quedan apagadas, mezcladas con el fondo).
+    private void OpenRoleGroup(int group)
+    {
+        if (group < 0 || group >= _roleGroups.Count) return;
+        EClassRole open = _roleGroups[group];
+
+        if (_classIcons != null)
+            for (int i = 0; i < _classIcons.Length; i++)
+                if (_classIcons[i] != null) _classIcons[i].gameObject.SetActive(RoleOf(i) == open);
+
+        for (int g = 0; g < _roleTabs.Count; g++)
+        {
+            if (_roleTabs[g] == null) continue;
+            Color c = ClassRoleStyle.Color(_roleGroups[g]);
+            _roleTabs[g].color = g == group ? c : Color.Lerp(c, PanelColor, 0.7f);
+        }
+    }
+
     // Solo mira: escribe el nombre de esa clase (o lo limpia con índice inválido).
     private void ShowClassName(int index)
     {
@@ -971,6 +1054,10 @@ public class UI_LobbyPanel : MonoBehaviour
             LobbyManager lobby = LobbyManager.Instance;
             if (lobby != null && !LobbyManager.IsBot(_pickerTarget)
                 && lobby.TryGetLocalEntry(out LobbyEntry me)) current = me.ClassIndex;
+
+            // Se abre en la pestaña del rol de esa clase (o en la primera, sin clase).
+            int group = ClassAt(current) != null ? _roleGroups.IndexOf(RoleOf(current)) : -1;
+            OpenRoleGroup(group >= 0 ? group : 0);
 
             if (ClassAt(current) != null) SelectClassInPicker(current);
             else

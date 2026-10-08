@@ -204,6 +204,40 @@ inclinación viaja en la RPC de locomoción (dos bytes más) y se aplica al mode
 
 ---
 
+# ★ Menús de clase más compactos e ícono de clase en las barras — CÓDIGO HECHO, falta probar (8 de octubre)
+
+Pedido de Gustavo: con más clases todo se estiraba. Compila limpio. No toca prefabs ni assets:
+todo se arma por código.
+
+- **Sala (pantalla principal): clases agrupadas por rol.** Arriba del selector, una pestaña
+  por rol del color del rol —`Tanks`, `Damage`, `Supports`, y `Other` si alguna clase no tiene
+  rol— con cuántas clases tiene; debajo, solo las del rol abierto. Se abre en la pestaña de tu
+  clase. Una clase BASE no tiene rol (no tiene definitiva): aparece con el de la mayoría de sus
+  subclases (`CharacterClassDefinition.DisplayRole`). Hoy: Bárbaro y Guerrero en Tanks, Pícaro
+  en Damage, Paladín y Clérigo en Supports.
+- [ ] **El Monje no tiene subclases todavía, así que sale en `Other`: ponerle `Menu Role` =
+      Damage en `Class_Monk` (sección Identidad).** Lo mismo con cada clase base nueva hasta que
+      tenga subclases. El inspector de la clase avisa cuando falta.
+- **Menú de clases en partida (C / V): tarjetas en grilla.** Desde 5 clases, dos filas; con
+  menos (las subclases), una. Tarjetas, nombre, ícono y descripción más chicos (la descripción
+  se achica sola si no entra). Los tamaños se ajustan en `UI_ClassMenu` del prefab
+  `Player Camera` (sección "Tarjetas (grilla)").
+- **Ícono de la clase al lado de la barra de vida** de aliados y enemigos (jugadores y bots),
+  a la DERECHA de la barra (a la izquierda, arriba, van los buffs). Cambia solo al cambiar de
+  clase o evolucionar. Tamaño y posición en `UI_WorldHealthbar` del prefab `Player`
+  (`Class Icon Size`, `Class Icon Offset`; `Show Class Icon` lo apaga).
+
+**Qué probar:**
+
+- [ ] La sala: las pestañas cambian las clases, el recuadro no salta de tamaño, elegir y
+      confirmar sigue funcionando (también eligiéndole clase a un bot).
+- [ ] El menú C con 6 clases en dos filas de 3; el V con las 3 subclases en una fila; las
+      teclas 1–6 y el control siguen eligiendo la tarjeta correcta.
+- [ ] El ícono al lado de la barra: que se vea en aliados y enemigos, que cambie al cambiar de
+      clase, y que no choque con los buffs.
+
+---
+
 # ★ QUÉ SIGUE (rumbo al showcase de diciembre, ~9 semanas)
 
 En orden de lo que más mueve la demo:

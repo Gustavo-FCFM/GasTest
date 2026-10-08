@@ -57,6 +57,46 @@ public class UI_ClassCard : MonoBehaviour, ISelectHandler, IDeselectHandler, IPo
         }
     }
 
+    // Versión CHICA de la tarjeta, para la grilla de dos filas de UI_ClassMenu: ícono,
+    // nombre y descripción más chicos y menos aire entre ellos. El nombre va en un solo
+    // renglón (se achica si no entra) y la descripción se achica sola hasta
+    // descriptionMinSize si no entra en la tarjeta. Los tamaños los decide el menú.
+    public void ApplyCompact(float iconSize, float titleSize, float descriptionSize, float descriptionMinSize)
+    {
+        VerticalLayoutGroup layout = GetComponent<VerticalLayoutGroup>();
+        if (layout != null)
+        {
+            layout.spacing = 4f;
+            layout.padding = new RectOffset(8, 8, 8, 6);
+        }
+
+        if (ClassIconImage != null)
+        {
+            ClassIconImage.preserveAspect = true;
+            LayoutElement le = ClassIconImage.GetComponent<LayoutElement>();
+            if (le != null) { le.preferredWidth = iconSize; le.preferredHeight = iconSize; }
+        }
+
+        if (ClassNameText != null)
+        {
+            ClassNameText.textWrappingMode = TextWrappingModes.NoWrap;
+            ClassNameText.enableAutoSizing = true;
+            ClassNameText.fontSizeMax      = titleSize;
+            ClassNameText.fontSizeMin      = titleSize * 0.6f;
+            ClassNameText.fontSize         = titleSize;
+            LayoutElement le = ClassNameText.GetComponent<LayoutElement>();
+            if (le != null) le.preferredHeight = titleSize * 1.35f;
+        }
+
+        if (DescriptionText != null)
+        {
+            DescriptionText.enableAutoSizing = true;
+            DescriptionText.fontSizeMax      = descriptionSize;
+            DescriptionText.fontSizeMin      = descriptionMinSize;
+            DescriptionText.fontSize         = descriptionSize;
+        }
+    }
+
     // --- LÓGICA DE FEEDBACK VISUAL ---
     public void OnSelect(BaseEventData eventData) => HighlightCard();
     public void OnDeselect(BaseEventData eventData) => UnhighlightCard();

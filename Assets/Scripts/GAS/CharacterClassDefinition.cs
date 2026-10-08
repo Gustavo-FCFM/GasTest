@@ -31,6 +31,36 @@ public class CharacterClassDefinition : ScriptableObject
              "curar a un aliado. None para las clases BASE, que todavía no tienen definitiva.")]
     public EClassRole Role = EClassRole.None;
 
+    [Tooltip("Bajo qué rol aparece en los menús (la sala y el menú de clases las agrupan por rol). " +
+             "None = el suyo; una clase BASE, que no tiene rol, aparece con el de la mayoría de sus " +
+             "subclases. Hace falta solo para una clase base que todavía no tiene subclases.")]
+    public EClassRole MenuRole = EClassRole.None;
+
+    // El rol con el que se la muestra en los menús. No cambia nada del juego (la carga de
+    // la definitiva sigue mirando Role): solo dónde se la lista.
+    public EClassRole DisplayRole
+    {
+        get
+        {
+            if (MenuRole != EClassRole.None) return MenuRole;
+            if (Role != EClassRole.None) return Role;
+
+            // Una clase base: el rol de la mayoría de sus subclases (en empate, el primero
+            // del orden de los menús: Tanque, Daño, Soporte).
+            if (AvailableSubclasses == null) return EClassRole.None;
+            var counts = new int[4];
+            foreach (CharacterClassDefinition sub in AvailableSubclasses)
+                if (sub != null && sub != this && (int)sub.Role > 0 && (int)sub.Role < counts.Length)
+                    counts[(int)sub.Role]++;
+
+            EClassRole best = EClassRole.None;
+            int bestCount = 0;
+            foreach (EClassRole r in ClassRoleStyle.MenuOrder)
+                if ((int)r > 0 && counts[(int)r] > bestCount) { best = r; bestCount = counts[(int)r]; }
+            return best;
+        }
+    }
+
     [Section(ClassSection.Stats)]
     [Tooltip("Los stats con los que arranca (nivel 1): un ASDef_*.")]
     public AttributeSetDefinition BaseAttributes;
