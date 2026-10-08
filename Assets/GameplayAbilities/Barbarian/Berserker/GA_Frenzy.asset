@@ -43,19 +43,6 @@ MonoBehaviour:
     OnlyIfTargetHas: 0
   Visuals:
   - When: 0
-    VFXPrefab: {fileID: 7155335147208632822, guid: 268b1b15038d49b418cf03198b835136, type: 3}
-    Delay: 0
-    Offset: {x: 0, y: 0, z: 0}
-    RotationOffset: {x: 0, y: 0, z: 0}
-    Scale: {x: 0, y: 0, z: 0}
-    Attach: 1
-    MatchAreaSize: 0
-    AreaSizeMultiplier: 0
-    DestroyTime: 0
-    EndWithTag: 20
-    EndWhenAttributeDepleted: 0
-    DepletedAttribute: 0
-  - When: 0
     VFXPrefab: {fileID: 1289543790355709915, guid: b99922c2f59b1a542bdd06ae8bee47ae, type: 3}
     Delay: 0
     Offset: {x: 0, y: 0, z: 0}

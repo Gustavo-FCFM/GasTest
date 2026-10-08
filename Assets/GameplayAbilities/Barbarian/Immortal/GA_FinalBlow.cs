@@ -59,6 +59,14 @@ public class GA_FinalBlow : GameplayAbility, IChanneledAbility
     // La carga no gira al personaje: eso es cosa del molinete.
     public float SpinSpeed => 0f;
 
+    // Con la carga animada, el mandoble sale al TERMINAR la carga y no al apretar. Así que:
+    // el dueño no lo anticipa (lo veía al apretar y después el arma subía), el servidor no
+    // manda el clip suelto al activar (en las otras pantallas pisaba la carga), y al
+    // terminar lo manda esta habilidad a TODAS las pantallas (ver ChargeRoutine).
+    private bool AnimatesCharge => ChargeLoopAnimation != null;
+    public override bool CanPredictActivation()  => !AnimatesCharge;
+    public override bool BroadcastsOwnAnimation   => AnimatesCharge;
+
     // Valida, cobra costo/cooldown y arranca la carga.
     public override void Activate()
     {
@@ -137,7 +145,10 @@ public class GA_FinalBlow : GameplayAbility, IChanneledAbility
             yield break;
         }
 
-        if (pc != null) pc.PlayAnimation(this);
+        // El mandoble. Con la carga animada va a todas las pantallas, dueño incluido: ni él
+        // ni los demás lo vieron todavía. Sin carga animada, el dueño ya lo vio al apretar.
+        if (AnimatesCharge && netAscChannel != null) netAscChannel.ServerPlayAbilityAnimationOnAll(this);
+        else if (pc != null) pc.PlayAnimation(this);
 
         Transform  owner        = OwnerASC.transform;
         Vector3    hitboxCenter = owner.position

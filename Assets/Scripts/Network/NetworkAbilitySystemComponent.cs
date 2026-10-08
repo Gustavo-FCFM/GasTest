@@ -811,6 +811,11 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         ParticleSystem[] systems = vfx.GetComponentsInChildren<ParticleSystem>();
         if (systems.Length == 0) { Destroy(vfx); return; }
 
+        // Un VFX que junta partículas con un modelo (las alas del Ángel vengador): el
+        // modelo se apaga en el acto, solo las partículas se desvanecen.
+        foreach (Renderer r in vfx.GetComponentsInChildren<Renderer>())
+            if (!(r is ParticleSystemRenderer)) r.enabled = false;
+
         float longest = 0f;
         foreach (ParticleSystem ps in systems)
         {
@@ -1318,6 +1323,27 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
             ? GameplayAbilityRegistry.Instance.GetIndex(ability) : -1;
         ObserversPlayAbilityAnimation(index, ability.AnimationTriggerName, ability.AnimationID,
                                       ability.ResolveAnimationSpeed());
+    }
+
+    // Igual que la anterior pero TAMBIÉN en el dueño. Para un golpe que sale cuando lo
+    // decide el servidor y no al apretar (el mandoble del Golpe final, al terminar la
+    // carga): el dueño no lo pudo anticipar, así que tiene que recibirlo como los demás.
+    [Server]
+    public void ServerPlayAbilityAnimationOnAll(GameplayAbility ability)
+    {
+        if (ability == null) return;
+        int index = GameplayAbilityRegistry.Instance != null
+            ? GameplayAbilityRegistry.Instance.GetIndex(ability) : -1;
+        ObserversPlayAbilityAnimationOnAll(index, ability.ResolveAnimationSpeed());
+    }
+
+    [ObserversRpc]
+    private void ObserversPlayAbilityAnimationOnAll(int abilityIndex, float animationSpeed)
+    {
+        GameplayAbility ability = abilityIndex >= 0
+            ? GameplayAbilityRegistry.Instance?.GetAbility(abilityIndex) : null;
+        PlayerController pc = GetComponent<PlayerController>();
+        if (ability != null && pc != null) pc.ApplyAbilityAnimation(ability, animationSpeed);
     }
 
     // =========================================================

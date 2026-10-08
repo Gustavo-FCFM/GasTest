@@ -136,6 +136,9 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   RPC del `NetworkASC`, y caminar/saltar/caer más el `AimPitch` por las RPC de
   `PlayerController`. Un parámetro nuevo del Animator que tenga que verse en las otras
   pantallas hay que mandarlo; no alcanza con escribirlo.
+  Una habilidad con pose sostenida (un canalizado: el molinete, la carga del Golpe final)
+  declara `BroadcastsOwnAnimation`: si no, el clip suelto que el servidor manda después de
+  `Activate()` pisa la pose en las otras pantallas (el dueño no lo nota: ese RPC lo saltea).
 - **Los modificadores `Multiply` se MULTIPLICAN entre sí** (×0.5 y ×0.5 = ×0.25):
   `AttributeValue` guarda la lista y rehace el producto. Hasta el 25 de septiembre de
   2026 se sumaban (×0.5 + ×0.5 = ×0). La velocidad de ataque tiene un tope de
@@ -195,6 +198,9 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   habilidad van en su lista **`Visuals`** (cada entrada dice cuándo: al lanzar / al
   golpear / en el impacto); en código se disparan con `BroadcastHitVFX(objetivo)` y
   `BroadcastImpactVFX(punto)` — nunca un `Instantiate` a mano ni un campo `HitVFX` nuevo.
+  Un GE tiene UN `TargetVFX`: si el buff necesita dos piezas, van juntas en un prefab
+  (`VFX_AvengingAngel`, `VFX_FrenzyBuff`). Los `GE_*` se guardan en `Effects/`, nunca al
+  lado de la habilidad.
 
 - **Los efectos de una habilidad van en su lista `Effects`** (desde el 7 de octubre de
   2026): cada entrada dice cuándo (al golpear, al primer golpe, al activarse, al matar),

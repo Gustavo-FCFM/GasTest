@@ -57,6 +57,12 @@ public class GA_Whirlwind : GA_ContinuousAoE, IChanneledAbility
     public AnimationClip ChannelEndClip   => ChannelEndAnimation;
     public float         SpinSpeed        => ModelSpinSpeed;
 
+    // Con clip de bucle, la animación de las demás pantallas la manda el canalizado
+    // (TryPlayCustomAnimation). Sin esto el servidor mandaba ADEMÁS el clip suelto de la
+    // habilidad justo después, y ese disparo pisaba la pose sostenida: el molinete solo
+    // se veía en la pantalla del dueño (a él ese RPC se lo saltea).
+    public override bool BroadcastsOwnAnimation => ChannelLoopAnimation != null;
+
     // Con clip de bucle la animación la maneja el canalizado (sostenida + giro) en vez del
     // disparo suelto. Va por la capa de red porque Activate() corre en el SERVIDOR: sin el
     // RPC, el dueño remoto no vería nada.

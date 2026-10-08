@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 7 de octubre de 2026 (noche)
+# Pendientes — actualizado el 8 de octubre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -104,12 +104,12 @@ Resurrección, Intercepción) aplican también sus efectos "al golpear" al elegi
 
 **Qué probar:**
 
-- [ ] Que todo pegue igual que antes: daños, aturdidos, la estela que cura del Castigo
+- [x] Que todo pegue igual que antes: daños, aturdidos, la estela que cura del Castigo
       divino y del arco de luz, la Zona de verdad, la Luz del amanecer, la bandera del
       Comandante, los tótems de la Furia elemental.
-- [ ] VFX de golpe e impacto en las DOS pantallas (cambió la RPC de "al golpear"; Unity
+- [x] VFX de golpe e impacto en las DOS pantallas (cambió la RPC de "al golpear"; Unity
       tiene que recompilar).
-- [ ] Rueda de tótems: nombres, descripciones y cooldowns como estaban.
+- [x] Rueda de tótems: nombres, descripciones y cooldowns como estaban.
 - [ ] Proyectil devuelto por el parry del Guardián: sigue haciendo el daño que traía.
 - [ ] Bots: siguen usando sus buffs (Comida de emergencia, Emboscada sombría) y sus aturdidos.
 
@@ -191,7 +191,7 @@ batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 
    **Arte (animaciones, esqueletos, VFX y sonido): lo toma el artista contratado.**
    Lo de arte de esta lista queda para él.
 
-   - [ ] El `FlashVFX` del Destello (artista).
+   - [x] El `FlashVFX` del Destello (artista).
    - [x] La Bendición también cuando el Clérigo se cura a sí mismo (29 de septiembre):
          aviso nuevo `ASC.OnHealedSelf`, aparte de `OnHealedAlly` para que curarse NO
          cargue la definitiva. **PROBADO ✅ (5 de octubre)** (clic derecho sin nadie en la
@@ -317,22 +317,42 @@ batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 
          jurado o Aturdir sobre alguien que se mueve; Resurrección; el círculo de la Zona
          de verdad acostado en el piso; las estrellas del aturdido a la altura de la cabeza.
 
-   **Limpieza de assets pendiente (en el editor, revisión del 30 de septiembre):**
-   - [ ] `GA_DivineSmiteVengeane`: **VFX doble**. Su Visuals Sequence pone el aura `Buff`
+   **Limpieza de assets (revisión del 30 de septiembre) — HECHA el 8 de octubre, falta verla:**
+   - [x] `GA_DivineSmiteVengeane`: **VFX doble**. Su Visuals Sequence pone el aura `Buff`
          y `GE_DivineSmiteCharge` pone el mismo prefab. Borrar el de la secuencia.
-   - [ ] `GA_Frenzy`: pasar `RageBuff` (el elemento que termina con `Status_Frenzy`) al
+   - [x] `GA_Frenzy`: pasar `RageBuff` (el elemento que termina con `Status_Frenzy`) al
          Target VFX de `GE_Frenzy`. El del escudo (termina al gastarse) se queda.
-   - [ ] `GA_InvencibleConqueror`: pasar `RageBuff` al Target VFX de
+   - [x] `GA_InvencibleConqueror`: pasar `RageBuff` al Target VFX de
          `GE_InvencibleConquerorTag`.
-   - [ ] `GA_AvengingAngel`: dos VFX por dos vías (`RageBuff` en la secuencia, las alas en
+   - [x] `GA_AvengingAngel`: dos VFX por dos vías (`RageBuff` en la secuencia, las alas en
          `GE_AvengingAngelTag`). Funciona; un GE admite UN Target VFX, así que pasarlo todo
          al GE pide juntarlos en un prefab.
-   - [ ] `GA_RadiantHealingWord`: su Impact VFX (`Healing buff`) y el de `GE_RadiantHeal`
+   - [x] `GA_RadiantHealingWord`: su Impact VFX (`Healing buff`) y el de `GE_RadiantHeal`
          (`Healing buff Burn`) salen juntos. Si se ven encimados, sacarle el Impact VFX.
-   - [ ] 10 GE viven en `GameplayAbilities/` y no en `Effects/` (Venganza: `GE_AvengingAngelTag`,
+   - [x] 10 GE viven en `GameplayAbilities/` y no en `Effects/` (Venganza: `GE_AvengingAngelTag`,
          `GE_AvenginAngelBuffs` —con error de tipeo—, `GE_SwornEnemy`, `GE_SwornEnemyHeal`;
          Conquista: `GE_InvencibleConquerorTag`, `GE_ShieldOfFaith`; Pirata: `GE_WinGamble`,
          `GE_LoseGamble`, `GE_WinHeal`, `GE_LoseHeal`). Moverlos desde Unity no rompe nada.
+
+   **Cómo quedó (8 de octubre, con Unity cerrado):**
+   - El Castigo divino de la Venganza ya lo habías limpiado vos.
+   - Frenesí e Invencible conquistador: el `RageBuff` salió de la lista de VFX de la habilidad
+     y es el Target VFX de `GE_Frenzy` y `GE_InvencibleConquerorTag`. El escudo del Frenesí
+     (termina al gastarse) sigue en la habilidad.
+   - Ángel vengador: prefab nuevo **`Art/VFX/VFX_AvengingAngel`** = las alas (con su
+     altura 0.5 y escala 0.6 de antes) + el `RageBuff`, como tu `VFX_FrenzyBuff`. Es el
+     Target VFX de `GE_AvengingAngelTag`; la habilidad ya no tiene VFX propios. Se pierde
+     el retraso de 0.2 s que tenía el aura. Al terminar el efecto, lo que NO es partícula
+     (las alas) se apaga en el acto y las partículas se desvanecen (cambio en
+     `NetworkASC.FadeOutEffectVfx`, sirve para cualquier VFX combinado).
+   - Healing Word radiante: se queda como está. El de la habilidad es el destello de 1 s al
+     curar (eso va en la lista de la habilidad) y el del GE dura la curación; no son el mismo.
+   - Los GE se movieron con `git mv` (mismo GUID, no se rompe ninguna referencia): a
+     `Effects/Buffs` todos menos `GE_SwornEnemy`, que va a `Effects/Debuffs`. También
+     `GE_Fly`, que estaba suelto en `GameplayAbilities/`. `GE_AvenginAngelBuffs` se llama
+     ahora **`GE_AvengingAngelBuffs`**.
+   - [ ] Ver en juego el Frenesí, el Invencible conquistador y el Ángel vengador (las alas
+         a la altura de antes, y que se vayan al terminar).
 
    **Arreglos del 30 de septiembre, PROBADOS ✅:**
    - **Los lanzamientos no se veían en las otras pantallas**: el hacha del Bárbaro, las
@@ -605,6 +625,19 @@ batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 
    **molinete** del Berserker), roja con "Interrupted" si la cortan. Una habilidad la pide
    con `ShowCastBar(duración, channel)` / `HideCastBar(interrumpida)`.
    - [ ] Probar con el Golpe final (y cortarlo con un aturdido) y con el molinete.
+
+   **El molinete solo se veía en la pantalla del que lo usaba (8 de octubre) — ARREGLADO, falta
+   probar.** Después de `Activate()` el servidor manda a los demás el clip suelto de la
+   habilidad; con el molinete llegaba justo DESPUÉS de la pose sostenida (el canalizado) y
+   la pisaba. Al dueño no le pasaba porque ese RPC se lo saltea. Ahora `GA_Whirlwind` dice
+   que manda su propia animación (`BroadcastsOwnAnimation`) cuando tiene clip de bucle.
+   El **Golpe final** tenía lo mismo y uno más: el mandoble del final solo se veía en el
+   host. Ahora el dueño no lo anticipa al apretar, nadie lo recibe al activar, y al
+   terminar la carga va a TODAS las pantallas (RPC nueva
+   `ServerPlayAbilityAnimationOnAll`; Unity tiene que recompilar).
+   - [ ] Con dos ventanas: el molinete gira y sostiene la pose en la del otro; el Golpe final
+         levanta el arma, la sostiene y baja el mandoble, en las dos (también cortado con un
+         aturdido: baja el arma sin mandoble).
    - [ ] Canalizar como MECÁNICA genérica (un tiempo de lanzamiento antes de que salga
          cualquier habilidad, que se corta si te aturden): no está; la barra ya sirve para
          cuando se haga.

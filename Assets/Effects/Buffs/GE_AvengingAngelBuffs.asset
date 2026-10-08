@@ -10,21 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 923ea9fbcde13614b8da2b7689d349ea, type: 3}
-  m_Name: GE_InvencibleConquerorTag
+  m_Name: GE_AvengingAngelBuffs
   m_EditorClassIdentifier: 
-  Duration: 6
+  Duration: 1.1
   Period: 0
-  StackingPolicy: 2
+  StackingPolicy: 0
   MaxStacks: 0
   OnMaxStacksEffect: {fileID: 0}
-  EffectGroup: 48
+  EffectGroup: 0
   Priority: 0
-  Icon: {fileID: 21300000, guid: 17d6c280c160ea74d8b2c15e55b4b73a, type: 3}
+  Icon: {fileID: 21300000, guid: a1f847c920738f042ad9109a838804f1, type: 3}
   EffectType: 0
   Modifiers:
-  - Attribute: 20
+  - Attribute: 9
     Type: 0
-    Magnitude: 0.5
+    Magnitude: 2
     UseAttributeScaling: 0
     SourceAttribute: 0
     AttributeCoefficient: 0
@@ -33,7 +33,7 @@ MonoBehaviour:
     TargetHealthCoefficient: 0
   - Attribute: 10
     Type: 1
-    Magnitude: 0.7
+    Magnitude: 0.8
     UseAttributeScaling: 0
     SourceAttribute: 0
     AttributeCoefficient: 0
@@ -41,8 +41,4 @@ MonoBehaviour:
     TargetHealthMode: 0
     TargetHealthCoefficient: 0
   IsCrowdControl: 0
-  TargetVFX: {fileID: 0}
-  TargetVFXOffset: {x: 0, y: 0, z: 0}
-  TargetVFXRotation: {x: 0, y: 0, z: 0}
-  TargetVFXScale: {x: 0, y: 0, z: 0}
-  GrantedTags: 30000000
+  GrantedTags: 

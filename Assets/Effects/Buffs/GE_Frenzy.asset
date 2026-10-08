@@ -83,10 +83,11 @@ MonoBehaviour:
     TargetHealthCoefficient: 0.5
     MinMagnitude: 1
   IsCrowdControl: 0
-  TargetVFX: {fileID: 0}
+  TargetVFX: {fileID: 7155335147208632822, guid: 268b1b15038d49b418cf03198b835136, type: 3}
   TargetVFXOffset: {x: 0, y: 0, z: 0}
   TargetVFXRotation: {x: 0, y: 0, z: 0}
   TargetVFXScale: {x: 0, y: 0, z: 0}
+  TargetVFXLoop: 1
   TargetSound:
     Clips: []
     Volume: 1
