@@ -210,7 +210,7 @@ con Excel: quien ayude a traducir no necesita Unity. Guardarla como **"CSV UTF-8
     (para ver qué falta o pasárselo a quien traduzca). Una celda `es` vacía no toca el asset.
   - Las habilidades nuevas: llenarles `Ability Name Es` al crearlas (o exportar, completar e
     importar).
-- [ ] **Una vez, con Unity abierto (después de que recompile):** `Mercenarios ▸ Idiomas ▸
+- [x] **(Hecho el 9 de octubre: importados en los 209 assets.)** **Una vez, con Unity abierto (después de que recompile):** `Mercenarios ▸ Idiomas ▸
       Importar nombres traducidos`. La consola dice cuántos cambió (tienen que ser 242). Revisar
       los nombres en el CSV o en los assets: los internos (pasos de combo, variantes) no se ven en
       pantalla, pero también quedaron traducidos.
