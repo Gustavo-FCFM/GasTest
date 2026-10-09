@@ -277,7 +277,16 @@ public class PlayerVisibility : MonoBehaviour
             if (g.Target != null)
             {
                 g.Target.sharedMaterials   = g.OriginalMaterials;
-                g.Target.shadowCastingMode = g.OriginalShadows;
+
+                // "Solo sombra" NO se devuelve: es como la cámara esconde tu propio modelo
+                // cuando se pega a una pared o mientras apuntás un lanzamiento, no un estado
+                // del Renderer. Si te volvías invisible en ese momento, al salir te
+                // quedabas en "solo sombra" para siempre: los demás te veían y vos no. La
+                // cámara vuelve a esconderlo sola si todavía hace falta (ver
+                // ThirdPersonOrbitCam.UpdateTargetVisibility).
+                g.Target.shadowCastingMode = g.OriginalShadows == UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly
+                    ? UnityEngine.Rendering.ShadowCastingMode.On
+                    : g.OriginalShadows;
             }
 
             // Las copias son nuestras: si no las destruimos, cada vez que alguien se

@@ -1304,6 +1304,17 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         if (aimDir.sqrMagnitude < 0.0001f) aimDir = OwnerASC.transform.forward;
         aimDir.Normalize();
 
+        // TOLERANCIA DE RED. El dueño eligió al objetivo en SU pantalla y el servidor lo busca
+        // con las posiciones que él tiene, que llegan con atraso: contra alguien que se mueve,
+        // a 3 m (el Desarme) el servidor no encontraba a nadie, rechazaba la activación y el
+        // dueño veía el golpe pero el efecto nunca entraba. Solo para un dueño REMOTO: el
+        // host y los bots ven las mismas posiciones que el servidor.
+        if (pc != null && pc.IsServerInitialized && !pc.IsOwner && pc.Owner != null && pc.Owner.IsValid)
+        {
+            maxRange      += ServerRangeGrace;
+            selectionAngle = Mathf.Min(selectionAngle + ServerAngleGrace, 89f);
+        }
+
         Collider[] cols = Physics.OverlapSphere(origin, maxRange, TargetLayer);
         AbilitySystemComponent best = null;
         // Umbral de "está dentro del cono": comparar cosenos evita un Acos por candidato.
@@ -1337,6 +1348,11 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // alcance de nada: solo sirve para que el punto quede lo bastante lejos como para
     // que la dirección sea estable.
     private const float AimRayLength = 200f;
+
+    // Cuánto más alcance y ángulo acepta el servidor que el dueño remoto (ver la tolerancia
+    // de red en FindBestTargetInAim).
+    private const float ServerRangeGrace = 1.5f;
+    private const float ServerAngleGrace = 10f;
 
     // A qué altura del transform está el centro de un personaje. Los modelos del
     // proyecto tienen el pivote en los pies y miden algo menos de dos metros.

@@ -3355,7 +3355,29 @@ public class PlayerController : NetworkBehaviour
 
         bool stunned = ASC.HasTag(EGameplayTag.State_Stunned) && !ASC.HasTag(EGameplayTag.State_Dead);
         if (characterAnimator.GetBool(StunnedParam) != stunned) characterAnimator.SetBool(StunnedParam, stunned);
+
+        // Los BRAZOS también. El aturdido vive en la capa Base, y la capa del torso
+        // (UpperBody: el ataque a medias, el escudo levantado, la reacción al golpe) se
+        // dibuja encima: con un escudo arriba o un golpe en curso, el aturdido solo se veía
+        // en las piernas, y en las clases de escudo parecía que no lo tenían. Mientras dura,
+        // esa capa se apaga (la del brazo del escudo la apaga TickStanceVisuals).
+        int upper = characterAnimator.GetLayerIndex(UpperBodyLayerName);
+        if (upper < 0) return;
+
+        if (stunned)
+        {
+            if (characterAnimator.GetLayerWeight(upper) > 0f) characterAnimator.SetLayerWeight(upper, 0f);
+            _stunHidUpperBody = true;
+        }
+        else if (_stunHidUpperBody)
+        {
+            characterAnimator.SetLayerWeight(upper, 1f);
+            _stunHidUpperBody = false;
+        }
     }
+
+    private const string UpperBodyLayerName = "UpperBody";
+    private bool _stunHidUpperBody;
 
     // ¿El Animator tiene un parámetro con ese nombre y tipo? Se mira una vez, al armar
     // el controller en runtime, y no cada golpe.
@@ -3783,7 +3805,9 @@ public class PlayerController : NetworkBehaviour
             int layer = characterAnimator.GetLayerIndex(OffHandPoseLayerName);
             if (layer >= 0)
             {
-                float wanted = !dead && WantsOffHandPose(cls, ASC) ? 1f : 0f;
+                // Aturdido, el brazo cae con el resto del cuerpo (ver TickStunAnimation).
+                bool stunned = ASC.HasTag(EGameplayTag.State_Stunned);
+                float wanted = !dead && !stunned && WantsOffHandPose(cls, ASC) ? 1f : 0f;
                 _offHandPoseOn = wanted > 0f;
                 if (!Mathf.Approximately(characterAnimator.GetLayerWeight(layer), wanted))
                     characterAnimator.SetLayerWeight(layer, wanted);

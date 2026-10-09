@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 9 de octubre de 2026
+# Pendientes — actualizado el 8 de octubre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -45,6 +45,47 @@ rm -rf "Assets/FishNet" "Assets/FishNet.meta" "Assets/TextMesh Pro/Examples & Ex
       **29 de septiembre: a medias.** `TextMesh Pro/Examples & Extras` ya no está;
       `Assets/FishNet` sigue (solo `.csproj`/`.sln` viejos y sus `.meta`, ignorados por git).
       Falta borrar esa carpeta con Unity cerrado.
+
+---
+
+# ★ Balance de curaciones, desarme, aturdido e invisibilidad — HECHO, falta probar (8 de octubre, noche)
+
+Pedidos de Gustavo después de probar. Compila limpio. Hay que dejar que Unity recompile.
+
+- **Clérigo, menos curación seguida:** `GA_HealingWord` y `GA_RadiantHealingWord` pasan de 4 a
+  **3 cargas**, y cada carga tarda **4.5 s** en volver (antes 3 s). Lo usan también Vida y Orden.
+- **Paladín, más curación por golpe:** el aura cura el **65 %** del daño hecho (antes 50 %),
+  en `PaladinBehaviours` y en los Behaviours de las tres subclases. Lo bloqueado sigue en 20 %.
+- **El Desarme no desarmaba.** El bloqueo estaba bien puesto (los ataques del Clérigo y del
+  Paladín sí llevan `State_Disarmed`). Lo que fallaba era encontrar al objetivo: con un dueño
+  REMOTO, el servidor lo busca con las posiciones que él tiene, que van atrasadas, y con 3 m de
+  alcance contra alguien que se mueve no lo encontraba. El dueño veía el golpe (lo anticipa en
+  su pantalla), pero el servidor rechazaba la habilidad y el efecto nunca entraba. Ahora, para un
+  dueño remoto, el servidor acepta **1.5 m más de alcance y 10° más de ángulo**
+  (`FindBestTargetInAim`). Sirve igual para todas las de objetivo único: Golpe mortal, Enemigo
+  jurado, Intercepción, Imposición de manos, Aturdir...
+- **Aturdido en todas las clases.** Todas tenían el clip (`HumanM@Stun01` en sus AOC). Lo que
+  pasaba es que el aturdido va en la capa Base y la capa del torso (`UpperBody`: el ataque a
+  medias, el escudo levantado, la reacción al golpe) y la del brazo del escudo (`OffHandPose`)
+  se dibujaban encima: en las clases de escudo, o atacando, solo se aturdían las piernas.
+  Ahora, mientras dura el aturdido, esas dos capas se apagan (`TickStunAnimation`,
+  `TickStanceVisuals`).
+- **Invisibilidad: a veces no te veías a ti mismo al salir.** La cámara esconde tu modelo
+  dejando solo la sombra cuando se pega a una pared o mientras apuntas un lanzamiento. Si te
+  volvías invisible en ese momento, el fantasma se guardaba "solo sombra" como estado original
+  y te lo devolvía al salir: quedabas invisible para ti, visible para los demás. Ahora
+  `PlayerVisibility` nunca devuelve "solo sombra" y la cámara sostiene lo suyo en cada frame.
+
+**Qué probar:**
+
+- [ ] Clérigo: 3 curaciones seguidas y cada una vuelve a los 4.5 s. ¿Sigue curando demasiado?
+- [ ] Paladín: el número verde del aura al pegar, un poco más alto.
+- [ ] Con dos ventanas (o la prueba en red): el Desarme del Maestro de batalla a un Clérigo o
+      Paladín que se mueve; el desarmado no puede atacar 2 s (sí bloquear y lanzar magia).
+- [ ] Aturdir a un Guerrero o Paladín con el escudo levantado, y a alguien a mitad de un ataque:
+      todo el cuerpo hace la animación, y al terminar el escudo vuelve a su lugar.
+- [ ] Invisibilidad (Asesino, Shinobi): volverse invisible pegado a una pared o apuntando un
+      lanzamiento, y salir de la invisibilidad: te tienes que volver a ver.
 
 ---
 
@@ -141,7 +182,7 @@ se pueden borrar los bloques `DATOS VIEJOS` del final de cada GA.
 
 ---
 
-# ★ El juego en español e inglés — LAS 3 ETAPAS HECHAS (menús, partida y contenido), falta probar (9 de octubre)
+# ★ El juego en español e inglés — LAS 3 ETAPAS HECHAS (menús, partida y contenido), falta probar (8 de octubre)
 
 Pedido en la prueba: poder jugar en español, y que las builds arranquen en español. "Mercenaries"
 (nombre provisional) no se traduce. Cómo funciona: ver CLAUDE.md ("Lo que ve el jugador va en
@@ -191,7 +232,7 @@ con Excel: quien ayude a traducir no necesita Unity. Guardarla como **"CSV UTF-8
 
 **Lo que falta:**
 
-- [x] **Etapa 3 — el contenido: CÓDIGO HECHO (9 de octubre), falta importar y probar.**
+- [x] **Etapa 3 — el contenido: CÓDIGO HECHO (8 de octubre), falta importar y probar.**
   Se eligió la propuesta: **el español va en el propio asset**, al lado del inglés. Así no se
   rompe al renombrar un asset y se edita donde se crea la habilidad.
   - **Campos nuevos:** `ClassNameEs` y `DescriptionEs` en cada `Class_*` (sección Identidad),
@@ -210,7 +251,7 @@ con Excel: quien ayude a traducir no necesita Unity. Guardarla como **"CSV UTF-8
     (para ver qué falta o pasárselo a quien traduzca). Una celda `es` vacía no toca el asset.
   - Las habilidades nuevas: llenarles `Ability Name Es` al crearlas (o exportar, completar e
     importar).
-- [x] **(Hecho el 9 de octubre: importados en los 209 assets.)** **Una vez, con Unity abierto (después de que recompile):** `Mercenarios ▸ Idiomas ▸
+- [x] **(Hecho el 8 de octubre: importados en los 209 assets.)** **Una vez, con Unity abierto (después de que recompile):** `Mercenarios ▸ Idiomas ▸
       Importar nombres traducidos`. La consola dice cuántos cambió (tienen que ser 242). Revisar
       los nombres en el CSV o en los assets: los internos (pasos de combo, variantes) no se ven en
       pantalla, pero también quedaron traducidos.

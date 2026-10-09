@@ -300,6 +300,11 @@ public class ThirdPersonOrbitCam : MonoBehaviour
     {
         // Apuntando: oculto sí o sí. Al soltar, la cámara se aleja y el criterio de la
         // distancia de abajo lo vuelve a mostrar.
+        // Escondido, se sostiene en cada frame: otro sistema puede haberle tocado la sombra
+        // al modelo mientras tanto (el fantasma de la invisibilidad), y si solo se aplicara
+        // al cambiar de estado, el modelo se quedaría a la vista con la cámara encima.
+        if (_targetHidden) KeepTargetHidden();
+
         if (_aimActive && HideTargetWhileAiming)
         {
             if (!_targetHidden) SetTargetHidden(true);
@@ -337,6 +342,14 @@ public class ThirdPersonOrbitCam : MonoBehaviour
             // pegó contra una pared.
             r.shadowCastingMode = hidden ? ShadowCastingMode.ShadowsOnly : ShadowCastingMode.On;
         }
+    }
+
+    private void KeepTargetHidden()
+    {
+        if (_targetRenderers == null) return;
+        foreach (Renderer r in _targetRenderers)
+            if (r != null && r.shadowCastingMode != ShadowCastingMode.ShadowsOnly)
+                r.shadowCastingMode = ShadowCastingMode.ShadowsOnly;
     }
 
     private void CacheTargetRenderers()

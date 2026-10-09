@@ -897,7 +897,7 @@ MonoBehaviour:
   NetworkMoveDirection: {x: 0, y: 0, z: 0}
   isRadialMenuOpen: 0
   AutoRepeatPrimaryAttack: 1
-  StartSubclassWithFullUltimate: 1
+  StartSubclassWithFullUltimate: 0
   UltimateKeptOnClassChange: 0.5
   TankChargePerDamage: 0.15
   DamageChargePerKill: 30
@@ -1091,6 +1091,9 @@ MonoBehaviour:
   ObstacleLayer:
     serializedVersion: 2
     m_Bits: 1
+  ShowClassIcon: 1
+  ClassIconSize: 26
+  ClassIconOffset: {x: 4, y: 0}
 --- !u!114 &252880015692499658
 MonoBehaviour:
   m_ObjectHideFlags: 0

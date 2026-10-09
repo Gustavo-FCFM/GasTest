@@ -56,7 +56,7 @@ MonoBehaviour:
     Attach: 0
     MatchAreaSize: 0
     AreaSizeMultiplier: 0
-    DestroyTime: 1
+    DestroyTime: 0.5
     EndWithTag: 0
     EndWhenAttributeDepleted: 0
     DepletedAttribute: 0

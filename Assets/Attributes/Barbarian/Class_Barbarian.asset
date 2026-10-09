@@ -20,7 +20,7 @@ MonoBehaviour:
   DescriptionEs: Aguanta golpes y pega duro. Lanza su hacha desde lejos, acorta la
     distancia con un salto y Enfurecer lo cura con cada golpe. El que abre la pelea.
   Role: 0
-  MenuRole: 0
+  MenuRole: 1
   BaseAttributes: {fileID: 11400000, guid: 018a6225b1f822143aa86c2bcaef873f, type: 2}
   Abilities:
   - InputSlot: 1
@@ -37,8 +37,6 @@ MonoBehaviour:
   StatGrowthPerLevel:
   - Attribute: 2
     AmountPerLevel: 70
-  - Attribute: 7
-    AmountPerLevel: 0
   - Attribute: 8
     AmountPerLevel: 1
   - Attribute: 14

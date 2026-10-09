@@ -44,8 +44,8 @@ MonoBehaviour:
   TargetVFXOffset: {x: 0, y: 0, z: 0}
   TargetVFXRotation: {x: 0, y: 0, z: 0}
   TargetVFXScale: {x: 0, y: 0, z: 0}
-  TargetVFXLoop: 1
-  JumpVFX: {fileID: 4809171458859421548, guid: 4e91ed1a8efe7044785b9bd97a47d87f, type: 3}
+  TargetVFXLoop: 0
+  JumpVFX: {fileID: 0}
   TargetSound:
     Clips: []
     Volume: 1

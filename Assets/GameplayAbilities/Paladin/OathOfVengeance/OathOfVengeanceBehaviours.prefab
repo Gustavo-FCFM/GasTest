@@ -278,7 +278,7 @@ MonoBehaviour:
   CharacterLayer:
     serializedVersion: 2
     m_Bits: 128
-  HealPercentOfDamage: 0.5
+  HealPercentOfDamage: 0.65
   HealPercentOfBlocked: 0.2
   HealRingIndex: 0
   HealExtraEffects: []

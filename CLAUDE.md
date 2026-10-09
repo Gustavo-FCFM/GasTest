@@ -25,7 +25,7 @@ solo al cambiar de idioma); lo que se recalcula llama a `Loc.T` cada vez y escuc
 clientes no puede ir como texto ya escrito (cada uno lo ve en su idioma): se manda qué es
 (un enum, un índice) y cada pantalla lo escribe: el registro de bajas manda el índice de
 la clase y qué NPC es (`ENpcLabel`), el desatascarse manda la CLAVE del motivo. **El CONTENIDO no va en la
-tabla, va en el propio asset** (desde el 9 de octubre de 2026): el inglés y, al lado, el
+tabla, va en el propio asset** (desde el 8 de octubre de 2026): el inglés y, al lado, el
 español — `ClassName`/`ClassNameEs`, `Description`/`DescriptionEs`, `AbilityName`/
 `AbilityNameEs`, el `Name`/`NameEs` de cada opción de rueda. La UI lee `DisplayName` /
 `DisplayDescription` (`Loc.Pick`), nunca el campo en inglés directo. Así renombrar un asset no

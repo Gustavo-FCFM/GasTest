@@ -17,7 +17,7 @@ MonoBehaviour:
   AbilityIcon: {fileID: 21300000, guid: 7cb8b00857ad5674682c2d2af3de3b57, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: ecfe07a06c63704479a331a9bae55086, type: 2}
-  CooldownDuration: 3
+  CooldownDuration: 4.5
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 1
   ActivationBlockedTags: 0100000003000000
@@ -64,7 +64,7 @@ MonoBehaviour:
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  MaxCharges: 4
+  MaxCharges: 3
   ImpactVFX: {fileID: 0}
   AttachImpactVFX: 1
   ImpactVFXOffset: {x: 0, y: 0, z: 0}
