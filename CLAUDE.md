@@ -109,7 +109,7 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
 | `Assets/Resources/` | Lo que se carga por nombre: los dos registros de red, el catálogo de enemigos, la biblioteca de audio y la tabla de textos (`Localization.csv`). |
 | `Assets/48toPlay/` | Restos de la game jam: los fantasmas y sus stats. Se reusan como NPCs. |
 | `Assets/AssetsExtra/` | Packs comprados: FishNet, animaciones de Kevin Iglesias, Medieval Cute Series, Vefects, VFX. |
-| `DesignDocuments/` | Diseño en `.docx`: arquitectura del GAS, guía de habilidades, las 8 clases, glosario. |
+| `DesignDocuments/` | Diseño en `.docx`: arquitectura del GAS, **arquitectura de red** (`Red_Arquitectura.docx`: servidor autoritativo, cómo viaja el ASC, todas las RPC), guía de habilidades, las 8 clases, glosario. |
 
 **Escenas:**
 - `Assets/Scenes/Test_Network.unity` — pruebas rápidas de clases y habilidades.
