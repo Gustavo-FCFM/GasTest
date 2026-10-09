@@ -1840,17 +1840,22 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // el servidor con GameplayAbility.ShowCastBar / HideCastBar. Un bot no tiene pantalla.
     // =========================================================
 
+    // Viaja el ÍNDICE de la habilidad, no su nombre: el dueño lo escribe en SU idioma.
     [Server]
-    public void ServerShowCastBar(string label, float duration, bool channel)
+    public void ServerShowCastBar(GameplayAbility ability, float duration, bool channel)
     {
         if (!HasOwnerConnection()) return;
-        TargetShowCastBar(Owner, label, duration, channel);
+        int index = GameplayAbilityRegistry.Instance != null && ability != null
+            ? GameplayAbilityRegistry.Instance.GetIndex(ability) : -1;
+        TargetShowCastBar(Owner, index, duration, channel);
     }
 
     [TargetRpc]
-    private void TargetShowCastBar(NetworkConnection conn, string label, float duration, bool channel)
+    private void TargetShowCastBar(NetworkConnection conn, int abilityIndex, float duration, bool channel)
     {
-        UI_CastBar.Show(label, duration, channel);
+        GameplayAbility ability = abilityIndex >= 0
+            ? GameplayAbilityRegistry.Instance?.GetAbility(abilityIndex) : null;
+        UI_CastBar.Show(ability != null ? ability.DisplayName : "", duration, channel);
     }
 
     [Server]

@@ -13,8 +13,12 @@ MonoBehaviour:
   m_Name: Class_WaveBarbarian
   m_EditorClassIdentifier: 
   ClassName: Barbarian
+  ClassNameEs: "B\xE1rbaro"
   ClassIcon: {fileID: 21300000, guid: 150ec0fe7eb33a744879df340d60234b, type: 3}
   Description: Wave mode barbarian
+  DescriptionEs: "B\xE1rbaro del modo oleadas"
+  Role: 0
+  MenuRole: 0
   BaseAttributes: {fileID: 11400000, guid: 83129729f0889ad438eca2355550df4d, type: 2}
   Abilities:
   - InputSlot: 1
@@ -29,6 +33,9 @@ MonoBehaviour:
     Ability: {fileID: 11400000, guid: acda43e15e9bc1c4da89c6727b5d73c2, type: 2}
   - InputSlot: 5
     Ability: {fileID: 11400000, guid: 95426c07a66a6ba4aab2f0b1325a5dcb, type: 2}
+  PassiveBehaviorsPrefab: {fileID: 0}
+  PassiveEffects: []
+  WallMovement: {fileID: 0}
   StatGrowthPerLevel:
   - Attribute: 2
     AmountPerLevel: 30
@@ -38,5 +45,19 @@ MonoBehaviour:
     AmountPerLevel: 1
   AvailableSubclasses: []
   ClassAnimatorOverride: {fileID: 22100000, guid: c1aea6e6b93746e4dbab09a9b224bfaa, type: 2}
+  StanceAnimatorOverride: {fileID: 0}
+  StanceAnimatorTag: 0
   MainHandWeaponPrefab: {fileID: 8072587243417393782, guid: c61cbb6b38d7de247a8e5b46c0726dec, type: 3}
   OffHandWeaponPrefab: {fileID: 0}
+  MainHandRotationOffset: {x: 0, y: 0, z: 0}
+  MainHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandPose: {fileID: 0}
+  OffHandPoseRequiredTag: 0
+  StowOffHandTag: 0
+  StowedOffHandPositionOffset: {x: 0, y: 0, z: 0}
+  StowedOffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandScale: 1
+  GrowTag: 0
+  GrowScale: 1.5

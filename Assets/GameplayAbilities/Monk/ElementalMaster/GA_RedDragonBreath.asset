@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GA_RedDragonBreath
   m_EditorClassIdentifier: 
   AbilityName: Red Dragon Breath
+  AbilityNameEs: "Aliento de drag\xF3n rojo"
   AbilityIcon: {fileID: 21300000, guid: 2b83dd799a9f88849b8c5ad76ad983e6, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 0}

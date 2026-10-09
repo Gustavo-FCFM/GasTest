@@ -13,11 +13,16 @@ MonoBehaviour:
   m_Name: Class_Berserker
   m_EditorClassIdentifier: 
   ClassName: Berserker
+  ClassNameEs: Berserker
   ClassIcon: {fileID: 21300000, guid: 3a3a94c5d846c634f8d0e8369d21714f, type: 3}
   Description: A barbarian of fast strikes. Attacks twice as often and each hit lands
     softer. Whirlwind is for fighting surrounded. The longer the fight, the better
     he does.
+  DescriptionEs: "Un b\xE1rbaro de golpes r\xE1pidos. Ataca el doble de seguido y
+    cada golpe pega m\xE1s suave. El Ataque giratorio es para pelear rodeado. Cuanto
+    m\xE1s dura la pelea, mejor le va."
   Role: 1
+  MenuRole: 0
   BaseAttributes: {fileID: 11400000, guid: 5f2d453bdca4bc847bc79581b5e6b791, type: 2}
   Abilities:
   - InputSlot: 1
@@ -34,6 +39,7 @@ MonoBehaviour:
     Ability: {fileID: 11400000, guid: 95426c07a66a6ba4aab2f0b1325a5dcb, type: 2}
   PassiveBehaviorsPrefab: {fileID: 0}
   PassiveEffects: []
+  WallMovement: {fileID: 0}
   StatGrowthPerLevel: []
   AvailableSubclasses: []
   ClassAnimatorOverride: {fileID: 22100000, guid: a6e013513f2d1ab40b229d993cd946c9, type: 2}
@@ -50,3 +56,6 @@ MonoBehaviour:
   StowOffHandTag: 0
   StowedOffHandPositionOffset: {x: 0, y: 0, z: 0}
   StowedOffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandScale: 1
+  GrowTag: 0
+  GrowScale: 1.5

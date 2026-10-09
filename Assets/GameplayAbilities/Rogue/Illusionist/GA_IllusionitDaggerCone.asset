@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GA_IllusionitDaggerCone
   m_EditorClassIdentifier: 
   AbilityName: IllusionistPrimaryAttack1
+  AbilityNameEs: Barrido
   AbilityIcon: {fileID: 0}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 0}
@@ -74,6 +75,11 @@ MonoBehaviour:
   ConeAngle: 90
   UseVerticalAim: 1
   OriginOffset: {x: 0, y: 1, z: 0}
+  ImpactZone: {fileID: 0}
+  ZoneLayout: 0
+  ZoneCount: 1
+  ZoneSpacing: 5
+  ZoneMaxRange: 10
   DamageEffect: {fileID: 0}
   AdditionalEffects: []
   TargetEffects: []

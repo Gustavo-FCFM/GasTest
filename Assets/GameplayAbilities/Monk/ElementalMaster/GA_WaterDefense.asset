@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GA_WaterDefense
   m_EditorClassIdentifier: 
   AbilityName: Water Defense
+  AbilityNameEs: Defensa de agua
   AbilityIcon: {fileID: 21300000, guid: 7ab079a1675316540b31a853504792eb, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 0}

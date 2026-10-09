@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GA_DevastatingCuts
   m_EditorClassIdentifier: 
   AbilityName: Devastating Cuts
+  AbilityNameEs: Cortes devastadores
   AbilityIcon: {fileID: 21300000, guid: c4969617742db394784a6be8cb6e0901, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 0}

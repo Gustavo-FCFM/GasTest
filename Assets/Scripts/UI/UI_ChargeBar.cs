@@ -167,7 +167,7 @@ public class UI_ChargeBar : MonoBehaviour
         }
 
         _group.alpha = 1f;
-        _label.text  = held.AbilityName;
+        _label.text  = held.DisplayName;
 
         for (int i = 0; i < _segments.Count; i++)
         {

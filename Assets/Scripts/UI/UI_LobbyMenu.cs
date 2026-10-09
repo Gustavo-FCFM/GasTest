@@ -326,7 +326,7 @@ public class UI_LobbyMenu : MonoBehaviour
         // El nombre, SIN el "[1]" de adelante: ese prefijo lo agrega SetupCard cuando
         // la tarjeta no tiene un NumberText propio, y en el lobby se elige con el
         // mouse, así que el número no aporta nada.
-        if (card.ClassNameText != null && cls != null) card.ClassNameText.text = cls.ClassName;
+        if (card.ClassNameText != null && cls != null) card.ClassNameText.text = cls.DisplayName;
         if (card.NumberText != null) card.NumberText.gameObject.SetActive(false);
 
         // Escape hatch por si querés ocultar algo más, por nombre de objeto.

@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GA_ElementalOrbLeft
   m_EditorClassIdentifier: 
   AbilityName: Elemental Orb
+  AbilityNameEs: Orbe elemental
   AbilityIcon: {fileID: 21300000, guid: 099ce49f838495c4597cd1684135b082, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 0}

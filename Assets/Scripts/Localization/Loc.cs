@@ -85,6 +85,13 @@ public static class Loc
         return text;
     }
 
+    // El CONTENIDO (nombres y descripciones de clases, habilidades y opciones de rueda) no
+    // está en la tabla: cada asset trae su texto en inglés y, al lado, el de español
+    // (ClassName / ClassNameEs, AbilityName / AbilityNameEs...). Así no se rompe al renombrar
+    // el asset. Esto elige el del idioma actual; sin español cargado, sale el inglés.
+    public static string Pick(string english, string spanish)
+        => Language == ELanguage.Spanish && !string.IsNullOrEmpty(spanish) ? spanish : english;
+
     // Para lo que PUEDE tener traducción pero no siempre (los nombres de los niveles de
     // calidad, que salen del proyecto): si la clave no está, no avisa.
     public static string TOr(string key, string fallback)
@@ -204,7 +211,8 @@ public static class Loc
 
     // CSV con comillas: un campo entre comillas puede tener el separador, saltos de línea y
     // comillas dobladas ("").
-    private static List<List<string>> ParseCsv(string text, char separator)
+    // Pública para la herramienta que importa los nombres traducidos (mismo formato de CSV).
+    public static List<List<string>> ParseCsv(string text, char separator)
     {
         var rows  = new List<List<string>>();
         var row   = new List<string>();

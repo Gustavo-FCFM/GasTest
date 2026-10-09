@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GA_SpinningSlash
   m_EditorClassIdentifier: 
   AbilityName: Spinning Slash
+  AbilityNameEs: Corte giratorio
   AbilityIcon: {fileID: 21300000, guid: efea2816bc86a2349ae86cc0bad072f5, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 0}

@@ -34,7 +34,7 @@ public class UI_ClassCard : MonoBehaviour, ISelectHandler, IDeselectHandler, IPo
         AssignedClass = classDef;
 
         if (ClassIconImage != null) ClassIconImage.sprite = classDef.ClassIcon;
-        if (DescriptionText != null) DescriptionText.text = classDef.Description;
+        if (DescriptionText != null) DescriptionText.text = classDef.DisplayDescription;
 
         // El número es una ayuda DE TECLADO: el 1/2/3 que elige esta tarjeta. Con un
         // control no hay tecla que mostrar —ahí se elige moviendo el stick y
@@ -48,12 +48,12 @@ public class UI_ClassCard : MonoBehaviour, ISelectHandler, IDeselectHandler, IPo
         {
             NumberText.text = showNumber ? number.ToString() : "";
             NumberText.gameObject.SetActive(showNumber);
-            if (ClassNameText != null) ClassNameText.text = classDef.ClassName;
+            if (ClassNameText != null) ClassNameText.text = classDef.DisplayName;
         }
         else if (ClassNameText != null)
         {
-            ClassNameText.text = showNumber ? $"[{number}]  {classDef.ClassName}"
-                                            : classDef.ClassName;
+            ClassNameText.text = showNumber ? $"[{number}]  {classDef.DisplayName}"
+                                            : classDef.DisplayName;
         }
     }
 

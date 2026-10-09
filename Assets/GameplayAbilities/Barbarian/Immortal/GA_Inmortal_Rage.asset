@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GA_Inmortal_Rage
   m_EditorClassIdentifier: 
   AbilityName: Inmortal Rage
+  AbilityNameEs: Enfurecer
   AbilityIcon: {fileID: 21300000, guid: 60ac2909fbe6b8f49a5eaedccd5ac4ce, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: edc8f7b5f2c7d684d8f67cdabbccd4df, type: 2}
@@ -36,11 +37,15 @@ MonoBehaviour:
     Volume: 1
     PitchVariance: 0.08
     MaxDistance: 35
+  StacksTag: 0
+  ConsumeStacks: 0
   Effects:
   - When: 2
     ApplyTo: 2
     Effect: {fileID: 11400000, guid: a75b70b476f860f4aaf3f1e7e0dea8f1, type: 2}
     OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
   Visuals: []
   IsInterruptible: 0
   TargetLayer:

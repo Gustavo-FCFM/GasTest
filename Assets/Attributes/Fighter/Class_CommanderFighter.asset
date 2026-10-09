@@ -13,11 +13,16 @@ MonoBehaviour:
   m_Name: Class_CommanderFighter
   m_EditorClassIdentifier: 
   ClassName: Commander
+  ClassNameEs: Comandante
   ClassIcon: {fileID: 21300000, guid: 649d7f1106f7c844f854cf316999fbb8, type: 3}
   Description: The battlefield leader. His stance inspires every ally around him;
     in offensive stance he grips his spear with both hands, strikes from mid range
     and hurls it to stun enemies. He leaps into the fray and plants his banner.
+  DescriptionEs: "El l\xEDder del campo de batalla. Su postura inspira a todos los
+    aliados a su alrededor; en postura ofensiva toma la lanza a dos manos, golpea
+    a media distancia y la arroja para aturdir. Salta a la pelea y planta su estandarte."
   Role: 1
+  MenuRole: 0
   BaseAttributes: {fileID: 11400000, guid: 05c6b8bc042380a4794999adf6699f49, type: 2}
   Abilities:
   - InputSlot: 1
@@ -36,6 +41,7 @@ MonoBehaviour:
   PassiveEffects:
   - {fileID: 11400000, guid: 5425dc3edd0320d4a8b0ad013919b6cc, type: 2}
   - {fileID: 11400000, guid: 6380aee251c0493479b81ddfd0e2c79e, type: 2}
+  WallMovement: {fileID: 0}
   StatGrowthPerLevel: []
   AvailableSubclasses: []
   ClassAnimatorOverride: {fileID: 22100000, guid: 75ec53281b263d24dbe5fee5e2ab9c9e, type: 2}

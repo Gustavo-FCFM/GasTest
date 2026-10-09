@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GA_SamuraiAttack
   m_EditorClassIdentifier: 
   AbilityName: Katana Strikes
+  AbilityNameEs: Golpes de katana
   AbilityIcon: {fileID: 21300000, guid: 13cc5b8be01263f4a8eac57c4ca3cfec, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 45327044be4f41c4d8f5289bc6f9b3be, type: 2}
@@ -53,3 +54,4 @@ MonoBehaviour:
     Ability: {fileID: 11400000, guid: d04338eb25a89af498d50f68379b4c3b, type: 2}
     ConsumeTag: 1
     Icon: {fileID: 21300000, guid: a1c77b00b8ce7574b9012b50004d247e, type: 3}
+    AlsoActiveWithTag: 0

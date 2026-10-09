@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GA_AoEDamage
   m_EditorClassIdentifier: 
   AbilityName: New Ability
+  AbilityNameEs: "Da\xF1o en \xE1rea"
   AbilityIcon: {fileID: 0}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 0}
@@ -36,6 +37,8 @@ MonoBehaviour:
     Volume: 1
     PitchVariance: 0.08
     MaxDistance: 35
+  StacksTag: 0
+  ConsumeStacks: 0
   Effects: []
   Visuals:
   - When: 2

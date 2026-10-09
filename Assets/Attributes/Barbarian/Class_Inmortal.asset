@@ -13,11 +13,16 @@ MonoBehaviour:
   m_Name: Class_Inmortal
   m_EditorClassIdentifier: 
   ClassName: Inmortal
+  ClassNameEs: Inmortal
   ClassIcon: {fileID: 21300000, guid: 01a083dd1c5fae649a40e683197eb815, type: 3}
   Description: A barbarian who will not stay dead. His ultimate picks him back up
     with his abilities ready again. Slow, heavy swings and a finisher that punishes
     the wounded.
+  DescriptionEs: "Un b\xE1rbaro que no se queda muerto. Su definitiva lo levanta
+    con las habilidades listas otra vez. Golpes lentos y pesados, y un remate que
+    castiga a los heridos."
   Role: 1
+  MenuRole: 0
   BaseAttributes: {fileID: 11400000, guid: f48497a22d22faf43b99c324878da5ca, type: 2}
   Abilities:
   - InputSlot: 1
@@ -34,6 +39,7 @@ MonoBehaviour:
     Ability: {fileID: 11400000, guid: 35250ec3ba95b494bba4a6e9e79b250e, type: 2}
   PassiveBehaviorsPrefab: {fileID: 0}
   PassiveEffects: []
+  WallMovement: {fileID: 0}
   StatGrowthPerLevel: []
   AvailableSubclasses: []
   ClassAnimatorOverride: {fileID: 22100000, guid: c1aea6e6b93746e4dbab09a9b224bfaa, type: 2}
@@ -50,3 +56,6 @@ MonoBehaviour:
   StowOffHandTag: 0
   StowedOffHandPositionOffset: {x: 0, y: 0, z: 0}
   StowedOffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandScale: 1
+  GrowTag: 0
+  GrowScale: 1.5

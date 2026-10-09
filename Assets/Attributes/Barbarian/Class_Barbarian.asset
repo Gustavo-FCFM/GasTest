@@ -13,10 +13,14 @@ MonoBehaviour:
   m_Name: Class_Barbarian
   m_EditorClassIdentifier: 
   ClassName: Barbarian
+  ClassNameEs: "B\xE1rbaro"
   ClassIcon: {fileID: 21300000, guid: 150ec0fe7eb33a744879df340d60234b, type: 3}
   Description: Takes a beating and hits hard. Throws his axe from range, closes the
     gap with a leap, and Rage heals him with every hit. The one who opens the fight.
+  DescriptionEs: Aguanta golpes y pega duro. Lanza su hacha desde lejos, acorta la
+    distancia con un salto y Enfurecer lo cura con cada golpe. El que abre la pelea.
   Role: 0
+  MenuRole: 0
   BaseAttributes: {fileID: 11400000, guid: 018a6225b1f822143aa86c2bcaef873f, type: 2}
   Abilities:
   - InputSlot: 1
@@ -29,6 +33,7 @@ MonoBehaviour:
     Ability: {fileID: 11400000, guid: 56dc5dcfc67b24b49aaea483f6856e81, type: 2}
   PassiveBehaviorsPrefab: {fileID: 0}
   PassiveEffects: []
+  WallMovement: {fileID: 0}
   StatGrowthPerLevel:
   - Attribute: 2
     AmountPerLevel: 70

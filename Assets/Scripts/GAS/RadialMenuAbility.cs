@@ -18,7 +18,8 @@ public interface IRadialMenuAbility
     Sprite[] RadialIcons { get; }
 
     // OPCIONAL: el nombre de cada opción, que la rueda muestra en el centro al pasar por
-    // encima (lo que ve el jugador: en inglés). Sin esto dice "Option 1", "Option 2"...
+    // encima, YA en el idioma del jugador (Loc.Pick). Se lee cada vez que se abre la rueda.
+    // Sin esto dice "Option 1", "Option 2"...
     string[] RadialLabels => null;
 
     // OPCIONAL: una línea corta debajo del nombre (qué da esa opción).

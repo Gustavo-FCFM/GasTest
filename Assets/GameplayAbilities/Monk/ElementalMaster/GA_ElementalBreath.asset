@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GA_ElementalBreath
   m_EditorClassIdentifier: 
   AbilityName: Fire Breath
+  AbilityNameEs: Aliento de fuego
   AbilityIcon: {fileID: 21300000, guid: a8f5c32405815f94fa9013f6c921b362, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: bd07a782525833e47889b22896900f13, type: 2}

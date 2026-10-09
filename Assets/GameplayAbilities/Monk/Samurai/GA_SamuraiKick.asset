@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GA_SamuraiKick
   m_EditorClassIdentifier: 
   AbilityName: Flying Kick
+  AbilityNameEs: Patada voladora
   AbilityIcon: {fileID: 21300000, guid: 9dfa8e9bf94852745bf68a7da7addb62, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 10f0981bf286ed844b33e0f4b4b974e3, type: 2}

@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GA_CommanderStance
   m_EditorClassIdentifier: 
   AbilityName: Stance
+  AbilityNameEs: Cambio de postura
   AbilityIcon: {fileID: 21300000, guid: 2b6d156bc968d074ea617d3bf5625679, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: edc8f7b5f2c7d684d8f67cdabbccd4df, type: 2}
@@ -36,6 +37,8 @@ MonoBehaviour:
     Volume: 1
     PitchVariance: 0.08
     MaxDistance: 35
+  StacksTag: 0
+  ConsumeStacks: 0
   Effects: []
   Visuals: []
   IsInterruptible: 0
@@ -51,3 +54,4 @@ MonoBehaviour:
     Ability: {fileID: 11400000, guid: 74ffe2fb2e8279444ab9e385decc6d6b, type: 2}
     ConsumeTag: 0
     Icon: {fileID: 21300000, guid: 2b6d156bc968d074ea617d3bf5625679, type: 3}
+    AlsoActiveWithTag: 0

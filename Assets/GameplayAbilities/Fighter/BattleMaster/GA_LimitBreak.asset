@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GA_LimitBreak
   m_EditorClassIdentifier: 
   AbilityName: Limit Break
+  AbilityNameEs: "Romper l\xEDmites"
   AbilityIcon: {fileID: 21300000, guid: cecc01e2fdb33b149b7efafe2a448972, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 4165da9d9de274a4aa511261df047340, type: 2}
@@ -36,11 +37,15 @@ MonoBehaviour:
     Volume: 1
     PitchVariance: 0.08
     MaxDistance: 35
+  StacksTag: 0
+  ConsumeStacks: 0
   Effects:
   - When: 2
     ApplyTo: 2
     Effect: {fileID: 11400000, guid: 394247cf9df320c46b79493f3420d612, type: 2}
     OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
   Visuals: []
   IsInterruptible: 0
   TargetLayer:

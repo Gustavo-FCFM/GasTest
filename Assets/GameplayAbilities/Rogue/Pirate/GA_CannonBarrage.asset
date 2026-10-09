@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GA_CannonBarrage
   m_EditorClassIdentifier: 
   AbilityName: Cannon Barrage
+  AbilityNameEs: "Ca\xF1ones"
   AbilityIcon: {fileID: 21300000, guid: 107b2910c7b4adc42a5858debd33198a, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 4165da9d9de274a4aa511261df047340, type: 2}
@@ -36,11 +37,15 @@ MonoBehaviour:
     Volume: 1
     PitchVariance: 0.08
     MaxDistance: 35
+  StacksTag: 0
+  ConsumeStacks: 0
   Effects:
   - When: 0
     ApplyTo: 0
     Effect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
     OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
   Visuals:
   - When: 2
     VFXPrefab: {fileID: 7957833072274404953, guid: 3355f6bfa6db8b24281b827de929694c, type: 3}

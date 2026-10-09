@@ -13,8 +13,14 @@ MonoBehaviour:
   m_Name: Class_Paladin
   m_EditorClassIdentifier: 
   ClassName: Paladin
+  ClassNameEs: "Palad\xEDn"
   ClassIcon: {fileID: 21300000, guid: c100be65aadeec04f96406f06b4aa65b, type: 3}
-  Description: The wall. Hits for less and takes far more. Blocks with his shield, punishes with magic damage, and throws himself in front of an ally in trouble.
+  Description: The wall. Hits for less and takes far more. Blocks with his shield,
+    punishes with magic damage, and throws himself in front of an ally in trouble.
+  DescriptionEs: "El muro. Pega menos y aguanta mucho m\xE1s. Bloquea con su escudo,
+    castiga con da\xF1o m\xE1gico y se lanza delante de un aliado en apuros."
+  Role: 0
+  MenuRole: 0
   BaseAttributes: {fileID: 11400000, guid: a8df6c05dad20b646b05806d130250b7, type: 2}
   Abilities:
   - InputSlot: 1
@@ -28,6 +34,7 @@ MonoBehaviour:
   PassiveBehaviorsPrefab: {fileID: 9026357972262154142, guid: 6cb57ab5ff075d44ea0ca589b1d76a3b, type: 3}
   PassiveEffects:
   - {fileID: 11400000, guid: 5425dc3edd0320d4a8b0ad013919b6cc, type: 2}
+  WallMovement: {fileID: 0}
   StatGrowthPerLevel:
   - Attribute: 2
     AmountPerLevel: 60
@@ -44,9 +51,19 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f3331208d03902b4db0cfd64419891b6, type: 2}
   - {fileID: 11400000, guid: 1bd567b7e66e224438b07a214666a38c, type: 2}
   ClassAnimatorOverride: {fileID: 22100000, guid: 75ec53281b263d24dbe5fee5e2ab9c9e, type: 2}
+  StanceAnimatorOverride: {fileID: 0}
+  StanceAnimatorTag: 0
   MainHandWeaponPrefab: {fileID: 5073896408682217672, guid: 1dd30a155c67b2b499185ae1abb43b21, type: 3}
   OffHandWeaponPrefab: {fileID: 3844116661835162637, guid: 355227fa58c247448aac64714c11cb4a, type: 3}
   MainHandRotationOffset: {x: 0, y: 0, z: 0}
   MainHandPositionOffset: {x: 0, y: 0, z: 0}
   OffHandRotationOffset: {x: 0, y: 180, z: 0}
   OffHandPositionOffset: {x: 0, y: 0, z: -0.1}
+  OffHandPose: {fileID: 0}
+  OffHandPoseRequiredTag: 0
+  StowOffHandTag: 0
+  StowedOffHandPositionOffset: {x: 0, y: 0, z: 0}
+  StowedOffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandScale: 1
+  GrowTag: 0
+  GrowScale: 1.5

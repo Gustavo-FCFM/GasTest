@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GA_ConqueringPresence
   m_EditorClassIdentifier: 
   AbilityName: Conquering Presence
+  AbilityNameEs: Presencia conquistadora
   AbilityIcon: {fileID: 21300000, guid: 21010f49c4bf45b49b169ae4edf5031f, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: bd07a782525833e47889b22896900f13, type: 2}
@@ -36,11 +37,15 @@ MonoBehaviour:
     Volume: 1
     PitchVariance: 0.08
     MaxDistance: 35
+  StacksTag: 0
+  ConsumeStacks: 0
   Effects:
   - When: 0
     ApplyTo: 0
     Effect: {fileID: 11400000, guid: 599bef532c08eae4a8e05af2dc063cf9, type: 2}
     OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
   Visuals:
   - When: 0
     VFXPrefab: {fileID: 4994997792314849709, guid: 3dd50886582244645be87adb42aa8528, type: 3}
@@ -64,6 +69,8 @@ MonoBehaviour:
   DeployMode: 0
   MaxRange: 0
   StartDelay: 0.1
+  ExtraHitsPerStack: 0
+  RepeatInterval: 0.3
   Targets: 0
   EffectsToApply: []
   VisualPrefab: {fileID: 0}

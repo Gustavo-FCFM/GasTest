@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GA_ShadowStep
   m_EditorClassIdentifier: 
   AbilityName: Shadow Step
+  AbilityNameEs: Paso de las sombras
   AbilityIcon: {fileID: 21300000, guid: 008268c7ebf1932418f68523136f8635, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 10f0981bf286ed844b33e0f4b4b974e3, type: 2}

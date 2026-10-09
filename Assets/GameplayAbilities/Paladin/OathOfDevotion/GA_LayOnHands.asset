@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GA_LayOnHands
   m_EditorClassIdentifier: 
   AbilityName: LayOnHands
+  AbilityNameEs: "Imposici\xF3n de manos"
   AbilityIcon: {fileID: 21300000, guid: 0a7c6e00fc60d2a47bace86d4f3d6f45, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: bd07a782525833e47889b22896900f13, type: 2}
@@ -36,11 +37,15 @@ MonoBehaviour:
     Volume: 1
     PitchVariance: 0.08
     MaxDistance: 35
+  StacksTag: 0
+  ConsumeStacks: 0
   Effects:
   - When: 0
     ApplyTo: 1
     Effect: {fileID: 11400000, guid: ab05ab65a33c9754bbeb168b51e81d90, type: 2}
     OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
   Visuals:
   - When: 1
     VFXPrefab: {fileID: 1374770465800164, guid: d0e33492ce1ba064291b3ff95ce32e4e, type: 3}

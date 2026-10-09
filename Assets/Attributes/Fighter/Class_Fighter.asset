@@ -13,11 +13,16 @@ MonoBehaviour:
   m_Name: Class_Fighter
   m_EditorClassIdentifier: 
   ClassName: Fighter
+  ClassNameEs: Guerrero
   ClassIcon: {fileID: 21300000, guid: fd0df9f4c10bf604fb297a0cc27b3c9f, type: 3}
   Description: 'A frontline soldier who changes stance on the fly: a defensive one
     that holds the line behind his shield, and an offensive one that hits harder.
     A well-timed block becomes a parry that stuns whoever struck him.'
+  DescriptionEs: "Un soldado de primera l\xEDnea que cambia de postura sobre la marcha:
+    una defensiva que sostiene la l\xEDnea tras su escudo y una ofensiva que pega
+    m\xE1s fuerte. Un bloqueo a tiempo se vuelve un parry que aturde a quien lo golpe\xF3."
   Role: 0
+  MenuRole: 0
   BaseAttributes: {fileID: 11400000, guid: 0e2275220d36a2644b4d67e9d0f15715, type: 2}
   Abilities:
   - InputSlot: 1
@@ -32,6 +37,7 @@ MonoBehaviour:
   PassiveEffects:
   - {fileID: 11400000, guid: 5425dc3edd0320d4a8b0ad013919b6cc, type: 2}
   - {fileID: 11400000, guid: 71af769e08a6061438522b63f129b721, type: 2}
+  WallMovement: {fileID: 0}
   StatGrowthPerLevel:
   - Attribute: 2
     AmountPerLevel: 60

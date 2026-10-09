@@ -1,0 +1,243 @@
+﻿guid;asset;field;en;es
+0fc6ecdc87f53c941a69707bee7c6254;Class_WaveBarbarian;ClassNameEs;Barbarian;Bárbaro
+0fc6ecdc87f53c941a69707bee7c6254;Class_WaveBarbarian;DescriptionEs;Wave mode barbarian;Bárbaro del modo oleadas
+94ade0794681b0248a3b0176ad1651c6;Class_Barbarian;ClassNameEs;Barbarian;Bárbaro
+94ade0794681b0248a3b0176ad1651c6;Class_Barbarian;DescriptionEs;Takes a beating and hits hard. Throws his axe from range, closes the gap with a leap, and Rage heals him with every hit. The one who opens the fight.;Aguanta golpes y pega duro. Lanza su hacha desde lejos, acorta la distancia con un salto y Enfurecer lo cura con cada golpe. El que abre la pelea.
+dddebebeb12f05e4a978c173b6f504dd;Class_Berserker;ClassNameEs;Berserker;Berserker
+dddebebeb12f05e4a978c173b6f504dd;Class_Berserker;DescriptionEs;A barbarian of fast strikes. Attacks twice as often and each hit lands softer. Whirlwind is for fighting surrounded. The longer the fight, the better he does.;Un bárbaro de golpes rápidos. Ataca el doble de seguido y cada golpe pega más suave. El Ataque giratorio es para pelear rodeado. Cuanto más dura la pelea, mejor le va.
+fc80e36e6c65c4c4c8c8c0da24e9a267;Class_Inmortal;ClassNameEs;Inmortal;Inmortal
+fc80e36e6c65c4c4c8c8c0da24e9a267;Class_Inmortal;DescriptionEs;A barbarian who will not stay dead. His ultimate picks him back up with his abilities ready again. Slow, heavy swings and a finisher that punishes the wounded.;Un bárbaro que no se queda muerto. Su definitiva lo levanta con las habilidades listas otra vez. Golpes lentos y pesados, y un remate que castiga a los heridos.
+dc7a0186b9ca16342b41ac3a101fe68d;Class_Shaman;ClassNameEs;Shaman;Chamán
+dc7a0186b9ca16342b41ac3a101fe68d;Class_Shaman;DescriptionEs;A barbarian who never fights alone. Plants totems that make nearby allies tougher, faster or deadlier, and his ultimate raises all four at once. The one who holds ground.;Un bárbaro que nunca pelea solo. Planta tótems que hacen a los aliados cercanos más resistentes, más rápidos o más letales, y su definitiva levanta los cuatro a la vez. El que sostiene la posición.
+985459ea0a3ec5a4caf8b1f84badcc5a;Class_Cleric;ClassNameEs;Cleric;Clérigo
+985459ea0a3ec5a4caf8b1f84badcc5a;Class_Cleric;DescriptionEs;The healer who fights from range. His light burns enemies and mends allies in its path, and everyone he heals takes less damage for a while.;El sanador que pelea a distancia. Su luz quema a los enemigos y cura a los aliados en su camino, y cada uno al que cura recibe menos daño por un rato.
+2ff330b0c335d1b49a43c09b69759389;Class_LifeDomainCleric;ClassNameEs;Life Domain;Dominio de la vida
+2ff330b0c335d1b49a43c09b69759389;Class_LifeDomainCleric;DescriptionEs;The cleric who refuses to let anyone fall. Keeps a dying ally standing for a moment, heals harder the more hurt they are, and brings the fallen back to the fight.;El clérigo que no deja caer a nadie. Mantiene en pie un momento a un aliado moribundo, cura más cuanto más herido está y devuelve a los caídos a la pelea.
+c7126ec9f9b8b0549bd0cccac46b1909;Class_LightDomainCleric;ClassNameEs;Light Domain;Dominio de la luz
+c7126ec9f9b8b0549bd0cccac46b1909;Class_LightDomainCleric;DescriptionEs;The cleric of the burning dawn. His spells hit harder and heal more, but over time: enemies keep burning, allies keep mending, and nothing stays hidden near him.;El clérigo del amanecer ardiente. Sus hechizos pegan más y curan más, pero con el tiempo: los enemigos siguen ardiendo, los aliados se siguen curando y nada queda oculto cerca de él.
+a31961d72e2505a4ca2cb243a5e377b2;Class_OrderDomainCleric;ClassNameEs;Order Domain;Dominio del orden
+a31961d72e2505a4ca2cb243a5e377b2;Class_OrderDomainCleric;DescriptionEs;The cleric who lays down the law. Every strike stuns the first enemy it touches, whoever hits an ally under his command is halted, and his truth silences everyone who stands in it.;El clérigo que impone la ley. Cada golpe aturde al primer enemigo que toca, quien golpea a un aliado bajo su mando queda detenido, y su verdad silencia a todos los que la pisan.
+17c3ad398681eeb4586674ddfccce0a0;Class_BattleMasterFighter;ClassNameEs;Battle Master;Maestro de batalla
+17c3ad398681eeb4586674ddfccce0a0;Class_BattleMasterFighter;DescriptionEs;"The fighter who lives for the duel. In offensive stance he grips his greatsword with both hands and charges devastating strikes; his blows expose weak points, and he can strip an enemy of their weapon.";"El guerrero que vive para el duelo. En postura ofensiva toma el mandoble a dos manos y carga golpes devastadores; sus golpes exponen puntos débiles, y puede desarmar a un enemigo."
+425e52fb908c0004bb9fc17ccb2b3a77;Class_CommanderFighter;ClassNameEs;Commander;Comandante
+425e52fb908c0004bb9fc17ccb2b3a77;Class_CommanderFighter;DescriptionEs;"The battlefield leader. His stance inspires every ally around him; in offensive stance he grips his spear with both hands, strikes from mid range and hurls it to stun enemies. He leaps into the fray and plants his banner.";"El líder del campo de batalla. Su postura inspira a todos los aliados a su alrededor; en postura ofensiva toma la lanza a dos manos, golpea a media distancia y la arroja para aturdir. Salta a la pelea y planta su estandarte."
+a21d4d368c00b2340b6b78faed3e3b22;Class_Fighter;ClassNameEs;Fighter;Guerrero
+a21d4d368c00b2340b6b78faed3e3b22;Class_Fighter;DescriptionEs;A frontline soldier who changes stance on the fly: a defensive one that holds the line behind his shield, and an offensive one that hits harder. A well-timed block becomes a parry that stuns whoever struck him.;Un soldado de primera línea que cambia de postura sobre la marcha: una defensiva que sostiene la línea tras su escudo y una ofensiva que pega más fuerte. Un bloqueo a tiempo se vuelve un parry que aturde a quien lo golpeó.
+bab651adec009cb41972ed3874f401b4;Class_GuardianFighter;ClassNameEs;Guardian;Guardián
+bab651adec009cb41972ed3874f401b4;Class_GuardianFighter;DescriptionEs;The wall of the team. His great shield covers him and every ally behind it, returns every blow it blocks, and a well-timed parry sends projectiles back. The more he bleeds, the harder he is to bring down.;El muro del equipo. Su gran escudo lo cubre a él y a cada aliado detrás, devuelve cada golpe que bloquea, y un parry a tiempo regresa los proyectiles. Cuanto más sangra, más cuesta derribarlo.
+d93cd898780fd0949a8cab0ea13f3392;Class_ElementalMaster;ClassNameEs;Elemental Master;Maestro elemental
+d93cd898780fd0949a8cab0ea13f3392;Class_ElementalMaster;DescriptionEs;A monk who channels the elements: every punch also hurls a magic orb, and Ki awakens each element: strikes that stun, water that turns damage into healing, a wind kick that blasts through enemies and dragon fire. Ultimate: Peace of Mind, a few seconds of unlimited Ki.;Un monje que canaliza los elementos: cada puñetazo lanza además un orbe mágico, y el Ki despierta cada elemento: golpes que aturden, agua que convierte el daño en curación, una patada de viento que atraviesa a los enemigos y fuego de dragón. Definitiva: Paz mental, unos segundos de Ki sin límite.
+c2ea37ab2ac5bb7418974642d08d3cc8;Class_Monk;ClassNameEs;Monk;Monje
+c2ea37ab2ac5bb7418974642d08d3cc8;Class_Monk;DescriptionEs;A martial artist who fights with bare hands. Every hit that lands makes him faster, and Ki empowers his next move: a flurry of blows, a defense that guards him from every side, or a kick that stuns.;Un artista marcial que pelea a puño limpio. Cada golpe que acierta lo hace más rápido, y el Ki potencia su siguiente movimiento: una ráfaga de golpes, una defensa que lo cubre por todos lados o una patada que aturde.
+e82bbcba1d1c15146867c01e03546e8f;Class_Samurai;ClassNameEs;Samurai;Samurái
+e82bbcba1d1c15146867c01e03546e8f;Class_Samurai;DescriptionEs;A monk with a katana: wide, long cuts that leave bleeding wounds, and Martial Arts stacks that also sharpen his blade. Whoever strikes his guard bleeds for it. Ultimate: Final Cut, a dash through a line of enemies that finishes anyone left below 5% health.;Un monje con katana: cortes amplios y largos que abren heridas, y acumulaciones de Artes marciales que también afilan su hoja. Quien golpea su guardia sangra por ello. Definitiva: Corte final, un tajo a través de una fila de enemigos que remata a quien quede por debajo del 5 % de vida.
+5ee5b7ae34ae986468b5ec92f4756058;Class_Shinobi;ClassNameEs;Shinobi;Shinobi
+5ee5b7ae34ae986468b5ec92f4756058;Class_Shinobi;DescriptionEs;A monk of the shadows: throws kunai that crit from behind, slips through projectiles while guarding and vanishes in a cloak of darkness. Ki-empowered moves spend Martial Arts stacks to cut deep into wounded enemies. Ultimate: Silent Death, striking from enemy to enemy.;Un monje de las sombras: lanza kunais que hacen crítico por la espalda, esquiva los proyectiles mientras se cubre y se desvanece en un manto de oscuridad. Sus movimientos con Ki gastan las acumulaciones de Artes marciales para herir a fondo a los enemigos heridos. Definitiva: Muerte silenciosa, de enemigo en enemigo.
+1bd567b7e66e224438b07a214666a38c;Class_OathOfConquestPaladin;ClassNameEs;Oath Of Conquest;Juramento de la conquista
+1bd567b7e66e224438b07a214666a38c;Class_OathOfConquestPaladin;DescriptionEs;The aggressive paladin. His presence stuns everyone around him and his ultimate makes him nearly unstoppable. Goes in first and breaks the formation.;El paladín agresivo. Su presencia aturde a todos a su alrededor y su definitiva lo vuelve casi imparable. Entra primero y rompe la formación.
+ba4bd956c90da094fbc32b68626e890e;Class_OathOfDevotionPaladin;ClassNameEs;Oath Of Devotion;Juramento de la devoción
+ba4bd956c90da094fbc32b68626e890e;Class_OathOfDevotionPaladin;DescriptionEs;The healing paladin. Lays hands on an ally and shields the whole team. The one who keeps everyone standing as the fight drags on.;El paladín sanador. Impone las manos sobre un aliado y protege a todo el equipo. El que mantiene a todos en pie mientras la pelea se alarga.
+f3331208d03902b4db0cfd64419891b6;Class_OathOfVengeancePaladin;ClassNameEs;Oath Of Vengeance;Juramento de la venganza
+f3331208d03902b4db0cfd64419891b6;Class_OathOfVengeancePaladin;DescriptionEs;The hunting paladin. Marks one enemy and goes after them. Swings faster than his brothers of the order and does not let go until it is over.;El paladín cazador. Marca a un enemigo y va tras él. Ataca más rápido que sus hermanos de la orden y no lo suelta hasta que termina.
+9704f66316c658c4d9e4fa5c7aa06d9c;Class_Paladin;ClassNameEs;Paladin;Paladín
+9704f66316c658c4d9e4fa5c7aa06d9c;Class_Paladin;DescriptionEs;The wall. Hits for less and takes far more. Blocks with his shield, punishes with magic damage, and throws himself in front of an ally in trouble.;El muro. Pega menos y aguanta mucho más. Bloquea con su escudo, castiga con daño mágico y se lanza delante de un aliado en apuros.
+f8d0c911739d00645818a9921d68a37a;Class_Assassin;ClassNameEs;Assassin;Asesino
+f8d0c911739d00645818a9921d68a37a;Class_Assassin;DescriptionEs;"The pure rogue. Hides to ambush and marks a target to finish it. Hunts whoever got separated; head on and in plain sight, he loses.";"El pícaro puro. Se oculta para emboscar y marca a un objetivo para rematarlo. Caza al que se separó; de frente y a la vista, pierde."
+b3eee0f77e21da14e827261d359b3b73;Class_Illusionist;ClassNameEs;Illusionist;Ilusionista
+b3eee0f77e21da14e827261d359b3b73;Class_Illusionist;DescriptionEs;The trickster rogue. Sends a copy of you to fight and his ultimate floods the area with them. Wins by confusing, not by hitting.;El pícaro tramposo. Manda una copia de sí mismo a pelear y su definitiva llena la zona de copias. Gana confundiendo, no golpeando.
+a2192d4370aa0bf46ba4b1b02cc83e69;Class_Pirate;ClassNameEs;Pirate;Pirata
+a2192d4370aa0bf46ba4b1b02cc83e69;Class_Pirate;DescriptionEs;The ranged rogue. A pistol instead of a dagger, food to heal, and a rain of cannon fire. The only rogue who fights from a distance.;El pícaro a distancia. Una pistola en lugar de la daga, comida para curarse y una lluvia de cañonazos. El único pícaro que pelea de lejos.
+390e03f3a9d111e46ba5dc758818e4cb;Class_Rogue;ClassNameEs;Rogue;Pícaro
+390e03f3a9d111e46ba5dc758818e4cb;Class_Rogue;DescriptionEs;Fragile and blindingly fast. Attacks twice as often, appears behind his target with Blink, and hits double from the back. Two hits and he is gone.;Frágil y rapidísimo. Ataca el doble de seguido, aparece a la espalda de su objetivo con Golpe mortal y pega el doble por la espalda. Dos golpes y ya no está.
+06280d7ea4148f142912712dcda4ec7d;GA_AoEDamage;AbilityNameEs;New Ability;Daño en área
+80e8c2b99459134409681a187b325173;GA_BossAbility;AbilityNameEs;Boss Ability;Habilidad del jefe
+11a9cd014a96d6d4fb0f56ed9789d54b;GA_BossAura;AbilityNameEs;Boss Aura;Aura del jefe
+af94aa4ebeffdc248bc2a80f60b01014;GA_Fireball;AbilityNameEs;EnemyFireball;Bola de fuego
+6f6fbb0bc9be7d64089047b09e96c26e;GA_IceAoE;AbilityNameEs;Ice AoE;Zona de hielo
+3d695ff6c309dcc45b9f6908d928df5a;GA_Iceball;AbilityNameEs;EnemyFireball;Bola de hielo
+5a74aa86edab3724888ca994d80725c6;GA_Rock;AbilityNameEs;EnemyRock;Roca
+56154d375aef97348818609f5d5698d5;GA_WaveAxeAttack;AbilityNameEs;New Ability;Ataque con hacha
+67e0658b3d2b8164c9dcad3e5120f791;GA_WaveAxeThrow;AbilityNameEs;Axe Throw;Lanzamiento de hacha
+dbd13729b70e393459dea58007d521f1;GA_AlternatingBerserker;AbilityNameEs;Alternating Berserker Primary Attack;Ataque del Berserker
+d3f383ba0b1a5dc46847a2fa679a266e;GA_Berserker_AxeAttack;AbilityNameEs;Axe Attack;Ataque con hacha
+830101eba8c1e234c9bc8d55c6d4b4d5;GA_ConeReckless 1;AbilityNameEs;Reckless2;Ataque temerario
+28ccd4d41e3a4a546b2915b40eef9aa2;GA_ConeReckless2;AbilityNameEs;Reckless 2;Ataque temerario
+a31f982b4c5e2af46a38df6e9830982f;GA_Frenzy;AbilityNameEs;Frenzy;Frenesí
+f5b8c13a15cbefd47aa60586da5a1693;GA_LineReckless;AbilityNameEs;Reckless;Ataque temerario
+acda43e15e9bc1c4da89c6727b5d73c2;GA_RecklessAttack;AbilityNameEs;Reckless Attack;Ataque temerario
+95426c07a66a6ba4aab2f0b1325a5dcb;GA_WhirlwindAttack;AbilityNameEs;Whirlwind Attack;Ataque giratorio
+b41663af55e0dcc429858dd8602c7730;GA_AxeAttack;AbilityNameEs;Attack;Ataque con hacha
+02d07c3295dba8341a727a557148876d;GA_AxeThrow;AbilityNameEs;Throwing Axe;Lanzamiento de hacha
+56dc5dcfc67b24b49aaea483f6856e81;GA_BarbarianLeap;AbilityNameEs;Barbarian Leap;Salto furioso
+7f53883b772b6f34f8b3d5f6701bc219;GA_Rage;AbilityNameEs;Rage;Enfurecer
+841ec26c95a61014994aee639a5c6d47;GA_FinalBlow;AbilityNameEs;Final Blow;Golpe final
+8414b99a63f36c949a2ea0e8fb5ec3b1;GA_Inmortal_Rage;AbilityNameEs;Inmortal Rage;Enfurecer
+35250ec3ba95b494bba4a6e9e79b250e;GA_InmortalWrath;AbilityNameEs;Inmortal Wrath;Ira después de la muerte
+4ceb242268d0d9141af77c1cca344540;GA_SwordAttack;AbilityNameEs;Sword Attack;Ataque con mandoble
+c0119bad393d6f74f9f62aa452dea6ad;GA_ElementalFury;AbilityNameEs;Elemental Fury;Furia elemental
+8902185c93152ec4a8a659346dbea617;GA_SpawnTotem;AbilityNameEs;Spawn Totem;Invocar tótem
+8902185c93152ec4a8a659346dbea617;GA_SpawnTotem;Totems.Array.data[0].NameEs;Bear Totem;Tótem del oso
+8902185c93152ec4a8a659346dbea617;GA_SpawnTotem;Totems.Array.data[0].DescriptionEs;Max health;Vida máxima
+8902185c93152ec4a8a659346dbea617;GA_SpawnTotem;Totems.Array.data[1].NameEs;Eagle Totem;Tótem del águila
+8902185c93152ec4a8a659346dbea617;GA_SpawnTotem;Totems.Array.data[1].DescriptionEs;Movement speed;Velocidad de movimiento
+8902185c93152ec4a8a659346dbea617;GA_SpawnTotem;Totems.Array.data[2].NameEs;Tiger Totem;Tótem del tigre
+8902185c93152ec4a8a659346dbea617;GA_SpawnTotem;Totems.Array.data[2].DescriptionEs;Attack speed;Velocidad de ataque
+8902185c93152ec4a8a659346dbea617;GA_SpawnTotem;Totems.Array.data[3].NameEs;Wolf Totem;Tótem del lobo
+8902185c93152ec4a8a659346dbea617;GA_SpawnTotem;Totems.Array.data[3].DescriptionEs;More damage;Más daño
+6f7b2fa117308d647a0c7472e470bf7f;GA_ClericFlash;AbilityNameEs;Flash;Destello
+a722fef8255f8494fbdb4145b1b64d58;GA_ClericLightArc;AbilityNameEs;Light Arc;Arco de luz
+bf1152c1bdf110f4788a96db57d3c465;GA_ClericStaffCombo;AbilityNameEs;Staff and Light;Bastón y luz
+9ebbe8a1f67d55b4b8fbcaa671c8123e;GA_ClericStaffSwing;AbilityNameEs;Staff Swing;Golpe de bastón
+c599de90196b787438b3bbb420159046;GA_GuidingLight;AbilityNameEs;Guiding Bolt;Luz guía
+1febd8429db62574d9dbfa40eeedc1c0;GA_HealingWord;AbilityNameEs;Healing Word;Palabra de curación
+bddceaf7c74a95a418496efb820cc065;GA_PreserveLife;AbilityNameEs;Preserve Life;Preservar vida
+7744dec84ff9fbd4295013479b74505a;GA_Resurrection;AbilityNameEs;Resurrection;Resurrección
+a0c76349caf20c148bc3dbd753325202;GA_DawnLight;AbilityNameEs;Light of Dawn;Luz del amanecer
+965bb25821939294b824a380abad6205;GA_HolyFire;AbilityNameEs;Holy Fire;Quemadura santa
+13c2a5802066b9442907c9878dd1e4a7;GA_HolyFireZone;AbilityNameEs;Holy Fire Zone;Fuego sagrado
+7fa4a9d0af9c1854f8a52c6c44b0dede;GA_RadiantGuidingBolt;AbilityNameEs;Radiant Guiding Bolt;Luz guía radiante
+39cdd5b8fa13d3948b6dd52051987cd3;GA_RadiantHealingWord;AbilityNameEs;Radiant Healing Word;Palabra de curación radiante
+f1dfbd1db6f0dda4d982cac861c1c70d;GA_RadiantLightArc;AbilityNameEs;Radiant Light Arc;Arco de luz radiante
+d5a910e46e5e2194bb17df6484ea79e5;GA_RadiantStaffCombo;AbilityNameEs;Staff and Radiance;Bastón y resplandor
+fe04d561911ba2c4f8a6871129784019;GA_CommandHalt;AbilityNameEs;Command: Halt;Aturdir
+6c681f7be86e434468958e016178bd9e;GA_OrderLightArc;AbilityNameEs;Order Light Arc;Arco de luz del orden
+42916fa59ccb7df45a251bb4c77a56d2;GA_OrderStaffCombo;AbilityNameEs;Staff and Order;Martillo y orden
+dbfca759814ebb442b073e7a17deff8c;GA_ZoneOfTruth;AbilityNameEs;Zone of Truth;Zona de verdad
+8d25e6a3a6ab66c4ba62e20f82d7f442;GA_FireballEnemy;AbilityNameEs;EnemyFireball;Bola de fuego
+3fd0e0eb6c6a46d42b61f966bbca5437;GA_BattleMasterGuard;AbilityNameEs;Guard / Charged Strike;Guardia / Golpe cargado
+e934390e3496a294bbee54d7768b78fe;GA_BattleMasterPrimary;AbilityNameEs;Battle Master Attack;Ataque del Maestro de batalla
+25a4ea0bba9b66844a57ef7bd817e6de;GA_ChargedStrikeStage1;AbilityNameEs;Charged Strike I;Golpe cargado I
+9a3871314cb9b5c4dbbef336d054549f;GA_ChargedStrikeStage2;AbilityNameEs;Charged Strike II;Golpe cargado II
+0024d680924b7ed4f9caa5c5ac9763df;GA_ChargedStrikeStage3;AbilityNameEs;Charged Strike III;Golpe cargado III
+739770c04ee53d34c93d504e507ca1f0;GA_Disarm;AbilityNameEs;Disarm;Desarme
+3af62cae0f234d140b0650adfafa99d3;GA_GreatswordChargedStrike;AbilityNameEs;Charged Strike;Golpe cargado
+3dd2da92883781949875ed386336df8d;GA_GreatswordSlash;AbilityNameEs;Greatsword Slash;Tajo de mandoble
+fa63cb71a0530db44a915aa70ede8921;GA_LimitBreak;AbilityNameEs;Limit Break;Romper límites
+2126fd4c0dda9cb4daf0a99e93be8082;GA_CommanderBanner;AbilityNameEs;Battle Banner;Estandarte de batalla
+c04d970567b12ca4b8b72159048d66be;GA_CommanderEnterDefensiveStance;AbilityNameEs;Defensive Stance;Postura defensiva
+74ffe2fb2e8279444ab9e385decc6d6b;GA_CommanderEnterOffensiveStance;AbilityNameEs;Offensive Stance;Postura ofensiva
+26b318ae86482f8489c1222803aa0b6d;GA_CommanderGuard;AbilityNameEs;Guard / Charged Strike;Guardia / Golpe cargado
+5dc20e8c8b47f0a41a117ca71aed422b;GA_CommanderPrimary;AbilityNameEs;Spear Thrust;Estocada de lanza
+93a05fb96c69ab34392cfc0382810790;GA_CommanderStance;AbilityNameEs;Stance;Cambio de postura
+c5e0519347d03ce4385114ed9afbcc5a;GA_CommandingVoice;AbilityNameEs;Commanding Voice;Voz de mando
+7a4000aed49eea84f94d5e6462c2f3ca;GA_HeroicLeap;AbilityNameEs;Heroic Leap;Salto heroico
+db9d56cf4ffaf294986e68a10dcee9ff;GA_SpearThrow;AbilityNameEs;Spear Throw;Lanzamiento de lanza
+cffe632d469eb384d8a0dd5d0809502a;GA_SpearThrust;AbilityNameEs;Spear Thrust;Estocada de lanza
+f9433e6d9a18a2844bf03e6b6f2369e2;GA_EnterDefensiveStance;AbilityNameEs;Defensive Stance;Postura defensiva
+e773f476d70b4a948939788db7842c72;GA_EnterOffensiveStance;AbilityNameEs;Offensive Stance;Postura ofensiva
+e33fcd237b6f6e6438abc870ae8cbb8b;GA_FighterCharge;AbilityNameEs;Charge;Carga
+b0bea3d533af40f45b50c3156467af9d;GA_FighterChargeDefensive;AbilityNameEs;Defensive Charge;Carga defensiva
+136c7c4e1de9a844da581a166f9192b5;GA_FighterChargeOffensive;AbilityNameEs;Offensive Charge;Carga ofensiva
+e03685a7f8450d147a210b7e1effe534;GA_FighterPrimaryCombo;AbilityNameEs;Main Hand Attack;Ataque con espada
+da04c02d81730c449af28763e9450833;GA_FighterShieldBlock;AbilityNameEs;Shield Block;Bloqueo con escudo
+4c51208451546954f95745a0f9c2327e;GA_FighterSlash;AbilityNameEs;Main Hand Slash;Tajo de espada
+a8d78254d7d677647b5025dd9b115065;GA_FighterStance;AbilityNameEs;Stance;Cambio de postura
+909ace3f0755aad419af9fb688596dbd;GA_Avatar;AbilityNameEs;Avatar;Avatar
+490ce21d8341f154b830c8512b5b9b89;GA_Execute;AbilityNameEs;Execute;Ejecución
+eeccf44f7809245488462fad067f060c;GA_GuardianEnterDefensiveStance;AbilityNameEs;Defensive Stance;Postura defensiva
+75f349d835f023741b194e74965678ae;GA_GuardianStance;AbilityNameEs;Stance;Cambio de postura
+c945ef84d1489e0409a4d20848828ea7;GA_Flight;AbilityNameEs;Flight;Vuelo
+517e2538c06660b45a5c393475cb7a78;GA_DragonFireZone;AbilityNameEs;Dragon Fire;Fuego de dragón
+e105d14e4472c634c89c3f886e26250d;GA_ElementalAttack;AbilityNameEs;Elemental Strikes;Golpes elementales
+bdf695fedaf749148b1a4e74a5f7e408;GA_ElementalBreath;AbilityNameEs;Fire Breath;Aliento de fuego
+d5ad3f05594129640b5d531d18de5d06;GA_ElementalGuard;AbilityNameEs;Block;Bloqueo
+124019badc6612d4891e3cc071dd3e74;GA_ElementalKick;AbilityNameEs;Flying Kick;Patada voladora
+b8589a8e65f231449b54934bd35f8ffd;GA_ElementalOrbLeft;AbilityNameEs;Elemental Orb;Orbe elemental
+58ce73c545839dd4fa7df895d42ee49f;GA_ElementalOrbRight;AbilityNameEs;Elemental Orb;Orbe elemental
+8008f62868daa1e459f8f3afd5bed455;GA_ElementalStrikes;AbilityNameEs;Elemental Strikes;Golpes elementales
+490b809c583c23f42bbb904ba134a1b5;GA_FireBreath;AbilityNameEs;Fire Breath;Aliento de fuego
+e42af95904a8e634bad4014c6d46b2c1;GA_PeaceOfMind;AbilityNameEs;Peace of Mind;Paz mental
+36244544d8e145b45ab64f06b10c35db;GA_RedDragonBreath;AbilityNameEs;Red Dragon Breath;Aliento de dragón rojo
+24cb2f9c314150d4cb45af1f4c30654d;GA_StunningFlurry;AbilityNameEs;Stunning Flurry;Ráfaga aturdidora
+2cee7871f98c6b541b481eca5a5e9acf;GA_StunningPunchLeft;AbilityNameEs;Left Punch;Puñetazo izquierdo
+fa2bc6f8ec195344eb692e02d44de8e0;GA_StunningPunchRight;AbilityNameEs;Right Punch;Puñetazo derecho
+ba588c0c6c6c9244faf789beedfe40db;GA_WaterDefense;AbilityNameEs;Water Defense;Defensa de agua
+58707eca94ad44149bc25d1de21b4b91;GA_WindKick;AbilityNameEs;Wind Kick;Patada del viento
+66acd3f322e68c44a85fe7cae0b95d22;GA_DragonKick;AbilityNameEs;Dragon Kick;Patada del dragón
+4382692a2238b2c46a40a378f6d72d03;GA_FlurryOfBlows;AbilityNameEs;Flurry of Blows;Ráfaga de golpes
+8926eb5ee8684ec4fbba3620945ec79f;GA_FlurryStacks;AbilityNameEs;Flurry Stacks;Ráfaga de golpes
+770dacadf8a080349ae6b5b13256c7cd;GA_FlyingKick;AbilityNameEs;Flying Kick;Patada voladora
+686f962b53eab3e478265bd85dea8682;GA_Ki;AbilityNameEs;Ki;Ki
+94e991fe4fc08a04a862b4745f7bee5a;GA_MonkAttack;AbilityNameEs;Strikes;Golpes
+39b291771ce80094aa5f216541c6a850;GA_MonkBlock;AbilityNameEs;Block;Bloqueo
+e7bb04f6d20cf5a40b94703f5af20640;GA_MonkGuard;AbilityNameEs;Block;Bloqueo
+aba3fbae50846ac49a7f7eef7666e9a0;GA_MonkKick;AbilityNameEs;Flying Kick;Patada voladora
+5f9d38fb79ae5954980caabbeb75160d;GA_MonkPunchLeft;AbilityNameEs;Left Punch;Puñetazo izquierdo
+f1288359b63abd74aa55312321eb1f87;GA_MonkPunchRight;AbilityNameEs;Right Punch;Puñetazo derecho
+39b7008a1b302e34f923f176b3964a5d;GA_MonkStrikes;AbilityNameEs;Strikes;Golpes
+eb76c27be4d49724fbc71234e1193a65;GA_PatientDefense;AbilityNameEs;Patient Defense;Defensa paciente
+00949211d028af24d9e060fea9e9af07;GA_DevastatingCuts;AbilityNameEs;Devastating Cuts;Cortes devastadores
+34c2ad41bdd9b3c4dbb588e66b1d8eea;GA_FinalCut;AbilityNameEs;Final Cut;Corte final
+7c6d8484827a1c64c8e82bbd752bf137;GA_SamuraiAttack;AbilityNameEs;Katana Strikes;Golpes de katana
+008c91ead3659344db49974f9c4c35f6;GA_SamuraiDragonKick;AbilityNameEs;Dragon Kick;Patada del dragón
+d04338eb25a89af498d50f68379b4c3b;GA_SamuraiFlurry;AbilityNameEs;Flurry of Blades;Ráfaga de cortes
+6836020a28f405841a3d2b7bae98d443;GA_SamuraiFlurryStacks;AbilityNameEs;Flurry Stacks;Ráfaga de golpes
+fe638be738464a649b5d843dcb2978ea;GA_SamuraiFlyingKick;AbilityNameEs;Flying Kick;Patada voladora
+56cd959e46fa5784ebbf9f8dbec7e50b;GA_SamuraiKick;AbilityNameEs;Flying Kick;Patada voladora
+ddade5c9339138d4caa4e677f7f388fd;GA_SamuraiSlash;AbilityNameEs;Katana Slash;Tajo de katana
+b981f7ca1dae46f44b3771a2724522ad;GA_SamuraiSpin;AbilityNameEs;Spinning Slash;Corte giratorio
+4b5192600b976494d9c2be02e8b8f0b7;GA_SamuraiStrikes;AbilityNameEs;Katana Strikes;Golpes de katana
+7e2a4a14c5f90494b813cd43f805b056;GA_SpinningSlash;AbilityNameEs;Spinning Slash;Corte giratorio
+8d560bf89e4620d45bef21243c33d8fc;GA_Kunai;AbilityNameEs;Kunai;Kunai
+823557918a0a6fe44b371ad11ef6efeb;GA_KunaiDarkArts;AbilityNameEs;Kunai;Kunai
+94aaffc2607f7774cb73a0b35443a29f;GA_ShadowCloak;AbilityNameEs;Cloak of Darkness;Manto de oscuridad
+d65febbd5ee26964bb1bdc5d88faac04;GA_ShadowStep;AbilityNameEs;Shadow Step;Paso de las sombras
+80c41310eb1f0d741a913a7743ab4282;GA_ShinobiAttack;AbilityNameEs;Kunai;Kunai
+4d48f843c563d9f44b0902a698f3abbe;GA_ShinobiBlock;AbilityNameEs;Block;Bloqueo
+376359ea70faa9a498d07f902af0e092;GA_ShinobiCloak;AbilityNameEs;Cloak of Darkness;Manto de oscuridad
+679c8f2dcd3d30a46984b8ef16b6f28b;GA_ShinobiDragonKick;AbilityNameEs;Dragon Kick;Patada del dragón
+ff347a70ec484cc499f3bcaea9f9f269;GA_ShinobiFlurry;AbilityNameEs;Kunai Flurry;Ráfaga de kunais
+3f5a009b04bd02c468e28489d3ddf149;GA_ShinobiGuard;AbilityNameEs;Block;Bloqueo
+a4739dd6071ff5b42bdf97ba92e74fb5;GA_ShinobiKick;AbilityNameEs;Flying Kick;Patada voladora
+d83bf5b46999d2748bff9f267440b538;GA_ShinobiPatientDefense;AbilityNameEs;Patient Defense;Defensa paciente
+bbb002b6331f9694d94dd35988fb2a5d;GA_ShinobiStrikes;AbilityNameEs;Kunai;Kunai
+2a384ed365c7c0e48a75a93e6645dfe1;GA_SilentDeath;AbilityNameEs;Silent Death;Muerte silenciosa
+24119e21f28789646ad4aa0caea72ed6;GA_AttackWithSmite;AbilityNameEs;Attack With Smite;Ataque con castigo
+c0385947266c84944b448bda69bbd77e;GA_DivineSmite;AbilityNameEs;Divine Smite;Castigo divino
+a0f11893e7b547f4cb7859680a104a35;GA_HeroicIntervention;AbilityNameEs;Heroic Intervention;Intercepción heroica
+fd24cab436f632c4c9710c0b95196996;GA_PaladinPrimaryAttack;AbilityNameEs;Paladin Primary Attack;Ataque del Paladín
+8d51fde4b2bdfbd48929947f0b00f484;GA_PaladinShieldBlock;AbilityNameEs;Shield Block;Bloqueo con escudo
+97d55b34db628d84f9b76de7d688d654;GA_PaladinSmiteSwitch;AbilityNameEs;Paladin Smite Switch;Ataque del Paladín
+7246db634db6ccb478b73953df2c75e7;GA_SmiteBeam;AbilityNameEs;Smite;Castigo
+ed18b508fbc4d1c438c981c1446a1d31;GA_AttackWithSmiteConquest;AbilityNameEs;Attack With Smite Conquest;Ataque con castigo
+b48f11ab9c3a9204cb401a8c4b15cf35;GA_ConqueringPresence;AbilityNameEs;Conquering Presence;Presencia conquistadora
+ce7c0a4ca80d7934ebe7497cb444c084;GA_InvencibleConqueror;AbilityNameEs;Invencible Conqueror;Conquistador invencible
+d4cadf7ad8a0b2e4ba47dd0b7e7e1455;GA_PaladinPrimaryAttackConquest;AbilityNameEs;Primary Attack Conquest;Ataque del Paladín
+a06c3b35c630a6a43ad8f062c2c5f234;GA_PaladinPrimaryAttackConquestUltimate;AbilityNameEs;Primary Attack Conquest Ultimate;Ataque del Conquistador invencible
+c385f78b7264e2647ad02c0147a3747e;GA_PaladinSwitchConquest;AbilityNameEs;Paladin Switch conquest;Ataque del Paladín
+e0d3c5273aa307d49b68c8a3c7a2d8c1;GA_ShieldOfFaith;AbilityNameEs;ShieldOfFaith;Cubrir con escudo
+c3d72f6107747be4ab2e54affd864ff0;GA_SmiteBeamConquest;AbilityNameEs;Smite Conqueror;Castigo
+61c6d1212f012104a9d77d4744c35a53;GA_DivineProtection;AbilityNameEs;Divine Protection;Protección divina
+2a249ba8a84f6bf44841c936e2f501cd;GA_LayOnHands;AbilityNameEs;LayOnHands;Imposición de manos
+77096c185a34af44bbe6022c84d7fba4;GA_AttackWithSmiteVengeance;AbilityNameEs;Attack With Smite;Ataque con castigo
+0c07287c8aaec654db9f2cf213738a91;GA_AvengingAngel;AbilityNameEs;Avenging Angel;Ángel vengador
+8608f6dfe7eac0c4391a6852f85b7b75;GA_AvengingAngelAttack;AbilityNameEs;Avenging Angel Attackl;Ataque del Ángel vengador
+37a905182ea05554d96670b11a93e01b;GA_DivineSmiteVengeane;AbilityNameEs;Divine Smite;Castigo divino
+d2acbfbe298bdeb44acd480de5aa42e9;GA_PaladinPrimaryAttackVengeance;AbilityNameEs;Paladin Primary Attack Vengeance;Ataque del Paladín
+712371cc965ebf348a2c095b0041fe59;GA_PaladinSwitchVengeance;AbilityNameEs;Paladin Switch Vengeance;Ataque del Paladín
+951d6b62a16c17940885660820aea7f0;GA_SwornEnemy;AbilityNameEs;Sworn Enemy;Enemigo jurado
+2c40eaebc42e5cd48b76a0b3dd759af6;GA_Assassin_DaggerShoot;AbilityNameEs;Assassin Dagger Shoot;Lanzamiento de daga
+8b4c8a4d4b8922a49943317306b6ba16;GA_Assassin_Dash;AbilityNameEs;Assassin Dash;Dash siniestro
+bc7c0e912e9f29d43b4d2cab4506a378;GA_Assassin_Line_Attack;AbilityNameEs;Assassin Line Attack;Estocada
+ee5a2504c9cdd17489cf62874d7be7aa;GA_Assassin_Primary_Attack;AbilityNameEs;Assasin Primary Attack;Ataque del Asesino
+66be1fd7369d74e40834def8e6f6ad57;GA_MarkedForDeath;AbilityNameEs;Marked For Death;Marcado para morir
+7fb7d8935fcfbb946921778d62635f8b;GA_ShadowAmbush;AbilityNameEs;Shadow Ambush;Emboscada sombría
+5b2baabbde4a86e48bed0823da7a55b6;GA_Blink;AbilityNameEs;Blink;Golpe mortal
+2258c23867170244e937630928348433;GA_DaggerCone;AbilityNameEs;RoguePrimaryAttack1;Barrido
+17fd5d900f9eb5140bfbd70dd7e6e170;GA_DaggerLine;AbilityNameEs;RoguePrimaryAttack2;Puñalada
+dd44f73b3d9170446913f3c4a1fcc47c;GA_DaggerShoot;AbilityNameEs;Dagger Shoot;Lanzamiento de daga
+9db99063e5c4e01409e0c85f976aff92;GA_Dash;AbilityNameEs;Dash;Dash siniestro
+99fd8d5071408fa46a61f0fb309a57fe;GA_RoguePrimaryAttack;AbilityNameEs;Rogue Primary Attack;Ataque del Pícaro
+7cf327837f69f074fa2979acda0e5477;GA_CopyParty;AbilityNameEs;Copy Party;Fiesta de copias
+2729cca432fceb7438489a0fb81987dd;GA_ExactCopy;AbilityNameEs;Exact Copy;Copia exacta
+b018c3af0c78c7146b98fb93e7186332;GA_Illusionist_Dash;AbilityNameEs;Assassin Dash;Dash siniestro
+71345ef822f086d438ac931efffd0afe;GA_IllusionistDaggerShoot;AbilityNameEs;Illusionist Dagger Shoot;Lanzamiento de daga
+74b2d1eee6bbe944aa11845e9c41b4df;GA_IllusionistPrimaryAttack;AbilityNameEs;Illusionist Primary Attack;Ataque del Ilusionista
+2e01f13b2794f9749bc8a2bec872d819;GA_IllusionitDaggerCone;AbilityNameEs;IllusionistPrimaryAttack1;Barrido
+7ee9af6fe95ba4e4ca642ac2920d3c17;GA_AlternatingComboPirate;AbilityNameEs;Primary attack Pirate;Ataque del Pirata
+2bfe0b6ac89ecfe4286e8ee01d24a4dd;GA_CannonBarrage;AbilityNameEs;Cannon Barrage;Cañones
+5440252ddba79b64391ca1bdd6f64234;GA_EmergencyFood;AbilityNameEs;Emergency Food;Comida de emergencia
+064fc6de9e5490044b6666cf88bb646c;GA_Pirate_Dash;AbilityNameEs;Pirate Dash;Dash siniestro
+2a19f99ef64ae634b8735680952d87d0;GA_PirateGun;AbilityNameEs;Pirate Gun;Pistola
+cbf0da3a5f0d30245bd6dddc9df00aa2;GA_RapierCone;AbilityNameEs;RoguePrimaryAttack1;Barrido de estoque
+db75fe2261851a543a93a553d25a5233;GA_RapierLine;AbilityNameEs;RoguePrimaryAttack2;Estocada de estoque

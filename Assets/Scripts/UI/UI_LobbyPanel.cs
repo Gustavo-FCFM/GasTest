@@ -1031,7 +1031,7 @@ public class UI_LobbyPanel : MonoBehaviour
     private void ShowClassName(int index)
     {
         CharacterClassDefinition cls = ClassAt(index);
-        if (_classNameLabel != null) _classNameLabel.text = cls != null ? cls.ClassName : "";
+        if (_classNameLabel != null) _classNameLabel.text = cls != null ? cls.DisplayName : "";
     }
 
     // Selecciona sin aplicar: resalta el ícono y muestra su descripción.
@@ -1041,7 +1041,7 @@ public class UI_LobbyPanel : MonoBehaviour
         ShowClassName(index);
 
         CharacterClassDefinition cls = ClassAt(index);
-        if (_classDescLabel != null) _classDescLabel.text = cls != null ? cls.Description : "";
+        if (_classDescLabel != null) _classDescLabel.text = cls != null ? cls.DisplayDescription : "";
 
         // El resaltado es el propio ícono, más brillante. Los demás quedan apagados, así
         // se ve de un vistazo cuál está elegida.

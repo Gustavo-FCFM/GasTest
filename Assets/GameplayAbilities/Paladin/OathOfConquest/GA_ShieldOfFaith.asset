@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GA_ShieldOfFaith
   m_EditorClassIdentifier: 
   AbilityName: ShieldOfFaith
+  AbilityNameEs: Cubrir con escudo
   AbilityIcon: {fileID: 21300000, guid: cf20f2008440dec4bae7f5473afd3184, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: ecfe07a06c63704479a331a9bae55086, type: 2}
@@ -36,11 +37,15 @@ MonoBehaviour:
     Volume: 1
     PitchVariance: 0.08
     MaxDistance: 35
+  StacksTag: 0
+  ConsumeStacks: 0
   Effects:
   - When: 0
     ApplyTo: 1
     Effect: {fileID: 11400000, guid: 97a675e6082b3c64aa1b911c1458eebb, type: 2}
     OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
   Visuals: []
   IsInterruptible: 0
   TargetLayer:

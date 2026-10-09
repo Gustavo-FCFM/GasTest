@@ -13,11 +13,16 @@ MonoBehaviour:
   m_Name: Class_BattleMasterFighter
   m_EditorClassIdentifier: 
   ClassName: Battle Master
+  ClassNameEs: Maestro de batalla
   ClassIcon: {fileID: 21300000, guid: 02bfef8aee3adcb4fab6ad83480d001d, type: 3}
   Description: The fighter who lives for the duel. In offensive stance he grips his
     greatsword with both hands and charges devastating strikes; his blows expose
     weak points, and he can strip an enemy of their weapon.
+  DescriptionEs: "El guerrero que vive para el duelo. En postura ofensiva toma el
+    mandoble a dos manos y carga golpes devastadores; sus golpes exponen puntos d\xE9biles,
+    y puede desarmar a un enemigo."
   Role: 1
+  MenuRole: 0
   BaseAttributes: {fileID: 11400000, guid: 676c79869bb26d54baf2279001bfa954, type: 2}
   Abilities:
   - InputSlot: 1
@@ -36,6 +41,7 @@ MonoBehaviour:
   PassiveEffects:
   - {fileID: 11400000, guid: 5425dc3edd0320d4a8b0ad013919b6cc, type: 2}
   - {fileID: 11400000, guid: 71af769e08a6061438522b63f129b721, type: 2}
+  WallMovement: {fileID: 0}
   StatGrowthPerLevel: []
   AvailableSubclasses: []
   ClassAnimatorOverride: {fileID: 22100000, guid: 75ec53281b263d24dbe5fee5e2ab9c9e, type: 2}

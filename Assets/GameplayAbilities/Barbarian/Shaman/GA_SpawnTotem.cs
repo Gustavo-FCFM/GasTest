@@ -23,11 +23,17 @@ public class GA_SpawnTotem : GameplayAbility, IRadialMenuAbility
     [System.Serializable]
     public struct TotemOption
     {
-        [Tooltip("Nombre en la rueda (lo ve el jugador: en inglés).")]
+        [Tooltip("Nombre en la rueda, en inglés.")]
         public string Name;
 
-        [Tooltip("Qué da, debajo del nombre en la rueda (en inglés).")]
+        [Tooltip("Nombre en la rueda, en español. Vacío = sale el inglés.")]
+        public string NameEs;
+
+        [Tooltip("Qué da, debajo del nombre en la rueda, en inglés.")]
         public string Description;
+
+        [Tooltip("Qué da, en español. Vacío = sale el inglés.")]
+        public string DescriptionEs;
 
         public Sprite Icon;
 
@@ -50,8 +56,8 @@ public class GA_SpawnTotem : GameplayAbility, IRadialMenuAbility
     // Implementación de IRadialMenuAbility (la rueda lee arrays: se arman de la lista).
     public float    MaxRadialRange     => MaxSpawnRange;
     public Sprite[] RadialIcons        => Collect(t => t.Icon);
-    public string[] RadialLabels       => Collect(t => t.Name);
-    public string[] RadialDescriptions => Collect(t => t.Description);
+    public string[] RadialLabels       => Collect(t => Loc.Pick(t.Name, t.NameEs));
+    public string[] RadialDescriptions => Collect(t => Loc.Pick(t.Description, t.DescriptionEs));
 
     private T[] Collect<T>(System.Func<TotemOption, T> pick)
     {

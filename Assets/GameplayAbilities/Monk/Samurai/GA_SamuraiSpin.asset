@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GA_SamuraiSpin
   m_EditorClassIdentifier: 
   AbilityName: Spinning Slash
+  AbilityNameEs: Corte giratorio
   AbilityIcon: {fileID: 21300000, guid: efea2816bc86a2349ae86cc0bad072f5, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: bd07a782525833e47889b22896900f13, type: 2}
@@ -53,3 +54,4 @@ MonoBehaviour:
     Ability: {fileID: 11400000, guid: 00949211d028af24d9e060fea9e9af07, type: 2}
     ConsumeTag: 1
     Icon: {fileID: 21300000, guid: c4969617742db394784a6be8cb6e0901, type: 3}
+    AlsoActiveWithTag: 0

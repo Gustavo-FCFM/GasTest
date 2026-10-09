@@ -13,11 +13,16 @@ MonoBehaviour:
   m_Name: Class_Samurai
   m_EditorClassIdentifier: 
   ClassName: Samurai
+  ClassNameEs: "Samur\xE1i"
   ClassIcon: {fileID: 21300000, guid: 18cfa7668e0b1cd49b01cb5817a062a9, type: 3}
   Description: 'A monk with a katana: wide, long cuts that leave bleeding wounds,
     and Martial Arts stacks that also sharpen his blade. Whoever strikes his guard
     bleeds for it. Ultimate: Final Cut, a dash through a line of enemies that finishes
     anyone left below 5% health.'
+  DescriptionEs: "Un monje con katana: cortes amplios y largos que abren heridas,
+    y acumulaciones de Artes marciales que tambi\xE9n afilan su hoja. Quien golpea
+    su guardia sangra por ello. Definitiva: Corte final, un tajo a trav\xE9s de una
+    fila de enemigos que remata a quien quede por debajo del 5 % de vida."
   Role: 2
   MenuRole: 0
   BaseAttributes: {fileID: 11400000, guid: dc8c735f89e9c8c4f9831e920b5fa498, type: 2}

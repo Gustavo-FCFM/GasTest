@@ -20,8 +20,17 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // =========================================================
 
     [Section(AbilitySection.General)]
+    [Tooltip("El nombre en inglés (lo ve el jugador con el juego en inglés: la barra de casteo y la de carga).")]
     public string AbilityName = "New Ability";
+
+    [Tooltip("El nombre en español. Vacío = sale el inglés. Se cargan todos de una con " +
+             "Mercenarios ▸ Idiomas ▸ Importar nombres traducidos.")]
+    public string AbilityNameEs;
+
     public Sprite AbilityIcon;
+
+    // El nombre que ve el jugador, en su idioma.
+    public string DisplayName => Loc.Pick(AbilityName, AbilityNameEs);
 
     [Section(AbilitySection.CostCooldown)]
     [Tooltip("Efecto instantáneo que se descuenta al activar (ej: -20 de maná).")]
@@ -443,7 +452,7 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     protected void ShowCastBar(float duration, bool channel)
     {
         NetworkAbilitySystemComponent netAsc = OwnerASC != null ? OwnerASC.GetComponent<NetworkAbilitySystemComponent>() : null;
-        if (netAsc != null && netAsc.IsServerInitialized) netAsc.ServerShowCastBar(AbilityName, duration, channel);
+        if (netAsc != null && netAsc.IsServerInitialized) netAsc.ServerShowCastBar(this, duration, channel);
     }
 
     protected void HideCastBar(bool interrupted)

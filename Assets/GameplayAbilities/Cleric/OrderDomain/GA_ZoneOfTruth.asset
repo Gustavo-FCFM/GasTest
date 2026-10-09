@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GA_ZoneOfTruth
   m_EditorClassIdentifier: 
   AbilityName: Zone of Truth
+  AbilityNameEs: Zona de verdad
   AbilityIcon: {fileID: 21300000, guid: 466752f5275f99e47971d046d71176bf, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 4165da9d9de274a4aa511261df047340, type: 2}
@@ -36,15 +37,21 @@ MonoBehaviour:
     Volume: 1
     PitchVariance: 0.08
     MaxDistance: 35
+  StacksTag: 0
+  ConsumeStacks: 0
   Effects:
   - When: 0
     ApplyTo: 3
     Effect: {fileID: 11400000, guid: a0c41f3e4e7b1c54ba6beba7f55d009b, type: 2}
     OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
   - When: 0
     ApplyTo: 1
     Effect: {fileID: 11400000, guid: 367479c5276f6f3489dc15e58d722f43, type: 2}
     OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
   Visuals:
   - When: 2
     VFXPrefab: {fileID: 1151652431613522, guid: 45130264cfc2aff4f8ca3b20703f20f9, type: 3}

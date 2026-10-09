@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GA_HolyFireZone
   m_EditorClassIdentifier: 
   AbilityName: Holy Fire Zone
+  AbilityNameEs: Fuego sagrado
   AbilityIcon: {fileID: 21300000, guid: 7201ce93f2ad9bb499f5ac43bf49bf1c, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 0}

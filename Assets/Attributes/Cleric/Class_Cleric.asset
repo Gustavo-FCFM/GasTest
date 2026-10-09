@@ -13,10 +13,15 @@ MonoBehaviour:
   m_Name: Class_Cleric
   m_EditorClassIdentifier: 
   ClassName: Cleric
+  ClassNameEs: "Cl\xE9rigo"
   ClassIcon: {fileID: 21300000, guid: a68a2430c566aff44a4951c15bd99730, type: 3}
   Description: The healer who fights from range. His light burns enemies and mends
     allies in its path, and everyone he heals takes less damage for a while.
+  DescriptionEs: "El sanador que pelea a distancia. Su luz quema a los enemigos y
+    cura a los aliados en su camino, y cada uno al que cura recibe menos da\xF1o
+    por un rato."
   Role: 0
+  MenuRole: 0
   BaseAttributes: {fileID: 11400000, guid: 1e1aedd4892e5f04fb91643e280fd884, type: 2}
   Abilities:
   - InputSlot: 1
@@ -29,6 +34,7 @@ MonoBehaviour:
     Ability: {fileID: 11400000, guid: 6f7b2fa117308d647a0c7472e470bf7f, type: 2}
   PassiveBehaviorsPrefab: {fileID: 481456162507743029, guid: 8e1122b8b95a4504992667c3b2cc3251, type: 3}
   PassiveEffects: []
+  WallMovement: {fileID: 0}
   StatGrowthPerLevel:
   - Attribute: 2
     AmountPerLevel: 50

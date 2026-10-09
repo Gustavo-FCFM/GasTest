@@ -13,11 +13,16 @@ MonoBehaviour:
   m_Name: Class_LifeDomainCleric
   m_EditorClassIdentifier: 
   ClassName: Life Domain
+  ClassNameEs: Dominio de la vida
   ClassIcon: {fileID: 21300000, guid: 4c5e81a67f8ce824d8ff733a302f9ea8, type: 3}
   Description: The cleric who refuses to let anyone fall. Keeps a dying ally standing
     for a moment, heals harder the more hurt they are, and brings the fallen back
     to the fight.
+  DescriptionEs: "El cl\xE9rigo que no deja caer a nadie. Mantiene en pie un momento
+    a un aliado moribundo, cura m\xE1s cuanto m\xE1s herido est\xE1 y devuelve a
+    los ca\xEDdos a la pelea."
   Role: 3
+  MenuRole: 0
   BaseAttributes: {fileID: 11400000, guid: 9352511327bf038449f384002c14a661, type: 2}
   Abilities:
   - InputSlot: 1
@@ -34,9 +39,12 @@ MonoBehaviour:
     Ability: {fileID: 11400000, guid: 7744dec84ff9fbd4295013479b74505a, type: 2}
   PassiveBehaviorsPrefab: {fileID: 481456162507743029, guid: d4a57e2f784080d4db1f1d5d0069a67c, type: 3}
   PassiveEffects: []
+  WallMovement: {fileID: 0}
   StatGrowthPerLevel: []
   AvailableSubclasses: []
   ClassAnimatorOverride: {fileID: 22100000, guid: 64da5fe3f7cb7ea48baff673a078d7f5, type: 2}
+  StanceAnimatorOverride: {fileID: 0}
+  StanceAnimatorTag: 0
   MainHandWeaponPrefab: {fileID: 6409903527971818013, guid: 7bea6d1a74f72294d8df22a0cdea31aa, type: 3}
   OffHandWeaponPrefab: {fileID: 0}
   MainHandRotationOffset: {x: 0, y: 0, z: 0}
@@ -44,3 +52,10 @@ MonoBehaviour:
   OffHandRotationOffset: {x: 0, y: 0, z: 0}
   OffHandPositionOffset: {x: 0, y: 0, z: 0}
   OffHandPose: {fileID: 0}
+  OffHandPoseRequiredTag: 0
+  StowOffHandTag: 0
+  StowedOffHandPositionOffset: {x: 0, y: 0, z: 0}
+  StowedOffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandScale: 1
+  GrowTag: 0
+  GrowScale: 1.5

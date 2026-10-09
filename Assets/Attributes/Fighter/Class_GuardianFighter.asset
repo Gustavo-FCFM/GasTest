@@ -13,11 +13,16 @@ MonoBehaviour:
   m_Name: Class_GuardianFighter
   m_EditorClassIdentifier: 
   ClassName: Guardian
+  ClassNameEs: "Guardi\xE1n"
   ClassIcon: {fileID: 21300000, guid: 96db33fe1dd9542408d6020fd58dd73e, type: 3}
   Description: The wall of the team. His great shield covers him and every ally behind
     it, returns every blow it blocks, and a well-timed parry sends projectiles back.
     The more he bleeds, the harder he is to bring down.
+  DescriptionEs: "El muro del equipo. Su gran escudo lo cubre a \xE9l y a cada aliado
+    detr\xE1s, devuelve cada golpe que bloquea, y un parry a tiempo regresa los proyectiles.
+    Cuanto m\xE1s sangra, m\xE1s cuesta derribarlo."
   Role: 1
+  MenuRole: 0
   BaseAttributes: {fileID: 11400000, guid: 237055d6fde6e4e48b37ee4c8ba93058, type: 2}
   Abilities:
   - InputSlot: 1
@@ -36,6 +41,7 @@ MonoBehaviour:
   PassiveEffects:
   - {fileID: 11400000, guid: 5425dc3edd0320d4a8b0ad013919b6cc, type: 2}
   - {fileID: 11400000, guid: 65f322306fcd59541854e82423283c22, type: 2}
+  WallMovement: {fileID: 0}
   StatGrowthPerLevel:
   - Attribute: 2
     AmountPerLevel: 60

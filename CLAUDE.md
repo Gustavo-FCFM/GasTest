@@ -24,12 +24,14 @@ solo al cambiar de idioma); lo que se recalcula llama a `Loc.T` cada vez y escuc
 (`GameSettings.Language`). "Mercenaries" no se traduce. Lo que el SERVIDOR le manda a los
 clientes no puede ir como texto ya escrito (cada uno lo ve en su idioma): se manda qué es
 (un enum, un índice) y cada pantalla lo escribe: el registro de bajas manda el índice de
-la clase y qué NPC es (`ENpcLabel`), el desatascarse manda la CLAVE del motivo. Va por
-etapas: 1) menús (inicio, ajustes, recuadro de red, sala) — hecha; 2) la partida (marcador,
-anunciador, Objetivo, bajas, muerte, menú de clases, rueda, barras, botones dibujados,
-espectador) — hecha; 3) nombres y descripciones de clases y habilidades (en el propio
-asset), incluida la barra de casteo, que hoy recibe el AbilityName escrito. Hasta que una
-etapa esté hecha, lo suyo sigue en inglés.
+la clase y qué NPC es (`ENpcLabel`), el desatascarse manda la CLAVE del motivo. **El CONTENIDO no va en la
+tabla, va en el propio asset** (desde el 9 de octubre de 2026): el inglés y, al lado, el
+español — `ClassName`/`ClassNameEs`, `Description`/`DescriptionEs`, `AbilityName`/
+`AbilityNameEs`, el `Name`/`NameEs` de cada opción de rueda. La UI lee `DisplayName` /
+`DisplayDescription` (`Loc.Pick`), nunca el campo en inglés directo. Así renombrar un asset no
+rompe nada. Se cargan todos de una por `DesignDocuments/Traduccion_Contenido.csv` (por GUID) con
+`Mercenarios ▸ Idiomas ▸ Importar nombres traducidos` / `Exportar`. Una habilidad o clase
+nueva lleva su texto en español.
 
 **El trabajo dentro del editor de Unity lo hace Gustavo.** Armar escenas, crear y
 configurar prefabs, cablear referencias en el Inspector, acomodar geometría: eso es

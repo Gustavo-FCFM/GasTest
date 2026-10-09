@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GA_SpawnTotem
   m_EditorClassIdentifier: 
   AbilityName: Spawn Totem
+  AbilityNameEs: "Invocar t\xF3tem"
   AbilityIcon: {fileID: 21300000, guid: 72087692fc8469047840263552e982ad, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 0}
@@ -36,6 +37,8 @@ MonoBehaviour:
     Volume: 1
     PitchVariance: 0.08
     MaxDistance: 35
+  StacksTag: 0
+  ConsumeStacks: 0
   Effects: []
   Visuals:
   - When: 2
@@ -58,22 +61,30 @@ MonoBehaviour:
   MaxCharges: 1
   Totems:
   - Name: Bear Totem
+    NameEs: "T\xF3tem del oso"
     Description: Max health
+    DescriptionEs: "Vida m\xE1xima"
     Icon: {fileID: 21300000, guid: 95e74f627f2452745813d67eb9c0b63d, type: 3}
     Prefab: {fileID: 1564936832730364612, guid: d4cec081c92d2c04fbf4a2eae5e1aec7, type: 3}
     Cooldown: {fileID: 11400000, guid: c352164367780a54e9b2a7a1bd1d7ef8, type: 2}
   - Name: Eagle Totem
+    NameEs: "T\xF3tem del \xE1guila"
     Description: Movement speed
+    DescriptionEs: Velocidad de movimiento
     Icon: {fileID: 21300000, guid: cb6add1f3e6dffb459ffa9215e188359, type: 3}
     Prefab: {fileID: 1564936832730364612, guid: b5fed081739057d40a1f79c0cec54762, type: 3}
     Cooldown: {fileID: 11400000, guid: 167def151585bb34c9cf21cc923b2010, type: 2}
   - Name: Tiger Totem
+    NameEs: "T\xF3tem del tigre"
     Description: Attack speed
+    DescriptionEs: Velocidad de ataque
     Icon: {fileID: 21300000, guid: 5458d2aa114d929418de6c74c9806cf8, type: 3}
     Prefab: {fileID: 1564936832730364612, guid: b63783dd32f378f4d97bd222a4f04f52, type: 3}
     Cooldown: {fileID: 11400000, guid: edf7f61866b81824bb584b3a4002a48f, type: 2}
   - Name: Wolf Totem
+    NameEs: "T\xF3tem del lobo"
     Description: More damage
+    DescriptionEs: "M\xE1s da\xF1o"
     Icon: {fileID: 21300000, guid: 11b1ee7ff303aa04382ca53cd7824af7, type: 3}
     Prefab: {fileID: 1564936832730364612, guid: 38112faa447d74946bf350636678be65, type: 3}
     Cooldown: {fileID: 11400000, guid: 4f826c6e2a70e3c4ebd81be8b061245a, type: 2}

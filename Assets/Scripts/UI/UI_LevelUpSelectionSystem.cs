@@ -115,8 +115,8 @@ public class LevelUpSelectionSystem : MonoBehaviour
         for (int i = 0; i < _subs.Count; i++)
         {
             string marker = (i == _selectedIndex) ? "> " : "   ";
-            text += showNumbers ? $"{marker}[{i + 1}] {_subs[i].ClassName}\n"
-                                : $"{marker}{_subs[i].ClassName}\n";
+            text += showNumbers ? $"{marker}[{i + 1}] {_subs[i].DisplayName}\n"
+                                : $"{marker}{_subs[i].DisplayName}\n";
         }
         optionsText.text = text;
     }

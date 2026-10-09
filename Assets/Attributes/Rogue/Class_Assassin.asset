@@ -13,10 +13,14 @@ MonoBehaviour:
   m_Name: Class_Assassin
   m_EditorClassIdentifier: 
   ClassName: Assassin
+  ClassNameEs: Asesino
   ClassIcon: {fileID: 21300000, guid: 445b3487b3a229844be688e53b283941, type: 3}
   Description: The pure rogue. Hides to ambush and marks a target to finish it. Hunts
     whoever got separated; head on and in plain sight, he loses.
+  DescriptionEs: "El p\xEDcaro puro. Se oculta para emboscar y marca a un objetivo
+    para rematarlo. Caza al que se separ\xF3; de frente y a la vista, pierde."
   Role: 2
+  MenuRole: 0
   BaseAttributes: {fileID: 11400000, guid: d4bdb499162328d498ae70ec392a2dc7, type: 2}
   Abilities:
   - InputSlot: 1

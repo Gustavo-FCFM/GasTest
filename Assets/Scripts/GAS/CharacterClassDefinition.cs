@@ -22,9 +22,24 @@ public class CharacterClassDefinition : ScriptableObject
     }
 
     [Section(ClassSection.Identity)]
+    [Tooltip("El nombre en inglés (lo que ve el jugador con el juego en inglés).")]
     public string ClassName = "Aldeano";
+
+    [Tooltip("El nombre en español. Vacío = sale el inglés.")]
+    public string ClassNameEs;
+
     public Sprite ClassIcon;
+
+    [Tooltip("La descripción en inglés (sala, menú de clases).")]
     [TextArea] public string Description;
+
+    [Tooltip("La descripción en español. Vacío = sale la inglesa. Nombres y descripciones se " +
+             "cargan todos de una con Mercenarios ▸ Idiomas ▸ Importar nombres traducidos.")]
+    [TextArea] public string DescriptionEs;
+
+    // Lo que ve el jugador, en su idioma.
+    public string DisplayName        => Loc.Pick(ClassName, ClassNameEs);
+    public string DisplayDescription => Loc.Pick(Description, DescriptionEs);
 
     [Tooltip("El rol en el equipo. Decide qué le carga la definitiva además de sus golpes: " +
              "Tank al aguantar daño, Damage al matar a un personaje enemigo, Support al " +

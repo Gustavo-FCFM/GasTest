@@ -13,11 +13,16 @@ MonoBehaviour:
   m_Name: Class_OrderDomainCleric
   m_EditorClassIdentifier: 
   ClassName: Order Domain
+  ClassNameEs: Dominio del orden
   ClassIcon: {fileID: 21300000, guid: 7ebb75875bec77c45b0f0797b61b1af9, type: 3}
   Description: The cleric who lays down the law. Every strike stuns the first enemy
     it touches, whoever hits an ally under his command is halted, and his truth silences
     everyone who stands in it.
+  DescriptionEs: "El cl\xE9rigo que impone la ley. Cada golpe aturde al primer enemigo
+    que toca, quien golpea a un aliado bajo su mando queda detenido, y su verdad
+    silencia a todos los que la pisan."
   Role: 3
+  MenuRole: 0
   BaseAttributes: {fileID: 11400000, guid: bc09ef1aad27c1a49be1873d9cc7da25, type: 2}
   Abilities:
   - InputSlot: 1
@@ -34,9 +39,12 @@ MonoBehaviour:
     Ability: {fileID: 11400000, guid: dbfca759814ebb442b073e7a17deff8c, type: 2}
   PassiveBehaviorsPrefab: {fileID: 481456162507743029, guid: dd220ad530d79ec4e9d72f8c4b916564, type: 3}
   PassiveEffects: []
+  WallMovement: {fileID: 0}
   StatGrowthPerLevel: []
   AvailableSubclasses: []
   ClassAnimatorOverride: {fileID: 22100000, guid: 64da5fe3f7cb7ea48baff673a078d7f5, type: 2}
+  StanceAnimatorOverride: {fileID: 0}
+  StanceAnimatorTag: 0
   MainHandWeaponPrefab: {fileID: 5073896408682217672, guid: 1dd30a155c67b2b499185ae1abb43b21, type: 3}
   OffHandWeaponPrefab: {fileID: 0}
   MainHandRotationOffset: {x: 0, y: 0, z: 0}
@@ -44,3 +52,10 @@ MonoBehaviour:
   OffHandRotationOffset: {x: 0, y: 0, z: 0}
   OffHandPositionOffset: {x: 0, y: 0, z: 0}
   OffHandPose: {fileID: 0}
+  OffHandPoseRequiredTag: 0
+  StowOffHandTag: 0
+  StowedOffHandPositionOffset: {x: 0, y: 0, z: 0}
+  StowedOffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandScale: 1
+  GrowTag: 0
+  GrowScale: 1.5

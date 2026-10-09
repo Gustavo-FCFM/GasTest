@@ -13,11 +13,16 @@ MonoBehaviour:
   m_Name: Class_LightDomainCleric
   m_EditorClassIdentifier: 
   ClassName: Light Domain
+  ClassNameEs: Dominio de la luz
   ClassIcon: {fileID: 21300000, guid: f40e018b78dc3b542a914498a366dca4, type: 3}
   Description: 'The cleric of the burning dawn. His spells hit harder and heal more,
     but over time: enemies keep burning, allies keep mending, and nothing stays hidden
     near him.'
+  DescriptionEs: "El cl\xE9rigo del amanecer ardiente. Sus hechizos pegan m\xE1s
+    y curan m\xE1s, pero con el tiempo: los enemigos siguen ardiendo, los aliados
+    se siguen curando y nada queda oculto cerca de \xE9l."
   Role: 3
+  MenuRole: 0
   BaseAttributes: {fileID: 11400000, guid: 7b298bccd92168e4192fcc934d546b93, type: 2}
   Abilities:
   - InputSlot: 1
@@ -34,9 +39,12 @@ MonoBehaviour:
     Ability: {fileID: 11400000, guid: 965bb25821939294b824a380abad6205, type: 2}
   PassiveBehaviorsPrefab: {fileID: 481456162507743029, guid: 2ba120d51ea3e3c448cbb54fa670f187, type: 3}
   PassiveEffects: []
+  WallMovement: {fileID: 0}
   StatGrowthPerLevel: []
   AvailableSubclasses: []
   ClassAnimatorOverride: {fileID: 22100000, guid: 64da5fe3f7cb7ea48baff673a078d7f5, type: 2}
+  StanceAnimatorOverride: {fileID: 0}
+  StanceAnimatorTag: 0
   MainHandWeaponPrefab: {fileID: 6409903527971818013, guid: 7bea6d1a74f72294d8df22a0cdea31aa, type: 3}
   OffHandWeaponPrefab: {fileID: 0}
   MainHandRotationOffset: {x: 0, y: 0, z: 0}
@@ -44,3 +52,10 @@ MonoBehaviour:
   OffHandRotationOffset: {x: 0, y: 0, z: 0}
   OffHandPositionOffset: {x: 0, y: 0, z: 0}
   OffHandPose: {fileID: 0}
+  OffHandPoseRequiredTag: 0
+  StowOffHandTag: 0
+  StowedOffHandPositionOffset: {x: 0, y: 0, z: 0}
+  StowedOffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandScale: 1
+  GrowTag: 0
+  GrowScale: 1.5

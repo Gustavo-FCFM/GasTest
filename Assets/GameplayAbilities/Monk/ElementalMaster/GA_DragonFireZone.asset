@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GA_DragonFireZone
   m_EditorClassIdentifier: 
   AbilityName: Dragon Fire
+  AbilityNameEs: "Fuego de drag\xF3n"
   AbilityIcon: {fileID: 21300000, guid: 2b83dd799a9f88849b8c5ad76ad983e6, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 0}

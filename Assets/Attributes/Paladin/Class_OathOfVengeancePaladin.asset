@@ -13,9 +13,14 @@ MonoBehaviour:
   m_Name: Class_OathOfVengeancePaladin
   m_EditorClassIdentifier: 
   ClassName: Oath Of Vengeance
+  ClassNameEs: Juramento de la venganza
   ClassIcon: {fileID: 21300000, guid: d412d87adf9614e44bc1af5f14b8341b, type: 3}
-  Description: The hunting paladin. Marks one enemy and goes after them. Swings faster than his brothers of the order and does not let go until it is over.
+  Description: The hunting paladin. Marks one enemy and goes after them. Swings faster
+    than his brothers of the order and does not let go until it is over.
+  DescriptionEs: "El palad\xEDn cazador. Marca a un enemigo y va tras \xE9l. Ataca
+    m\xE1s r\xE1pido que sus hermanos de la orden y no lo suelta hasta que termina."
   Role: 3
+  MenuRole: 0
   BaseAttributes: {fileID: 11400000, guid: a72a788970521214fa2df6a045aaaf2a, type: 2}
   Abilities:
   - InputSlot: 1
@@ -33,12 +38,23 @@ MonoBehaviour:
   PassiveBehaviorsPrefab: {fileID: 9026357972262154142, guid: 9403e0bad0214464c850f0784abd7f95, type: 3}
   PassiveEffects:
   - {fileID: 11400000, guid: 5425dc3edd0320d4a8b0ad013919b6cc, type: 2}
+  WallMovement: {fileID: 0}
   StatGrowthPerLevel: []
   AvailableSubclasses: []
   ClassAnimatorOverride: {fileID: 22100000, guid: 75ec53281b263d24dbe5fee5e2ab9c9e, type: 2}
+  StanceAnimatorOverride: {fileID: 0}
+  StanceAnimatorTag: 0
   MainHandWeaponPrefab: {fileID: 1309212752354464438, guid: 7fa95640d05aad6418ff83caf186c2ea, type: 3}
   OffHandWeaponPrefab: {fileID: 3844116661835162637, guid: 355227fa58c247448aac64714c11cb4a, type: 3}
   MainHandRotationOffset: {x: 0, y: 0, z: 0}
   MainHandPositionOffset: {x: 0, y: 0, z: 0}
   OffHandRotationOffset: {x: 0, y: 180, z: 0}
   OffHandPositionOffset: {x: 0, y: 0, z: -0.1}
+  OffHandPose: {fileID: 0}
+  OffHandPoseRequiredTag: 0
+  StowOffHandTag: 0
+  StowedOffHandPositionOffset: {x: 0, y: 0, z: 0}
+  StowedOffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandScale: 1
+  GrowTag: 0
+  GrowScale: 1.5

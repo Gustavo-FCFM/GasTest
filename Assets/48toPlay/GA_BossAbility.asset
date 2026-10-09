@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GA_BossAbility
   m_EditorClassIdentifier: 
   AbilityName: Boss Ability
+  AbilityNameEs: Habilidad del jefe
   AbilityIcon: {fileID: 21300000, guid: f4e1082d5e4844446b03f3be01feec06, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 0}
@@ -36,6 +37,8 @@ MonoBehaviour:
     Volume: 1
     PitchVariance: 0.08
     MaxDistance: 35
+  StacksTag: 0
+  ConsumeStacks: 0
   Effects: []
   Visuals: []
   IsInterruptible: 0

@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 8 de octubre de 2026
+# Pendientes — actualizado el 9 de octubre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -141,7 +141,7 @@ se pueden borrar los bloques `DATOS VIEJOS` del final de cada GA.
 
 ---
 
-# ★ El juego en español e inglés — ETAPAS 1 Y 2 HECHAS (menús y partida), falta probar (8 de octubre, noche)
+# ★ El juego en español e inglés — LAS 3 ETAPAS HECHAS (menús, partida y contenido), falta probar (9 de octubre)
 
 Pedido en la prueba: poder jugar en español, y que las builds arranquen en español. "Mercenaries"
 (nombre provisional) no se traduce. Cómo funciona: ver CLAUDE.md ("Lo que ve el jugador va en
@@ -191,27 +191,29 @@ con Excel: quien ayude a traducir no necesita Unity. Guardarla como **"CSV UTF-8
 
 **Lo que falta:**
 
-- [ ] **Etapa 3 — el contenido** (lo único que todavía sale en inglés). Qué entra:
-  - **Clases (24):** `ClassName` y `Description` de cada `Class_*`. Se ven en la sala (selector y
-    pestañas), en el menú de clases (C / V), en la elección de subclase, en el registro de bajas
-    y en la pantalla de muerte.
-  - **Habilidades (184):** `AbilityName`. Se ve en la barra de casteo (canalizados y cargas) y en
-    la rueda. **La barra de casteo hoy recibe el nombre ya escrito por red**
-    (`NetworkASC.ServerShowCastBar(AbilityName...)`): hay que mandar el índice de la habilidad en
-    `GameplayAbilityRegistry` y que cada pantalla escriba el nombre en su idioma.
-  - **Opciones de las ruedas:** nombre y descripción de cada opción (tótems del Chamán, la rueda
-    del Mago, las mascotas del Explorador, las trampas del Trampero): viven en la lista de
-    opciones de cada habilidad.
-  - **Cómo (propuesta):** un campo en español al lado del inglés en el propio asset
-    (`ClassNameEs`, `DescriptionEs`, `AbilityNameEs`...) y una propiedad que devuelve el del
-    idioma elegido, cayendo al inglés si está vacío. Es robusto a renombrar assets (Gustavo los
-    renombra), se edita donde se crea la habilidad y no cambia nada guardado. Alternativa: claves
-    en el mismo `Localization.csv` (todo en una tabla para quien traduzca), pero la clave saldría
-    del nombre del asset y se rompería al renombrarlo. **Decisión de Gustavo.** Con cualquiera de
-    las dos, una herramienta puede exportar e importar todos los nombres a un CSV para traducir
-    en Excel de una sola vez.
-  - **Los nombres en español ya existen casi todos** en el documento de diseño (Golpe mortal,
-    Emboscada sombría, Paz mental…): los carga Claude con la herramienta y Gustavo los revisa.
+- [x] **Etapa 3 — el contenido: CÓDIGO HECHO (9 de octubre), falta importar y probar.**
+  Se eligió la propuesta: **el español va en el propio asset**, al lado del inglés. Así no se
+  rompe al renombrar un asset y se edita donde se crea la habilidad.
+  - **Campos nuevos:** `ClassNameEs` y `DescriptionEs` en cada `Class_*` (sección Identidad),
+    `AbilityNameEs` en cada GA (sección General), `NameEs` y `DescriptionEs` en cada tótem de la
+    rueda del Chamán. Vacío = sale el inglés. Lo que ve el jugador sale de `DisplayName` /
+    `DisplayDescription` (`Loc.Pick`): la sala, el menú de clases, la elección de subclase,
+    el registro de bajas, la pantalla de muerte, la barra de carga y la rueda.
+  - **La barra de casteo ya no recibe el nombre escrito:** viaja el índice de la habilidad en
+    `GameplayAbilityRegistry` y el dueño escribe el nombre en su idioma (cambió la RPC
+    `TargetShowCastBar`: Unity tiene que recompilar).
+  - **Los textos en español ya están escritos** en `DesignDocuments/Traduccion_Contenido.csv`
+    (242: las 25 clases con su descripción, las 184 habilidades y los 4 tótems), con los
+    nombres del documento de diseño. Cada fila va por el GUID del asset, no por su nombre.
+  - **Herramienta nueva:** `Mercenarios ▸ Idiomas ▸ Importar nombres traducidos` escribe la
+    columna `es` en los assets; `Exportar nombres para traducir` regenera el CSV con lo que haya
+    (para ver qué falta o pasárselo a quien traduzca). Una celda `es` vacía no toca el asset.
+  - Las habilidades nuevas: llenarles `Ability Name Es` al crearlas (o exportar, completar e
+    importar).
+- [ ] **Una vez, con Unity abierto (después de que recompile):** `Mercenarios ▸ Idiomas ▸
+      Importar nombres traducidos`. La consola dice cuántos cambió (tienen que ser 242). Revisar
+      los nombres en el CSV o en los assets: los internos (pasos de combo, variantes) no se ven en
+      pantalla, pero también quedaron traducidos.
   - [ ] Probar: elegir clase y subclase, morir, canalizar y abrir una rueda, en los dos idiomas;
         con dos ventanas en idiomas distintos, la barra de casteo de cada uno en el suyo.
 - [ ] **El Inspector en español** (pedido de Gustavo: GA, ASDef, GE, clases y lo demás nuestro,

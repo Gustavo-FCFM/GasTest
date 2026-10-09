@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GA_ShinobiGuard
   m_EditorClassIdentifier: 
   AbilityName: Block
+  AbilityNameEs: Bloqueo
   AbilityIcon: {fileID: 21300000, guid: 93439de347048124db42b8744001167a, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 0}

@@ -2355,7 +2355,7 @@ public class PlayerController : NetworkBehaviour
     private string ResolveClassName(int classIndex)
     {
         CharacterClassDefinition def = GetClassByIndex(classIndex);
-        return def != null ? def.ClassName : "";
+        return def != null ? def.DisplayName : "";
     }
 
     [ObserversRpc]

@@ -13,11 +13,17 @@ MonoBehaviour:
   m_Name: Class_Shinobi
   m_EditorClassIdentifier: 
   ClassName: Shinobi
+  ClassNameEs: Shinobi
   ClassIcon: {fileID: 21300000, guid: 8ce705290504a354a8c88b5374fa7f58, type: 3}
   Description: 'A monk of the shadows: throws kunai that crit from behind, slips
     through projectiles while guarding and vanishes in a cloak of darkness. Ki-empowered
     moves spend Martial Arts stacks to cut deep into wounded enemies. Ultimate: Silent
     Death, striking from enemy to enemy.'
+  DescriptionEs: "Un monje de las sombras: lanza kunais que hacen cr\xEDtico por
+    la espalda, esquiva los proyectiles mientras se cubre y se desvanece en un manto
+    de oscuridad. Sus movimientos con Ki gastan las acumulaciones de Artes marciales
+    para herir a fondo a los enemigos heridos. Definitiva: Muerte silenciosa, de
+    enemigo en enemigo."
   Role: 2
   MenuRole: 0
   BaseAttributes: {fileID: 11400000, guid: d7076b4927624304aa42404155bf5950, type: 2}
