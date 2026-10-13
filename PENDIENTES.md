@@ -768,7 +768,7 @@ marcados "Pospuesto".
 **Estado al 5 de octubre:** Clérigo completo y probado. Guerrero: kit base, Maestro de
 batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 9).
 **Guardián: hecho y probado ✅** (5 de octubre). **El Guerrero queda completo** (kit base y las 3 subclases).
-**6 de octubre:** barra de carga por etapas del ataque cargado (`UI_ChargeBar`), repeler / atraer y vuelo libre: hechos y probados. **Monje: kit base hecho y probado (8 de octubre). Barra de canalizar (`UI_CastBar`): hecha.** Queda la mascota con IA en red.
+**6 de octubre:** barra de carga por etapas del ataque cargado (`UI_ChargeBar`), repeler / atraer y vuelo libre: hechos y probados. **Monje: kit base hecho y probado (8 de octubre). Barra de canalizar (`UI_CastBar`): hecha.** Queda la mascota con IA en red. **13 de octubre: Explorador (Ranger), kit base hecho; sigue el Maestro de bestias con su Lobo (la mascota con IA en red). Documentos al día (diseño de clases, arquitectura del GAS y de red, guía y glosario).**
 
 1. **Clases nuevas — DECIDIDO (28 de septiembre): Clérigo + Guerrero completos**, en ese
    orden. Detalle y estimación en la sección 6.
