@@ -58,23 +58,28 @@ public class GC_Projectile : NetworkBehaviour
              "Con material puesto, cada malla del ARMA CLONADA recibe SimpleSpinBlur, que " +
              "dibuja copias fantasma entre los frames de rotacion. Por eso el efecto sale solo " +
              "cuando el proyectil gira de verdad (hacha con AddSpin) y no en un tiro recto.")]
+    [Label("Blur: material")]
     public Material SpinBlurMaterial;
 
     [Range(1, 128)]
     [Tooltip("Cuantos frames de retraso cubre el blur. Mas alto = estela de giro mas larga.")]
+    [Label("Blur: frames de estela")]
     public int SpinBlurShutterSpeed = 4;
 
     [Range(1, 50)]
     [Tooltip("Copias fantasma dibujadas entre cada par de rotaciones. Mas alto = mas suave y " +
              "mas caro.")]
+    [Label("Blur: copias")]
     public int SpinBlurSamples = 4;
 
     [Range(-0.1f, 0.1f)]
     [Tooltip("Opacidad de las copias fantasma. El rango es chico a proposito: es el del paquete.")]
+    [Label("Blur: opacidad")]
     public float SpinBlurAlpha = 0f;
 
     [Tooltip("Por debajo de esta velocidad angular no se dibuja nada. Es lo que hace que el " +
              "blur aparezca solo mientras el arma gira y desaparezca sola si se frena.")]
+    [Label("Blur: giro mínimo")]
     public float SpinBlurAngularCutoff = 5f;
 
     [Range(1, 8)]
@@ -84,6 +89,7 @@ public class GC_Projectile : NetworkBehaviour
              "para las hojas, que es lo unico que se nota girando.\n\n" +
              "El criterio es el VOLUMEN de la malla, no el nombre: sigue funcionando aunque " +
              "renombres las piezas.")]
+    [Label("Blur: máximo de mallas")]
     public int SpinBlurMaxMeshes = 2;
 
     // =========================================================

@@ -14,6 +14,7 @@ using TMPro;
 public class UI_PlayerHUD : MonoBehaviour
 {
     [Header("Target")]
+    [Label("Jugador")]
     public PlayerController player;
     private AbilitySystemComponent asc;
 
@@ -24,32 +25,48 @@ public class UI_PlayerHUD : MonoBehaviour
     private NetworkAbilitySystemComponent netAsc;
 
     [Header("Panel Izquierdo (Estado)")]
+    [Label("Ícono de clase")]
     public Image ClassIconImage;
+    [Label("Barra de vida")]
     public Slider HealthSlider;
+    [Label("Barra de escudo")]
     public Slider ShieldSlider;
+    [Label("Texto de vida")]
     public TextMeshProUGUI HealthText;
 
     [Header("Barra de Maná (Opcional)")]
+    [Label("Contenedor de maná")]
     public GameObject ManaBarContainer; // Se oculta entero si la clase no usa maná
+    [Label("Barra de maná")]
     public Slider ManaSlider;
+    [Label("Texto de maná")]
     public TextMeshProUGUI ManaText;
 
     [Header("Barra de Energía (Opcional)")]
     [Tooltip("Recurso de las mecánicas de BLOQUEO (el escudo del Paladín/Guerrero). Igual que la " +
              "de maná, el contenedor entero se oculta en las clases que no la usan — o sea, en las " +
              "que su AttributeSetDefinition no define MaxEnergy.")]
+    [Label("Contenedor de energía")]
     public GameObject EnergyBarContainer;
+    [Label("Barra de energía")]
     public Slider EnergySlider;
+    [Label("Texto de energía")]
     public TextMeshProUGUI EnergyText;
 
     [Header("Panel Derecho (Habilidades)")]
+    [Label("Casillero Shift")]
     public UI_AbilitySlot slotShift;
+    [Label("Casillero Q")]
     public UI_AbilitySlot slotQ;
+    [Label("Casillero E")]
     public UI_AbilitySlot slotE;
+    [Label("Casillero clic izquierdo")]
     public UI_AbilitySlot slotLMB;
+    [Label("Casillero clic derecho")]
     public UI_AbilitySlot slotRMB;
 
     [Header("Panel Central (Ultimate)")]
+    [Label("Casillero de la definitiva")]
     public UI_UltimateSlot UltimateSlot;
 
     [Header("Barra de Efectos (Buffs/Debuffs)")]
@@ -57,13 +74,16 @@ public class UI_PlayerHUD : MonoBehaviour
     // NO se puede setear en el prefab (el jugador se spawnea en runtime), así
     // que lo enganchamos acá en InitializeHUD. Arrastrá acá el UI_EffectContainer
     // del HUD (el que muestra los efectos propios, no el de los enemigos).
+    [Label("Contenedor de efectos")]
     public UI_EffectContainer EffectContainer;
 
     [Header("Notificaciones")]
+    [Label("Aviso de nivel")]
     public GameObject LevelUpNotification;
 
     [Tooltip("Se prende cuando el Crítico mejorado (Asesino) está disponible. Solo aparece si el " +
              "jugador tiene esa pasiva, así que en las demás clases queda siempre oculto. Opcional.")]
+    [Label("Aviso de crítico mejorado")]
     public GameObject FirstStrikeReadyIndicator;
 
     // =========================================================

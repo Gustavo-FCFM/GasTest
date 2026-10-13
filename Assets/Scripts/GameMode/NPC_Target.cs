@@ -16,14 +16,18 @@ public class NPC_Target : MonoBehaviour
     private AbilitySystemComponent ASC;
 
     [Header("Configuración de Respawn")]
+    [Label("Reaparece en (s)")]
     public float RespawnTime = 3f;
     // Modelo/malla visual (hijo) que se apaga mientras está "muerto".
+    [Label("Modelo")]
     public GameObject VisualModel;
     // Collider principal; si no se asigna, se toma el del propio GameObject.
+    [Label("Collider")]
     public Collider MainCollider;
 
     [Header("Recompensa")]
     // Experiencia que le da al jugador al morir este NPC.
+    [Label("Experiencia que da")]
     public float ExperienceReward = 150f;
 
     // Cachea el ASC y el collider principal si no fue asignado a mano.

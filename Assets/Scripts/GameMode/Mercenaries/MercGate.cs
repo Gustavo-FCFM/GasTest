@@ -27,20 +27,25 @@ public class MercGate : MonoBehaviour
 {
     [Header("Qué se mueve")]
     [Tooltip("La parte que sube al abrirse. Si lo dejás vacío se mueve este mismo objeto.")]
+    [Label("Parte que se mueve")]
     public Transform MovingPart;
 
     [Tooltip("Cuánto sube la reja al abrirse. Tiene que ser suficiente para que el hueco " +
              "quede libre de verdad.")]
+    [Label("Altura al abrirse")]
     public float OpenHeight = 5f;
 
     [Tooltip("Cuánto tarda en subir o bajar, en segundos.")]
+    [Label("Tiempo de movimiento (s)")]
     public float MoveSeconds = 1.5f;
 
     [Header("Cuándo se cierra")]
     [Tooltip("Cerrada durante los segundos de preparación (lo normal).")]
+    [Label("Cerrada en la preparación")]
     public bool ClosedDuringWarmup = true;
 
     [Tooltip("Cerrarla de nuevo al terminar la partida, mientras se muestra el resultado.")]
+    [Label("Cerrar al terminar")]
     public bool ClosedWhenMatchEnds = false;
 
     // Posición local con la reja CERRADA. Se toma de cómo la dejaste en el editor: la
@@ -98,9 +103,13 @@ public class MercGate : MonoBehaviour
     // =========================================================
 
     [Header("Barrotes generados (opcional)")]
+    [Label("Ancho de la reja")]
     public float BarsWidth  = 5.5f;
+    [Label("Alto de la reja")]
     public float BarsHeight = 4.5f;
+    [Label("Cantidad de barrotes")]
     [Range(3, 15)] public int BarCount = 7;
+    [Label("Grosor de los barrotes")]
     public float BarThickness = 0.18f;
 
     [ContextMenu("Generar reja de barrotes")]

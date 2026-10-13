@@ -27,32 +27,42 @@ public class HealthPack : NetworkBehaviour
     [Header("Curación")]
     [Tooltip("Vida que devuelve. 75 es un tercio de un tanque y casi toda la de un pícaro: " +
              "suficiente para salvar una pelea, no tanto como para no volver nunca a la base.")]
+    [Label("Curación")]
     public float HealAmount = 75f;
 
     [Tooltip("Segundos hasta que vuelve a aparecer.")]
+    [Label("Reaparece en (s)")]
     public float RespawnSeconds = 20f;
 
     [Tooltip("Radio en el que se recoge. Se aplica al SphereCollider del objeto.")]
+    [Label("Radio de recogida")]
     public float PickupRadius = 1.6f;
 
     [Tooltip("No lo levanta quien está a full: así no se desperdicia al pasar caminando.")]
+    [Label("Solo si está herido")]
     public bool OnlyIfHurt = true;
 
     [Header("Visual")]
     [Tooltip("La cruz que flota. Si se deja vacío se arma una por código (dos barras verdes).")]
+    [Label("Cruz (visual)")]
     public GameObject CrossVisual;
 
     [Tooltip("Altura a la que flota la cruz sobre el piso.")]
+    [Label("Altura de la cruz")]
     public float CrossHeight = 1.1f;
 
     [Tooltip("Color de la cruz y del disco.")]
+    [Label("Color")]
     public Color Tint = new Color(0.25f, 0.95f, 0.45f);
 
     [Tooltip("VFX al recogerlo (opcional). Se instancia en el jugador y se destruye solo.")]
+    [Label("VFX al recoger")]
     public GameObject PickupVFX;
+    [Label("VFX: duración (s)")]
     public float PickupVFXLifetime = 2f;
 
     [Header("Sonido")]
+    [Label("Sonido al recoger")]
     public SfxCue PickupSound;
 
     // Tick del servidor en el que vuelve a estar listo. 0 = listo desde siempre.

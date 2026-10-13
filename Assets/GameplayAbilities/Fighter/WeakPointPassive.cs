@@ -23,12 +23,15 @@ using System.Collections.Generic;
 public class WeakPointPassive : MonoBehaviour
 {
     [Tooltip("La marca normal (GE_WeakPoint): Vulnerability con duración.")]
+    [Label("Efecto de la marca")]
     public GameplayEffect MarkEffect;
 
     [Tooltip("La marca mientras el dueño tiene EmpoweredWhileTag (GE_WeakPointEmpowered).")]
+    [Label("Marca potenciada")]
     public GameplayEffect EmpoweredMark;
 
     [Tooltip("El tag que potencia la marca (Status_BreakLimits, de Romper límites).")]
+    [Label("Potenciada con tag")]
     public EGameplayTag EmpoweredWhileTag = EGameplayTag.Status_BreakLimits;
 
     private AbilitySystemComponent        _asc;

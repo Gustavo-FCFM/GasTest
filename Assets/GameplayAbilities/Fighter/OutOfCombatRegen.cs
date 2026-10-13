@@ -27,18 +27,23 @@ public class OutOfCombatRegen : MonoBehaviour
     public enum ERegenMode { PercentOfMissing, PercentOfMax, Flat }
 
     [Tooltip("Segundos sin que le baje la vida para contar como fuera de combate.")]
+    [Label("Fuera de combate tras (s)")]
     public float OutOfCombatDelay = 3f;
 
     [Tooltip("Cada cuánto cura, ya fuera de combate.")]
+    [Label("Cada cuánto (s)")]
     public float TickInterval = 1f;
 
     [Tooltip("Cómo se calcula cada curación (ver la cabecera del script).")]
+    [Label("Cómo cura")]
     public ERegenMode Mode = ERegenMode.PercentOfMissing;
 
     [Tooltip("PercentOfMissing / PercentOfMax: fracción (0.05 = 5 %). Flat: puntos de vida.")]
+    [Label("Cantidad")]
     public float Amount = 0.05f;
 
     [Tooltip("Curación mínima por tick, para que casi lleno no salgan números de 0.")]
+    [Label("Mínimo por curación")]
     public float MinPerTick = 1f;
 
     private AbilitySystemComponent        _asc;

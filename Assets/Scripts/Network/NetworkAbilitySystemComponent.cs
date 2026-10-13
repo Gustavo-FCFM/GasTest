@@ -30,6 +30,7 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     [Header("Recompensas")]
     [Tooltip("EXP que gana el jugador que consigue una baja. Provisional para pruebas; " +
              "es lo que reemplaza al cheat de subir de nivel a mano una vez que haya varios jugadores.")]
+    [Label("Experiencia por baja")]
     public float ExperiencePerKill = 50f;
 
     // Referencia al ASC local (mismo GameObject).
@@ -1523,6 +1524,7 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // =========================================================
 
     [Tooltip("Cada cuánto se juntan las curaciones de este personaje en un solo número verde.")]
+    [Label("Juntar curaciones cada (s)")]
     public float HealNumberBatchSeconds = 0.35f;
 
     private float _pendingHeal;

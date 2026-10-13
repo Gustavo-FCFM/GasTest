@@ -23,16 +23,20 @@ using UnityEngine;
 public class AmbushKillReset : MonoBehaviour
 {
     [Tooltip("La habilidad cuyo cooldown se reinicia al matar dentro de la ventana (la Emboscada sombría).")]
+    [Label("Habilidad que se reinicia")]
     public GameplayAbility Ability;
 
     [Tooltip("El tag que, al irse, abre la ventana.")]
+    [Label("Tag que abre la ventana")]
     public EGameplayTag WindowTag = EGameplayTag.Status_Invisible;
 
     [Tooltip("Segundos de la ventana, contados desde que sale de la invisibilidad.")]
+    [Label("Ventana (s)")]
     public float KillWindow = 6f;
 
     [Tooltip("OPCIONAL: buff que se le pone mientras dura la ventana, para que la vea en su barra de " +
              "efectos. Su duración la pone KillWindow; se quita solo al reiniciar.")]
+    [Label("Efecto de la ventana")]
     public GameplayEffect WindowEffect;
 
     private AbilitySystemComponent _asc;

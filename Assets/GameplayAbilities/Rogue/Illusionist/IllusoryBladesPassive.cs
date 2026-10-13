@@ -27,13 +27,17 @@ public class IllusoryBladesPassive : MonoBehaviour
 {
     [Header("Cuchilla")]
     [Tooltip("Prefab con Entity_IllusoryBlade + NetworkObject + NetworkTransform.")]
+    [Label("Prefab de la cuchilla")]
     public GameObject BladePrefab;
     [Tooltip("Herida que la cuchilla aplica al impactar (normalmente el mismo GE_Heridas).")]
+    [Label("Efecto de herida")]
     public GameplayEffect WoundEffect;
 
     [Header("Búsqueda de Objetivo")]
     [Tooltip("Alcance para buscar al enemigo más cercano (distinto al golpeado).")]
+    [Label("Radio de búsqueda")]
     public float SearchRadius = 15f;
+    [Label("Capa de personajes")]
     public LayerMask CharacterLayer;
 
     private AbilitySystemComponent _asc;

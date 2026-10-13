@@ -45,37 +45,46 @@ public class PlayerController : NetworkBehaviour
     [Header("Cámara de Red")]
     // Prefab de cámara que se instancia solo para el dueño local (ver
     // OnStartClient).
+    [Label("Prefab de la cámara")]
     public GameObject CameraPrefab;
 
     [Header("Clase")]
+    [Label("Clase actual")]
     public CharacterClassDefinition   CurrentClassDef;
     // Todas las clases jugables posibles, usadas para sincronizar el
     // ÍNDICE de clase por red (ver ServerSetClass) en vez de la
     // referencia al asset.
+    [Label("Clases base")]
     public CharacterClassDefinition[] MainBaseClasses;
 
     [Header("UI")]
+    [Label("Ícono del personaje")]
     public Sprite CharacterIcon;
 
     [Header("Animación")]
+    [Label("Animator")]
     public Animator characterAnimator;
 
     [Tooltip("Nombre del clip PLACEHOLDER que ocupa el estado genérico de acción en el controller " +
              "BASE (AC_Player). Es la 'ranura' donde se mete el clip de cada habilidad que tenga " +
              "AnimationClip asignado, así no hace falta un estado por ataque.")]
+    [Label("Acción: clip placeholder")]
     public string ActionClipSlotName = "PLACEHOLDER_Action";
 
     [Tooltip("Valor de ActionID que lleva al estado genérico de acción (la transición desde AnyState " +
              "de ese estado se filtra por este número).")]
+    [Label("Acción: ActionID")]
     public int ActionClipStateID = 99;
 
     [Tooltip("Trigger que dispara el estado genérico de acción.")]
+    [Label("Acción: trigger")]
     public string ActionClipTrigger = "AttackTrigger";
 
     [Tooltip("Parámetro float que controla la VELOCIDAD del estado genérico de acción. Es propio y " +
              "NO se toca cada frame (a diferencia de AttackSpeedMult, que UpdateAnimations reescribe " +
              "siempre): se fija una vez al activar la habilidad, con la velocidad que hace que el clip " +
              "entre justo en el ritmo de ataque (ver GameplayAbility.ResolveAnimationSpeed).")]
+    [Label("Acción: parámetro de velocidad")]
     public string ActionSpeedParam = "ActionSpeedMult";
 
     [Tooltip("Parámetro FLOAT del Animator con la velocidad vertical del personaje: positiva " +
@@ -84,6 +93,7 @@ public class PlayerController : NetworkBehaviour
              "bool dice que estás en el aire, no hacia dónde vas. Un dash hacia arriba se quedaba " +
              "con la pose de despegue durante toda la bajada.\n\n" +
              "Vacío = no se escribe (el Animator sigue funcionando con IsJumping como antes).")]
+    [Label("Parámetro de velocidad vertical")]
     public string VerticalSpeedParam = "VerticalSpeed";
 
     // =========================================================
@@ -120,37 +130,46 @@ public class PlayerController : NetworkBehaviour
     [Header("Animación — Mantener (escudo, canalizados)")]
     [Tooltip("Clip placeholder del estado 'mantener' (en bucle) en el controller BASE. Es el " +
              "ÚNICO obligatorio de los tres.")]
+    [Label("Mantener: clip del bucle")]
     public string HoldLoopSlotName  = "PLACEHOLDER_HoldLoop";
 
     [Tooltip("OPCIONAL: clip placeholder del estado 'levantar'. Vacío (o sin el estado en el " +
              "Animator) = se entra directo al bucle.")]
+    [Label("Mantener: clip de levantar")]
     public string HoldStartSlotName = "PLACEHOLDER_HoldStart";
 
     [Tooltip("OPCIONAL: clip placeholder del estado 'bajar'. Vacío (o sin el estado en el " +
              "Animator) = se sale del bucle directo a la locomoción.")]
+    [Label("Mantener: clip de bajar")]
     public string HoldEndSlotName   = "PLACEHOLDER_HoldEnd";
 
     [Tooltip("OPCIONAL: clip placeholder de la reacción al recibir un golpe mientras bloqueás " +
              "(el escudo 'acusa' el impacto). Vacío = sin reacción.")]
+    [Label("Mantener: clip del golpe")]
     public string HoldImpactSlotName = "PLACEHOLDER_HoldImpact";
 
     [Tooltip("Valor de ActionID que lleva al estado de mantener (la transición desde AnyState " +
              "se filtra por este número). Tiene que ser distinto de ActionClipStateID.")]
+    [Label("Mantener: ActionID")]
     public int HoldStateID = 98;
 
     [Tooltip("Valor de ActionID que lleva al estado de reacción al golpe en el escudo. Tiene que " +
              "ser distinto de ActionClipStateID y de HoldStateID.")]
+    [Label("Mantener: ActionID del golpe")]
     public int HoldImpactStateID = 97;
 
     [Tooltip("Trigger que dispara la entrada al mantenido.")]
+    [Label("Mantener: trigger")]
     public string HoldTrigger = "HoldTrigger";
 
     [Tooltip("Trigger que dispara la reacción al golpe en el escudo.")]
+    [Label("Mantener: trigger del golpe")]
     public string HoldImpactTrigger = "HoldImpactTrigger";
 
     [Tooltip("Parámetro BOOL que sostiene el bucle: mientras esté en true el personaje se queda " +
              "en el estado de mantener; al ponerse en false sale (al estado de bajar si existe, " +
              "o directo a la locomoción).")]
+    [Label("Mantener: parámetro bool")]
     public string HoldingParam = "IsHolding";
 
     [Header("Animación — Salto de habilidad (leap)")]
@@ -158,20 +177,24 @@ public class PlayerController : NetworkBehaviour
              "Vacío (o sin el estado en el Animator) = se entra directo al bucle. Ojo: si el " +
              "despegue vive DENTRO del clip del bucle, el salto entero se repite mientras el " +
              "personaje está en el aire — por eso van separados.")]
+    [Label("Salto: clip de despegue")]
     public string AirStartSlotName = "PLACEHOLDER_AirStart";
 
     [Tooltip("Clip placeholder del estado que se reproduce EN BUCLE mientras el personaje está " +
              "en el aire. Es el único obligatorio de los tres.\n\n" +
              "Tiene que ser SOLO la pose sostenida (el hacha arriba): si le metés el despegue, " +
              "el salto entero se repite en loop mientras dura el vuelo.")]
+    [Label("Salto: clip del bucle")]
     public string AirLoopSlotName = "PLACEHOLDER_AirLoop";
 
     [Tooltip("OPCIONAL: clip placeholder del remate al aterrizar. Vacío (o sin el estado en el " +
              "Animator) = del bucle se vuelve directo a la locomoción.")]
+    [Label("Salto: clip de aterrizaje")]
     public string AirLandSlotName = "PLACEHOLDER_AirLand";
 
     [Tooltip("Valor de ActionID que lleva al estado del bucle aéreo. Tiene que ser distinto de " +
              "ActionClipStateID, HoldStateID (98) y HoldImpactStateID (97).")]
+    [Label("Salto: ActionID")]
     public int LeapStateID = 96;
 
     // ---------------------------------------------------------
@@ -193,9 +216,11 @@ public class PlayerController : NetworkBehaviour
     [Header("Reacción de golpe")]
     [Tooltip("Clip placeholder del estado de reacción de golpe en la capa UpperBody. Cada AOC de " +
              "clase lo reemplaza por el clip de su postura.")]
+    [Label("Golpe: clip placeholder")]
     public string HitClipSlotName = "PLACEHOLDER_Hit";
 
     [Tooltip("Trigger del Animator que dispara la reacción.")]
+    [Label("Golpe: trigger")]
     public string HitTrigger = "HitTrigger";
 
     [Tooltip("Segundos mínimos entre dos ANIMACIONES de reacción de golpe. Es aparte del " +
@@ -203,11 +228,13 @@ public class PlayerController : NetworkBehaviour
              "velocidad de ataque de varias clases, cada golpe pasaba ese filtro y el personaje " +
              "quedaba temblando sin parar. El sonido en cada golpe se lee bien; la sacudida no.\n\n" +
              "En 0 reacciona a todos los golpes que le lleguen.")]
+    [Label("Golpe: entre reacciones (s)")]
     public float HitReactionCooldown = 1f;
 
     [Tooltip("Los estados del Animator con esta etiqueta (Tag, en el Inspector del estado) NO se " +
              "interrumpen con la reacción de golpe: bucles como mantener el escudo, el molinete, " +
              "el vuelo del salto o el aturdido. Se mira en todas las capas.")]
+    [Label("Golpe: bloqueado por estado")]
     public string HitBlockedByStateTag = "Loop";
 
     private bool _hasHitTrigger;
@@ -231,20 +258,25 @@ public class PlayerController : NetworkBehaviour
     [Header("Muerte y aturdimiento")]
     [Tooltip("Clip placeholder del estado de muerte (capa Base). Al morir se reemplaza por uno " +
              "de DeathClips al azar.")]
+    [Label("Muerte: clip placeholder")]
     public string DeathClipSlotName = "PLACEHOLDER_Death";
 
     [Tooltip("Animaciones de muerte posibles. Se elige una al azar por muerte.")]
+    [Label("Muerte: animaciones")]
     public AnimationClip[] DeathClips;
 
     [Tooltip("Bool del Animator que lleva al estado de muerte.")]
+    [Label("Muerte: parámetro")]
     public string DeadParam = "IsDead";
 
     [Tooltip("Bool del Animator que lleva al bucle de aturdido. Se alimenta del tag State_Stunned " +
              "en todas las copias.")]
+    [Label("Aturdido: parámetro")]
     public string StunnedParam = "IsStunned";
 
     [Tooltip("Con ragdoll: la cámara sigue al cuerpo mientras cae, en vez de quedarse mirando el " +
              "punto donde murió. Apagalo para probar la otra sensación.")]
+    [Label("Cámara sigue al ragdoll")]
     public bool CameraFollowsRagdoll = true;
 
     private string _deathSlotKey;
@@ -294,7 +326,9 @@ public class PlayerController : NetworkBehaviour
     private float _leapTakeoffDeadline;
 
     [Header("Huesos")]
+    [Label("Socket mano principal")]
     public Transform MainHandSocket;
+    [Label("Socket mano secundaria")]
     public Transform OffHandSocket;
 
     private GameObject currentMainWeapon;
@@ -328,23 +362,28 @@ public class PlayerController : NetworkBehaviour
     [HideInInspector] public GameplayAbility AimAbility;
 
     [Header("Físicas")]
+    [Label("Fuerza de salto")]
     public float jumpForce  = 8f;
+    [Label("Gravedad")]
     public float gravity    = -9.8f;
 
     [Header("Caída de Pluma / Aleteo")]
     [Tooltip("Multiplicador de gravedad mientras el personaje tenga el tag Status_FeatherFall. " +
              "0.35 = cae a poco más de un tercio de la velocidad normal. 1 = gravedad normal.")]
     [Range(0f, 1f)]
+    [Label("Caída de pluma: gravedad (×)")]
     public float featherFallGravityScale = 0.35f;
 
     [Tooltip("Impulso de cada ALETEO. Mientras dure la caída de pluma se puede volver a saltar en " +
              "el aire las veces que se quiera, y cada aleteo vale esto. Conviene por debajo de " +
              "jumpForce, porque se encadenan uno atrás del otro.")]
+    [Label("Caída de pluma: aleteo")]
     public float flapForce = 3f;
 
     [Tooltip("Tope de velocidad de caída mientras dura (valor positivo). Sin esto, la gravedad se " +
              "sigue acumulando entre aleteo y aleteo y caer desde muy alto termina en picada. " +
              "0 = sin tope.")]
+    [Label("Caída de pluma: velocidad máx.")]
     public float featherFallMaxSpeed = 6f;
 
     [Header("Apuntado (Third Person Shooter)")]
@@ -352,11 +391,13 @@ public class PlayerController : NetworkBehaviour
     // Más alto = casi instantáneo; más bajo = giro más suave/perezoso.
     // Si algún día querés que el cuerpo SOLO gire mientras te movés o apuntás
     // (y no mientras estás quieto girando la cámara), ver FaceCameraForward.
+    [Label("Giro al apuntar")]
     public float aimTurnSpeed = 15f;
 
     [Tooltip("Cuánto control conserva un jugador mientras lo repelen o lo atraen: su movimiento normal, " +
              "multiplicado por esto, se SUMA al empuje (y el cuerpo sigue a la cámara). 0 = ninguno, " +
              "1 = camina normal encima del empuje. Aturdido o enraizado no tiene control igual.")]
+    [Label("Control al ser empujado")]
     [Range(0f, 1f)] public float knockbackSteerControl = 0.6f;
 
     private float   verticalVelocity;
@@ -430,7 +471,8 @@ public class PlayerController : NetworkBehaviour
     private float    _wallVertical;        // velocidad vertical mientras está enganchado
     private Vector3  _wallAlongVelocity;   // lo que corre a lo largo (Monje): lo conserva al soltarse
 
-    // La última pared de la que se soltó: a ESA no se vuelve a pegar hasta tocar el piso.
+    // La última pared de la que se soltó: a ESA no se vuelve a pegar hasta tocar el piso
+    // (salvo que haya SALTADO de ella: WallMovementProfile.SameWallAfterJump).
     private bool     _hasLastWall;
     private Collider _lastWallCollider;
     private Vector3  _lastWallNormal;
@@ -1591,6 +1633,9 @@ public class PlayerController : NetworkBehaviour
         }
         Vector3 wallNormal = _wallNormal;
         StopWall();
+        // Saltando (no soltándose solo) puede volver a esta misma pared: el bloqueo de abajo
+        // ya le impide pegarse de rebote al apretar contra ella.
+        if (p.SameWallAfterJump) _hasLastWall = false;
 
         verticalVelocity    = p.JumpOffUp;
         _inertiaVelocity    = away * p.JumpOffSpeed;
@@ -1795,6 +1840,7 @@ public class PlayerController : NetworkBehaviour
     // habilidades de rueda, de mantener o de zona tienen su propio ciclo con el botón.
     [Header("Ataque básico")]
     [Tooltip("Mantener apretado el ataque principal lo repite solo cada vez que vuelve a estar disponible.")]
+    [Label("Repetir ataque al mantener")]
     public bool AutoRepeatPrimaryAttack = true;
 
     // Pequeño respiro entre disparos automáticos: si el servidor rechazara uno, esto
@@ -2506,26 +2552,31 @@ public class PlayerController : NetworkBehaviour
     [Header("Carga de la definitiva")]
     [Tooltip("PRUEBAS: al elegir subclase, la definitiva arranca LISTA en vez de en 0. " +
              "Para probar clases rápido; apagado en una partida de verdad.")]
+    [Label("PRUEBAS: definitiva llena al evolucionar")]
     public bool StartSubclassWithFullUltimate = false;
 
     [Tooltip("Qué parte de la carga se conserva al cambiar de clase a mitad de partida. " +
              "0.5 = la mitad. Existe para que no se pueda cargar la definitiva con una " +
              "clase y gastarla con otra.")]
     [Range(0f, 1f)]
+    [Label("Definitiva conservada al cambiar")]
     public float UltimateKeptOnClassChange = 0.5f;
 
     [Tooltip("TANQUE: segundos de definitiva por cada punto de daño que aguanta de un " +
              "enemigo (después de las defensas, antes del escudo). Con 0.1, aguantar " +
              "100 de daño adelanta 10 s de los 180.")]
+    [Label("Tanque: carga por daño")]
     public float TankChargePerDamage = 0.1f;
 
     [Tooltip("DAÑO: segundos de definitiva por cada personaje enemigo que mata (jugador " +
              "o bot; los monstruos no cuentan).")]
+    [Label("Daño: carga por baja")]
     public float DamageChargePerKill = 20f;
 
     [Tooltip("SOPORTE: segundos de definitiva por cada punto de vida que le cura a un " +
              "ALIADO. No cuenta curarse a sí mismo ni lo que se pasa de la vida máxima. " +
              "Con 0.15, curar 100 adelanta 15 s.")]
+    [Label("Soporte: carga por curación")]
     public float SupportChargePerHeal = 0.15f;
 
     // Carga guardada al dejar una clase con definitiva, para la próxima subclase.
@@ -3423,12 +3474,16 @@ public class PlayerController : NetworkBehaviour
 
     [Header("Desatascarse (botón Unstuck del recuadro de red)")]
     [Tooltip("Segundos que hay que llevar quieto para que el servidor acepte el pedido.")]
+    [Label("Desatascarse: quieto (s)")]
     public float UnstuckStillSeconds = 5f;
     [Tooltip("Cuánto te puedes mover (en metros) y seguir contando como quieto.")]
+    [Label("Desatascarse: radio quieto")]
     public float UnstuckStillRadius = 0.75f;
     [Tooltip("Si te pegaron hace menos que esto, no se puede usar: no es un escape de peleas.")]
+    [Label("Desatascarse: bloqueo en combate (s)")]
     public float UnstuckCombatLockSeconds = 5f;
     [Tooltip("Cada cuánto lo puede usar un mismo jugador.")]
+    [Label("Desatascarse: espera (s)")]
     public float UnstuckCooldownSeconds = 60f;
 
     // Cooldown por CONEXIÓN y no por personaje: el personaje se reemplaza al usarlo.

@@ -30,20 +30,24 @@ public class MercEnemySpawner : MonoBehaviour
     public class SpawnRule
     {
         [Tooltip("Qué enemigo. El prefab lo resuelve MercEnemyCatalog.")]
+        [Label("Tipo")]
         public EMercEnemyType Type = EMercEnemyType.Ghost;
 
         [Tooltip("Peso del sorteo. NO tiene que sumar 100 entre todos: el porcentaje real " +
                  "se calcula sobre los tipos que estén desbloqueados en ese momento. Poner " +
                  "70 y 30 es lo mismo que poner 7 y 3.")]
+        [Label("Peso")]
         [Range(0f, 100f)] public float Weight = 100f;
 
         [Tooltip("Minuto de partida a partir del cual PUEDE aparecer. En 0 aparece desde el " +
                  "arranque. El reloj cuenta desde que termina la preparación.")]
+        [Label("Aparece desde el minuto")]
         public float UnlockMinute = 0f;
 
         [Tooltip("Cuántos de ESTE tipo puede haber vivos a la vez en este campamento. " +
                  "En 0 no hay límite. Sirve para los jefes: sin esto, un campamento de tres " +
                  "puede sacarte tres jefes juntos.")]
+        [Label("Máximo vivos")]
         public int MaxAlive = 0;
     }
 
@@ -57,24 +61,30 @@ public class MercEnemySpawner : MonoBehaviour
     [Tooltip("Prefab que se usa si la tabla está vacía o si el catálogo no resuelve ningún " +
              "tipo. Es la red de seguridad: un campamento mal configurado saca esto en vez " +
              "de quedarse vacío toda la partida.")]
+    [Label("Prefab del enemigo")]
     public GameObject EnemyPrefab;
 
     [Header("Cuántos")]
     [Tooltip("Cuántos mantiene vivos a la vez, contando todos los tipos.")]
+    [Label("Cantidad viva")]
     public int Count = 3;
 
     [Tooltip("Radio en el que se reparten alrededor de este punto.")]
+    [Label("Radio de aparición")]
     public float SpawnRadius = 5f;
 
     [Header("Reposición")]
     [Tooltip("Segundos entre que uno muere y aparece su reemplazo.")]
+    [Label("Reaparece en (s)")]
     public float RespawnSeconds = 20f;
 
     [Tooltip("Segundos entre apariciones al poblar el campamento por primera vez.")]
+    [Label("Entre apariciones (s)")]
     public float SpawnInterval = 0.5f;
 
     [Header("Cuándo")]
     [Tooltip("Poblar el campamento ya en la preparación, para que el escenario nunca se vea vacío.")]
+    [Label("Poblar en la preparación")]
     public bool PopulateDuringWarmup = true;
 
     // Enemigos vivos de este campamento, con el tipo con el que salieron (solo servidor).

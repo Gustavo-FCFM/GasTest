@@ -22,20 +22,24 @@ public class AbilitySystemComponent : MonoBehaviour
     [Header("Configuración de Rol")]
     // Stats iniciales (vida, maná, etc.) que se cargan al arrancar o al
     // llamar InitializeAttributes(). Normalmente lo asigna la clase actual.
+    [Label("Stats base (ASDef)")]
     public AttributeSetDefinition CharacterRoleDefinition;
 
     [Header("Clase y Progresión")]
     // Clase equipada actualmente; se usa para saber cuánto suben los stats
     // al subir de nivel (StatGrowthPerLevel).
+    [Label("Clase actual")]
     public CharacterClassDefinition CurrentClass;
 
     [Header("Multijugador y Afiliación")]
     // Equipo al que pertenece. 0 = neutral/hostil para todos (ver
     // IsEnemyOf). NetworkGameManager le asigna un valor único por jugador.
+    [Label("Equipo")]
     public int TeamID = 0;
 
     // Nivel máximo alcanzable; al llegarlo, GainExperience deja de subir
     // de nivel y dispara OnMaxLevelReached.
+    [Label("Nivel máximo")]
     public int MaxLevel = 3;
 
     // =========================================================
@@ -181,6 +185,7 @@ public class AbilitySystemComponent : MonoBehaviour
     // Instancias de habilidades otorgadas a este personaje (una por cada
     // GameplayAbility de su clase). Modificar esta lista a mano rompe la
     // relación con los slots de PlayerController — usar GrantAbility().
+    [Label("Habilidades dadas")]
     public List<GameplayAbility> GrantedAbilities = new List<GameplayAbility>();
 
     // Último ASC que le hizo daño a este personaje. Lo setea ExecuteInstantEffect
@@ -503,6 +508,21 @@ public class AbilitySystemComponent : MonoBehaviour
     // a ActiveEffects respetando su StackingPolicy (Refresh/Stack/Override).
     // durationOverride pisa la duración del asset (usado por cooldowns
     // dinámicos, ej. basados en velocidad de ataque).
+    // Espera por enemigo de las entradas de efectos (AbilityEffect.PerTargetCooldown): hasta
+    // cuándo ESTA habilidad (key), de ESTE lanzador, no le puede volver a aplicar ESTE efecto
+    // a este personaje. Solo en el servidor, que es quien aplica los efectos.
+    private readonly Dictionary<(UnityEngine.Object key, GameplayEffect effect, AbilitySystemComponent source), float> _effectCooldownUntil =
+        new Dictionary<(UnityEngine.Object, GameplayEffect, AbilitySystemComponent), float>();
+
+    // true = se puede aplicar ahora, y queda anotada la espera; false = todavía no.
+    public bool TryStartEffectCooldown(UnityEngine.Object key, GameplayEffect effect, AbilitySystemComponent source, float seconds)
+    {
+        var id = (key, effect, source);
+        if (_effectCooldownUntil.TryGetValue(id, out float until) && Time.time < until) return false;
+        _effectCooldownUntil[id] = Time.time + seconds;
+        return true;
+    }
+
     public void ApplyGameplayEffect(GameplayEffect effect, object source = null, float durationOverride = -1f)
     {
         if (effect == null) return;

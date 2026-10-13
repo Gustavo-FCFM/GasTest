@@ -72,8 +72,8 @@ MonoBehaviour:
     m_Bits: 128
   MaxCharges: 1
   AimFirst: 0
-  Distance: 20
-  Speed: 20
+  Distance: 30
+  Speed: 30
   StrafeSpeed: 5
   AimVertical: 1
   MaxPitch: 45

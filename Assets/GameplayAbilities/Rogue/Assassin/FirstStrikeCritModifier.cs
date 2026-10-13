@@ -27,11 +27,14 @@ public class FirstStrikeCritModifier : MonoBehaviour, IDamageModifier
 {
     [Tooltip("Ventana por objetivo: un enemigo vuelve a estar 'fresco' para un crítico mejorado " +
              "si no lo golpeás en estos segundos.")]
+    [Label("Ventana por objetivo (s)")]
     public float FirstStrikeWindow = 6f;
     [Tooltip("Reutilización global: mínimo de segundos entre dos críticos mejorados (contra cualquiera).")]
+    [Label("Espera entre críticos (s)")]
     public float FirstStrikeCooldown = 2f;
     [Tooltip("Mientras está invisible, las dos esperas de arriba corren este tanto más rápido " +
              "(3 = la ventana de 6 s se cumple en 2 s). 1 = igual que visible.")]
+    [Label("Recuperación invisible (×)")]
     [Min(1f)] public float InvisibleRecoveryMultiplier = 3f;
 
     private AbilitySystemComponent _asc;

@@ -36,10 +36,12 @@ public class NetworkGameManager : NetworkBehaviour
 {
     [Header("Prefab del Jugador")]
     [Tooltip("DEBE tener NetworkObject, AbilitySystemComponent y NetworkAbilitySystemComponent")]
+    [Label("Prefab del jugador")]
     public GameObject PlayerPrefab;
 
     [Header("Puntos de Spawn")]
     [Tooltip("Pon varios puntos separados para que los jugadores no aparezcan encimados")]
+    [Label("Puntos de aparición")]
     public Transform[] SpawnPoints;
 
     // Cuenta total histórica de conexiones (nunca baja) — se usa para

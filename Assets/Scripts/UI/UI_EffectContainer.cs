@@ -14,7 +14,9 @@ using System.Collections.Generic;
 public class UI_EffectContainer : MonoBehaviour
 {
     [Header("Configuración")]
+    [Label("ASC objetivo")]
     public AbilitySystemComponent TargetASC; // A quién se le muestran los efectos
+    [Label("Prefab del casillero")]
     public GameObject EffectSlotPrefab;      // Prefab con el script UI_EffectSlot
 
     private NetworkAbilitySystemComponent netAsc;

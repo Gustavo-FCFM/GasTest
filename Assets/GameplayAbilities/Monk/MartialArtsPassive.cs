@@ -23,6 +23,7 @@ public class MartialArtsPassive : MonoBehaviour
 {
     [Tooltip("El GE que se aplica a sí mismo por cada ataque que pega (GE_MartialArts: Stack, " +
              "MaxStacks 4, 8 s, AtkSpeed × 0.95).")]
+    [Label("Efecto por acumulación")]
     public GameplayEffect StackEffect;
 
     private AbilitySystemComponent        _asc;

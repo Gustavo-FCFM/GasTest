@@ -16,10 +16,13 @@ public class LevelUpSelectionSystem : MonoBehaviour
     [Header("Referencias")]
     // Jugador dueño local. Lo asigna Initialize() en runtime; solo dejalo
     // puesto a mano en escenas de un solo jugador sin red.
+    [Label("Jugador")]
     public PlayerController player;
     // Panel/texto que se muestra mientras está activo el modo selección.
+    [Label("Visuales de la selección")]
     public GameObject selectionVisuals;
     // Texto opcional donde se listan las subclases disponibles.
+    [Label("Texto de opciones")]
     public TextMeshProUGUI optionsText;
 
     [Header("Comportamiento")]
@@ -27,6 +30,7 @@ public class LevelUpSelectionSystem : MonoBehaviour
              "Apagado (lo normal): al subir de nivel solo se avisa por el HUD y el jugador " +
              "decide cuándo evolucionar, con la tecla V. Abrirlo solo lo dejaba plantado en " +
              "medio de una pelea, sin poder moverse hasta elegir.")]
+    [Label("Abrir al nivel máximo")]
     public bool OpenOnMaxLevel = false;
 
     private AbilitySystemComponent playerASC;

@@ -387,6 +387,14 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // ni se copia al clonar (se setea a mano justo después del Instantiate).
     [System.NonSerialized] public GameplayAbility SourceTemplate;
 
+    // Qué habilidad "es" para la espera por enemigo de sus efectos (AbilityEffect.
+    // PerTargetCooldown). Un combo se la pone a sus pasos: los 4 golpes de una ráfaga
+    // comparten la espera. null = ella misma (su asset, así la espera sigue entre usos).
+    [System.NonSerialized] public Object EffectCooldownKey;
+
+    public Object CooldownKey => EffectCooldownKey != null ? EffectCooldownKey
+                               : SourceTemplate != null ? (Object)SourceTemplate : this;
+
     // Velocidad de animación forzada desde afuera (0 = sin forzar, se calcula sola).
     // La usan los combos: el ritmo de ataque lo conoce el PADRE, así que se lo imponen
     // a cada paso — que por sí solo devolvería velocidad natural, porque no tiene
@@ -1152,6 +1160,10 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
             // cuándo se puede volver a aturdir a ese enemigo), y no tiene que anotar nada que
             // después no se aplique.
             if (e.When == EEffectWhen.OnFirstHit && !CanApplyFirstHitEffect(target, e.Effect)) continue;
+
+            // Espera por enemigo: al MISMO objetivo, una vez cada tanto (la anota al aplicarse).
+            if (e.PerTargetCooldown > 0f && e.ApplyTo != EEffectTarget.Self &&
+                !target.TryStartEffectCooldown(CooldownKey, e.Effect, source, e.PerTargetCooldown)) continue;
 
             GameplayEffect effect = e.Effect;
             if (!primaryReplaced && primary != null && effect == primary && e.When == EEffectWhen.OnHit &&

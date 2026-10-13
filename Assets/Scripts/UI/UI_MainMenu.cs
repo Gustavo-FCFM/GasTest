@@ -29,23 +29,33 @@ public class UI_MainMenu : MonoBehaviour
     [Header("Textos")]
     [Tooltip("El nombre del juego: no se traduce. El subtítulo y los botones salen de " +
              "Resources/Localization.csv (claves menu.*).")]
+    [Label("Título")]
     public string Title    = "MERCENARIES";
 
     [Header("Comportamiento")]
     [Tooltip("Mostrar el menú apenas arranca la escena. Apagalo para probar la arena directo.")]
+    [Label("Mostrar al arrancar")]
     public bool ShowOnStart = true;
 
     [Header("Fondo")]
     [Tooltip("Velo oscuro sobre la arena para que el texto se lea. Transparente del todo si querés ver el mapa limpio.")]
+    [Label("Color del velo")]
     public Color BackdropColor = new Color(0f, 0f, 0f, 0.35f);
+    [Label("Color de la franja")]
     public Color BandColor     = new Color(0f, 0f, 0f, 0.35f);
 
     [Header("Botones")]
+    [Label("Tamaño de botón")]
     public Vector2 ButtonSize   = new Vector2(320f, 58f);
+    [Label("Separación de botones")]
     public float   ButtonGap    = 16f;
+    [Label("Color de botón")]
     public Color   ButtonColor  = new Color(0.20f, 0.22f, 0.26f);
+    [Label("Color de Jugar")]
     public Color   PlayColor    = new Color(0.95f, 0.65f, 0.20f);
+    [Label("Color del texto")]
     public Color   TextColor    = new Color(0.94f, 0.94f, 0.94f);
+    [Label("Color del texto tenue")]
     public Color   DimTextColor = new Color(0.6f, 0.6f, 0.6f);
 
     public static UI_MainMenu Instance { get; private set; }

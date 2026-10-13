@@ -36,65 +36,83 @@ public class UI_CombatFeedback : MonoBehaviour
 
     [Header("X de golpe")]
     [Tooltip("Largo de cada PUNTA de la X. Es la perilla para agrandarla o achicarla.")]
+    [Label("X: largo")]
     public float HitMarkLength = 26f;
 
     [Tooltip("Hueco en el centro: a qué distancia del medio arrancan las puntas. Sin " +
              "hueco la X tapa la retícula justo cuando estás apuntando.")]
+    [Label("X: hueco central")]
     public float HitMarkGap = 9f;
 
     [Tooltip("Grosor de cada punta.")]
+    [Label("X: grosor")]
     public float HitMarkThickness = 5f;
 
     [Tooltip("Cuánto tarda en apagarse la X.")]
+    [Label("X: se apaga en (s)")]
     public float HitFadeSeconds = 0.45f;
 
     [Tooltip("Opacidad MÍNIMA de la X. Sin esto, pegarle a alguien con la vida llena no " +
              "se vería casi nada y parecería que el golpe no entró.")]
     [Range(0f, 1f)]
+    [Label("X: opacidad mínima")]
     public float HitMinAlpha = 0.25f;
 
+    [Label("X: color")]
     public Color HitColor = new Color(0.95f, 0.15f, 0.15f, 1f);
 
     [Tooltip("Color de la X cuando el golpe fue CRÍTICO (el mismo amarillo del número).")]
+    [Label("X: color de crítico")]
     public Color HitCriticalColor = new Color(1f, 0.85f, 0.1f, 1f);
 
     [Tooltip("Opacidad mínima de la X de crítico: un crítico siempre se tiene que notar, " +
              "aunque el golpeado tenga la vida llena.")]
     [Range(0f, 1f)]
+    [Label("X: opacidad mínima de crítico")]
     public float HitCriticalMinAlpha = 0.85f;
 
     [Header("Calavera de baja")]
     [Tooltip("Tamaño de la calavera.")]
+    [Label("Calavera: tamaño")]
     public float KillMarkSize = 46f;
 
     [Tooltip("Cuánto tarda en apagarse. Corto a propósito: es un premio, no un cartel.")]
+    [Label("Calavera: se apaga en (s)")]
     public float KillFadeSeconds = 0.9f;
 
     [Tooltip("Si le asignás un sprite de calavera, se usa ese en vez de la que se dibuja " +
              "por código (una cabeza, dos ojos y la mandíbula).")]
+    [Label("Calavera: sprite")]
     public Sprite KillIcon;
 
+    [Label("Calavera: color")]
     public Color KillColor = new Color(1f, 0.2f, 0.2f, 1f);
 
     [Header("Arco de daño recibido")]
     [Tooltip("Radio del círculo, en píxeles de la maqueta. Grande a propósito: tiene que " +
              "verse por el rabillo del ojo sin tapar la pelea.")]
+    [Label("Daño recibido: radio")]
     public float DamageRingRadius = 190f;
 
     [Tooltip("En cuántos pedacitos se divide el círculo. Más = arco más suave y más " +
              "objetos en pantalla.")]
+    [Label("Daño recibido: segmentos")]
     public int DamageRingSegments = 24;
 
     [Tooltip("Largo y grosor de cada pedacito del arco.")]
+    [Label("Daño recibido: tamaño del segmento")]
     public Vector2 DamageSegmentSize = new Vector2(34f, 9f);
 
     [Tooltip("Ancho del arco que se enciende, en grados a cada lado de por donde vino el " +
              "golpe. Los del borde se encienden menos.")]
+    [Label("Daño recibido: ancho del arco (°)")]
     public float DamageArcHalfWidth = 38f;
 
     [Tooltip("Cuánto tarda en apagarse el arco.")]
+    [Label("Daño recibido: se apaga en (s)")]
     public float DamageFadeSeconds = 1.1f;
 
+    [Label("Color de daño")]
     public Color DamageColor = new Color(0.9f, 0.1f, 0.1f, 1f);
 
     // =========================================================

@@ -30,57 +30,76 @@ public class UI_LobbyMenu : MonoBehaviour
 {
     [Header("Panel")]
     [Tooltip("Raíz del menú (se prende/apaga).")]
+    [Label("Contenedor del menú")]
     public GameObject MenuContainer;
 
     [Header("Datos de la sala")]
     [Tooltip("Muestra la IP a la que conectarse. Opcional.")]
+    [Label("Texto de la IP")]
     public TMPro.TMP_Text HostAddressText;
     [Tooltip("Campo donde el jugador escribe su nombre.")]
+    [Label("Campo del nombre")]
     public TMPro.TMP_InputField NameInput;
     [Tooltip("Nombre por defecto si lo deja vacío.")]
+    [Label("Nombre por defecto")]
     public string DefaultName = "Player";
 
     [Header("Equipo")]
     [Tooltip("Botones de equipo, EN ORDEN: el primero es el equipo 1, el segundo el 2, etc.")]
+    [Label("Botones de equipo")]
     public Button[] TeamButtons;
     [Tooltip("Color del botón del equipo elegido.")]
+    [Label("Color: equipo elegido")]
     public Color SelectedTeamColor = new Color(0.3f, 0.8f, 1f, 1f);
     [Tooltip("Color del botón sin elegir.")]
+    [Label("Color: sin elegir")]
     public Color NormalTeamColor   = Color.white;
     [Tooltip("Color al pasar el mouse por encima (sin elegir todavía).")]
+    [Label("Color: al pasar el mouse")]
     public Color HoverTeamColor    = new Color(0.12f, 0.16f, 0.22f, 1f);
 
     [Header("Clase inicial")]
     [Tooltip("Clases elegibles al entrar. Poné las mismas que MainBaseClasses del Player.")]
+    [Label("Clases elegibles")]
     public CharacterClassDefinition[] SelectableClasses;
     [Tooltip("Contenedor donde se instancian las tarjetas de clase.")]
+    [Label("Contenedor de tarjetas")]
     public Transform CardsParent;
     [Tooltip("Prefab de UI_ClassCard.")]
+    [Label("Prefab de tarjeta")]
     public GameObject ClassCardPrefab;
     [Tooltip("Simplificar la tarjeta en el lobby: deja el icono y el NOMBRE, y oculta lo demás. " +
              "El mismo prefab se sigue usando completo en el menú de clases del juego.")]
+    [Label("Solo íconos")]
     public bool IconsOnly = true;
     [Tooltip("Objetos de la tarjeta que se ocultan con 'Icons Only', por nombre. El nombre de la " +
              "clase (ClassTittle) se deja visible para saber qué es cada icono.")]
+    [Label("Partes ocultas de la tarjeta")]
     public string[] HiddenCardParts = { "ClassDescription" };
     [Tooltip("Lado de cada tarjeta en píxeles: quedan cuadradas y todas iguales. El Canvas Scaler " +
              "es el que las escala según el tamaño de pantalla.")]
+    [Label("Tamaño de tarjeta")]
     public float CardSize = 180f;
     [Tooltip("Color del contorno que marca la clase elegida.")]
+    [Label("Color: clase elegida")]
     public Color SelectedClassColor = new Color(0.3f, 0.8f, 1f, 1f);
     [Tooltip("Grosor de ese contorno.")]
+    [Label("Grosor del contorno")]
     public float SelectedOutlineSize = 4f;
 
     [Header("Confirmar")]
     [Tooltip("Botón para entrar a la partida. Se habilita al elegir equipo y clase.")]
+    [Label("Botón de confirmar")]
     public Button ConfirmButton;
 
     [Header("Sala de espera (opcional)")]
     [Tooltip("Casilla para entrar como ESPECTADOR: sin personaje, sin equipo y sin frenar el " +
              "arranque de la partida. Dejala en None si no querés la opción.")]
+    [Label("Casilla de espectador")]
     public Toggle SpectatorToggle;
 
     [Tooltip("Dónde se avisa que el nombre está repetido o que el equipo está lleno. Opcional.")]
+    [Label("Texto de aviso")]
     public TMPro.TMP_Text WarningText;
 
     // La lista de clases del menú es la MISMA en todos los peers (mismo asset, misma

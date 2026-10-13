@@ -55,15 +55,15 @@ MonoBehaviour:
     DelayAfter: 0.4
     AnimationClipOverride: {fileID: 3094330708855449807, guid: 8ab57abc06f7ffd47ae8d91e99f41fa2, type: 3}
     AnimationIDOverride: 0
-  - AbilityToCast: {fileID: 11400000, guid: 8d560bf89e4620d45bef21243c33d8fc, type: 2}
+  - AbilityToCast: {fileID: 11400000, guid: 823557918a0a6fe44b371ad11ef6efeb, type: 2}
     DelayAfter: 0.4
     AnimationClipOverride: {fileID: 3094330708855449807, guid: c2160d1a58a158543817a3f1c504dc91, type: 3}
     AnimationIDOverride: 0
-  - AbilityToCast: {fileID: 11400000, guid: 8d560bf89e4620d45bef21243c33d8fc, type: 2}
+  - AbilityToCast: {fileID: 11400000, guid: 823557918a0a6fe44b371ad11ef6efeb, type: 2}
     DelayAfter: 0.4
     AnimationClipOverride: {fileID: 3094330708855449807, guid: 8ab57abc06f7ffd47ae8d91e99f41fa2, type: 3}
     AnimationIDOverride: 0
-  - AbilityToCast: {fileID: 11400000, guid: 8d560bf89e4620d45bef21243c33d8fc, type: 2}
+  - AbilityToCast: {fileID: 11400000, guid: 823557918a0a6fe44b371ad11ef6efeb, type: 2}
     DelayAfter: 0
     AnimationClipOverride: {fileID: 3094330708855449807, guid: c2160d1a58a158543817a3f1c504dc91, type: 3}
     AnimationIDOverride: 0

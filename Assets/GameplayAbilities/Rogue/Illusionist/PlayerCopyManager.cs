@@ -19,8 +19,10 @@ using FishNet.Object;
 public class PlayerCopyManager : MonoBehaviour
 {
     [Tooltip("Prefab de la copia (Entity_PlayerCopy + NetworkObject + NetworkTransform + ASC + collider).")]
+    [Label("Prefab de la copia")]
     public GameObject CopyPrefab;
     [Tooltip("Máximo de copias de Copia exacta a la vez. Al invocar una más, se elimina la más vieja (FIFO). No aplica a Fiesta.")]
+    [Label("Máximo de copias")]
     public int MaxCopies = 4;
 
     private AbilitySystemComponent _asc;

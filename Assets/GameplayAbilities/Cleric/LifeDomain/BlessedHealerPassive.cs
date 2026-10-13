@@ -22,6 +22,7 @@ public class BlessedHealerPassive : MonoBehaviour, IHealModifier
 {
     [Tooltip("Bono máximo, con el objetivo casi sin vida. 1 = hasta el doble de curación; " +
              "0.5 = hasta +50 %. Escala en línea recta con la vida que le falta.")]
+    [Label("Bono máximo")]
     public float MaxBonus = 1f;
 
     private AbilitySystemComponent _asc;

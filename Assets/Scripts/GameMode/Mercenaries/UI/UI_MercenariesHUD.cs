@@ -20,14 +20,19 @@ public class UI_MercenariesHUD : MonoBehaviour
 {
     [Header("Colocación")]
     [Tooltip("Separación desde el borde superior de la pantalla, en píxeles de referencia (1080p).")]
+    [Label("Margen superior")]
     public float TopMargin = 14f;
 
     [Tooltip("Ancho del marcador.")]
+    [Label("Ancho del panel")]
     public float PanelWidth = 520f;
 
     [Header("Estilo")]
+    [Label("Color del fondo")]
     public Color PanelBackground     = new Color(0f, 0f, 0f, 0.55f);
+    [Label("Fondo de tu equipo")]
     public Color LocalTeamBackground = new Color(1f, 1f, 1f, 0.16f);
+    [Label("Color de tramo vacío")]
     public Color EmptySegmentColor   = new Color(1f, 1f, 1f, 0.14f);
 
     private const float RowHeight  = 34f;

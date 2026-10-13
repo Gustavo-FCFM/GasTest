@@ -27,30 +27,37 @@ public class ShieldBlockFlash : MonoBehaviour
     [Header("Destello")]
     [Tooltip("Color al que salta la barrera en el impacto. El alpha importa: con un material " +
              "transparente es lo que la vuelve momentáneamente más sólida.")]
+    [Label("Color del destello")]
     public Color FlashColor = new Color(1f, 0.95f, 0.6f, 0.75f);
 
     [Tooltip("Cuánto tarda en volver a su color normal, en segundos.")]
+    [Label("Duración del destello (s)")]
     public float FlashDuration = 0.22f;
 
     [Tooltip("Curva del apagado: en 1 está a pleno destello y en 0 ya volvió al color base. " +
              "La de por defecto (rápida al principio) es la que mejor lee como 'impacto'.")]
+    [Label("Curva del apagado")]
     public AnimationCurve FlashFalloff = AnimationCurve.EaseInOut(0f, 1f, 1f, 0f);
 
     [Tooltip("Nombre de la propiedad de color del shader. En URP (Lit y Unlit) es _BaseColor; " +
              "en el pipeline viejo o en un shader propio puede ser _Color.")]
+    [Label("Propiedad de color")]
     public string ColorProperty = "_BaseColor";
 
     [Header("VFX de Impacto (opcional)")]
     [Tooltip("Prefab que se instancia en el punto exacto del impacto, orientado hacia afuera de " +
              "la barrera. Dejalo vacío si solo querés el destello del panel.")]
+    [Label("VFX de impacto")]
     public GameObject ImpactVFXPrefab;
 
     [Tooltip("Segundos tras los que se destruye el VFX instanciado.")]
+    [Label("VFX: duración (s)")]
     public float ImpactVFXLifetime = 1.5f;
 
     [Header("Filtro")]
     [Tooltip("Impactos seguidos más juntos que esto no reinician el destello, para que un ataque " +
              "rápido o los ticks de un área no lo dejen clavado en el color de destello.")]
+    [Label("Mínimo entre destellos (s)")]
     public float MinTimeBetweenFlashes = 0.05f;
 
     private Entity_ShieldBarrier _barrier;

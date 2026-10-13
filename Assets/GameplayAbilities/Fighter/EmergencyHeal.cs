@@ -21,20 +21,25 @@ public class EmergencyHeal : MonoBehaviour
 {
     [Tooltip("Fracción de la vida por debajo de la cual salta. 0.3 = al bajar del 30 %.")]
     [Range(0.01f, 1f)]
+    [Label("Salta bajo (vida)")]
     public float HealthThreshold = 0.3f;
 
     [Tooltip("Cuánto cura en total, como fracción de la vida máxima del momento en que salta. " +
              "0.8 = un 80 %.")]
+    [Label("Curación total (fracción)")]
     public float HealPercentOfMax = 0.8f;
 
     [Tooltip("En cuántas curaciones iguales se reparte.")]
     [Min(1)]
+    [Label("Curaciones")]
     public int Ticks = 5;
 
     [Tooltip("Segundos en los que se reparten las curaciones.")]
+    [Label("Duración (s)")]
     public float Duration = 5f;
 
     [Tooltip("Segundos, desde que salta, hasta que puede volver a saltar.")]
+    [Label("Espera (s)")]
     public float Cooldown = 60f;
 
     private AbilitySystemComponent        _asc;

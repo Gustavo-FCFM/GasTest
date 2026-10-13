@@ -22,7 +22,7 @@ public class MercEnemySpawnerEditor : Editor
 
     public override void OnInspectorGUI()
     {
-        DrawDefaultInspector();
+        LabeledComponentEditor.DrawFields(serializedObject);
 
         var spawner = (MercEnemySpawner)target;
 

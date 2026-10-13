@@ -30,27 +30,34 @@ public class MercTeamBase : MonoBehaviour
 {
     [Header("Identidad")]
     [Tooltip("Equipo dueño de esta base: 1, 2 o 3.")]
+    [Label("Equipo")]
     public int TeamID = 1;
 
     [Header("Sala segura")]
     [Tooltip("Centro de la sala segura. Si lo dejás vacío se usa el transform de este objeto.")]
+    [Label("Centro de la sala segura")]
     public Transform SafeRoomCenter;
 
     [Tooltip("Tamaño de la caja de la sala segura, en metros.")]
+    [Label("Tamaño de la sala segura")]
     public Vector3 SafeRoomSize = new Vector3(14f, 6f, 14f);
 
     [Tooltip("Capa donde viven los personajes. En este proyecto es 'Character' (7).")]
+    [Label("Capa de personajes")]
     public LayerMask CharacterLayer = 1 << 7;
 
     [Header("Entrega del Objetivo")]
     [Tooltip("Adónde hay que llevar el Objetivo. Si lo dejás vacío se usa el centro de la sala segura.")]
+    [Label("Punto de entrega")]
     public Transform DeliveryPoint;
 
     [Tooltip("Radio de entrega en metros: con acercarse a esta distancia alcanza.")]
+    [Label("Radio de entrega")]
     public float DeliveryRadius = 4f;
 
     [Header("Aparición de jugadores")]
     [Tooltip("Puntos donde aparecen y reaparecen los jugadores de este equipo. Se reparten en orden.")]
+    [Label("Puntos de aparición")]
     public Transform[] SpawnPoints;
 
     // Quiénes están adentro AHORA (solo servidor). Guardamos el ASC porque es lo que
@@ -60,13 +67,16 @@ public class MercTeamBase : MonoBehaviour
     [Header("Sala prohibida")]
     [Tooltip("Sacar del área a quien no sea de este equipo. La sala segura cura y vuelve " +
              "intocable a quien está adentro: dejar entrar a un enemigo es regalarle eso.")]
+    [Label("Expulsar enemigos")]
     public bool EjectEnemies = true;
 
     [Tooltip("Sacar también a quien sea de ESTE equipo pero cargue el Objetivo. Si pudiera " +
              "meterse con la bolsa a la sala, donde es intocable, la partida no terminaría nunca.")]
+    [Label("Expulsar al portador propio")]
     public bool EjectObjectiveCarrier = true;
 
     [Tooltip("Cuántos metros afuera del borde queda el intruso al ser expulsado.")]
+    [Label("Margen de expulsión")]
     public float EjectMargin = 1.5f;
 
     // Buffer reutilizado por el OverlapBox: evita una alocación por chequeo.

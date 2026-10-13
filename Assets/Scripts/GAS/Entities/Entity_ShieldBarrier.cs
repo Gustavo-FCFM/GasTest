@@ -40,6 +40,7 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
     [Header("Activación")]
     [Tooltip("Mientras el dueño tenga este tag, la barrera está levantada. Lo otorga el " +
              "GameplayEffect de la habilidad de bloqueo (ver GA_ShieldBlock.BlockEffect).")]
+    [Label("Tag que la activa")]
     public EGameplayTag ActiveTag = EGameplayTag.Status_Blocking;
 
     [Header("Bloqueo")]
@@ -47,34 +48,41 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
              "0.7 = te llega el 30%. Se aplica ANTES de Resistencia/Defensa, así que las dos " +
              "cosas se acumulan.")]
     [Range(0f, 1f)]
+    [Label("Daño frenado (fracción)")]
     public float DamageReduction = 0.7f;
 
     [Tooltip("Energía que cuesta frenar 1 punto de daño. Con 1, un golpe de 40 frenado al 70% " +
              "gasta 28 de energía. Si no queda energía para frenar todo, frena solo la parte " +
              "que alcance y el resto pasa.")]
+    [Label("Energía por punto frenado")]
     public float EnergyPerDamageBlocked = 1f;
 
     [Tooltip("Altura (desde los pies) a la que se mide la trayectoria del golpe. Si midiéramos " +
              "de pie a pie, el segmento atacante→víctima pasaría por DEBAJO de la barrera y no " +
              "bloquearía nunca. ~1.2 = a la altura del pecho.")]
+    [Label("Altura de medición")]
     public float AimHeight = 1.2f;
 
     [Tooltip("Energía que cuesta parar UN proyectil físico. Los proyectiles se resuelven por " +
              "colisión con este collider (no por el pipeline de daño), así que no sabemos cuánto " +
              "daño traían: se cobra un costo fijo por proyectil detenido.")]
+    [Label("Energía por proyectil")]
     public float EnergyPerProjectileBlocked = 10f;
 
     [Header("Parry (Guerrero)")]
     [Tooltip("Segundos, desde que se LEVANTA el escudo, en los que un golpe que la barrera frena " +
              "es un PARRY: se frena entero y no gasta energía. 0 = sin parry (el Paladín).")]
+    [Label("Ventana de parry (s)")]
     public float ParryWindow = 0f;
 
     [Tooltip("Hasta qué distancia del dueño de la barrera un atacante cuenta como cuerpo a cuerpo. " +
              "A esos, el parry además los aturde (ParryStunEffect); a los de lejos solo se les " +
              "frena el golpe entero.")]
+    [Label("Alcance del parry")]
     public float ParryMeleeRange = 3.5f;
 
     [Tooltip("Lo que recibe el atacante cuerpo a cuerpo al que le hacen parry (GE_ParryStun).")]
+    [Label("Efecto del parry")]
     public GameplayEffect ParryStunEffect;
 
     [Header("Carga de la Definitiva")]
@@ -82,6 +90,7 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
              "la barrera (la cantidad de golpes, no el daño): uno pequeño y uno enorme valen lo " +
              "mismo. Cuenta también lo que frena por un aliado, los proyectiles y el parry. 0 = no " +
              "carga nada.")]
+    [Label("Definitiva por golpe frenado (s)")]
     public float UltimateSecondsPerBlock = 1f;
 
     // El mismo golpe frenado para varios a la vez (un barrido contra él y dos aliados detrás)
@@ -95,17 +104,20 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
              "(el Guardián). 0 = nada (el resto de los escudos). Lo devuelto no se puede volver " +
              "a devolver, así dos Guardianes no se rebotan el daño.")]
     [Range(0f, 1f)]
+    [Label("Daño devuelto (fracción)")]
     public float ReflectMeleeFraction = 0f;
 
     [Tooltip("En la ventana del parry, los proyectiles no se paran: cambian de dueño (pasan a " +
              "ser del dueño de la barrera) y salen hacia donde apunta. Una sola vez por " +
              "proyectil.")]
+    [Label("Devolver proyectiles en el parry")]
     public bool ReflectProjectilesOnParry = false;
 
     [Header("Castigar al atacante (Samurái)")]
     [Tooltip("Se le aplica al ATACANTE por cada golpe que frena esta barrera: cuerpo a cuerpo o a " +
              "distancia, también en el parry. El Samurái pone las heridas del Pícaro (GE_Wounds, " +
              "hasta 10). El mismo golpe frenado para varios a la vez cuenta una vez. Vacío = nada.")]
+    [Label("Efecto al atacante")]
     public GameplayEffect OnBlockAttackerEffect;
 
     // Mismo criterio que la carga de la definitiva: un golpe que frena para varios a la vez
@@ -123,40 +135,49 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
     [Tooltip("La barrera frena los golpes que le llegan al DUEÑO desde CUALQUIER lado, sin " +
              "mirar la geometría (una cápsula a su alrededor). No cubre aliados ni sigue la mira. " +
              "El collider igual hace falta (un CapsuleCollider que lo envuelva): es lo que para los proyectiles.")]
+    [Label("En todas las direcciones")]
     public bool Omnidirectional = false;
 
     [Tooltip("Solo con Omnidirectional: a qué distancia del pecho del dueño sale el destello del golpe.")]
+    [Label("Radio del destello")]
     public float OmniFlashRadius = 0.8f;
 
     [Header("Inclinación con la Mira")]
     [Tooltip("La barrera sube y baja con la mira del jugador (mirando al cielo, el escudo apunta " +
              "arriba). Sigue la misma inclinación que el torso (UpperBodyAim), así que se ve igual " +
              "en todas las pantallas y el servidor bloquea con la misma geometría.")]
+    [Label("Sigue la mira vertical")]
     public bool FollowAimPitch = true;
 
     [Tooltip("Altura del punto sobre el que gira la barrera, medida desde los pies (el pecho).")]
+    [Label("Altura del pivote")]
     public float PitchPivotHeight = 1.2f;
 
     [Tooltip("Cuánto de la inclinación de la mira sigue la barrera. 1 = toda.")]
     [Range(0f, 1.5f)]
+    [Label("Cuánto sigue la mira")]
     public float PitchFactor = 1f;
 
     [Header("Protección a Aliados")]
     [Tooltip("Si la barrera también protege a los aliados que queden detrás (lo que la convierte " +
              "en un escudo de equipo estilo Reinhardt). Desactivalo para un escudo puramente personal.")]
+    [Label("Protege aliados")]
     public bool ProtectAllies = true;
 
     [Tooltip("Solo con Protect Allies: a qué distancia del dueño se buscan aliados a los que " +
              "cubrir. No define el bloqueo (eso lo decide la geometría de la barrera), solo a " +
              "quiénes se les consulta — poner un valor holgado.")]
+    [Label("Alcance para aliados")]
     public float AllyScanRange = 12f;
 
     [Tooltip("Capa de los personajes, para buscar a los aliados a cubrir.")]
+    [Label("Capa de personajes")]
     public LayerMask CharacterLayer;
 
     [Tooltip("Cada cuánto se revisa qué aliados están cerca. No hace falta que sea rápido: un " +
              "aliado recién llegado igual queda cubierto en menos de un tick, y el bloqueo real " +
              "siempre se decide con la geometría al momento del golpe.")]
+    [Label("Cada cuánto busca aliados (s)")]
     public float AllyScanInterval = 0.25f;
 
     // Se dispara cada vez que la barrera frena daño: cuánto frenó y en qué punto del

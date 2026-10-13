@@ -27,11 +27,14 @@ public class UI_ChargeBar : MonoBehaviour
     // =========================================================
 
     [Tooltip("Dónde va la barra, en píxeles desde el centro de la pantalla (1920x1080).")]
+    [Label("Posición")]
     public Vector2 Position = new Vector2(0f, -170f);
 
+    [Label("Tamaño")]
     public Vector2 Size = new Vector2(380f, 20f);
 
     [Tooltip("Espacio entre tramos.")]
+    [Label("Separación de tramos")]
     public float SegmentGap = 4f;
 
     [Tooltip("Color de cada etapa, en orden. Si hay más etapas que colores, repite el último.")]
@@ -43,6 +46,7 @@ public class UI_ChargeBar : MonoBehaviour
     };
 
     [Tooltip("Segundos que tarda en desvanecerse al soltar.")]
+    [Label("Desvanecerse (s)")]
     public float FadeOutSeconds = 0.25f;
 
     // =========================================================

@@ -32,39 +32,52 @@ public class UI_ClassMenu : MonoBehaviour
 
     [Header("Configuración UI")]
     [Tooltip("Panel raíz del menú (se prende/apaga).")]
+    [Label("Panel del menú")]
     public GameObject MenuContainer;
     [Tooltip("Contenedor donde se instancian las tarjetas.")]
+    [Label("Contenedor de tarjetas")]
     public Transform  CardsParent;
     [Tooltip("Prefab de UI_ClassCard.")]
+    [Label("Prefab de tarjeta")]
     public GameObject ClassCardPrefab;
 
     [Header("Comportamiento")]
     [Tooltip("Abrir el menú de clases base automáticamente al entrar a la partida.")]
+    [Label("Abrir al entrar")]
     public bool OpenOnSpawn = true;
     [Tooltip("Abrir el menú de subclases SOLO al llegar al nivel máximo.\n\n" +
              "Apagado (lo normal): al llegar a nivel máximo el HUD avisa que se puede evolucionar " +
              "y el jugador abre el menú con la tecla V cuando le conviene. Abrirlo solo lo dejaba " +
              "plantado en medio de una pelea, sin poder moverse hasta elegir.")]
+    [Label("Abrir subclases al nivel máximo")]
     public bool OpenSubclassesOnMaxLevel = false;
 
     [Tooltip("Recibir daño con el menú abierto lo cierra sin elegir. Elegir subclase no " +
              "es un momento de invulnerabilidad: el que lo abre en medio de una pelea se " +
              "lleva los golpes igual, así que lo sano es que vuelva a su base y lo abra ahí.")]
+    [Label("Cerrar al recibir daño")]
     public bool CloseOnDamage = true;
 
     [Header("Tarjetas (grilla)")]
     [Tooltip("Desde cuántas clases se reparten en DOS filas. Con menos, una sola fila.")]
+    [Label("Dos filas desde")]
     public int TwoRowsFrom = 5;
     [Tooltip("Tamaño MÁXIMO de cada tarjeta, en unidades del canvas. Si no entran en el panel, se achican solas.")]
+    [Label("Tamaño máximo de tarjeta")]
     public Vector2 MaxCardSize = new Vector2(230f, 170f);
     [Tooltip("Espacio entre tarjetas (horizontal, vertical).")]
+    [Label("Separación de tarjetas")]
     public Vector2 CardSpacing = new Vector2(20f, 16f);
     [Tooltip("Lado del ícono de clase en cada tarjeta.")]
+    [Label("Tamaño del ícono")]
     public float CardIconSize = 56f;
     [Tooltip("Tamaño del nombre de la clase (se achica si no entra en un renglón).")]
+    [Label("Tamaño del nombre")]
     public float CardTitleSize = 16f;
     [Tooltip("Tamaño de la descripción. Si no entra en la tarjeta, se achica sola hasta el mínimo.")]
+    [Label("Tamaño de la descripción")]
     public float CardDescriptionSize = 10f;
+    [Label("Tamaño mínimo de la descripción")]
     public float CardDescriptionMinSize = 6f;
 
     // La grilla donde van las tarjetas (ver EnsureGrid).

@@ -27,23 +27,31 @@ public class MenuOrbitCamera : MonoBehaviour
 {
     [Header("Órbita")]
     [Tooltip("Altura sobre el centro de la arena.")]
+    [Label("Altura")]
     public float Height = 22f;
 
     [Tooltip("Distancia horizontal al centro. Chica = encima de la meseta; grande = desde afuera.")]
+    [Label("Distancia al centro")]
     public float Radius = 18f;
 
     [Tooltip("Grados por segundo. 3 = una vuelta cada dos minutos.")]
+    [Label("Giro (°/s)")]
     public float DegreesPerSecond = 3f;
 
     [Tooltip("Hacia dónde mira, relativo al centro de la arena (en metros). Un poco por " +
              "encima del piso queda más natural que mirar al punto exacto.")]
+    [Label("Hacia dónde mira")]
     public Vector3 LookAtOffset = new Vector3(0f, 1f, 0f);
 
     [Header("Blur (Depth of Field de URP)")]
+    [Label("Desenfoque")]
     public bool  BlurEnabled = true;
     [Tooltip("Cuanto más chica la distancia de foco y más grande la focal, más blur.")]
+    [Label("Desenfoque: distancia de foco")]
     public float BlurFocusDistance = 0.5f;
+    [Label("Desenfoque: focal")]
     public float BlurFocalLength   = 120f;
+    [Label("Desenfoque: apertura")]
     public float BlurAperture      = 1.4f;
 
     private Camera _camera;

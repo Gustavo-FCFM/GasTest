@@ -19,22 +19,30 @@ public class Entity_Totem : NetworkBehaviour
 
     [Header("Configuración del Tótem")]
     [Tooltip("El efecto (GameplayEffect) normal que este tótem aplicará a los aliados.")]
+    [Label("Efecto del aura")]
     public GameplayEffect AuraEffect;
 
     [Header("Sinergia: Ira del Tótem")]
     [Tooltip("El efecto potenciado que se aplica si el Chamán está Enfurecido.")]
+    [Label("Efecto potenciado")]
     public GameplayEffect EmpoweredAuraEffect;
 
     [Tooltip("La etiqueta que el tótem buscará en el creador para saber si está Enfurecido (Ej. Status_Frenzy).")]
+    [Label("Tag de enfurecido")]
     public EGameplayTag RageTag;
 
+    [Label("Radio del aura")]
     public float AuraRadius = 7f;
     // Cada cuánto se reaplica el aura a los aliados dentro del radio.
+    [Label("Cada cuánto (s)")]
     public float TickRate = 0.5f;
+    [Label("Capa de personajes")]
     public LayerMask CharacterLayer;
 
     [Header("Visuales")]
+    [Label("VFX del aura")]
     public GameObject AuraVFXPrefab;
+    [Label("Escala del VFX")]
     public float VfxScaleMultiplier = 2.0f;
     private GameObject currentAuraVFX;
 

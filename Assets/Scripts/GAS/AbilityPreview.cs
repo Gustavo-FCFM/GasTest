@@ -31,27 +31,34 @@ public class AbilityPreview : MonoBehaviour
     [Header("Habilidades a previsualizar")]
     [Tooltip("Assets de habilidad que se dibujan SIEMPRE desde este objeto (para comparar). La " +
              "habilidad elegida en el Project se dibuja aparte, sin tener que agregarla acá.")]
+    [Label("Kit (botón y habilidad)")]
     public List<GameplayAbility> Abilities = new List<GameplayAbility>();
 
     [Tooltip("Dibuja también la habilidad (o habilidades) elegida en el Project, con sus manijas.")]
+    [Label("Mostrar la elegida")]
     public bool ShowSelectedAbility = true;
 
     [Header("Regla de distancia")]
     [Tooltip("Dibuja anillos concéntricos para medir alcances de un vistazo.")]
+    [Label("Anillos de distancia")]
     public bool DrawDistanceRings = true;
     [Tooltip("Separación entre anillos, en metros.")]
+    [Label("Separación de anillos")]
     public float RingSpacing = 1f;
     [Tooltip("Cuántos anillos dibujar.")]
+    [Label("Cantidad de anillos")]
     public int RingCount = 10;
 
     [Header("Visualización")]
     [Tooltip("Dibuja una silueta de personaje (1.8 m de alto) con una flecha hacia adelante: la " +
              "escala y hacia dónde sale cada habilidad.")]
+    [Label("Dibujar silueta")]
     public bool DrawBody = true;
 
     [Tooltip("Si está activo, las habilidades de la lista solo se dibujan al SELECCIONAR este " +
              "objeto. Desactivalo para verlas siempre (útil al mover otros objetos alrededor). La " +
              "habilidad elegida en el Project se dibuja igual.")]
+    [Label("Solo al seleccionarlo")]
     public bool OnlyWhenSelected = true;
 
     private void OnDrawGizmosSelected()

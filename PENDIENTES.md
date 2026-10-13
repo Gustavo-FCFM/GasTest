@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 8 de octubre de 2026
+# Pendientes — actualizado el 13 de octubre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -48,7 +48,39 @@ rm -rf "Assets/FishNet" "Assets/FishNet.meta" "Assets/TextMesh Pro/Examples & Ex
 
 ---
 
-# ★ Balance de curaciones, desarme, aturdido e invisibilidad — HECHO, falta probar (8 de octubre, noche)
+# ★ Misma pared otra vez y espera por enemigo en las ráfagas — HECHO, falta probar (13 de octubre; herramienta corrida y borrada)
+
+Pedidos de Gustavo después de probar el Monje y sus subclases.
+
+- **Volver a la misma pared** (Monje y Pícaro). Después de SALTAR de una pared ya se puede
+  engancharse otra vez a esa misma. Si se soltó SOLO (el Pícaro al terminar de resbalar, el
+  Monje al llegar al final), esa pared sigue bloqueada hasta tocar el piso; si no, empujando
+  contra ella quedaría colgado para siempre. Es la casilla nueva `Volver a la misma pared tras
+  saltar` del perfil de pared (`WallMove_*`), prendida por defecto.
+- **Espera por enemigo** en cada entrada de la lista de efectos de una habilidad (desplegando
+  la flechita): después de aplicarle ese efecto a un objetivo, la habilidad no se lo vuelve a
+  aplicar a ESE objetivo hasta pasados esos segundos; a los demás sí. Los pasos de un combo
+  comparten la espera del combo, y dura entre un uso y el siguiente.
+  - Ráfaga aturdidora: los 4 golpes ya llevaban el aturdido. Ahora cada uno puede aturdir a un
+    enemigo distinto, pero al mismo solo una vez cada 2 s (con la Paz mental ya no lo deja
+    aturdido para siempre).
+  - Ráfaga de kunais del Shinobi: los 4 kunais hacen el daño de Artes oscuras (antes solo el
+    primero), con 2 s de espera por enemigo.
+- [x] **Correr `Mercenarios ▸ Una vez ▸ Espera por enemigo en las ráfagas con Ki`** (pone los
+      2 s en los puñetazos de la Ráfaga aturdidora y en el kunai de Artes oscuras, y pasa los 4
+      kunais de la Ráfaga a Artes oscuras). Después se borra `MercFlurryPerTargetSetup.cs`.
+- [ ] Probar: saltar de una pared, volver a ella y engancharse (Monje y Pícaro); resbalar hasta
+      soltarse y que NO se vuelva a pegar a la misma.
+- [ ] Ráfaga aturdidora contra dos enemigos juntos: los dos quedan aturdidos. Con la Paz mental,
+      ráfagas seguidas al mismo: entre una y otra hay un hueco.
+- [ ] Ráfaga de kunais contra dos enemigos: los dos reciben el daño extra; al mismo, una vez
+      cada 2 s.
+- **Escudos:** los cuatro (Guerrero, Paladín, Monje, Shinobi) ya cobran 5 de energía al
+  levantarse, todos con `GE_Cost_Shield`.
+
+---
+
+# ★ Balance de curaciones, desarme, aturdido e invisibilidad — HECHO Y PROBADO ✅ (8 de octubre, noche; probado el 13)
 
 Pedidos de Gustavo después de probar. Compila limpio. Hay que dejar que Unity recompile.
 
@@ -78,13 +110,13 @@ Pedidos de Gustavo después de probar. Compila limpio. Hay que dejar que Unity r
 
 **Qué probar:**
 
-- [ ] Clérigo: 3 curaciones seguidas y cada una vuelve a los 4.5 s. ¿Sigue curando demasiado?
-- [ ] Paladín: el número verde del aura al pegar, un poco más alto.
-- [ ] Con dos ventanas (o la prueba en red): el Desarme del Maestro de batalla a un Clérigo o
+- [x] Clérigo: 3 curaciones seguidas y cada una vuelve a los 4.5 s. ¿Sigue curando demasiado?
+- [x] Paladín: el número verde del aura al pegar, un poco más alto.
+- [x] Con dos ventanas (o la prueba en red): el Desarme del Maestro de batalla a un Clérigo o
       Paladín que se mueve; el desarmado no puede atacar 2 s (sí bloquear y lanzar magia).
-- [ ] Aturdir a un Guerrero o Paladín con el escudo levantado, y a alguien a mitad de un ataque:
+- [x] Aturdir a un Guerrero o Paladín con el escudo levantado, y a alguien a mitad de un ataque:
       todo el cuerpo hace la animación, y al terminar el escudo vuelve a su lugar.
-- [ ] Invisibilidad (Asesino, Shinobi): volverse invisible pegado a una pared o apuntando un
+- [x] Invisibilidad (Asesino, Shinobi): volverse invisible pegado a una pared o apuntando un
       lanzamiento, y salir de la invisibilidad: te tienes que volver a ver.
 
 ---
@@ -154,7 +186,7 @@ Resurrección, Intercepción) aplican también sus efectos "al golpear" al elegi
       tiene que recompilar).
 - [x] Rueda de tótems: nombres, descripciones y cooldowns como estaban.
 - [ ] Proyectil devuelto por el parry del Guardián: sigue haciendo el daño que traía.
-- [ ] Bots: siguen usando sus buffs (Comida de emergencia, Emboscada sombría) y sus aturdidos.
+- [x] Bots: siguen usando sus buffs (Comida de emergencia, Emboscada sombría) y sus aturdidos.
 
 **Detalles que cambian (a propósito):**
 
@@ -199,10 +231,10 @@ con Excel: quien ayude a traducir no necesita Unity. Guardarla como **"CSV UTF-8
   el momento. Las etiquetas largas se achican solas si no entran.
 - Menú principal, Ajustes, recuadro de red (ESC) y la sala de espera (pestañas de rol incluidas)
   pasan por la tabla. "Restablecer" no cambia el idioma.
-- [ ] Probar: abrir el juego → todo en español; Ajustes ▸ Idioma → English cambia todo al momento
+- [x] Probar: abrir el juego → todo en español; Ajustes ▸ Idioma → English cambia todo al momento
       (menú de atrás, sala, recuadro de red); cerrar y volver a abrir → se acuerda.
-- [ ] Mirar que ningún texto en español se salga de su recuadro (botones, encabezados de la sala).
-- [ ] Una build: que arranque en español y que se lean las tildes, la ñ y ¿ ¡ (la fuente las
+- [x] Mirar que ningún texto en español se salga de su recuadro (botones, encabezados de la sala).
+- [x] Una build: que arranque en español y que se lean las tildes, la ñ y ¿ ¡ (la fuente las
       agrega sola con su fallback dinámico).
 - [-] Fuera de la etapa: la sala VIEJA de la escena de pruebas (`UI_LobbyMenu`, textos fijos en
       su prefab) sigue en inglés. Si se usa, se le pone `LocalizedText` a cada texto.
@@ -222,10 +254,10 @@ con Excel: quien ayude a traducir no necesita Unity. Guardarla como **"CSV UTF-8
   idioma: en una partida mezclada, cada uno lo ve en el suyo. (Cambiaron tres RPC.)
 - Quitada la fila de **Calidad** de Ajustes (pedido de Gustavo: no hay niveles de calidad
   pensados para elegir).
-- [ ] Probar en partida, en español y en inglés: el marcador, los avisos, el Objetivo, morir
+- [x] Probar en partida, en español y en inglés: el marcador, los avisos, el Objetivo, morir
       (contra un jugador y contra un NPC), el registro de bajas, la definitiva lista, la rueda.
-- [ ] Con dos ventanas en idiomas distintos: cada una ve las bajas en el suyo.
-- [ ] Que "EQUIPO 1 (TÚ)" entre en el marcador (se achica solo si no).
+- [x] Con dos ventanas en idiomas distintos: cada una ve las bajas en el suyo.
+- [x] Que "EQUIPO 1 (TÚ)" entre en el marcador (se achica solo si no).
 - [-] Lo que todavía sale en inglés es CONTENIDO (etapa 3): los nombres de clases (en las bajas,
       las tarjetas, la sala), los nombres de habilidades (la barra de casteo) y las opciones de
       la rueda (las mascotas del Explorador...).
@@ -255,7 +287,7 @@ con Excel: quien ayude a traducir no necesita Unity. Guardarla como **"CSV UTF-8
       Importar nombres traducidos`. La consola dice cuántos cambió (tienen que ser 242). Revisar
       los nombres en el CSV o en los assets: los internos (pasos de combo, variantes) no se ven en
       pantalla, pero también quedaron traducidos.
-  - [ ] Probar: elegir clase y subclase, morir, canalizar y abrir una rueda, en los dos idiomas;
+  - [x] Probar: elegir clase y subclase, morir, canalizar y abrir una rueda, en los dos idiomas;
         con dos ventanas en idiomas distintos, la barra de casteo de cada uno en el suyo.
 - [x] **El Inspector en español — HECHO Y REVISADO ✅ (13 de octubre: "están todos correctos").** Pedido de Gustavo,
       para quienes le ayuden. Cada campo de los GA, GE, clases, ASDef y perfiles de pared tiene su
@@ -269,9 +301,15 @@ con Excel: quien ayude a traducir no necesita Unity. Guardarla como **"CSV UTF-8
       documentos.
   - [x] Abrir unos cuantos (una habilidad de cada tipo, un efecto, una clase) y ver que ningún nombre
         quede cortado y que se entienda. Si alguno no te gusta, se cambia en su `[Label]`.
-  - [ ] Lo que NO tiene nombres en español todavía: los componentes de los prefabs (pasivas como
-        `AmbushKillReset`, tótems, proyectiles, el `PlayerController`). Usan el inspector normal de
-        Unity; si hace falta, se les puede poner el mismo sistema.
+  - [x] **Los componentes también — HECHO, falta mirarlo (13 de octubre).** 644 campos más en ~75
+        componentes nuestros: pasivas, tótems, proyectiles, barreras, el `PlayerController`, la
+        cámara, los bots y NPCs, el modo de juego y toda la UI. Lo dibuja `LabeledComponentEditor`, el
+        inspector general de los MonoBehaviour: mismo orden, `[Header]`, `[Range]` y tooltips de
+        siempre; un script sin `[Label]` (los de los packs, los de Unity) se ve exactamente igual que
+        antes. Las entradas de lista de la aura del Paladín, las habilidades extra de los NPCs y las
+        reglas de aparición, con `LabeledFieldsDrawer`. Quedan fuera los restos de la jam (`48toPlay`).
+  - [ ] Mirar unos cuantos prefabs (el jugador, un tótem, una pasiva, un NPC, el HUD) y que nada se
+        vea raro ni cortado.
 
 ---
 
@@ -296,7 +334,7 @@ Pedido de Gustavo: la quemadura del Monje (`GE_DragonBurn`) usaba el MISMO VFX q
 - [x] **El orbe es un objeto de red** *(quedó en DefaultPrefabObjects; PROBADO ✅ en un cliente: los orbes se ven rojos)*: la herramienta revisa que haya quedado en
       `DefaultPrefabObjects` y avisa en la consola si no. Si avisa: `Tools ▸ Fish-Networking ▸
       Utility ▸ Refresh Default Prefabs`. Probar en un cliente que los orbes se ven.
-- [ ] Mirar: la quemadura del Monje roja y la del Clérigo como siempre; las zonas, los orbes y su
+- [x] Mirar: la quemadura del Monje roja y la del Clérigo como siempre; las zonas, los orbes y su
       golpe bien rojos. Si algo queda "demasiado" rojo o apagado, se ajusta a mano en su prefab.
 
 ---
@@ -349,7 +387,7 @@ Las piezas para soltar zonas desde otra habilidad quedaron en `GA_ContinuousAoE`
 
 - [x] La Quemadura santa rellena el cono de zonas amarillas (o, en fila, donde apuntás).
 - [x] Un enemigo adentro suma quemaduras sagradas (hasta 5); un aliado adentro se sigue curando.
-- [ ] En un cliente: las zonas caen donde mira él y se ven en las dos ventanas.
+- [x] En un cliente: las zonas caen donde mira él y se ven en las dos ventanas.
 - [x] ¿Se ve amarillo el fuego? (si las fogatas amarillas de Hovl no alcanzan, se le cambia el color).
 
 ---
@@ -413,16 +451,16 @@ de FishNet (hay RPC nuevas en `PlayerController`).
 
 **Qué probar:**
 
-- [ ] Wall jump con Pícaro y Monje: al aterrizar se frena ahí, sin resbalar.
-- [ ] Paz mental + Defensa de agua varias veces: un solo buff en la barra, que se reinicia.
+- [x] Wall jump con Pícaro y Monje: al aterrizar se frena ahí, sin resbalar.
+- [x] Paz mental + Defensa de agua varias veces: un solo buff en la barra, que se reinicia.
 - [x] Aliento de dragón rojo: 3 golpes en 3 s, una zona por golpe donde mirás; girando, el cono y
       las zonas siguen la mira; cada zona dura 5 s y suma una quemadura por segundo (hasta 5).
       En un cliente (no el host) también: que las zonas caigan donde mira ÉL. **PROBADO ✅ en el
       cliente (8 de octubre).**
-- [ ] Aturdido o silenciado a mitad del aliento: se corta (barra roja) y puede volver a usar todo.
-- [ ] Asesino: invisible, el aviso del crítico mejorado vuelve antes; salir de la invisibilidad
+- [x] Aturdido o silenciado a mitad del aliento: se corta (barra roja) y puede volver a usar todo.
+- [x] Asesino: invisible, el aviso del crítico mejorado vuelve antes; salir de la invisibilidad
       y matar a alguien (o un NPC) en 6 s → la Emboscada lista; pasados los 6 s, no.
-- [ ] Shinobi: humo al ocultarse, en las dos puntas del Paso de las sombras y en cada salto
+- [x] Shinobi: humo al ocultarse, en las dos puntas del Paso de las sombras y en cada salto
       oculto (piso y pared), en las dos ventanas.
 
 ---
@@ -459,7 +497,7 @@ al recompilar: hay dos RPC que cambiaron).
   segundo el WASD no puede empujar de vuelta contra ella. **Empujar hacia afuera** lo suelta.
   **El salto se desvía hacia donde mira la cámara, hasta 30° a cada lado** (pedido de Gustavo,
   8 de octubre): nunca sale derecho a donde mira. `Jump Aim Max Angle` en los perfiles.
-  - [ ] Probar: pegado, mirar a la izquierda o la derecha y saltar → sale torcido hacia ese lado.
+  - [x] Probar: pegado, mirar a la izquierda o la derecha y saltar → sale torcido hacia ese lado.
 - **Saltos encadenados sin límite**, pero a la pared de la que se acaba de soltar no se vuelve
   a pegar hasta tocar el piso.
 - Pegado **se pueden usar las habilidades**; las de movimiento (dash, Blink, la patada) salen
@@ -477,17 +515,17 @@ inclinación viaja en la RPC de locomoción (dos bytes más) y se aplica al mode
 
 **Qué probar:**
 
-- [ ] Pícaro: saltar contra una pared → se pega 1 s, resbala y se suelta; Espacio pegado →
+- [x] Pícaro: saltar contra una pared → se pega 1 s, resbala y se suelta; Espacio pegado →
       salta hacia afuera; entre dos paredes enfrentadas, subir saltando de una a otra; que no
       se vuelva a pegar a la misma sin tocar el piso.
-- [ ] Monje: correr a lo largo de una pared, que baje de a poco y termine en el piso; que la
+- [x] Monje: correr a lo largo de una pared, que baje de a poco y termine en el piso; que la
       pared se acabe a mitad de camino; saltar hacia afuera; la patada desde la pared.
-- [ ] Que NO se pegue a: los límites invisibles de la arena, otros jugadores, tótems, la barrera
+- [x] Que NO se pegue a: los límites invisibles de la arena, otros jugadores, tótems, la barrera
       de un escudo.
-- [ ] Atacar pegado (dagas, puños, el escudo); aturdido o empujado pegado → se cae.
+- [x] Atacar pegado (dagas, puños, el escudo); aturdido o empujado pegado → se cae.
 - [ ] Con dos ventanas: que el otro vea la pose (Monje corriendo inclinado, Pícaro pegado).
 - [ ] La Ráfaga con 4 golpes (¿se ve bien a esa velocidad?) y el Ki con 2 cargas.
-- [ ] Escudos: levantar cobra 5 de energía; con 5 o menos no se levanta.
+- [x] Escudos: levantar cobra 5 de energía; con 5 o menos no se levanta.
 - [-] Animaciones de pared propias: no hay en el pack de Kevin Iglesias (se usan caer y correr);
       del artista si las hace.
 
@@ -537,13 +575,13 @@ Claude. Compila limpio (juego y editor).
 
 - [x] **PROBADO ✅ (8 de octubre, "está bien").** Los cortes ponen heridas; bloquear hiere al
       atacante; Afilar; los Cortes devastadores con y sin acumulaciones; los cortes extra en red.
-- [ ] **R: la franja NO se veía** (8 de octubre). No era la franja: el marcador del piso
+- [x] **R: la franja NO se veía** (8 de octubre). No era la franja: el marcador del piso
       (`UI_GroundTargetIndicator`) no estaba puesto en NINGUNA escena ni prefab, así que ninguna
       habilidad de zona mostró nunca nada. Ahora se crea solo y dibuja una caja rellena con borde
       (la franja) o un círculo relleno con borde (las zonas). Probar: la franja sigue la mira, se
       corta en las paredes, marca a los enemigos de adentro (y no a un invisible); al soltar los
       atraviesa a todos. Un enemigo con la marca que baja al 5 % muere y la baja es del Samurái.
-- [ ] De paso, ahora SÍ se ve el círculo de las demás habilidades de zona: Marcado para morir del
+- [x] De paso, ahora SÍ se ve el círculo de las demás habilidades de zona: Marcado para morir del
       Asesino, Salto heroico del Comandante, las áreas "en la retícula".
 - [ ] Las patadas del Samurái ponen herida.
 - [-] ⚙ Animaciones: el corte giratorio usa el clip del molinete (`MagicAttackOmni01`) y el Corte
@@ -586,22 +624,22 @@ Los tres tags nuevos, al final del enum.
 
 **Qué probar:**
 
-- [ ] Maestro elemental: los orbes salen con cada puñetazo y pegan de lejos (daño mágico).
-- [ ] Ráfaga aturdidora con 0, 2 y 4 acumulaciones: no aturde / 1 s / 2 s; después tiene 4.
-- [ ] Defensa de agua: los primeros 2 s los golpes curan (número verde); después frena como siempre.
-- [ ] Patada del viento: atraviesa a varios, los empuja y los aturde.
-- [ ] Aliento de fuego: el cono quema. Con Ki: ver el Aliento de dragón rojo sostenido arriba
+- [x] Maestro elemental: los orbes salen con cada puñetazo y pegan de lejos (daño mágico).
+- [x] Ráfaga aturdidora con 0, 2 y 4 acumulaciones: no aturde / 1 s / 2 s; después tiene 4.
+- [x] Defensa de agua: los primeros 2 s los golpes curan (número verde); después frena como siempre.
+- [x] Patada del viento: atraviesa a varios, los empuja y los aturde.
+- [x] Aliento de fuego: el cono quema. Con Ki: ver el Aliento de dragón rojo sostenido arriba
       (¿se ve bien el VFX de la zona y del tamaño correcto?).
-- [ ] Paz mental: 6 s en los que clic izq./der., Shift y E salen con Ki sin gastar el Ki.
-- [ ] Shinobi: kunais por la espalda hacen crítico (número amarillo). Con Ki, el primero de la
+- [x] Paz mental: 6 s en los que clic izq./der., Shift y E salen con Ki sin gastar el Ki.
+- [x] Shinobi: kunais por la espalda hacen crítico (número amarillo). Con Ki, el primero de la
       Ráfaga hace más daño con más acumulaciones.
-- [ ] Bloqueo / Defensa paciente: un hacha, una daga o un arco lo atraviesan sin dañarlo (y
+- [x] Bloqueo / Defensa paciente: un hacha, una daga o un arco lo atraviesan sin dañarlo (y
       siguen); un golpe cuerpo a cuerpo se frena normal.
-- [ ] Manto: invisible, rápido, el primer golpe crítico; 2 cargas. Con Ki, Paso de las sombras:
+- [x] Manto: invisible, rápido, el primer golpe crítico; 2 cargas. Con Ki, Paso de las sombras:
       el doble de lejos; mirando una pared, aparece pegado a ella.
-- [ ] Muerte silenciosa con 3+ enemigos: salta de uno a otro, primero jugadores y el más herido,
+- [x] Muerte silenciosa con 3+ enemigos: salta de uno a otro, primero jugadores y el más herido,
       a cada uno una vez; nadie le hace daño mientras dura.
-- [ ] En red (dos ventanas): los orbes y kunais se ven, los saltos de la Muerte silenciosa, la zona
+- [x] En red (dos ventanas): los orbes y kunais se ven, los saltos de la Muerte silenciosa, la zona
       de fuego.
 - [-] ⚙ Animaciones: el Aliento usa `MagicAttackDirect1H01_R` y la Muerte silenciosa el golpe del
       cono de dagas; los kunais, el lanzamiento de dagas (el mismo clip para los dos).
@@ -619,7 +657,7 @@ todo se arma por código.
   clase. Una clase BASE no tiene rol (no tiene definitiva): aparece con el de la mayoría de sus
   subclases (`CharacterClassDefinition.DisplayRole`). Hoy: Bárbaro y Guerrero en Tanks, Pícaro
   en Damage, Paladín y Clérigo en Supports.
-- [ ] **El Monje no tiene subclases todavía, así que sale en `Other`: ponerle `Menu Role` =
+- [x] **El Monje no tiene subclases todavía, así que sale en `Other`: ponerle `Menu Role` =
       Damage en `Class_Monk` (sección Identidad).** Lo mismo con cada clase base nueva hasta que
       tenga subclases. El inspector de la clase avisa cuando falta.
 - **Menú de clases en partida (C / V): tarjetas en grilla.** Desde 5 clases, dos filas; con
@@ -633,11 +671,11 @@ todo se arma por código.
 
 **Qué probar:**
 
-- [ ] La sala: las pestañas cambian las clases, el recuadro no salta de tamaño, elegir y
+- [x] La sala: las pestañas cambian las clases, el recuadro no salta de tamaño, elegir y
       confirmar sigue funcionando (también eligiéndole clase a un bot).
-- [ ] El menú C con 6 clases en dos filas de 3; el V con las 3 subclases en una fila; las
+- [x] El menú C con 6 clases en dos filas de 3; el V con las 3 subclases en una fila; las
       teclas 1–6 y el control siguen eligiendo la tarjeta correcta.
-- [ ] El ícono al lado de la barra: que se vea en aliados y enemigos, que cambie al cambiar de
+- [x] El ícono al lado de la barra: que se vea en aliados y enemigos, que cambie al cambiar de
       clase, y que no choque con los buffs.
 
 ---

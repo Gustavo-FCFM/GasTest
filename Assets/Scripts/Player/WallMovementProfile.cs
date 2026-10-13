@@ -16,8 +16,9 @@ using UnityEngine;
 //    el piso. Si la pared se acaba, cae con el impulso que traía.
 //
 // En los dos: Espacio salta en la dirección OPUESTA a la pared, más un impulso hacia
-// arriba. Los saltos se encadenan sin límite, pero no se vuelve a pegar a la MISMA pared
-// de la que se acaba de soltar hasta tocar el piso. Pegado se pueden usar las
+// arriba. Los saltos se encadenan sin límite, y después de SALTAR se puede volver a la
+// misma pared (SameWallAfterJump, 13 de octubre); a la que se soltó SOLA (resbalando, o al
+// terminar de correr) no se vuelve a pegar hasta tocar el piso. Pegado se pueden usar las
 // habilidades; las de movimiento (dash, Blink, la patada) lo despegan. Con la bolsa del
 // objetivo también se puede (decisiones de Gustavo, 8 de octubre de 2026).
 //
@@ -132,6 +133,13 @@ public class WallMovementProfile : ScriptableObject
     [Tooltip("Qué tan rápido se disipa el impulso del salto. Más alto = vuela menos lejos.")]
     [Label("Disipación del impulso")]
     [Range(0.5f, 10f)] public float JumpOffDamping = 1.5f;
+
+    [Tooltip("Después de SALTAR de una pared se puede volver a engancharse a esa MISMA pared (ir y " +
+             "volver, o subir en zigzag). Soltarse solo, resbalando o al terminar de correr, la sigue " +
+             "bloqueando hasta tocar el piso: si no, se quedaría colgado para siempre empujando contra " +
+             "ella. Apagado = después de saltar tampoco (como era antes del 13 de octubre).")]
+    [Label("Volver a la misma pared tras saltar")]
+    public bool SameWallAfterJump = true;
 
     [Section("Cómo se ve")]
     [Tooltip("Cuánto se inclina el modelo hacia afuera de la pared mientras está enganchado (grados). " +

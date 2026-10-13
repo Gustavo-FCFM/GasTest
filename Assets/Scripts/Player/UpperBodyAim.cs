@@ -29,41 +29,50 @@ public class UpperBodyAim : MonoBehaviour
 {
     [Header("Animator")]
     [Tooltip("Si se deja vacío, se busca en los hijos.")]
+    [Label("Animator")]
     public Animator Target;
 
     [Tooltip("Parámetro FLOAT del Animator donde se copia el ángulo (grados; + = mirando " +
              "arriba). Es opcional: sirve para ver el valor en la ventana del Animator " +
              "mientras se prueba. La inclinación no depende de él.")]
+    [Label("Parámetro del ángulo")]
     public string PitchParam = "AimPitch";
 
     [Header("Huesos")]
     [Tooltip("Los huesos que se inclinan, de la cadera hacia arriba. Vacío = se resuelven solos " +
              "del avatar humanoide (Spine, Chest, UpperChest, Head).")]
+    [Label("Huesos")]
     public Transform[] Bones;
 
     [Tooltip("Cuánto del ángulo total se lleva cada hueso, en el mismo orden que Bones. " +
              "Repartirlo entre varios huesos se ve natural; cargarlo todo en uno, quebrado. " +
              "La suma normalmente da 1.")]
+    [Label("Pesos")]
     public float[] Weights = { 0.3f, 0.35f, 0.2f, 0.15f };
 
     [Header("Límites")]
     [Tooltip("Tope de inclinación hacia arriba, en grados.")]
+    [Label("Máximo arriba (°)")]
     public float MaxUp = 50f;
 
     [Tooltip("Tope de inclinación hacia abajo, en grados.")]
+    [Label("Máximo abajo (°)")]
     public float MaxDown = 40f;
 
     [Tooltip("Suavizado del ángulo, en segundos. En el dueño persigue a la mira; en las " +
              "copias remotas, al último valor que llegó por la red.")]
+    [Label("Suavizado (s)")]
     public float Smooth = 0.08f;
 
     [Header("Red")]
     [Tooltip("Cuántas veces por segundo el dueño manda su ángulo. 15 alcanza de sobra: " +
              "el resto lo tapa el suavizado.")]
+    [Label("Envíos por segundo")]
     public float SendRate = 15f;
 
     [Tooltip("Grados que tiene que cambiar el ángulo para que valga la pena mandarlo. " +
              "Quieto, no se manda nada.")]
+    [Label("Cambio mínimo para enviar (°)")]
     public float MinDeltaToSend = 0.75f;
 
     private PlayerController _player;

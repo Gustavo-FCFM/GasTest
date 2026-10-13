@@ -37,42 +37,55 @@ public class MercObjective : NetworkBehaviour
 
     [Header("Recolección")]
     [Tooltip("A qué distancia se levanta el Objetivo con solo acercarse.")]
+    [Label("Radio de recogida")]
     public float PickupRadius = 2.2f;
 
     [Tooltip("Segundos que queda bloqueado tras caer al piso, antes de poder levantarse otra vez.")]
+    [Label("Bloqueo al caer (s)")]
     public float PickupLockSeconds = 3f;
 
     [Tooltip("Capa de los personajes (en este proyecto, 'Character' = 7).")]
+    [Label("Capa de personajes")]
     public LayerMask CharacterLayer = 1 << 7;
 
     [Header("Cómo lo carga el portador")]
     [Tooltip("Dónde se ve la bolsa respecto del portador (espacio local del personaje).")]
+    [Label("Posición al llevarlo")]
     public Vector3 CarryOffset = new Vector3(0f, 2.1f, -0.35f);
 
     [Tooltip("Cuánta velocidad de movimiento pierde el que lo lleva. 0.25 = un 25% más lento.")]
+    [Label("Ralentización al llevarlo")]
     [Range(0f, 0.9f)] public float CarrySlowPercent = 0.25f;
 
     [Tooltip("Opcional: efecto propio para el portador. Si lo dejás vacío se arma uno en código " +
              "con la ralentización de arriba y el tag Status_Carrying_Objective.")]
+    [Label("Efecto del portador")]
     public GameplayEffect CarryEffect;
 
     [Header("Entrega")]
     [Tooltip("Segundos que hay que quedarse en la zona de entrega para anotar. Salir de la " +
              "zona o recibir daño de otro personaje reinicia la cuenta. 0 = entrega instantánea.")]
+    [Label("Tiempo de entrega (s)")]
     public float DeliverSeconds = 6f;   // 6 y no 3 (30 sept.): más que los 5 s de la Zona de verdad, en la que nadie puede atacar; con 3 s se entregaba entera adentro sin que nadie pudiera frenarlo
 
     [Header("Presentación")]
     [Tooltip("Altura del flotado cuando está en el piso.")]
+    [Label("Altura del flotado")]
     public float BobHeight = 0.25f;
+    [Label("Velocidad del flotado")]
     public float BobSpeed  = 2f;
+    [Label("Giro (°/s)")]
     public float SpinSpeed = 45f;
 
     [Header("Columna de luz mientras se entrega")]
     [Tooltip("Alto de la columna. Alta a propósito: se tiene que ver desde todo el mapa.")]
+    [Label("Columna: alto")]
     public float BeaconHeight = 40f;
     [Tooltip("Radio de la columna.")]
+    [Label("Columna: radio")]
     public float BeaconRadius = 1.6f;
     [Tooltip("Opacidad con la entrega casi terminada (arranca más tenue y se va encendiendo).")]
+    [Label("Columna: opacidad")]
     [Range(0f, 1f)] public float BeaconAlpha = 0.4f;
 
     // =========================================================

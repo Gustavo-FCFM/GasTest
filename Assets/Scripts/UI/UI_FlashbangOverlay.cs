@@ -24,13 +24,17 @@ using UnityEngine.UI;
 public class UI_FlashbangOverlay : MonoBehaviour
 {
     [Tooltip("Imagen blanca de pantalla completa. Este script solo maneja su alpha.")]
+    [Label("Imagen")]
     public Image Overlay;
     [Tooltip("Segundos desde el flash total hasta despejarse por completo.")]
+    [Label("Desvanecerse (s)")]
     public float FadeDuration = 2f;
     [Range(0f, 1f)]
     [Tooltip("Opacidad máxima del flash (1 = blanco total en el instante del golpe).")]
+    [Label("Opacidad máxima")]
     public float MaxAlpha = 1f;
     [Tooltip("Curva del desvanecimiento (X = progreso 0..1 del fade, Y = intensidad). Por defecto lineal descendente.")]
+    [Label("Curva del desvanecimiento")]
     public AnimationCurve FadeCurve = AnimationCurve.Linear(0f, 1f, 1f, 0f);
 
     private float _fadeTimer = float.MaxValue; // tiempo transcurrido del fade actual (arranca "ya despejado")

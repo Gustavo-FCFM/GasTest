@@ -13,19 +13,27 @@ using TMPro;
 public class UI_UltimateSlot : MonoBehaviour
 {
     [Header("UI References")]
+    [Label("Fondo del ícono")]
     public Image iconBackground;           // Ícono oscurecido de fondo
+    [Label("Relleno del ícono")]
     public Image iconFill;                 // Ícono que se va llenando de color (Type: Filled)
+    [Label("Texto del porcentaje")]
     public TextMeshProUGUI percentageText; // Texto "0%" → "99%" → "READY"
+    [Label("Efectos de lista")]
     public GameObject readyEffects;        // Partículas/marco que se prende al llegar al 100%
 
     [Tooltip("Texto con la tecla/botón de la ultimate (R). Se rellena solo según el slot. Opcional.")]
+    [Label("Texto de la tecla")]
     public TextMeshProUGUI keyText;        // Etiqueta de la tecla asignada
 
     [Header("Lista para usar")]
     [Tooltip("Cuánto crece el ícono al latir con la definitiva cargada. 0.08 = un 8 %.")]
+    [Label("Latido: tamaño")]
     public float ReadyPulseScale = 0.08f;
     [Tooltip("Latidos por segundo con la definitiva cargada.")]
+    [Label("Latido: velocidad")]
     public float ReadyPulseSpeed = 1.5f;
+    [Label("Color del aviso de lista")]
     public Color ReadyToastColor = new Color(1f, 0.82f, 0.25f, 1f);
 
     private GameplayAbility assignedAbility;

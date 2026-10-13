@@ -31,25 +31,32 @@ public class UI_ScreenFeedback : MonoBehaviour
 
     [Header("Viñeta de poca vida")]
     [Tooltip("Por debajo de esta fracción de vida empieza a verse la viñeta. 0.3 = 30 %.")]
+    [Label("Vida baja desde")]
     [Range(0f, 1f)] public float LowHealthThreshold = 0.3f;
 
     [Tooltip("Opacidad máxima del borde, con la vida casi en cero.")]
+    [Label("Viñeta: opacidad máxima")]
     [Range(0f, 1f)] public float VignetteMaxAlpha = 0.6f;
 
     [Tooltip("Latidos por segundo: el primero es justo en el umbral, el segundo casi muerto.")]
+    [Label("Latidos por segundo")]
     public Vector2 PulseSpeed = new Vector2(1.2f, 3f);
 
     [Tooltip("Qué tan ancho es el borde: 0 = todo rojo, 1 = casi nada. El centro de la " +
              "pantalla siempre queda limpio.")]
+    [Label("Viñeta: radio interior")]
     [Range(0f, 0.95f)] public float VignetteInnerRadius = 0.55f;
 
+    [Label("Viñeta: color")]
     public Color VignetteColor = new Color(0.85f, 0.05f, 0.05f, 1f);
 
     [Header("Pantalla de muerte")]
     [Tooltip("Si no hay reaparición (o no se sabe cuándo), cuánto se muestra el aviso.")]
+    [Label("Aviso de muerte (s)")]
     public float DeathFallbackSeconds = 3f;
 
     [Header("Avisos cortos")]
+    [Label("Aviso dura (s)")]
     public float ToastSeconds = 1.6f;
 
     // =========================================================

@@ -14,7 +14,7 @@ public class AbilityPreviewEditor : Editor
 {
     public override void OnInspectorGUI()
     {
-        DrawDefaultInspector();
+        LabeledComponentEditor.DrawFields(serializedObject);
 
         EditorGUILayout.HelpBox(
             "Elegí una habilidad en el Project para verla acá (con sus manijas). Las de la lista se ven " +

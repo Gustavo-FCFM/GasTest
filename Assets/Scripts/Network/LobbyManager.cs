@@ -71,15 +71,18 @@ public class LobbyManager : NetworkBehaviour
 
     [Header("Cupos")]
     [Tooltip("Cuántos jugadores entran por equipo. 0 = sin límite (útil para probar de a dos).")]
+    [Label("Jugadores por equipo")]
     public int MaxPlayersPerTeam = 3;
 
     [Header("Arranque")]
     [Tooltip("Si la partida espera a que TODOS los jugadores estén listos antes de arrancar la " +
              "preparación. Apagado = arranca por reloj como antes, sin importar quién falte.")]
+    [Label("Esperar a que todos estén listos")]
     public bool RequireAllReady = true;
 
     [Tooltip("Mínimo de jugadores (sin contar espectadores) para que el gate de 'todos listos' " +
              "pueda darse por cumplido. En 1 alcanza con vos para probar solo.")]
+    [Label("Mínimo de jugadores")]
     public int MinPlayersToStart = 1;
 
     // El HOST apreto Start. Es lo que destraba la preparacion: antes arrancaba sola en

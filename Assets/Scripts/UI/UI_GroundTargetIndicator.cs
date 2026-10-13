@@ -37,24 +37,32 @@ public class UI_GroundTargetIndicator : MonoBehaviour
     [Header("Marcador")]
     [Tooltip("OPCIONAL: un prefab propio para la ZONA (un quad de 1×1 que se escala al diámetro). " +
              "Vacío = un círculo relleno con borde, dibujado por código.")]
+    [Label("Prefab del marcador")]
     public GameObject MarkerPrefab;
 
     [Tooltip("Capas del suelo/entorno sobre las que se apoya el marcador.")]
+    [Label("Capas del suelo")]
     public LayerMask GroundLayer = ~((1 << 7) | (1 << 2));
 
     [Tooltip("Color del relleno (zona y franja). Transparente: que se vea el piso.")]
+    [Label("Color del relleno")]
     public Color FillColor = new Color(1f, 0.8f, 0.25f, 0.22f);
     [Tooltip("Color del borde (zona y franja).")]
+    [Label("Color del borde")]
     public Color LineColor = new Color(1f, 0.85f, 0.3f, 0.95f);
     [Tooltip("Grosor del borde, en metros.")]
+    [Label("Grosor del borde")]
     public float LineThickness = 0.1f;
 
     [Header("Franja (Corte final)")]
     [Tooltip("Color del contorno de los enemigos que la franja alcanzaría.")]
+    [Label("Color del contorno")]
     public Color TargetOutlineColor = new Color(1f, 0.35f, 0.25f, 1f);
     [Tooltip("Grosor del contorno, en metros.")]
+    [Label("Grosor del contorno")]
     public float TargetOutlineWidth = 0.03f;
     [Tooltip("Lo que CORTA la franja (las paredes, también las invisibles). Los personajes no la cortan.")]
+    [Label("Capas que cortan la franja")]
     public LayerMask LineBlockLayers = ~(1 << 7);
 
     private const int CircleSegments = 48;

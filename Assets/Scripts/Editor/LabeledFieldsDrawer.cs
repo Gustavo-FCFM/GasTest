@@ -8,7 +8,8 @@ using UnityEditor;
 // LabeledFieldsDrawer
 //
 // Las entradas de lista que Unity dibuja campo por campo (una opción de tótem, una etapa
-// de carga, un paso de combo, una variante por tag), con los nombres en español de sus
+// de carga, un paso de combo, una variante por tag, un anillo de aura, una habilidad extra
+// de un NPC, una regla de aparición), con los nombres en español de sus
 // [Label]. Se ve igual que el dibujo de siempre: el renglón plegable y, abierto, un campo
 // por renglón; solo cambian los nombres. Un campo sin [Label] sale con el de siempre.
 //
@@ -20,6 +21,9 @@ using UnityEditor;
 [CustomPropertyDrawer(typeof(GA_ChargedAttack.ChargeStage))]
 [CustomPropertyDrawer(typeof(GA_ComboSequence.ComboStep))]
 [CustomPropertyDrawer(typeof(GA_TagSwitch.TagVariant))]
+[CustomPropertyDrawer(typeof(MercEnemyAI.ExtraAbility))]
+[CustomPropertyDrawer(typeof(MercEnemySpawner.SpawnRule))]
+[CustomPropertyDrawer(typeof(PaladinAuraPassive.AuraRing))]
 public class LabeledFieldsDrawer : PropertyDrawer
 {
     private const float Spacing = 2f;

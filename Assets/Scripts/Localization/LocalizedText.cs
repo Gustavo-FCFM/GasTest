@@ -22,6 +22,7 @@ using UnityEngine;
 public class LocalizedText : MonoBehaviour
 {
     [Tooltip("La clave en Resources/Localization.csv (por ejemplo menu.play).")]
+    [Label("Clave")]
     public string Key;
 
     private TMP_Text     _text;

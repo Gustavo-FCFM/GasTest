@@ -32,43 +32,58 @@ public enum ECombatNumber : byte
 public class UI_DamageNumbers : MonoBehaviour
 {
     [Header("Colores")]
+    [Label("Color de daño")]
     public Color DamageColor         = new Color(1f, 0.28f, 0.22f, 1f);
+    [Label("Color de crítico")]
     public Color CriticalColor       = new Color(1f, 0.85f, 0.1f, 1f);
+    [Label("Color de curación")]
     public Color HealColor           = new Color(0.35f, 1f, 0.4f, 1f);
+    [Label("Color de daño periódico")]
     public Color DamageOverTimeColor = new Color(1f, 0.55f, 0.5f, 1f);
 
     [Header("Tamaños")]
+    [Label("Tamaño: daño")]
     public float DamageFontSize         = 30f;
+    [Label("Tamaño: crítico")]
     public float CriticalFontSize       = 42f;
+    [Label("Tamaño: curación")]
     public float HealFontSize           = 28f;
+    [Label("Tamaño: daño periódico")]
     public float DamageOverTimeFontSize = 21f;
 
     [Header("Movimiento")]
     [Tooltip("A qué altura nacen, como fracción entre los pies (0) y la barra de vida (1). " +
              "0.6 = a la altura del pecho, que es donde uno apunta casi siempre.")]
+    [Label("Altura de nacimiento")]
     [Range(0f, 1.2f)] public float HeightFraction = 0.6f;
 
     [Tooltip("Cuánto dura cada número en pantalla, en segundos.")]
+    [Label("Duración (s)")]
     public float Lifetime = 0.9f;
 
     [Tooltip("Cuánto sube en el mundo mientras dura, en metros. Poco: que no se vaya de " +
              "la vista si estás apuntando al pecho.")]
+    [Label("Subida (m)")]
     public float RiseMeters = 0.6f;
 
     [Tooltip("Desvío al azar a los costados al nacer, en metros: varios golpes seguidos " +
              "no salen uno encima del otro.")]
+    [Label("Desvío al azar")]
     public float Jitter = 0.45f;
 
     [Header("Distancia")]
     [Tooltip("Más lejos que esto (desde la cámara) no se dibujan: en una pelea grande, " +
              "los números del otro lado del mapa son ruido.")]
+    [Label("Distancia máxima")]
     public float MaxDistance = 40f;
 
     [Tooltip("A esta distancia el número se ve de su tamaño normal; más lejos se achica " +
              "(hasta la mitad), más cerca no crece.")]
+    [Label("Distancia de referencia")]
     public float ReferenceDistance = 10f;
 
     [Tooltip("Cuántos números puede haber a la vez.")]
+    [Label("Cantidad máxima a la vez")]
     public int PoolSize = 48;
 
     private class Popup

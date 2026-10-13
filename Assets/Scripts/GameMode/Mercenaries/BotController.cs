@@ -45,103 +45,127 @@ public class BotController : MonoBehaviour
 {
     [Header("Rol")]
     [Tooltip("Auto lo deduce de la clase base que tenga puesta. Forzalo solo para probar.")]
+    [Label("Rol forzado")]
     public EBotRole RoleOverride = EBotRole.Auto;
 
     [Header("Percepción")]
     [Tooltip("Hasta dónde ve enemigos. Es generoso a propósito: la arena mide 42 m de radio " +
              "y con poca vista los bots se quedan dando vueltas en su base.")]
+    [Label("Radio de visión")]
     public float VisionRadius = 35f;
 
     [Tooltip("La capa 7 (Character), donde viven jugadores y NPCs.")]
+    [Label("Capa de personajes")]
     public LayerMask CharacterLayer = 1 << 7;
 
     [Tooltip("Cada cuánto vuelve a decidir a quién pegarle y adónde ir. Bajarlo los hace " +
              "más reactivos y más caros; 0.25 alcanza y sobra.")]
+    [Label("Cada cuánto decide (s)")]
     public float ThinkInterval = 0.25f;
 
     [Header("Distancias de pelea")]
     [Tooltip("A qué distancia pega el Bárbaro. Es el alcance de un ataque cuerpo a cuerpo.")]
+    [Label("Alcance cuerpo a cuerpo")]
     public float MeleeRange = 2.6f;
     [Tooltip("El Pícaro se retira a curarse cuando su vida baja de esta fracción.")]
+    [Label("Pícaro: se retira bajo (vida)")]
     [Range(0.05f, 0.9f)] public float AssassinRetreatBelowHealth = 0.35f;
 
     [Tooltip("Y vuelve a la pelea cuando se recuperó hasta esta otra. La diferencia entre " +
              "las dos evita que entre y salga sin parar en el borde exacto.")]
+    [Label("Pícaro: vuelve sobre (vida)")]
     [Range(0.1f, 1f)] public float AssassinReturnAboveHealth = 0.75f;
 
     [Tooltip("A qué distancia sigue el Paladín a su compañero cuando no hay a quién pegarle.")]
+    [Label("Soporte: distancia de seguimiento")]
     public float SupportFollowDistance = 6f;
 
     [Tooltip("Cuánto sostiene una habilidad de MANTENER (el escudo del Paladín) antes de " +
              "soltarla. Un bot no suelta botones: sin esto se quedaría con el escudo " +
              "levantado para siempre y no podría volver a usarlo.")]
+    [Label("Tiempo manteniendo (s)")]
     public float HoldSeconds = 1.6f;
 
     [Header("Colisión del salto y el dash")]
     [Tooltip("Contra qué choca un bot mientras salta o dashea. Todo MENOS la capa 7 " +
              "(Character): los personajes no se frenan entre ellos, igual que en un dash normal.")]
+    [Label("Capas de colisión")]
     public LayerMask CollisionMask = ~(1 << 7);
 
     [Tooltip("Radio de la esfera que barre el camino. Un poco menos que el ancho del " +
              "personaje, para no engancharse en cada esquina.")]
+    [Label("Radio del barrido")]
     public float CollisionProbeRadius = 0.35f;
 
     [Tooltip("A qué altura del pie se hace el barrido, para no chocar contra el propio suelo.")]
+    [Label("Altura del barrido")]
     public float CollisionProbeHeight = 0.9f;
 
     [Header("Que no parezcan estatuas")]
     [Tooltip("Cuánto rodea al enemigo en cada decisión, en grados. En 0 se quedan de frente " +
              "como antes. Cada bot gira para su lado y cambia de sentido cada tanto.")]
+    [Label("Rodeo por decisión (°)")]
     public float StrafeDegreesPerThink = 22f;
 
     [Tooltip("Cada cuántos segundos, más o menos, un bot cambia el sentido en que rodea.")]
+    [Label("Cambia de sentido cada (s)")]
     public float StrafeFlipSeconds = 3.5f;
 
     [Tooltip("Cuánto se despega del enemigo MIENTRAS su ataque básico está en cooldown, en " +
              "múltiplos del alcance. Es lo que hace que peguen y se salgan en vez de " +
              "quedarse plantados comiendo golpes.")]
+    [Label("Se despega (×)")]
     public float BackOffRangeMult = 2.1f;
 
     [Header("Ritmo")]
     [Tooltip("Mínimo entre dos ataques básicos. El cooldown real lo pone la habilidad; " +
              "esto solo evita machacar CanActivate() sesenta veces por segundo.")]
+    [Label("Entre ataques básicos (s)")]
     public float PrimaryInterval = 0.6f;
 
     [Tooltip("Mínimo entre dos intentos de habilidad (Q/E/R). Si están en cooldown, no pasa nada.")]
+    [Label("Entre habilidades (s)")]
     public float AbilityInterval = 1.2f;
 
     [Tooltip("El mismo mínimo, pero MIENTRAS SE ACERCAN. Más corto a propósito: es lo que " +
              "hace que tiren el hacha en el camino en vez de guardarse todo para el cuerpo " +
              "a cuerpo.")]
+    [Label("Entre habilidades acercándose (s)")]
     public float ApproachAbilityInterval = 0.45f;
 
     [Tooltip("Mínimo entre dos INVOCACIONES (los tótems del Chamán). Mucho más largo que el " +
              "resto: el cooldown de la habilidad deja invocar seguido, pero un bot que la " +
              "usa apenas puede llena el mapa de tótems y no se ve como juega una persona.")]
+    [Label("Entre invocaciones (s)")]
     public float SummonInterval = 10f;
 
     [Header("Criterio")]
     [Tooltip("Radio con el que se cuenta si hay VARIOS enemigos juntos. Decide si vale la " +
              "pena un área, un salto encima del grupo, o la definitiva del Bárbaro.")]
+    [Label("Radio para grupos")]
     public float AoeRadius = 5f;
 
     [Tooltip("Por debajo de esta vida, el Pícaro considera que puede EJECUTAR y suelta su " +
              "definitiva.")]
+    [Label("Ejecutar bajo (vida)")]
     [Range(0.05f, 0.9f)] public float ExecuteBelowHealth = 0.4f;
 
     [Tooltip("Por debajo de esta vida se considera que alguien está EN PELIGRO. Es lo que " +
              "hace que el Paladín deje de pegar y pase a curar, escudar y soltar su " +
              "definitiva.")]
+    [Label("Aliado en peligro bajo (vida)")]
     [Range(0.05f, 0.9f)] public float AllyDangerHealth = 0.3f;
 
     [Tooltip("Vida a partir de la cual el Paladín SOSTIENE a alguien: escudos y curaciones " +
              "de objetivo. Más alta que AllyDangerHealth a propósito — el Escudo de fe se " +
              "pone ANTES de que la cosa se ponga fea; la definitiva se guarda para cuando ya " +
              "lo está.")]
+    [Label("Sostener aliado bajo (vida)")]
     [Range(0.1f, 1f)] public float AllySupportHealth = 0.5f;
 
     [Tooltip("Cuántos segundos de combate trabado antes de gastar un buff. Sin esto se los " +
              "gastan caminando, apenas salen de cooldown, y no los tienen cuando importan.")]
+    [Label("Buff tras combate de (s)")]
     public float BuffAfterSeconds = 1.5f;
 
     // --- referencias, resueltas en el servidor ---

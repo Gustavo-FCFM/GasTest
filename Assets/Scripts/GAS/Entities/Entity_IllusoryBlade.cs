@@ -28,24 +28,33 @@ public class Entity_IllusoryBlade : NetworkBehaviour
 {
     [Header("Fase 1 · Elevación")]
     [Tooltip("Segundos que se eleva girando antes de lanzarse.")]
+    [Label("Tiempo subiendo (s)")]
     public float RiseDuration = 1f;
     [Tooltip("Cuánto sube por encima del Ilusionista.")]
+    [Label("Altura de subida")]
     public float RiseHeight = 2f;
     [Tooltip("Malla que gira durante la elevación (hijo). El giro es solo visual, no se sincroniza.")]
+    [Label("Malla visual")]
     public Transform Visual;
     [Tooltip("Velocidad del giro visual, en grados/seg.")]
+    [Label("Giro (°/s)")]
     public float SpinSpeed = 720f;
 
     [Header("Fase 2 · Viaje")]
     [Tooltip("Velocidad del viaje recto (baja, para dar ventana de esquive).")]
+    [Label("Velocidad de viaje")]
     public float TravelSpeed = 6f;
     [Tooltip("Se disipa tras estos segundos de VIAJE si no impacta nada.")]
+    [Label("Se disipa tras (s)")]
     public float TravelTimeout = 5f;
     [Tooltip("A qué distancia de un enemigo cuenta como impacto.")]
+    [Label("Radio de golpe")]
     public float HitRadius = 0.7f;
     [Tooltip("Capas de pared/entorno que frenan la cuchilla.")]
+    [Label("Capas que frenan")]
     public LayerMask WallLayer;
     [Tooltip("Capa de personajes, para detectar al enemigo impactado.")]
+    [Label("Capa de personajes")]
     public LayerMask CharacterLayer;
 
     // Estado solo-servidor.

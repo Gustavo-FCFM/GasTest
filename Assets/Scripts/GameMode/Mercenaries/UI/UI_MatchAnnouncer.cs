@@ -19,13 +19,17 @@ public class UI_MatchAnnouncer : MonoBehaviour
 {
     [Header("Colocación")]
     [Tooltip("Altura del aviso, medida desde el centro de la pantalla hacia arriba (1080p).")]
+    [Label("Altura")]
     public float VerticalOffset = 180f;
 
     [Header("Tiempos")]
+    [Label("Duración del aviso (s)")]
     public float MessageDuration = 3.5f;
+    [Label("Desvanecerse (s)")]
     public float FadeDuration    = 0.45f;
 
     [Tooltip("Cuántos avisos se apilan a la vez. Los más viejos suben y se desvanecen.")]
+    [Label("Máximo a la vez")]
     public int MaxVisible = 3;
 
     private class Message

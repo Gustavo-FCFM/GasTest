@@ -32,14 +32,17 @@ public class ConnectionHUD : MonoBehaviour
     [Header("Conexión")]
     [Tooltip("IP del host (tu PC). LAN: tu IP local. Internet: tu IP pública o la de la VPN. " +
              "Tus amigos igual pueden editarla en pantalla antes de conectarse.")]
+    [Label("IP del host")]
     public string HostAddress = "127.0.0.1";
 
     [Tooltip("Puerto del transporte (Tugboat por defecto usa 7770).")]
+    [Label("Puerto")]
     public ushort Port = 7770;
 
     [Header("Permisos")]
     [Tooltip("Si está activo, el botón 'Iniciar Host' SOLO aparece dentro del editor de Unity. " +
              "Las builds de tus amigos solo verán el botón de Cliente → solo vos podés ser host.")]
+    [Label("Host solo en el editor")]
     public bool HostOnlyInEditor = true;
 
     // ¿Esta build se abrió con el argumento -host?

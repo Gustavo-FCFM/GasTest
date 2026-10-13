@@ -29,10 +29,12 @@ public class VFX_AreaVisual : MonoBehaviour
              "Para medirlo: poné el prefab en la escena con escala 1 junto a un objeto con " +
              "AbilityPreview (que dibuja anillos de 1m) y fijate hasta qué anillo llega el borde. " +
              "También podés usar 'Estimar desde las partículas' en el menú del componente.")]
+    [Label("Radio con escala 1 (m)")]
     public float RadiusAtScaleOne = 4f;
 
     [Tooltip("Segundos extra que se deja vivo el objeto tras cortar la emisión, para que las " +
              "partículas que quedaron se desvanezcan. 0 = usar el startLifetime más largo del prefab.")]
+    [Label("Desvanecerse (s)")]
     public float FadeOutTime = 0f;
 
     // Ajusta la escala para que el efecto cubra EXACTAMENTE ese radio.

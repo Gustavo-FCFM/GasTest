@@ -28,6 +28,7 @@ public class AudioManager : MonoBehaviour
     public static AudioManager Instance { get; private set; }
 
     [Tooltip("Cuántos sonidos pueden sonar a la vez. Si se acaban, el más viejo se corta.")]
+    [Label("Cantidad máxima a la vez")]
     public int PoolSize = 24;
 
     private readonly List<AudioSource> _pool = new List<AudioSource>();

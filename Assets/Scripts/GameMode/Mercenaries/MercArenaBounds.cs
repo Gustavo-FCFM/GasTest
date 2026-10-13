@@ -27,28 +27,35 @@ public class MercArenaBounds : MonoBehaviour
     [Header("Forma")]
     [Tooltip("Radio del anillo invisible. Ponelo un poco MÁS que el muro visible para que " +
              "nadie quede trabado entre las dos paredes.")]
+    [Label("Radio del anillo")]
     public float Radius = 43f;
 
     [Tooltip("Altura del techo invisible. Alto a propósito: tiene que frenar al que salta o " +
              "vuela, no molestar a nadie que juegue normal.")]
+    [Label("Altura del techo")]
     public float CeilingHeight = 20f;
 
     [Tooltip("En cuántos bloques se divide el anillo. Más bloques = curva más fina.")]
+    [Label("Bloques")]
     [Range(8, 64)] public int Segments = 28;
 
     [Header("Puertas")]
     [Tooltip("Dejar un hueco en el anillo hacia cada base, para poder entrar y salir de las " +
              "salas aunque estén fuera del muro.")]
+    [Label("Huecos hacia las bases")]
     public bool OpenTowardBases = true;
 
     [Tooltip("Qué tan ancho es cada hueco, en grados a cada lado de la dirección de la base.")]
+    [Label("Ancho del hueco (°)")]
     [Range(2f, 45f)] public float GateHalfAngle = 15f;
 
     [Header("Techo")]
+    [Label("Armar techo")]
     public bool BuildCeiling = true;
 
     [Tooltip("Cuánto se pasa el techo del radio del anillo. Sirve para que también tape las " +
              "salas de los equipos si las pusiste afuera de la arena.")]
+    [Label("Margen del techo")]
     public float CeilingMargin = 18f;
 
     [Header("Capa")]
@@ -57,10 +64,12 @@ public class MercArenaBounds : MonoBehaviour
              "la capa — pero dejan de contar en los raycasts que filtran por capa.\n\n" +
              "Si quedan en Default, la oclusión de las barras de vida los trata como una pared " +
              "y esconde a TODOS los enemigos apenas la cámara mira desde arriba del techo.")]
+    [Label("Capa de los límites")]
     public int BoundsLayer = 2;
 
     [Header("Cuándo")]
     [Tooltip("Armar los límites al arrancar. Apagalo solo si querés armarlos a mano desde otro script.")]
+    [Label("Armar al arrancar")]
     public bool BuildOnAwake = true;
 
     private const string ChildName = "InvisibleBounds";

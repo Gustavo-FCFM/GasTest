@@ -7,11 +7,15 @@ using TMPro;
 public class UI_ClassCard : MonoBehaviour, ISelectHandler, IDeselectHandler, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
     [Header("Referencias Visuales")]
+    [Label("Ícono de clase")]
     public Image ClassIconImage;
+    [Label("Texto del nombre")]
     public TextMeshProUGUI ClassNameText;
+    [Label("Texto de la descripción")]
     public TextMeshProUGUI DescriptionText;
     // Opcional: un texto dedicado para el número de tecla (1/2/3). Si lo
     // dejás en None, el número se antepone al nombre para que igual se vea.
+    [Label("Texto del número")]
     public TextMeshProUGUI NumberText;
 
     [HideInInspector] public CharacterClassDefinition AssignedClass;

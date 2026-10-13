@@ -46,9 +46,11 @@ public class GamblePassive : MonoBehaviour, IDamageModifier
 {
     [Header("Marca")]
     [Tooltip("Cada cuántos segundos busca un nuevo enemigo al que apostarle (solo si no hay una marca activa).")]
+    [Label("Cada cuánto apuesta (s)")]
     public float MarkInterval = 15f;
 
     [Tooltip("Radio en el que busca enemigos a los que apostarle.")]
+    [Label("Radio de búsqueda")]
     public float SearchRadius = 20f;
 
     [Tooltip("Apostar SOLO a jugadores, nunca a NPCs.\n\n" +
@@ -59,29 +61,35 @@ public class GamblePassive : MonoBehaviour, IDamageModifier
              "WinEffects gratis cada 15 segundos.\n\n" +
              "Se detecta por PlayerController y no por número de equipo: así cualquier NPC que " +
              "agregues después queda fuera solo.")]
+    [Label("Solo a jugadores")]
     public bool OnlyBetOnPlayers = true;
 
     [Tooltip("Capa de personajes en la que buscar enemigos (Character).")]
+    [Label("Capa de personajes")]
     public LayerMask CharacterLayer;
 
     [Tooltip("GE de la marca que se aplica al enemigo elegido. Debe otorgar Status_Gambled y " +
              "tener Duration > 0 (esa duración ES el tiempo que dura la apuesta). Marcalo como " +
              "Debuff para que salga en rojo en su barra de efectos.")]
+    [Label("Efecto de la marca")]
     public GameplayEffect MarkEffect;
 
     [Tooltip("Cuánto más fuerte le pega el Pirata al enemigo marcado (1.25 = +25%). Solo afecta " +
              "al daño del Pirata contra SU marcado, no al de sus aliados.")]
+    [Label("Daño contra el marcado (×)")]
     public float DamageMultiplier = 1.25f;
 
     [Header("Apuesta ganada (el Pirata mata al marcado)")]
     [Tooltip("Efectos que se aplica el PIRATA al ganar la apuesta. Poné acá el buff con duración " +
              "(daño, velocidad de movimiento y de ataque) y, aparte, un GE INSTANTÁNEO de curación " +
              "(un GE con duración no puede tocar la Vida: es un 'pool', quedaría inerte).")]
+    [Label("Efectos al ganar")]
     public List<GameplayEffect> WinEffects;
 
     [Header("Apuesta perdida (el marcado mata al Pirata)")]
     [Tooltip("Efectos que recibe el ENEMIGO que ganó la apuesta (versión menor de los de arriba, " +
              "por poco tiempo).")]
+    [Label("Efectos al perder")]
     public List<GameplayEffect> LossEffects;
 
     // UNA apuesta abierta contra un enemigo concreto.

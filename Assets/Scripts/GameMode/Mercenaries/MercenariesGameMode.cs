@@ -67,36 +67,47 @@ public class MercenariesGameMode : NetworkBehaviour
 
     [Header("Ritmo de la partida")]
     [Tooltip("Segundos de preparación antes de que arranque. Los equipos esperan en su base.")]
+    [Label("Preparación (s)")]
     public float WarmupSeconds = 30f;
 
     [Tooltip("Duración máxima de la partida. Si nadie llegó a los puntos necesarios, gana quien vaya arriba.")]
+    [Label("Duración de la partida (s)")]
     public float MatchDurationSeconds = 900f; // 15 min
 
     [Tooltip("Entregas necesarias para ganar.")]
+    [Label("Entregas para ganar")]
     public int PointsToWin = 2;
 
     [Tooltip("Segundos tras el arranque hasta que aparece el PRIMER Objetivo.")]
+    [Label("Primer Objetivo a los (s)")]
     public float FirstObjectiveDelay = 60f;
 
     [Tooltip("Segundos entre una entrega y la aparición del siguiente Objetivo.")]
+    [Label("Siguiente Objetivo tras (s)")]
     public float ObjectiveRespawnDelay = 30f;
 
     [Tooltip("Segundos que tarda un jugador en reaparecer en su base tras morir.")]
+    [Label("Reaparece en (s)")]
     public float RespawnSeconds = 5f;
 
     [Tooltip("Al terminar, reiniciar la partida sola (cómodo para demos y pruebas).")]
+    [Label("Reiniciar sola")]
     public bool AutoRestart = true;
+    [Label("Reinicio tras (s)")]
     public float RestartDelay = 15f;
 
     [Header("Objetivo")]
     [Tooltip("Prefab del Objetivo (la Bolsa de oro). Necesita NetworkObject + MercObjective.")]
+    [Label("Prefab del Objetivo")]
     public GameObject ObjectivePrefab;
 
     [Tooltip("Dónde aparece el Objetivo. Normalmente el centro del escenario.")]
+    [Label("Dónde aparece el Objetivo")]
     public Transform ObjectiveSpawnPoint;
 
     [Header("Equipos")]
     [Tooltip("Las tres bases. Cada una trae su sala segura, su punto de entrega y sus puntos de aparición.")]
+    [Label("Bases")]
     public MercTeamBase[] TeamBases = new MercTeamBase[TeamCount];
 
     [Tooltip("Color de cada equipo (1, 2, 3). Lo usan el HUD, los avisos y el marcador del Objetivo.")]
@@ -109,28 +120,35 @@ public class MercenariesGameMode : NetworkBehaviour
 
     [Header("Experiencia compartida (bolsa por equipo)")]
     [Tooltip("Nivel máximo. Tiene que coincidir con el MaxLevel del AbilitySystemComponent del jugador.")]
+    [Label("Nivel máximo")]
     public int MaxTeamLevel = 3;
 
     [Tooltip("Experiencia para pasar de nivel 1 a 2, de 2 a 3, etc. Un valor por salto.")]
+    [Label("Experiencia por nivel")]
     public float[] XpPerLevel = { 100f, 150f };
 
     [Tooltip("Experiencia que la bolsa del equipo gana por cada NPC derrotado.")]
+    [Label("Experiencia por NPC")]
     public float XpPerNpcKill = 15f;
 
     [Tooltip("Experiencia por derribar a un JUGADOR enemigo. Vale bastante más que un NPC a propósito.")]
+    [Label("Experiencia por jugador")]
     public float XpPerPlayerTakedown = 40f;
 
     [Tooltip("Minuto en el que un equipo que no hizo NADA llega igual al nivel máximo. Es la red de " +
              "seguridad para que nadie se quede atrás: la experiencia pasiva se calcula sola a partir " +
              "de esto. Matando NPCs y jugadores se llega bastante antes (alrededor del minuto 5).")]
+    [Label("Nivel máximo garantizado (min)")]
     public float MinutesToGuaranteedMaxLevel = 10f;
 
     [Tooltip("Experiencia pasiva por segundo. En 0 (por defecto) se calcula sola con el minuto de " +
              "arriba; ponele un valor si querés fijarla a mano.")]
+    [Label("Experiencia pasiva por segundo")]
     public float PassiveXpPerSecondOverride = 0f;
 
     [Header("Reglas")]
     [Tooltip("El cambio de clase (tecla C) solo se permite dentro de la sala segura del propio equipo.")]
+    [Label("Cambiar clase solo en la sala")]
     public bool ClassChangeOnlyInSafeRoom = true;
 
     // =========================================================
@@ -788,6 +806,7 @@ public class MercenariesGameMode : NetworkBehaviour
     // la planta de su sala durante la preparación vuelve a su punto de aparición.
     [Tooltip("Cuánto (en metros) puede pasarse alguien del borde de su sala durante la " +
              "preparación antes de que lo devuelvan adentro.")]
+    [Label("Margen de salida en la preparación")]
     public float WarmupEscapeMargin = 1.5f;
 
     [Server]

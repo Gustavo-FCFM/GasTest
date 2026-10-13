@@ -30,31 +30,41 @@ public class Entity_PlayerCopy : NetworkBehaviour
 {
     [Header("Referencias")]
     [Tooltip("ASC del señuelo (normalmente en la misma raíz). Da el equipo y recibe el golpe.")]
+    [Label("ASC")]
     public AbilitySystemComponent Asc;
     [Tooltip("Animator de la copia. El controller (animator override) se toma de la clase del jugador copiado.")]
+    [Label("Animator")]
     public Animator WalkAnimator;
 
     [Header("Sockets de arma (bones del Avatar, se buscan por nombre)")]
     [Tooltip("Nombre del socket de la mano principal. Se busca por nombre en la jerarquía (los bones " +
              "del Avatar son un prefab anidado y no se pueden arrastrar como referencia).")]
+    [Label("Socket mano principal")]
     public string MainHandSocketName = "Socket_MainHand";
     [Tooltip("Nombre del socket de la mano secundaria.")]
+    [Label("Socket mano secundaria")]
     public string OffHandSocketName = "Socket_OffHand";
 
     [Header("Efectos al ser golpeada")]
     [Tooltip("Flashbang: se aplica al enemigo que golpea la copia (otorga Status_Blinded).")]
+    [Label("Efecto de ceguera")]
     public GameplayEffect BlindEffect;
     [Tooltip("Herida mortal: se aplica al enemigo que golpea la copia (el GE apilable Mortal Wounds).")]
+    [Label("Efecto de herida")]
     public GameplayEffect WoundEffect;
 
     [Header("Movimiento")]
     [Tooltip("A qué distancia (horizontal) del objetivo se considera que llegó y se queda idle.")]
+    [Label("Distancia de llegada")]
     public float StopDistance = 0.4f;
     [Tooltip("Nombre del parámetro float del Animator que controla la mezcla caminar/idle.")]
+    [Label("Parámetro de velocidad")]
     public string AnimatorSpeedParam = "Speed";
     [Tooltip("Capas de pared/entorno que frenan a la copia (no las atraviesa). Asigná la misma capa de paredes que usa el Dash.")]
+    [Label("Capas que frenan")]
     public LayerMask WallLayer;
     [Tooltip("Radio del chequeo de pared al caminar.")]
+    [Label("Radio de chequeo de pared")]
     public float WallCheckRadius = 0.4f;
 
     // Índice de clase del jugador COPIADO, sincronizado a todos los peers. Cada peer

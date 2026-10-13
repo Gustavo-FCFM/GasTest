@@ -38,63 +38,82 @@ public class UI_LobbyPanel : MonoBehaviour
     [Header("Clases elegibles")]
     [Tooltip("Las mismas que MainBaseClasses del Player. El ícono de cada una sale de su " +
              "ClassIcon, y el índice que se manda a la sala es la posición en esta lista.")]
+    [Label("Clases elegibles")]
     public CharacterClassDefinition[] SelectableClasses;
 
     [Header("Aspecto")]
     [Tooltip("Medidas de la MAQUETA, sobre un canvas de referencia de 1920x1080. Lo que " +
              "se ve en pantalla es esto multiplicado por PanelScale.")]
+    [Label("Tamaño del panel")]
     public Vector2 PanelSize    = new Vector2(1180f, 660f);
+    [Label("Ancho de columna")]
     public float   ColumnWidth  = 250f;
+    [Label("Alto de fila")]
     public float   RowHeight    = 56f;
 
     [Tooltip("Cuánto se agranda el panel entero — fondo, columnas, textos y botones, todo " +
              "junto y en proporción. 1 es la maqueta original, que ocupaba poco más de la " +
              "mitad de la pantalla. Con 1.35 llega al 80% y se lee bien de lejos.")]
     [Range(0.5f, 2f)]
+    [Label("Escala del panel")]
     public float PanelScale = 1.35f;
 
     [Tooltip("Tamaño del ícono de clase en cada lugar de equipo. Se recorta al alto de la " +
              "fila, así que para íconos de verdad más grandes hay que subir también " +
              "RowHeight (el ícono nunca pasa de RowHeight - 8).")]
+    [Label("Tamaño del ícono de lugar")]
     public float SlotIconSize  = 40f;
 
     [Tooltip("Tamaño de los íconos en la grilla de elegir clase. El recuadro de la grilla " +
              "crece solo con ellos.")]
+    [Label("Tamaño del ícono de clase")]
     public float ClassIconSize = 84f;
 
     [Tooltip("Alto de la línea con el NOMBRE de la clase (la que está bajo el mouse).")]
+    [Label("Alto del nombre")]
     public float NameHeight        = 30f;
 
     [Tooltip("Alto del bloque de DESCRIPCIÓN de la clase seleccionada. Si tus textos se " +
              "cortan, subilo.")]
+    [Label("Alto de la descripción")]
     public float DescriptionHeight = 72f;
 
     [Tooltip("Alto que se reserva abajo para el botón Confirm del selector.")]
+    [Label("Alto de confirmar")]
     public float ConfirmHeight     = 56f;
 
     [Tooltip("Alto de las pestañas de rol (Tanks / Damage / Supports) arriba del selector.")]
+    [Label("Alto de las pestañas")]
     public float RoleTabHeight     = 34f;
 
     [Tooltip("Fondo del panel. La grilla de clases usa este mismo color pero SIN " +
              "transparencia, para que no se lea el panel de atrás mientras elegís.")]
+    [Label("Color del panel")]
     public Color PanelColor   = new Color(0.09f, 0.09f, 0.11f, 0.97f);
+    [Label("Color del lugar")]
     public Color SlotColor    = new Color(0.20f, 0.24f, 0.32f, 1f);
+    [Label("Color: listo")]
     public Color ReadyColor   = new Color(0.55f, 0.95f, 0.55f, 1f);
+    [Label("Color: pendiente")]
     public Color PendingColor = new Color(0.86f, 0.88f, 0.92f, 1f);
     [Tooltip("Color del botón de Start y de Confirmar cuando TODAVÍA no corresponde " +
              "apretarlos. Verde cuando sí.")]
+    [Label("Color: inactivo")]
     public Color IdleColor    = new Color(0.17f, 0.24f, 0.40f, 1f);
 
     [Tooltip("Fondo de una fila OCUPADA: el recuadro detrás del ícono y el nombre. Las " +
              "filas libres no lo llevan — ahí el fondo lo pone el propio botón de Unirte.")]
+    [Label("Color de fila")]
     public Color RowColor     = new Color(0.16f, 0.19f, 0.26f, 1f);
 
     [Tooltip("Fondo de TU propia fila. Sirve para encontrarte de un vistazo cuando la " +
              "sala está llena.")]
+    [Label("Color de tu fila")]
     public Color OwnRowColor  = new Color(0.22f, 0.29f, 0.42f, 1f);
 
     [Tooltip("Color del nombre de los BOTS. Distinto del de un jugador listo a propósito: " +
              "en una captura tiene que verse de un vistazo quién es persona y quién no.")]
+    [Label("Color de los bots")]
     public Color BotColor     = new Color(0.72f, 0.66f, 0.95f, 1f);
 
     // --- construidos en runtime ---

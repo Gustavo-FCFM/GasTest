@@ -21,19 +21,25 @@ public class UI_KillFeed : MonoBehaviour
 {
     [Header("Perillas")]
     [Tooltip("Cuántas líneas se ven a la vez; la más vieja se va al llegar una nueva.")]
+    [Label("Líneas a la vez")]
     public int MaxEntries = 5;
 
     [Tooltip("Segundos que dura cada línea (el último se usa para apagarse).")]
+    [Label("Duración de cada línea (s)")]
     public float EntrySeconds = 6f;
 
+    [Label("Tamaño de letra")]
     public float FontSize = 20f;
 
     [Tooltip("Margen contra la esquina superior derecha. Y bajado para no tapar el reloj " +
              "ni el marcador de arriba.")]
+    [Label("Margen")]
     public Vector2 Margin = new Vector2(24f, 120f);
 
+    [Label("Color del fondo")]
     public Color BackgroundColor = new Color(0f, 0f, 0f, 0.5f);
     [Tooltip("Fondo de las líneas donde apareces tú (mataste o te mataron).")]
+    [Label("Fondo de tus líneas")]
     public Color LocalBackgroundColor = new Color(1f, 1f, 1f, 0.22f);
 
     private const float RowHeight = 32f;

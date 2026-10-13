@@ -7,7 +7,8 @@ using UnityEditor;
 // Cómo se ve una entrada de la lista de efectos de una habilidad (AbilityEffect): todo
 // en UNA línea — CUÁNDO · A QUIÉN · el GameplayEffect — y, si se despliega con la
 // flechita (o si ya tiene una), la CONDICIÓN de tag en una segunda línea y el ESCALADO
-// con las acumulaciones (sección Acumulaciones de la habilidad) en una tercera.
+// con las acumulaciones (sección Acumulaciones de la habilidad) en una tercera y la ESPERA
+// POR ENEMIGO en una cuarta.
 //
 // Lo que nunca se va a aplicar se marca en rojo con el motivo en el tooltip: un "al
 // golpear" en una habilidad que no golpea a nadie, un "al activarse" para enemigos... El
@@ -22,14 +23,16 @@ public class AbilityEffectDrawer : PropertyDrawer
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
     {
         float line = EditorGUIUtility.singleLineHeight;
-        return ShowDetails(property) ? line * 3f + 6f : line + 2f;
+        return ShowDetails(property) ? line * 4f + 8f : line + 2f;
     }
 
-    // La condición y el escalado se ven desplegando la flechita, o solos si ya tienen algo.
+    // La condición, el escalado y la espera por enemigo se ven desplegando la flechita, o
+    // solos si ya tienen algo.
     private static bool ShowDetails(SerializedProperty property)
         => property.isExpanded
         || property.FindPropertyRelative("OnlyIfTargetHas").intValue != (int)EGameplayTag.None
-        || property.FindPropertyRelative("StackScaling").intValue != (int)EStackScaling.None;
+        || property.FindPropertyRelative("StackScaling").intValue != (int)EStackScaling.None
+        || property.FindPropertyRelative("PerTargetCooldown").floatValue > 0f;
 
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
@@ -39,6 +42,7 @@ public class AbilityEffectDrawer : PropertyDrawer
         SerializedProperty onlyIf  = property.FindPropertyRelative("OnlyIfTargetHas");
         SerializedProperty scaling = property.FindPropertyRelative("StackScaling");
         SerializedProperty perStack = property.FindPropertyRelative("PerStack");
+        SerializedProperty perTarget = property.FindPropertyRelative("PerTargetCooldown");
 
         EditorGUI.BeginProperty(position, label, property);
         int indent = EditorGUI.indentLevel;
@@ -94,6 +98,14 @@ public class AbilityEffectDrawer : PropertyDrawer
                                         new GUIContent("", perStack.tooltip));
                 EditorGUI.LabelField(new Rect(st.xMax - 44f, st.y, 44f, line), "s c/u", EditorStyles.miniLabel);
             }
+
+            // Espera por enemigo: cada cuánto se le puede volver a aplicar al MISMO objetivo.
+            Rect cd = new Rect(x, st.y + line + 2f, w, line);
+            EditorGUI.LabelField(new Rect(cd.x, cd.y, labelW, line),
+                                 new GUIContent("Espera por enemigo", perTarget.tooltip), EditorStyles.miniLabel);
+            EditorGUI.PropertyField(new Rect(cd.x + labelW, cd.y, cd.width - labelW - 46f, line), perTarget,
+                                    new GUIContent("", perTarget.tooltip));
+            EditorGUI.LabelField(new Rect(cd.xMax - 44f, cd.y, 44f, line), "s", EditorStyles.miniLabel);
         }
 
         EditorGUI.indentLevel = indent;

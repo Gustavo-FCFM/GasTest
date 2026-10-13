@@ -33,25 +33,38 @@ public class UI_SettingsPanel : MonoBehaviour
 {
     [Header("Medidas")]
     [Tooltip("Ancho del panel. El alto se calcula solo según las filas.")]
+    [Label("Ancho del panel")]
     public float   PanelWidth  = 760f;
     [Tooltip("Espacio bajo la última fila para los botones y la ayuda.")]
+    [Label("Alto del pie")]
     public float   FooterHeight = 110f;
+    [Label("Alto de fila")]
     public float   RowHeight   = 44f;
+    [Label("Ancho de etiqueta")]
     public float   LabelWidth  = 260f;
+    [Label("Separación de secciones")]
     public float   SectionGap  = 18f;
 
     [Header("Secciones")]
     [Tooltip("Mostrar la sección de sonido. Apagada mientras el juego no tenga clips: " +
              "tres barras que no cambian nada confunden. Prenderla cuando lleguen los sonidos.")]
+    [Label("Mostrar sonido")]
     public bool ShowSoundSection = false;
 
     [Header("Colores")]
+    [Label("Color del velo")]
     public Color BackdropColor = new Color(0f, 0f, 0f, 0.8f);
+    [Label("Color del panel")]
     public Color PanelColor    = new Color(0.10f, 0.11f, 0.13f, 0.97f);
+    [Label("Color de fila")]
     public Color RowColor      = new Color(1f, 1f, 1f, 0.04f);
+    [Label("Color de acento")]
     public Color AccentColor   = new Color(0.95f, 0.65f, 0.20f);
+    [Label("Color de controles")]
     public Color ControlColor  = new Color(0.20f, 0.22f, 0.26f);
+    [Label("Color del texto")]
     public Color TextColor     = new Color(0.92f, 0.92f, 0.92f);
+    [Label("Color del texto tenue")]
     public Color DimTextColor  = new Color(0.65f, 0.65f, 0.65f);
 
     // True mientras algún panel de ajustes esté abierto (hay uno por escena como mucho).

@@ -218,6 +218,13 @@ public struct AbilityEffect
     [Tooltip("Con 'Duración': cuántos segundos suma cada acumulación.")]
     public float PerStack;
 
+    [Tooltip("ESPERA POR ENEMIGO (opcional): después de aplicárselo a un objetivo, esta habilidad " +
+             "no se lo vuelve a aplicar a ESE objetivo hasta pasados estos segundos. A los demás " +
+             "objetivos sí. Los pasos de un combo cuentan como el combo: en una ráfaga de 4 golpes, " +
+             "cada golpe puede aturdir a un enemigo distinto, pero al mismo solo el primero; y la " +
+             "próxima ráfaga, recién pasada la espera. 0 = sin espera.")]
+    public float PerTargetCooldown;
+
     public AbilityEffect(GameplayEffect effect, EEffectWhen when = EEffectWhen.OnHit,
                          EEffectTarget applyTo = EEffectTarget.Enemies)
     {
@@ -227,6 +234,7 @@ public struct AbilityEffect
         OnlyIfTargetHas = EGameplayTag.None;
         StackScaling    = EStackScaling.None;
         PerStack        = 0f;
+        PerTargetCooldown = 0f;
     }
 }
 

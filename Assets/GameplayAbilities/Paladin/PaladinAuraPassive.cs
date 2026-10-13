@@ -45,22 +45,27 @@ public class PaladinAuraPassive : MonoBehaviour, IPassiveTargetVFX
     public class AuraRing
     {
         [Tooltip("Solo para leerlo cómodo en el inspector (ej. 'Protección', 'Venganza').")]
+        [Label("Nombre (solo para leer)")]
         public string Name = "Aura";
 
         [Tooltip("Radio del aura, en metros.")]
+        [Label("Radio")]
         public float Radius = 8f;
 
         [Tooltip("A quién alcanza este anillo. El aura de protección apunta a Allies; " +
                  "la de Venganza (los enemigos reciben más daño) apunta a Enemies.")]
+        [Label("A quién alcanza")]
         public EAuraTarget Targets = EAuraTarget.Allies;
 
         [Tooltip("Solo con Targets = Allies: si el propio Paladín se cuenta como aliado " +
                  "(sí para el aura de protección — también se beneficia a sí mismo).")]
+        [Label("Incluirse a sí mismo")]
         public bool IncludeSelf = true;
 
         [Tooltip("GameplayEffects que se le aplican a cada objetivo válido en cada tick.\n\n" +
                  "IMPORTANTE: StackingPolicy = Refresh y Duration ≈ 2× el intervalo de tick, " +
                  "o se van a apilar sin freno (ver la nota de la cabecera del script).")]
+        [Label("Efectos")]
         public List<GameplayEffect> Effects = new List<GameplayEffect>();
 
         [Tooltip("OPCIONAL: si se pone un tag, el anillo SOLO tickea mientras el Paladín lo tenga.\n\n" +
@@ -69,54 +74,66 @@ public class PaladinAuraPassive : MonoBehaviour, IPassiveTargetVFX
                  "anillos extra (velocidad de movimiento sobre el aura de protección, velocidad de " +
                  "ataque sobre la de venganza) que el resto del tiempo están apagados.\n\n" +
                  "None = el anillo está siempre activo, que es el caso normal.")]
+        [Label("Solo con tag en el dueño")]
         public EGameplayTag RequiredOwnerTag = EGameplayTag.None;
     }
 
     [Header("Anillos del Aura")]
     [Tooltip("Un anillo por cada aura simultánea. El prefab de la clase base trae solo el de " +
              "protección; los de las subclases traen ese (con más radio) y el suyo propio.")]
+    [Label("Anillos")]
     public List<AuraRing> Rings = new List<AuraRing>();
 
     [Tooltip("Cada cuánto se revisa quién está dentro de cada anillo y se reaplican sus efectos.")]
+    [Label("Cada cuánto (s)")]
     public float TickInterval = 0.5f;
 
     [Tooltip("Capa de los personajes (jugadores y NPCs) donde buscar objetivos.")]
+    [Label("Capa de personajes")]
     public LayerMask CharacterLayer;
 
     [Header("Curación al Golpear")]
     [Tooltip("Fracción del daño infligido que se cura a los aliados en el aura. 0.3 = cada golpe " +
              "de 50 les cura 15 a todos los aliados al alcance. 0 = desactivado.")]
     [Range(0f, 2f)]
+    [Label("Curación (fracción del daño)")]
     public float HealPercentOfDamage = 0.3f;
 
     [Header("Curación al Bloquear")]
     [Tooltip("Lo mismo pero cuando el ESCUDO frena daño ('cada vez que evite daño, el jugador " +
              "sanará a los aliados que estén en su aura'). 0 = desactivado.")]
     [Range(0f, 2f)]
+    [Label("Curación (fracción de lo frenado)")]
     public float HealPercentOfBlocked = 0.3f;
 
     [Header("Alcance de la Curación")]
     [Tooltip("Qué anillo define hasta dónde llega la curación (0 = el primero de la lista, " +
              "normalmente el de protección). Si el índice no existe, se usa el primero.")]
+    [Label("Anillo de la curación")]
     public int HealRingIndex = 0;
 
     [Tooltip("Efectos extra que se le aplican al aliado curado (un VFX de destello, un buff " +
              "corto...). Opcional — la curación en sí no los necesita.")]
+    [Label("Efectos extra al curar")]
     public List<GameplayEffect> HealExtraEffects;
 
     [Header("VFX de la Curación")]
     [Tooltip("VFX que aparece sobre cada aliado CADA VEZ que el aura lo cura (se ve en todas " +
              "las pantallas). Solo si de verdad le subió la vida: a uno lleno no le sale nada.")]
+    [Label("VFX de curación")]
     public GameObject HealVFX;
 
     [Tooltip("Dónde aparece, medido desde los pies del curado. (0, 1, 0) es el pecho; un " +
              "efecto pensado para el piso va con (0, 0, 0).")]
+    [Label("VFX: posición")]
     public Vector3 HealVFXOffset = new Vector3(0f, 1f, 0f);
 
     [Tooltip("Pegarlo al curado, así lo sigue si se mueve. Apagado, queda donde apareció.")]
+    [Label("VFX pegado al curado")]
     public bool AttachHealVFX = true;
 
     [Tooltip("Segundos hasta que el VFX se borra.")]
+    [Label("VFX: duración (s)")]
     public float HealVFXLifetime = 1f;
 
     private AbilitySystemComponent        _asc;

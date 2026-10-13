@@ -28,6 +28,7 @@ public class PlayerInputProvider : MonoBehaviour
 {
     [Header("Input System")]
     [Tooltip("Asignar el asset InputSystem_Actions (Assets/InputSystem_Actions.inputactions).")]
+    [Label("Acciones de input")]
     public InputActionAsset InputActions;
 
     // Proveedor del jugador DUEÑO local (null en un servidor sin cliente, o

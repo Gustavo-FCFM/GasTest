@@ -29,28 +29,38 @@ using UnityEngine.UI;
 public class SpectatorCamera : MonoBehaviour
 {
     [Header("Vuelo libre")]
+    [Label("Velocidad")]
     public float MoveSpeed       = 16f;
     [Tooltip("Cuánto multiplica la velocidad el Shift.")]
+    [Label("Rápido (×)")]
     public float FastMultiplier  = 3f;
+    [Label("Sensibilidad")]
     public float LookSensitivity = 2.4f;
 
     [Header("Dónde arranca")]
     [Tooltip("Altura sobre el centro de la arena. Pensada para ver el centro entero de " +
              "una, más o menos desde donde mira la cámara de la sala.")]
+    [Label("Altura inicial")]
     public float StartHeight   = 26f;
     [Tooltip("Cuánto se aleja del centro hacia atrás para tener perspectiva.")]
+    [Label("Distancia inicial")]
     public float StartDistance = 40f;
 
     [Header("Seguir a un jugador")]
     [Tooltip("Dónde se pone la cámara respecto del jugador que sigue: atrás y arriba, " +
              "como una cámara de hombro.")]
+    [Label("Posición al seguir")]
     public Vector3 FollowOffset = new Vector3(0f, 2.4f, -4.8f);
     [Tooltip("Qué tan rápido persigue. Bajo = más suave, y en una grabación se nota.")]
+    [Label("Suavizado al seguir")]
     public float FollowLerp = 8f;
 
     [Header("Teclas")]
+    [Label("Tecla: cámara libre")]
     public KeyCode FreeCamKey        = KeyCode.F;
+    [Label("Tecla: UI del jugador")]
     public KeyCode TogglePlayerUIKey = KeyCode.H;
+    [Label("Tecla: marcador")]
     public KeyCode ScoreboardKey     = KeyCode.M;
 
     // --- estado ---

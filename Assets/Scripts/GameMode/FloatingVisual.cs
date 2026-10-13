@@ -34,37 +34,46 @@ public class FloatingVisual : MonoBehaviour
     [Header("Qué flota")]
     [Tooltip("El objeto que se mueve. Si lo dejás vacío, se mueve este mismo — que es lo " +
              "normal: se pone el componente directamente en el modelo.")]
+    [Label("Objeto que flota")]
     public Transform Target;
 
     [Header("Subir y bajar")]
     [Tooltip("Cuánto sube y baja respecto de su posición original, en metros.")]
+    [Label("Altura del flotado")]
     public float BobHeight = 0.22f;
 
     [Tooltip("Ciclos por segundo. 0.6 = una subida y bajada completa cada segundo y medio.")]
+    [Label("Velocidad del flotado")]
     public float BobSpeed = 0.6f;
 
     [Tooltip("Cada copia arranca en un momento distinto del ciclo. Dejalo prendido: es lo " +
              "que evita que un campamento entero suba y baje al mismo tiempo, que es " +
              "justo lo que delata que es un truco.")]
+    [Label("Fase al azar")]
     public bool RandomizePhase = true;
 
     [Header("Bamboleo")]
     [Tooltip("Cuánto se ladea mientras flota, en grados. Poco alcanza: 3 o 4.")]
+    [Label("Bamboleo (°)")]
     public float SwayAngle = 4f;
 
     [Tooltip("Velocidad del bamboleo. A propósito NO es la misma que la de subir y bajar: " +
              "si las dos coincidieran, el movimiento se repetiría de forma obvia.")]
+    [Label("Velocidad del bamboleo")]
     public float SwaySpeed = 0.37f;
 
     [Header("Inclinarse al avanzar")]
     [Tooltip("Cuánto se inclina hacia adelante cuando persigue a alguien, en grados. " +
              "En 0 se apaga.")]
+    [Label("Inclinación (°)")]
     public float LeanAngle = 8f;
 
     [Tooltip("A qué velocidad de movimiento llega a la inclinación máxima (m/s).")]
+    [Label("Velocidad de inclinación máxima")]
     public float LeanReferenceSpeed = 3.5f;
 
     [Tooltip("Qué tan rápido acompaña los cambios de velocidad. Bajo = más perezoso.")]
+    [Label("Suavizado de la inclinación")]
     public float LeanSmoothing = 4f;
 
     // Posición y rotación de partida: todo se calcula COMO OFFSET de esto, así podés

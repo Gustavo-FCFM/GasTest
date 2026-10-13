@@ -21,13 +21,17 @@ using UnityEngine.UI;
 public class UI_ObjectiveMarker : MonoBehaviour
 {
     [Header("Estilo")]
+    [Label("Tamaño del marcador")]
     public float MarkerSize = 26f;
+    [Label("Color del Objetivo")]
     public Color ObjectiveColor = new Color(1f, 0.82f, 0.25f);
 
     [Tooltip("Margen contra el borde de la pantalla cuando el marcador queda fuera de cámara.")]
+    [Label("Margen del borde")]
     public float EdgePadding = 60f;
 
     [Tooltip("Ancho de la barra de entrega que aparece bajo el marcador del Objetivo.")]
+    [Label("Ancho de la barra de entrega")]
     public float DeliveryBarWidth = 90f;
 
     // Un marcador dibujado: rombo + flecha de borde + texto de distancia, y la barra

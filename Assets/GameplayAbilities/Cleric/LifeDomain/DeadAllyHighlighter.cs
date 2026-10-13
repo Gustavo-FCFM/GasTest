@@ -24,19 +24,25 @@ using UnityEngine;
 public class DeadAllyHighlighter : MonoBehaviour
 {
     [Tooltip("Se puede resucitar ya: la R lista y el cuerpo a su alcance.")]
+    [Label("Color: lista")]
     public Color ReadyColor = new Color(0.3f, 1f, 0.45f);
 
     [Tooltip("Aliado caído, pero todavía no se puede: la R en cooldown o el cuerpo lejos.")]
+    [Label("Color: todavía no")]
     public Color NotReadyColor = new Color(1f, 0.25f, 0.2f);
 
     [Tooltip("Grosor del contorno, en metros.")]
+    [Label("Grosor del contorno")]
     public float Width = 0.025f;
 
     [Tooltip("Latido del color: cuántas veces por segundo, y cuánto se oscurece (0 = fijo).")]
+    [Label("Latidos por segundo")]
     public float PulseSpeed = 3f;
+    [Label("Cuánto se oscurece")]
     [Range(0f, 1f)] public float PulseAmount = 0.35f;
 
     [Tooltip("Cada cuánto se buscan cuerpos nuevos y se recalcula verde/rojo.")]
+    [Label("Cada cuánto busca (s)")]
     public float ScanInterval = 0.2f;
 
     private const string OutlineName = "DeadAllyOutline";

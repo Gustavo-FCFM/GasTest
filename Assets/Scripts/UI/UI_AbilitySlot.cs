@@ -14,14 +14,19 @@ using TMPro;
 public class UI_AbilitySlot : MonoBehaviour
 {
     [Header("UI References")]
+    [Label("Ícono")]
     public Image iconImage;              // Ícono fijo de la habilidad
+    [Label("Capa de cooldown")]
     public Image cooldownOverlay;        // Imagen oscura, Type: Filled (Radial 360), tapa el ícono según cooldown
+    [Label("Texto de cooldown")]
     public TextMeshProUGUI cooldownText; // Texto numérico del tiempo restante (ej: "3.5")
 
     [Tooltip("Texto con el número de cargas. Solo se muestra en habilidades con cargas (ej: el dash). Opcional.")]
+    [Label("Texto de cargas")]
     public TextMeshProUGUI chargesText;  // Número de cargas disponibles
 
     [Tooltip("Texto con la tecla/botón de la habilidad (Q, E, Shift, LMB...). Se rellena solo según el slot. Opcional.")]
+    [Label("Texto de la tecla")]
     public TextMeshProUGUI keyText;      // Etiqueta de la tecla asignada
 
     private GameplayAbility assignedAbility;

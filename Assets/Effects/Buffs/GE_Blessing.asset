@@ -19,12 +19,13 @@ MonoBehaviour:
   OnMaxStacksEffect: {fileID: 0}
   EffectGroup: 0
   Priority: 0
+  ReplacesGroup: 0
   Icon: {fileID: 21300000, guid: 1de96c19a8832cc47882ebb9729bd4b3, type: 3}
   EffectType: 0
   Modifiers:
   - Attribute: 20
     Type: 0
-    Magnitude: 0.1
+    Magnitude: 0.05
     UseAttributeScaling: 0
     SourceAttribute: 0
     AttributeCoefficient: 1
@@ -33,11 +34,18 @@ MonoBehaviour:
     TargetHealthCoefficient: 0
     MinMagnitude: 0
   IsCrowdControl: 0
+  KnockbackDistance: 0
+  KnockbackDirection: 0
+  KnockbackDuration: 0.3
+  KnockbackUpVelocity: 0
+  PullStopDistance: 1.5
+  ExecuteBelowHealth: 0
   TargetVFX: {fileID: 7155335147208632822, guid: 62ecc4cf84c2fc04cb189bd12aad8bb0, type: 3}
   TargetVFXOffset: {x: 0, y: 0, z: 0}
   TargetVFXRotation: {x: 0, y: 0, z: 0}
   TargetVFXScale: {x: 0, y: 0, z: 0}
   TargetVFXLoop: 1
+  JumpVFX: {fileID: 0}
   TargetSound:
     Clips: []
     Volume: 1

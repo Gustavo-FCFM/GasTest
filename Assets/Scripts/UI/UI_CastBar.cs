@@ -27,18 +27,25 @@ public class UI_CastBar : MonoBehaviour
 
     [Tooltip("Dónde va la barra, en píxeles desde el centro de la pantalla (1920x1080). Un poco " +
              "más abajo que la barra de carga por etapas.")]
+    [Label("Posición")]
     public Vector2 Position = new Vector2(0f, -215f);
 
+    [Label("Tamaño")]
     public Vector2 Size = new Vector2(320f, 16f);
 
+    [Label("Color: casteo")]
     public Color CastColor        = new Color(1.00f, 0.78f, 0.20f, 1f);
+    [Label("Color: canalizado")]
     public Color ChannelColor     = new Color(0.35f, 0.85f, 0.35f, 1f);
+    [Label("Color: interrumpido")]
     public Color InterruptedColor = new Color(0.90f, 0.15f, 0.10f, 1f);
 
     [Tooltip("Segundos que queda la barra roja de \"Interrupted\" antes de irse.")]
+    [Label("Interrumpido dura (s)")]
     public float InterruptedSeconds = 0.6f;
 
     [Tooltip("Segundos que tarda en desvanecerse al terminar bien.")]
+    [Label("Desvanecerse (s)")]
     public float FadeOutSeconds = 0.25f;
 
     // =========================================================

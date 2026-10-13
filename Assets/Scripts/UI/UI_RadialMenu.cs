@@ -36,42 +36,59 @@ public class UI_RadialMenu : MonoBehaviour
 
     [Header("Tamaño (píxeles a 1920x1080)")]
     [Tooltip("Radio exterior del anillo con hasta 6 opciones.")]
+    [Label("Radio exterior")]
     public float OuterRadius = 200f;
 
     [Tooltip("Cuánto crece el radio por cada opción después de la sexta, para que entren.")]
+    [Label("Radio extra por opción")]
     public float ExtraRadiusPerOption = 14f;
 
     [Tooltip("Radio interior del anillo, como fracción del exterior.")]
+    [Label("Radio interior (fracción)")]
     [Range(0.2f, 0.8f)] public float InnerRatio = 0.46f;
 
     [Tooltip("Radio del centro (cancelar). Con la mira ahí adentro, soltar no elige nada.")]
+    [Label("Radio del centro")]
     public float CenterRadius = 72f;
 
     [Tooltip("Tamaño máximo de los íconos. Con muchas opciones se achican solos.")]
+    [Label("Tamaño del ícono")]
     public float IconSize = 64f;
 
     [Tooltip("Grados de separación entre porciones.")]
+    [Label("Separación (°)")]
     public float GapDegrees = 2.5f;
 
     [Tooltip("Cuánto sale hacia afuera la porción resaltada.")]
+    [Label("Salida del resaltado")]
     public float PopDistance = 12f;
 
     [Header("Colores")]
+    [Label("Color de porción")]
     public Color WedgeColor     = new Color(0.10f, 0.10f, 0.12f, 0.82f);
+    [Label("Color resaltado")]
     public Color HoverColor     = new Color(1.00f, 0.78f, 0.25f, 0.95f);
+    [Label("Color del brillo")]
     public Color GlowColor      = new Color(1.00f, 0.70f, 0.20f, 0.35f);
+    [Label("Color deshabilitado")]
     public Color DisabledColor  = new Color(0.25f, 0.08f, 0.08f, 0.80f);
+    [Label("Color de cancelar")]
     public Color CancelColor    = new Color(0.90f, 0.25f, 0.20f, 1f);
+    [Label("Color del centro")]
     public Color CenterColor    = new Color(0.05f, 0.05f, 0.06f, 0.88f);
 
     [Header("Animación")]
+    [Label("Abrir en (s)")]
     public float OpenSeconds  = 0.14f;
+    [Label("Cerrar en (s)")]
     public float CloseSeconds = 0.18f;
     [Tooltip("Qué tan rápido sigue el resaltado a la mira.")]
+    [Label("Velocidad del resaltado")]
     public float HoverSpeed   = 16f;
 
     [Header("Versión vieja")]
     [Tooltip("El menú viejo del prefab (4 porciones fijas). Se apaga al arrancar; se puede borrar.")]
+    [Label("Contenedor del menú")]
     public GameObject MenuContainer;
 
     // =========================================================

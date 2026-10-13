@@ -14,16 +14,22 @@ using TMPro;
 public class UI_EffectSlot : MonoBehaviour
 {
     [Header("Referencias UI")]
+    [Label("Ícono")]
     public Image IconImage;       // Ícono del efecto, en el centro
+    [Label("Borde")]
     public Image BorderImage;     // Marco de color (verde = buff, rojo = debuff)
+    [Label("Capa de duración")]
     public Image CooldownOverlay; // Sombra que gira mostrando cuánto falta (Type: Filled)
 
     [Tooltip("Texto con la cantidad de acumulaciones. Solo se muestra si el efecto tiene más de 1 " +
              "stack (ej: las Heridas del Pícaro). Opcional.")]
+    [Label("Texto de acumulaciones")]
     public TextMeshProUGUI StacksText;
 
     [Header("Configuración Colores")]
+    [Label("Color de buff")]
     public Color BuffColor = Color.green;
+    [Label("Color de debuff")]
     public Color DebuffColor = Color.red;
 
     // Efecto en vivo que este slot sigue en modo local (null en modo red).

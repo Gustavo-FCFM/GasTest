@@ -34,36 +34,48 @@ public class UI_WorldHealthbar : MonoBehaviour
 {
     [Header("Canvas del Nameplate (hijo, World Space)")]
     [Tooltip("Raíz del nameplate: se orienta a la cámara (billboard) y se prende/apaga.")]
+    [Label("Raíz de la barra")]
     public Transform BarRoot;
 
     [Header("UI")]
     [Tooltip("Barra de vida (Image Type: Filled). Se usa su fillAmount y su color.")]
+    [Label("Relleno de vida")]
     public Image HealthFill;
     [Tooltip("Alternativa/complemento: un Slider de vida. Opcional.")]
+    [Label("Barra de vida (opcional)")]
     public Slider HealthSlider;
     [Tooltip("Muestra los buffs/debuffs del personaje. Se le setea el TargetASC solo. Opcional.")]
+    [Label("Contenedor de efectos")]
     public UI_EffectContainer EffectContainer;
     [Tooltip("Aviso de Crítico mejorado disponible contra ESTE enemigo. Solo en enemigos. Opcional.")]
+    [Label("Aviso de crítico mejorado")]
     public GameObject FirstStrikeMarker;
     [Tooltip("Nombre del jugador (el que eligió al entrar). Se pinta del color de su equipo. Opcional.")]
+    [Label("Texto del nombre")]
     public TMPro.TMP_Text NameText;
 
     [Header("Colores por Equipo")]
+    [Label("Color aliado")]
     public Color AllyColor  = new Color(0.2f, 0.9f, 0.2f, 1f);
+    [Label("Color enemigo")]
     public Color EnemyColor = new Color(0.9f, 0.2f, 0.2f, 1f);
 
     [Header("Oclusión")]
     [Tooltip("Capas del entorno que TAPAN la barra de un enemigo (paredes/piso). Los aliados no se ocultan.")]
+    [Label("Capas que tapan")]
     public LayerMask ObstacleLayer;
 
     [Header("Ícono de clase")]
     [Tooltip("El ícono de la clase del personaje a la derecha de su barra de vida, para saber " +
              "quién es cada uno mientras no hay modelos por clase. Solo jugadores y bots (los " +
              "NPCs no tienen clase). Se crea solo: no hay que armar nada en el prefab.")]
+    [Label("Mostrar ícono de clase")]
     public bool ShowClassIcon = true;
     [Tooltip("Lado del ícono, en unidades del canvas del nameplate (la barra mide 100 × 10).")]
+    [Label("Tamaño del ícono de clase")]
     public float ClassIconSize = 26f;
     [Tooltip("Corrimiento del ícono desde el borde DERECHO de la barra (a la izquierda están los buffs).")]
+    [Label("Posición del ícono de clase")]
     public Vector2 ClassIconOffset = new Vector2(4f, 0f);
 
     private AbilitySystemComponent        _asc;

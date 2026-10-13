@@ -16,16 +16,20 @@ using UnityEngine;
 public class VengeancePassive : MonoBehaviour
 {
     [Tooltip("El efecto de UNA acumulación (Stack, MaxStacks = Max Stacks, con duración larga).")]
+    [Label("Efecto por acumulación")]
     public GameplayEffect StackEffect;
 
     [Tooltip("Acumulaciones con el máximo de Venganza (10 × 3 % = 30 %).")]
+    [Label("Acumulaciones máximas")]
     public int MaxStacks = 10;
 
     [Tooltip("Fracción de la vida a la que se llega al máximo (0.5 = a la mitad).")]
     [Range(0.05f, 1f)]
+    [Label("Máximo con vida al")]
     public float FullAtHealthFraction = 0.5f;
 
     [Tooltip("Cada cuánto se revisa la vida.")]
+    [Label("Cada cuánto (s)")]
     public float TickInterval = 0.2f;
 
     private AbilitySystemComponent        _asc;
