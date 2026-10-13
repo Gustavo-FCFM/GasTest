@@ -26,12 +26,16 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
     [Section("Proyectil")]
     [Tooltip("El prefab que vuela (con GC_Projectile, NetworkObject y Rigidbody). Al chocar le " +
              "aplica la lista de efectos de ESTA habilidad a quien toque.")]
+    [Label("Prefab del proyectil")]
     public GameObject ProjectilePrefab;
     [Tooltip("Velocidad de salida del proyectil.")]
+    [Label("Velocidad")]
     public float      LaunchForce  = 20f;
     [Tooltip("Punto de salida, en espacio local del dueño (X = derecha, Y = arriba, Z = adelante): la mano.")]
+    [Label("Punto de salida")]
     public Vector3    SpawnOffset  = new Vector3(0.5f, 1.5f, 1.0f);
     [Tooltip("Si el proyectil gira sobre sí mismo mientras vuela (solo estético).")]
+    [Label("Girar en el aire")]
     public bool       AddSpin      = true;
 
     [Tooltip("Esconde el arma que el personaje tiene en la mano mientras el proyectil vuela.\n\n" +
@@ -40,6 +44,7 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
              "del jugador ADEMAS del proyectil. Se apaga al soltar y se vuelve a prender al " +
              "terminar la habilidad.\n\n" +
              "Apagado (lo normal) para magos y cualquier disparo que no suelte el arma.")]
+    [Label("Esconder el arma mientras vuela")]
     public bool       HideWeaponWhileFlying = false;
 
     [Tooltip("Alcance del proyectil expresado en SEGUNDOS de vuelo (con velocidad constante, " +
@@ -47,6 +52,7 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
              "chocado con nada. 0 = usar el default del prefab (5s).\n\n" +
              "Para una estela/rayo que avanza lento y no cae, ponele al Rigidbody del prefab " +
              "Use Gravity en false y bajá LaunchForce.")]
+    [Label("Tiempo de vuelo (s)")]
     public float LifeTime = 0f;
 
     [Tooltip("Distancia mínima a la que se considera que la retícula y el proyectil se " +
@@ -55,42 +61,50 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
              "torcido. Con esto se apunta a un punto del MISMO rayo pero a esta " +
              "distancia, así el tiro sale derecho y igual pasa por donde apuntaste. " +
              "Subirlo endereza más el tiro de cerca; bajarlo lo hace más literal.")]
+    [Label("Convergencia mínima")]
     public float MinConvergeDistance = 4f;
 
     [Section(AbilitySection.Timing)]
     [Tooltip("Espera entre activar la habilidad y que el proyectil realmente salga, si el clip " +
              "no trae el evento AnimationEvent_HitFrame (con el evento, sale en ese frame).")]
+    [Label("Espera al lanzar (s)")]
     public float SpawnDelay = 0.4f;
 
     [Section(AbilitySection.Effects)]
     [Tooltip("Segundos mínimos antes de volver a aplicarle los efectos 'al primer golpe' al MISMO " +
              "enemigo (el primero que toca cada proyectil). Sin esto, un aturdido de 1 s con " +
              "ataques cada 0.8 s lo deja aturdido para siempre. 0 = sin límite.")]
+    [Label("Espera del primer golpe por objetivo (s)")]
     public float FirstHitCooldownPerTarget = 3f;
 
     [Section("Apuntar (mantener y soltar)")]
     [Tooltip("Mantener el botón apunta (el arma atrás, la cámara cerca de la mira, el modelo " +
              "oculto para el que apunta) y SOLTAR lanza al instante. Apagado = sale al apretar, " +
              "como siempre (los castigos, el arco del combo del Clérigo).")]
+    [Label("Apuntar antes de lanzar")]
     public bool AimBeforeThrow = false;
 
     [ShowIf(nameof(AimBeforeThrow))]
     [Tooltip("Pose de apuntar, en bucle, mientras se mantiene (ej. HumanM@ThrowWeapon01_R - Hold).")]
+    [Label("Clip: apuntando (bucle)")]
     public AnimationClip AimHoldClip;
 
     [ShowIf(nameof(AimBeforeThrow))]
     [Tooltip("El lanzamiento DESDE la pose de apuntar, sin el impulso hacia atrás: se reproduce " +
              "al soltar. Si trae el evento AnimationEvent_HitFrame, el proyectil sale ahí. " +
              "Vacío = se usa el AnimationClip entero.")]
+    [Label("Clip: soltar")]
     public AnimationClip AimReleaseClip;
 
     [ShowIf(nameof(AimBeforeThrow))]
     [Tooltip("Si el clip de soltar no trae el evento: segundos desde que se suelta hasta que " +
              "sale el proyectil.")]
+    [Label("Espera al soltar (s)")]
     public float AimReleaseDelay = 0.1f;
 
     [ShowIf(nameof(AimBeforeThrow))]
     [Tooltip("Corte de seguridad: si el aviso de soltar nunca llega, lanza a los tantos segundos.")]
+    [Label("Corte de seguridad (s)")]
     public float AimSafetyTimeout = 30f;
 
     // Donde choca es un punto: acepta VFX de impacto.

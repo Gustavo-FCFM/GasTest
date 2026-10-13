@@ -15,9 +15,11 @@ public class GA_Execute : GA_ConeAttack
     [Section("Al ejecutar")]
     [Tooltip("Fracción de la vida MÁXIMA del ejecutado que se cura el Guardián (0.2 = 20 %).")]
     [Range(0f, 1f)]
+    [Label("Curación (fracción de su vida máx.)")]
     public float HealFractionOfVictimMaxHealth = 0.2f;
 
     [Tooltip("Si matar reinicia el tiempo de reutilización.")]
+    [Label("Reinicia al matar")]
     public bool ResetCooldownOnKill = true;
 
     // Corre en el servidor DESPUÉS de aplicar el daño (ver GA_ConeAttack), así que acá ya

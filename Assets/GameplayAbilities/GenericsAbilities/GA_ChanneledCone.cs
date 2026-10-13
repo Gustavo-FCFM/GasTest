@@ -29,35 +29,43 @@ public class GA_ChanneledCone : GameplayAbility, IChanneledAbility
 {
     [Section(AbilitySection.Shape)]
     [Tooltip("Alcance del cono, en metros, desde el punto de salida.")]
+    [Label("Alcance")]
     public float Range = 6f;
 
     [Range(0f, 360f)]
     [Tooltip("Apertura del cono, en grados (el ángulo completo). 90 = un cuarto de círculo.")]
+    [Label("Apertura del cono (°)")]
     public float ConeAngle = 60f;
 
     [Tooltip("El cono se inclina hacia donde apunta la mira (arriba o abajo). Apagado = siempre " +
              "horizontal: solo importa el ángulo visto desde el cielo.")]
+    [Label("Sigue la mira vertical")]
     public bool UseVerticalAim = true;
 
     [Tooltip("Desde dónde sale el cono, en espacio local del dueño (X = derecha, Y = arriba, " +
              "Z = adelante). Un aliento sale de la boca: (0, 1.5, 0).")]
+    [Label("Punto de salida")]
     public Vector3 OriginOffset = new Vector3(0f, 1.5f, 0f);
 
     [Section(AbilitySection.Timing)]
     [Tooltip("Cuánto dura el canalizado, en segundos.")]
+    [Label("Duración (s)")]
     public float ChannelDuration = 3f;
 
     [Tooltip("Cada cuántos segundos golpea el cono (y suelta su zona). El primero sale al empezar: " +
              "3 s cada 1 s = 3 golpes.")]
+    [Label("Cada cuánto (s)")]
     public float TickInterval = 1f;
 
     [Tooltip("Mientras dura, no puede usar otras habilidades (salvo las que tengan 'Usable While " +
              "Channeling' en su asset).")]
+    [Label("Bloquea otras habilidades")]
     public bool BlockOtherAbilities = true;
 
     [Section("Zona por tick")]
     [Tooltip("OPCIONAL: zona que deja en cada tick. Se usa esa habilidad tal cual (radio, duración, " +
              "ticks, efectos y VFX) pero sin su costo, cooldown ni animación.")]
+    [Label("Zona en cada golpe")]
     public GA_ContinuousAoE TickZone;
 
     [ShowIf(nameof(TickZone))]
@@ -66,35 +74,42 @@ public class GA_ChanneledCone : GameplayAbility, IChanneledAbility
              "· Rellenar el cono: las que hagan falta para cubrir el cono de ese tick (Range y Cone " +
              "Angle), en arcos desde el borde de afuera hacia el lanzador. Cuántas salen lo deciden el " +
              "cono, el radio de la zona y la separación: el gizmo las muestra.")]
+    [Label("Distribución de zonas")]
     public GA_ContinuousAoE.EZoneLayout ZoneLayout = GA_ContinuousAoE.EZoneLayout.Row;
 
     [ShowIf(nameof(TickZone))]
     [ShowIf(nameof(ZoneLayout), GA_ContinuousAoE.EZoneLayout.Row)]
     [Min(1)]
     [Tooltip("Cuántas zonas por tick, en FILA de costado a la mira.")]
+    [Label("Cantidad de zonas")]
     public int ZoneCount = 1;
 
     [ShowIf(nameof(TickZone))]
     [Tooltip("Distancia entre los centros de dos zonas vecinas, en metros. En fila, el doble del radio " +
              "de la zona = se tocan. Rellenando el cono, ~1.7 veces el radio no deja huecos; más " +
              "grande = menos zonas.")]
+    [Label("Separación de zonas")]
     public float ZoneSpacing = 5f;
 
     [ShowIf(nameof(TickZone))]
     [ShowIf(nameof(ZoneLayout), GA_ContinuousAoE.EZoneLayout.Row)]
     [Tooltip("Hasta qué distancia del lanzador puede caer la fila. Mirando más lejos, cae a esta " +
              "distancia en esa dirección.")]
+    [Label("Alcance de las zonas")]
     public float ZoneMaxRange = 6f;
 
     [Section(AbilitySection.Animation)]
     [Tooltip("Clip en BUCLE mientras dura. Reusa las ranuras del mantenido en el Animator (las del " +
              "escudo), así que no hace falta crear estados. Vacío = el clip suelto de la habilidad.")]
+    [Label("Clip: bucle")]
     public AnimationClip ChannelLoopAnimation;
 
     [Tooltip("OPCIONAL: arranque, una sola vez, antes de entrar al bucle.")]
+    [Label("Clip: arranque")]
     public AnimationClip ChannelStartAnimation;
 
     [Tooltip("OPCIONAL: remate al terminar.")]
+    [Label("Clip: remate")]
     public AnimationClip ChannelEndAnimation;
 
     // IChanneledAbility: la capa de red lee los clips por acá para replicarlos.

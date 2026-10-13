@@ -17,22 +17,28 @@ public class GA_ElementalFury : GameplayAbility
 {
     [Section("Tótems")]
     [Tooltip("Hasta 4 prefabs de tótem, uno por esquina del cuadrado.")]
+    [Label("Prefabs de tótem")]
     public GameObject[] TotemPrefabs;
     [Tooltip("Distancia del centro a cada esquina donde aparecen los tótems.")]
+    [Label("Distancia a las esquinas")]
     public float SquareRadius = 4f;
 
     [Section(AbilitySection.Shape)]
     [Tooltip("Radio del tornado: a quiénes alcanza cada tick. El VFX del tornado es una entrada " +
              "'En el impacto' (con 'Calzar con el área' mide lo mismo; con 'Lo sigue' sigue al " +
              "dueño si el tornado lo sigue).")]
+    [Label("Radio de daño")]
     public float DamageRadius = 5f;
     [Tooltip("El tornado sigue al dueño. Apagado = queda fijo donde se activó.")]
+    [Label("Sigue al dueño")]
     public bool FollowPlayer = false;
 
     [Section(AbilitySection.Timing)]
     [Tooltip("Cuánto dura el tornado (y por lo tanto, cuánto viven los tótems).")]
+    [Label("Duración del tornado (s)")]
     public float Duration = 10f;
     [Tooltip("Cada cuánto se aplican los efectos a quien esté dentro del tornado.")]
+    [Label("Cada cuánto (s)")]
     public float TickRate = 0.5f;
 
     public override float VisualAreaRadius => DamageRadius;

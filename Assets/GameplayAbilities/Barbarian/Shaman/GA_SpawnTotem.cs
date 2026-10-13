@@ -24,33 +24,42 @@ public class GA_SpawnTotem : GameplayAbility, IRadialMenuAbility
     public struct TotemOption
     {
         [Tooltip("Nombre en la rueda, en inglés.")]
+        [Label("Nombre (inglés)")]
         public string Name;
 
         [Tooltip("Nombre en la rueda, en español. Vacío = sale el inglés.")]
+        [Label("Nombre (español)")]
         public string NameEs;
 
         [Tooltip("Qué da, debajo del nombre en la rueda, en inglés.")]
+        [Label("Descripción (inglés)")]
         public string Description;
 
         [Tooltip("Qué da, en español. Vacío = sale el inglés.")]
+        [Label("Descripción (español)")]
         public string DescriptionEs;
 
+        [Label("Ícono")]
         public Sprite Icon;
 
         [Tooltip("El tótem que se invoca (con Entity_Totem y NetworkObject).")]
+        [Label("Prefab del tótem")]
         public GameObject Prefab;
 
         [Tooltip("Cooldown propio de este tótem: mientras su PRIMER GrantedTag esté puesto, no se " +
                  "puede volver a invocar (y en la rueda se ve apagado).")]
+        [Label("Cooldown del tótem (GE)")]
         public GameplayEffect Cooldown;
     }
 
     [Section("Tótems")]
     [Tooltip("Las opciones de la rueda, en orden (la primera arriba, después en sentido horario).")]
+    [Label("Tótems")]
     public List<TotemOption> Totems = new List<TotemOption>();
 
     [Section(AbilitySection.Shape)]
     [Tooltip("Hasta dónde se puede poner el tótem desde el jugador.")]
+    [Label("Alcance máximo")]
     public float MaxSpawnRange = 10f;
 
     // Implementación de IRadialMenuAbility (la rueda lee arrays: se arman de la lista).

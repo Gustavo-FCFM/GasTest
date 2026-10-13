@@ -21,12 +21,15 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
 
     [Section(AbilitySection.General)]
     [Tooltip("El nombre en inglés (lo ve el jugador con el juego en inglés: la barra de casteo y la de carga).")]
+    [Label("Nombre (inglés)")]
     public string AbilityName = "New Ability";
 
     [Tooltip("El nombre en español. Vacío = sale el inglés. Se cargan todos de una con " +
              "Mercenarios ▸ Idiomas ▸ Importar nombres traducidos.")]
+    [Label("Nombre (español)")]
     public string AbilityNameEs;
 
+    [Label("Ícono")]
     public Sprite AbilityIcon;
 
     // El nombre que ve el jugador, en su idioma.
@@ -34,6 +37,7 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
 
     [Section(AbilitySection.CostCooldown)]
     [Tooltip("Efecto instantáneo que se descuenta al activar (ej: -20 de maná).")]
+    [Label("Efecto de costo")]
     public GameplayEffect CostEffect;
 
     // Efecto CON duración que bloquea reactivar la habilidad mientras esté
@@ -45,12 +49,14 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     [Tooltip("GE con duración que bloquea volver a usarla. Lo que importa es su PRIMER " +
              "GrantedTag (la identidad del cooldown); la duración normalmente sale de " +
              "CooldownDuration, así un mismo GE sirve para muchas habilidades.")]
+    [Label("Efecto de cooldown")]
     public GameplayEffect CooldownEffect;
 
     [Tooltip("Duración del cooldown en segundos, configurada acá en el GA. Si es > 0, " +
              "pisa el Duration del CooldownEffect (reusá un mismo GE de cooldown y ajustá " +
              "el tiempo por habilidad). 0 = usar el Duration del GE. Lo ignora " +
              "UseAttackSpeedAsCooldown (ese tiene prioridad).")]
+    [Label("Cooldown (s)")]
     public float CooldownDuration = 0f;
 
     [Tooltip("Marcá esto en los ATAQUES BÁSICOS: el cooldown sale del stat AtkSpeed del dueño " +
@@ -59,11 +65,13 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
              "También controla la ANIMACIÓN: al ser un ritmo, el clip se estira/comprime para durar " +
              "exactamente ese tiempo y el swing entra justo entre golpe y golpe. Las habilidades " +
              "normales (cooldown = espera, no ritmo) reproducen su clip a velocidad natural.")]
+    [Label("Cooldown = ritmo de ataque")]
     public bool UseAttackSpeedAsCooldown = false;
 
     // Cuánto adelanta el cooldown de la ultimate cada vez que esta
     // habilidad conecta un golpe (ver ChargeUltimate).
     [Tooltip("Segundos que le resta al cooldown de la DEFINITIVA cada golpe que conecta. 0 = nada.")]
+    [Label("Carga de la definitiva (s)")]
     public float UltimateChargeAmount = 0f;
 
     // Si el dueño tiene cualquiera de estos tags, CanActivate() falla
@@ -72,11 +80,13 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     [Tooltip("Si el lanzador tiene CUALQUIERA de estos tags, no la puede usar. Por tipo de acción: " +
              "State_Stunned en todas; State_Disarmed en las de arma; State_Silenced en las de " +
              "magia; State_Rooted en las de movimiento.")]
+    [Label("Bloqueada por tags")]
     public List<EGameplayTag> ActivationBlockedTags;
 
     [Tooltip("Al revés que ActivationBlockedTags: el dueño DEBE tener TODOS estos tags para " +
              "poder activarla (ej: 'Marcado para morir' del Asesino solo se lanza estando invisible). " +
              "Vacío = sin requisitos.")]
+    [Label("Requiere tags")]
     public List<EGameplayTag> ActivationRequiredTags;
 
     [Tooltip("Esta habilidad SÍ se puede usar mientras el personaje está canalizando otra (el " +
@@ -85,6 +95,7 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
              "permitido se arma marcando esta casilla en las pocas que sí, no enumerando las " +
              "muchas que no. Así una habilidad nueva nace bloqueada por defecto, que es lo " +
              "seguro — si fuera al revés habría que acordarse de agregarla a una lista.")]
+    [Label("Usable canalizando")]
     public bool UsableWhileChanneling = false;
 
     [Tooltip("Esta habilidad SÍ se puede usar mientras se sostiene una habilidad de MANTENER " +
@@ -93,6 +104,7 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
              "El escudo SIGUE arriba durante y después de esta habilidad: se baja soltando el " +
              "botón, como siempre. Mientras se sostiene, esta habilidad no reproduce su " +
              "animación, para no romper la pose del escudo.")]
+    [Label("Usable manteniendo")]
     public bool UsableWhileHolding = false;
 
     // Si se puede usar con un mantenido arriba. Virtual porque un GA_TagSwitch lo
@@ -106,21 +118,26 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
              "(ver PlayerController.ActionClipSlotName). Como el clip vive en ESTE asset, cada peer " +
              "reproduce el mismo sin sincronizar nada extra.\n\n" +
              "Si lo dejás vacío se usa el esquema viejo de AnimationTriggerName + AnimationID.")]
+    [Label("Clip de animación")]
     public AnimationClip AnimationClip;
 
     [Tooltip("Esquema viejo (solo se usa si AnimationClip está vacío): nombre del trigger del Animator.")]
+    [Label("Trigger (viejo)")]
     public string AnimationTriggerName = "AttackTrigger";
 
     [Tooltip("Esquema viejo (solo se usa si AnimationClip está vacío). 1=Melee, 2=Proyectil, 3=Salto, 4=Extra")]
+    [Label("ID de animación (viejo)")]
     public int AnimationID = 1;
 
     [Section(AbilitySection.Sound)]
     [Tooltip("Al LANZAR: suena en el personaje junto con la animación. Lo oyen todos los peers " +
              "por el mismo camino que la animación. Vacío = silencio.")]
+    [Label("Sonido al lanzar")]
     public SfxCue CastSound;
 
     [Tooltip("Al IMPACTAR: suena con los VFX de golpe e impacto (en cada objetivo alcanzado, o " +
              "donde cae la habilidad), en todos los peers. Vacío = silencio.")]
+    [Label("Sonido al impactar")]
     public SfxCue ImpactSound;
 
     // =========================================================
@@ -137,12 +154,14 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     [Tooltip("Acumulaciones que esta habilidad LEE al activarse, contadas por este tag (cada " +
              "acumulación lo da una vez: las Artes marciales dan Status_MartialArts). Las entradas " +
              "de Efectos que escalan con acumulaciones usan cuántas había. None = no lee ninguna.")]
+    [Label("Tag de las acumulaciones")]
     public EGameplayTag StacksTag = EGameplayTag.None;
 
     [ShowIf(nameof(StacksTag), EGameplayTag.None, true)]
     [Tooltip("Si gasta las acumulaciones que leyó, y cuándo. 'Al terminar' conserva lo que dan " +
              "mientras dura la habilidad: el +1 de ataque por acumulación del Samurái, con el que " +
              "curan los Cortes devastadores.")]
+    [Label("Gasta las acumulaciones")]
     public EStackConsume ConsumeStacks = EStackConsume.Never;
 
     // Cuántas acumulaciones había al activarse (las lee CommitAbility). -1 = no leyó. Un
@@ -156,12 +175,14 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
              "todos) y, si querés, una CONDICIÓN (que el objetivo tenga un tag).\n\n" +
              "Se aplican en el orden de la lista. El primero 'al golpear, a enemigos' sin condición " +
              "es el DAÑO PRINCIPAL: el que mide una barrera al frenar un proyectil.")]
+    [Label("Efectos")]
     public List<AbilityEffect> Effects = new List<AbilityEffect>();
 
     [Section(AbilitySection.Visuals)]
     [Tooltip("Los VFX de la habilidad. Cada entrada dice CUÁNDO aparece (al lanzar, al golpear, " +
              "en el impacto), dónde, de qué tamaño y cuánto dura. Se ven en todas las pantallas.")]
     [UnityEngine.Serialization.FormerlySerializedAs("VisualsSequence")]
+    [Label("VFX")]
     public List<AbilityVisual> Visuals = new List<AbilityVisual>();
 
     // Nombre del Animation Event que marca el FRAME DE IMPACTO dentro de un clip.
@@ -277,6 +298,7 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     [Tooltip("Otra habilidad puede CORTAR esta a mitad de camino. Lo que ya pegó (o ya " +
              "salió) queda; lo que faltaba no pasa, y el cooldown ya pagado NO se " +
              "devuelve. El ataque principal lo trae puesto de fábrica.")]
+    [Label("Se puede interrumpir")]
     public bool IsInterruptible;
 
     // True si el último HitTimingRoutine se cortó por una interrupción. Quien lo llame
@@ -340,6 +362,7 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     [Section(AbilitySection.Targeting)]
     [Tooltip("Capas de física que puede alcanzar (normalmente 'Character', la 7). Es solo el " +
              "filtro de física: quién es amigo o enemigo lo decide el código.")]
+    [Label("Capas alcanzables")]
     public LayerMask TargetLayer;
 
     // ¿Esta habilidad busca personajes con TargetLayer? Las que no (un buff propio, un
@@ -666,6 +689,7 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
              "cargas: cooldown normal en cada uso, como cualquier habilidad.\n\n" +
              "Con 2 o más, el cooldown se aplica solo al gastar la ÚLTIMA carga, y cada carga " +
              "tarda en volver lo que dure ese mismo cooldown.")]
+    [Label("Cargas")]
     public int MaxCharges = 1;
 
     // IChargedAbility: la UI lo lee para mostrar el contador junto al ícono (solo si es > 1).

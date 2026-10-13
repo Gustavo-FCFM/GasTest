@@ -15,6 +15,8 @@ using Object = UnityEngine.Object;
 //    un campo sin [Section] va en la última sección abierta por su misma clase (como un
 //    [Header]). Las secciones salen en el orden que da cada inspector (SectionOrder), y
 //    qué está abierto se recuerda por sección.
+//  · NOMBRES EN ESPAÑOL: un campo con [Label("...")] sale con ese nombre (el tooltip sigue
+//    igual); sin [Label], con el de siempre. El buscador encuentra los dos.
 //  · BUSCADOR y "Abrir todo / Cerrar todo" arriba.
 //  · CAMPOS QUE SE ESCONDEN cuando no aplican ([ShowIf], se pueden poner varios: tienen
 //    que cumplirse todos). Lo escondido CONSERVA su valor.
@@ -38,6 +40,8 @@ public abstract class SectionedInspector : Editor
 
     private List<SectionGroup> _sections;
     private readonly Dictionary<string, ShowIfAttribute[]> _showIf = new Dictionary<string, ShowIfAttribute[]>();
+    // El nombre en español de cada campo que tiene [Label].
+    private readonly Dictionary<string, string> _labels = new Dictionary<string, string>();
 
     // Lo escrito en el buscador. Compartido entre todos los inspectores de este tipo.
     private static readonly Dictionary<Type, string> _searchByEditor = new Dictionary<Type, string>();
@@ -83,6 +87,7 @@ public abstract class SectionedInspector : Editor
     {
         _sections = new List<SectionGroup>();
         _showIf.Clear();
+        _labels.Clear();
         if (serializedObject == null || target == null) return;
 
         var byTitle    = new Dictionary<string, SectionGroup>();
@@ -104,6 +109,9 @@ public abstract class SectionedInspector : Editor
             {
                 var showIf = (ShowIfAttribute[])field.GetCustomAttributes(typeof(ShowIfAttribute), true);
                 if (showIf.Length > 0) _showIf[it.propertyPath] = showIf;
+
+                LabelAttribute label = field.GetCustomAttribute<LabelAttribute>();
+                if (label != null) _labels[it.propertyPath] = label.Text;
             }
 
             string title;
@@ -218,7 +226,8 @@ public abstract class SectionedInspector : Editor
         {
             SerializedProperty prop = serializedObject.FindProperty(path);
             if (prop == null || !PassesShowIf(prop) || !IsPropertyVisible(prop)) continue;
-            if (searching && !titleMatches && !Matches(prop.displayName) && !Matches(prop.name)) continue;
+            if (searching && !titleMatches && !Matches(prop.displayName) && !Matches(prop.name) &&
+                !Matches(LabelText(prop.propertyPath))) continue;
             visible.Add(prop);
         }
         if (visible.Count == 0) return;
@@ -245,12 +254,17 @@ public abstract class SectionedInspector : Editor
         EditorGUI.indentLevel++;
         foreach (SerializedProperty prop in visible)
         {
-            EditorGUILayout.PropertyField(prop, true);
+            string label = LabelText(prop.propertyPath);
+            if (label != null) EditorGUILayout.PropertyField(prop, new GUIContent(label, prop.tooltip), true);
+            else               EditorGUILayout.PropertyField(prop, true);
             AfterProperty(prop);
         }
         EditorGUI.indentLevel--;
         EditorGUILayout.Space(6);
     }
+
+    // El nombre en español del campo ([Label]), o null si no tiene.
+    private string LabelText(string path) => _labels.TryGetValue(path, out string label) ? label : null;
 
     private bool Matches(string text)
         => !string.IsNullOrEmpty(text) && text.IndexOf(Search, StringComparison.OrdinalIgnoreCase) >= 0;

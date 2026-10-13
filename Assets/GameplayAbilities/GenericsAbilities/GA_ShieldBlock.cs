@@ -37,18 +37,22 @@ public class GA_ShieldBlock : GameplayAbility, IHoldAbility
              "velocidad de movimiento, más resistencia, lo que sea. Ponele una Duration larga: " +
              "el efecto se retira a mano al soltar, la duración es solo un salvavidas por si algo " +
              "corta la habilidad de forma anormal.")]
+    [Label("Efecto de bloqueo")]
     public GameplayEffect BlockEffect;
 
     [Section("Energía")]
     [Tooltip("Energía mínima necesaria para poder levantar el escudo. Con 0 se puede levantar " +
              "mientras quede cualquier resto (pero se cae al primer golpe).")]
+    [Label("Energía mínima")]
     public float MinEnergyToActivate = 5f;
 
     [Tooltip("Energía que se consume por segundo con solo sostener el escudo, además de la que " +
              "cuesta frenar daño. 0 = sostenerlo es gratis y solo se paga al bloquear.")]
+    [Label("Energía por segundo")]
     public float EnergyDrainPerSecond = 0f;
 
     [Tooltip("Tiempo máximo que se puede sostener, en segundos. 0 = sin límite (lo limita la energía).")]
+    [Label("Tiempo máximo (s)")]
     public float MaxHoldTime = 0f;
 
     [Tooltip("RED DE SEGURIDAD del servidor, en segundos. Solo actúa cuando MaxHoldTime es 0 " +
@@ -57,6 +61,7 @@ public class GA_ShieldBlock : GameplayAbility, IHoldAbility
              "el servidor sigue creyendo que tiene el escudo puesto. Llegar a este tope no es " +
              "normal: se avisa por consola con el nombre de quien lo tenía.")]
     [ShowIf(nameof(MaxHoldTime), 0f)]
+    [Label("Corte de seguridad (s)")]
     public float HoldSafetyTimeout = 20f;
 
     // El escudo no busca personajes ni golpea: lo que frena lo resuelve la barrera.
@@ -66,23 +71,28 @@ public class GA_ShieldBlock : GameplayAbility, IHoldAbility
     [Section(AbilitySection.Animation)]
     [Tooltip("Clip de SOSTENER el escudo, EN BUCLE (el personaje ya lo tiene levantado). Es el " +
              "único obligatorio: con solo este y un estado en el Animator, la habilidad ya se ve bien.")]
+    [Label("Clip: sosteniendo (bucle)")]
     public AnimationClip HoldClip;
 
     [Tooltip("OPCIONAL: clip de LEVANTAR el escudo (una vez, al presionar). Vacío = se entra " +
              "directo al bucle.")]
+    [Label("Clip: levantar")]
     public AnimationClip RaiseClip;
 
     [Tooltip("OPCIONAL: clip de BAJAR el escudo (una vez, al soltar). Vacío = se sale directo " +
              "del bucle.")]
+    [Label("Clip: bajar")]
     public AnimationClip LowerClip;
 
     [Tooltip("OPCIONAL: reacción al recibir un golpe EN el escudo (una vez, sin salir del " +
              "mantenido). Se dispara cada vez que la barrera frena daño.")]
+    [Label("Clip: golpe en el escudo")]
     public AnimationClip ShieldHitClip;
 
     [Tooltip("Tiempo mínimo entre dos reacciones al golpe, en segundos. Sin esto, varios " +
              "impactos seguidos (un ataque rápido, un tick de área) reiniciarían el clip en cada " +
              "frame y no se vería nada.")]
+    [Label("Entre reacciones (s)")]
     public float ShieldHitCooldown = 0.35f;
 
     // IHoldAbility: los clips salen del asset, así cada peer resuelve los suyos.

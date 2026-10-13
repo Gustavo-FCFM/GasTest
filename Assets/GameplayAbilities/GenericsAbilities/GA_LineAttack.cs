@@ -15,9 +15,11 @@ public class GA_LineAttack : GameplayAbility
 {
     [Section(AbilitySection.Shape)]
     [Tooltip("Largo de la caja de detección, hacia adelante desde el punto de salida.")]
+    [Label("Largo")]
     public float Length = 5f;
 
     [Tooltip("Ancho de la caja de detección.")]
+    [Label("Ancho")]
     public float Width  = 2f;
 
     [Tooltip("Alto TOTAL de la caja de detección.\n\n" +
@@ -27,6 +29,7 @@ public class GA_LineAttack : GameplayAbility
              "quien tenés enfrente.\n\n" +
              "Para cubrir un cuerpo entero de pie querés 4 o más (o subir la Y del Origin Offset). " +
              "Bajalo para un barrido rasante que pase por debajo de los que saltan.")]
+    [Label("Alto")]
     public float Height = 2f;
 
     [Tooltip("Desde DÓNDE sale la caja, en espacio local del dueño (X = derecha, Y = arriba, " +
@@ -35,12 +38,14 @@ public class GA_LineAttack : GameplayAbility
              "alto queda enterrada. Subir la Y a la altura del pecho (1.2-1.5) es lo que hace " +
              "que la estocada golpee donde se la ve.\n\n" +
              "En CERO (el default) sale del pivote, como se comportó siempre.")]
+    [Label("Punto de salida")]
     public Vector3 OriginOffset = Vector3.zero;
 
     [Tooltip("La estocada se inclina hacia donde apunta la CÁMARA (arriba o abajo), en vez de " +
              "salir siempre horizontal. La caja de detección se inclina con ella.\n\n" +
              "El giro horizontal NO cambia: lo sigue dando el cuerpo, que acompaña la mira en " +
              "vivo. Lo único que se toma de la mira es la INCLINACIÓN.")]
+    [Label("Sigue la mira vertical")]
     public bool UseVerticalAim = false;
 
     // Valida, rota al dueño hacia el punto de mira, cobra costo/cooldown

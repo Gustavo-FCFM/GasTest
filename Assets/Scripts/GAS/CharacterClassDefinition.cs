@@ -23,18 +23,23 @@ public class CharacterClassDefinition : ScriptableObject
 
     [Section(ClassSection.Identity)]
     [Tooltip("El nombre en inglés (lo que ve el jugador con el juego en inglés).")]
+    [Label("Nombre (inglés)")]
     public string ClassName = "Aldeano";
 
     [Tooltip("El nombre en español. Vacío = sale el inglés.")]
+    [Label("Nombre (español)")]
     public string ClassNameEs;
 
+    [Label("Ícono")]
     public Sprite ClassIcon;
 
     [Tooltip("La descripción en inglés (sala, menú de clases).")]
+    [Label("Descripción (inglés)")]
     [TextArea] public string Description;
 
     [Tooltip("La descripción en español. Vacío = sale la inglesa. Nombres y descripciones se " +
              "cargan todos de una con Mercenarios ▸ Idiomas ▸ Importar nombres traducidos.")]
+    [Label("Descripción (español)")]
     [TextArea] public string DescriptionEs;
 
     // Lo que ve el jugador, en su idioma.
@@ -44,11 +49,13 @@ public class CharacterClassDefinition : ScriptableObject
     [Tooltip("El rol en el equipo. Decide qué le carga la definitiva además de sus golpes: " +
              "Tank al aguantar daño, Damage al matar a un personaje enemigo, Support al " +
              "curar a un aliado. None para las clases BASE, que todavía no tienen definitiva.")]
+    [Label("Rol")]
     public EClassRole Role = EClassRole.None;
 
     [Tooltip("Bajo qué rol aparece en los menús (la sala y el menú de clases las agrupan por rol). " +
              "None = el suyo; una clase BASE, que no tiene rol, aparece con el de la mayoría de sus " +
              "subclases. Hace falta solo para una clase base que todavía no tiene subclases.")]
+    [Label("Rol en los menús")]
     public EClassRole MenuRole = EClassRole.None;
 
     // El rol con el que se la muestra en los menús. No cambia nada del juego (la carga de
@@ -78,10 +85,12 @@ public class CharacterClassDefinition : ScriptableObject
 
     [Section(ClassSection.Stats)]
     [Tooltip("Los stats con los que arranca (nivel 1): un ASDef_*.")]
+    [Label("Stats base (ASDef)")]
     public AttributeSetDefinition BaseAttributes;
 
     [Section(ClassSection.Abilities)]
     [Tooltip("Qué habilidad va en cada botón (clic izq., clic der., Q, E, R, Shift, pasiva).")]
+    [Label("Kit (botón y habilidad)")]
     public List<AbilityAssignment> Abilities;
 
     [Section(ClassSection.Passives)]
@@ -90,34 +99,40 @@ public class CharacterClassDefinition : ScriptableObject
              "equipar la clase y se destruye al cambiarla, así el prefab del Player queda limpio y " +
              "cada clase trae solo lo suyo. Sus componentes llegan al ASC con GetComponentInParent. " +
              "Dejar None si la clase no necesita lógica en C#.")]
+    [Label("Prefab de pasivas (código)")]
     public GameObject PassiveBehaviorsPrefab;
 
     [Tooltip("GameplayEffects que se aplican al equipar la clase y permanecen activos toda la partida. " +
              "Pensados para pasivas (ej: el tag de Ataque Furtivo del Pícaro). Deben tener una Duration " +
              "muy grande (casi infinita) y normalmente EffectType = Hidden para no ensuciar la barra de buffs. " +
              "Se aplican con autoridad de servidor y se resincronizan a los clientes por los canales normales.")]
+    [Label("Efectos pasivos")]
     public List<GameplayEffect> PassiveEffects;
 
     [Section(ClassSection.Movement)]
     [Tooltip("Cómo se mueve en las paredes (WallMove_*): pegarse y saltar (Pícaro) o correr por " +
              "ellas (Monje). Las subclases apuntan al mismo perfil que su clase base. None = no se " +
              "engancha a las paredes.")]
+    [Label("Paredes")]
     public WallMovementProfile WallMovement;
 
     [Section(ClassSection.Stats)]
     [Tooltip("Cuánto sube cada stat por cada nivel ganado.")]
+    [Label("Crecimiento por nivel")]
     public List<AttributeGrowth> StatGrowthPerLevel;
 
     [Section(ClassSection.Evolution)]
     [Tooltip("A qué subclases puede evolucionar al llegar al nivel máximo.")]
     // A qué subclases se puede evolucionar al llegar al nivel máximo
     // (ver UI_LevelUpSelectionSystem).
+    [Label("Subclases")]
     public List<CharacterClassDefinition> AvailableSubclasses;
 
     [Section(ClassSection.Animation)]
     [Tooltip("Override de animaciones de la clase (AOC_*): el idle, caminar, correr y los clips de base.")]
     // Override de animaciones específico de esta clase (idle agresivo,
     // ataque pesado vs rápido, etc.).
+    [Label("Animaciones (AOC)")]
     public AnimatorOverrideController ClassAnimatorOverride;
 
     // Animaciones de una POSTURA: mientras el personaje tenga StanceAnimatorTag, los clips
@@ -128,16 +143,20 @@ public class CharacterClassDefinition : ScriptableObject
     // de las habilidades (PLACEHOLDER_...) no se tocan.
     [Tooltip("Override que se aplica encima del de la clase mientras tenga el tag de abajo " +
              "(ej. el Maestro de batalla en ofensiva: AOC_Paladin_2Handed). Vacío = nunca cambia.")]
+    [Label("Animaciones de postura (AOC)")]
     public AnimatorOverrideController StanceAnimatorOverride;
 
     [ShowIf(nameof(StanceAnimatorOverride))]
     [Tooltip("Mientras tenga este tag se usa el override de arriba. None = nunca.")]
+    [Label("Tag de la postura")]
     public EGameplayTag StanceAnimatorTag = EGameplayTag.None;
 
     [Section(ClassSection.Weapons)]
     [Tooltip("Arma principal (mano derecha). Vacío = sin arma (el Monje).")]
+    [Label("Arma principal")]
     public GameObject MainHandWeaponPrefab;
     [Tooltip("Arma secundaria (mano izquierda), opcional: un escudo.")]
+    [Label("Arma secundaria")]
     public GameObject OffHandWeaponPrefab;
 
     // ============================================================
@@ -160,20 +179,24 @@ public class CharacterClassDefinition : ScriptableObject
     [ShowIf(nameof(MainHandWeaponPrefab))]
     [Tooltip("Rotación extra (grados) del arma principal respecto del hueso de la mano. " +
              "En cero queda pegada al hueso. Usalo si el modelo aparece torcido o al revés.")]
+    [Label("Arma principal: rotación")]
     public Vector3 MainHandRotationOffset;
 
     [ShowIf(nameof(MainHandWeaponPrefab))]
     [Tooltip("Desplazamiento extra del arma principal respecto del hueso, en espacio local.")]
+    [Label("Arma principal: posición")]
     public Vector3 MainHandPositionOffset;
 
     [ShowIf(nameof(OffHandWeaponPrefab))]
     [Tooltip("Rotación extra (grados) del arma secundaria. Ojo: el socket de esta mano viene " +
              "con 180° de giro respecto del de la principal, así que un escudo suele necesitar " +
              "compensarlo acá (probá 180 en Z).")]
+    [Label("Arma secundaria: rotación")]
     public Vector3 OffHandRotationOffset;
 
     [ShowIf(nameof(OffHandWeaponPrefab))]
     [Tooltip("Desplazamiento extra del arma secundaria respecto del hueso, en espacio local.")]
+    [Label("Arma secundaria: posición")]
     public Vector3 OffHandPositionOffset;
 
     // ============================================================
@@ -192,12 +215,14 @@ public class CharacterClassDefinition : ScriptableObject
     [Section(ClassSection.Animation)]
     [Tooltip("Pose del brazo izquierdo mientras se juega la clase (ej. el libro del Clérigo: " +
              "HumanM@ObjectBook01_L). Vacío = el brazo se anima normal.")]
+    [Label("Pose de la mano izquierda")]
     public AnimationClip OffHandPose;
 
     [ShowIf(nameof(OffHandPose))]
     [Tooltip("La pose de arriba se aplica SOLO mientras el personaje tenga este tag. None = " +
              "siempre. El Maestro de batalla la usa con Stance_Offensive: en ofensiva toma el " +
              "mandoble a dos manos.")]
+    [Label("Pose: solo con tag")]
     public EGameplayTag OffHandPoseRequiredTag = EGameplayTag.None;
 
     // ============================================================
@@ -213,22 +238,26 @@ public class CharacterClassDefinition : ScriptableObject
     [Section(ClassSection.Weapons)]
     [ShowIf(nameof(OffHandWeaponPrefab))]
     [Tooltip("Mientras tenga este tag, el arma secundaria va a la espalda. None = nunca.")]
+    [Label("Guardar arma con tag")]
     public EGameplayTag StowOffHandTag = EGameplayTag.None;
 
     [ShowIf(nameof(OffHandWeaponPrefab))]
     [ShowIf(nameof(StowOffHandTag), EGameplayTag.None, true)]
     [Tooltip("Posición del arma guardada, en el espacio del hueso del pecho. Se ajusta mirando " +
              "en Play (cambiar la clase y volver a equiparla la recoloca).")]
+    [Label("Arma guardada: posición")]
     public Vector3 StowedOffHandPositionOffset;
 
     [ShowIf(nameof(OffHandWeaponPrefab))]
     [ShowIf(nameof(StowOffHandTag), EGameplayTag.None, true)]
     [Tooltip("Rotación (grados) del arma guardada, en el espacio del hueso del pecho.")]
+    [Label("Arma guardada: rotación")]
     public Vector3 StowedOffHandRotationOffset;
 
     [ShowIf(nameof(OffHandWeaponPrefab))]
     [Tooltip("Tamaño del arma secundaria respecto del prefab. 1 = como viene. El Guardián lleva " +
              "el escudo de siempre más grande (1.3) mientras no haya un modelo propio.")]
+    [Label("Arma secundaria: tamaño")]
     public float OffHandScale = 1f;
 
     // ============================================================
@@ -242,10 +271,12 @@ public class CharacterClassDefinition : ScriptableObject
 
     [Section(ClassSection.Grow, startCollapsed: true)]
     [Tooltip("Mientras tenga este tag, el modelo crece a Grow Scale. None = nunca.")]
+    [Label("Tag para crecer")]
     public EGameplayTag GrowTag = EGameplayTag.None;
 
     [ShowIf(nameof(GrowTag), EGameplayTag.None, true)]
     [Tooltip("Tamaño del modelo con el tag (1.5 = 50 % más grande).")]
+    [Label("Tamaño al crecer")]
     public float GrowScale = 1.5f;
 }
 

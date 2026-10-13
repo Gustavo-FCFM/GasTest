@@ -38,6 +38,7 @@ public class GA_RushAttack : GameplayAbility, IChanneledAbility, IGroundTargetAb
     [Section(AbilitySection.Targeting)]
     [Tooltip("Se apunta antes de salir: mantener el botón muestra la franja que va a recorrer y " +
              "marca a los enemigos que alcanzaría; soltar sale. Apagado = sale al apretar.")]
+    [Label("Apuntar antes de salir")]
     public bool AimFirst = false;
 
     // La franja de apuntar (ver AimFirst).
@@ -50,38 +51,48 @@ public class GA_RushAttack : GameplayAbility, IChanneledAbility, IGroundTargetAb
 
     [Section(AbilitySection.Movement)]
     [Tooltip("Metros que recorre si nada la corta.")]
+    [Label("Distancia")]
     public float Distance = 14f;
 
     [Tooltip("Metros por segundo, constantes. Más bajo = más larga y más fácil de guiar.")]
+    [Label("Velocidad (m/s)")]
     public float Speed = 10f;
 
     [Tooltip("Metros por segundo que la corren de costado izquierda/derecha mientras dura, SIN " +
              "girarla: sigue mirando y avanzando hacia el mismo lado. 0 = recta.")]
+    [Label("Velocidad de costado")]
     public float StrafeSpeed = 5f;
 
     [Tooltip("Sale con el ángulo vertical de la mira, como el dash: mirando arriba se eleva (para " +
              "alcanzar a alguien en el aire) y mirando abajo baja. Apagado = siempre horizontal.")]
+    [Label("Sigue la mira vertical")]
     public bool AimVertical = false;
 
     [ShowIf(nameof(AimVertical))]
     [Tooltip("Ángulo máximo, en grados, hacia arriba o hacia abajo.")]
+    [Label("Ángulo máximo (°)")]
     [Range(0f, 89f)] public float MaxPitch = 45f;
 
     [Tooltip("Volver a apretar el botón la corta en el acto.")]
+    [Label("Se corta al reapretar")]
     public bool Cancelable = true;
 
     [Tooltip("Capas que atraviesa mientras dura (los jugadores), sin dejar de chocar con las paredes.")]
+    [Label("Atraviesa capas")]
     public LayerMask ExcludePlayerLayer;
 
     [Tooltip("Termina en el primer enemigo que toca. Apagado = lo atraviesa y sigue (cada enemigo, una vez).")]
+    [Label("Para en el primer enemigo")]
     public bool StopAtFirstEnemy = true;
 
     [Section(AbilitySection.Shape)]
     [Tooltip("Radio alrededor del dueño en el que un enemigo cuenta como alcanzado.")]
+    [Label("Radio de golpe")]
     public float HitRadius = 1.2f;
 
     [Section(AbilitySection.Animation)]
     [Tooltip("OPCIONAL: pose EN BUCLE mientras dura (la patada extendida). Vacío = solo el AnimationClip suelto.")]
+    [Label("Clip: en curso (bucle)")]
     public AnimationClip RushLoopClip;
 
     public AnimationClip ChannelStartClip => null;

@@ -257,10 +257,21 @@ con Excel: quien ayude a traducir no necesita Unity. Guardarla como **"CSV UTF-8
       pantalla, pero también quedaron traducidos.
   - [ ] Probar: elegir clase y subclase, morir, canalizar y abrir una rueda, en los dos idiomas;
         con dos ventanas en idiomas distintos, la barra de casteo de cada uno en el suyo.
-- [ ] **El Inspector en español** (pedido de Gustavo: GA, ASDef, GE, clases y lo demás nuestro,
-      para quienes le ayuden): etiquetas en español sobre cada campo (`[Label("...")]`), sin
-      renombrar el código (renombrar borraría los valores guardados en los assets). Las dibuja el
-      inspector por secciones; se pueden sacar de los tooltips, que ya están en español.
+- [x] **El Inspector en español — HECHO Y REVISADO ✅ (13 de octubre: "están todos correctos").** Pedido de Gustavo,
+      para quienes le ayuden. Cada campo de los GA, GE, clases, ASDef y perfiles de pared tiene su
+      nombre en español con `[Label("...")]` (331 campos); el código y los assets siguen igual
+      (renombrar borraría lo guardado). El tooltip no cambió, y el buscador del inspector encuentra
+      el nombre en español y el de siempre. Las entradas de las listas (opciones de tótem, etapas de
+      carga, pasos de combo, variantes por tag) también, con `LabeledFieldsDrawer`. Los menús
+      desplegables también: atributos (Vida máxima, Defensa...), botones (Clic izquierdo, Q...), rol,
+      cómo se acumula, tipo de efecto, dirección del empuje, dónde aparece el área, a quién apunta.
+      Los tags (`State_Stunned`...) quedan como están: son los nombres que usan el código y los
+      documentos.
+  - [x] Abrir unos cuantos (una habilidad de cada tipo, un efecto, una clase) y ver que ningún nombre
+        quede cortado y que se entienda. Si alguno no te gusta, se cambia en su `[Label]`.
+  - [ ] Lo que NO tiene nombres en español todavía: los componentes de los prefabs (pasivas como
+        `AmbushKillReset`, tótems, proyectiles, el `PlayerController`). Usan el inspector normal de
+        Unity; si hace falta, se les puede poner el mismo sistema.
 
 ---
 

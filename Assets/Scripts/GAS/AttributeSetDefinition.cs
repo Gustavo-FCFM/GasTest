@@ -26,5 +26,6 @@ public class AttributeSetDefinition : ScriptableObject
     [Section("Atributos base")]
     [Tooltip("Con qué valor arranca cada atributo al equipar la clase (nivel 1). Lo que suben por " +
              "nivel está en la clase (Stats y progresión).")]
+    [Label("Atributos")]
     public List<BaseAttribute> InitialAttributes;
 }

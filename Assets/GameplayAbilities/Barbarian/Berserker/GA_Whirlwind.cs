@@ -26,12 +26,15 @@ public class GA_Whirlwind : GA_ContinuousAoE, IChanneledAbility
              "VACÍO = animación normal (un disparo suelto del AnimationClip de la habilidad).\n\n" +
              "Reusa las ranuras del MANTENIDO en el Animator, así que no hay que crear estados " +
              "nuevos: los del escudo sirven tal cual.")]
+    [Label("Clip: bucle")]
     public AnimationClip ChannelLoopAnimation;
 
     [Tooltip("OPCIONAL: arranque, una sola vez, antes de entrar al bucle.")]
+    [Label("Clip: arranque")]
     public AnimationClip ChannelStartAnimation;
 
     [Tooltip("OPCIONAL: remate al terminar el área.")]
+    [Label("Clip: remate")]
     public AnimationClip ChannelEndAnimation;
 
     [Section("Molinete")]
@@ -41,6 +44,7 @@ public class GA_Whirlwind : GA_ContinuousAoE, IChanneledAbility
              "movimiento WASD se calcula relativo a la cámara. Como el área es un radio sin " +
              "dirección, girar el modelo no cambia a quién le pega.\n\n" +
              "360 = una vuelta por segundo. Para un molinete rápido, 500-700.")]
+    [Label("Giro del modelo (°/s)")]
     public float ModelSpinSpeed = 0f;
 
     [Tooltip("Mientras dure el área, el personaje NO puede usar ninguna otra habilidad — salvo " +
@@ -49,6 +53,7 @@ public class GA_Whirlwind : GA_ContinuousAoE, IChanneledAbility
              "salto, para el molinete) en vez de enumerar todas las que no. Una habilidad nueva " +
              "nace bloqueada, que es lo seguro.\n\n" +
              "El bloqueo dura lo mismo que el área, no lo que tarde el jugador en quedar libre.")]
+    [Label("Bloquea otras habilidades")]
     public bool BlockOtherAbilities = false;
 
     // IChanneledAbility: la capa de red lee los clips y el giro por acá para replicarlos.

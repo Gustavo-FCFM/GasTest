@@ -34,14 +34,17 @@ public class GA_InstantAoE : GameplayAbility, IGroundTargetAbility
 {
     [Section(AbilitySection.Shape)]
     [Tooltip("Radio del área, en metros.")]
+    [Label("Radio")]
     public float Radius = 4f;
 
     [Tooltip("AtOwner: el área estalla sobre el dueño. AtReticle: se apunta con el marcador " +
              "en el suelo (mantener → apuntar → soltar) y cae ahí.")]
+    [Label("Dónde aparece")]
     public GA_ContinuousAoE.EAoEDeploy DeployMode = GA_ContinuousAoE.EAoEDeploy.AtOwner;
 
     [ShowIf(nameof(DeployMode), GA_ContinuousAoE.EAoEDeploy.AtReticle)]
     [Tooltip("Alcance máximo al que se puede lanzar la zona.")]
+    [Label("Alcance máximo")]
     public float MaxRange = 15f;
 
     // IGroundTargetAbility: valores del marcador del suelo (solo se muestra si
@@ -53,16 +56,19 @@ public class GA_InstantAoE : GameplayAbility, IGroundTargetAbility
     [Section(AbilitySection.Timing)]
     [Tooltip("Espera antes de que el golpe caiga (para acompañar la animación). Se ajusta " +
              "por la velocidad de ataque, igual que en las demás habilidades.")]
+    [Label("Espera inicial (s)")]
     public float StartDelay = 0f;
 
     [Tooltip("Golpes EXTRA por cada acumulación leída (sección Acumulaciones). Con 1: sin " +
              "acumulaciones, un golpe; con 4, cinco (los Cortes devastadores del Samurái). Cada " +
              "golpe extra repite la animación y vuelve a aplicar los efectos 'al activarse' (la " +
              "curación por corte). 0 = siempre un solo golpe.")]
+    [Label("Golpes extra por acumulación")]
     public int ExtraHitsPerStack = 0;
 
     [ShowIf(nameof(ExtraHitsPerStack), ShowIfAttribute.Positive)]
     [Tooltip("Segundos entre un golpe y el siguiente (se ajusta con la velocidad de ataque).")]
+    [Label("Entre golpes (s)")]
     public float RepeatInterval = 0.3f;
 
     public override float VisualAreaRadius => Radius;

@@ -30,7 +30,11 @@ public class GA_Target : TargetImpactAbility
 {
     // A quién apunta la habilidad. Allies es el valor 0 = el comportamiento original,
     // así que los assets ya configurados no cambian al agregar esto.
-    public enum ETargetSide { Allies, Enemies }
+    public enum ETargetSide
+    {
+        [InspectorName("Aliados")]  Allies  = 0,
+        [InspectorName("Enemigos")] Enemies = 1,
+    }
 
     [Section(AbilitySection.Targeting)]
     [Tooltip("A quién apunta. Allies: curaciones, escudos y protecciones. Enemies: marcas, " +
@@ -38,23 +42,28 @@ public class GA_Target : TargetImpactAbility
              "el 'Canalizar divinidad: Aturdir' del Clérigo).\n\n" +
              "Con Enemies, el autocasteo sobre uno mismo se ignora aunque esté marcado: no tiene " +
              "sentido aplicarte a vos mismo un debuff porque no encontraste a nadie.")]
+    [Label("A quién apunta")]
     public ETargetSide Targets = ETargetSide.Allies;
 
     [Tooltip("Alcance máximo para buscar al objetivo.")]
+    [Label("Alcance máximo")]
     public float MaxRange = 12f;
 
     [Tooltip("Ángulo máximo (grados) entre la mira y el aliado para que cuente como objetivo. " +
              "Más alto = más fácil de enganchar, pero más fácil también de agarrar al que no querías.")]
+    [Label("Ángulo de selección (°)")]
     public float SelectionAngle = 30f;
 
     [ShowIf(nameof(Targets), ETargetSide.Allies)]
     [Tooltip("Si no hay ningún aliado en la mira, ¿se lo aplica a SÍ MISMO? Es el " +
              "'si no hay aliado seleccionado, se selecciona a sí mismo' del diseño. " +
              "Apagado = sin objetivo la habilidad no se lanza y no gasta nada.")]
+    [Label("Sin objetivo, a sí mismo")]
     public bool SelfIfNoTarget = true;
 
     [Tooltip("Si se puede elegir a un aliado MUERTO. Solo tiene sentido en habilidades que " +
              "revivan; para una curación normal dejalo apagado o vas a desperdiciar el uso.")]
+    [Label("Permitir muertos")]
     public bool AllowDeadTargets = false;
 
     // LOS EFECTOS van en la lista de la habilidad, "Al golpear" con el bando que se apunta

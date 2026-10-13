@@ -17,14 +17,17 @@ public class GA_LeapAttack : GameplayAbility, ILeapAbility
 {
     [Section(AbilitySection.Movement)]
     [Tooltip("Impulso vertical inicial del salto.")]
+    [Label("Impulso hacia arriba")]
     public float JumpVelocity = 15f;
     [Tooltip("Impulso hacia adelante (hacia donde mira la cámara del dueño).")]
+    [Label("Impulso hacia adelante")]
     public float ForwardForce = 5f;
 
     [Section(AbilitySection.Shape)]
     [Tooltip("Radio del golpe al aterrizar, en metros. A los alcanzados les aplica la lista de " +
              "efectos; el VFX del aterrizaje es una entrada 'En el impacto' (con 'Calzar con el " +
              "área' mide lo mismo que este radio).")]
+    [Label("Radio del golpe")]
     public float AbilityRadius = 3f;
 
     [Section(AbilitySection.Animation)]
@@ -32,6 +35,7 @@ public class GA_LeapAttack : GameplayAbility, ILeapAbility
              "Va separado del bucle a propósito: si el despegue vive dentro del clip que se " +
              "loopea, el salto entero se repite una y otra vez mientras el personaje está en el " +
              "aire.\n\nVacío = se entra directo al bucle.")]
+    [Label("Clip: despegue")]
     public AnimationClip AirStartAnimation;
 
     [Tooltip("Clip que se reproduce EN BUCLE mientras el personaje está en el aire.\n\n" +
@@ -39,10 +43,12 @@ public class GA_LeapAttack : GameplayAbility, ILeapAbility
              "normal la animación terminaba a mitad del salto y el personaje caía en pose de " +
              "locomoción. Acá el bucle se sostiene todo el vuelo y lo corta el aterrizaje.\n\n" +
              "VACÍO = comportamiento de siempre (el AnimationClip de arriba, una sola vez).")]
+    [Label("Clip: en el aire (bucle)")]
     public AnimationClip AirLoopAnimation;
 
     [Tooltip("OPCIONAL: remate que se reproduce UNA vez al tocar el suelo (el hachazo).\n\n" +
              "Vacío = del bucle se vuelve directo a la locomoción, sin remate.")]
+    [Label("Clip: aterrizaje")]
     public AnimationClip AirLandAnimation;
 
     // ILeapAbility: PlayerController lee los clips por acá (ver ApplyLeapAnimation).

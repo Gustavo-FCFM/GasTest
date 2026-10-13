@@ -1,3 +1,5 @@
+using UnityEngine;
+
 // ============================================================
 // EAbilityInput
 //
@@ -9,12 +11,12 @@
 // ============================================================
 public enum EAbilityInput
 {
-    None,
-    PrimaryAttack,   // Click Izquierdo (LMB)
-    SecondaryAttack, // Click Derecho (RMB)
-    Action1,         // Q
-    Action2,         // E
-    Action3,         // R
-    Movement,        // Shift (habilidades de desplazamiento: salto, dash, etc.)
-    Passive          // Pasiva, no tiene botón propio
+    [InspectorName("Ninguno")]              None,
+    [InspectorName("Clic izquierdo")]       PrimaryAttack,   // Click Izquierdo (LMB)
+    [InspectorName("Clic derecho")]         SecondaryAttack, // Click Derecho (RMB)
+    [InspectorName("Q (acción 1)")]         Action1,         // Q
+    [InspectorName("E (acción 2)")]         Action2,         // E
+    [InspectorName("R (definitiva)")]       Action3,         // R
+    [InspectorName("Shift (movimiento)")]   Movement,        // Shift (habilidades de desplazamiento: salto, dash, etc.)
+    [InspectorName("Pasiva")]               Passive          // Pasiva, no tiene botón propio
 }

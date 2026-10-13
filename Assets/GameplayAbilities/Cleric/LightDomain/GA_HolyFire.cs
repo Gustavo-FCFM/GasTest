@@ -24,14 +24,17 @@ public class GA_HolyFire : GA_ConeAttack
     [Section("La marca (aliados que lo golpean se curan)")]
     [Tooltip("Segundos que queda marcado cada enemigo alcanzado. Lo natural es lo mismo que " +
              "dura la quemadura.")]
+    [Label("Duración de la marca (s)")]
     public float MarkDuration = 5f;
 
     [Tooltip("Efectos que recibe CADA aliado (o el Clérigo) que golpee a un marcado. " +
              "Normalmente una curación instantánea.")]
+    [Label("Efectos para el aliado")]
     public List<GameplayEffect> AllyRewardEffects;
 
     [Tooltip("Tiempo mínimo entre dos curaciones al MISMO aliado. Sin esto, una clase de " +
              "ataques rápidos se curaría mucho más que una de golpes lentos.")]
+    [Label("Espera por aliado (s)")]
     public float RewardCooldownPerAlly = 0.2f;
 
     // Marcados ahora mismo y hasta cuándo; y la última curación de cada aliado.

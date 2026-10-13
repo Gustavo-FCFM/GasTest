@@ -32,22 +32,27 @@ public class GA_HeroicInterception : TargetImpactAbility
 {
     [Section(AbilitySection.Targeting)]
     [Tooltip("Alcance máximo para buscar al aliado al que interceptar.")]
+    [Label("Alcance máximo")]
     public float MaxRange = 14f;
 
     [Tooltip("Ángulo máximo (grados) entre la mira y el aliado para que cuente como objetivo. " +
              "Más alto = más fácil de enganchar, pero más fácil también de agarrar al que no querías.")]
+    [Label("Ángulo de selección (°)")]
     public float SelectionAngle = 30f;
 
     [Tooltip("Si se puede interceptar a un aliado MUERTO. Normalmente no: saltar a cubrir un " +
              "cadáver desperdicia la carga.")]
+    [Label("Permitir muertos")]
     public bool AllowDeadTargets = false;
 
     [Section(AbilitySection.Movement)]
     [Tooltip("A qué distancia por DELANTE del aliado (según hacia dónde mira él) aterriza el Paladín.")]
+    [Label("Distancia delante")]
     public float FrontDistance = 2.5f;
 
     [Tooltip("Si el Paladín queda mirando hacia donde miraba el aliado (o sea, dándole la espalda " +
              "y encarando la amenaza). Desactivado = queda mirando al aliado.")]
+    [Label("Mirar hacia afuera")]
     public bool FaceAwayFromAlly = true;
 
     // LOS EFECTOS van en la lista: "Al activarse → El lanzador" para el Paladín (la

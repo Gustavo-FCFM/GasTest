@@ -25,22 +25,27 @@ public class GA_HeroicLeap : GA_Teleport
     [Section(AbilitySection.Shape)]
     [Tooltip("Radio del golpe alrededor del punto de llegada. También conviene ponerlo en " +
              "Marker Radius, así el marcador muestra a quién va a alcanzar.")]
+    [Label("Radio del impacto")]
     public float ImpactRadius = 3f;
 
     [Section(AbilitySection.Timing)]
     [Tooltip("Segundos desde que despega hasta que aparece en el destino.")]
+    [Label("Tiempo en el aire (s)")]
     public float JumpDelay = 0.35f;
 
     [Tooltip("Segundos que queda ocupado después de aterrizar, antes de poder actuar.")]
+    [Label("Recuperación al aterrizar (s)")]
     public float LandRecovery = 0.5f;
 
     [Section("Bandera")]
     [Tooltip("La zona que se clava al llegar. Nace FIJA en el punto de llegada (ponerle " +
              "FollowOwner apagado) y sin animación propia.")]
+    [Label("Estandarte al llegar")]
     public GA_ContinuousAoE BannerAbility;
 
     [Section(AbilitySection.Animation)]
     [Tooltip("Clip del aterrizaje (el despegue es el AnimationClip de la habilidad).")]
+    [Label("Clip: aterrizaje")]
     public AnimationClip LandClip;
 
     // A diferencia del teletransporte, este sí golpea al llegar.

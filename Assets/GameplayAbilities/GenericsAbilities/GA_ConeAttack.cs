@@ -19,10 +19,12 @@ public class GA_ConeAttack : GameplayAbility
 {
     [Section(AbilitySection.Shape)]
     [Tooltip("Alcance del cono, en metros, desde el punto de salida.")]
+    [Label("Alcance")]
     public float Range = 2.5f;
 
     [Range(0f, 360f)]
     [Tooltip("Apertura del cono, en grados (el ángulo completo). 90 = un cuarto de círculo.")]
+    [Label("Apertura del cono (°)")]
     public float ConeAngle = 90f;
 
     [Tooltip("El barrido se inclina hacia donde apunta la CÁMARA (arriba o abajo), en vez de " +
@@ -31,6 +33,7 @@ public class GA_ConeAttack : GameplayAbility
              "vivo durante todo el swing. Lo único que se toma de la mira es la INCLINACIÓN.\n\n" +
              "Apagado, el cono ignora por completo si el objetivo está arriba o abajo — el " +
              "comportamiento de siempre.")]
+    [Label("Sigue la mira vertical")]
     public bool UseVerticalAim = false;
 
     [Tooltip("Desde DÓNDE sale el cono, en espacio local del dueño (X = derecha, Y = arriba, " +
@@ -41,12 +44,14 @@ public class GA_ConeAttack : GameplayAbility
              "donde de verdad sale el golpe.\n\n" +
              "Importa MÁS con puntería vertical encendida, porque ahí el ángulo se mide en 3D.\n\n" +
              "En CERO (el default) sale del pivote, como se comportó siempre.")]
+    [Label("Punto de salida")]
     public Vector3 OriginOffset = Vector3.zero;
 
     [Section("Zonas donde apunta")]
     [Tooltip("OPCIONAL: al golpear, deja esta zona en el piso (la Quemadura santa del Clérigo deja " +
              "fuego sagrado). Se usa esa habilidad tal cual —radio, duración, ticks, efectos y VFX— " +
              "sin su costo, su cooldown ni su animación.")]
+    [Label("Zona al golpear")]
     public GA_ContinuousAoE ImpactZone;
 
     [ShowIf(nameof(ImpactZone))]
@@ -55,24 +60,28 @@ public class GA_ConeAttack : GameplayAbility
              "· Rellenar el cono: las que hagan falta para cubrir el cono entero (el Range y el Cone " +
              "Angle de arriba), en arcos desde el borde de afuera hacia el lanzador. Cuántas salen lo " +
              "deciden el cono, el radio de la zona y la separación: el gizmo las muestra.")]
+    [Label("Distribución de zonas")]
     public GA_ContinuousAoE.EZoneLayout ZoneLayout = GA_ContinuousAoE.EZoneLayout.Row;
 
     [ShowIf(nameof(ImpactZone))]
     [ShowIf(nameof(ZoneLayout), GA_ContinuousAoE.EZoneLayout.Row)]
     [Min(1)]
     [Tooltip("Cuántas zonas. Van en FILA, de costado a la mira y centradas en el punto apuntado.")]
+    [Label("Cantidad de zonas")]
     public int ZoneCount = 1;
 
     [ShowIf(nameof(ImpactZone))]
     [Tooltip("Distancia entre los centros de dos zonas vecinas, en metros. En fila, el doble del radio " +
              "de la zona = se tocan. Rellenando el cono, ~1.7 veces el radio no deja huecos; más " +
              "grande = menos zonas.")]
+    [Label("Separación de zonas")]
     public float ZoneSpacing = 5f;
 
     [ShowIf(nameof(ImpactZone))]
     [ShowIf(nameof(ZoneLayout), GA_ContinuousAoE.EZoneLayout.Row)]
     [Tooltip("Hasta qué distancia del lanzador puede caer la fila. Mirando más lejos, cae a esta " +
              "distancia en esa dirección.")]
+    [Label("Alcance de las zonas")]
     public float ZoneMaxRange = 10f;
 
     // Las zonas salen con el PRIMER frame de impacto de cada lanzamiento (no con cada uno

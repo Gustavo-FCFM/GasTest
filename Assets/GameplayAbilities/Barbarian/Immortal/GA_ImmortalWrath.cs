@@ -15,6 +15,7 @@ public class GA_ImmortalWrath : GameplayAbility
 {
     [Section(AbilitySection.Shape)]
     [Tooltip("Radio de la explosión alrededor del punto de reaparición.")]
+    [Label("Radio del golpe")]
     public float AbilityRadius = 3f;
 
     public override float VisualAreaRadius => AbilityRadius;

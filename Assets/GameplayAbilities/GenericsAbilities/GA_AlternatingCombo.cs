@@ -25,10 +25,12 @@ public class GA_AlternatingCombo : GameplayAbility
     [Section("Combo")]
     [Tooltip("SECUENCIA A: sale en las activaciones impares (1ª, 3ª, ...). Ej: combo de 2 " +
              "estocadas (GA_LineAttack).")]
+    [Label("Secuencia A")]
     public List<GA_ComboSequence.ComboStep> FirstSequence;
 
     [Tooltip("SECUENCIA B: sale en las activaciones pares (2ª, 4ª, ...). Ej: combo de 2 " +
              "barridos (GA_ConeAttack).")]
+    [Label("Secuencia B")]
     public List<GA_ComboSequence.ComboStep> SecondSequence;
 
     // Envoltorio: buscan y golpean los pasos, no esta.

@@ -19,23 +19,28 @@ public class GA_ComboSequence : GameplayAbility
     public struct ComboStep
     {
         [Tooltip("La habilidad a ejecutar (Cono, Línea, etc)")]
+        [Label("Habilidad")]
         public GameplayAbility AbilityToCast;
 
         [Tooltip("Tiempo a esperar DESPUÉS de lanzar esta habilidad antes de la siguiente")]
+        [Label("Espera después (s)")]
         public float DelayAfter;
 
         [Tooltip("Clip propio de ESTE paso: si lo asignás, pisa el AnimationClip de la habilidad. " +
                  "Es lo que permite que dos pasos de la MISMA habilidad se vean distintos (ej. dos " +
                  "cortes encadenados, o estocada en una secuencia y barrido en otra).")]
+        [Label("Clip propio del paso")]
         public AnimationClip AnimationClipOverride;
 
         [Tooltip("Esquema viejo (solo si no usás clips): si > 0, fuerza a la habilidad a usar este AnimationID en lugar del suyo")]
+        [Label("ID de animación (viejo)")]
         public int AnimationIDOverride;
     }
 
     [Section("Combo")]
     [Tooltip("Los pasos del combo, en orden: qué habilidad sale en cada uno y cuánto esperar " +
              "antes del siguiente.")]
+    [Label("Pasos")]
     public List<ComboStep> Sequence;
 
     // Envoltorio: buscan y golpean los pasos, no esta.

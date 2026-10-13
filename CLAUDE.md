@@ -224,7 +224,10 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   a quién (enemigos, aliados, el lanzador, todos) y una condición de tag opcional. El
   código los aplica con `ApplyHitEffects(objetivo, primerGolpe)`; "al activarse" lo hace
   `CommitAbility`. Nada de campos sueltos `DamageEffect` / `AdditionalEffects` nuevos.
-  Los campos nuevos de un GA llevan **`[Section]`** (con las constantes de
+  Los campos nuevos de un GA (y de un GE, una clase, un ASDef o un perfil de pared) llevan
+  **`[Label("...")]`** con su nombre en español: el Inspector se ve en español (desde el 13 de
+  octubre de 2026) y sin `[Label]` el campo sale en inglés. Un enum nuevo que se elige en el
+  Inspector lleva `[InspectorName("...")]` en cada valor. Los campos nuevos de un GA llevan **`[Section]`** (con las constantes de
   `AbilitySection`) y, si dependen de otro, **`[ShowIf]`**; si tiene forma, que
   sobreescriba `DrawGizmos` y `DrawSceneHandles` (manijas con `AbilityHandles`).
   **Lo que gasta acumulaciones** (las de Artes marciales del Monje: cada una da

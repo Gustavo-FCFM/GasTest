@@ -33,7 +33,11 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
 
     // Dónde nace el área. AtOwner es el valor 0 = el comportamiento de siempre, así
     // que los assets ya configurados no cambian.
-    public enum EAoEDeploy { AtOwner, AtReticle }
+    public enum EAoEDeploy
+    {
+        [InspectorName("Sobre el dueño")]           AtOwner   = 0,
+        [InspectorName("Donde apunta (marcador)")]  AtReticle = 1,
+    }
 
     // Cómo se traduce el viejo "Targets" de un área a la entrada de efectos.
     public static EEffectTarget ToEffectTarget(EAoETarget targets)
@@ -48,20 +52,24 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
 
     [Section(AbilitySection.Shape)]
     [Tooltip("Radio del área, en metros.")]
+    [Label("Radio")]
     public float Radius        = 4f;
 
     [Tooltip("AtOwner: el área nace sobre el dueño (comportamiento clásico). AtReticle: se apunta " +
              "con el marcador en el suelo (mantener → apuntar → soltar) y queda fija ahí.")]
+    [Label("Dónde aparece")]
     public EAoEDeploy DeployMode = EAoEDeploy.AtOwner;
 
     [ShowIf(nameof(DeployMode), EAoEDeploy.AtReticle)]
     [Tooltip("Alcance máximo al que se puede desplegar la zona.")]
+    [Label("Alcance máximo")]
     public float MaxRange = 15f;
 
     // Si el área se mueve con el dueño o queda fija donde se activó. Se ignora con
     // DeployMode = AtReticle (una zona apuntada siempre queda fija donde cae).
     [ShowIf(nameof(DeployMode), EAoEDeploy.AtOwner)]
     [Tooltip("La zona se mueve con el dueño (un aura). Apagado = queda fija donde nació.")]
+    [Label("Sigue al dueño")]
     public bool FollowOwner = true;
 
     // IGroundTargetAbility: el marcador del suelo usa estos valores para la vista
@@ -75,14 +83,17 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
 
     [Section(AbilitySection.Timing)]
     [Tooltip("Espera antes de que el área empiece a existir, tras activar la habilidad.")]
+    [Label("Espera inicial (s)")]
     public float StartDelay = 0.5f;
 
     [Tooltip("Cuánto dura la zona, en segundos.")]
+    [Label("Duración (s)")]
     public float TotalDuration = 5f;
 
     // Cada cuánto se vuelve a revisar quién está dentro del área y se le
     // reaplican los efectos.
     [Tooltip("Cada cuántos segundos se aplican los efectos a los que están adentro.")]
+    [Label("Cada cuánto (s)")]
     public float TickInterval  = 0.5f;
 
     public override float VisualAreaRadius => Radius;

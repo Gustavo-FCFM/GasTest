@@ -21,19 +21,24 @@ public class GA_Flight : GA_SelfBuff
 {
     [Section("Vuelo")]
     [Tooltip("Velocidad hacia arriba del despegue. Se disipa sola en menos de un segundo.")]
+    [Label("Velocidad de despegue")]
     public float LaunchSpeed = 12f;
 
     [Tooltip("Velocidad de vuelo = velocidad de movimiento × esto.")]
+    [Label("Velocidad (×)")]
     public float SpeedMultiplier = 1.5f;
 
     [Tooltip("Extra si SOLO va hacia adelante (sin moverse de lado): × esto encima de lo anterior.")]
+    [Label("Extra hacia adelante")]
     public float ForwardBoost = 1.5f;
 
     [Tooltip("Metros por segundo al subir (Espacio) o bajar (Ctrl).")]
+    [Label("Subir/bajar (m/s)")]
     public float VerticalSpeed = 6f;
 
     [Tooltip("Quieto en el aire (sin WASD ni subir/bajar) va cayendo despacio, acelerando en 1 s " +
              "hasta esta velocidad (m/s). Obliga a moverse para no bajar. 0 = flota quieto para siempre.")]
+    [Label("Caída quieto (m/s)")]
     public float IdleSinkSpeed = 1.5f;
 
     public override bool MovesThroughOwner => true;

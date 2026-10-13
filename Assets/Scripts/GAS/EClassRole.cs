@@ -1,3 +1,5 @@
+using UnityEngine;
+
 // ============================================================
 // EClassRole
 //
@@ -18,10 +20,10 @@
 // ============================================================
 public enum EClassRole
 {
-    None    = 0,
-    Tank    = 1,
-    Damage  = 2,
-    Support = 3
+    [InspectorName("Ninguno")] None    = 0,
+    [InspectorName("Tanque")]  Tank    = 1,
+    [InspectorName("Daño")]    Damage  = 2,
+    [InspectorName("Soporte")] Support = 3
 }
 
 // Cómo se muestra cada rol en los menús: su color (Tanque azul, Daño rojo, Soporte verde)

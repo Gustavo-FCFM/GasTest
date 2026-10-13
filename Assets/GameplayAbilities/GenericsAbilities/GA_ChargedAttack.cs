@@ -31,34 +31,42 @@ public class GA_ChargedAttack : GameplayAbility, IHoldAbility
     public struct ChargeStage
     {
         [Tooltip("Segundos de carga para llegar a esta etapa. La primera va en 0 (tocar y soltar).")]
+        [Label("Carga mínima (s)")]
         public float MinChargeTime;
 
         [Tooltip("Lo que sale al soltar en esta etapa (un cono, una línea, un proyectil...). Trae " +
                  "su propio daño, efectos y clip.")]
+        [Label("Habilidad al soltar")]
         public GameplayAbility Ability;
     }
 
     [Section("Etapas de carga")]
     [Tooltip("En orden de MinChargeTime. Al soltar sale la última a la que se llegó.")]
+    [Label("Etapas")]
     public List<ChargeStage> Stages = new List<ChargeStage>();
 
     [Tooltip("Al llegar a este tiempo de carga se suelta solo. 0 = sin tope (solo la red de " +
              "seguridad de abajo).")]
+    [Label("Carga máxima (s)")]
     public float MaxChargeTime = 2f;
 
     [Tooltip("Lo que se aplica al empezar a cargar y se saca al soltar (una ralentización, " +
              "por ejemplo). Opcional.")]
+    [Label("Efectos al cargar")]
     public List<GameplayEffect> WhileChargingEffects = new List<GameplayEffect>();
 
     [Section(AbilitySection.Advanced, startCollapsed: true)]
     [Tooltip("Corte de seguridad si MaxChargeTime está en 0 y el aviso de soltar nunca llega.")]
+    [Label("Corte de seguridad (s)")]
     public float HoldSafetyTimeout = 10f;
 
     [Section(AbilitySection.Animation)]
     [Tooltip("Pose de carga EN BUCLE. Con este solo ya se ve.")]
+    [Label("Clip: cargando (bucle)")]
     public AnimationClip ChargeLoopClip;
 
     [Tooltip("OPCIONAL: el gesto de empezar a cargar (una vez). Vacío = directo al bucle.")]
+    [Label("Clip: empezar a cargar")]
     public AnimationClip ChargeStartClip;
 
     // IHoldAbility: al soltar no hay clip de "bajar", sale el golpe de la etapa.

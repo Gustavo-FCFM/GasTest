@@ -20,12 +20,15 @@ public class GA_Blink : GameplayAbility
 {
     [Section(AbilitySection.Targeting)]
     [Tooltip("Alcance máximo para buscar al enemigo objetivo.")]
+    [Label("Alcance máximo")]
     public float MaxRange = 12f;
     [Tooltip("Ángulo máximo (grados) entre la mira y el enemigo para que cuente como objetivo.")]
+    [Label("Ángulo de selección (°)")]
     public float SelectionAngle = 25f;
 
     [Section(AbilitySection.Movement)]
     [Tooltip("A qué distancia por detrás del enemigo aparece el jugador.")]
+    [Label("Distancia detrás")]
     public float BehindDistance = 1.5f;
 
     // Valida, elige objetivo, teletransporta detrás de él, aplica los efectos y

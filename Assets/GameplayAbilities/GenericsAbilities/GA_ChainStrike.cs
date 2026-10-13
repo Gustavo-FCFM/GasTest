@@ -22,30 +22,38 @@ public class GA_ChainStrike : GameplayAbility
 {
     [Section(AbilitySection.Targeting)]
     [Tooltip("Alcance para elegir al PRIMER enemigo, con la mira.")]
+    [Label("Alcance máximo")]
     public float MaxRange = 15f;
 
     [Tooltip("Ángulo máximo (grados) entre la mira y el primer enemigo.")]
+    [Label("Ángulo de selección (°)")]
     public float SelectionAngle = 25f;
 
     [Section("Cadena")]
     [Tooltip("A qué distancia del último golpeado busca al siguiente.")]
+    [Label("Alcance del salto")]
     public float JumpRange = 10f;
 
     [Tooltip("Segundos que se queda sobre cada enemigo antes de saltar al siguiente.")]
+    [Label("Tiempo en cada uno (s)")]
     public float StayTime = 0.5f;
 
     [Tooltip("Primero los JUGADORES (el que más vida le falta); los monstruos y NPCs, solo si no queda ninguno.")]
+    [Label("Primero jugadores")]
     public bool PrioritizePlayers = true;
 
     [Tooltip("Tope de enemigos por cadena. 0 = sin tope (hasta que no quede ninguno sin golpear).")]
+    [Label("Máximo de objetivos")]
     public int MaxTargets = 0;
 
     [Tooltip("Lo que lleva mientras dura la cadena, y se le saca al terminar: intocable (un GE con " +
              "Status_Immunity y Status_Unstoppable, de duración larga).")]
+    [Label("Efecto mientras dura")]
     public GameplayEffect WhileActiveEffect;
 
     [Section(AbilitySection.Movement)]
     [Tooltip("A qué distancia detrás de cada enemigo aparece.")]
+    [Label("Distancia detrás")]
     public float BehindDistance = 1.2f;
 
     public override bool MovesThroughOwner => true;

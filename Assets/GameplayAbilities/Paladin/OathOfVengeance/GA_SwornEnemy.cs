@@ -28,25 +28,30 @@ public class GA_SwornEnemy : TargetImpactAbility
 {
     [Section(AbilitySection.Targeting)]
     [Tooltip("Alcance máximo para buscar al enemigo a marcar.")]
+    [Label("Alcance máximo")]
     public float MaxRange = 10f;
 
     [Tooltip("Ángulo máximo (grados) entre la mira y el enemigo para que cuente como objetivo.")]
+    [Label("Ángulo de selección (°)")]
     public float SelectionAngle = 30f;
 
     [Section("La marca")]
     [Tooltip("Efecto CON DURACIÓN que se le aplica al enemigo marcado. Acá va el modificador de " +
              "Vulnerability (recibe más daño) y el tag Status_SwornEnemy.\n\n" +
              "Su Duration es la que manda: la vigilancia de golpes dura exactamente lo mismo.")]
+    [Label("Efecto de la marca")]
     public GameplayEffect MarkEffect;
 
     [Tooltip("Efectos que recibe CADA aliado que golpee al marcado. Normalmente una curación " +
              "instantánea. El Paladín también cuenta como aliado de sí mismo, así que él también " +
              "se cura al golpearlo.")]
+    [Label("Efectos para el aliado")]
     public List<GameplayEffect> AllyRewardEffects;
 
     [Tooltip("Tiempo mínimo entre dos curaciones al MISMO aliado, en segundos. Sin esto, una clase " +
              "de ataques rápidos se curaría muchísimo más que una de golpes lentos por el simple " +
              "hecho de pegar más veces.")]
+    [Label("Espera por aliado (s)")]
     public float RewardCooldownPerAlly = 0.5f;
 
     // Objetivo marcado ahora mismo, para poder desuscribirnos al re-marcar o al

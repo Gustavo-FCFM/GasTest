@@ -24,17 +24,21 @@ public class GA_CommandHalt : TargetImpactAbility
 {
     [Section(AbilitySection.Targeting)]
     [Tooltip("Alcance máximo para buscar al enemigo a marcar. 10 m = alcance medio.")]
+    [Label("Alcance máximo")]
     public float MaxRange = 10f;
 
     [Tooltip("Ángulo máximo (grados) entre la mira y el enemigo para que cuente como objetivo.")]
+    [Label("Ángulo de selección (°)")]
     public float SelectionAngle = 30f;
 
     [Section("La marca")]
     [Tooltip("Efecto CON DURACIÓN que lleva el marcado (el ícono y la duración de la vigilancia). " +
              "Su Duration manda: la marca vigila exactamente ese tiempo.")]
+    [Label("Efecto de la marca")]
     public GameplayEffect MarkEffect;
 
     [Tooltip("Lo que recibe el marcado si le pega a un aliado (GE_Stun). Puede ser más de uno.")]
+    [Label("Castigo")]
     public List<GameplayEffect> PunishEffects = new List<GameplayEffect>();
 
     // Enemigo marcado ahora mismo. NonSerialized: estado de runtime por instancia otorgada.

@@ -20,8 +20,10 @@ public class GA_ExactCopy : GameplayAbility
 {
     [Section("Copia")]
     [Tooltip("Velocidad de caminado de la copia. 0 = usar la velocidad del jugador (MovSpeed).")]
+    [Label("Velocidad de la copia")]
     public float MoveSpeedOverride = 0f;
     [Tooltip("Alcance máximo hacia donde puede caminar la copia (recorta el punto de mira si está muy lejos). 0 = sin recorte.")]
+    [Label("Alcance máximo (0 = sin tope)")]
     public float MaxRange = 0f;
 
     // No busca personajes ni golpea a nadie: crea una copia.

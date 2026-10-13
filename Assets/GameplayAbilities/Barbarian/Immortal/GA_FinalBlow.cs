@@ -16,23 +16,28 @@ public class GA_FinalBlow : GameplayAbility, IChanneledAbility
 {
     [Section("Carga")]
     [Tooltip("Segundos de carga, enraizado, antes de que salga el golpe.")]
+    [Label("Tiempo de carga (s)")]
     public float ChargeTime = 1.5f;
 
     [Tooltip("Lo que recibe MIENTRAS carga (el escudo). GEs con duración que se aplica a sí " +
              "mismo; la duración la fuerza ChargeTime, así que no hace falta igualarla en el GE. " +
              "Si lo interrumpen, se retiran antes de tiempo.")]
+    [Label("Efectos al cargar")]
     public List<GameplayEffect> WhileChargingEffects = new List<GameplayEffect>();
 
     [Section(AbilitySection.Shape)]
     [Tooltip("Qué tan lejos del dueño está el centro de la caja de golpe.")]
+    [Label("Distancia de la caja")]
     public float   HitboxOffsetZ     = 1.5f;
 
     [Tooltip("A qué ALTURA queda el centro de la caja, respecto del pivote del dueño — que está " +
              "a los PIES.\n\nEn 0 la caja nace a ras del suelo y la mitad de su alto queda " +
              "enterrada, así que el golpe apenas llega a la cintura del que tenés enfrente. " +
              "Subilo a la altura del pecho (1.2-1.5) para que conecte donde se lo ve.")]
+    [Label("Altura de la caja")]
     public float   HitboxOffsetY     = 0f;
     [Tooltip("Mitad del tamaño de la caja de golpe en cada eje (X ancho, Y alto, Z largo).")]
+    [Label("Mitad de la caja")]
     public Vector3 HitboxHalfExtents = new Vector3(1f, 1f, 1f);
 
     [Section(AbilitySection.Animation)]
@@ -42,13 +47,16 @@ public class GA_FinalBlow : GameplayAbility, IChanneledAbility
              "cuando la interrumpen).\n\n" +
              "Reusa las ranuras del MANTENIDO en el Animator, así que no hay estados nuevos que " +
              "crear: son las mismas del escudo.")]
+    [Label("Clip: cargando (bucle)")]
     public AnimationClip ChargeLoopAnimation;
 
     [Tooltip("OPCIONAL: el gesto de LEVANTAR el arma, una vez, antes de entrar al bucle.")]
+    [Label("Clip: levantar el arma")]
     public AnimationClip ChargeStartAnimation;
 
     [Tooltip("OPCIONAL: el gesto de BAJAR el arma. Se reproduce si la carga se interrumpe; " +
              "cuando sale bien, el mandoble la pisa enseguida.")]
+    [Label("Clip: bajar el arma")]
     public AnimationClip ChargeEndAnimation;
 
     // IChanneledAbility: la capa de red lee los clips por acá para replicarlos.

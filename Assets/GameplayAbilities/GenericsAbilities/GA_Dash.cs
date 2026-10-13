@@ -40,14 +40,17 @@ public class GA_Dash : GameplayAbility
 {
     [Section(AbilitySection.Movement)]
     [Tooltip("Distancia objetivo del dash (se recorta si hay una pared antes).")]
+    [Label("Distancia")]
     public float DashDistance = 8f;
     [Tooltip("Velocidad del impulso. El frenado/inercia lo da la atenuación de PlayerController.")]
+    [Label("Velocidad")]
     public float DashSpeed = 30f;
     [Tooltip("Esquiva direccional (estilo shooter): el dash va hacia donde APUNTA el " +
              "movimiento (WASD/stick) y el cuerpo NO gira — sigue mirando a la mira, así " +
              "podés esquivar de costado o hacia atrás sin dejar de encarar al enemigo. " +
              "Si el jugador está quieto, cae a la dirección de la mira (dash hacia adelante). " +
              "Desactivado = comportamiento clásico: dashea hacia la mira y encara esa dirección.")]
+    [Label("Esquiva direccional")]
     public bool DirectionalDodge = true;
 
     [Tooltip("Solo con Directional Dodge: qué tan 'hacia adelante' (alineado con la mira) " +
@@ -56,6 +59,7 @@ public class GA_Dash : GameplayAbility
              "costados y hacia atrás siempre quedan horizontales (no elevan).")]
     [Range(0f, 1f)]
     [ShowIf(nameof(DirectionalDodge))]
+    [Label("Umbral hacia adelante")]
     public float ForwardDashElevationDot = 0.5f;
 
     [Tooltip("Qué fracción de la velocidad del dash se CONSERVA cuando termina el impulso, en vez " +
@@ -63,33 +67,41 @@ public class GA_Dash : GameplayAbility
              "todavía corriendo y se va disipando. Se conserva también la parte VERTICAL, así que " +
              "un dash hacia arriba sigue subiendo un poco antes de caer en lugar de desplomarse.")]
     [Range(0f, 1f)]
+    [Label("Inercia al terminar")]
     public float ExitSpeedPercent = 0.35f;
 
     [Tooltip("Qué tan rápido se disipa esa inercia, en 1/segundos. Más alto = se va antes " +
              "(3 deja alrededor de un 5% al segundo y medio). Mientras dura, el jugador conserva " +
              "el control normal: puede girar, frenar y saltar.")]
+    [Label("Disipación de la inercia")]
     public float ExitDamping = 3f;
 
     [Tooltip("Capas que FRENAN el dash (paredes/entorno). Se usa para recortar la distancia.")]
+    [Label("Capas que frenan")]
     public LayerMask WallLayer;
     [Tooltip("Capa de JUGADORES a atravesar durante el dash (se excluye de la colisión del CC).")]
+    [Label("Atraviesa capas")]
     public LayerMask ExcludePlayerLayer;
 
     [Tooltip("El dash termina frente al PRIMER enemigo del camino, y solo él recibe los efectos " +
              "(con los de 'al primer golpe' incluidos). Apagado = atraviesa y daña a todos (lo de " +
              "siempre). La Carga defensiva del Guerrero.")]
+    [Label("Para en el primer enemigo")]
     public bool StopAtFirstEnemy = false;
 
     [ShowIf(nameof(StopAtFirstEnemy))]
     [Tooltip("A cuántos metros ANTES del enemigo se frena, para no quedar metido adentro de él.")]
+    [Label("Frena antes (m)")]
     public float StopShortDistance = 1f;
 
     [Section(AbilitySection.Shape)]
     [Tooltip("Radio del barrido de daño a lo largo del recorrido.")]
+    [Label("Radio de golpe")]
     public float HitRadius = 1.2f;
 
     [Section("Reinicio por muerte")]
     [Tooltip("Si un enemigo golpeado por el dash muere dentro de esta ventana (seg), se recupera una carga.")]
+    [Label("Ventana de reinicio al matar (s)")]
     public float KillResetWindow = 2f;
 
     // Valida (con el cooldown estándar, que se sincroniza al dueño), consume una

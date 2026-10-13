@@ -40,23 +40,28 @@ public class GA_TagSwitch : GameplayAbility, IGroundTargetAbility
     public struct TagVariant
     {
         [Tooltip("Tag que el dueño tiene que tener para que se dispare esta variante.")]
+        [Label("Tag necesario")]
         public EGameplayTag RequiredTag;
 
         [Tooltip("Habilidad a ejecutar cuando el tag está presente.")]
+        [Label("Habilidad de la variante")]
         public GameplayAbility Ability;
 
         [Tooltip("Si al usarla se consume el tag (o sea, es de UN solo uso: 'tu PRÓXIMO ataque'). " +
                  "Desactivado = la variante sigue activa mientras dure el efecto que da el tag " +
                  "(el caso de un ult que cambia tus ataques por un rato).")]
+        [Label("Gasta el tag")]
         public bool ConsumeTag;
 
         [Tooltip("Solo con ShowVariantIcon: el ícono del botón mientras esta variante sea la que " +
                  "se dispararía. Vacío = el ícono de su habilidad.")]
+        [Label("Ícono de la variante")]
         public Sprite Icon;
 
         [Tooltip("OPCIONAL: con este tag la variante también se dispara, y SIN gastar nada (la " +
                  "Paz mental del Maestro elemental: mientras dura, todo sale con Ki y el Ki no se " +
                  "gasta). None = solo con RequiredTag.")]
+        [Label("También activa con tag")]
         public EGameplayTag AlsoActiveWithTag;
     }
 
@@ -71,18 +76,22 @@ public class GA_TagSwitch : GameplayAbility, IGroundTargetAbility
     [Tooltip("Si el botón muestra el ícono de la variante que se dispararía AHORA, en vez del " +
              "propio. Lo usan las posturas del Guerrero (Q y Shift) para que se vea en qué " +
              "postura está. Apagado = el ícono de siempre (el Castigo divino del Paladín).")]
+    [Label("Mostrar ícono de la variante")]
     public bool ShowVariantIcon = false;
 
     [ShowIf(nameof(ShowVariantIcon))]
     [Tooltip("El ícono cuando no aplica ninguna variante. Vacío = el de DefaultAbility.")]
+    [Label("Ícono por defecto")]
     public Sprite DefaultIcon;
 
     [Section("Variantes")]
     [Tooltip("La que se ejecuta cuando no aplica ninguna variante (el ataque normal).")]
+    [Label("Habilidad por defecto")]
     public GameplayAbility DefaultAbility;
 
     [Tooltip("Se evalúan EN ORDEN y gana la primera cuyo tag esté presente. Poné arriba las " +
              "más específicas o las que deban tener prioridad si se solapan dos estados.")]
+    [Label("Variantes")]
     public List<TagVariant> Variants;
 
     // Envoltorio: busca y golpea la variante que se ejecuta, no esta.

@@ -62,6 +62,20 @@ public class ShowIfAttribute : Attribute
     public ShowIfAttribute(string field, object value, bool invert)  { Field = field; Value = value; Invert = invert; }
 }
 
+// El nombre en ESPAÑOL con el que el Inspector muestra el campo (pedido de Gustavo, 13 de
+// octubre de 2026: que quien le ayude pueda armar habilidades sin saber inglés). El campo
+// sigue llamándose igual en el código y en los assets: renombrarlo borraría lo guardado.
+// Sin [Label] sale el nombre en inglés de siempre. Los dibujan los inspectores por secciones
+// (GA, GE, clases, ASDef, paredes) y, dentro de una entrada de lista, LabeledFieldsDrawer.
+//   [Label("Alcance máximo")] public float MaxRange = 10f;
+[AttributeUsage(AttributeTargets.Field)]
+public class LabelAttribute : Attribute
+{
+    public readonly string Text;
+
+    public LabelAttribute(string text) { Text = text; }
+}
+
 // Los títulos de las secciones comunes, y en qué orden se muestran. Con constantes y no
 // con texto suelto en cada GA: así "Efectos (GE)" es la MISMA sección en todos y queda
 // siempre en el mismo lugar.

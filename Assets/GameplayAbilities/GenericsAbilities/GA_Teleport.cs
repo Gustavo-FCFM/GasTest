@@ -32,10 +32,12 @@ public class GA_Teleport : GameplayAbility, IGroundTargetAbility
 {
     [Section(AbilitySection.Shape)]
     [Tooltip("Distancia máxima (en el plano) desde el personaje hasta el destino.")]
+    [Label("Alcance máximo")]
     public float MaxRange = 12f;
 
     [ShowIf(nameof(DirectionalTeleport), false)]
     [Tooltip("Radio del marcador en el suelo (solo visual, sin Directional).")]
+    [Label("Radio del marcador")]
     public float MarkerRadius = 1f;
 
     [Section(AbilitySection.Movement)]
@@ -44,12 +46,14 @@ public class GA_Teleport : GameplayAbility, IGroundTargetAbility
              "caminas hacia donde miras (o estás quieto), vas a donde miras; si caminas de " +
              "lado o hacia atrás, te vas en esa dirección lo más lejos que se pueda, sin " +
              "dejar de mirar al frente. Ideal para escapar hacia atrás de quien te pega.")]
+    [Label("Teletransporte direccional")]
     public bool DirectionalTeleport = false;
 
     [Tooltip("Solo con Directional: qué tan alineado con la mira tiene que ir el movimiento " +
              "para contar como 'hacia adelante'. 0.5 ≈ incluye las diagonales hacia adelante.")]
     [Range(0f, 1f)]
     [ShowIf(nameof(DirectionalTeleport))]
+    [Label("Umbral hacia adelante")]
     public float ForwardDot = 0.5f;
 
     public float MaxTargetRange   => MaxRange;
@@ -60,30 +64,38 @@ public class GA_Teleport : GameplayAbility, IGroundTargetAbility
     [Section("Aterrizaje seguro", startCollapsed: true)]
     [Tooltip("Capas del escenario: piso y obstáculos. Por defecto todo menos los personajes " +
              "(7). Las paredes invisibles (Ignore Raycast, 2) frenan pero nunca cuentan como piso.")]
+    [Label("Capas del escenario")]
     public LayerMask EnvironmentMask = ~(1 << 7);
 
     [Tooltip("Tamaño del personaje para probar que quepa en el destino.")]
+    [Label("Radio del cuerpo")]
     public float BodyRadius = 0.4f;
+    [Label("Alto del cuerpo")]
     public float BodyHeight = 1.8f;
 
     [Tooltip("Qué tan plano tiene que ser algo para ser PISO (la Y de su normal). 0.6 ≈ " +
              "hasta unos 53° de pendiente.")]
     [Range(0f, 1f)]
+    [Label("Piso: inclinación máxima")]
     public float WalkableNormalY = 0.6f;
 
     [Tooltip("Si la mira toca una pared o una plataforma por abajo: hasta cuánto más ARRIBA " +
              "del punto se busca el piso de encima (subirse a la plataforma).")]
+    [Label("Buscar piso hacia arriba")]
     public float LedgeSearchUp = 3f;
 
     [Tooltip("Hasta cuánto más ABAJO del punto apuntado se busca el piso (apuntando al aire, " +
              "o bajo una pared).")]
+    [Label("Buscar piso hacia abajo")]
     public float FloorSearchDown = 25f;
 
     [Tooltip("Cuánto retrocede por intento cuando el destino no sirve.")]
+    [Label("Paso de retroceso")]
     public float BackoffStep = 0.5f;
 
     [Tooltip("Solo para el retroceso y el direccional: cuánto más abajo puede estar el piso " +
              "de cada punto que se prueba. Si no hay piso a esa distancia, ese punto no vale.")]
+    [Label("Caída máxima")]
     public float MaxDrop = 4f;
 
     // Los VFX "en el impacto" salen en el punto de salida y en el de llegada (el destello
@@ -96,10 +108,12 @@ public class GA_Teleport : GameplayAbility, IGroundTargetAbility
              "del punto apuntado), si el cuerpo cabe ahí; y si su clase se engancha a las paredes, " +
              "queda enganchado. Es el Paso de las sombras del Shinobi. Apagado = una pared lo manda " +
              "al piso de encima o al de abajo, como siempre.")]
+    [Label("Aparecer en paredes")]
     public bool AllowWallLanding = false;
 
     [ShowIf(nameof(AllowWallLanding))]
     [Tooltip("Qué tan vertical tiene que ser la pared (0.3 = hasta ~17° de inclinación).")]
+    [Label("Pared: verticalidad")]
     [Range(0f, 0.7f)] public float WallMaxNormalY = 0.3f;
 
     // La pared en la que va a aparecer en esta activación (cero = en un piso). La usa
