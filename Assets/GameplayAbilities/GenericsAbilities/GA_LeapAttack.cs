@@ -19,7 +19,8 @@ public class GA_LeapAttack : GameplayAbility, ILeapAbility
     [Tooltip("Impulso vertical inicial del salto.")]
     [Label("Impulso hacia arriba")]
     public float JumpVelocity = 15f;
-    [Tooltip("Impulso hacia adelante (hacia donde mira la cámara del dueño).")]
+    [Tooltip("Impulso hacia adelante (hacia donde mira la cámara del dueño). NEGATIVO = hacia " +
+             "atrás (la Retirada del Explorador).")]
     [Label("Impulso hacia adelante")]
     public float ForwardForce = 5f;
 
@@ -29,6 +30,11 @@ public class GA_LeapAttack : GameplayAbility, ILeapAbility
              "área' mide lo mismo que este radio).")]
     [Label("Radio del golpe")]
     public float AbilityRadius = 3f;
+
+    [Tooltip("El golpe sale al DESPEGAR, en el lugar de donde salta, y no al aterrizar (la " +
+             "Retirada del Explorador: daña y ralentiza a los que deja atrás). Apagado = al aterrizar.")]
+    [Label("Golpe al despegar")]
+    public bool HitAtTakeoff;
 
     [Section(AbilitySection.Animation)]
     [Tooltip("OPCIONAL: el DESPEGUE. Se reproduce una vez y encadena al bucle.\n\n" +
@@ -66,6 +72,9 @@ public class GA_LeapAttack : GameplayAbility, ILeapAbility
 
         CommitAbility();
 
+        // La Retirada golpea donde estaba, antes de irse.
+        if (HitAtTakeoff) ResolveImpact();
+
         PlayerController pc = OwnerASC.GetComponent<PlayerController>();
         NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
 
@@ -92,6 +101,12 @@ public class GA_LeapAttack : GameplayAbility, ILeapAbility
     // siempre en el servidor — cuando el dueño (el único que simula su
     // propio CharacterController) le avisa que aterrizó.
     public void ExecuteImpactCheck()
+    {
+        if (!HitAtTakeoff) ResolveImpact();   // con golpe al despegar, aterrizar no hace nada
+    }
+
+    // El golpe en área alrededor de donde está el dueño AHORA (al aterrizar, o al despegar).
+    private void ResolveImpact()
     {
         Vector3 impactCenter = OwnerASC.transform.position;
 

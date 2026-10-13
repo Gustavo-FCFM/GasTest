@@ -145,6 +145,36 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     public readonly SyncDictionary<EAttributeType, float> NetStats = new SyncDictionary<EAttributeType, float>();
 
     // =========================================================
+    // REVELADO A UN EQUIPO (ver a través de paredes)
+    //
+    // Equipo → tick del servidor hasta el que ese equipo ve a este personaje a través de
+    // las paredes (la silueta de TeamReveal). Lo usa la Marca del cazador del Explorador:
+    // el que lo marcó y sus aliados lo ven; el resto, no. No es un tag porque un tag no
+    // dice QUIÉN lo puso, y en un 3c3c3 el tercer equipo no tiene por qué verlo.
+    //
+    // Las entradas vencidas no se borran al instante: cada pantalla compara contra su
+    // tick, y la próxima marca pisa la entrada de ese equipo.
+    // =========================================================
+
+    public readonly SyncDictionary<int, uint> NetRevealedUntilTick = new SyncDictionary<int, uint>();
+
+    // Revela a este personaje al equipo 'team' por 'seconds' segundos (o lo que le quede,
+    // si ya estaba revelado por más tiempo).
+    [Server]
+    public void ServerRevealToTeam(int team, float seconds)
+    {
+        if (team <= 0 || seconds <= 0f) return;
+        uint until = TimeManager.Tick + TimeManager.TimeToTicks(seconds, FishNet.Managing.Timing.TickRounding.RoundUp);
+        if (NetRevealedUntilTick.TryGetValue(team, out uint current) && current >= until) return;
+        NetRevealedUntilTick[team] = until;
+    }
+
+    // ¿Lo ve ahora el equipo 'team' a través de las paredes?
+    public bool IsRevealedToTeam(int team)
+        => team > 0 && NetRevealedUntilTick.TryGetValue(team, out uint until) && TimeManager != null &&
+           TimeManager.Tick < until;
+
+    // =========================================================
     // PROPIEDADES PÚBLICAS DE LECTURA (para la UI y otros scripts)
     // =========================================================
 
@@ -273,6 +303,10 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         // Lo mismo para los VFX: si entramos a la partida con un debuff ya puesto
         // encima de este personaje, su VFX tiene que aparecer igual.
         foreach (int index in NetActiveEffectDuration.Keys) SpawnEffectVfx(index);
+
+        // La silueta a través de paredes (Marca del cazador) la dibuja cada pantalla: se
+        // agrega sola a todo personaje en red, así no hay que tocar ningún prefab.
+        if (GetComponent<TeamReveal>() == null) gameObject.AddComponent<TeamReveal>();
     }
 
     // Solo en el servidor: re-sincroniza los cooldowns cada
@@ -1662,7 +1696,9 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         if (elapsed >= liftoffTimeout)
             Debug.LogWarning("[NetASC] Salto: nunca detecté el despegue (timeout) — probablemente algo bloqueó el impulso hacia arriba.");
 
-        while (!pc.IsGrounded)
+        // Aterrizar, o engancharse a una pared a mitad del salto (el Explorador y el Pícaro):
+        // las dos cosas terminan el salto.
+        while (!pc.IsGrounded && !pc.IsOnWall)
             yield return null;
 
         pc.ClearAbilityVelocity();

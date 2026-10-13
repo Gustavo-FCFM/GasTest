@@ -52,6 +52,20 @@ public class GC_Projectile : NetworkBehaviour
     // poder apagarlos y volver a prenderlos sin tocar el arma clonada.
     private Renderer[] _defaultRenderers;
 
+    [Header("Modelo")]
+    [Tooltip("Lo que se ve volar es una copia del ARMA de la mano del que lo tiró (el hacha, la " +
+             "daga, el kunai). Apagado = se ve el modelo propio de este prefab: la flecha del " +
+             "Explorador, que no es el arco que tiene en la mano.")]
+    [Label("Usar el arma del que lo tira")]
+    public bool UseShooterWeapon = true;
+
+    [Tooltip("La punta sigue la curva del vuelo: con gravedad, sube mirando arriba y cae de " +
+             "punta (la flecha). Apagado = conserva el giro con el que salió (el hacha que gira).")]
+    [Label("Apunta hacia donde vuela")]
+    public bool AlignToVelocity;
+
+    private Rigidbody _body;
+
     [Header("Blur de giro (opcional)")]
     [Tooltip("Material translucido del efecto (el paquete Simple Spin Blur trae uno listo: " +
              "'Spin Blur Material').\n\nVACIO = sin blur; el proyectil vuela como siempre.\n\n" +
@@ -96,6 +110,33 @@ public class GC_Projectile : NetworkBehaviour
     // CICLO DE VIDA
     // =========================================================
 
+    // Vuela derecho (sin gravedad) 'seconds' y después cae. Lo pide GA_ProjectileShoot con su
+    // Vuelo recto, en el servidor, justo después de darle la velocidad.
+    public void HoldGravity(float seconds)
+    {
+        if (_body == null) _body = GetComponent<Rigidbody>();
+        if (_body == null || !_body.useGravity) return;
+        _body.useGravity = false;
+        StartCoroutine(RestoreGravity(seconds));
+    }
+
+    private IEnumerator RestoreGravity(float seconds)
+    {
+        yield return new WaitForSeconds(seconds);
+        if (_body != null && !_body.isKinematic) _body.useGravity = true;
+    }
+
+    // La flecha mira hacia donde va (solo en el servidor; el NetworkTransform lo lleva a todos).
+    private void FixedUpdate()
+    {
+        if (!AlignToVelocity || !IsServerInitialized) return;
+        if (_body == null) _body = GetComponent<Rigidbody>();
+        if (_body == null || _body.isKinematic) return;
+
+        Vector3 v = _body.linearVelocity;
+        if (v.sqrMagnitude > 0.25f) _body.MoveRotation(Quaternion.LookRotation(v));
+    }
+
     // Apaga el placeholder visual (el cubo del prefab) apenas el objeto
     // existe.
     private void Awake()
@@ -104,6 +145,13 @@ public class GC_Projectile : NetworkBehaviour
         // se apagan y se vuelven a prender. Guardarlos evita que, más adelante, un
         // "prender todo" también encienda el arma clonada y se vean las dos cosas.
         _defaultRenderers = GetComponentsInChildren<Renderer>(true);
+
+        // Con modelo propio (la flecha) no hay nada que reemplazar: se ve tal cual viene.
+        if (!UseShooterWeapon)
+        {
+            _weaponVisualsApplied = true;
+            return;
+        }
 
         // Apagamos el modelo propio ACÁ y no en OnStartClient(). Awake() corre síncrono
         // como parte del propio Instantiate(), antes de que el objeto se dibuje por

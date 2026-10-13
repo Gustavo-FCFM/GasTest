@@ -38,6 +38,12 @@ public class GA_ChargedAttack : GameplayAbility, IHoldAbility
                  "su propio daño, efectos y clip.")]
         [Label("Habilidad al soltar")]
         public GameplayAbility Ability;
+
+        [Tooltip("ZOOM de la cámara del que carga al llegar a esta etapa: su campo de visión " +
+                 "multiplicado por esto (0.8 = se acerca un 20 %). 0 o 1 = sin zoom. El arco del " +
+                 "Explorador se acerca un poco más en cada fase.")]
+        [Label("Zoom de cámara")]
+        [Range(0f, 1f)] public float CameraZoom;
     }
 
     [Section("Etapas de carga")]
@@ -54,6 +60,12 @@ public class GA_ChargedAttack : GameplayAbility, IHoldAbility
              "por ejemplo). Opcional.")]
     [Label("Efectos al cargar")]
     public List<GameplayEffect> WhileChargingEffects = new List<GameplayEffect>();
+
+    [Tooltip("CARGA COMPLETA AL INSTANTE: con este tag, apretar suelta YA la última etapa, sin " +
+             "cargar, y gasta UNA acumulación del tag (Ataque rápido del Explorador: sus próximos 3 " +
+             "disparos salen con la carga máxima). None = siempre se carga.")]
+    [Label("Carga completa con tag")]
+    public EGameplayTag FullChargeTag = EGameplayTag.None;
 
     [Section(AbilitySection.Advanced, startCollapsed: true)]
     [Tooltip("Corte de seguridad si MaxChargeTime está en 0 y el aviso de soltar nunca llega.")]
@@ -77,7 +89,15 @@ public class GA_ChargedAttack : GameplayAbility, IHoldAbility
 
     [System.NonSerialized] private bool  _holding;
     [System.NonSerialized] private float _chargeStartedAt;
-    public bool UsesHoldInput => true;
+    // Con la carga completa al instante (Ataque rápido) NO es de mantener: apretar dispara ya.
+    // Lo mira también el dueño (los tags le llegan), así no arranca la pose ni la barra de carga.
+    public bool UsesHoldInput => !FiresInstantly;
+
+    private bool FiresInstantly
+        => FullChargeTag != EGameplayTag.None && OwnerASC != null && OwnerASC.HasTag(FullChargeTag);
+
+    // Cada disparo tiene su número: el aviso de fin de uno viejo no corta una carga nueva.
+    [System.NonSerialized] private int _shotId;
     public bool IsHolding => _holding;
 
     // Para el RPC de animación de los pasos: la "secuencia" 0 son las etapas.
@@ -111,6 +131,17 @@ public class GA_ChargedAttack : GameplayAbility, IHoldAbility
         if (!IsServer) return;
         if (!CanActivate()) return;
         if (_holding) return;
+
+        // Un disparo anterior que todavía no avisó su fin (su animación dura más que el
+        // cooldown) ya no tiene que cortar esta carga.
+        _shotId++;
+
+        // Carga completa al instante (Ataque rápido): sale la última etapa ya, sin cargar.
+        if (FiresInstantly)
+        {
+            FireInstantly();
+            return;
+        }
 
         _holding         = true;
         _chargeStartedAt = Time.time;
@@ -180,10 +211,7 @@ public class GA_ChargedAttack : GameplayAbility, IHoldAbility
         // El jugador queda ocupado hasta que termina el golpe. El aviso de fin va con el
         // nombre de esta habilidad (o del switch que la envuelve), que es lo que el dueño
         // está sosteniendo: así se libera aunque la carga se haya soltado sola.
-        float duration = 0.1f;
-        if (stage != null && stage.AnimationClip != null)
-            duration = stage.AnimationClip.length / Mathf.Max(0.1f, stage.ResolveAnimationSpeed());
-        OwnerASC.StartAbilityCoroutine(EndAfter(duration));
+        ScheduleEnd(stage);
     }
 
     // Cortada sin golpe (aturdido, muerte): sale el cooldown igual y se libera al jugador.
@@ -223,6 +251,31 @@ public class GA_ChargedAttack : GameplayAbility, IHoldAbility
         return best;
     }
 
+    // Lo que saldría si soltara ahora, con 'heldSeconds' de carga (para la trayectoria que
+    // ve el dueño mientras tensa: TrajectoryPreview).
+    public GameplayAbility StageAt(float heldSeconds)
+    {
+        int stage = ResolveStage(heldSeconds);
+        return stage >= 0 ? Stages[stage].Ability : null;
+    }
+
+    // La última etapa que tiene habilidad (la carga completa).
+    private int LastStageIndex()
+    {
+        for (int i = Stages.Count - 1; i >= 0; i--)
+            if (Stages[i].Ability != null) return i;
+        return -1;
+    }
+
+    // Zoom de la cámara del dueño: el de la etapa a la que llegó (ver ChargeStage.CameraZoom).
+    public override float HeldCameraZoom(float heldSeconds)
+    {
+        int stage = ResolveStage(heldSeconds);
+        if (stage < 0) return 1f;
+        float zoom = Stages[stage].CameraZoom;
+        return zoom > 0f ? zoom : 1f;
+    }
+
     // Clona y ejecuta la etapa, igual que un paso de combo.
     private GameplayAbility FireStage(int index)
     {
@@ -247,9 +300,34 @@ public class GA_ChargedAttack : GameplayAbility, IHoldAbility
         return instance;
     }
 
-    private IEnumerator EndAfter(float seconds)
+    // Sin cargar: gasta una acumulación del tag, cobra y suelta la última etapa.
+    private void FireInstantly()
+    {
+        OwnerASC.RemoveOneEffectWithTag(FullChargeTag);
+
+        if (CostEffect != null) OwnerASC.ApplyGameplayEffect(CostEffect, this);
+        ApplyActivationEffects();
+        PlayCastVisuals();
+
+        if (CooldownEffect != null)
+            OwnerASC.ApplyGameplayEffect(CooldownEffect, this, ResolveCooldownDuration());
+
+        ScheduleEnd(FireStage(LastStageIndex()));
+    }
+
+    // El jugador queda ocupado hasta que termina el golpe de la etapa.
+    private void ScheduleEnd(GameplayAbility stage)
+    {
+        float duration = 0.1f;
+        if (stage != null && stage.AnimationClip != null)
+            duration = stage.AnimationClip.length / Mathf.Max(0.1f, stage.ResolveAnimationSpeed());
+        OwnerASC.StartAbilityCoroutine(EndAfter(duration, _shotId));
+    }
+
+    private IEnumerator EndAfter(float seconds, int shotId)
     {
         yield return new WaitForSeconds(seconds);
+        if (shotId != _shotId || _holding) yield break;   // ya empezó otro disparo: ese avisa solo
         EndAbility();
     }
 

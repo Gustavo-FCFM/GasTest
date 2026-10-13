@@ -169,6 +169,13 @@ public class ThirdPersonOrbitCam : MonoBehaviour
     // (GameplayAbility.AimsCameraWhileHeld). Recién después de AimDelay cuenta como
     // apuntando (_aimActive).
     [HideInInspector] public bool Aiming;
+
+    // Zoom: el campo de visión de la cámara × esto (1 = normal). Lo pone PlayerController
+    // mientras se mantiene una habilidad que acerca (las fases del arco del Explorador).
+    [HideInInspector] public float ZoomFov = 1f;
+    private Camera _camera;
+    private float  _baseFov;
+    private float  _zoomCurrent = 1f;
     private float _aimBlend;
     private float _aimHeldSince = -1f;
     private bool  _aimActive;
@@ -194,6 +201,9 @@ public class ThirdPersonOrbitCam : MonoBehaviour
         rotY = angles.y;
 
         _currentDistance = CamOffset.magnitude;
+
+        _camera = GetComponentInChildren<Camera>();
+        if (_camera != null) _baseFov = _camera.fieldOfView;
     }
 
     void LateUpdate()
@@ -283,6 +293,13 @@ public class ThirdPersonOrbitCam : MonoBehaviour
 
         // 5. Y si quedó encima del jugador, dejar de dibujarlo
         UpdateTargetVisibility();
+
+        // 6. El zoom, suave (sin tirones al pasar de una fase a otra).
+        if (_camera != null && _baseFov > 0f)
+        {
+            _zoomCurrent = Mathf.MoveTowards(_zoomCurrent, Mathf.Clamp(ZoomFov, 0.2f, 1f), 1.5f * Time.deltaTime);
+            _camera.fieldOfView = _baseFov * _zoomCurrent;
+        }
     }
 
     // Gira la cámara (solo el yaw; la inclinación queda como estaba) para que mire

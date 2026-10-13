@@ -124,4 +124,9 @@ public enum EGameplayTag
     Status_DodgeProjectiles,   // Esquiva proyectiles: los enemigos lo atraviesan sin hacerle nada, y su barrera no los para (el bloqueo y la Defensa paciente del Shinobi). Ver GC_Projectile
     Status_DamageToHeal,       // El daño que recibe lo CURA en vez de dañarlo (los primeros segundos de la Defensa de agua del Maestro elemental). Ver AbilitySystemComponent.ExecuteInstantEffect
     Status_PeaceOfMind,        // Paz mental del Maestro elemental: sus variantes con Ki salen sin gastar el Ki (GA_TagSwitch.TagVariant.AlsoActiveWithTag)
+
+    // --- EXPLORADOR ---
+    Status_QuickShot,          // UNA por disparo de Ataque rápido que queda: el arco suelta YA la carga máxima y gasta una (GA_ChargedAttack.FullChargeTag). Lo da GE_QuickShot (3 acumulaciones)
+    Status_HuntersMark,        // Marcado por la Marca del cazador (recibe más daño). El "se lo ve a través de paredes" NO va por tag: lo revela al equipo del que marcó (NetworkAbilitySystemComponent.ServerRevealToTeam)
+    Status_BladesDrawn,        // Tiene la espada corta en la mano: el arma principal sale de la espalda mientras dure (CharacterClassDefinition.DrawMainHandTag). Lo da GE_BladesDrawn al cortar con el clic derecho del Explorador
 }

@@ -55,6 +55,12 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
     [Label("Tiempo de vuelo (s)")]
     public float LifeTime = 0f;
 
+    [Tooltip("Segundos que vuela DERECHO hacia la mira, sin caer; después la gravedad lo baja " +
+             "(las flechas del Explorador: van exactas a la mira hasta su alcance, = esto × " +
+             "velocidad, y de ahí caen). 0 = cae desde que sale (si el prefab usa gravedad).")]
+    [Label("Vuelo recto (s)")]
+    public float StraightFlightTime = 0f;
+
     [Tooltip("Distancia mínima a la que se considera que la retícula y el proyectil se " +
              "juntan. La retícula sale de la cámara y el proyectil de la mano: apuntando " +
              "a algo muy cerca, esas dos líneas se abren y el tiro sale visiblemente " +
@@ -529,7 +535,21 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
         if (rb != null)
         {
             rb.linearVelocity = launchDirection * LaunchForce;
+            if (StraightFlightTime > 0f && rb.useGravity && projectileScript != null)
+                projectileScript.HoldGravity(StraightFlightTime);
             if (AddSpin) rb.AddRelativeTorque(Vector3.right * 1000f);
+        }
+    }
+
+    // ¿El proyectil cae? Lo decide el Rigidbody del prefab (por defecto, sí). Lo usan el
+    // gizmo de abajo y la trayectoria que ve el jugador al tensar el arco (TrajectoryPreview).
+    public bool ProjectileUsesGravity
+    {
+        get
+        {
+            if (ProjectilePrefab == null) return true;
+            Rigidbody rb = ProjectilePrefab.GetComponent<Rigidbody>();
+            return rb == null || rb.useGravity;
         }
     }
 
@@ -544,13 +564,7 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
         Vector3 start = origin.TransformPoint(SpawnOffset);
         Vector3 velocity = origin.forward * LaunchForce;
 
-        // La gravedad la decide el Rigidbody del prefab (por defecto, sí la usa).
-        bool useGravity = true;
-        if (ProjectilePrefab != null)
-        {
-            Rigidbody rb = ProjectilePrefab.GetComponent<Rigidbody>();
-            if (rb != null) useGravity = rb.useGravity;
-        }
+        bool useGravity = ProjectileUsesGravity;
 
         Gizmos.color = new Color(0.3f, 0.8f, 1f, 0.9f);
         Gizmos.DrawWireSphere(start, 0.15f);

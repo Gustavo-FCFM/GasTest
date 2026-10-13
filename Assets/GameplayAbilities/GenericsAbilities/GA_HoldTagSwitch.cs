@@ -110,6 +110,8 @@ public class GA_HoldTagSwitch : GA_TagSwitch, IHoldAbility
 
     // La cámara de apuntar, si la variante la pide (en ofensiva, apuntar la lanza).
     public override bool AimsCameraWhileHeld => ActiveHold is GameplayAbility held && held.AimsCameraWhileHeld;
+    public override float HeldCameraZoom(float heldSeconds)
+        => ActiveHold is GameplayAbility held ? held.HeldCameraZoom(heldSeconds) : 1f;
 
     // La barra de carga es la de la variante (en ofensiva, el ataque cargado).
     public override bool GetChargeStages(System.Collections.Generic.List<float> stageTimes, out float maxTime)

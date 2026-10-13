@@ -1066,7 +1066,7 @@ public class PlayerController : NetworkBehaviour
                 _inertiaVelocity = Vector3.zero;
             }
         }
-        else if (!_abilityVelocityActive) TryStartWall(inputVec);
+        else TryStartWall(inputVec);   // también en medio de un salto de habilidad (la Retirada)
     }
 
     // Cámara del dueño, cacheada. Camera.main busca por TAG cada vez que se llama, y
@@ -1132,6 +1132,9 @@ public class PlayerController : NetworkBehaviour
     // True si el CharacterController está tocando el piso ahora mismo.
     public bool IsGrounded => characterController.isGrounded;
 
+    // True mientras está enganchado a una pared (pegado o corriendo).
+    public bool IsOnWall => _wallActive;
+
     // Toma control temporal del movimiento: aplica un impulso horizontal
     // (que se va atenuando solo) y uno vertical instantáneo. Funciona esté o no
     // en el piso (se puede usar en el aire — ej. el Salto Furioso o el dash).
@@ -1143,7 +1146,10 @@ public class PlayerController : NetworkBehaviour
         _abilityVelocityActive = true;
 
         Vector3 flatDir = new Vector3(horizontalVelocity.x, 0, horizontalVelocity.z);
-        if (flatDir != Vector3.zero) transform.forward = flatDir.normalized;
+        // Encara hacia donde salta, salvo que salte hacia ATRÁS (la Retirada): ahí sigue mirando
+        // al frente.
+        if (flatDir != Vector3.zero && Vector3.Dot(flatDir, transform.forward) >= 0f)
+            transform.forward = flatDir.normalized;
 
         return true;
     }
@@ -1399,7 +1405,9 @@ public class PlayerController : NetworkBehaviour
         if (ASC == null || p == null) return false;
         if (ASC.HasTag(EGameplayTag.State_Dead) || ASC.HasTag(EGameplayTag.State_Stunned) ||
             ASC.HasTag(EGameplayTag.State_Rooted) || IsFlying) return false;
-        if (_dashActive || _rushActive || _knockbackActive || _abilityVelocityActive) return false;
+        // El salto de una habilidad (la Retirada del Explorador) SÍ deja engancharse: el
+        // impulso termina ahí (ver StartWall). El dash, la embestida y el empujón no.
+        if (_dashActive || _rushActive || _knockbackActive) return false;
 
         if (p.BlockedByTags != null)
             foreach (EGameplayTag tag in p.BlockedByTags)
@@ -1494,6 +1502,10 @@ public class PlayerController : NetworkBehaviour
 
     private void StartWall(WallMovementProfile p, Vector3 n, Collider wall, Vector3 point)
     {
+        // Enganchado a mitad de un salto de habilidad: el salto termina acá (el que lo lanzó
+        // lo nota con IsOnWall y da el salto por terminado).
+        if (_abilityVelocityActive) ClearAbilityVelocity();
+
         _wallActive        = true;
         _wallNormal        = n;
         _wallCollider      = wall;
@@ -2905,6 +2917,7 @@ public class PlayerController : NetworkBehaviour
         if (newClass.MainHandWeaponPrefab != null && MainHandSocket != null)
         {
             currentMainWeapon = Instantiate(newClass.MainHandWeaponPrefab, MainHandSocket);
+            _mainHandStowed   = false;   // nace en la mano; TickStanceVisuals la guarda si hace falta
             // La pose sale de la CLASE, no del prefab del arma: los dos sockets tienen
             // orientaciones distintas, así que un mismo modelo necesita ajustes según
             // en qué mano vaya. En cero queda pegado al hueso, como antes.
@@ -3828,13 +3841,14 @@ public class PlayerController : NetworkBehaviour
     }
 
     // ---------------------------------------------------------
-    // POSTURA A LA VISTA: escudo a la espalda y pose de dos manos según un tag
+    // POSTURA A LA VISTA: armas a la espalda y pose de dos manos según un tag
     //
     // Corre en TODAS las copias (desde LateUpdate): los tags viajan sincronizados, así
     // que cada pantalla decide sola qué mostrar, sin RPC. Solo hace algo cuando el
     // estado cambia.
     // ---------------------------------------------------------
     private bool _offHandStowed;
+    private bool _mainHandStowed;
     private bool _offHandPoseOn;
     private Transform _backBone;
 
@@ -3844,6 +3858,13 @@ public class PlayerController : NetworkBehaviour
         if (cls == null || ASC == null) return;
 
         bool dead = ASC.HasTag(EGameplayTag.State_Dead);
+
+        // El arma principal, al revés: guardada salvo mientras tenga DrawMainHandTag.
+        if (cls.DrawMainHandTag != EGameplayTag.None && currentMainWeapon != null)
+        {
+            bool stow = !dead && !ASC.HasTag(cls.DrawMainHandTag);
+            if (stow != _mainHandStowed) PlaceMainHandWeapon(cls, stow);
+        }
 
         if (cls.StowOffHandTag != EGameplayTag.None && currentOffWeapon != null)
         {
@@ -3981,6 +4002,19 @@ public class PlayerController : NetworkBehaviour
         currentOffWeapon.transform.SetLocalPositionAndRotation(
             stowed ? cls.StowedOffHandPositionOffset : cls.OffHandPositionOffset,
             Quaternion.Euler(stowed ? cls.StowedOffHandRotationOffset : cls.OffHandRotationOffset));
+    }
+
+    // Cuelga el arma principal del pecho (guardada) o la devuelve a la mano.
+    private void PlaceMainHandWeapon(CharacterClassDefinition cls, bool stowed)
+    {
+        Transform parent = stowed ? BackBone() : MainHandSocket;
+        if (parent == null) return;
+
+        _mainHandStowed = stowed;
+        currentMainWeapon.transform.SetParent(parent, false);
+        currentMainWeapon.transform.SetLocalPositionAndRotation(
+            stowed ? cls.StowedMainHandPositionOffset : cls.MainHandPositionOffset,
+            Quaternion.Euler(stowed ? cls.StowedMainHandRotationOffset : cls.MainHandRotationOffset));
     }
 
     // El hueso del pecho del esqueleto humanoide (o la columna si no hay pecho).
@@ -4682,6 +4716,28 @@ public class PlayerController : NetworkBehaviour
         }
     }
 
+    // La curva de la flecha mientras se tensa un arco (TrajectoryPreview): la de la fase que
+    // saldría si soltara ahora, desde la mano y hacia la mira, como el disparo de verdad.
+    private TrajectoryPreview _trajectory;
+
+    private void TickTrajectoryPreview()
+    {
+        GA_ProjectileShoot shot = _holdAbility is GA_ChargedAttack charged
+            ? charged.StageAt(Time.time - HoldStartedAt) as GA_ProjectileShoot
+            : null;
+
+        if (shot == null)
+        {
+            if (_trajectory != null) _trajectory.Hide();
+            return;
+        }
+
+        if (_trajectory == null) _trajectory = gameObject.AddComponent<TrajectoryPreview>();
+        Vector3 start = transform.TransformPoint(shot.SpawnOffset);
+        Vector3 dir   = GetLaunchDirection(start, shot.MinConvergeDistance);
+        _trajectory.Show(start, dir * shot.LaunchForce, shot.ProjectileUsesGravity, shot.StraightFlightTime);
+    }
+
     // Va en LateUpdate y no en Update: el Animator escribe las poses en Update, así que
     // rotar antes lo pisaría el propio animator en el mismo frame.
     private void LateUpdate()
@@ -4692,7 +4748,12 @@ public class PlayerController : NetworkBehaviour
 
         // Mantener un lanzamiento acerca la cámara a la mira (solo el dueño tiene cámara).
         if (_orbitCam != null)
+        {
             _orbitCam.Aiming = _holdAbility != null && _holdAbility.AimsCameraWhileHeld;
+            _orbitCam.ZoomFov = _holdAbility != null ? _holdAbility.HeldCameraZoom(Time.time - HoldStartedAt) : 1f;
+        }
+
+        if (IsOwner) TickTrajectoryPreview();
 
         // Rotación del MODELO: la inclinación en una pared y el giro del molinete, juntos.
         TickModelLean();

@@ -468,6 +468,11 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // del mantenido en curso. Ver GA_ChargedAttack.AimCamera.
     public virtual bool AimsCameraWhileHeld => false;
 
+    // Zoom de la cámara del dueño mientras MANTIENE esta habilidad: su campo de visión × esto
+    // (1 = sin zoom). Lo lee PlayerController con los segundos que lleva manteniendo; el arco
+    // del Explorador (GA_ChargedAttack) se acerca en cada etapa de la carga.
+    public virtual float HeldCameraZoom(float heldSeconds) => 1f;
+
     // Las etapas de una carga, para la barra de carga del dueño (UI_ChargeBar): en
     // stageTimes, los segundos en que empieza cada etapa; en maxTime, cuándo se suelta
     // sola. false = esta habilidad no tiene etapas (no se dibuja barra).

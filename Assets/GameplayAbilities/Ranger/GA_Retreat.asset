@@ -1,0 +1,87 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c4a66bf1a89589408f6c85798e5e13f, type: 3}
+  m_Name: GA_Retreat
+  m_EditorClassIdentifier: 
+  AbilityName: Retreat
+  AbilityNameEs: Retirada
+  AbilityIcon: {fileID: 21300000, guid: 82bafc1657f56cf4bba1700fe6c58f45, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: 10f0981bf286ed844b33e0f4b4b974e3, type: 2}
+  CooldownDuration: 7
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 1
+  ActivationBlockedTags: 0100000002000000
+  ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  UsableWhileHolding: 0
+  AnimationClip: {fileID: 0}
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  StacksTag: 0
+  ConsumeStacks: 0
+  Effects:
+  - When: 0
+    ApplyTo: 0
+    Effect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
+    OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
+    PerTargetCooldown: 0
+  - When: 0
+    ApplyTo: 0
+    Effect: {fileID: 11400000, guid: 70c9bebbbfba254448fb78d4cf1f9726, type: 2}
+    OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
+    PerTargetCooldown: 0
+  Visuals:
+  - When: 2
+    VFXPrefab: {fileID: 1758473627833946668, guid: 9b21333b068a5084ba09535839bee3c8, type: 3}
+    Delay: 0
+    Offset: {x: 0, y: 0, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    Attach: 0
+    MatchAreaSize: 0
+    AreaSizeMultiplier: 0
+    DestroyTime: 1
+    EndWithTag: 0
+    EndWhenAttributeDepleted: 0
+    DepletedAttribute: 0
+  IsInterruptible: 0
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  MaxCharges: 1
+  JumpVelocity: 7
+  ForwardForce: -14
+  AbilityRadius: 3
+  HitAtTakeoff: 1
+  AirStartAnimation: {fileID: 0}
+  AirLoopAnimation: {fileID: 0}
+  AirLandAnimation: {fileID: 0}
+  DamageEffect: {fileID: 0}
+  CrowdControlEffect: {fileID: 0}
+  AdditionalEffects: []
+  ImpactVFX: {fileID: 0}
+  ImpactVFXScaleMultiplier: 2

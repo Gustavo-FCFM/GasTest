@@ -226,6 +226,35 @@ public class CharacterClassDefinition : ScriptableObject
     public EGameplayTag OffHandPoseRequiredTag = EGameplayTag.None;
 
     // ============================================================
+    // ARMA PRINCIPAL A LA ESPALDA (13 de octubre de 2026, pedido de Gustavo)
+    //
+    // Al revés que la secundaria: el arma de la mano derecha va colgada del PECHO y solo
+    // sale a la mano MIENTRAS tenga DrawMainHandTag. La espada corta del Explorador: la
+    // saca para el corte del clic derecho (el efecto del corte le da el tag un momento) y
+    // la vuelve a guardar; con el arco no la tiene en la mano.
+    // ============================================================
+
+    [Section(ClassSection.Weapons)]
+    [ShowIf(nameof(MainHandWeaponPrefab))]
+    [Tooltip("El arma principal va a la ESPALDA y solo sale a la mano mientras tenga este tag. " +
+             "None = siempre en la mano.")]
+    [Label("Sacar arma principal con tag")]
+    public EGameplayTag DrawMainHandTag = EGameplayTag.None;
+
+    [ShowIf(nameof(MainHandWeaponPrefab))]
+    [ShowIf(nameof(DrawMainHandTag), EGameplayTag.None, true)]
+    [Tooltip("Posición del arma principal guardada, en el espacio del hueso del pecho. Se " +
+             "ajusta mirando en Play (cambiar la clase y volver a equiparla la recoloca).")]
+    [Label("Principal guardada: posición")]
+    public Vector3 StowedMainHandPositionOffset = new Vector3(0f, 0f, -0.2f);
+
+    [ShowIf(nameof(MainHandWeaponPrefab))]
+    [ShowIf(nameof(DrawMainHandTag), EGameplayTag.None, true)]
+    [Tooltip("Rotación (grados) del arma principal guardada, en el espacio del hueso del pecho.")]
+    [Label("Principal guardada: rotación")]
+    public Vector3 StowedMainHandRotationOffset = new Vector3(0f, 180f, 45f);
+
+    // ============================================================
     // ARMA SECUNDARIA A LA ESPALDA
     //
     // Mientras el personaje tenga StowOffHandTag, el arma de la mano izquierda (el escudo

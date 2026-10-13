@@ -48,6 +48,82 @@ rm -rf "Assets/FishNet" "Assets/FishNet.meta" "Assets/TextMesh Pro/Examples & Ex
 
 ---
 
+# ★ Explorador (Ranger): kit base — HECHO (13 de octubre); lo que sigue: el Maestro de bestias y su Lobo
+
+Pedido de Gustavo: primero el kit base, después la mascota del Maestro de bestias (el Lobo,
+con una figura de primitivas mientras no haya modelo). Sin modelos ni animaciones nuevas: las
+dagas del Pícaro hacen de espadas cortas y de arco, y los clips de lanzar hacen de tensar y
+soltar; el proyectil es el de la daga, sin girar. Los íconos son prestados.
+
+| Ranura | Habilidad | Cómo |
+|---|---|---|
+| Pasiva | Marca del cazador: cada impacto marca 4 s (+10 % de daño recibido) y su equipo lo ve a través de las paredes | `HuntersMarkPassive` (nueva) + `GE_HuntersMark`, en `ExplorerBehaviours` |
+| Clic izq. | Arco corto: mantener carga en 3 fases (0 / 0.5 / 1 s): ×1 / ×1.6 / ×2.4 del ataque, 24 / 44 / 70 m, más rápido y con zoom; cargando camina más lento | `GA_ChargedAttack` con `GA_ExplorerArrow1..3` |
+| Clic der. | Espadas cortas: un corte en arco corto | copia de `GA_DaggerCone` |
+| Q | Ataque rápido: los próximos 3 disparos salen con la carga máxima al instante, y 6 s atacando más rápido (×0.6 entre ataques). 12 s | `GA_SelfBuff` + `GE_QuickShot` (3 acumulaciones) + `GE_QuickShotHaste` |
+| Shift | Retirada: salta hacia atrás; donde estaba, daña y ralentiza. 7 s | `GA_LeapAttack` con impulso negativo y `Golpe al despegar` |
+
+Lo nuevo de código, que sirve para más cosas:
+- **Revelar a un equipo** (`NetworkAbilitySystemComponent.ServerRevealToTeam`): ese equipo ve la
+  silueta del personaje a través de las paredes (`TeamReveal` + shader `Mercenaries/XRay`); los
+  demás, no. Se agrega solo a todo personaje en red. Lo podrán usar el Búho y el Depredador
+  definitivo.
+- **Zoom por etapa** en el ataque cargado (`Zoom de cámara` de cada etapa) y la cámara con zoom
+  (`ThirdPersonOrbitCam.ZoomFov`).
+- **Carga completa con tag** en el ataque cargado: con el tag, suelta YA la última etapa y gasta
+  una acumulación.
+- **Golpe al despegar** en el salto (`GA_LeapAttack.HitAtTakeoff`), y el impulso negativo
+  salta hacia atrás.
+- Tags nuevos al final: `Status_QuickShot`, `Status_HuntersMark`.
+
+- [x] **Correr `Mercenarios ▸ Una vez ▸ Crear el Explorador (kit base)`** (corrida el 13 de octubre; herramienta borrada). Crea los assets en
+      `GameplayAbilities/Explorer` y `Attributes/Explorer`, agrega la clase al FINAL de
+      `MainBaseClasses` del jugador y de la sala de la escena abierta, y actualiza los registros
+      de red. **Guardar la escena**, y en las otras escenas con sala agregar `Class_Explorer` al
+      final de `Clases elegibles` del `UI_LobbyPanel`. Después se borra `MercExplorerSetup.cs`.
+- [x] **Armas del pack samurái** (tt-3d, importado por Gustavo; corrida el 13 de octubre, herramienta borrada): correr `Mercenarios ▸ Una vez ▸ Poner las armas
+      samurái (arco, katana, kunai)`. Pasa sus materiales a URP, arma `Bow`, `Katana`, `ShortSword`,
+      `Kunai` y `Spear` (la del Trampero) en `Art/Models/Weapons` con el tamaño y la dirección del arma que
+      reemplazan, y `PF_Arrow` (la flecha vuela con su modelo, no con el arco: `GC_Projectile` tiene la
+      casilla nueva `Usar el arma del que lo tira`). Explorador: la espada de siempre al 70 % en la derecha (`ShortSword`), arco en la izquierda;
+      Samurái: katana; Shinobi: un kunai en cada mano. Después se borra `MercWeaponPackSetup.cs`.
+- [x] **Íconos del Explorador** (corrida el 13 de octubre, herramienta borrada) (los puso Gustavo en `Art/Icons/Abilities/Ranger` y `Classes`): correr
+      `Mercenarios ▸ Una vez ▸ Poner los íconos del Explorador` y borrar `MercExplorerIcons.cs`. Arco y
+      flechas: Bow Attack; espadas: Slash attack; Ataque rápido y su buff: Arrows Rain; Retirada: Jump;
+      la marca: Hunter's_Mark_Icon; la clase: Class_Ranger_Icon. Para las subclases quedan: Improved
+      bow attack (el arco largo del Cazador), prey, Depredator, Ranger Invisibility (Tácticas defensivas o
+      Cazador paciente), owl / wolf / bear / primal fury (Maestro de bestias), las bombas (Trampero), marked,
+      y los íconos de clase Hunter, Beast Master y Trampero.
+- [x] **Espada del Explorador a la espalda** (herramienta corrida y borrada) (pedido de Gustavo): va colgada del pecho y solo sale a la mano
+      para el corte del clic derecho (campo nuevo de la clase `Sacar arma principal con tag`, con
+      `Status_BladesDrawn` que da `GE_BladesDrawn` 1 s al cortar). Correr `Mercenarios ▸ Una vez ▸ Espada del
+      Explorador a la espalda` y borrar `MercExplorerBladesStow.cs`. Ajustar en `Class_Explorer` (Armas) la
+      posición y rotación de la espada guardada mirando en Play.
+- [x] **Flechas hasta chocar y trayectoria al tensar** (herramienta corrida y borrada; falta probar la curva en un cliente) (pedido de Gustavo): las flechas vuelan RECTO hacia la mira lo que era el alcance de su fase (24 / 44 / 70 m; `GA_ProjectileShoot` ▸ `Vuelo recto`) y después caen, y
+      vuelan hasta chocar (antes desaparecían en el aire a los 0.6-1 s), con la punta siguiendo la curva
+      (`GC_Projectile` ▸ `Apunta hacia donde vuela`). Mientras tensa, el dueño ve la curva de la fase que
+      saldría y un anillo donde cae (`TrajectoryPreview`, solo en su pantalla). Correr `Mercenarios ▸ Una vez ▸
+      Flechas del Explorador hasta chocar` y borrar `MercRangerArrows.cs`. Probar: la curva coincide con
+      donde cae la flecha de verdad, en las 3 fases y en un cliente.
+- [ ] Arreglados (falta probar): disparar enseguida después del cooldown ya no corta la carga nueva, y con
+      Ataque rápido el arco dispara al apretar (sin pose ni barra de carga).
+- [ ] **Engancharse a una pared a mitad de la Retirada** (Gustavo le puso al Explorador el perfil de pared del
+      Pícaro): antes el impulso de un salto de habilidad no dejaba engancharse. Ahora sí, y el salto termina ahí
+      (`PlayerController.IsOnWall`). De paso, saltar hacia ATRÁS ya no da vuelta al personaje. Probar en un cliente.
+- [ ] Mirar en Play cómo quedan en la mano; si alguna está girada o corrida, se arregla UNA vez en el
+      hijo de su prefab (vale para todas las clases que la usan).
+- [ ] Probar: el arco con las 3 fases (la barra de carga, el zoom, el alcance y el daño de cada
+      una); soltar rápido sale la flecha corta.
+- [ ] Ataque rápido: los 3 disparos siguientes salen al instante con la carga completa; el
+      ícono muestra cuántos quedan.
+- [ ] La Retirada: salta hacia atrás y daña y ralentiza a los que estaban pegados.
+- [ ] La marca: el enemigo golpeado se ve en rojo a través de las paredes para el Explorador y
+      sus aliados (dos ventanas), y NO para su propio equipo ni para el tercero.
+- [ ] Los bots con el Explorador: que carguen y suelten.
+- [ ] Después: el Maestro de bestias y su Lobo (la mascota con IA en red).
+
+---
+
 # ★ Misma pared otra vez y espera por enemigo en las ráfagas — HECHO, falta probar (13 de octubre; herramienta corrida y borrada)
 
 Pedidos de Gustavo después de probar el Monje y sus subclases.
@@ -2549,7 +2625,7 @@ Qué se reusa, en corto:
 - [x] **Repeler / atraer** — Monje (Patada del viento), Explorador (trampa explosiva). Hecho y probado (6 de octubre): sección "Desplazamiento" de cada GE (`KnockbackDistance`, dirección, duración, elevación, `PullStopDistance`). Es CC: el Imparable no se mueve, la resistencia al control recorta la distancia, el escudo no lo frena. Falta: que la trampa empuje desde ella y no desde el Explorador
 - [x] **Revelar invisibles** — Clérigo (Faro de esperanza), Explorador (Búho). Hecho: `State_AlwaysVisible`
 - [x] **Vuelo libre** — Mago, quizá Muerte silenciosa del Shinobi. Hecho y probado (6 de octubre): `GA_Flight` (Create ▸ GAS ▸ Generics ▸ Flight) + un GE que dé `Status_Flying`. Despega con impulso; WASD en 3D hacia la cámara (×ForwardBoost solo hacia adelante), Espacio sube, **Ctrl baja (Ctrl ya no ataca; en control, L3)**; no aterriza; sin techo propio (el del mapa). Quieto en el aire cae despacio (`IdleSinkSpeed`). Daño de otro o enraizado lo terminan; al terminar en el aire, o aturdido, cae lento. Los bots no lo usan. Prueba: `GA_Flight` y `GE_Fly` quedaron en `GameplayAbilities/` (mover `GE_Fly` a `Effects/` desde Unity)
-- [ ] **Mascota con IA en red** — Explorador; sirve para futuros summons
+- [ ] **Mascota con IA en red** — Explorador (Maestro de bestias); sirve para futuros summons. Va después del kit base (ver arriba, 13 de octubre)
 
 ## Para la demo: Clérigo + Guerrero (~4–4.5 semanas)
 
@@ -2564,7 +2640,7 @@ nuevo vive casi todo en las subclases). Contra: al llegar a nivel 3 no hay qué 
 
 - [x] Decidir: Clérigo + Guerrero completos (28 de septiembre). Clérigo: kit base hecho;
       Clérigo completo; Guerrero: kit base, Maestro de batalla, Comandante y Guardián probados (5 de octubre): Guerrero completo.
-- [ ] Antes del Mago: definir la extra de Filo danzante (el vuelo libre ya está, 6 de octubre)
+- [x] Antes del Mago: definir la extra de Filo danzante — DECIDIDO (13 de octubre): **Espada mágica** (Magic blade): por un tiempo sus ataques hacen daño MÁGICO; sin ella, la espada solo hace daño físico. Falta pasarlo al documento de diseño de clases.
 
 ---
 
