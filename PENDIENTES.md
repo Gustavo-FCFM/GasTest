@@ -48,7 +48,7 @@ rm -rf "Assets/FishNet" "Assets/FishNet.meta" "Assets/TextMesh Pro/Examples & Ex
 
 ---
 
-# ★ Explorador (Ranger): kit base — HECHO (13 de octubre); lo que sigue: el Maestro de bestias y su Lobo
+# ★ Explorador (Ranger): kit base — HECHO Y PROBADO ✅ (13-14 de octubre; faltan los bots); lo que sigue: el Maestro de bestias y su Lobo
 
 Pedido de Gustavo: primero el kit base, después la mascota del Maestro de bestias (el Lobo,
 con una figura de primitivas mientras no haya modelo). Sin modelos ni animaciones nuevas: las
@@ -105,21 +105,21 @@ Lo nuevo de código, que sirve para más cosas:
       saldría y un anillo donde cae (`TrajectoryPreview`, solo en su pantalla). Correr `Mercenarios ▸ Una vez ▸
       Flechas del Explorador hasta chocar` y borrar `MercRangerArrows.cs`. Probar: la curva coincide con
       donde cae la flecha de verdad, en las 3 fases y en un cliente.
-- [ ] Arreglados (falta probar): disparar enseguida después del cooldown ya no corta la carga nueva, y con
+- [x] Arreglados (falta probar): disparar enseguida después del cooldown ya no corta la carga nueva, y con
       Ataque rápido el arco dispara al apretar (sin pose ni barra de carga).
-- [ ] **Engancharse a una pared a mitad de la Retirada** (Gustavo le puso al Explorador el perfil de pared del
+- [x] **Engancharse a una pared a mitad de la Retirada** (Gustavo le puso al Explorador el perfil de pared del
       Pícaro): antes el impulso de un salto de habilidad no dejaba engancharse. Ahora sí, y el salto termina ahí
       (`PlayerController.IsOnWall`). De paso, saltar hacia ATRÁS ya no da vuelta al personaje. Probar en un cliente.
-- [ ] Mirar en Play cómo quedan en la mano; si alguna está girada o corrida, se arregla UNA vez en el
+- [x] Mirar en Play cómo quedan en la mano; si alguna está girada o corrida, se arregla UNA vez en el
       hijo de su prefab (vale para todas las clases que la usan).
-- [ ] Probar: el arco con las 3 fases (la barra de carga, el zoom, el alcance y el daño de cada
+- [x] Probar: el arco con las 3 fases (la barra de carga, el zoom, el alcance y el daño de cada
       una); soltar rápido sale la flecha corta.
-- [ ] Ataque rápido: los 3 disparos siguientes salen al instante con la carga completa; el
+- [x] Ataque rápido: los 3 disparos siguientes salen al instante con la carga completa; el
       ícono muestra cuántos quedan.
-- [ ] La Retirada: salta hacia atrás y daña y ralentiza a los que estaban pegados.
-- [ ] La marca: el enemigo golpeado se ve en rojo a través de las paredes para el Explorador y
+- [x] La Retirada: salta hacia atrás y daña y ralentiza a los que estaban pegados.
+- [x] La marca: el enemigo golpeado se ve en rojo a través de las paredes para el Explorador y
       sus aliados (dos ventanas), y NO para su propio equipo ni para el tercero.
-- [ ] Los bots con el Explorador: que carguen y suelten.
+- [ ] Los bots: probar que jueguen el Explorador (que carguen y suelten el arco), el Monje y el Guerrero; ninguno de los tres se probó con bots todavía.
 - [ ] Después: el Maestro de bestias y su Lobo (la mascota con IA en red).
 
 ---
@@ -145,11 +145,11 @@ Pedidos de Gustavo después de probar el Monje y sus subclases.
 - [x] **Correr `Mercenarios ▸ Una vez ▸ Espera por enemigo en las ráfagas con Ki`** (pone los
       2 s en los puñetazos de la Ráfaga aturdidora y en el kunai de Artes oscuras, y pasa los 4
       kunais de la Ráfaga a Artes oscuras). Después se borra `MercFlurryPerTargetSetup.cs`.
-- [ ] Probar: saltar de una pared, volver a ella y engancharse (Monje y Pícaro); resbalar hasta
+- [x] Probar: saltar de una pared, volver a ella y engancharse (Monje y Pícaro); resbalar hasta
       soltarse y que NO se vuelva a pegar a la misma.
-- [ ] Ráfaga aturdidora contra dos enemigos juntos: los dos quedan aturdidos. Con la Paz mental,
+- [x] Ráfaga aturdidora contra dos enemigos juntos: los dos quedan aturdidos. Con la Paz mental,
       ráfagas seguidas al mismo: entre una y otra hay un hueco.
-- [ ] Ráfaga de kunais contra dos enemigos: los dos reciben el daño extra; al mismo, una vez
+- [x] Ráfaga de kunais contra dos enemigos: los dos reciben el daño extra; al mismo, una vez
       cada 2 s.
 - **Escudos:** los cuatro (Guerrero, Paladín, Monje, Shinobi) ya cobran 5 de energía al
   levantarse, todos con `GE_Cost_Shield`.
@@ -384,7 +384,7 @@ con Excel: quien ayude a traducir no necesita Unity. Guardarla como **"CSV UTF-8
         siempre; un script sin `[Label]` (los de los packs, los de Unity) se ve exactamente igual que
         antes. Las entradas de lista de la aura del Paladín, las habilidades extra de los NPCs y las
         reglas de aparición, con `LabeledFieldsDrawer`. Quedan fuera los restos de la jam (`48toPlay`).
-  - [ ] Mirar unos cuantos prefabs (el jugador, un tótem, una pasiva, un NPC, el HUD) y que nada se
+  - [x] Mirar unos cuantos prefabs (el jugador, un tótem, una pasiva, un NPC, el HUD) y que nada se
         vea raro ni cortado.
 
 ---
@@ -599,8 +599,8 @@ inclinación viaja en la RPC de locomoción (dos bytes más) y se aplica al mode
 - [x] Que NO se pegue a: los límites invisibles de la arena, otros jugadores, tótems, la barrera
       de un escudo.
 - [x] Atacar pegado (dagas, puños, el escudo); aturdido o empujado pegado → se cae.
-- [ ] Con dos ventanas: que el otro vea la pose (Monje corriendo inclinado, Pícaro pegado).
-- [ ] La Ráfaga con 4 golpes (¿se ve bien a esa velocidad?) y el Ki con 2 cargas.
+- [x] Con dos ventanas: que el otro vea la pose (Monje corriendo inclinado, Pícaro pegado).
+- [x] La Ráfaga con 4 golpes (¿se ve bien a esa velocidad?) y el Ki con 2 cargas.
 - [x] Escudos: levantar cobra 5 de energía; con 5 o menos no se levanta.
 - [-] Animaciones de pared propias: no hay en el pack de Kevin Iglesias (se usan caer y correr);
       del artista si las hace.
@@ -659,7 +659,7 @@ Claude. Compila limpio (juego y editor).
       atraviesa a todos. Un enemigo con la marca que baja al 5 % muere y la baja es del Samurái.
 - [x] De paso, ahora SÍ se ve el círculo de las demás habilidades de zona: Marcado para morir del
       Asesino, Salto heroico del Comandante, las áreas "en la retícula".
-- [ ] Las patadas del Samurái ponen herida.
+- [x] Las patadas del Samurái ponen herida (las dos, la voladora y la del dragón, ya llevan GE_Wounds al golpear; revisado el 14 de octubre).
 - [-] ⚙ Animaciones: el corte giratorio usa el clip del molinete (`MagicAttackOmni01`) y el Corte
       final el corte del Guerrero; cambiarlos si hay algo mejor.
 
@@ -1139,7 +1139,7 @@ batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 
          apuntar: sin `Aim Hold Clip` el personaje sigue con su animación normal (antes
          habría entrado al bucle de mantener con el clip de otra habilidad). Solo apunta la
          cámara.
-   - [ ] **Jueves 9:** probar el aturdido mientras se apunta (no lanza ni cobra), con
+   - [x] **Jueves 9:** probar el aturdido mientras se apunta (no lanza ni cobra), con
          otro jugador o el control; y los bots con los lanzamientos.
    - [-] Pospuesto: el evento de impacto de la estocada (al 40 % a ojo), el momento en que
          suelta la lanza, la bandera. Se usa lo que hay hasta que lleguen los modelos y
@@ -1293,7 +1293,7 @@ batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 
    carga (el **Golpe final** del Inmortal), verde y se VACÍA en un canalizado (el
    **molinete** del Berserker), roja con "Interrupted" si la cortan. Una habilidad la pide
    con `ShowCastBar(duración, channel)` / `HideCastBar(interrumpida)`.
-   - [ ] Probar con el Golpe final (y cortarlo con un aturdido) y con el molinete.
+   - [x] Probar con el Golpe final (y cortarlo con un aturdido) y con el molinete.
 
    **El molinete solo se veía en la pantalla del que lo usaba (8 de octubre) — ARREGLADO Y
    PROBADO ✅.** Después de `Activate()` el servidor manda a los demás el clip suelto de la
