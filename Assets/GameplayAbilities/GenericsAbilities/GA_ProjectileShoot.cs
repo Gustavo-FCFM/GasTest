@@ -113,6 +113,12 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
     [Label("Corte de seguridad (s)")]
     public float AimSafetyTimeout = 30f;
 
+    [Tooltip("Mientras se apunta (Apuntar antes de lanzar), o mientras se tensa el arco si es una " +
+             "fase de un ataque cargado, el que apunta ve la curva que va a hacer el proyectil y un " +
+             "anillo donde va a chocar. Solo en su pantalla.")]
+    [Label("Curva para el que apunta")]
+    public bool ShowTrajectoryWhileAiming = true;
+
     // Donde choca es un punto: acepta VFX de impacto.
     public override bool SupportsVisualTiming(EVisualWhen when) => true;
 
@@ -128,6 +134,13 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
     public AnimationClip HoldImpactClip => null;
 
     public override bool AimsCameraWhileHeld => AimBeforeThrow;
+
+    // La curva mientras se apunta (ver TrajectoryPreview).
+    public override GA_ProjectileShoot ProjectileToPreview(float heldSeconds)
+        => AimBeforeThrow && ShowTrajectoryWhileAiming ? this : null;
+
+    // Cuánto vuela antes de desaparecer: su "Tiempo de vuelo", o el del proyectil si está en 0.
+    public float FlightSeconds => LifeTime > 0f ? LifeTime : GC_Projectile.DefaultLifeTime;
 
     // El clip que se ve al soltar (y del que salen los tiempos del lanzamiento apuntado).
     public AnimationClip ReleaseClip => AimReleaseClip != null ? AimReleaseClip : AnimationClip;

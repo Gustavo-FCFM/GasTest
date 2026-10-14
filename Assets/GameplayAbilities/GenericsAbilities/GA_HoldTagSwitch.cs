@@ -113,6 +113,10 @@ public class GA_HoldTagSwitch : GA_TagSwitch, IHoldAbility
     public override float HeldCameraZoom(float heldSeconds)
         => ActiveHold is GameplayAbility held ? held.HeldCameraZoom(heldSeconds) : 1f;
 
+    // La curva del lanzamiento, si la variante lanza algo (en ofensiva, la lanza).
+    public override GA_ProjectileShoot ProjectileToPreview(float heldSeconds)
+        => ActiveHold is GameplayAbility held ? held.ProjectileToPreview(heldSeconds) : null;
+
     // La barra de carga es la de la variante (en ofensiva, el ataque cargado).
     public override bool GetChargeStages(System.Collections.Generic.List<float> stageTimes, out float maxTime)
     {

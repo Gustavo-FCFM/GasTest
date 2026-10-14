@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -19,10 +20,14 @@ using UnityEngine.UI;
 // POR QUÉ IMPORTA EL DE RECIBIR: sin él, morir por la espalda se siente injusto — no
 // llegaste a saber que te estaban pegando. Con el arco, te das vuelta.
 //
-// NO HAY NADA QUE CABLEAR. Se dibuja solo con MercUIFactory, igual que el resto del HUD
-// del modo, y quien lo necesita lo pide con UI_CombatFeedback.Get(). Si querés cambiar
-// colores o tamaños sin tocar código, poné el componente en un GameObject de la escena y
-// el que se use va a ser ese.
+// VIVE EN EL PREFAB DE LA CÁMARA (Player Camera ▸ UI ▸ CombatFeedback), con sus piezas
+// armadas ahí y a la vista para acomodarlas: la X (cuatro puntas), la calavera y el círculo
+// de pedacitos. Al empezar el juego este script las apaga, y las prende cuando toca.
+//   · El TAMAÑO y la FORMA se cambian en las piezas mismas. Las cuatro puntas de la X están
+//     giradas en sus soportes, así que seleccionándolas juntas se les cambia el largo, el
+//     grosor y el hueco del centro (su posición X) a las cuatro a la vez.
+//   · El arco usa el COLOR que tiene cada pedacito en el prefab, y el ángulo de cada uno sale
+//     de dónde está: se pueden mover, sacar o agregar pedacitos.
 //
 // QUIÉN LO LLAMA: el servidor, que es el único que sabe cuánto daño entró y a quién. Se
 // lo manda SOLO al dueño que corresponde por TargetRpc — ver
@@ -30,30 +35,21 @@ using UnityEngine.UI;
 // ============================================================
 public class UI_CombatFeedback : MonoBehaviour
 {
-    // =========================================================
-    // PERILLAS
-    // =========================================================
-
     [Header("X de golpe")]
-    [Tooltip("Largo de cada PUNTA de la X. Es la perilla para agrandarla o achicarla.")]
-    [Label("X: largo")]
-    public float HitMarkLength = 26f;
+    [Tooltip("El CanvasGroup de la X: la prende y la apaga.")]
+    [Label("X: grupo")]
+    public CanvasGroup HitMarkGroup;
 
-    [Tooltip("Hueco en el centro: a qué distancia del medio arrancan las puntas. Sin " +
-             "hueco la X tapa la retícula justo cuando estás apuntando.")]
-    [Label("X: hueco central")]
-    public float HitMarkGap = 9f;
+    [Tooltip("Las puntas de la X, para pintarlas (rojas, o amarillas en un crítico).")]
+    [Label("X: puntas")]
+    public Image[] HitMarkArms;
 
-    [Tooltip("Grosor de cada punta.")]
-    [Label("X: grosor")]
-    public float HitMarkThickness = 5f;
-
-    [Tooltip("Cuánto tarda en apagarse la X.")]
+    [Tooltip("Segundos que tarda en apagarse la X.")]
     [Label("X: se apaga en (s)")]
     public float HitFadeSeconds = 0.45f;
 
-    [Tooltip("Opacidad MÍNIMA de la X. Sin esto, pegarle a alguien con la vida llena no " +
-             "se vería casi nada y parecería que el golpe no entró.")]
+    [Tooltip("Opacidad MÍNIMA de la X (0 a 1). Sin esto, pegarle a alguien con la vida llena " +
+             "no se vería casi nada y parecería que el golpe no entró.")]
     [Range(0f, 1f)]
     [Label("X: opacidad mínima")]
     public float HitMinAlpha = 0.25f;
@@ -65,98 +61,101 @@ public class UI_CombatFeedback : MonoBehaviour
     [Label("X: color de crítico")]
     public Color HitCriticalColor = new Color(1f, 0.85f, 0.1f, 1f);
 
-    [Tooltip("Opacidad mínima de la X de crítico: un crítico siempre se tiene que notar, " +
-             "aunque el golpeado tenga la vida llena.")]
+    [Tooltip("Opacidad mínima de la X de crítico (0 a 1): un crítico siempre se tiene que " +
+             "notar, aunque el golpeado tenga la vida llena.")]
     [Range(0f, 1f)]
     [Label("X: opacidad mínima de crítico")]
     public float HitCriticalMinAlpha = 0.85f;
 
     [Header("Calavera de baja")]
-    [Tooltip("Tamaño de la calavera.")]
-    [Label("Calavera: tamaño")]
-    public float KillMarkSize = 46f;
+    [Tooltip("El CanvasGroup de la calavera: la prende y la apaga. Lo de adentro (las piezas, " +
+             "o una Image con un sprite de calavera) se arma en el prefab.")]
+    [Label("Calavera: grupo")]
+    public CanvasGroup KillMarkGroup;
 
-    [Tooltip("Cuánto tarda en apagarse. Corto a propósito: es un premio, no un cartel.")]
+    [Tooltip("Segundos que tarda en apagarse. Corto a propósito: es un premio, no un cartel.")]
     [Label("Calavera: se apaga en (s)")]
     public float KillFadeSeconds = 0.9f;
 
-    [Tooltip("Si le asignás un sprite de calavera, se usa ese en vez de la que se dibuja " +
-             "por código (una cabeza, dos ojos y la mandíbula).")]
-    [Label("Calavera: sprite")]
-    public Sprite KillIcon;
-
-    [Label("Calavera: color")]
-    public Color KillColor = new Color(1f, 0.2f, 0.2f, 1f);
-
     [Header("Arco de daño recibido")]
-    [Tooltip("Radio del círculo, en píxeles de la maqueta. Grande a propósito: tiene que " +
-             "verse por el rabillo del ojo sin tapar la pelea.")]
-    [Label("Daño recibido: radio")]
-    public float DamageRingRadius = 190f;
+    [Tooltip("El círculo de pedacitos alrededor de la mira: cada hijo con Image es un pedacito. " +
+             "Su ángulo sale de dónde está (arriba = de frente, a la derecha = por la derecha) y " +
+             "al encenderse usa el color que tiene en el prefab.")]
+    [Label("Daño recibido: círculo")]
+    public RectTransform DamageRing;
 
-    [Tooltip("En cuántos pedacitos se divide el círculo. Más = arco más suave y más " +
-             "objetos en pantalla.")]
-    [Label("Daño recibido: segmentos")]
-    public int DamageRingSegments = 24;
-
-    [Tooltip("Largo y grosor de cada pedacito del arco.")]
-    [Label("Daño recibido: tamaño del segmento")]
-    public Vector2 DamageSegmentSize = new Vector2(34f, 9f);
-
-    [Tooltip("Ancho del arco que se enciende, en grados a cada lado de por donde vino el " +
-             "golpe. Los del borde se encienden menos.")]
-    [Label("Daño recibido: ancho del arco (°)")]
+    [Tooltip("Cuántos grados a cada lado de por donde vino el golpe se encienden. Los del borde " +
+             "se encienden menos.")]
+    [Label("Daño recibido: grados a cada lado")]
     public float DamageArcHalfWidth = 38f;
 
-    [Tooltip("Cuánto tarda en apagarse el arco.")]
+    [Tooltip("Segundos que tarda en apagarse el arco.")]
     [Label("Daño recibido: se apaga en (s)")]
     public float DamageFadeSeconds = 1.1f;
-
-    [Label("Color de daño")]
-    public Color DamageColor = new Color(0.9f, 0.1f, 0.1f, 1f);
 
     // =========================================================
     // ACCESO
     // =========================================================
 
+    // El del jugador local (en su cámara). Null si todavía no hay jugador.
     private static UI_CombatFeedback _instance;
 
-    public static UI_CombatFeedback Get()
+    public static UI_CombatFeedback Get() => _instance;
+
+    // Cada pedacito del círculo, con su ángulo y su color del prefab.
+    private struct RingSegment
     {
-        if (_instance != null) return _instance;
-
-        _instance = FindFirstObjectByType<UI_CombatFeedback>(FindObjectsInactive.Include);
-        if (_instance != null) return _instance;
-
-        GameObject go = new GameObject("UI_CombatFeedback");
-        _instance = go.AddComponent<UI_CombatFeedback>();
-        return _instance;
+        public Image Image;
+        public float Angle;
+        public Color Color;
     }
 
-    // --- construido en runtime ---
-    private Canvas        _canvas;
-    private RectTransform _root;
-
-    private CanvasGroup     _hitGroup;
-    private RectTransform[] _hitArms;
-    private CanvasGroup     _killGroup;
-    private Image[]     _ringSegments;
+    private RingSegment[] _ring = new RingSegment[0];
+    private float[] _segmentAlpha = new float[0];
 
     private float _hitAlpha, _hitFrom;
     private float _killAlpha;
-    private float[] _segmentAlpha;
 
     private void Awake()
     {
-        if (_instance != null && _instance != this) { Destroy(gameObject); return; }
         _instance = this;
 
-        Build();
+        if (HitMarkGroup != null)  HitMarkGroup.alpha  = 0f;
+        if (KillMarkGroup != null) KillMarkGroup.alpha = 0f;
+        CollectRing();
     }
 
     private void OnDestroy()
     {
         if (_instance == this) _instance = null;
+    }
+
+    // Los pedacitos del círculo y a qué ángulo mira cada uno, medido desde el centro del
+    // círculo: 0 grados arriba y creciendo hacia la derecha, que es como se lee una brújula
+    // — y como devuelve el ángulo SignedAngle de ShowDamageFrom.
+    private void CollectRing()
+    {
+        if (DamageRing == null) return;
+
+        var found = new List<RingSegment>();
+        foreach (Image image in DamageRing.GetComponentsInChildren<Image>(true))
+        {
+            if (image.transform == DamageRing) continue;
+
+            Vector3 local = DamageRing.InverseTransformPoint(image.rectTransform.position);
+            found.Add(new RingSegment
+            {
+                Image = image,
+                Angle = Mathf.Atan2(local.x, local.y) * Mathf.Rad2Deg,
+                Color = image.color,
+            });
+
+            Color off = image.color; off.a = 0f;
+            image.color = off;
+        }
+
+        _ring         = found.ToArray();
+        _segmentAlpha = new float[_ring.Length];
     }
 
     // =========================================================
@@ -175,13 +174,10 @@ public class UI_CombatFeedback : MonoBehaviour
         _hitFrom  = Mathf.Max(critical ? HitCriticalMinAlpha : HitMinAlpha, 1f - health);
         _hitAlpha = _hitFrom;
 
-        if (_hitArms == null) return;
+        if (HitMarkArms == null) return;
         Color color = critical ? HitCriticalColor : HitColor;
-        foreach (RectTransform arm in _hitArms)
-        {
-            Image image = arm != null ? arm.GetComponent<Image>() : null;
-            if (image != null) image.color = color;
-        }
+        foreach (Image arm in HitMarkArms)
+            if (arm != null) arm.color = color;
     }
 
     // Mataste a un personaje.
@@ -192,7 +188,7 @@ public class UI_CombatFeedback : MonoBehaviour
     // el jugador tiene que corregir es la cámara.
     public void ShowDamageFrom(Vector3 worldPosition, Transform victim)
     {
-        if (_ringSegments == null || victim == null) return;
+        if (_ring.Length == 0 || victim == null) return;
 
         Vector3 toAttacker = worldPosition - victim.position;
         toAttacker.y = 0f;
@@ -212,16 +208,16 @@ public class UI_CombatFeedback : MonoBehaviour
         // Ángulo con signo entre "hacia dónde miro" y "de dónde vino": 0 = de frente,
         // 180 = por la espalda, positivo = por la derecha.
         float angle = Vector3.SignedAngle(forward.normalized, toAttacker.normalized, Vector3.up);
+        float half  = Mathf.Max(1f, DamageArcHalfWidth);
 
-        for (int i = 0; i < _ringSegments.Length; i++)
+        for (int i = 0; i < _ring.Length; i++)
         {
-            float segmentAngle = SegmentAngle(i);
-            float delta        = Mathf.Abs(Mathf.DeltaAngle(segmentAngle, angle));
-            if (delta > DamageArcHalfWidth) continue;
+            float delta = Mathf.Abs(Mathf.DeltaAngle(_ring[i].Angle, angle));
+            if (delta > half) continue;
 
             // Los del borde del arco encienden menos: así el arco se ve como una mancha
             // y no como un bloque recortado.
-            float strength = 1f - delta / DamageArcHalfWidth;
+            float strength = 1f - delta / half;
             _segmentAlpha[i] = Mathf.Max(_segmentAlpha[i], strength);
         }
     }
@@ -232,193 +228,31 @@ public class UI_CombatFeedback : MonoBehaviour
 
     private void Update()
     {
-        if (_hitGroup != null)
+        if (HitMarkGroup != null)
         {
             if (_hitAlpha > 0f && HitFadeSeconds > 0f)
                 _hitAlpha = Mathf.Max(0f, _hitAlpha - _hitFrom * Time.deltaTime / HitFadeSeconds);
-            _hitGroup.alpha = _hitAlpha;
+            HitMarkGroup.alpha = _hitAlpha;
         }
 
-        if (_killGroup != null)
+        if (KillMarkGroup != null)
         {
             if (_killAlpha > 0f && KillFadeSeconds > 0f)
                 _killAlpha = Mathf.Max(0f, _killAlpha - Time.deltaTime / KillFadeSeconds);
-            _killGroup.alpha = _killAlpha;
+            KillMarkGroup.alpha = _killAlpha;
         }
-
-        if (_ringSegments == null) return;
 
         float step = DamageFadeSeconds > 0f ? Time.deltaTime / DamageFadeSeconds : 1f;
-        for (int i = 0; i < _ringSegments.Length; i++)
+        for (int i = 0; i < _ring.Length; i++)
         {
+            if (_ring[i].Image == null) continue;
+            if (_segmentAlpha[i] <= 0f && _ring[i].Image.color.a <= 0f) continue;
+
             if (_segmentAlpha[i] > 0f) _segmentAlpha[i] = Mathf.Max(0f, _segmentAlpha[i] - step);
 
-            Color c = DamageColor;
-            c.a = _segmentAlpha[i] * DamageColor.a;
-            _ringSegments[i].color = c;
-        }
-    }
-
-    // =========================================================
-    // CONSTRUCCIÓN
-    // =========================================================
-
-    // A qué ángulo mira el pedacito i del círculo. 0 grados = arriba de la pantalla =
-    // de frente.
-    private float SegmentAngle(int index) => index * 360f / Mathf.Max(1, DamageRingSegments);
-
-    private void Build()
-    {
-        _canvas = MercUIFactory.CreateCanvas("CombatFeedbackCanvas", 120);
-        _canvas.transform.SetParent(transform, false);
-
-        Vector2 mid = new Vector2(0.5f, 0.5f);
-        _root = MercUIFactory.CreateRect(_canvas.transform, "Root", mid, mid, mid,
-                                         Vector2.zero, Vector2.zero);
-
-        BuildHitMark(mid);
-        BuildKillMark(mid);
-        BuildDamageRing(mid);
-    }
-
-    // La X: CUATRO puntas con un hueco en el medio, no dos barras cruzadas enteras.
-    //
-    // POR QUÉ CON HUECO: la X vive encima de la retícula, y una equis maciza tapa
-    // justamente el punto al que estás apuntando en el momento en que más lo mirás.
-    // Con el hueco se lee igual de bien —el ojo completa la forma— y la mira queda
-    // libre. Es como la hacen los juegos de disparos.
-    //
-    // No hace falta ningún sprite: con el blanco de 1x1 y cuatro rotaciones alcanza.
-    private void BuildHitMark(Vector2 mid)
-    {
-        RectTransform holder = MercUIFactory.CreateRect(_root, "HitMark", mid, mid, mid,
-                                                        Vector2.zero, Vector2.zero);
-        _hitGroup = holder.gameObject.AddComponent<CanvasGroup>();
-        _hitGroup.alpha = 0f;
-        _hitGroup.blocksRaycasts = false;
-        _hitGroup.interactable   = false;
-
-        _hitArms = new RectTransform[4];
-        for (int i = 0; i < 4; i++)
-            _hitArms[i] = MakeArm(holder, $"Arm_{i}", 45f + i * 90f);
-
-        ApplyHitMarkLayout();
-    }
-
-    private RectTransform MakeArm(Transform parent, string name, float degrees)
-    {
-        Vector2 mid = new Vector2(0.5f, 0.5f);
-        Image arm = MercUIFactory.CreateImage(parent, name, HitColor, Vector2.zero,
-                                              Vector2.one, mid, mid, mid);
-        return arm.rectTransform;
-    }
-
-    // Coloca las cuatro puntas según las medidas de ahora. Aparte para poder retocarlo
-    // en vivo desde el Inspector mientras se juega (ver OnValidate).
-    private void ApplyHitMarkLayout()
-    {
-        if (_hitArms == null) return;
-
-        for (int i = 0; i < _hitArms.Length; i++)
-        {
-            if (_hitArms[i] == null) continue;
-
-            float degrees = 45f + i * 90f;
-            float radians = degrees * Mathf.Deg2Rad;
-
-            // Cada punta se corre del centro lo que dure el hueco más media punta: así
-            // crece hacia afuera y el hueco del medio no cambia al alargarlas.
-            float distance = HitMarkGap + HitMarkLength * 0.5f;
-
-            _hitArms[i].sizeDelta        = new Vector2(HitMarkLength, HitMarkThickness);
-            _hitArms[i].anchoredPosition = new Vector2(Mathf.Cos(radians), Mathf.Sin(radians)) * distance;
-            _hitArms[i].localRotation    = Quaternion.Euler(0f, 0f, degrees);
-        }
-    }
-
-#if UNITY_EDITOR
-    // Tocar las medidas en el Inspector mientras corre el juego las aplica al momento.
-    // Sin esto habría que salir y volver a entrar para ver si el tamaño quedó bien, que
-    // es la peor forma de ajustar algo que se juzga de un vistazo.
-    private void OnValidate()
-    {
-        if (Application.isPlaying) ApplyHitMarkLayout();
-    }
-#endif
-
-    // La calavera. Si hay sprite asignado se usa ese; si no, se dibuja una a la que le
-    // alcanza para leerse a este tamaño: cabeza, dos ojos y la mandíbula.
-    private void BuildKillMark(Vector2 mid)
-    {
-        RectTransform holder = MercUIFactory.CreateRect(_root, "KillMark", mid, mid, mid,
-                                                        Vector2.zero,
-                                                        new Vector2(KillMarkSize, KillMarkSize));
-        _killGroup = holder.gameObject.AddComponent<CanvasGroup>();
-        _killGroup.alpha = 0f;
-        _killGroup.blocksRaycasts = false;
-        _killGroup.interactable   = false;
-
-        if (KillIcon != null)
-        {
-            Image icon = MercUIFactory.CreateImage(holder, "Icon", KillColor, Vector2.zero,
-                                                   new Vector2(KillMarkSize, KillMarkSize),
-                                                   mid, mid, mid);
-            icon.sprite         = KillIcon;
-            icon.preserveAspect = true;
-            return;
-        }
-
-        float s = KillMarkSize;
-        // Cráneo.
-        MercUIFactory.CreateImage(holder, "Head", KillColor, new Vector2(0f, s * 0.1f),
-                                  new Vector2(s * 0.8f, s * 0.7f), mid, mid, mid);
-        // Mandíbula, más angosta y debajo.
-        MercUIFactory.CreateImage(holder, "Jaw", KillColor, new Vector2(0f, -s * 0.34f),
-                                  new Vector2(s * 0.45f, s * 0.22f), mid, mid, mid);
-
-        // Los ojos van del color del FONDO, no negros: sobre cualquier escenario, dos
-        // huecos oscuros se leen como ojos aunque el fondo sea claro.
-        Color sockets = new Color(0.05f, 0.05f, 0.05f, 1f);
-        MercUIFactory.CreateImage(holder, "EyeL", sockets, new Vector2(-s * 0.17f, s * 0.16f),
-                                  new Vector2(s * 0.22f, s * 0.26f), mid, mid, mid);
-        MercUIFactory.CreateImage(holder, "EyeR", sockets, new Vector2(s * 0.17f, s * 0.16f),
-                                  new Vector2(s * 0.22f, s * 0.26f), mid, mid, mid);
-        // Nariz.
-        MercUIFactory.CreateImage(holder, "Nose", sockets, new Vector2(0f, -s * 0.08f),
-                                  new Vector2(s * 0.1f, s * 0.14f), mid, mid, mid);
-    }
-
-    // El círculo de recibir daño: pedacitos sueltos alrededor del centro, todos
-    // invisibles hasta que alguien te pega.
-    //
-    // POR QUÉ PEDACITOS Y NO UN ANILLO CON RELLENO RADIAL: un anillo necesita un sprite
-    // con agujero, y el proyecto no tiene ninguno; un círculo relleno con Radial360
-    // daría una porción de torta que taparía el centro de la pantalla justo cuando más
-    // se necesita ver.
-    private void BuildDamageRing(Vector2 mid)
-    {
-        int count = Mathf.Max(4, DamageRingSegments);
-        _ringSegments = new Image[count];
-        _segmentAlpha = new float[count];
-
-        RectTransform holder = MercUIFactory.CreateRect(_root, "DamageRing", mid, mid, mid,
-                                                        Vector2.zero, Vector2.zero);
-
-        for (int i = 0; i < count; i++)
-        {
-            float degrees = SegmentAngle(i);
-            float radians = degrees * Mathf.Deg2Rad;
-
-            // 0 grados arriba y creciendo hacia la derecha, que es como se lee una
-            // brújula — y como devuelve el ángulo SignedAngle de ShowDamageFrom.
-            Vector2 position = new Vector2(Mathf.Sin(radians), Mathf.Cos(radians)) * DamageRingRadius;
-
-            Color transparent = DamageColor; transparent.a = 0f;
-            Image segment = MercUIFactory.CreateImage(holder, $"Seg_{i}", transparent, position,
-                                                      DamageSegmentSize, mid, mid, mid);
-            // Acostado sobre el círculo: el lado largo sigue la curva.
-            segment.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -degrees);
-            _ringSegments[i] = segment;
+            Color c = _ring[i].Color;
+            c.a *= _segmentAlpha[i];
+            _ring[i].Image.color = c;
         }
     }
 }

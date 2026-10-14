@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 // ============================================================
 // UI_ChargeBar
@@ -12,8 +11,10 @@ using UnityEngine.UI;
 // llena mientras se está en esa etapa; al pasar a la siguiente, el tramo destella y la
 // barra da un saltito. El último tramo es la cuenta hasta que se suelta sola.
 //
-// NO HAY NADA QUE CABLEAR: se arma sola al empezar el juego (ver Bootstrap) y se dibuja
-// con MercUIFactory, igual que UI_ScreenFeedback.
+// VIVE EN EL PREFAB DE LA CÁMARA (Player Camera ▸ UI ▸ ChargeBar): el marco, la zona de los
+// tramos, el MOLDE de un tramo (UI_ChargeSegment) y el nombre se acomodan ahí. Este script
+// copia el molde una vez por etapa, le da a cada copia su parte del ancho (según lo que dura
+// esa etapa) y los anima.
 //
 // DE DÓNDE SALE: PlayerController.HeldAbility / HoldStartedAt (lo que sostiene el dueño
 // y desde cuándo) y GameplayAbility.GetChargeStages (dónde empieza cada etapa). Se
@@ -22,22 +23,40 @@ using UnityEngine.UI;
 // ============================================================
 public class UI_ChargeBar : MonoBehaviour
 {
-    // =========================================================
-    // PERILLAS
-    // =========================================================
+    [Header("Piezas")]
+    [Tooltip("El CanvasGroup de la barra: la muestra y la esconde.")]
+    [Label("Grupo")]
+    public CanvasGroup Group;
 
-    [Tooltip("Dónde va la barra, en píxeles desde el centro de la pantalla (1920x1080).")]
-    [Label("Posición")]
-    public Vector2 Position = new Vector2(0f, -170f);
+    [Tooltip("Lo que da el saltito al pasar de etapa (normalmente la barra entera).")]
+    [Label("Lo que salta")]
+    public RectTransform PunchTarget;
 
-    [Label("Tamaño")]
-    public Vector2 Size = new Vector2(380f, 20f);
+    [Tooltip("El rectángulo donde van los tramos: cada uno ocupa su parte del ancho, según " +
+             "cuánto dura su etapa.")]
+    [Label("Zona de los tramos")]
+    public RectTransform SegmentArea;
 
-    [Tooltip("Espacio entre tramos.")]
-    [Label("Separación de tramos")]
-    public float SegmentGap = 4f;
+    [Tooltip("El molde de un tramo (un hijo de la zona de los tramos). Se copia una vez por etapa.")]
+    [Label("Molde de un tramo")]
+    public UI_ChargeSegment SegmentTemplate;
 
-    [Tooltip("Color de cada etapa, en orden. Si hay más etapas que colores, repite el último.")]
+    [Tooltip("El nombre de la habilidad, debajo de la barra.")]
+    [Label("Nombre")]
+    public TMP_Text NameText;
+
+    [Header("Medidas")]
+    [Tooltip("Espacio libre entre un tramo y el siguiente, en píxeles del HUD.")]
+    [Label("Separación entre tramos (px)")]
+    public float SegmentGap = 2f;
+
+    [Tooltip("Cuánto crece la barra en el saltito al llegar a una etapa. 12 = un 12 % más grande.")]
+    [Label("Saltito al subir de etapa (%)")]
+    public float PunchPercent = 12f;
+
+    [Header("Colores")]
+    [Tooltip("El color de cada etapa, en orden. Si hay más etapas que colores, repite el último.")]
+    [Label("Color de cada etapa")]
     public Color[] StageColors =
     {
         new Color(0.95f, 0.85f, 0.55f, 1f),   // 1: dorado pálido
@@ -45,41 +64,43 @@ public class UI_ChargeBar : MonoBehaviour
         new Color(1.00f, 0.25f, 0.10f, 1f),   // 3: rojo
     };
 
+    [Tooltip("El fondo de un tramo al que todavía no se llegó.")]
+    [Label("Fondo de un tramo sin llegar")]
+    public Color PendingBackColor = new Color(0.12f, 0.12f, 0.12f, 0.9f);
+
+    [Tooltip("El fondo de un tramo alcanzado es el color de su etapa, oscurecido: 35 = con el " +
+             "35 % de su brillo.")]
+    [Label("Brillo del fondo de un tramo alcanzado (%)")]
+    [Range(0f, 100f)]
+    public float ReachedBackBrightness = 35f;
+
+    [Label("Número de un tramo alcanzado")]
+    public Color ReachedNumberColor = Color.white;
+
+    [Label("Número de un tramo sin llegar")]
+    public Color PendingNumberColor = new Color(1f, 1f, 1f, 0.35f);
+
+    [Header("Tiempos")]
     [Tooltip("Segundos que tarda en desvanecerse al soltar.")]
-    [Label("Desvanecerse (s)")]
+    [Label("Desvanecerse al soltar (s)")]
     public float FadeOutSeconds = 0.25f;
 
-    // =========================================================
-    // ACCESO
-    // =========================================================
+    [Tooltip("Segundos que dura el destello de un tramo al llegar a su etapa.")]
+    [Label("Destello al llegar (s)")]
+    public float FlashSeconds = 0.33f;
 
-    private static UI_ChargeBar _instance;
+    [Tooltip("En la última etapa el tramo late, avisando que se va a soltar sola: cuántas " +
+             "veces por segundo.")]
+    [Label("Latidos de la última etapa por segundo")]
+    public float LastStagePulsesPerSecond = 1.9f;
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void Bootstrap()
-    {
-        if (_instance != null) return;
-        _instance = FindFirstObjectByType<UI_ChargeBar>(FindObjectsInactive.Include);
-        if (_instance == null) _instance = new GameObject("UI_ChargeBar").AddComponent<UI_ChargeBar>();
-        DontDestroyOnLoad(_instance.gameObject);
-    }
-
-    // --- construido en runtime ---
+    // Una copia del molde y los segundos de carga que cubre.
     private class Segment
     {
-        public RectTransform Rect;
-        public Image Back;
-        public Image Fill;
-        public Image Flash;
-        public TextMeshProUGUI Number;
-        public float From, To;      // segundos de carga que cubre
+        public UI_ChargeSegment View;
+        public float From, To;
     }
 
-    private Canvas          _canvas;
-    private RectTransform   _root;
-    private CanvasGroup     _group;
-    private RectTransform   _segmentsRoot;
-    private TextMeshProUGUI _label;
     private readonly List<Segment> _segments = new List<Segment>();
 
     private readonly List<float> _stageTimes  = new List<float>();
@@ -92,42 +113,8 @@ public class UI_ChargeBar : MonoBehaviour
 
     private void Awake()
     {
-        if (_instance != null && _instance != this) { Destroy(gameObject); return; }
-        _instance = this;
-        Build();
-    }
-
-    private void OnDestroy()
-    {
-        if (_instance == this) _instance = null;
-    }
-
-    private void Build()
-    {
-        _canvas = MercUIFactory.CreateCanvas("ChargeBarCanvas", 45);
-        _canvas.transform.SetParent(transform, false);
-
-        Vector2 center = new Vector2(0.5f, 0.5f);
-        _root = MercUIFactory.CreateRect(_canvas.transform, "ChargeBar", center, center, center,
-                                         Position, Size);
-        _group = _root.gameObject.AddComponent<CanvasGroup>();
-        _group.alpha          = 0f;
-        _group.interactable   = false;
-        _group.blocksRaycasts = false;
-
-        // Marco oscuro, un poco más grande que la barra.
-        MercUIFactory.CreateImage(_root, "Frame", new Color(0f, 0f, 0f, 0.65f),
-                                  Vector2.zero, new Vector2(6f, 6f),
-                                  Vector2.zero, Vector2.one, center);
-
-        _segmentsRoot = MercUIFactory.CreateRect(_root, "Segments", Vector2.zero, Vector2.one, center,
-                                                 Vector2.zero, Vector2.zero);
-
-        _label = MercUIFactory.CreateText(_root, "Label", "", 18f, Color.white,
-                                          TextAlignmentOptions.Center,
-                                          new Vector2(0f, -6f), new Vector2(Size.x, 24f),
-                                          new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 1f));
-        MercUIFactory.AddShadow(_label);
+        if (SegmentTemplate != null) SegmentTemplate.gameObject.SetActive(false);
+        if (Group != null) Group.alpha = 0f;
     }
 
     // =========================================================
@@ -136,18 +123,20 @@ public class UI_ChargeBar : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (Group == null) return;
+
         PlayerController pc   = PlayerController.LocalPlayer;
         GameplayAbility  held = pc != null ? pc.HeldAbility : null;
 
         float maxTime = 0f;
-        bool  show    = held != null && held.GetChargeStages(_stageTimes, out maxTime);
+        bool  show    = held != null && held.GetChargeStages(_stageTimes, out maxTime) && maxTime > 0f;
 
         if (!show)
         {
             // Al soltar se desvanece con lo último que mostró.
-            _group.alpha = Mathf.MoveTowards(_group.alpha, 0f,
-                                             Time.unscaledDeltaTime / Mathf.Max(0.01f, FadeOutSeconds));
-            if (_group.alpha <= 0f) _lastStage = -1;
+            Group.alpha = Mathf.MoveTowards(Group.alpha, 0f,
+                                            Time.unscaledDeltaTime / Mathf.Max(0.01f, FadeOutSeconds));
+            if (Group.alpha <= 0f) _lastStage = -1;
             return;
         }
 
@@ -167,42 +156,58 @@ public class UI_ChargeBar : MonoBehaviour
         {
             _lastStage = stage;
             _punch     = 1f;
-            if (stage < _segments.Count) _segments[stage].Flash.color = Color.white;
+            if (stage < _segments.Count && _segments[stage].View.Flash != null)
+                _segments[stage].View.Flash.color = Color.white;
         }
 
-        _group.alpha = 1f;
-        _label.text  = held.DisplayName;
+        Group.alpha = 1f;
+        if (NameText != null) NameText.text = held.DisplayName;
+
+        float flashStep = Time.unscaledDeltaTime / Mathf.Max(0.01f, FlashSeconds);
+        float brightness = ReachedBackBrightness / 100f;
 
         for (int i = 0; i < _segments.Count; i++)
         {
-            Segment seg  = _segments[i];
-            float   span = Mathf.Max(0.0001f, seg.To - seg.From);
-            float   t    = Mathf.Clamp01((charged - seg.From) / span);
+            Segment          seg  = _segments[i];
+            UI_ChargeSegment view = seg.View;
+            float span = Mathf.Max(0.0001f, seg.To - seg.From);
+            float t    = Mathf.Clamp01((charged - seg.From) / span);
 
             Color stageColor = ColorFor(i);
-            seg.Fill.rectTransform.anchorMax = new Vector2(t, 1f);
-            seg.Fill.color = stageColor;
+            bool  reached    = i <= stage;
 
-            bool reached = i <= stage;
-            seg.Back.color   = Color.Lerp(new Color(0.12f, 0.12f, 0.12f, 0.9f), stageColor * 0.35f, reached ? 1f : 0.4f);
-            seg.Number.color = reached ? Color.white : new Color(1f, 1f, 1f, 0.35f);
+            if (view.Fill != null)
+            {
+                view.Fill.rectTransform.anchorMax = new Vector2(t, 1f);
+                view.Fill.color = stageColor;
+            }
+            if (view.Back != null)
+                view.Back.color = reached
+                    ? new Color(stageColor.r * brightness, stageColor.g * brightness, stageColor.b * brightness, PendingBackColor.a)
+                    : PendingBackColor;
+            if (view.Number != null)
+                view.Number.color = reached ? ReachedNumberColor : PendingNumberColor;
 
-            Color flash = seg.Flash.color;
-            flash.a = Mathf.MoveTowards(flash.a, 0f, Time.unscaledDeltaTime * 3f);
-            seg.Flash.color = flash;
+            if (view.Flash != null)
+            {
+                Color flash = view.Flash.color;
+                flash.a = Mathf.MoveTowards(flash.a, 0f, flashStep);
+                view.Flash.color = flash;
+            }
         }
 
-        // El último tramo (ya en la etapa máxima) late: avisa que se va a soltar sola.
-        if (stage == _segments.Count - 1 && _segments.Count > 0)
+        // El último tramo (ya en la etapa máxima) late hacia el blanco: avisa que se va a
+        // soltar sola.
+        if (_segments.Count > 0 && stage == _segments.Count - 1 && _segments[stage].View.Fill != null)
         {
-            float pulse = 0.75f + 0.25f * Mathf.Sin(Time.unscaledTime * 12f);
-            Color c = ColorFor(stage);
-            _segments[stage].Fill.color = new Color(c.r * pulse + (1f - pulse), c.g * pulse + (1f - pulse),
-                                                    c.b * pulse + (1f - pulse), 1f);
+            float wave  = Mathf.Sin(Time.unscaledTime * LastStagePulsesPerSecond * Mathf.PI * 2f);
+            float white = 0.25f - 0.25f * wave;   // de 0 (su color) a 0.5 (mitad blanco)
+            _segments[stage].View.Fill.color = Color.Lerp(ColorFor(stage), Color.white, white);
         }
 
         _punch = Mathf.MoveTowards(_punch, 0f, Time.unscaledDeltaTime * 5f);
-        _root.localScale = Vector3.one * (1f + 0.12f * _punch);
+        if (PunchTarget != null)
+            PunchTarget.localScale = Vector3.one * (1f + PunchPercent / 100f * _punch);
     }
 
     private int CurrentStage(float charged)
@@ -233,7 +238,7 @@ public class UI_ChargeBar : MonoBehaviour
 
     private void Rebuild(float maxTime)
     {
-        foreach (Segment s in _segments) Destroy(s.Rect.gameObject);
+        foreach (Segment s in _segments) if (s.View != null) Destroy(s.View.gameObject);
         _segments.Clear();
 
         _builtTimes.Clear();
@@ -241,40 +246,30 @@ public class UI_ChargeBar : MonoBehaviour
         _builtTimes.Sort();
         _builtMax = maxTime;
 
-        float width = Size.x;
+        if (SegmentTemplate == null || SegmentArea == null) return;
+
         for (int i = 0; i < _builtTimes.Count; i++)
         {
             float from = _builtTimes[i];
             float to   = i + 1 < _builtTimes.Count ? _builtTimes[i + 1] : maxTime;
             if (to <= from) to = from + 0.0001f;
 
-            // Cada tramo ocupa su parte del ancho (proporcional al tiempo), menos la separación.
-            float x0 = from / maxTime * width + (i > 0 ? SegmentGap * 0.5f : 0f);
-            float x1 = to   / maxTime * width - (i + 1 < _builtTimes.Count ? SegmentGap * 0.5f : 0f);
+            UI_ChargeSegment view = Instantiate(SegmentTemplate, SegmentArea);
+            view.name = $"Stage{i + 1}";
+            view.gameObject.SetActive(true);
 
-            Segment seg = new Segment { From = from, To = to };
-            seg.Rect = MercUIFactory.CreateRect(_segmentsRoot, $"Stage{i + 1}",
-                                                new Vector2(0f, 0f), new Vector2(0f, 1f), new Vector2(0f, 0.5f),
-                                                new Vector2(x0, 0f), new Vector2(Mathf.Max(1f, x1 - x0), 0f));
+            // Cada tramo ocupa su parte del ancho de la zona (proporcional al tiempo), menos
+            // media separación de cada lado que tenga vecino.
+            var rect = (RectTransform)view.transform;
+            rect.anchorMin = new Vector2(from / maxTime, 0f);
+            rect.anchorMax = new Vector2(to   / maxTime, 1f);
+            rect.offsetMin = new Vector2(i > 0 ? SegmentGap * 0.5f : 0f, 0f);
+            rect.offsetMax = new Vector2(i + 1 < _builtTimes.Count ? -SegmentGap * 0.5f : 0f, 0f);
 
-            seg.Back = MercUIFactory.CreateImage(seg.Rect, "Back", Color.black, Vector2.zero, Vector2.zero,
-                                                 Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f));
+            if (view.Number != null) view.Number.text = (i + 1).ToString();
+            if (view.Flash  != null) view.Flash.color = new Color(1f, 1f, 1f, 0f);
 
-            // El relleno se estira de izquierda a derecha moviendo su anchorMax.x.
-            seg.Fill = MercUIFactory.CreateImage(seg.Rect, "Fill", ColorFor(i), Vector2.zero, Vector2.zero,
-                                                 Vector2.zero, new Vector2(0f, 1f), new Vector2(0f, 0.5f));
-
-            seg.Flash = MercUIFactory.CreateImage(seg.Rect, "Flash", new Color(1f, 1f, 1f, 0f),
-                                                  Vector2.zero, Vector2.zero,
-                                                  Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f));
-
-            seg.Number = MercUIFactory.CreateText(seg.Rect, "Number", (i + 1).ToString(), 14f, Color.white,
-                                                  TextAlignmentOptions.Center, Vector2.zero, Vector2.zero,
-                                                  Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f));
-            seg.Number.fontStyle = FontStyles.Bold;
-            MercUIFactory.AddShadow(seg.Number, 1f);
-
-            _segments.Add(seg);
+            _segments.Add(new Segment { View = view, From = from, To = to });
         }
     }
 }

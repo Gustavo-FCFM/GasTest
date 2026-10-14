@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -6,10 +7,10 @@ using UnityEngine.UI;
 // ============================================================
 // UI_RadialMenu
 //
-// La rueda para elegir una opción de una habilidad IRadialMenuAbility (el tótem del
-// Chamán, y más adelante los hechizos del Mago). Mantener el botón la abre alrededor de la
-// mira; se apunta con el mouse (o el stick) y al SOLTAR sale la opción resaltada. El centro
-// es cancelar.
+// La rueda para elegir una opción de una habilidad IRadialMenuAbility (el tótem del Chamán,
+// el compañero del Maestro de bestias, y más adelante los hechizos del Mago). Mantener el
+// botón la abre alrededor de la mira; se apunta con el mouse (o el stick) y al SOLTAR sale la
+// opción resaltada. El centro es cancelar.
 //
 // CUÁNTAS OPCIONES: las que dé la habilidad (RadialIcons.Length). Cada una es una porción
 // del anillo; con más de 6 el anillo crece y los íconos se achican para que entren.
@@ -19,77 +20,139 @@ using UnityEngine.UI;
 //   · La porción bajo la mira se ilumina, sale un poco hacia afuera con un halo y su ícono
 //     crece; un rombo en el borde interior apunta hacia donde va la mira.
 //   · El centro muestra el nombre de la opción y una línea de qué hace
-//     (RadialLabels / RadialDescriptions). Sobre el centro dice "Cancel" en rojo.
+//     (RadialLabels / RadialDescriptions). Sobre el centro dice "Cancelar" en rojo.
 //   · Una opción que no se puede usar ahora (su cooldown propio,
 //     IsRadialOptionAvailable) se ve apagada; soltarla ahí es cancelar.
 //   · Al confirmar, la elegida destella mientras la rueda se desvanece.
 //
-// NO HAY NADA QUE CABLEAR: se dibuja sola por código (como UI_ChargeBar). La versión vieja
-// del prefab Player Camera (MenuContainer con 4 porciones fijas) se apaga al arrancar y se
-// puede borrar del prefab.
+// VIVE EN EL PREFAB DE LA CÁMARA (Player Camera ▸ UI ▸ RadialMenu), con sus piezas a la vista
+// para acomodarlas: el fondo, el MOLDE de una porción (UI_RadialOption), el centro, el puntero
+// y los dos textos. Al empezar el juego este script las apaga.
+//   · LO QUIETO se cambia en las piezas: los radios y colores de la porción y su brillo (en el
+//     molde), el tamaño máximo del ícono, el radio y color del centro (es también la zona de
+//     cancelar), el fondo, el puntero y los textos.
+//   · LO QUE CAMBIA AL MOVER LA MIRA se cambia acá: el color de la resaltada, el de las que no
+//     se pueden usar, el de cancelar y los tiempos.
 // ============================================================
 public class UI_RadialMenu : MonoBehaviour
 {
-    // =========================================================
-    // PERILLAS
-    // =========================================================
+    [Header("Piezas")]
+    [Tooltip("El CanvasGroup de la rueda: la muestra y la esconde.")]
+    [Label("Grupo")]
+    public CanvasGroup Group;
 
-    [Header("Tamaño (píxeles a 1920x1080)")]
-    [Tooltip("Radio exterior del anillo con hasta 6 opciones.")]
-    [Label("Radio exterior")]
-    public float OuterRadius = 200f;
+    [Tooltip("Lo que se agranda al abrir y al elegir: el padre de las porciones.")]
+    [Label("Anillo")]
+    public RectTransform Ring;
 
-    [Tooltip("Cuánto crece el radio por cada opción después de la sexta, para que entren.")]
-    [Label("Radio extra por opción")]
-    public float ExtraRadiusPerOption = 14f;
+    [Tooltip("El molde de una porción (un hijo del anillo). Se copia una vez por opción. Sus " +
+             "radios son los de la rueda con hasta 6 opciones.")]
+    [Label("Molde de una porción")]
+    public UI_RadialOption OptionTemplate;
 
-    [Tooltip("Radio interior del anillo, como fracción del exterior.")]
-    [Label("Radio interior (fracción)")]
-    [Range(0.2f, 0.8f)] public float InnerRatio = 0.46f;
+    [Tooltip("La sombra oscura detrás de la rueda. Lo que sobresale de las porciones en el " +
+             "prefab se mantiene cuando la rueda crece.")]
+    [Label("Fondo")]
+    public UI_RingWedge Backdrop;
 
-    [Tooltip("Radio del centro (cancelar). Con la mira ahí adentro, soltar no elige nada.")]
-    [Label("Radio del centro")]
-    public float CenterRadius = 72f;
+    [Tooltip("El disco del medio. Su radio es también la zona de cancelar: con la mira ahí " +
+             "adentro, soltar no elige nada.")]
+    [Label("Centro")]
+    public UI_RingWedge Center;
 
-    [Tooltip("Tamaño máximo de los íconos. Con muchas opciones se achican solos.")]
-    [Label("Tamaño del ícono")]
-    public float IconSize = 64f;
+    [Tooltip("El rombo que apunta hacia la mira, en el borde interior del anillo. La distancia " +
+             "que tiene en el prefab al borde interior se mantiene.")]
+    [Label("Puntero")]
+    public Graphic Pointer;
 
-    [Tooltip("Grados de separación entre porciones.")]
-    [Label("Separación (°)")]
+    [Tooltip("El nombre de la opción, arriba del medio.")]
+    [Label("Nombre")]
+    public TMP_Text NameText;
+
+    [Tooltip("Qué hace la opción, debajo del nombre.")]
+    [Label("Descripción")]
+    public TMP_Text DescriptionText;
+
+    [Header("Medidas")]
+    [Tooltip("Grados libres entre una porción y la siguiente.")]
+    [Label("Separación entre porciones (°)")]
     public float GapDegrees = 2.5f;
 
-    [Tooltip("Cuánto sale hacia afuera la porción resaltada.")]
-    [Label("Salida del resaltado")]
-    public float PopDistance = 12f;
+    [Tooltip("Con más de 6 opciones el anillo crece esto por cada una de más, para que entren.")]
+    [Label("Radio extra por opción después de la sexta (px)")]
+    public float ExtraRadiusPerOption = 8f;
 
-    [Header("Colores")]
-    [Label("Color de porción")]
-    public Color WedgeColor     = new Color(0.10f, 0.10f, 0.12f, 0.82f);
-    [Label("Color resaltado")]
-    public Color HoverColor     = new Color(1.00f, 0.78f, 0.25f, 0.95f);
-    [Label("Color del brillo")]
-    public Color GlowColor      = new Color(1.00f, 0.70f, 0.20f, 0.35f);
-    [Label("Color deshabilitado")]
-    public Color DisabledColor  = new Color(0.25f, 0.08f, 0.08f, 0.80f);
-    [Label("Color de cancelar")]
-    public Color CancelColor    = new Color(0.90f, 0.25f, 0.20f, 1f);
-    [Label("Color del centro")]
-    public Color CenterColor    = new Color(0.05f, 0.05f, 0.06f, 0.88f);
+    [Tooltip("Cuánto sale hacia afuera la porción resaltada, en píxeles del HUD.")]
+    [Label("Salida de la resaltada (px)")]
+    public float PopDistance = 7f;
+
+    [Tooltip("Cuánto crece el ícono de la porción resaltada. 25 = un 25 % más grande.")]
+    [Label("Ícono resaltado crece (%)")]
+    public float HoverIconGrowthPercent = 25f;
+
+    [Tooltip("Al elegir, el ícono de la elegida crece esto de más mientras la rueda se va. 15 = un 15 % más.")]
+    [Label("Ícono elegido crece de más (%)")]
+    public float ConfirmIconGrowthPercent = 15f;
+
+    [Header("Colores que cambian al apuntar")]
+    [Label("Porción resaltada")]
+    public Color HoverColor = new Color(0.35f, 0.85f, 0.40f, 0.95f);
+
+    [Tooltip("Una opción que no se puede usar ahora (en espera).")]
+    [Label("Porción que no se puede usar")]
+    public Color DisabledColor = new Color(0.25f, 0.08f, 0.08f, 0.80f);
+
+    [Label("Porción que no se puede usar, resaltada")]
+    public Color DisabledHoverColor = new Color(0.575f, 0.165f, 0.14f, 0.90f);
+
+    [Tooltip("El centro con la mira adentro (cancelar).")]
+    [Label("Centro al cancelar")]
+    public Color CenterCancelColor = new Color(0.35f, 0.12f, 0.11f, 0.92f);
+
+    [Tooltip("El color del texto \"Cancelar\".")]
+    [Label("Texto de cancelar")]
+    public Color CancelTextColor = new Color(0.90f, 0.25f, 0.20f, 1f);
+
+    [Tooltip("El nombre de una opción que no se puede usar ahora.")]
+    [Label("Nombre de una opción en espera")]
+    public Color UnavailableNameColor = new Color(1f, 0.55f, 0.5f, 1f);
+
+    [Label("Ícono de una opción en espera")]
+    public Color UnavailableIconColor = new Color(0.55f, 0.55f, 0.55f, 0.45f);
+
+    [Tooltip("Los íconos de las porciones sin resaltar se ven un poco más oscuros. 85 = al 85 % " +
+             "de su brillo.")]
+    [Label("Brillo de los íconos sin resaltar (%)")]
+    [Range(0f, 100f)]
+    public float IdleIconBrightness = 85f;
 
     [Header("Animación")]
     [Label("Abrir en (s)")]
-    public float OpenSeconds  = 0.14f;
+    public float OpenSeconds = 0.14f;
+
     [Label("Cerrar en (s)")]
     public float CloseSeconds = 0.18f;
-    [Tooltip("Qué tan rápido sigue el resaltado a la mira.")]
-    [Label("Velocidad del resaltado")]
-    public float HoverSpeed   = 16f;
 
-    [Header("Versión vieja")]
-    [Tooltip("El menú viejo del prefab (4 porciones fijas). Se apaga al arrancar; se puede borrar.")]
-    [Label("Contenedor del menú")]
-    public GameObject MenuContainer;
+    [Tooltip("Lo que tarda el resaltado en pasar de una porción a otra.")]
+    [Label("El resaltado tarda (s)")]
+    public float HoverSeconds = 0.125f;
+
+    [Tooltip("Al abrir, la rueda arranca a este tamaño y crece hasta el 100 %.")]
+    [Label("Abre desde (%)")]
+    public float OpenFromScalePercent = 80f;
+
+    [Tooltip("Al elegir, la rueda crece hasta este tamaño mientras se desvanece.")]
+    [Label("Al elegir crece hasta (%)")]
+    public float ConfirmScalePercent = 108f;
+
+    [Tooltip("Al cancelar, la rueda se achica hasta este tamaño mientras se desvanece.")]
+    [Label("Al cancelar se achica hasta (%)")]
+    public float CancelScalePercent = 90f;
+
+    [Tooltip("Cuánto destella hacia el blanco la porción elegida. 60 = al 60 % del blanco.")]
+    [Label("Destello de la elegida (%)")]
+    [Range(0f, 100f)]
+    public float ConfirmFlashPercent = 60f;
 
     // =========================================================
     // ACCESO
@@ -97,69 +160,83 @@ public class UI_RadialMenu : MonoBehaviour
 
     private static UI_RadialMenu _instance;
 
-    // La única rueda. Si la escena no trae una (el prefab Player Camera sí), se crea sola.
-    public static UI_RadialMenu Instance
-    {
-        get
-        {
-            if (_instance != null) return _instance;
-            _instance = FindFirstObjectByType<UI_RadialMenu>();
-            if (_instance == null) _instance = new GameObject("UI_RadialMenu").AddComponent<UI_RadialMenu>();
-            return _instance;
-        }
-    }
+    // La rueda del jugador local (en su cámara). Null si todavía no hay jugador.
+    public static UI_RadialMenu Instance => _instance;
 
-    // --- construido en runtime ---
     private class Slice
     {
-        public RectTransform Root;
-        public Image Glow;
-        public Image Wedge;
-        public Image Icon;
+        public UI_RadialOption View;
+        public RectTransform   Root;
         public float Angle;       // grados, antihorario desde la derecha
         public float Hover;       // 0..1, sigue suave al resaltado
         public bool  Available;
     }
 
-    private Canvas          _canvas;
-    private RectTransform   _root;
-    private CanvasGroup     _group;
-    private Image           _backdrop;
-    private RectTransform   _ringRoot;
-    private Image           _center;
-    private Image           _pointer;
-    private TextMeshProUGUI _label;
-    private TextMeshProUGUI _description;
-    private Sprite          _ringSprite;
-    private Sprite          _discSprite;
-    private Sprite          _softSprite;
-    private float           _ringSpriteRatio = -1f;
-
-    private Slice[]  _slices = new Slice[0];
+    private readonly List<Slice> _slices = new List<Slice>();
     private string[] _labels;
     private string[] _descriptions;
     private IRadialMenuAbility _ability;
+
+    // Medidas leídas del prefab (ver Awake).
+    private float _baseInner, _baseOuter;           // la porción del molde
+    private float _glowInnerExtra, _glowOuterExtra, _glowSpanExtra;
+    private float _iconMax;
+    private float _backdropExtra;
+    private float _pointerInset;
+    private Color _wedgeColor, _glowColor, _centerColor, _nameColor;
+    private Canvas _canvas;
 
     private bool  _open;
     private bool  _closing;
     private float _stateTime;
     private int   _selected = -1;
     private int   _confirmed = -1;
-    private float _outer, _inner;
+    private float _inner, _outer;
 
     private void Awake()
     {
-        if (MenuContainer != null) MenuContainer.SetActive(false);
+        if (Group == null || Ring == null || OptionTemplate == null || OptionTemplate.Wedge == null ||
+            Center == null || NameText == null)
+        {
+            Debug.LogWarning($"[Rueda] {name} no tiene sus piezas asignadas: la rueda no va a abrir.", this);
+            enabled = false;
+            return;
+        }
 
-        if (_instance != null && _instance != this) { enabled = false; return; }
         _instance = this;
-        Build();
+        _canvas   = GetComponentInParent<Canvas>();
+
+        // Las medidas y colores quietos salen de las piezas del prefab.
+        UI_RingWedge wedge = OptionTemplate.Wedge;
+        _baseInner  = wedge.InnerRadius;
+        _baseOuter  = wedge.OuterRadius;
+        _wedgeColor = wedge.color;
+        if (OptionTemplate.Glow != null)
+        {
+            _glowInnerExtra = OptionTemplate.Glow.InnerRadius - wedge.InnerRadius;
+            _glowOuterExtra = OptionTemplate.Glow.OuterRadius - wedge.OuterRadius;
+            _glowSpanExtra  = OptionTemplate.Glow.SpanDegrees - wedge.SpanDegrees;
+            _glowColor      = OptionTemplate.Glow.color;
+        }
+        if (OptionTemplate.Icon != null)
+        {
+            Vector2 size = OptionTemplate.Icon.rectTransform.sizeDelta;
+            _iconMax = Mathf.Max(size.x, size.y);
+        }
+        _backdropExtra = Backdrop != null ? Backdrop.OuterRadius - _baseOuter : 0f;
+        _pointerInset  = Pointer != null ? _baseInner - Pointer.rectTransform.anchoredPosition.magnitude : 0f;
+        _centerColor   = Center.color;
+        _nameColor     = NameText.color;
+
+        OptionTemplate.gameObject.SetActive(false);
+        Group.alpha          = 0f;
+        Group.interactable   = false;
+        Group.blocksRaycasts = false;
     }
 
     private void OnDestroy()
     {
         if (_instance == this) _instance = null;
-        if (_canvas != null) Destroy(_canvas.gameObject);
         if (_open) UICursor.Release(this);
     }
 
@@ -170,7 +247,7 @@ public class UI_RadialMenu : MonoBehaviour
     // Abre la rueda con las opciones de la habilidad y libera el cursor para apuntar.
     public void Show(IRadialMenuAbility ability)
     {
-        if (_root == null) Build();
+        if (!enabled) return;
 
         _ability      = ability;
         _labels       = ability.RadialLabels;
@@ -182,7 +259,6 @@ public class UI_RadialMenu : MonoBehaviour
         _stateTime = 0f;
         _selected  = -1;
         _confirmed = -1;
-        _root.gameObject.SetActive(true);
 
         UICursor.Request(this, blockGameplayInput: false);   // la rueda usa el mapa de juego
     }
@@ -192,7 +268,7 @@ public class UI_RadialMenu : MonoBehaviour
     {
         if (!_open) return -1;
 
-        int pick = _selected >= 0 && _selected < _slices.Length && _slices[_selected].Available ? _selected : -1;
+        int pick = _selected >= 0 && _selected < _slices.Count && _slices[_selected].Available ? _selected : -1;
 
         _open      = false;
         _closing   = true;
@@ -208,7 +284,7 @@ public class UI_RadialMenu : MonoBehaviour
 
     private void Update()
     {
-        if (_root == null || (!_open && !_closing)) return;
+        if (!_open && !_closing) return;
 
         _stateTime += Time.unscaledDeltaTime;
 
@@ -223,11 +299,12 @@ public class UI_RadialMenu : MonoBehaviour
     private void TickOpen()
     {
         float k = Ease(Mathf.Clamp01(_stateTime / Mathf.Max(0.01f, OpenSeconds)));
-        _group.alpha = k;
-        _ringRoot.localScale = Vector3.one * Mathf.Lerp(0.8f, 1f, k);
+        Group.alpha = k;
+        Ring.localScale = Vector3.one * Mathf.Lerp(OpenFromScalePercent / 100f, 1f, k);
 
-        // Dirección de la mira: el stick con control, el mouse si no.
-        float scale = _canvas.scaleFactor > 0f ? _canvas.scaleFactor : 1f;
+        // Dirección de la mira desde el centro de la rueda en pantalla: el stick con control,
+        // el mouse si no.
+        float scale = _canvas != null && _canvas.rootCanvas.scaleFactor > 0f ? _canvas.rootCanvas.scaleFactor : 1f;
         Vector2 dir;
         PlayerInputProvider input = PlayerInputProvider.Local;
         if (input != null && input.MoveIsGamepad)
@@ -235,41 +312,43 @@ public class UI_RadialMenu : MonoBehaviour
         else
         {
             Vector2 mouse = Mouse.current != null ? Mouse.current.position.ReadValue() : (Vector2)Input.mousePosition;
-            dir = mouse - new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+            dir = mouse - ScreenCenter();
         }
 
-        bool inCenter = dir.magnitude <= CenterRadius * scale;
-        _selected = inCenter || _slices.Length == 0 ? -1 : IndexForAngle(Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg);
+        bool inCenter = dir.magnitude <= Center.OuterRadius * scale;
+        _selected = inCenter || _slices.Count == 0 ? -1 : IndexForAngle(Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg);
 
         // Puntero: un rombo en el borde interior, hacia donde va la mira.
-        _pointer.enabled = !inCenter;
-        if (!inCenter)
+        if (Pointer != null)
         {
-            float a = Mathf.Atan2(dir.y, dir.x);
-            _pointer.rectTransform.anchoredPosition = new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * (_inner - 12f);
-            _pointer.rectTransform.localRotation = Quaternion.Euler(0f, 0f, a * Mathf.Rad2Deg + 45f);
+            Pointer.enabled = !inCenter;
+            if (!inCenter)
+            {
+                float a = Mathf.Atan2(dir.y, dir.x);
+                Pointer.rectTransform.anchoredPosition = new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * (_inner - _pointerInset);
+                Pointer.rectTransform.localRotation    = Quaternion.Euler(0f, 0f, a * Mathf.Rad2Deg + 45f);
+            }
         }
 
         // Centro: cancelar, o el nombre de la opción.
         if (inCenter)
         {
-            _center.color = Color.Lerp(CenterColor, CancelColor, 0.35f);
-            SetText(Loc.T("radial.cancel"), "", CancelColor);
+            Center.color = CenterCancelColor;
+            SetText(Loc.T("radial.cancel"), "", CancelTextColor);
         }
         else
         {
-            _center.color = CenterColor;
+            Center.color = _centerColor;
             Slice s = _slices[_selected];
-            string name = Label(_selected);
             string desc = s.Available ? Description(_selected) : Loc.T("radial.on_cooldown");
-            SetText(name, desc, s.Available ? Color.white : new Color(1f, 0.55f, 0.5f));
+            SetText(Label(_selected), desc, s.Available ? _nameColor : UnavailableNameColor);
         }
 
-        float dt = Time.unscaledDeltaTime;
-        for (int i = 0; i < _slices.Length; i++)
+        float step = Time.unscaledDeltaTime / Mathf.Max(0.01f, HoverSeconds);
+        for (int i = 0; i < _slices.Count; i++)
         {
             Slice s = _slices[i];
-            s.Hover = Mathf.MoveTowards(s.Hover, i == _selected ? 1f : 0f, dt * HoverSpeed * 0.5f);
+            s.Hover = Mathf.MoveTowards(s.Hover, i == _selected ? 1f : 0f, step);
             ApplySlice(s, s.Hover, 0f);
         }
     }
@@ -277,46 +356,66 @@ public class UI_RadialMenu : MonoBehaviour
     private void TickClosing()
     {
         float t = Mathf.Clamp01(_stateTime / Mathf.Max(0.01f, CloseSeconds));
-        _group.alpha = 1f - t;
-        _ringRoot.localScale = Vector3.one * Mathf.Lerp(1f, _confirmed >= 0 ? 1.08f : 0.9f, Ease(t));
-        _pointer.enabled = false;
+        Group.alpha = 1f - t;
+        float endScale = (_confirmed >= 0 ? ConfirmScalePercent : CancelScalePercent) / 100f;
+        Ring.localScale = Vector3.one * Mathf.Lerp(1f, endScale, Ease(t));
+        if (Pointer != null) Pointer.enabled = false;
 
         // La elegida destella mientras la rueda se va.
-        for (int i = 0; i < _slices.Length; i++)
+        for (int i = 0; i < _slices.Count; i++)
             ApplySlice(_slices[i], i == _confirmed ? 1f : _slices[i].Hover * (1f - t), i == _confirmed ? 1f - t : 0f);
 
         if (t >= 1f)
         {
             _closing = false;
-            _root.gameObject.SetActive(false);
+            Group.alpha = 0f;
         }
+    }
+
+    // El centro de la rueda en la pantalla (en píxeles), para medir hacia dónde va el mouse.
+    private Vector2 ScreenCenter()
+    {
+        Camera cam = _canvas != null && _canvas.rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay
+            ? _canvas.rootCanvas.worldCamera : null;
+        return RectTransformUtility.WorldToScreenPoint(cam, transform.position);
     }
 
     // Color, salida y escala de una porción según qué tan resaltada está (h) y el destello.
     private void ApplySlice(Slice s, float h, float flash)
     {
-        Color baseColor = s.Available ? WedgeColor : DisabledColor;
-        Color hover     = s.Available ? HoverColor : Color.Lerp(DisabledColor, CancelColor, 0.5f);
-        s.Wedge.color = Color.Lerp(Color.Lerp(baseColor, hover, h), Color.white, flash * 0.6f);
+        UI_RadialOption v = s.View;
 
-        Color glow = GlowColor;
-        glow.a *= Mathf.Max(h, flash);
-        s.Glow.color = s.Available ? glow : new Color(0f, 0f, 0f, 0f);
+        Color idle  = s.Available ? _wedgeColor : DisabledColor;
+        Color hover = s.Available ? HoverColor  : DisabledHoverColor;
+        v.Wedge.color = Color.Lerp(Color.Lerp(idle, hover, h), Color.white, flash * ConfirmFlashPercent / 100f);
+
+        if (v.Glow != null)
+        {
+            Color glow = _glowColor;
+            glow.a *= s.Available ? Mathf.Max(h, flash) : 0f;
+            v.Glow.color = glow;
+        }
 
         Vector2 dir = new Vector2(Mathf.Cos(s.Angle * Mathf.Deg2Rad), Mathf.Sin(s.Angle * Mathf.Deg2Rad));
         s.Root.anchoredPosition = dir * (PopDistance * h);
 
-        float iconScale = 1f + 0.25f * h + 0.15f * flash;
-        s.Icon.rectTransform.localScale = Vector3.one * iconScale;
-        Color iconColor = s.Available ? Color.white : new Color(0.55f, 0.55f, 0.55f, 0.45f);
-        s.Icon.color = Color.Lerp(iconColor * new Color(0.85f, 0.85f, 0.85f, 1f), iconColor, h);
+        if (v.Icon != null)
+        {
+            v.Icon.rectTransform.localScale =
+                Vector3.one * (1f + HoverIconGrowthPercent / 100f * h + ConfirmIconGrowthPercent / 100f * flash);
+
+            Color icon = s.Available ? Color.white : UnavailableIconColor;
+            float dim  = IdleIconBrightness / 100f;
+            Color idleIcon = new Color(icon.r * dim, icon.g * dim, icon.b * dim, icon.a);
+            v.Icon.color = Color.Lerp(idleIcon, icon, h);
+        }
     }
 
     // Opción bajo un ángulo (grados, antihorario desde la derecha). La 0 está arriba y
     // siguen en sentido horario, como un reloj.
     private int IndexForAngle(float angle)
     {
-        int n = _slices.Length;
+        int n = _slices.Count;
         float step = 360f / n;
         float fromTop = Mathf.Repeat(90f - angle + step * 0.5f, 360f);
         return Mathf.Clamp(Mathf.FloorToInt(fromTop / step), 0, n - 1);
@@ -324,9 +423,9 @@ public class UI_RadialMenu : MonoBehaviour
 
     private void SetText(string label, string desc, Color color)
     {
-        _label.text  = label;
-        _label.color = color;
-        _description.text = desc;
+        NameText.text  = label;
+        NameText.color = color;
+        if (DescriptionText != null) DescriptionText.text = desc;
     }
 
     private string Label(int i)
@@ -341,134 +440,58 @@ public class UI_RadialMenu : MonoBehaviour
     private static float Ease(float t) => 1f - (1f - t) * (1f - t) * (1f - t);
 
     // =========================================================
-    // CONSTRUCCIÓN
+    // PORCIONES
     // =========================================================
 
-    private void Build()
-    {
-        _canvas = MercUIFactory.CreateCanvas("RadialMenuCanvas", 60);
-
-        Vector2 c = new Vector2(0.5f, 0.5f);
-        _root = MercUIFactory.CreateRect(_canvas.transform, "RadialMenu", c, c, c, Vector2.zero, Vector2.zero);
-        _group = _root.gameObject.AddComponent<CanvasGroup>();
-        _group.interactable = false;
-        _group.blocksRaycasts = false;
-
-        _softSprite = MakeDisc(128, 0f, soft: true);
-        _discSprite = MakeDisc(256, 0f, soft: false);
-
-        _backdrop = MakeImage(_root, "Backdrop", _softSprite, new Color(0f, 0f, 0f, 0.55f), Vector2.zero);
-        _ringRoot = MercUIFactory.CreateRect(_root, "Ring", c, c, c, Vector2.zero, Vector2.zero);
-
-        _center = MakeImage(_root, "Center", _discSprite, CenterColor, new Vector2(CenterRadius * 2f, CenterRadius * 2f));
-
-        _pointer = MakeImage(_root, "Pointer", MercUIFactory.WhiteSprite, HoverColor, new Vector2(12f, 12f));
-
-        _label = MercUIFactory.CreateText(_root, "Label", "", 20f, Color.white, TextAlignmentOptions.Center,
-                                          new Vector2(0f, 10f), new Vector2(CenterRadius * 2.4f, 28f), c, c, c);
-        _label.fontStyle = FontStyles.Bold;
-        _label.textWrappingMode = TextWrappingModes.NoWrap;
-        MercUIFactory.AddShadow(_label, 1.5f);
-
-        _description = MercUIFactory.CreateText(_root, "Description", "", 14f, new Color(0.85f, 0.85f, 0.85f),
-                                                TextAlignmentOptions.Center, new Vector2(0f, -16f),
-                                                new Vector2(CenterRadius * 1.9f, 40f), c, c, c);
-        MercUIFactory.AddShadow(_description, 1f);
-
-        _root.gameObject.SetActive(false);
-    }
-
-    // Una porción por opción, con el radio según cuántas son.
+    // Una copia del molde por opción, con el radio según cuántas son.
     private void BuildSlices(Sprite[] icons)
     {
-        foreach (Slice s in _slices) if (s != null && s.Root != null) Destroy(s.Root.gameObject);
+        foreach (Slice s in _slices) if (s.View != null) Destroy(s.View.gameObject);
+        _slices.Clear();
 
         int n = icons != null ? icons.Length : 0;
-        _slices = new Slice[n];
         if (n == 0) return;
 
-        _outer = OuterRadius + Mathf.Max(0, n - 6) * ExtraRadiusPerOption;
-        _inner = _outer * InnerRatio;
-        if (!Mathf.Approximately(_ringSpriteRatio, InnerRatio))
-        {
-            _ringSprite = MakeDisc(512, InnerRatio, soft: false);
-            _ringSpriteRatio = InnerRatio;
-        }
-
-        Vector2 size = new Vector2(_outer * 2f, _outer * 2f);
-        _backdrop.rectTransform.sizeDelta = size + new Vector2(110f, 110f);
+        float extra = Mathf.Max(0, n - 6) * ExtraRadiusPerOption;
+        _inner = _baseInner + extra;
+        _outer = _baseOuter + extra;
+        if (Backdrop != null) Backdrop.SetShape(0f, _outer + _backdropExtra, 360f, 90f);
 
         float step = 360f / n;
         float span = Mathf.Max(1f, step - GapDegrees);
         float mid  = (_inner + _outer) * 0.5f;
-        float icon = Mathf.Min(IconSize, 2f * Mathf.PI * mid / n * 0.55f, (_outer - _inner) * 0.8f);
+        float icon = Mathf.Min(_iconMax, 2f * Mathf.PI * mid / n * 0.55f, (_outer - _inner) * 0.8f);
 
         for (int i = 0; i < n; i++)
         {
             float angle = 90f - i * step;   // la primera arriba, después en sentido horario
 
-            var s = new Slice { Angle = angle, Available = _ability == null || _ability.IsRadialOptionAvailable(i) };
-            Vector2 c = new Vector2(0.5f, 0.5f);
-            s.Root = MercUIFactory.CreateRect(_ringRoot, $"Option{i}", c, c, c, Vector2.zero, Vector2.zero);
+            UI_RadialOption view = Instantiate(OptionTemplate, OptionTemplate.transform.parent);
+            view.name = $"Option{i}";
+            view.gameObject.SetActive(true);
 
-            // El relleno radial arranca arriba y va en sentido horario: se gira para que la
-            // porción quede centrada en su ángulo.
-            float rot = angle - (90f - span * 0.5f);
-            s.Glow  = MakeWedge(s.Root, "Glow",  size * 1.07f, span + 1.5f, rot - 0.75f);
-            s.Wedge = MakeWedge(s.Root, "Wedge", size, span, rot);
+            view.Wedge.SetShape(_inner, _outer, span, angle);
+            if (view.Glow != null)
+                view.Glow.SetShape(_inner + _glowInnerExtra, _outer + _glowOuterExtra, span + _glowSpanExtra, angle);
 
-            Vector2 at = new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad)) * mid;
-            s.Icon = MakeImage(s.Root, "Icon", icons[i], Color.white, new Vector2(icon, icon));
-            s.Icon.rectTransform.anchoredPosition = at;
-            s.Icon.preserveAspect = true;
+            if (view.Icon != null)
+            {
+                view.Icon.sprite         = icons[i];
+                view.Icon.preserveAspect = true;
+                view.Icon.rectTransform.sizeDelta = new Vector2(icon, icon);
+                view.Icon.rectTransform.anchoredPosition =
+                    new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad)) * mid;
+            }
 
-            _slices[i] = s;
+            var s = new Slice
+            {
+                View      = view,
+                Root      = (RectTransform)view.transform,
+                Angle     = angle,
+                Available = _ability == null || _ability.IsRadialOptionAvailable(i),
+            };
+            _slices.Add(s);
             ApplySlice(s, 0f, 0f);
         }
-    }
-
-    private Image MakeWedge(RectTransform parent, string name, Vector2 size, float spanDegrees, float rotation)
-    {
-        Image img = MakeImage(parent, name, _ringSprite, WedgeColor, size);
-        img.type          = Image.Type.Filled;
-        img.fillMethod    = Image.FillMethod.Radial360;
-        img.fillOrigin    = (int)Image.Origin360.Top;
-        img.fillClockwise = true;
-        img.fillAmount    = spanDegrees / 360f;
-        img.rectTransform.localRotation = Quaternion.Euler(0f, 0f, rotation);
-        return img;
-    }
-
-    private static Image MakeImage(RectTransform parent, string name, Sprite sprite, Color color, Vector2 size)
-    {
-        Vector2 c = new Vector2(0.5f, 0.5f);
-        RectTransform rt = MercUIFactory.CreateRect(parent, name, c, c, c, Vector2.zero, size);
-        Image img = rt.gameObject.AddComponent<Image>();
-        img.sprite = sprite;
-        img.color = color;
-        img.raycastTarget = false;
-        return img;
-    }
-
-    // Un disco (innerRatio 0) o un anillo, con el borde suavizado. soft = degradé hacia
-    // afuera (el fondo oscuro detrás de la rueda).
-    private static Sprite MakeDisc(int size, float innerRatio, bool soft)
-    {
-        var tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
-        float r = size * 0.5f;
-        float inner = r * innerRatio;
-        var px = new Color32[size * size];
-        for (int y = 0; y < size; y++)
-            for (int x = 0; x < size; x++)
-            {
-                float d = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), new Vector2(r, r));
-                float a;
-                if (soft) a = Mathf.Clamp01(1f - d / r) * Mathf.Clamp01(1f - d / r) * 1.6f;
-                else      a = Mathf.Clamp01(r - d) * (innerRatio > 0f ? Mathf.Clamp01(d - inner) : 1f);
-                px[y * size + x] = new Color32(255, 255, 255, (byte)(Mathf.Clamp01(a) * 255));
-            }
-        tex.SetPixels32(px);
-        tex.Apply();
-        return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f);
     }
 }

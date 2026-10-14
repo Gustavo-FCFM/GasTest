@@ -1,0 +1,62 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 749805704a6088741af34d91f0891ced, type: 3}
+  m_Name: Class_BeastMaster
+  m_EditorClassIdentifier: 
+  ClassName: Beast Master
+  ClassNameEs: Maestro de bestias
+  ClassIcon: {fileID: 21300000, guid: 7c90a04249529bd43acb6bc21dc27f5c, type: 3}
+  Description: 'Fights alongside an animal companion: a Wolf that bleeds them, a
+    Bear that holds the front or an Owl that hunts the invisible. Switch companions
+    at will.'
+  DescriptionEs: "Pelea junto a un compa\xF1ero animal: un Lobo que los desangra,
+    un Oso que aguanta el frente o un B\xFAho que caza invisibles. Cambia de compa\xF1ero
+    cuando quiere."
+  Role: 2
+  MenuRole: 0
+  BaseAttributes: {fileID: 11400000, guid: 8563a9d94bcb4904eb33c51ddb8ef90e, type: 2}
+  Abilities:
+  - InputSlot: 1
+    Ability: {fileID: 11400000, guid: a8133b6c4880e6449971278fd877ff22, type: 2}
+  - InputSlot: 2
+    Ability: {fileID: 11400000, guid: 9acde7e81f694fb44bf78459d28c65dc, type: 2}
+  - InputSlot: 3
+    Ability: {fileID: 11400000, guid: 38b4a901257ce2f4994ff125db298229, type: 2}
+  - InputSlot: 6
+    Ability: {fileID: 11400000, guid: c620036cb752b6e45a2beffe30b28d74, type: 2}
+  - InputSlot: 4
+    Ability: {fileID: 11400000, guid: 8b00e2a074e16e04cbf19c1172803406, type: 2}
+  PassiveBehaviorsPrefab: {fileID: 1798604898553192926, guid: 03ff9b4623169c04a9e7152c18e1fdb2, type: 3}
+  PassiveEffects: []
+  WallMovement: {fileID: 11400000, guid: 0909e17f538cef540ba16708b593b2db, type: 2}
+  StatGrowthPerLevel: []
+  AvailableSubclasses: []
+  ClassAnimatorOverride: {fileID: 22100000, guid: f175085a22aa728459655748dd969669, type: 2}
+  StanceAnimatorOverride: {fileID: 0}
+  StanceAnimatorTag: 0
+  MainHandWeaponPrefab: {fileID: 2940968421794840072, guid: d6566bb9ade75594b8068db0bf39da23, type: 3}
+  OffHandWeaponPrefab: {fileID: 6751337086952172511, guid: 93671539c61430f4a8deda9514111581, type: 3}
+  MainHandRotationOffset: {x: 0, y: 0, z: 0}
+  MainHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandPositionOffset: {x: -0.1, y: 0, z: 0}
+  OffHandPose: {fileID: 0}
+  OffHandPoseRequiredTag: 0
+  DrawMainHandTag: 71
+  StowedMainHandPositionOffset: {x: 0.2, y: 0.2, z: -0.2}
+  StowedMainHandRotationOffset: {x: 0, y: 180, z: -135}
+  StowOffHandTag: 0
+  StowedOffHandPositionOffset: {x: 0, y: 0, z: 0}
+  StowedOffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandScale: 1
+  GrowTag: 0
+  GrowScale: 1.5

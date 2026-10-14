@@ -11,19 +11,18 @@ using UnityEngine.Rendering;
 // comparando contra el equipo de SU jugador local, igual que PlayerVisibility.
 //
 // Es una copia de cada malla del cuerpo (con los mismos huesos si es animada) con el
-// shader Mercenaries/XRay: solo se ve donde algo lo tapa. No toca los materiales del
+// material de la silueta: solo se ve donde algo lo tapa. No toca los materiales del
 // personaje. Un invisible que no fue revelado (Status_Invisible) sigue sin verse.
 //
 // No va en ningún prefab: el NetworkAbilitySystemComponent la agrega solo al aparecer en
 // cada pantalla. Mientras nadie lo revela no hace nada más que mirar un diccionario.
+// El MATERIAL (y con él el color) lo pone la cámara del jugador local: TeamRevealStyle, en
+// el prefab Player Camera.
 // ============================================================
 public class TeamReveal : MonoBehaviour
 {
     // Mismo sufijo que los contornos: así nadie contornea ni copia una silueta.
     private const string CopyName = "XRay" + CharacterOutline.Suffix;
-
-    private static readonly Color RevealColor = new Color(1f, 0.35f, 0.2f, 0.55f);
-    private static Material _sharedMaterial;
 
     private NetworkAbilitySystemComponent _net;
     private AbilitySystemComponent        _asc;
@@ -60,9 +59,12 @@ public class TeamReveal : MonoBehaviour
 
     private void Show()
     {
-        _shown = true;
-        Material material = SharedMaterial();
+        // Sin la cámara del jugador local (o sin material en ella) no hay silueta: se vuelve a
+        // probar el frame que viene.
+        TeamRevealStyle style = TeamRevealStyle.Current;
+        Material material = style != null ? style.SilhouetteMaterial : null;
         if (material == null) return;
+        _shown = true;
 
         // Se copian ahora y no al aparecer: el modelo cambia con la clase. Solo el MODELO
         // (lo que cuelga del Animator, armas incluidas): ni la barra de vida ni los VFX.
@@ -111,19 +113,5 @@ public class TeamReveal : MonoBehaviour
         foreach (Renderer r in _copies)
             if (r != null) Destroy(r.gameObject);
         _copies.Clear();
-    }
-
-    private static Material SharedMaterial()
-    {
-        if (_sharedMaterial != null) return _sharedMaterial;
-        Shader shader = Resources.Load<Shader>("MercXRay");
-        if (shader == null)
-        {
-            Debug.LogWarning("[TeamReveal] No encontré el shader MercXRay (Assets/Shaders/Resources): sin silueta.");
-            return null;
-        }
-        _sharedMaterial = new Material(shader);
-        _sharedMaterial.SetColor("_Color", RevealColor);
-        return _sharedMaterial;
     }
 }

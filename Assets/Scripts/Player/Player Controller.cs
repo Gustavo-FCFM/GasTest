@@ -4716,14 +4716,17 @@ public class PlayerController : NetworkBehaviour
         }
     }
 
-    // La curva de la flecha mientras se tensa un arco (TrajectoryPreview): la de la fase que
-    // saldría si soltara ahora, desde la mano y hacia la mira, como el disparo de verdad.
+    // La curva del proyectil mientras se mantiene un lanzamiento (TrajectoryPreview): el arco
+    // del Explorador (la fase que saldría si soltara ahora) y los lanzamientos apuntados (el
+    // hacha, las dagas, la lanza, el Guiding Bolt). Desde la mano y hacia la mira, como el
+    // disparo de verdad. La curva vive en el prefab de la cámara.
     private TrajectoryPreview _trajectory;
+    private bool _trajectorySearched;
 
     private void TickTrajectoryPreview()
     {
-        GA_ProjectileShoot shot = _holdAbility is GA_ChargedAttack charged
-            ? charged.StageAt(Time.time - HoldStartedAt) as GA_ProjectileShoot
+        GA_ProjectileShoot shot = _holdAbility != null
+            ? _holdAbility.ProjectileToPreview(Time.time - HoldStartedAt)
             : null;
 
         if (shot == null)
@@ -4732,10 +4735,17 @@ public class PlayerController : NetworkBehaviour
             return;
         }
 
-        if (_trajectory == null) _trajectory = gameObject.AddComponent<TrajectoryPreview>();
+        if (_trajectory == null && !_trajectorySearched && _ownerCamera != null)
+        {
+            _trajectorySearched = true;
+            _trajectory = _ownerCamera.GetComponentInChildren<TrajectoryPreview>(true);
+        }
+        if (_trajectory == null) return;
+
         Vector3 start = transform.TransformPoint(shot.SpawnOffset);
         Vector3 dir   = GetLaunchDirection(start, shot.MinConvergeDistance);
-        _trajectory.Show(start, dir * shot.LaunchForce, shot.ProjectileUsesGravity, shot.StraightFlightTime);
+        _trajectory.Show(start, dir * shot.LaunchForce, shot.ProjectileUsesGravity, shot.StraightFlightTime,
+                         shot.FlightSeconds, transform.root);
     }
 
     // Va en LateUpdate y no en Update: el Animator escribe las poses en Update, así que

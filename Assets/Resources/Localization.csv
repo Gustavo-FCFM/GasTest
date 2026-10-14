@@ -161,3 +161,6 @@ glyph.dpad_up;CRUCETA ARRIBA;D-PAD UP
 # ---- Espectador ----
 spectator.hint_following;Clic: cambiar de jugador · {free}: cámara libre · {info}: info · {scoreboard}: marcador;Click: switch player · {free}: free camera · {info}: info · {scoreboard}: scoreboard
 spectator.hint_free;WASD + Espacio/Ctrl · Shift: rápido · Clic: seguir a un jugador · {scoreboard}: marcador;WASD + Space/Ctrl · Shift: fast · Click: follow a player · {scoreboard}: scoreboard
+# ---- Compañeros (Maestro de bestias) ----
+companion.active_suffix; (activo); (active)
+companion.respawning;Vuelve en {seconds} s;Back in {seconds}s

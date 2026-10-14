@@ -238,6 +238,20 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   el viejo como `[SerializeField, HideInInspector] private` con su mismo nombre y pasarlo
   en `OnUpgradeLegacyData` — así los assets no pierden lo cargado.
 
+- **La UI del jugador vive en el prefab `Player Camera`** (desde el 14 de octubre de 2026,
+  pedido de Gustavo): las barras de canalizar y de carga, los avisos de combate, la viñeta,
+  la rueda, los compañeros, la curva de los lanzamientos y el material de la silueta están
+  ARMADOS ahí (con un MOLDE apagado si algo se repite), y cada script los tiene por
+  referencia: solo lee el juego y los anima. **Nada de crear canvas ni objetos de UI por
+  código "encima".** Lo que se ve quieto se cambia en las piezas mismas; lo que cambia en
+  juego, con campos en unidades absolutas y que digan cuáles (px del HUD, s, %), nunca
+  relativos raros. El canvas del HUD es de 800×600 con match en ancho: lo pensado para un
+  canvas de 1920 va × 800/1920. Una pieza nueva se pone con una herramienta de una vez y
+  después se edita a mano. Lo que es de la PARTIDA y no del personaje (registro de bajas,
+  pantalla de muerte, números flotantes, marcador) va a un prefab de partida — falta,
+  PENDIENTES etapa 5. Un `Graphic` propio necesita `[RequireComponent(typeof(CanvasRenderer))]`:
+  sin él no se dibuja y no avisa.
+
 Los detalles finos del GAS (pipeline de daño, acumulación de efectos, animaciones de
 combo) están en `DesignDocuments/GAS_Arquitectura.docx`.
 

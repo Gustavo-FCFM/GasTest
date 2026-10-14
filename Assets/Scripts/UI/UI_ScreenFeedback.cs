@@ -5,22 +5,20 @@ using UnityEngine.UI;
 // ============================================================
 // UI_ScreenFeedback
 //
-// Lo que la pantalla le dice al jugador LOCAL sobre su propio estado:
+// Lo que la pantalla le dice al jugador LOCAL sobre la partida:
 //
-//   · POCA VIDA      → el borde de la pantalla late en rojo por debajo de un umbral.
-//                      Más rojo y más rápido cuanto menos vida queda. Avisa "retírate"
-//                      sin tener que mirar la barra del HUD.
 //   · MORISTE        → quién te eliminó (con su clase y el color de su equipo) y la
 //                      cuenta regresiva para reaparecer. Sin esto uno moría sin saber
 //                      por qué ni cuánto faltaba.
 //   · AVISOS CORTOS  → un texto que aparece un momento bajo la mira. Lo usa la
 //                      definitiva al quedar cargada ("¡DEFINITIVA LISTA!").
 //
-// NO HAY NADA QUE CABLEAR: se arma solo al empezar el juego (ver Bootstrap) y se
-// dibuja con MercUIFactory, igual que UI_CombatFeedback.
+// (La viñeta de poca vida ya no está acá: vive en el prefab de la cámara, UI_LowHealthVignette.)
 //
-// QUIÉN LO LLAMA: la viñeta se mira sola cada frame (la vida del jugador local ya está
-// sincronizada). La pantalla de muerte la pide el servidor por TargetRpc
+// TODAVÍA SE ARMA SOLO al empezar el juego (ver Bootstrap), con MercUIFactory. Pasa a un
+// prefab de partida en la revisión de la UI (PENDIENTES: "la UI vive en el prefab").
+//
+// QUIÉN LO LLAMA: la pantalla de muerte la pide el servidor por TargetRpc
 // (PlayerController.TargetShowDeath), porque solo él sabe quién dio el golpe final.
 // ============================================================
 public class UI_ScreenFeedback : MonoBehaviour
@@ -28,27 +26,6 @@ public class UI_ScreenFeedback : MonoBehaviour
     // =========================================================
     // PERILLAS
     // =========================================================
-
-    [Header("Viñeta de poca vida")]
-    [Tooltip("Por debajo de esta fracción de vida empieza a verse la viñeta. 0.3 = 30 %.")]
-    [Label("Vida baja desde")]
-    [Range(0f, 1f)] public float LowHealthThreshold = 0.3f;
-
-    [Tooltip("Opacidad máxima del borde, con la vida casi en cero.")]
-    [Label("Viñeta: opacidad máxima")]
-    [Range(0f, 1f)] public float VignetteMaxAlpha = 0.6f;
-
-    [Tooltip("Latidos por segundo: el primero es justo en el umbral, el segundo casi muerto.")]
-    [Label("Latidos por segundo")]
-    public Vector2 PulseSpeed = new Vector2(1.2f, 3f);
-
-    [Tooltip("Qué tan ancho es el borde: 0 = todo rojo, 1 = casi nada. El centro de la " +
-             "pantalla siempre queda limpio.")]
-    [Label("Viñeta: radio interior")]
-    [Range(0f, 0.95f)] public float VignetteInnerRadius = 0.55f;
-
-    [Label("Viñeta: color")]
-    public Color VignetteColor = new Color(0.85f, 0.05f, 0.05f, 1f);
 
     [Header("Pantalla de muerte")]
     [Tooltip("Si no hay reaparición (o no se sabe cuándo), cuánto se muestra el aviso.")]
@@ -77,8 +54,8 @@ public class UI_ScreenFeedback : MonoBehaviour
         return _instance;
     }
 
-    // La viñeta tiene que existir antes de que pase nada (se mira sola cada frame), así
-    // que se crea al arrancar el juego en vez de esperar a que alguien la pida.
+    // Se crea al arrancar el juego en vez de esperar a que alguien lo pida, para que el
+    // primer aviso no tarde en armarse.
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Bootstrap()
     {
@@ -88,7 +65,6 @@ public class UI_ScreenFeedback : MonoBehaviour
 
     // --- construido en runtime ---
     private Canvas _canvas;
-    private Image  _vignette;
 
     private CanvasGroup     _deathGroup;
     private TextMeshProUGUI _deathTitle;
@@ -100,8 +76,6 @@ public class UI_ScreenFeedback : MonoBehaviour
     private CanvasGroup     _toastGroup;
     private TextMeshProUGUI _toastText;
     private float _toastAlpha;
-
-    private float _pulsePhase;
 
     private void Awake()
     {
@@ -158,37 +132,8 @@ public class UI_ScreenFeedback : MonoBehaviour
 
     private void Update()
     {
-        UpdateVignette();
         UpdateDeath();
         UpdateToast();
-    }
-
-    private void UpdateVignette()
-    {
-        float target = 0f;
-        float speed  = PulseSpeed.x;
-
-        if (TryGetLocalHealth(out float health, out float max) && max > 0f && health > 0f)
-        {
-            float fraction = health / max;
-            if (fraction < LowHealthThreshold && LowHealthThreshold > 0f)
-            {
-                // 0 justo en el umbral, 1 con la vida casi en cero.
-                float danger = 1f - fraction / LowHealthThreshold;
-                target = Mathf.Lerp(0.35f, 1f, danger);
-                speed  = Mathf.Lerp(PulseSpeed.x, PulseSpeed.y, danger);
-            }
-        }
-
-        // Latido: nunca baja del 65 % de su intensidad, así se lee como un pulso y no
-        // como algo que parpadea.
-        _pulsePhase += Time.deltaTime * speed * Mathf.PI * 2f;
-        float pulse = 0.825f + 0.175f * Mathf.Sin(_pulsePhase);
-
-        Color c = VignetteColor;
-        c.a = target * pulse * VignetteMaxAlpha;
-        _vignette.color = c;
-        _vignette.enabled = c.a > 0.001f;
     }
 
     // Los componentes del jugador local, cacheados: esto corre cada frame y el jugador
@@ -275,56 +220,12 @@ public class UI_ScreenFeedback : MonoBehaviour
 
     private void Build()
     {
-        // Debajo del feedback de combate (120) y de los menús, encima del HUD.
+        // Encima del HUD y debajo de los menús.
         _canvas = MercUIFactory.CreateCanvas("ScreenFeedbackCanvas", 110);
         _canvas.transform.SetParent(transform, false);
 
-        BuildVignette();
         BuildDeathPanel();
         BuildToast();
-    }
-
-    // La viñeta es UNA imagen que cubre la pantalla con una textura hecha en código:
-    // transparente en el centro y opaca hacia los bordes. Estirada a la pantalla queda
-    // ovalada, que es justo la forma de una viñeta. El proyecto no trae ningún sprite así.
-    private void BuildVignette()
-    {
-        RectTransform rt = MercUIFactory.CreateRect(_canvas.transform, "LowHealthVignette",
-            Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
-
-        _vignette = rt.gameObject.AddComponent<Image>();
-        _vignette.sprite        = BuildVignetteSprite(VignetteInnerRadius);
-        _vignette.raycastTarget = false;
-        _vignette.enabled       = false;
-    }
-
-    private static Sprite BuildVignetteSprite(float inner)
-    {
-        const int size = 128;
-        Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
-        tex.wrapMode   = TextureWrapMode.Clamp;
-        tex.filterMode = FilterMode.Bilinear;
-
-        Color[] pixels = new Color[size * size];
-        float half = (size - 1) * 0.5f;
-        for (int y = 0; y < size; y++)
-        {
-            for (int x = 0; x < size; x++)
-            {
-                // Distancia al centro, 0 en el medio y 1 en el centro de cada borde (las
-                // esquinas pasan de 1: ahí queda lo más rojo).
-                float dx = (x - half) / half;
-                float dy = (y - half) / half;
-                float d  = Mathf.Sqrt(dx * dx + dy * dy);
-
-                float a = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(inner, 1.25f, d));
-                pixels[y * size + x] = new Color(1f, 1f, 1f, a);
-            }
-        }
-
-        tex.SetPixels(pixels);
-        tex.Apply();
-        return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
     }
 
     // Una franja oscura un poco debajo del centro: quién te eliminó y cuánto falta.

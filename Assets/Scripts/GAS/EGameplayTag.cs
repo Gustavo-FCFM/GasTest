@@ -129,4 +129,12 @@ public enum EGameplayTag
     Status_QuickShot,          // UNA por disparo de Ataque rápido que queda: el arco suelta YA la carga máxima y gasta una (GA_ChargedAttack.FullChargeTag). Lo da GE_QuickShot (3 acumulaciones)
     Status_HuntersMark,        // Marcado por la Marca del cazador (recibe más daño). El "se lo ve a través de paredes" NO va por tag: lo revela al equipo del que marcó (NetworkAbilitySystemComponent.ServerRevealToTeam)
     Status_BladesDrawn,        // Tiene la espada corta en la mano: el arma principal sale de la espalda mientras dure (CharacterClassDefinition.DrawMainHandTag). Lo da GE_BladesDrawn al cortar con el clic derecho del Explorador
+
+    // --- MAESTRO DE BESTIAS ---
+    Status_Taunting,           // Provoca a los NPCs: si cerca no hay otro jugador que su dueño, los fantasmas lo atacan a él (el Oso). Ver MercEnemyAI.FindTarget
+    Status_CompanionWolf,      // El compañero elegido es el Lobo (lo da el GE de compañero activo; con él el cliente sabe cuál dibujar en el HUD y en el botón)
+    Status_CompanionBear,      // El compañero elegido es el Oso
+    Status_CompanionOwl,       // El compañero elegido es el Búho
+    Cooldown_CompanionWolf,    // El Lobo murió y todavía no puede volver (GE de reaparición del Lobo, en el dueño)
+    Cooldown_CompanionBear,    // El Oso murió y todavía no puede volver
 }

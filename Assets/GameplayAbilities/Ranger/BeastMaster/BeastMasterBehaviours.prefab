@@ -1,0 +1,88 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1798604898553192926
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1612854927576649060}
+  - component: {fileID: 6908140468462988179}
+  - component: {fileID: 4557877731189863876}
+  m_Layer: 0
+  m_Name: BeastMasterBehaviours
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1612854927576649060
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1798604898553192926}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6908140468462988179
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1798604898553192926}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6360dcb11ea55504396d1829f69aeadb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MarkEffect: {fileID: 11400000, guid: a3c9940fa1f453a408ca52fdaab1f3f9, type: 2}
+  RevealSeconds: 0
+--- !u!114 &4557877731189863876
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1798604898553192926}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9486edb106e7aed468e5fc497a7a56e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Companions:
+  - Name: Wolf
+    NameEs: Lobo
+    Description: Fast, bites often and opens wounds. Howls when its prey dies.
+    DescriptionEs: "R\xE1pido, muerde seguido y abre heridas. A\xFAlla cuando muere
+      su presa."
+    Icon: {fileID: 21300000, guid: 778f892b8dfc11544aed7576b17211f3, type: 3}
+    Prefab: {fileID: 8086388282217948003, guid: 3595680c99cd8884c988090d6620a3f0, type: 3}
+    ActiveEffect: {fileID: 11400000, guid: 18b2aa347bd387a4990857b978e427ee, type: 2}
+    RespawnCooldown: {fileID: 11400000, guid: 326f0f0fa82a8af4e95927260ddddde4, type: 2}
+  - Name: Bear
+    NameEs: Oso
+    Description: Tough. Stands in front of you, stuns and draws the ghosts.
+    DescriptionEs: Resistente. Se pone delante, aturde y atrae a los fantasmas.
+    Icon: {fileID: 21300000, guid: 13b42182051086b4687895e842ae35f1, type: 3}
+    Prefab: {fileID: 8086388282217948003, guid: cd509a45db052604bb0f70a0695f6108, type: 3}
+    ActiveEffect: {fileID: 11400000, guid: 22a8e4f7e188ad443832173daa81c859, type: 2}
+    RespawnCooldown: {fileID: 11400000, guid: d5e42b0387a375448a87005e179272d1, type: 2}
+  - Name: Owl
+    NameEs: "B\xFAho"
+    Description: Can't be hurt. Hunts the invisible and marks from afar.
+    DescriptionEs: Indestructible. Caza invisibles y marca desde lejos.
+    Icon: {fileID: 21300000, guid: d94eb27273532514d935d2482b7c95dd, type: 3}
+    Prefab: {fileID: 8086388282217948003, guid: 1478e9613fad3d243bf298957a70f98d, type: 3}
+    ActiveEffect: {fileID: 11400000, guid: 4fa877502620826429d7438d19eca64c, type: 2}
+    RespawnCooldown: {fileID: 0}
+  StartIndex: 0

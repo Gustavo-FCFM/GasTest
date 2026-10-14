@@ -59,12 +59,15 @@ MonoBehaviour:
   StanceAnimatorTag: 0
   MainHandWeaponPrefab: {fileID: 1772970751879333821, guid: c60e8fca9b49abe43af6963a6499fc6b, type: 3}
   OffHandWeaponPrefab: {fileID: 1772970751879333821, guid: c60e8fca9b49abe43af6963a6499fc6b, type: 3}
-  MainHandRotationOffset: {x: 180, y: 0, z: 0}
-  MainHandPositionOffset: {x: 0, y: 0, z: 0}
-  OffHandRotationOffset: {x: 180, y: 0, z: 0}
-  OffHandPositionOffset: {x: 0, y: 0, z: 0}
+  MainHandRotationOffset: {x: 0, y: 0, z: 0}
+  MainHandPositionOffset: {x: 0, y: -0.25, z: 0}
+  OffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandPositionOffset: {x: 0, y: -0.25, z: 0}
   OffHandPose: {fileID: 0}
   OffHandPoseRequiredTag: 0
+  DrawMainHandTag: 0
+  StowedMainHandPositionOffset: {x: 0, y: 0, z: -0.2}
+  StowedMainHandRotationOffset: {x: 0, y: 180, z: 45}
   StowOffHandTag: 0
   StowedOffHandPositionOffset: {x: 0, y: 0, z: 0}
   StowedOffHandRotationOffset: {x: 0, y: 0, z: 0}

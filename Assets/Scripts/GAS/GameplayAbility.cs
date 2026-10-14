@@ -473,6 +473,12 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // del Explorador (GA_ChargedAttack) se acerca en cada etapa de la carga.
     public virtual float HeldCameraZoom(float heldSeconds) => 1f;
 
+    // La curva que ve el dueño mientras MANTIENE esta habilidad (TrajectoryPreview): el proyectil
+    // que saldría si soltara ahora, con 'heldSeconds' de mantener. null = sin curva. Lo responden
+    // el lanzamiento apuntado (GA_ProjectileShoot), el arco por fases (GA_ChargedAttack) y el
+    // switch de mantener (GA_HoldTagSwitch, por su variante).
+    public virtual GA_ProjectileShoot ProjectileToPreview(float heldSeconds) => null;
+
     // Las etapas de una carga, para la barra de carga del dueño (UI_ChargeBar): en
     // stageTimes, los segundos en que empieza cada etapa; en maxTime, cuándo se suelta
     // sola. false = esta habilidad no tiene etapas (no se dibuja barra).

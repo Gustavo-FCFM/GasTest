@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 13 de octubre de 2026
+# Pendientes — actualizado el 14 de octubre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -45,6 +45,163 @@ rm -rf "Assets/FishNet" "Assets/FishNet.meta" "Assets/TextMesh Pro/Examples & Ex
       **29 de septiembre: a medias.** `TextMesh Pro/Examples & Extras` ya no está;
       `Assets/FishNet` sigue (solo `.csproj`/`.sln` viejos y sus `.meta`, ignorados por git).
       Falta borrar esa carpeta con Unity cerrado.
+
+---
+
+# ★ Revisión: la UI vive en el prefab y variables claras — etapas 1 a 4 HECHAS; faltan la 5 y la 6 (14 de octubre)
+
+Pedido de Gustavo: la UI tiene que vivir en el prefab de la cámara del jugador y no "ponerse por
+encima" por código, y las variables tienen que entenderse sin leer el código ("Otros: más que un
+buff: −1" no se entiende). Hay que revisar todo lo hecho desde el Guerrero con ese criterio.
+
+**El patrón nuevo** (el piloto es el panel de compañeros): la pieza es un objeto del HUD en
+`Player Camera.prefab`, con sus partes armadas ahí (un MOLDE apagado si se repite, como los íconos
+de buffs). El script solo lee el juego y actualiza lo que ya existe; no crea canvas ni objetos de la
+nada. Los tamaños y colores son los de la pieza (en px del HUD), con nombres que dicen qué son.
+Una herramienta de una vez arma la pieza en el prefab la primera vez; después se edita a mano.
+
+- [x] **Piloto: panel de compañeros.** `UI_CompanionPanel` + `UI_CompanionSlot` (el molde) viven en
+      el HUD; tamaños "Tamaño del activo (px)" y "Tamaño de los otros (px)"; el CompanionManager ya
+      no sabe nada de la UI. La herramienta ya se corrió y se borró.
+  - [x] Acomodarlo a mano encima de los buffs (el script apaga solo el LayoutGroup que tenga; se
+        puede quitar del prefab).
+
+**Dónde va cada cosa** (lo que se habló el 14 de octubre):
+
+- **Prefab de la cámara** (`Player Camera`, solo existe la del jugador local): lo que es de MI
+  personaje y va pegado a la mira o al HUD — barras de canalizar y de carga, la X / calavera / arco
+  de daño, la viñeta, los compañeros, la rueda.
+- **Prefab de partida** (uno por escena, puesto en las dos): lo que es de la partida y tiene que
+  seguir aunque el personaje muera o cambie — registro de bajas, pantalla de muerte y avisos,
+  números flotantes, marcador, avisos de partida, marcador del Objetivo, espectador.
+- **Prefab de menús**: menú principal, sala, ajustes.
+
+**Lo que se armaba solo por código** (auditado el 14 de octubre):
+
+| Pieza | Script | Dónde vive | Desde |
+|---|---|---|---|
+| Barra de canalizar | `UI_CastBar` | **cámara** | 6 oct |
+| Barra de carga por etapas | `UI_ChargeBar` + molde `UI_ChargeSegment` | **cámara** | 5 oct |
+| La X, la calavera y el arco de daño | `UI_CombatFeedback` | **cámara** | 22 sep |
+| Viñeta de vida baja | `UI_LowHealthVignette` (antes en `UI_ScreenFeedback`) | **cámara** | 25 sep |
+| Pantalla de muerte y avisos | `UI_ScreenFeedback` | se crea sola → prefab de partida | 25 sep |
+| Números flotantes | `UI_DamageNumbers` | se crea sola → prefab de partida | 25 sep |
+| Registro de bajas | `UI_KillFeed` | se crea sola → prefab de partida | 25 sep |
+| Rueda | `UI_RadialMenu` + molde `UI_RadialOption` + `UI_RingWedge` | **cámara** | — |
+| Curva del proyectil al apuntar | `TrajectoryPreview` | **cámara** | 13 oct |
+| Silueta a través de paredes | `TeamReveal` + `TeamRevealStyle` | se agrega sola; su material, en la **cámara** | 13 oct |
+| Marcador, avisos de partida, marcador del Objetivo | `UI_MercenariesHUD`, `UI_MatchAnnouncer`, `UI_ObjectiveMarker` | en la escena, arman su dibujo por código | 18 sep |
+| Menú principal, sala, ajustes | `UI_MainMenu`, `UI_LobbyPanel`, `UI_SettingsPanel` | en la escena, arman su dibujo por código | 18 sep |
+
+- [x] **Etapa 2 — el HUD de la cámara.** Código hecho (14 de octubre): las cuatro piezas leen sus
+      partes del prefab (referencias en el Inspector) y ya no crean canvas. Medidas en px del HUD
+      (el canvas del HUD es de 800 de ancho: lo de antes, pensado para 1920, va × 800/1920).
+      La X tiene sus puntas dentro de soportes girados: seleccionando las cuatro se les cambia el
+      largo, el grosor y el hueco a la vez. El arco de daño saca el ángulo de dónde está cada
+      pedacito y usa su color del prefab; la viñeta usa el color de su Image (el más fuerte).
+  - [x] Correr `Mercenarios ▸ Una vez ▸ Poner las piezas del HUD en la cámara`, revisar y
+        acomodar en el prefab, y borrar `MercCameraHudSetup.cs`. La textura de la viñeta queda en
+        `Art/UI/Vignette_LowHealth.png`.
+  - [x] Probar: canalizar (Golpe final, molinete) y que "Interrumpido" salga rojo; cargar un
+        ataque por etapas (los tramos, el destello, el saltito); pegar (X roja, amarilla en
+        crítico), matar (calavera), recibir por la espalda (arco abajo); bajar del 30 % de vida.
+- [x] **Etapa 3 — la rueda.** Hecha y se ve bien (14 de octubre): `UI_RadialMenu` ya no dibuja nada ni
+      crea texturas; usa sus piezas del prefab (`Player Camera ▸ UI ▸ RadialMenu`): el fondo, el
+      MOLDE de una porción (`UI_RadialOption`: brillo, porción e ícono), el centro, el puntero y los
+      dos textos. Las porciones son `UI_RingWedge`, una pieza nueva que dibuja un trozo de anillo
+      con radio interior y exterior en px y su ancho en grados (como la Reticle, sin sprite): se ve
+      en el prefab tal cual. Lo quieto (radios, colores, tamaño máximo del ícono, el radio del
+      centro, que es también la zona de cancelar) se cambia en las piezas; lo que cambia al
+      apuntar (resaltado, en espera, cancelar, tiempos) en el componente. Se fue el parche
+      `UpgradeStyle` y el `RadialMenu_Container` viejo.
+  - [x] Correr `Mercenarios ▸ Una vez ▸ Poner la rueda en el HUD de la cámara`, revisar y
+        acomodar, y borrar `MercRadialMenuSetup.cs`. Hasta correrla la rueda no abre (avisa en
+        la consola).
+  - [ ] Probar jugando: el tótem del Chamán y los compañeros del Maestro de bestias (abrir, resaltar,
+        cancelar en el centro, una opción en espera, elegir), con mouse y con control.
+- [x] **Etapa 4 — lo que se dibuja en el mundo.** Hecha y se ve bien (14 de octubre):
+  - **La curva** (`TrajectoryPreview`) vive en `Player Camera ▸ TrajectoryPreview`, con sus dos
+    LineRenderer (`Line` y `Ring`): el color, el grosor y el material se cambian ahí, y se ven en
+    el prefab con una curva de muestra. Material nuevo `Art/Materials/Mat_TrajectoryLine`.
+  - **La silueta** (`TeamReveal`) toma su material de `Player Camera ▸ TeamRevealStyle`; el color
+    es el de `Art/Materials/Mat_TeamReveal` (shader Mercenaries/XRay).
+  - **La curva en TODOS los lanzamientos apuntados** (pedido de Gustavo): el hacha (Bárbaro y
+    subclases), las dagas (Pícaro, Asesino, Ilusionista), la lanza del Comandante (por su
+    switch) y el Guiding Bolt (y el radiante). Cada `GA_ProjectileShoot` tiene la casilla "Curva
+    para el que apunta" (prendida por defecto; también vale para las fases del arco). La curva
+    llega hasta donde vuela el proyectil ("Tiempo de vuelo", o 5 s). Se pregunta a cualquier
+    mantenido con `GameplayAbility.ProjectileToPreview` (lanzamiento, arco por fases, switch).
+  - [x] Correr `Mercenarios ▸ Una vez ▸ Poner la curva y la silueta en la cámara` (corrida y borrada el
+        14 de octubre).
+  - [ ] Probar jugando: apuntar con el hacha, las dagas, la lanza (en ofensiva) y el Guiding Bolt, y
+        tensar el arco: la curva sale de la mano, cae como el proyectil y el anillo marca donde
+        choca. La Marca del cazador sigue mostrando la silueta a través de las paredes.
+- [ ] **Etapa 5 — el prefab de partida y el de menús** (ver "Dónde va cada cosa"), puestos en las
+      dos escenas.
+- [ ] **Etapa 6 — variables claras en todo lo hecho desde el Guerrero:** nombres y tooltips que
+      digan qué es y en qué unidad, sin valores relativos raros; habilidades, efectos, pasivas,
+      compañeros, paredes, cámara.
+
+---
+
+# ★ Maestro de bestias: los compañeros — HECHO (herramientas corridas), falta probar jugando (14 de octubre)
+
+Diseño de Gustavo (14 de octubre). Cada compañero es una IA del servidor (`Entity_Companion`) que
+maneja el `CompanionManager` del Explorador (en `BeastMasterBehaviours`):
+
+- **Pasivo:** cada tantos segundos ataca solo a un enemigo en su rango (medido desde el Explorador),
+  primero jugadores y el más cercano al Explorador, y se pone en cooldown.
+- **Orden:** cuando el Explorador pega, el compañero se olvida del cooldown y corre al doble de
+  velocidad a pegarle a ese, aunque esté fuera de rango; si estaba fuera, después vuelve a merodear.
+  Se queda con su objetivo mientras siga en rango. **Defiende** al Explorador del que le pega.
+- No ataca invisibles, salvo el Búho, que los busca primero. Todos abren heridas; el Lobo dos por
+  mordida. Su daño cuenta como del Explorador (escala con su ataque, la baja es suya).
+- **Presencia bestial:** la dan el compañero Y el Explorador (8 m alrededor de cada uno), sin sumarse.
+- **Físicas:** Lobo y Oso por NavMesh; a un objetivo en una pared o en el aire lo esperan abajo; si
+  quedan lejos o trabados, reaparecen junto al Explorador. El Búho no busca camino: aparece junto al
+  objetivo para el picotazo y vuelve.
+- **HUD:** un panel arriba del ícono de clase con los tres (el activo más grande y con su vida; el que
+  murió, oscurecido con los segundos que le faltan) y el botón E muestra al activo. Cada compañero
+  muerto tiene su propia espera (sale en la barra de efectos); mientras, se puede sacar otro.
+- Los fantasmas prefieren al Oso si cerca no hay otro jugador que su dueño (`Status_Taunting`).
+
+| | Lobo | Oso | Búho |
+|---|---|---|---|
+| Vida | 50 % del Explorador | 150 % | indestructible |
+| Rango pasivo | 20 m | 12 m | 30 m |
+| Ataque | mordida cada 1 s (×0.35) + 2 heridas | zarpazo cada 2.2 s (×0.9) + herida + aturdido 0.3 s (al mismo, 1 vez cada 2 s) | picotazo cada 3 s (×0.3) + herida + Marca doble (+20 %) + revelado 4 s |
+| Especial | aúlla si muere algo que mordió: +5 % de ataque a aliados (hasta 3) | se pone delante; los fantasmas lo prefieren | caza invisibles |
+| Presencia | +10 % velocidad | +10 % resistencia | ×0.9 entre ataques |
+| Vuelve en | 10 s | 15 s | — |
+
+- [x] **Correr `Mercenarios ▸ Una vez ▸ Crear el Maestro de bestias (compañeros)`** (corrida y borrada el 14 de octubre; el Búho salió mal, ver abajo). Crea los efectos,
+      `ASDef_Companion`, los tres prefabs en `Prefabs/Summons` (copias del fantasma de red sin su IA,
+      con una figura de primitivas), `BeastMasterBehaviours`, `GA_SwitchCompanion` (la E) y
+      `Class_BeastMaster` como subclase del Explorador; actualiza los registros y la lista de FishNet.
+      Después se borra `MercBeastMasterSetup.cs`.
+- [x] **Correr `Mercenarios ▸ Una vez ▸ Arreglar los compañeros (Búho de cero)`** (corrida y borrada el 14 de octubre) y borrar `MercCompanionFix.cs`.
+      La barra de vida del fantasma vive en la RAÍZ de su prefab: al quitársela al Búho se borró todo y quedó
+      como copia cruda del fantasma, sin `Entity_Companion`; el manager no lo reconocía y sacaba otro cada frame
+      (los fantasmas que se multiplicaban). Ahora el Búho se arma de cero con primitivas (mismo archivo), al Lobo
+      y al Oso se les devuelve la raíz a cero y se les sube la barra, y el manager ya no reintenta un prefab sin
+      `Entity_Companion` (lo saca y avisa en la consola).
+- [ ] **Arreglos tras la primera prueba (14 de octubre), falta probar:**
+  - Bucle de correr y reaparecer: reaparecía junto al Explorador a 25 m aunque estuviera persiguiendo
+    una orden (que llegaba hasta 40 m). Ahora persiguiendo no reaparece, y una orden a más de 40 m del
+    Explorador (`Alcance de las órdenes`) se ignora.
+  - **Salta entre pisos:** si el camino por el NavMesh da mucha vuelta (más de 1.8 veces la línea
+    recta) o no llega, y el punto está a 14 m o menos y 9 m de alto o menos, con el aire libre en el
+    medio, salta derecho en arco y cae sobre el NavMesh del otro lado. Vale para ir a un objetivo y
+    para seguir al Explorador. Sección `Saltar entre pisos` del compañero.
+  - El panel y la rueda pasaron a ser piezas del prefab de la cámara (ver la revisión de la UI, arriba):
+    Gustavo acomodó el panel sobre los buffs y la rueda quedó como estaba (grande, resaltado verde).
+- [ ] Probar en una escena con NavMesh (la del modo): elegir Maestro de bestias, que salga el Lobo, que
+      ataque solo, que vaya a lo que le pegás, que defienda, que vuelva si se aleja.
+- [ ] La rueda (E): cambiar al Oso y al Búho; el que murió aparece apagado con su tiempo.
+- [ ] El panel del HUD y el ícono del botón con el compañero activo.
+- [ ] El Oso delante y los fantasmas yendo por él; el Búho apareciendo junto a un invisible.
+- [ ] En un cliente: que se vean moverse y atacar, y su vida.
+- [ ] Falta después: la definitiva Ira primal (los tres a la vez), y las otras dos subclases.
 
 ---
 
@@ -120,7 +277,7 @@ Lo nuevo de código, que sirve para más cosas:
 - [x] La marca: el enemigo golpeado se ve en rojo a través de las paredes para el Explorador y
       sus aliados (dos ventanas), y NO para su propio equipo ni para el tercero.
 - [ ] Los bots: probar que jueguen el Explorador (que carguen y suelten el arco), el Monje y el Guerrero; ninguno de los tres se probó con bots todavía.
-- [ ] Después: el Maestro de bestias y su Lobo (la mascota con IA en red).
+- [x] Después: el Maestro de bestias y su Lobo (la mascota con IA en red). Hecho el 14 de octubre, con los tres compañeros (ver arriba).
 
 ---
 
@@ -768,7 +925,7 @@ marcados "Pospuesto".
 **Estado al 5 de octubre:** Clérigo completo y probado. Guerrero: kit base, Maestro de
 batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 9).
 **Guardián: hecho y probado ✅** (5 de octubre). **El Guerrero queda completo** (kit base y las 3 subclases).
-**6 de octubre:** barra de carga por etapas del ataque cargado (`UI_ChargeBar`), repeler / atraer y vuelo libre: hechos y probados. **Monje: kit base hecho y probado (8 de octubre). Barra de canalizar (`UI_CastBar`): hecha.** Queda la mascota con IA en red. **13 de octubre: Explorador (Ranger), kit base hecho; sigue el Maestro de bestias con su Lobo (la mascota con IA en red). Documentos al día (diseño de clases, arquitectura del GAS y de red, guía y glosario).**
+**6 de octubre:** barra de carga por etapas del ataque cargado (`UI_ChargeBar`), repeler / atraer y vuelo libre: hechos y probados. **Monje: kit base hecho y probado (8 de octubre). Barra de canalizar (`UI_CastBar`): hecha.** Queda la mascota con IA en red. **13 de octubre: Explorador (Ranger), kit base hecho; sigue el Maestro de bestias con su Lobo (la mascota con IA en red). Documentos al día (diseño de clases, arquitectura del GAS y de red, guía y glosario).** **14 de octubre: Maestro de bestias (los tres compañeros) y la UI del jugador pasada al prefab de la cámara (barras, avisos de combate, viñeta, rueda, curva de los lanzamientos y silueta); la curva sale ahora en todos los lanzamientos apuntados. Documentos al día.**
 
 1. **Clases nuevas — DECIDIDO (28 de septiembre): Clérigo + Guerrero completos**, en ese
    orden. Detalle y estimación en la sección 6.
@@ -2625,7 +2782,7 @@ Qué se reusa, en corto:
 - [x] **Repeler / atraer** — Monje (Patada del viento), Explorador (trampa explosiva). Hecho y probado (6 de octubre): sección "Desplazamiento" de cada GE (`KnockbackDistance`, dirección, duración, elevación, `PullStopDistance`). Es CC: el Imparable no se mueve, la resistencia al control recorta la distancia, el escudo no lo frena. Falta: que la trampa empuje desde ella y no desde el Explorador
 - [x] **Revelar invisibles** — Clérigo (Faro de esperanza), Explorador (Búho). Hecho: `State_AlwaysVisible`
 - [x] **Vuelo libre** — Mago, quizá Muerte silenciosa del Shinobi. Hecho y probado (6 de octubre): `GA_Flight` (Create ▸ GAS ▸ Generics ▸ Flight) + un GE que dé `Status_Flying`. Despega con impulso; WASD en 3D hacia la cámara (×ForwardBoost solo hacia adelante), Espacio sube, **Ctrl baja (Ctrl ya no ataca; en control, L3)**; no aterriza; sin techo propio (el del mapa). Quieto en el aire cae despacio (`IdleSinkSpeed`). Daño de otro o enraizado lo terminan; al terminar en el aire, o aturdido, cae lento. Los bots no lo usan. Prueba: `GA_Flight` y `GE_Fly` quedaron en `GameplayAbilities/` (mover `GE_Fly` a `Effects/` desde Unity)
-- [ ] **Mascota con IA en red** — Explorador (Maestro de bestias); sirve para futuros summons. Va después del kit base (ver arriba, 13 de octubre)
+- [x] **Mascota con IA en red** — Explorador (Maestro de bestias); sirve para futuros summons. Hecha el 14 de octubre: `Entity_Companion` + `CompanionManager` (ver arriba)
 
 ## Para la demo: Clérigo + Guerrero (~4–4.5 semanas)
 

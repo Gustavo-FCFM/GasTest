@@ -372,6 +372,9 @@ public class MercEnemyAI : NetworkBehaviour
     {
         AbilitySystemComponent best = null;
         float bestDistance = float.MaxValue;
+        AbilitySystemComponent taunter = null;   // el Oso del Maestro de bestias (Status_Taunting)
+        bool otherThanTaunterOwner = false;   // hay algún jugador cerca que no es el dueño del Oso
+        var playersNear = new System.Collections.Generic.List<AbilitySystemComponent>();
 
         Collider[] hits = Physics.OverlapSphere(transform.position, DetectionRadius,
                                                 CharacterLayer, QueryTriggerInteraction.Collide);
@@ -381,6 +384,15 @@ public class MercEnemyAI : NetworkBehaviour
 
             AbilitySystemComponent asc = col.GetComponentInParent<AbilitySystemComponent>();
             if (asc == null || asc == _asc) continue;
+
+            // Un compañero que provoca (el Oso): se anota aparte, ver abajo.
+            if (asc.HasTag(EGameplayTag.Status_Taunting) && !asc.HasTag(EGameplayTag.State_Dead) &&
+                Vector3.Distance(_homePosition, asc.transform.position) <= LeashRadius)
+            {
+                if (taunter == null) taunter = asc;
+                continue;
+            }
+
             if (asc.GetComponent<PlayerController>() == null) continue;   // solo jugadores
             if (asc.HasTag(EGameplayTag.State_Dead)) continue;
             if (asc.HasTag(EGameplayTag.Status_SafeZone)) continue;       // en su base no se los toca
@@ -388,9 +400,20 @@ public class MercEnemyAI : NetworkBehaviour
 
             // Correa: si para alcanzarlo tendría que irse lejos de su puesto, lo ignora.
             if (Vector3.Distance(_homePosition, asc.transform.position) > LeashRadius) continue;
+            if (!playersNear.Contains(asc)) playersNear.Add(asc);
 
             float d = Vector3.Distance(transform.position, asc.transform.position);
             if (d < bestDistance) { bestDistance = d; best = asc; }
+        }
+
+        // El Oso provoca: si cerca no hay otro jugador que SU dueño (o ninguno), los fantasmas van
+        // por él (pedido de Gustavo, 14 de octubre de 2026).
+        if (taunter != null)
+        {
+            Entity_Companion bear = taunter.GetComponent<Entity_Companion>();
+            foreach (AbilitySystemComponent p in playersNear)
+                if (bear == null || p != bear.OwnerASC) otherThanTaunterOwner = true;
+            if (!otherThanTaunterOwner) return taunter;
         }
 
         return best;

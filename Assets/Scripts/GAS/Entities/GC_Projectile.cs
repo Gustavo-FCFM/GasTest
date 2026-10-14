@@ -18,7 +18,9 @@ using FishNet.Object.Synchronizing;
 public class GC_Projectile : NetworkBehaviour
 {
     private AbilitySystemComponent sourceASC; // Quién disparó (solo poblado en el servidor)
-    private float lifeTime = 5f;
+    // Cuánto vive un proyectil si la habilidad no dice otra cosa (su "Tiempo de vuelo" en 0).
+    public const float DefaultLifeTime = 5f;
+    private float lifeTime = DefaultLifeTime;
     private float ultChargeAmount = 0f;
     // Instancia de GA_ProjectileShoot que disparó. Lo que le hace el proyectil a quien
     // toca es SU lista de efectos (ApplyHitEffects: daño a enemigos, curación a aliados

@@ -259,6 +259,11 @@ public class GA_ChargedAttack : GameplayAbility, IHoldAbility
         return stage >= 0 ? Stages[stage].Ability : null;
     }
 
+    // La curva de la flecha de la fase que saldría ahora (si esa fase dispara un proyectil y
+    // tiene la curva prendida).
+    public override GA_ProjectileShoot ProjectileToPreview(float heldSeconds)
+        => StageAt(heldSeconds) is GA_ProjectileShoot shot && shot.ShowTrajectoryWhileAiming ? shot : null;
+
     // La última etapa que tiene habilidad (la carga completa).
     private int LastStageIndex()
     {
