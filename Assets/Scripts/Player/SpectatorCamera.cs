@@ -25,11 +25,39 @@ using UnityEngine.UI;
 // POR QUÉ NO ES UN NetworkBehaviour: no manda ni recibe nada. Un espectador no existe
 // para el servidor más allá de su fila en la sala — todo lo que hace es mirar objetos
 // que ya están sincronizados.
+//
+// VIVE EN EL PREFAB DE PARTIDA (Match_UI ▸ Spectator), desde el 14 de octubre de 2026: su
+// canvas (el panel de quien mirás, con nombre y vida, y la ayuda de teclas abajo a la
+// derecha) está armado ahí y se acomoda a mano. Este script mueve la cámara y escribe los textos.
 // ============================================================
 public class SpectatorCamera : MonoBehaviour
 {
+    [Header("Piezas")]
+    [Tooltip("El canvas del espectador: se prende solo al empezar a mirar.")]
+    [Label("Canvas del espectador")]
+    public Canvas UiCanvas;
+
+    [Tooltip("El panel de abajo con el nombre y la vida de quien seguís.")]
+    [Label("Panel del observado")]
+    public RectTransform PlayerPanel;
+
+    [Label("Nombre")]
+    public TMP_Text NameText;
+
+    [Tooltip("El relleno de la barra de vida (Image Filled horizontal).")]
+    [Label("Relleno de la vida")]
+    public Image HealthFill;
+
+    [Label("Texto de la vida")]
+    public TMP_Text HealthText;
+
+    [Tooltip("La ayuda de teclas, abajo a la derecha.")]
+    [Label("Ayuda")]
+    public TMP_Text HintText;
+
     [Header("Vuelo libre")]
-    [Label("Velocidad")]
+    [Tooltip("Metros por segundo.")]
+    [Label("Velocidad (m/s)")]
     public float MoveSpeed       = 16f;
     [Tooltip("Cuánto multiplica la velocidad el Shift.")]
     [Label("Rápido (×)")]
@@ -40,16 +68,16 @@ public class SpectatorCamera : MonoBehaviour
     [Header("Dónde arranca")]
     [Tooltip("Altura sobre el centro de la arena. Pensada para ver el centro entero de " +
              "una, más o menos desde donde mira la cámara de la sala.")]
-    [Label("Altura inicial")]
+    [Label("Altura inicial (m)")]
     public float StartHeight   = 26f;
     [Tooltip("Cuánto se aleja del centro hacia atrás para tener perspectiva.")]
-    [Label("Distancia inicial")]
+    [Label("Distancia inicial (m)")]
     public float StartDistance = 40f;
 
     [Header("Seguir a un jugador")]
     [Tooltip("Dónde se pone la cámara respecto del jugador que sigue: atrás y arriba, " +
              "como una cámara de hombro.")]
-    [Label("Posición al seguir")]
+    [Label("Posición al seguir (m)")]
     public Vector3 FollowOffset = new Vector3(0f, 2.4f, -4.8f);
     [Tooltip("Qué tan rápido persigue. Bajo = más suave, y en una grabación se nota.")]
     [Label("Suavizado al seguir")]
@@ -75,13 +103,10 @@ public class SpectatorCamera : MonoBehaviour
     private bool _showPlayerUI  = true;
     private bool _showScoreboard = true;
 
-    // --- UI, dibujada por código como el resto del HUD del modo ---
-    private Canvas          _canvas;
-    private RectTransform   _panel;
-    private TextMeshProUGUI _nameText;
-    private TextMeshProUGUI _healthText;
-    private Image           _healthFill;
-    private TextMeshProUGUI _hintText;
+    private void Awake()
+    {
+        if (UiCanvas != null) UiCanvas.gameObject.SetActive(false);
+    }
 
     private readonly List<PlayerController> _players = new List<PlayerController>();
 
@@ -143,7 +168,7 @@ public class SpectatorCamera : MonoBehaviour
     private void Exit()
     {
         _following = null;
-        if (_canvas != null) _canvas.gameObject.SetActive(false);
+        if (UiCanvas != null) UiCanvas.gameObject.SetActive(false);
 
         // Si el espectador apagó el marcador, se lo devolvemos al salir: la bandera es
         // global y se la llevaría puesta a la próxima partida.
@@ -320,69 +345,21 @@ public class SpectatorCamera : MonoBehaviour
 
     private void BuildUI()
     {
-        if (_canvas != null) { _canvas.gameObject.SetActive(true); return; }
-
-        _canvas = MercUIFactory.CreateCanvas("Canvas_Spectator", 60);
-
-        _panel = MercUIFactory.CreateRect(_canvas.transform, "Observado",
-                                          new Vector2(0.5f, 0f), new Vector2(0.5f, 0f),
-                                          new Vector2(0.5f, 0f), new Vector2(0f, 90f),
-                                          new Vector2(460f, 74f));
-
-        Image bg = _panel.gameObject.AddComponent<Image>();
-        bg.color = new Color(0.06f, 0.07f, 0.10f, 0.72f);
-
-        _nameText = MercUIFactory.CreateText(_panel, "Nombre", "", 26f, Color.white,
-                                             TextAlignmentOptions.Center,
-                                             new Vector2(0f, 18f), new Vector2(440f, 32f),
-                                             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-                                             new Vector2(0.5f, 0.5f));
-
-        RectTransform barBack = MercUIFactory.CreateRect(_panel, "BarraFondo",
-                                                         new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-                                                         new Vector2(0.5f, 0.5f), new Vector2(0f, -14f),
-                                                         new Vector2(400f, 16f));
-        Image backImg = barBack.gameObject.AddComponent<Image>();
-        backImg.color = new Color(0.15f, 0.16f, 0.20f, 1f);
-
-        RectTransform fill = MercUIFactory.CreateRect(barBack, "BarraRelleno",
-                                                      new Vector2(0f, 0f), new Vector2(1f, 1f),
-                                                      new Vector2(0f, 0.5f), Vector2.zero, Vector2.zero);
-        fill.offsetMin = Vector2.zero;
-        fill.offsetMax = Vector2.zero;
-
-        _healthFill = fill.gameObject.AddComponent<Image>();
-        _healthFill.sprite    = MercUIFactory.WhiteSprite;
-        _healthFill.type      = Image.Type.Filled;
-        _healthFill.fillMethod = Image.FillMethod.Horizontal;
-        _healthFill.color     = new Color(0.45f, 0.85f, 0.45f, 1f);
-
-        _healthText = MercUIFactory.CreateText(_panel, "Vida", "", 16f, Color.white,
-                                               TextAlignmentOptions.Center,
-                                               new Vector2(0f, -14f), new Vector2(400f, 20f),
-                                               new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-                                               new Vector2(0.5f, 0.5f));
-
-        _hintText = MercUIFactory.CreateText(_canvas.transform, "Ayuda", "", 15f,
-                                             new Color(0.85f, 0.87f, 0.92f, 0.75f),
-                                             TextAlignmentOptions.Right,
-                                             new Vector2(-24f, 24f), new Vector2(560f, 24f),
-                                             new Vector2(1f, 0f), new Vector2(1f, 0f),
-                                             new Vector2(1f, 0f));
+        if (UiCanvas != null) UiCanvas.gameObject.SetActive(true);
     }
 
     private void RefreshUI()
     {
-        if (_hintText != null)
+        if (HintText != null)
         {
-            _hintText.text = _following != null
+            HintText.text = _following != null
                 ? Loc.T("spectator.hint_following", ("free", FreeCamKey), ("info", TogglePlayerUIKey), ("scoreboard", ScoreboardKey))
                 : Loc.T("spectator.hint_free", ("scoreboard", ScoreboardKey));
         }
 
         bool showPanel = _showPlayerUI && _following != null;
-        if (_panel != null && _panel.gameObject.activeSelf != showPanel)
-            _panel.gameObject.SetActive(showPanel);
+        if (PlayerPanel != null && PlayerPanel.gameObject.activeSelf != showPanel)
+            PlayerPanel.gameObject.SetActive(showPanel);
 
         if (!showPanel) return;
 
@@ -390,18 +367,18 @@ public class SpectatorCamera : MonoBehaviour
         if (asc == null) return;
 
         int team = ResolveTeam(_following);
-        if (_nameText != null)
+        if (NameText != null)
         {
-            _nameText.text  = ResolveName(_following);
-            _nameText.color = MercUIFactory.TeamColor(team);
+            NameText.text  = ResolveName(_following);
+            NameText.color = MercUIFactory.TeamColor(team);
         }
 
         float hp  = asc.GetAttributeValue(EAttributeType.Health);
         float max = asc.GetAttributeValue(EAttributeType.MaxHealth);
         if (max <= 0f) max = 1f;
 
-        if (_healthFill != null) _healthFill.fillAmount = Mathf.Clamp01(hp / max);
-        if (_healthText != null) _healthText.text = $"{Mathf.CeilToInt(hp)} / {Mathf.CeilToInt(max)}";
+        if (HealthFill != null) HealthFill.fillAmount = Mathf.Clamp01(hp / max);
+        if (HealthText != null) HealthText.text = $"{Mathf.CeilToInt(hp)} / {Mathf.CeilToInt(max)}";
     }
 
     // =========================================================

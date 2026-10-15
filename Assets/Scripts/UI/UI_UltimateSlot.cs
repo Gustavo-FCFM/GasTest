@@ -133,7 +133,7 @@ public class UI_UltimateSlot : MonoBehaviour
         if (_readyKnown && ready && !_wasReady)
         {
             string key = UI_AbilitySlot.GetKeyLabel(slotInput);
-            UI_ScreenFeedback.Get().ShowToast(Loc.T("ultimate.ready_toast", ("key", key)), ReadyToastColor);
+            UI_ScreenFeedback.Get()?.ShowToast(Loc.T("ultimate.ready_toast", ("key", key)), ReadyToastColor);
         }
         _readyKnown = true;
         _wasReady   = ready;

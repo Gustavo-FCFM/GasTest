@@ -62,6 +62,12 @@ public class CompanionManager : MonoBehaviour
     [Label("Compañero inicial")]
     public int StartIndex = 0;
 
+    [Tooltip("Un compañero que se GUARDA herido (al cambiarlo por otro) vuelve con la vida que tenía, " +
+             "y mientras está guardado se cura de a poco: este % de su vida máxima por segundo. " +
+             "0 = no se cura guardado. Uno que MUERE vuelve con la vida llena tras su espera.")]
+    [Label("Curación guardado (% de vida por s)")]
+    public float StoredRegenPercentPerSecond = 2f;
+
     private AbilitySystemComponent        _asc;
     private NetworkAbilitySystemComponent _net;
 
@@ -70,6 +76,9 @@ public class CompanionManager : MonoBehaviour
     private int _petHitDepth;
     private float _spawnDelayUntil;
     private readonly HashSet<int> _broken = new HashSet<int>();   // prefabs que no sirven (ver SpawnCompanion)
+
+    // La vida guardada de cada compañero (0 a 1), por índice. Solo servidor. Sin entrada = llena.
+    private readonly Dictionary<int, float> _storedHealth = new Dictionary<int, float>();
 
     private bool IsServer => _net == null || _net.IsServerInitialized;
 
@@ -111,11 +120,32 @@ public class CompanionManager : MonoBehaviour
         if (_active < 0) _active = Mathf.Clamp(StartIndex, 0, Companions.Count - 1);
         EnsureActiveMark();
 
+        TickStoredRegen();
+
         if (_asc.HasTag(EGameplayTag.State_Dead)) { DespawnCurrent(); return; }
 
         if (_current == null && Time.time >= _spawnDelayUntil && !IsOnCooldown(_active) && !_broken.Contains(_active))
             SpawnCompanion(_active);
     }
+
+    // Los guardados heridos (los que no están afuera) se curan de a poco.
+    private readonly List<int> _healedKeys = new List<int>();
+    private void TickStoredRegen()
+    {
+        if (_storedHealth.Count == 0 || StoredRegenPercentPerSecond <= 0f) return;
+        _healedKeys.Clear();
+        _healedKeys.AddRange(_storedHealth.Keys);
+        foreach (int i in _healedKeys)
+        {
+            if (i == _active && _current != null) continue;   // el que está afuera no se cura así
+            float f = _storedHealth[i] + StoredRegenPercentPerSecond / 100f * Time.deltaTime;
+            if (f >= 1f) _storedHealth.Remove(i);
+            else         _storedHealth[i] = f;
+        }
+    }
+
+    // La vida guardada de un compañero (0 a 1). 1 = llena (o nunca se guardó herido).
+    public float StoredHealth(int index) => _storedHealth.TryGetValue(index, out float f) ? f : 1f;
 
     // El GE de "elegido" se pierde con la muerte o un cambio de clase: se vuelve a poner.
     private void EnsureActiveMark()
@@ -175,12 +205,20 @@ public class CompanionManager : MonoBehaviour
             _broken.Add(index);
             return;
         }
-        _current.Initialize(_asc, this);
+        _current.Initialize(_asc, this, StoredHealth(index));
+        _storedHealth.Remove(index);   // ya está afuera: su vida es la del compañero
     }
 
+    // Lo saca de la escena VIVO (cambio de compañero, muerte del dueño): guarda su vida.
     private void DespawnCurrent()
     {
         if (_current == null) return;
+        if (_active >= 0)
+        {
+            float f = _current.HealthFraction01;
+            if (f < 0.999f) _storedHealth[_active] = Mathf.Max(0.01f, f);
+            else            _storedHealth.Remove(_active);
+        }
         NetworkObject nob = _current.GetComponent<NetworkObject>();
         if (nob != null && nob.IsSpawned) InstanceFinder.ServerManager.Despawn(nob);
         else if (_current != null) Destroy(_current.gameObject);
@@ -192,6 +230,7 @@ public class CompanionManager : MonoBehaviour
     {
         if (companion != _current) return;
         _current = null;
+        _storedHealth.Remove(_active);   // muerto vuelve lleno, tras su espera
         GameplayEffect cooldown = Companions[_active].RespawnCooldown;
         if (cooldown != null && _asc != null) _asc.ApplyGameplayEffect(cooldown, _asc);
     }

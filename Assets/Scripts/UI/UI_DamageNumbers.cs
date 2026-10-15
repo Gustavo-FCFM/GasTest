@@ -27,10 +27,18 @@ public enum ECombatNumber : byte
 // Son un conjunto FIJO de textos que se reciclan: una pelea de nueve no crea y destruye
 // objetos a cada golpe. Si se acaban, se reusa el más viejo.
 //
-// NO HAY NADA QUE CABLEAR: se arma solo la primera vez que llega un número.
+// VIVE EN EL PREFAB DE PARTIDA (Match_UI ▸ DamageNumbers), desde el 14 de octubre de 2026:
+// "NumberTemplate" es el MOLDE apagado de un número (su letra, negrita y sombra se cambian
+// ahí); al empezar se copia las veces que diga "Cantidad máxima a la vez". Lo que cambia
+// según el tipo de número (color y tamaño) está en este componente.
 // ============================================================
 public class UI_DamageNumbers : MonoBehaviour
 {
+    [Header("Piezas")]
+    [Tooltip("El MOLDE de un número (apagado): un RectTransform anclado abajo a la izquierda con un texto adentro.")]
+    [Label("Molde de un número")]
+    public RectTransform NumberTemplate;
+
     [Header("Colores")]
     [Label("Color de daño")]
     public Color DamageColor         = new Color(1f, 0.28f, 0.22f, 1f);
@@ -41,7 +49,7 @@ public class UI_DamageNumbers : MonoBehaviour
     [Label("Color de daño periódico")]
     public Color DamageOverTimeColor = new Color(1f, 0.55f, 0.5f, 1f);
 
-    [Header("Tamaños")]
+    [Header("Tamaños (de letra)")]
     [Label("Tamaño: daño")]
     public float DamageFontSize         = 30f;
     [Label("Tamaño: crítico")]
@@ -68,18 +76,18 @@ public class UI_DamageNumbers : MonoBehaviour
 
     [Tooltip("Desvío al azar a los costados al nacer, en metros: varios golpes seguidos " +
              "no salen uno encima del otro.")]
-    [Label("Desvío al azar")]
+    [Label("Desvío al azar (m)")]
     public float Jitter = 0.45f;
 
     [Header("Distancia")]
     [Tooltip("Más lejos que esto (desde la cámara) no se dibujan: en una pelea grande, " +
              "los números del otro lado del mapa son ruido.")]
-    [Label("Distancia máxima")]
+    [Label("Distancia máxima (m)")]
     public float MaxDistance = 40f;
 
     [Tooltip("A esta distancia el número se ve de su tamaño normal; más lejos se achica " +
              "(hasta la mitad), más cerca no crece.")]
-    [Label("Distancia de referencia")]
+    [Label("Distancia de referencia (m)")]
     public float ReferenceDistance = 10f;
 
     [Tooltip("Cuántos números puede haber a la vez.")]
@@ -97,21 +105,23 @@ public class UI_DamageNumbers : MonoBehaviour
     }
 
     private static UI_DamageNumbers _instance;
+    private static bool _warnedMissing;
 
+    // El de la escena (el prefab de partida). Null si la escena no lo tiene: avisa una vez.
     public static UI_DamageNumbers Get()
     {
         if (_instance != null) return _instance;
-
         _instance = FindFirstObjectByType<UI_DamageNumbers>(FindObjectsInactive.Include);
-        if (_instance != null) return _instance;
-
-        GameObject go = new GameObject("UI_DamageNumbers");
-        _instance = go.AddComponent<UI_DamageNumbers>();
+        if (_instance == null && !_warnedMissing)
+        {
+            _warnedMissing = true;
+            Debug.LogWarning("[UI_DamageNumbers] La escena no tiene el prefab de partida (Match_UI): no hay números flotantes.");
+        }
         return _instance;
     }
 
     private Canvas  _canvas;
-    private Popup[] _pool;
+    private Popup[] _pool = new Popup[0];
     private Camera  _cam;
 
     private void Awake()
@@ -119,9 +129,9 @@ public class UI_DamageNumbers : MonoBehaviour
         if (_instance != null && _instance != this) { Destroy(gameObject); return; }
         _instance = this;
 
-        // Encima de los marcadores del mundo (45) y debajo del HUD de la partida.
-        _canvas = MercUIFactory.CreateCanvas("DamageNumbersCanvas", 48);
-        _canvas.transform.SetParent(transform, false);
+        _canvas = GetComponentInParent<Canvas>();
+        if (NumberTemplate == null) { Debug.LogWarning("[UI_DamageNumbers] Falta el molde de un número."); return; }
+        NumberTemplate.gameObject.SetActive(false);
 
         _pool = new Popup[Mathf.Max(8, PoolSize)];
         for (int i = 0; i < _pool.Length; i++) _pool[i] = BuildPopup(i);
@@ -145,7 +155,7 @@ public class UI_DamageNumbers : MonoBehaviour
     public void Spawn(Vector3 worldPosition, int amount, ECombatNumber kind)
     {
         Camera cam = ResolveCamera();
-        if (cam == null || amount <= 0) return;
+        if (cam == null || amount <= 0 || _pool.Length == 0) return;
         if (Vector3.Distance(cam.transform.position, worldPosition) > MaxDistance) return;
 
         Popup p = TakePopup();
@@ -238,20 +248,13 @@ public class UI_DamageNumbers : MonoBehaviour
     // CONJUNTO DE TEXTOS
     // =========================================================
 
+    // Una copia del molde. Anclado abajo-izquierda: la posición en pantalla se escribe tal
+    // cual (dividida por el factor de escala del canvas), como en UI_ObjectiveMarker.
     private Popup BuildPopup(int index)
     {
-        // Anclado abajo-izquierda: la posición en pantalla se escribe tal cual (dividida
-        // por el factor de escala del canvas), como en UI_ObjectiveMarker.
-        RectTransform rt = MercUIFactory.CreateRect(_canvas.transform, $"Number_{index}",
-            Vector2.zero, Vector2.zero, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(200f, 60f));
-
-        TextMeshProUGUI text = MercUIFactory.CreateText(rt, "Text", "", DamageFontSize, Color.white,
-            TextAlignmentOptions.Center, Vector2.zero, new Vector2(200f, 60f),
-            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        text.fontStyle     = FontStyles.Bold;
-        text.raycastTarget = false;
-        MercUIFactory.AddShadow(text, 2f);
-
+        RectTransform rt = Instantiate(NumberTemplate, NumberTemplate.parent);
+        rt.name = $"Number_{index}";
+        TextMeshProUGUI text = rt.GetComponentInChildren<TextMeshProUGUI>(true);
         rt.gameObject.SetActive(false);
         return new Popup { Rect = rt, Text = text };
     }

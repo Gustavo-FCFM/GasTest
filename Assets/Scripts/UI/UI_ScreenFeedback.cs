@@ -1,6 +1,5 @@
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 // ============================================================
 // UI_ScreenFeedback
@@ -13,27 +12,47 @@ using UnityEngine.UI;
 //   · AVISOS CORTOS  → un texto que aparece un momento bajo la mira. Lo usa la
 //                      definitiva al quedar cargada ("¡DEFINITIVA LISTA!").
 //
-// (La viñeta de poca vida ya no está acá: vive en el prefab de la cámara, UI_LowHealthVignette.)
+// (La viñeta de poca vida no está acá: vive en el prefab de la cámara, UI_LowHealthVignette.)
 //
-// TODAVÍA SE ARMA SOLO al empezar el juego (ver Bootstrap), con MercUIFactory. Pasa a un
-// prefab de partida en la revisión de la UI (PENDIENTES: "la UI vive en el prefab").
+// VIVE EN EL PREFAB DE PARTIDA (Match_UI ▸ ScreenFeedback), desde el 14 de octubre de 2026:
+// la franja de muerte (fondo, quién te mató, cuenta regresiva) y el aviso corto se
+// acomodan y se les cambia el tamaño ahí. Este script solo escribe los textos y los
+// muestra y esconde. Es de la PARTIDA y no del personaje: tiene que seguir en pantalla
+// mientras estás muerto.
 //
 // QUIÉN LO LLAMA: la pantalla de muerte la pide el servidor por TargetRpc
 // (PlayerController.TargetShowDeath), porque solo él sabe quién dio el golpe final.
 // ============================================================
 public class UI_ScreenFeedback : MonoBehaviour
 {
-    // =========================================================
-    // PERILLAS
-    // =========================================================
+    [Header("Piezas: pantalla de muerte")]
+    [Tooltip("El CanvasGroup de la franja de muerte: la muestra y la esconde.")]
+    [Label("Grupo de la muerte")]
+    public CanvasGroup DeathGroup;
 
-    [Header("Pantalla de muerte")]
-    [Tooltip("Si no hay reaparición (o no se sabe cuándo), cuánto se muestra el aviso.")]
-    [Label("Aviso de muerte (s)")]
+    [Tooltip("\"Te eliminó X\" (o \"Moriste\").")]
+    [Label("Quién te mató")]
+    public TMP_Text DeathTitle;
+
+    [Tooltip("\"Reapareces en N\".")]
+    [Label("Cuenta regresiva")]
+    public TMP_Text DeathCountdown;
+
+    [Header("Piezas: aviso corto")]
+    [Tooltip("El CanvasGroup del aviso corto bajo la mira.")]
+    [Label("Grupo del aviso")]
+    public CanvasGroup ToastGroup;
+
+    [Label("Texto del aviso")]
+    public TMP_Text ToastText;
+
+    [Header("Tiempos")]
+    [Tooltip("Si no hay reaparición (o no se sabe cuándo), cuánto se muestra el aviso de muerte.")]
+    [Label("Aviso de muerte sin cuenta (s)")]
     public float DeathFallbackSeconds = 3f;
 
-    [Header("Avisos cortos")]
-    [Label("Aviso dura (s)")]
+    [Tooltip("Cuánto dura el aviso corto: entero la primera mitad, después se apaga.")]
+    [Label("Aviso corto dura (s)")]
     public float ToastSeconds = 1.6f;
 
     // =========================================================
@@ -41,40 +60,25 @@ public class UI_ScreenFeedback : MonoBehaviour
     // =========================================================
 
     private static UI_ScreenFeedback _instance;
+    private static bool _warnedMissing;
 
+    // El de la escena (el prefab de partida). Null si la escena no lo tiene: avisa una vez.
     public static UI_ScreenFeedback Get()
     {
         if (_instance != null) return _instance;
-
         _instance = FindFirstObjectByType<UI_ScreenFeedback>(FindObjectsInactive.Include);
-        if (_instance != null) return _instance;
-
-        GameObject go = new GameObject("UI_ScreenFeedback");
-        _instance = go.AddComponent<UI_ScreenFeedback>();
+        if (_instance == null && !_warnedMissing)
+        {
+            _warnedMissing = true;
+            Debug.LogWarning("[UI_ScreenFeedback] La escena no tiene el prefab de partida (Match_UI): " +
+                             "no hay pantalla de muerte ni avisos cortos.");
+        }
         return _instance;
     }
 
-    // Se crea al arrancar el juego en vez de esperar a que alguien lo pida, para que el
-    // primer aviso no tarde en armarse.
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void Bootstrap()
-    {
-        UI_ScreenFeedback feedback = Get();
-        DontDestroyOnLoad(feedback.gameObject);
-    }
-
-    // --- construido en runtime ---
-    private Canvas _canvas;
-
-    private CanvasGroup     _deathGroup;
-    private TextMeshProUGUI _deathTitle;
-    private TextMeshProUGUI _deathCountdown;
     private float _deathShownAt = -1f;
     private float _deathEndsAt  = -1f;
     private bool  _deathHasCountdown;
-
-    private CanvasGroup     _toastGroup;
-    private TextMeshProUGUI _toastText;
     private float _toastAlpha;
 
     private void Awake()
@@ -82,7 +86,8 @@ public class UI_ScreenFeedback : MonoBehaviour
         if (_instance != null && _instance != this) { Destroy(gameObject); return; }
         _instance = this;
 
-        Build();
+        if (DeathGroup != null) { DeathGroup.alpha = 0f; DeathGroup.blocksRaycasts = false; DeathGroup.interactable = false; }
+        if (ToastGroup != null) { ToastGroup.alpha = 0f; ToastGroup.blocksRaycasts = false; ToastGroup.interactable = false; }
     }
 
     private void OnDestroy()
@@ -98,6 +103,8 @@ public class UI_ScreenFeedback : MonoBehaviour
     // respawnSeconds <= 0 = no hay cuenta regresiva que mostrar.
     public void ShowDeath(string killerName, string killerClass, int killerTeam, float respawnSeconds)
     {
+        if (DeathGroup == null || DeathTitle == null) return;
+
         string title;
         if (string.IsNullOrEmpty(killerName))
         {
@@ -110,20 +117,21 @@ public class UI_ScreenFeedback : MonoBehaviour
             title = Loc.T("death.killed_by", ("killer", $"<color=#{hex}>{killerName}</color>{klass}"));
         }
 
-        _deathTitle.text   = title;
+        DeathTitle.text    = title;
         _deathHasCountdown = respawnSeconds > 0f;
         _deathShownAt      = Time.time;
         _deathEndsAt       = Time.time + (_deathHasCountdown ? respawnSeconds : DeathFallbackSeconds);
-        _deathCountdown.text = "";
-        _deathGroup.alpha  = 1f;
+        if (DeathCountdown != null) DeathCountdown.text = "";
+        DeathGroup.alpha   = 1f;
     }
 
     // Un aviso corto bajo la mira.
     public void ShowToast(string text, Color color)
     {
-        _toastText.text  = text;
-        _toastText.color = color;
-        _toastAlpha      = 1f;
+        if (ToastText == null) return;
+        ToastText.text  = text;
+        ToastText.color = color;
+        _toastAlpha     = 1f;
     }
 
     // =========================================================
@@ -175,7 +183,7 @@ public class UI_ScreenFeedback : MonoBehaviour
 
     private void UpdateDeath()
     {
-        if (_deathShownAt < 0f) return;
+        if (_deathShownAt < 0f || DeathGroup == null) return;
 
         float remaining = _deathEndsAt - Time.time;
 
@@ -186,15 +194,15 @@ public class UI_ScreenFeedback : MonoBehaviour
         bool alive = Time.time - _deathShownAt > 0.5f && IsLocalAlive();
         if (remaining <= 0f || alive)
         {
-            _deathShownAt     = -1f;
-            _deathGroup.alpha = 0f;
+            _deathShownAt    = -1f;
+            DeathGroup.alpha = 0f;
             return;
         }
 
-        if (_deathHasCountdown)
+        if (_deathHasCountdown && DeathCountdown != null)
         {
             string text = Loc.T("death.respawning", ("seconds", Mathf.CeilToInt(remaining)));
-            if (_deathCountdown.text != text) _deathCountdown.text = text;
+            if (DeathCountdown.text != text) DeathCountdown.text = text;
         }
     }
 
@@ -206,69 +214,12 @@ public class UI_ScreenFeedback : MonoBehaviour
 
     private void UpdateToast()
     {
-        if (_toastAlpha <= 0f) { _toastGroup.alpha = 0f; return; }
+        if (ToastGroup == null) return;
+        if (_toastAlpha <= 0f) { ToastGroup.alpha = 0f; return; }
 
         _toastAlpha = Mathf.Max(0f, _toastAlpha - Time.deltaTime / Mathf.Max(0.1f, ToastSeconds));
 
         // Entero durante la primera mitad, y después se apaga: se alcanza a leer.
-        _toastGroup.alpha = Mathf.Clamp01(_toastAlpha * 2f);
-    }
-
-    // =========================================================
-    // CONSTRUCCIÓN
-    // =========================================================
-
-    private void Build()
-    {
-        // Encima del HUD y debajo de los menús.
-        _canvas = MercUIFactory.CreateCanvas("ScreenFeedbackCanvas", 110);
-        _canvas.transform.SetParent(transform, false);
-
-        BuildDeathPanel();
-        BuildToast();
-    }
-
-    // Una franja oscura un poco debajo del centro: quién te eliminó y cuánto falta.
-    private void BuildDeathPanel()
-    {
-        Vector2 mid = new Vector2(0.5f, 0.5f);
-        RectTransform panel = MercUIFactory.CreateRect(_canvas.transform, "DeathPanel",
-            new Vector2(0.5f, 0.3f), new Vector2(0.5f, 0.3f), mid, Vector2.zero, new Vector2(620f, 96f));
-
-        _deathGroup = panel.gameObject.AddComponent<CanvasGroup>();
-        _deathGroup.alpha = 0f;
-        _deathGroup.blocksRaycasts = false;
-        _deathGroup.interactable   = false;
-
-        MercUIFactory.CreateImage(panel, "Background", new Color(0f, 0f, 0f, 0.6f),
-            Vector2.zero, new Vector2(620f, 96f), mid, mid, mid);
-
-        _deathTitle = MercUIFactory.CreateText(panel, "Killer", "", 30f, Color.white,
-            TextAlignmentOptions.Center, new Vector2(0f, 16f), new Vector2(600f, 44f), mid, mid, mid);
-        _deathTitle.fontStyle = FontStyles.Bold;
-        _deathTitle.richText  = true;
-        MercUIFactory.AddShadow(_deathTitle);
-
-        _deathCountdown = MercUIFactory.CreateText(panel, "Countdown", "", 22f,
-            new Color(0.85f, 0.85f, 0.85f, 1f), TextAlignmentOptions.Center,
-            new Vector2(0f, -24f), new Vector2(600f, 30f), mid, mid, mid);
-        MercUIFactory.AddShadow(_deathCountdown);
-    }
-
-    private void BuildToast()
-    {
-        Vector2 mid = new Vector2(0.5f, 0.5f);
-        RectTransform holder = MercUIFactory.CreateRect(_canvas.transform, "Toast",
-            mid, mid, mid, new Vector2(0f, -110f), new Vector2(700f, 50f));
-
-        _toastGroup = holder.gameObject.AddComponent<CanvasGroup>();
-        _toastGroup.alpha = 0f;
-        _toastGroup.blocksRaycasts = false;
-        _toastGroup.interactable   = false;
-
-        _toastText = MercUIFactory.CreateText(holder, "Text", "", 30f, Color.white,
-            TextAlignmentOptions.Center, Vector2.zero, new Vector2(700f, 50f), mid, mid, mid);
-        _toastText.fontStyle = FontStyles.Bold;
-        MercUIFactory.AddShadow(_toastText);
+        ToastGroup.alpha = Mathf.Clamp01(_toastAlpha * 2f);
     }
 }

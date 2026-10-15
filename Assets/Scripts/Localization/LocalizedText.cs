@@ -25,6 +25,10 @@ public class LocalizedText : MonoBehaviour
     [Label("Clave")]
     public string Key;
 
+    [Tooltip("Escribirlo todo en mayúsculas (los títulos de sección de los Ajustes).")]
+    [Label("En mayúsculas")]
+    public bool UpperCase;
+
     private TMP_Text     _text;
     private Func<string> _build;
 
@@ -69,6 +73,6 @@ public class LocalizedText : MonoBehaviour
         if (_text == null) return;
 
         if (_build != null)                 _text.text = _build();
-        else if (!string.IsNullOrEmpty(Key)) _text.text = Loc.T(Key);
+        else if (!string.IsNullOrEmpty(Key)) _text.text = UpperCase ? Loc.T(Key).ToUpperInvariant() : Loc.T(Key);
     }
 }

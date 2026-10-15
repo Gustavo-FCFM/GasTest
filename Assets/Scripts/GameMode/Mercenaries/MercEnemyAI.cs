@@ -365,7 +365,7 @@ public class MercEnemyAI : NetworkBehaviour
         return !Physics.Linecast(from, to, SightBlockers, QueryTriggerInteraction.Ignore);
     }
 
-    // El jugador vivo más cercano dentro del radio de detección, siempre que
+    // El jugador (o compañero) vivo más cercano dentro del radio de detección, siempre que
     // perseguirlo no lo saque de su zona.
     [Server]
     private AbilitySystemComponent FindTarget()
@@ -393,14 +393,19 @@ public class MercEnemyAI : NetworkBehaviour
                 continue;
             }
 
-            if (asc.GetComponent<PlayerController>() == null) continue;   // solo jugadores
+            // Jugadores y los compañeros del Maestro de bestias (el Lobo; el Búho no se puede
+            // pegar). Pedido de Gustavo, 14 de octubre de 2026: van por el compañero si está en
+            // rango, como por cualquier jugador (el más cercano).
+            bool isCompanion = asc.GetComponent<Entity_Companion>() != null;
+            if (asc.GetComponent<PlayerController>() == null && !isCompanion) continue;
+            if (isCompanion && asc.HasTag(EGameplayTag.Status_Immunity)) continue;
             if (asc.HasTag(EGameplayTag.State_Dead)) continue;
             if (asc.HasTag(EGameplayTag.Status_SafeZone)) continue;       // en su base no se los toca
             if (asc.IsHiddenFromEnemies) continue;   // invisible y sin revelar
 
             // Correa: si para alcanzarlo tendría que irse lejos de su puesto, lo ignora.
             if (Vector3.Distance(_homePosition, asc.transform.position) > LeashRadius) continue;
-            if (!playersNear.Contains(asc)) playersNear.Add(asc);
+            if (!isCompanion && !playersNear.Contains(asc)) playersNear.Add(asc);
 
             float d = Vector3.Distance(transform.position, asc.transform.position);
             if (d < bestDistance) { bestDistance = d; best = asc; }

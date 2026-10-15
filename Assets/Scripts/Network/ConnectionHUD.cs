@@ -275,7 +275,7 @@ public class ConnectionHUD : MonoBehaviour
         GUILayout.Space(6);
         GUILayout.BeginHorizontal();
         if (GUILayout.Button(Loc.T("menu.settings"), GUILayout.Height(28)))
-            UI_SettingsPanel.GetOrCreate().Open();
+            UI_SettingsPanel.Get()?.Open();
         if (UI_MainMenu.Instance != null &&
             GUILayout.Button(Loc.T("net.main_menu"), GUILayout.Height(28)))
             UI_MainMenu.ReturnToMenu();

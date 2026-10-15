@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -8,15 +7,16 @@ using UnityEngine.UI;
 // ============================================================
 // UI_SettingsPanel
 //
-// El panel de Ajustes. Se dibuja solo por código (con MercUIFactory, igual que la sala
-// y el HUD de partida), así que alcanza con que el componente exista: no hay prefab
-// que cablear ni referencias que se rompan. Sirve igual en el menú principal y dentro
-// de la partida (ESC ▸ Ajustes en el recuadro de red).
+// El panel de Ajustes. Sirve igual en el menú principal y dentro de la partida (ESC ▸
+// Ajustes en el recuadro de red).
+//
+// VIVE EN EL PREFAB DE MENÚS (Menus_UI ▸ Settings), desde el 14 de octubre de 2026: el velo,
+// el panel, el título, las secciones, las filas (cada una con su UI_SettingRow, que dice
+// qué ajuste maneja), los botones y la ayuda están armados ahí y se acomodan a mano. Este
+// script conecta cada fila con su valor de GameSettings y abre o cierra el canvas.
 //
 // CÓMO SE USA DESDE OTRO SCRIPT:
-//     UI_SettingsPanel.GetOrCreate().Open();
-// Si hay uno en la escena lo usa (por ejemplo un prefab con los colores cambiados en el
-// Inspector); si no, lo crea en el momento.
+//     UI_SettingsPanel.Get()?.Open();
 //
 // Los valores viven en GameSettings (estático, PlayerPrefs): el panel solo los muestra
 // y los escribe. Cada cambio se aplica al instante y se guarda al cerrar.
@@ -26,46 +26,21 @@ using UnityEngine.UI;
 //
 // IDIOMA: es la primera fila (cualquiera tiene que poder encontrarla sin entender el
 // idioma de ahora: dice "Idioma · Language" en los dos). Los textos fijos del panel están
-// atados con LocalizedText y se reescriben solos al cambiarlo; los valores de las filas se
-// recalculan con RefreshAll, que corre con cada cambio de GameSettings.
+// atados con LocalizedText y se reescriben solos; los valores de las filas se recalculan
+// con RefreshAll, que corre con cada cambio de GameSettings.
 // ============================================================
 public class UI_SettingsPanel : MonoBehaviour
 {
-    [Header("Medidas")]
-    [Tooltip("Ancho del panel. El alto se calcula solo según las filas.")]
-    [Label("Ancho del panel")]
-    public float   PanelWidth  = 760f;
-    [Tooltip("Espacio bajo la última fila para los botones y la ayuda.")]
-    [Label("Alto del pie")]
-    public float   FooterHeight = 110f;
-    [Label("Alto de fila")]
-    public float   RowHeight   = 44f;
-    [Label("Ancho de etiqueta")]
-    public float   LabelWidth  = 260f;
-    [Label("Separación de secciones")]
-    public float   SectionGap  = 18f;
+    [Header("Piezas")]
+    [Tooltip("El canvas del panel: se prende al abrir y se apaga al cerrar.")]
+    [Label("Canvas de los ajustes")]
+    public GameObject PanelCanvas;
 
-    [Header("Secciones")]
-    [Tooltip("Mostrar la sección de sonido. Apagada mientras el juego no tenga clips: " +
-             "tres barras que no cambian nada confunden. Prenderla cuando lleguen los sonidos.")]
-    [Label("Mostrar sonido")]
-    public bool ShowSoundSection = false;
+    [Label("Botón Restablecer")]
+    public Button ResetButton;
 
-    [Header("Colores")]
-    [Label("Color del velo")]
-    public Color BackdropColor = new Color(0f, 0f, 0f, 0.8f);
-    [Label("Color del panel")]
-    public Color PanelColor    = new Color(0.10f, 0.11f, 0.13f, 0.97f);
-    [Label("Color de fila")]
-    public Color RowColor      = new Color(1f, 1f, 1f, 0.04f);
-    [Label("Color de acento")]
-    public Color AccentColor   = new Color(0.95f, 0.65f, 0.20f);
-    [Label("Color de controles")]
-    public Color ControlColor  = new Color(0.20f, 0.22f, 0.26f);
-    [Label("Color del texto")]
-    public Color TextColor     = new Color(0.92f, 0.92f, 0.92f);
-    [Label("Color del texto tenue")]
-    public Color DimTextColor  = new Color(0.65f, 0.65f, 0.65f);
+    [Label("Botón Cerrar")]
+    public Button CloseButton;
 
     // True mientras algún panel de ajustes esté abierto (hay uno por escena como mucho).
     public static bool IsAnyOpen { get; private set; }
@@ -77,8 +52,7 @@ public class UI_SettingsPanel : MonoBehaviour
     public bool IsOpen => _open;
 
     private bool _open;
-    private Canvas _canvas;
-    private GameObject _root;
+    private bool _bound;
     private GameObject _firstControl;
 
     // Controles que hay que refrescar cuando cambia un valor desde afuera (Restablecer).
@@ -88,24 +62,34 @@ public class UI_SettingsPanel : MonoBehaviour
     // ACCESO
     // =========================================================
 
-    public static UI_SettingsPanel GetOrCreate()
+    private static bool _warnedMissing;
+
+    // El de la escena (el prefab de menús). Null si no hay: avisa una vez.
+    public static UI_SettingsPanel Get()
     {
         UI_SettingsPanel existing = FindFirstObjectByType<UI_SettingsPanel>(FindObjectsInactive.Include);
-        if (existing != null) return existing;
+        if (existing == null && !_warnedMissing)
+        {
+            _warnedMissing = true;
+            Debug.LogWarning("[UI_SettingsPanel] La escena no tiene el prefab de menús (Menus_UI): no hay panel de Ajustes.");
+        }
+        return existing;
+    }
 
-        GameObject go = new GameObject("UI_SettingsPanel");
-        return go.AddComponent<UI_SettingsPanel>();
+    private void Awake()
+    {
+        if (PanelCanvas != null) PanelCanvas.SetActive(false);
     }
 
     public void Open()
     {
         if (_open) return;
 
-        if (_canvas == null) Build();
+        if (!_bound) BindAll();
         EnsureEventSystem();
 
         RefreshAll();
-        _canvas.gameObject.SetActive(true);
+        if (PanelCanvas != null) PanelCanvas.SetActive(true);
         _open = true;
         IsAnyOpen = true;
 
@@ -126,7 +110,7 @@ public class UI_SettingsPanel : MonoBehaviour
         GameSettings.OnChanged -= RefreshAll;
         GameSettings.Save();
 
-        if (_canvas != null) _canvas.gameObject.SetActive(false);
+        if (PanelCanvas != null) PanelCanvas.SetActive(false);
         UICursor.Release(this);
     }
 
@@ -146,113 +130,27 @@ public class UI_SettingsPanel : MonoBehaviour
     }
 
     // =========================================================
-    // CONSTRUCCIÓN
+    // CONECTAR LAS FILAS (una vez, al abrir por primera vez)
     // =========================================================
 
-    private void Build()
+    private void BindAll()
     {
-        _canvas = MercUIFactory.CreateCanvas("SettingsCanvas", 300);
-        _canvas.transform.SetParent(transform, false);
+        _bound = true;
 
-        // Fondo oscuro que tapa todo y se traga los clics (no se cierra al clickear afuera:
-        // un clic perdido en la partida no tiene que soltar el panel).
-        Image backdrop = MercUIFactory.CreateImage(_canvas.transform, "Backdrop", BackdropColor,
-                                                   Vector2.zero, Vector2.zero,
-                                                   Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f));
-        backdrop.raycastTarget = true;
-
-        Image panel = MercUIFactory.CreateImage(_canvas.transform, "Panel", PanelColor,
-                                                Vector2.zero, new Vector2(PanelWidth, 100f),
-                                                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        panel.raycastTarget = true;
-        _root = panel.gameObject;
-
-        Vector2 top = new Vector2(0.5f, 1f);
-        TextMeshProUGUI title = MercUIFactory.CreateText(_root.transform, "Title", "", 34f, TextColor,
-                                                         TextAlignmentOptions.Center,
-                                                         new Vector2(0f, -36f), new Vector2(PanelWidth, 44f),
-                                                         top, top, top);
-        title.fontStyle = FontStyles.Bold;
-        LocalizedText.Bind(title, "settings.title");
-
-        float y = -90f;
-
-        // ---- Idioma ----
-        // Lo primero de todo: quien no entiende el idioma de ahora tiene que encontrarlo
-        // sin leer nada más. La etiqueta dice lo mismo en los dos idiomas.
-        Section(ref y, "settings.section.language");
-        CyclerRow(ref y, "settings.language", Loc.Languages.Length,
-                  () => Array.IndexOf(Loc.Languages, GameSettings.Language),
-                  i => GameSettings.Language = Loc.Languages[i],
-                  i => Loc.LanguageName(Loc.Languages[i]));
-
-        // ---- Controles ----
-        // Es la pregunta que decide qué botones se ven en el resto del juego, y conviene
-        // que sea de lo primero que alguien ajuste.
-        Section(ref y, "settings.section.controls");
-        CyclerRow(ref y, "settings.input_scheme", InputSchemes.Length,
-                  () => Array.IndexOf(InputSchemes, GameSettings.InputScheme),
-                  i => GameSettings.InputScheme = InputSchemes[i],
-                  i => InputGlyphs.SchemeName(InputSchemes[i]));
-
-        // ---- Cámara ----
-        Section(ref y, "settings.section.camera");
-        SliderRow(ref y, "settings.sensitivity",
-                  GameSettings.MinSensitivity, GameSettings.MaxSensitivity,
-                  () => GameSettings.MouseSensitivity, v => GameSettings.MouseSensitivity = v,
-                  v => $"{v:0.0}×", first: true);
-        ToggleRow(ref y, "settings.invert_y", () => GameSettings.InvertY, v => GameSettings.InvertY = v);
-
-        // ---- Sonido ----
-        // Oculto mientras no haya clips (ver ShowSoundSection): tres barras que no hacen
-        // nada confunden más de lo que ayudan.
-        if (ShowSoundSection)
+        if (ResetButton != null)
         {
-            Section(ref y, "settings.section.sound");
-            SliderRow(ref y, "settings.master_volume", 0f, 1f,
-                      () => GameSettings.MasterVolume, v => GameSettings.MasterVolume = v, Percent);
-            SliderRow(ref y, "settings.music", 0f, 1f,
-                      () => GameSettings.MusicVolume, v => GameSettings.MusicVolume = v, Percent);
-            SliderRow(ref y, "settings.effects", 0f, 1f,
-                      () => GameSettings.SfxVolume, v => GameSettings.SfxVolume = v, Percent);
+            ResetButton.onClick.AddListener(AudioManager.Click);
+            ResetButton.onClick.AddListener(() => { GameSettings.ResetToDefaults(); RefreshAll(); });
+        }
+        if (CloseButton != null)
+        {
+            CloseButton.onClick.AddListener(AudioManager.Click);
+            CloseButton.onClick.AddListener(Close);
         }
 
-        // ---- Pantalla ----
-        Section(ref y, "settings.section.display");
-        CyclerRow(ref y, "settings.screen_mode", ScreenModeKeys.Length,
-                  () => Array.IndexOf(ScreenModes, GameSettings.ScreenMode),
-                  i => GameSettings.ScreenMode = ScreenModes[i],
-                  i => Loc.T(ScreenModeKeys[i]));
-        CyclerRow(ref y, "settings.resolution", GameSettings.Resolutions.Length,
-                  () => GameSettings.ResolutionIndex < 0 ? GameSettings.CurrentResolutionIndex() : GameSettings.ResolutionIndex,
-                  i => GameSettings.ResolutionIndex = i,
-                  i => $"{GameSettings.Resolutions[i].width} × {GameSettings.Resolutions[i].height}");
-        // Sin fila de calidad (8 de octubre, pedido de Gustavo): el proyecto no tiene niveles
-        // pensados para elegir (eran los de fábrica, Mobile y PC). GameSettings.QualityLevel
-        // sigue existiendo por si algún día se arman.
-        ToggleRow(ref y, "settings.vsync", () => GameSettings.VSync, v => GameSettings.VSync = v);
-
-        // El alto lo dicta el contenido: las filas de arriba más el pie con los botones.
-        // Con un alto fijo, agregar una fila corría los botones encima de las últimas.
-        panel.rectTransform.sizeDelta = new Vector2(PanelWidth, -y + FooterHeight);
-
-        // ---- Botones ----
-        Vector2 bottom = new Vector2(0.5f, 0f);
-        Button reset = MakeButton(_root.transform, "Reset", "settings.reset", ControlColor,
-                                  bottom, new Vector2(-110f, 36f), new Vector2(190f, 44f), localize: true);
-        reset.onClick.AddListener(() => { GameSettings.ResetToDefaults(); RefreshAll(); });
-
-        Button close = MakeButton(_root.transform, "Close", "settings.close", AccentColor,
-                                  bottom, new Vector2(110f, 36f), new Vector2(190f, 44f), localize: true);
-        close.onClick.AddListener(Close);
-
-        TextMeshProUGUI hint = MercUIFactory.CreateText(_root.transform, "Hint", "",
-                                                        15f, DimTextColor, TextAlignmentOptions.Center,
-                                                        new Vector2(0f, 8f), new Vector2(PanelWidth, 20f),
-                                                        bottom, bottom, bottom);
-        LocalizedText.Bind(hint, "settings.hint");
-
-        _canvas.gameObject.SetActive(false);
+        GameObject root = PanelCanvas != null ? PanelCanvas : gameObject;
+        foreach (UI_SettingRow row in root.GetComponentsInChildren<UI_SettingRow>(true))
+            Bind(row);
     }
 
     private static readonly EInputScheme[] InputSchemes =
@@ -265,233 +163,127 @@ public class UI_SettingsPanel : MonoBehaviour
 
     private static string Percent(float v) => $"{Mathf.RoundToInt(v * 100f)} %";
 
-    // ---------- filas ----------
-
-    // 'key': la clave del título en Loc (se muestra en mayúsculas).
-    private void Section(ref float y, string key)
+    private void Bind(UI_SettingRow row)
     {
-        y -= SectionGap;
-        Vector2 top = new Vector2(0f, 1f);
-        TextMeshProUGUI t = MercUIFactory.CreateText(_root.transform, "Section_" + key, "",
-                                                     16f, AccentColor, TextAlignmentOptions.Left,
-                                                     new Vector2(40f, y), new Vector2(PanelWidth - 80f, 24f),
-                                                     top, top, top);
-        t.fontStyle = FontStyles.Bold;
-        LocalizedText.Bind(t, () => Loc.T(key).ToUpperInvariant());
-        y -= 28f;
+        switch (row.Setting)
+        {
+            case ESettingKind.Language:
+                BindCycler(row, Loc.Languages.Length,
+                           () => Array.IndexOf(Loc.Languages, GameSettings.Language),
+                           i => GameSettings.Language = Loc.Languages[i],
+                           i => Loc.LanguageName(Loc.Languages[i]));
+                break;
+
+            case ESettingKind.InputScheme:
+                BindCycler(row, InputSchemes.Length,
+                           () => Array.IndexOf(InputSchemes, GameSettings.InputScheme),
+                           i => GameSettings.InputScheme = InputSchemes[i],
+                           i => InputGlyphs.SchemeName(InputSchemes[i]));
+                break;
+
+            case ESettingKind.Sensitivity:
+                BindSlider(row, GameSettings.MinSensitivity, GameSettings.MaxSensitivity,
+                           () => GameSettings.MouseSensitivity, v => GameSettings.MouseSensitivity = v,
+                           v => $"{v:0.0}×");
+                break;
+
+            case ESettingKind.InvertY:
+                BindToggle(row, () => GameSettings.InvertY, v => GameSettings.InvertY = v);
+                break;
+
+            case ESettingKind.MasterVolume:
+                BindSlider(row, 0f, 1f, () => GameSettings.MasterVolume, v => GameSettings.MasterVolume = v, Percent);
+                break;
+            case ESettingKind.MusicVolume:
+                BindSlider(row, 0f, 1f, () => GameSettings.MusicVolume, v => GameSettings.MusicVolume = v, Percent);
+                break;
+            case ESettingKind.EffectsVolume:
+                BindSlider(row, 0f, 1f, () => GameSettings.SfxVolume, v => GameSettings.SfxVolume = v, Percent);
+                break;
+
+            case ESettingKind.ScreenMode:
+                BindCycler(row, ScreenModeKeys.Length,
+                           () => Array.IndexOf(ScreenModes, GameSettings.ScreenMode),
+                           i => GameSettings.ScreenMode = ScreenModes[i],
+                           i => Loc.T(ScreenModeKeys[i]));
+                break;
+
+            case ESettingKind.Resolution:
+                BindCycler(row, GameSettings.Resolutions.Length,
+                           () => GameSettings.ResolutionIndex < 0 ? GameSettings.CurrentResolutionIndex() : GameSettings.ResolutionIndex,
+                           i => GameSettings.ResolutionIndex = i,
+                           i => $"{GameSettings.Resolutions[i].width} × {GameSettings.Resolutions[i].height}");
+                break;
+
+            case ESettingKind.VSync:
+                BindToggle(row, () => GameSettings.VSync, v => GameSettings.VSync = v);
+                break;
+        }
     }
 
-    // Una fila: fondo tenue, etiqueta a la izquierda, y devuelve el rect donde va el control.
-    // 'labelKey' es la clave de la etiqueta en Loc. La etiqueta se achica sola si en algún
-    // idioma no entra (el español suele ser más largo).
-    private RectTransform Row(ref float y, string labelKey)
+    private void BindSlider(UI_SettingRow row, float min, float max,
+                            Func<float> get, Action<float> set, Func<float, string> format)
     {
-        Vector2 top = new Vector2(0f, 1f);
-        float width = PanelWidth - 80f;
+        Slider slider = row.Slider;
+        if (slider == null) { Debug.LogWarning($"[Ajustes] La fila '{row.name}' ({row.Setting}) no tiene barra."); return; }
 
-        Image bg = MercUIFactory.CreateImage(_root.transform, "Row_" + labelKey, RowColor,
-                                             new Vector2(40f, y), new Vector2(width, RowHeight),
-                                             top, top, top);
-
-        TextMeshProUGUI label = MercUIFactory.CreateText(bg.transform, "Label", "", 19f, TextColor,
-                                                         TextAlignmentOptions.Left,
-                                                         new Vector2(14f, 0f), new Vector2(LabelWidth, RowHeight));
-        label.enableAutoSizing = true;
-        label.fontSizeMin      = 13f;
-        label.fontSizeMax      = 19f;
-        label.textWrappingMode = TextWrappingModes.NoWrap;
-        LocalizedText.Bind(label, labelKey);
-
-        RectTransform control = MercUIFactory.CreateRect(bg.transform, "Control",
-                                                         new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f),
-                                                         new Vector2(-14f, 0f), new Vector2(width - LabelWidth - 40f, RowHeight - 10f));
-        y -= RowHeight + 4f;
-        return control;
-    }
-
-    private void SliderRow(ref float y, string label, float min, float max,
-                           Func<float> get, Action<float> set, Func<float, string> format, bool first = false)
-    {
-        RectTransform control = Row(ref y, label);
-        float w = control.sizeDelta.x;
-
-        TextMeshProUGUI value = MercUIFactory.CreateText(control, "Value", "", 18f, TextColor, TextAlignmentOptions.Right,
-                                                         Vector2.zero, new Vector2(80f, RowHeight),
-                                                         new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(1f, 0.5f));
-
-        Slider slider = MakeSlider(control, new Vector2(0f, 0f), new Vector2(w - 96f, 24f), min, max);
+        slider.minValue = min;
+        slider.maxValue = max;
 
         bool refreshing = false;
         slider.onValueChanged.AddListener(v =>
         {
             if (refreshing) return;
             set(v);
-            value.text = format(get());
+            if (row.Value != null) row.Value.text = format(get());
         });
 
         _refreshers.Add(() =>
         {
             refreshing = true;
             slider.SetValueWithoutNotify(get());
-            value.text = format(get());
+            if (row.Value != null) row.Value.text = format(get());
             refreshing = false;
         });
 
-        if (first) _firstControl = slider.gameObject;
+        // El primer control que se selecciona al abrir (con el mando): la sensibilidad.
+        if (_firstControl == null) _firstControl = slider.gameObject;
     }
 
-    // Casilla para marcar y desmarcar (invertir Y, VSync). Es un Toggle de uGUI armado a
-    // mano: el cuadrado es el fondo y el cuadradito de color adentro es la "palomita" —
-    // un cuadrado relleno y no el glifo ✓, que la fuente por defecto no tiene.
-    private void ToggleRow(ref float y, string label, Func<bool> get, Action<bool> set)
+    private void BindToggle(UI_SettingRow row, Func<bool> get, Action<bool> set)
     {
-        RectTransform control = Row(ref y, label);
-        float h = RowHeight - 14f;
-
-        Vector2 right = new Vector2(1f, 0.5f);
-        Image box = MercUIFactory.CreateImage(control, "Box", ControlColor,
-                                              Vector2.zero, new Vector2(h, h), right, right, right);
-        box.raycastTarget = true;
-
-        Image mark = MercUIFactory.CreateImage(box.transform, "Mark", AccentColor,
-                                               Vector2.zero, new Vector2(h - 10f, h - 10f),
-                                               new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-
-        Toggle toggle = box.gameObject.AddComponent<Toggle>();
-        toggle.targetGraphic = box;
-        toggle.graphic       = mark;
-
-        ColorBlock colors = toggle.colors;
-        colors.highlightedColor = Color.Lerp(ControlColor, Color.white, 0.25f);
-        colors.selectedColor    = colors.highlightedColor;
-        toggle.colors = colors;
+        Toggle toggle = row.Toggle;
+        if (toggle == null) { Debug.LogWarning($"[Ajustes] La fila '{row.name}' ({row.Setting}) no tiene casilla."); return; }
 
         toggle.onValueChanged.AddListener(v => set(v));
-
         _refreshers.Add(() => toggle.SetIsOnWithoutNotify(get()));
     }
 
-    // < valor > — para todo lo que es una lista corta (modo de pantalla, resolución,
-    // calidad, sí/no). Anda con mouse y con control sin necesitar un dropdown.
-    private void CyclerRow(ref float y, string label, int count,
-                           Func<int> get, Action<int> set, Func<int, string> name)
+    // < valor > — para todo lo que es una lista corta. Anda con mouse y con control sin
+    // necesitar un dropdown.
+    private void BindCycler(UI_SettingRow row, int count, Func<int> get, Action<int> set, Func<int, string> name)
     {
-        RectTransform control = Row(ref y, label);
-        float w = control.sizeDelta.x;
-        float h = RowHeight - 10f;
-
-        Button prev = MakeButton(control, "Prev", "<", ControlColor,
-                                 new Vector2(0f, 0.5f), new Vector2(0f, 0f), new Vector2(h, h));
-        Button next = MakeButton(control, "Next", ">", ControlColor,
-                                 new Vector2(1f, 0.5f), new Vector2(0f, 0f), new Vector2(h, h));
-
-        // Sin rich text: TextMeshPro intentaría leer el "<" como el inicio de una etiqueta.
-        prev.GetComponentInChildren<TextMeshProUGUI>().richText = false;
-        next.GetComponentInChildren<TextMeshProUGUI>().richText = false;
-
-        TextMeshProUGUI value = MercUIFactory.CreateText(control, "Value", "", 18f, TextColor, TextAlignmentOptions.Center,
-                                                         Vector2.zero, new Vector2(w - h * 2f - 8f, h),
-                                                         new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-
         void Step(int dir)
         {
             if (count <= 0) return;
             int i = ((Mathf.Max(get(), 0) + dir) % count + count) % count;
             set(i);
-            value.text = name(i);
+            if (row.Value != null) row.Value.text = name(i);
         }
 
-        prev.onClick.AddListener(() => Step(-1));
-        next.onClick.AddListener(() => Step(+1));
+        if (row.Previous != null) { row.Previous.onClick.AddListener(AudioManager.Click); row.Previous.onClick.AddListener(() => Step(-1)); }
+        if (row.Next != null)     { row.Next.onClick.AddListener(AudioManager.Click);     row.Next.onClick.AddListener(() => Step(+1)); }
 
         _refreshers.Add(() =>
         {
             int i = Mathf.Clamp(get(), 0, Mathf.Max(count - 1, 0));
-            value.text = count > 0 ? name(i) : "—";
+            if (row.Value != null) row.Value.text = count > 0 ? name(i) : "—";
         });
     }
 
     private void RefreshAll()
     {
         foreach (Action r in _refreshers) r();
-    }
-
-    // ---------- widgets ----------
-
-    // Con 'localize', 'label' es una clave de Loc y el botón se reescribe al cambiar el
-    // idioma; sin él, es el texto tal cual (las flechas < >).
-    private Button MakeButton(Transform parent, string name, string label, Color color,
-                              Vector2 anchor, Vector2 position, Vector2 size, bool localize = false)
-    {
-        RectTransform rect = MercUIFactory.CreateRect(parent, name, anchor, anchor, anchor, position, size);
-
-        Image bg = rect.gameObject.AddComponent<Image>();
-        bg.sprite = MercUIFactory.WhiteSprite;
-        bg.color  = color;
-
-        Button button = rect.gameObject.AddComponent<Button>();
-        button.targetGraphic = bg;
-        button.onClick.AddListener(AudioManager.Click);
-
-        ColorBlock colors = button.colors;
-        colors.highlightedColor = Color.Lerp(color, Color.white, 0.25f);
-        colors.selectedColor    = colors.highlightedColor;
-        colors.pressedColor     = Color.Lerp(color, Color.black, 0.25f);
-        button.colors = colors;
-
-        TextMeshProUGUI text = MercUIFactory.CreateText(rect, "Text", localize ? "" : label, 18f, Color.white,
-                                                        TextAlignmentOptions.Center,
-                                                        Vector2.zero, new Vector2(size.x - 8f, size.y - 6f),
-                                                        new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        if (localize) LocalizedText.Bind(text, label);
-        return button;
-    }
-
-    // Un Slider de uGUI armado a mano: fondo, relleno y manija. Anclado a la izquierda
-    // del rect del control.
-    private Slider MakeSlider(Transform parent, Vector2 position, Vector2 size, float min, float max)
-    {
-        Vector2 left = new Vector2(0f, 0.5f);
-        RectTransform rect = MercUIFactory.CreateRect(parent, "Slider", left, left, left, position, size);
-
-        Image track = MercUIFactory.CreateImage(rect, "Track", ControlColor,
-                                                Vector2.zero, new Vector2(0f, 8f),
-                                                new Vector2(0f, 0.5f), new Vector2(1f, 0.5f), new Vector2(0.5f, 0.5f));
-
-        RectTransform fillArea = MercUIFactory.CreateRect(rect, "FillArea",
-                                                          new Vector2(0f, 0.5f), new Vector2(1f, 0.5f), new Vector2(0.5f, 0.5f),
-                                                          Vector2.zero, new Vector2(-12f, 8f));
-        Image fill = MercUIFactory.CreateImage(fillArea, "Fill", AccentColor,
-                                               Vector2.zero, new Vector2(12f, 0f),
-                                               Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f));
-
-        RectTransform handleArea = MercUIFactory.CreateRect(rect, "HandleArea",
-                                                            Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f),
-                                                            Vector2.zero, new Vector2(-12f, 0f));
-        Image handle = MercUIFactory.CreateImage(handleArea, "Handle", Color.white,
-                                                 Vector2.zero, new Vector2(12f, 0f),
-                                                 new Vector2(0f, 0f), new Vector2(0f, 1f), new Vector2(0.5f, 0.5f));
-        handle.raycastTarget = true;
-
-        Slider slider = rect.gameObject.AddComponent<Slider>();
-        slider.fillRect      = fill.rectTransform;
-        slider.handleRect    = handle.rectTransform;
-        slider.targetGraphic = handle;
-        slider.direction     = Slider.Direction.LeftToRight;
-        slider.minValue      = min;
-        slider.maxValue      = max;
-
-        ColorBlock colors = slider.colors;
-        colors.highlightedColor = AccentColor;
-        colors.selectedColor    = AccentColor;
-        slider.colors = colors;
-
-        // Toda la fila del slider recibe el clic, no solo la manija.
-        Image hit = rect.gameObject.AddComponent<Image>();
-        hit.color = Color.clear;
-        hit.raycastTarget = true;
-
-        return slider;
     }
 
     // Sin EventSystem no funciona ningún clic. El menú principal lo trae; en la partida

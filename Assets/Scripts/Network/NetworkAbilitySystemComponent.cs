@@ -1620,7 +1620,7 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
             ? bar.BarRoot.position
             : feet + Vector3.up * 2.2f;
 
-        UI_DamageNumbers.Get().Spawn(feet, top, amount, (ECombatNumber)kind);
+        UI_DamageNumbers.Get()?.Spawn(feet, top, amount, (ECombatNumber)kind);
     }
 
     [TargetRpc]

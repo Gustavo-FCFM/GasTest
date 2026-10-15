@@ -13,14 +13,38 @@ using UnityEngine;
 // acá se arma el texto. Eso quiere decir que cambiar la redacción o traducir el juego
 // no toca la red para nada.
 //
-// Se arma solo, igual que el marcador: componente en la escena y ya.
+// VIVE EN EL PREFAB DE PARTIDA (Match_UI ▸ Announcer), desde el 14 de octubre de 2026:
+// "Messages" es dónde salen (su posición es la altura del aviso) y "MessageTemplate" el MOLDE
+// apagado de un aviso (su letra, sombra y ancho se cambian ahí). El tamaño de letra según el
+// tipo de aviso está en este componente.
 // ============================================================
 public class UI_MatchAnnouncer : MonoBehaviour
 {
-    [Header("Colocación")]
-    [Tooltip("Altura del aviso, medida desde el centro de la pantalla hacia arriba (1080p).")]
-    [Label("Altura")]
-    public float VerticalOffset = 180f;
+    [Header("Piezas")]
+    [Tooltip("Donde salen los avisos (el más nuevo en su centro, los anteriores suben).")]
+    [Label("Contenedor de los avisos")]
+    public RectTransform Messages;
+
+    [Tooltip("El MOLDE de un aviso (apagado): un texto centrado.")]
+    [Label("Molde de un aviso")]
+    public TMP_Text MessageTemplate;
+
+    [Header("Disposición")]
+    [Tooltip("Cuánto sube cada aviso anterior cuando llega uno nuevo, en px del canvas.")]
+    [Label("Separación entre avisos (px)")]
+    public float LineSpacing = 52f;
+
+    [Header("Tamaños de letra")]
+    [Tooltip("Fin de partida, entrega y aparición del Objetivo.")]
+    [Label("Tamaño: lo más importante")]
+    public float BigFontSize = 44f;
+
+    [Tooltip("Equipo aniquilado y comienzo de partida.")]
+    [Label("Tamaño: importante")]
+    public float MediumFontSize = 38f;
+
+    [Label("Tamaño: el resto")]
+    public float SmallFontSize = 30f;
 
     [Header("Tiempos")]
     [Label("Duración del aviso (s)")]
@@ -34,39 +58,21 @@ public class UI_MatchAnnouncer : MonoBehaviour
 
     private class Message
     {
-        public TextMeshProUGUI Text;
+        public TMP_Text Text;
         public float Born;
     }
 
     private readonly List<Message> _messages = new List<Message>();
-    private RectTransform _root;
 
     private void Start()
     {
-        Transform parent = ResolveCanvas();
-
-        _root = MercUIFactory.CreateRect(parent, "AvisosDePartida",
-            anchorMin: new Vector2(0.5f, 0.5f), anchorMax: new Vector2(0.5f, 0.5f),
-            pivot:     new Vector2(0.5f, 0.5f),
-            anchoredPos: new Vector2(0f, VerticalOffset),
-            size:        new Vector2(1200f, 200f));
-
+        if (MessageTemplate != null) MessageTemplate.gameObject.SetActive(false);
         MercenariesGameMode.OnAnnouncement += HandleAnnouncement;
     }
 
     private void OnDestroy()
     {
         MercenariesGameMode.OnAnnouncement -= HandleAnnouncement;
-    }
-
-    private Transform ResolveCanvas()
-    {
-        Canvas canvas = GetComponentInParent<Canvas>();
-        if (canvas != null) return canvas.transform;
-
-        canvas = MercUIFactory.CreateCanvas("Canvas_Avisos", 51);
-        canvas.transform.SetParent(transform, false);
-        return canvas.transform;
     }
 
     // =========================================================
@@ -154,19 +160,19 @@ public class UI_MatchAnnouncer : MonoBehaviour
         }
     }
 
-    private static float ResolveSize(EMatchAnnouncement type)
+    private float ResolveSize(EMatchAnnouncement type)
     {
         switch (type)
         {
             case EMatchAnnouncement.MatchEnded:
             case EMatchAnnouncement.ObjectiveDelivered:
             case EMatchAnnouncement.ObjectiveSpawned:
-                return 44f;
+                return BigFontSize;
             case EMatchAnnouncement.TeamWiped:
             case EMatchAnnouncement.MatchStarted:
-                return 38f;
+                return MediumFontSize;
             default:
-                return 30f;
+                return SmallFontSize;
         }
     }
 
@@ -179,15 +185,15 @@ public class UI_MatchAnnouncer : MonoBehaviour
     // el mismo lugar, así el ojo no lo tiene que buscar.
     public void Push(string text, Color color, float fontSize = 32f)
     {
-        if (_root == null) return;
+        if (Messages == null || MessageTemplate == null) return;
 
-        TextMeshProUGUI tmp = MercUIFactory.CreateText(_root, "Aviso", text, fontSize, color,
-            TextAlignmentOptions.Center,
-            anchoredPos: Vector2.zero, size: new Vector2(1200f, 50f),
-            anchorMin: new Vector2(0.5f, 0.5f), anchorMax: new Vector2(0.5f, 0.5f),
-            pivot: new Vector2(0.5f, 0.5f));
-        tmp.fontStyle = FontStyles.Bold;
-        MercUIFactory.AddShadow(tmp, 3f);
+        TMP_Text tmp = Instantiate(MessageTemplate, Messages);
+        tmp.name = "Aviso";
+        tmp.gameObject.SetActive(true);
+        tmp.text     = text;
+        tmp.color    = color;
+        tmp.fontSize = fontSize;
+        tmp.rectTransform.anchoredPosition = Vector2.zero;
 
         _messages.Add(new Message { Text = tmp, Born = Time.time });
 
@@ -212,7 +218,7 @@ public class UI_MatchAnnouncer : MonoBehaviour
 
             // Los más viejos quedan arriba (el índice 0 es el más viejo).
             int fromBottom = _messages.Count - 1 - i;
-            Vector2 target = new Vector2(0f, fromBottom * 52f);
+            Vector2 target = new Vector2(0f, fromBottom * LineSpacing);
             msg.Text.rectTransform.anchoredPosition = Vector2.Lerp(
                 msg.Text.rectTransform.anchoredPosition, target, Time.deltaTime * 12f);
 

@@ -82,6 +82,31 @@ public class Entity_Companion : NetworkBehaviour
     [Label("Alcance de las órdenes (m)")]
     public float CommandRange = 40f;
 
+    [Header("Merodear (sin pelear)")]
+    [Tooltip("Sin nadie a quien pegar, da vueltas por la zona del dueño en vez de quedarse pegado " +
+             "detrás de él (el Lobo). No vale para el que se pone delante (Oso) ni para el que flota (Búho).")]
+    [Label("Merodea alrededor del dueño")]
+    public bool Roam = true;
+
+    [Tooltip("Hasta qué distancia del dueño elige los puntos a donde ir.")]
+    [Label("Merodear: radio (m)")]
+    public float RoamRadius = 6f;
+
+    [Tooltip("Los puntos quedan al menos a esta distancia del dueño: no se le mete entre los pies.")]
+    [Label("Merodear: distancia mínima (m)")]
+    public float RoamMinRadius = 2.5f;
+
+    [Tooltip("Velocidad al merodear, como fracción de la normal (camina, no corre).")]
+    [Label("Merodear: velocidad (×)")]
+    public float RoamSpeedFactor = 0.6f;
+
+    [Tooltip("Segundos que se queda quieto al llegar a cada punto (al azar entre los dos).")]
+    [Label("Merodear: pausa mínima (s)")]
+    public float RoamPauseMin = 1f;
+
+    [Label("Merodear: pausa máxima (s)")]
+    public float RoamPauseMax = 3f;
+
     [Header("Saltar entre pisos")]
     [Tooltip("Si el camino por el piso da mucha vuelta o no llega (otro piso, una plataforma), SALTA " +
              "derecho al punto, si está a esta distancia horizontal o menos.")]
@@ -198,6 +223,9 @@ public class Entity_Companion : NetworkBehaviour
     private Vector3 _leapFrom, _leapTo;
     private float _leapStart, _leapDuration, _leapHeight;
     private float _nextPathCheck, _nextLeapAt;
+    private bool    _hasRoamPoint;
+    private Vector3 _roamPoint;
+    private float   _roamWaitUntil;
     private readonly Dictionary<AbilitySystemComponent, float> _bitten = new Dictionary<AbilitySystemComponent, float>();
     private readonly Collider[] _hits = new Collider[48];
     private readonly HashSet<AbilitySystemComponent> _seen = new HashSet<AbilitySystemComponent>();
@@ -227,9 +255,10 @@ public class Entity_Companion : NetworkBehaviour
         if (_asc != null) _asc.OnDeath -= HandleDeath;
     }
 
-    // Lo llama el CompanionManager en el servidor, justo después de spawnearlo.
+    // Lo llama el CompanionManager en el servidor, justo después de spawnearlo. healthFraction:
+    // con cuánta vida sale (la que tenía guardada si se lo cambió herido; 1 = llena).
     [Server]
-    public void Initialize(AbilitySystemComponent owner, CompanionManager manager)
+    public void Initialize(AbilitySystemComponent owner, CompanionManager manager, float healthFraction = 1f)
     {
         OwnerASC = owner;
         _manager = manager;
@@ -243,7 +272,7 @@ public class Entity_Companion : NetworkBehaviour
                   : Mathf.Max(1f, owner.GetAttributeValue(EAttributeType.MaxHealth) * HealthFraction);
         float delta = max - _asc.GetAttributeValue(EAttributeType.MaxHealth);
         if (!Mathf.Approximately(delta, 0f)) _asc.UpgradeAttribute(EAttributeType.MaxHealth, delta);
-        _asc.SetCurrentAttributeValue(EAttributeType.Health, max);
+        _asc.SetCurrentAttributeValue(EAttributeType.Health, Mathf.Max(1f, max * Mathf.Clamp01(healthFraction)));
 
         if (Indestructible) _asc.AddTag(EGameplayTag.Status_Immunity);
         if (TauntsNpcs)     _asc.AddTag(EGameplayTag.Status_Taunting);
@@ -443,9 +472,21 @@ public class Entity_Companion : NetworkBehaviour
         _bitten[victim] = Time.time;
     }
 
-    // Sin objetivo: junto al dueño (el Oso, delante; los demás, a un costado y atrás).
+    // La vida que le queda, de 0 a 1 (la guarda el manager al cambiarlo por otro).
+    public float HealthFraction01
+    {
+        get
+        {
+            float max = _asc.GetAttributeValue(EAttributeType.MaxHealth);
+            return max > 0f ? Mathf.Clamp01(_asc.GetAttributeValue(EAttributeType.Health) / max) : 1f;
+        }
+    }
+
+    // Sin objetivo: junto al dueño (el Oso, delante; el Lobo merodea; los demás, a un costado y atrás).
     private void FollowOwner()
     {
+        if (Roam && !GuardOwner) { RoamAroundOwner(); return; }
+
         Transform owner = OwnerASC.transform;
         Vector3 goal = GuardOwner ? GuardPoint() : OwnerPoint(FollowOffset);
 
@@ -454,6 +495,62 @@ public class Entity_Companion : NetworkBehaviour
 
         if (FlatDistance(transform.position, goal) > 1.2f) MoveTo(goal, speed);
         else { Halt(); Face(transform.position + owner.forward); }
+    }
+
+    // Da vueltas por la zona del dueño: elige un punto a su alrededor, camina hasta ahí, se
+    // queda un rato y elige otro. Si el dueño se aleja, corre a alcanzarlo.
+    private void RoamAroundOwner()
+    {
+        Vector3 ownerPos = OwnerASC.transform.position;
+        float toOwner = FlatDistance(transform.position, ownerPos);
+
+        // Quedó lejos: lo alcanza corriendo y elige un punto nuevo al llegar.
+        if (toOwner > RoamRadius + 4f)
+        {
+            _hasRoamPoint = false;
+            MoveTo(ownerPos, MoveSpeed * 1.5f);
+            return;
+        }
+
+        // El punto quedó lejos del dueño (se movió): otro.
+        if (_hasRoamPoint && FlatDistance(_roamPoint, ownerPos) > RoamRadius * 1.3f) _hasRoamPoint = false;
+
+        if (!_hasRoamPoint)
+        {
+            if (Time.time < _roamWaitUntil) { Halt(); return; }
+            _hasRoamPoint = TryPickRoamPoint(ownerPos, out _roamPoint);
+            if (!_hasRoamPoint) { Halt(); return; }
+        }
+
+        if (FlatDistance(transform.position, _roamPoint) > 0.8f)
+        {
+            MoveTo(_roamPoint, MoveSpeed * RoamSpeedFactor);
+            return;
+        }
+
+        // Llegó: una pausa mirando hacia afuera, y después otro punto.
+        Halt();
+        _hasRoamPoint  = false;
+        _roamWaitUntil = Time.time + Random.Range(RoamPauseMin, Mathf.Max(RoamPauseMin, RoamPauseMax));
+    }
+
+    private bool TryPickRoamPoint(Vector3 ownerPos, out Vector3 point)
+    {
+        for (int i = 0; i < 6; i++)
+        {
+            Vector2 dir = Random.insideUnitCircle.normalized;
+            float r = Random.Range(RoamMinRadius, Mathf.Max(RoamMinRadius, RoamRadius));
+            Vector3 p = ownerPos + new Vector3(dir.x, 0f, dir.y) * r;
+            if (_agent != null && _agent.enabled)
+            {
+                if (NavMesh.SamplePosition(p, out NavMeshHit hit, 2f, NavMesh.AllAreas) &&
+                    Mathf.Abs(hit.position.y - ownerPos.y) < 2.5f)
+                { point = hit.position; return true; }
+            }
+            else { point = p; return true; }
+        }
+        point = ownerPos;
+        return false;
     }
 
     // Delante del dueño, hacia el enemigo más cercano (o hacia donde mira), corrido a un costado

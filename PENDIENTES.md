@@ -84,14 +84,14 @@ Una herramienta de una vez arma la pieza en el prefab la primera vez; después s
 | Barra de carga por etapas | `UI_ChargeBar` + molde `UI_ChargeSegment` | **cámara** | 5 oct |
 | La X, la calavera y el arco de daño | `UI_CombatFeedback` | **cámara** | 22 sep |
 | Viñeta de vida baja | `UI_LowHealthVignette` (antes en `UI_ScreenFeedback`) | **cámara** | 25 sep |
-| Pantalla de muerte y avisos | `UI_ScreenFeedback` | se crea sola → prefab de partida | 25 sep |
-| Números flotantes | `UI_DamageNumbers` | se crea sola → prefab de partida | 25 sep |
-| Registro de bajas | `UI_KillFeed` | se crea sola → prefab de partida | 25 sep |
+| Pantalla de muerte y avisos | `UI_ScreenFeedback` | **partida** (`Match_UI`, 14 oct) | 25 sep |
+| Números flotantes | `UI_DamageNumbers` | **partida** (`Match_UI`, 14 oct) | 25 sep |
+| Registro de bajas | `UI_KillFeed` | **partida** (`Match_UI`, 14 oct) | 25 sep |
 | Rueda | `UI_RadialMenu` + molde `UI_RadialOption` + `UI_RingWedge` | **cámara** | — |
 | Curva del proyectil al apuntar | `TrajectoryPreview` | **cámara** | 13 oct |
 | Silueta a través de paredes | `TeamReveal` + `TeamRevealStyle` | se agrega sola; su material, en la **cámara** | 13 oct |
-| Marcador, avisos de partida, marcador del Objetivo | `UI_MercenariesHUD`, `UI_MatchAnnouncer`, `UI_ObjectiveMarker` | en la escena, arman su dibujo por código | 18 sep |
-| Menú principal, sala, ajustes | `UI_MainMenu`, `UI_LobbyPanel`, `UI_SettingsPanel` | en la escena, arman su dibujo por código | 18 sep |
+| Marcador, avisos de partida, marcador del Objetivo | `UI_MercenariesHUD`, `UI_MatchAnnouncer`, `UI_ObjectiveMarker` | **partida** (`Match_UI`, 14 oct) | 18 sep |
+| Menú principal, sala, ajustes | `UI_MainMenu`, `UI_LobbyPanel`, `UI_SettingsPanel` | **menús** (`Menus_UI`, 14 oct) | 18 sep |
 
 - [x] **Etapa 2 — el HUD de la cámara.** Código hecho (14 de octubre): las cuatro piezas leen sus
       partes del prefab (referencias en el Inspector) y ya no crean canvas. Medidas en px del HUD
@@ -117,7 +117,7 @@ Una herramienta de una vez arma la pieza en el prefab la primera vez; después s
   - [x] Correr `Mercenarios ▸ Una vez ▸ Poner la rueda en el HUD de la cámara`, revisar y
         acomodar, y borrar `MercRadialMenuSetup.cs`. Hasta correrla la rueda no abre (avisa en
         la consola).
-  - [ ] Probar jugando: el tótem del Chamán y los compañeros del Maestro de bestias (abrir, resaltar,
+  - [x] **Se ven bien (14 de octubre).** Probar jugando: el tótem del Chamán y los compañeros del Maestro de bestias (abrir, resaltar,
         cancelar en el centro, una opción en espera, elegir), con mouse y con control.
 - [x] **Etapa 4 — lo que se dibuja en el mundo.** Hecha y se ve bien (14 de octubre):
   - **La curva** (`TrajectoryPreview`) vive en `Player Camera ▸ TrajectoryPreview`, con sus dos
@@ -133,11 +133,75 @@ Una herramienta de una vez arma la pieza en el prefab la primera vez; después s
     mantenido con `GameplayAbility.ProjectileToPreview` (lanzamiento, arco por fases, switch).
   - [x] Correr `Mercenarios ▸ Una vez ▸ Poner la curva y la silueta en la cámara` (corrida y borrada el
         14 de octubre).
-  - [ ] Probar jugando: apuntar con el hacha, las dagas, la lanza (en ofensiva) y el Guiding Bolt, y
+  - [x] **Se ven bien (14 de octubre).** Probar jugando: apuntar con el hacha, las dagas, la lanza (en ofensiva) y el Guiding Bolt, y
         tensar el arco: la curva sale de la mano, cae como el proyectil y el anillo marca donde
         choca. La Marca del cazador sigue mostrando la silueta a través de las paredes.
 - [ ] **Etapa 5 — el prefab de partida y el de menús** (ver "Dónde va cada cosa"), puestos en las
-      dos escenas.
+      dos escenas. Va en tres tandas:
+  - [ ] **5a — lo de la pelea: HECHO (14 de octubre; herramienta corrida en las dos escenas y borrada), falta probar.**
+        Prefab nuevo **`Prefabs/UI/Match_UI`** con tres canvas (mismo orden de dibujo que antes):
+        `DamageNumbers` (los números flotantes, con el MOLDE `NumberTemplate`), `KillFeed` (el registro
+        de bajas: `Entries` es la esquina y `EntryTemplate` el MOLDE de una línea) y `ScreenFeedback`
+        (la franja de muerte y el aviso corto). Los tres scripts ya no crean nada: si la escena no
+        tiene el prefab, avisan una vez en la consola y no muestran nada. Los canvas son de
+        1920×1080 (escalan con la pantalla), como eran: las medidas de las piezas siguen iguales.
+    - [x] Con `Mercenaries_Gamemode` abierta: `Mercenarios ▸ Una vez ▸ Crear el prefab de partida y
+          ponerlo en la escena`, guardar la escena. Abrir `Mercenaries_Graveyard`, correrla otra vez
+          (solo lo pone) y guardar. Si querés también en `Test_Network`, igual. Después borrar
+          `Assets/Scripts/Editor/MercMatchUiSetup.cs`.
+    - [ ] Probar: números de daño, crítico y curación; matar y morir (el registro arriba a la derecha,
+          tu línea resaltada; "Te eliminó X" y la cuenta para reaparecer); "¡Definitiva lista!".
+  - [ ] **5b — lo del modo: HECHO (14 de octubre; herramienta corrida y borrada), falta probar.** Al
+        mismo `Match_UI`, cada uno con su canvas y su orden de siempre (todo igual a como se veía):
+        - `Scoreboard` (`UI_MercenariesHUD`): `Panel` con el reloj, las tres filas (fondo, franja de
+          color, nombre, nivel, barrita de experiencia y dos tramos de entrega) y el estado del
+          Objetivo. El script pinta del color del equipo la franja, la barrita y los tramos; para
+          jugar a más de 2 puntos, la fila necesita más tramos.
+        - `Announcer` (`UI_MatchAnnouncer`): `Messages` es la altura del aviso y `MessageTemplate` el
+          MOLDE de uno. Los tres tamaños de letra según el aviso, en el componente.
+        - `ObjectiveMarkers` (`UI_ObjectiveMarker`): el del Objetivo y el de tu entrega, cada uno con
+          rombo, distancia y barra de entrega. El tamaño del rombo y el ancho de la barra salen del prefab.
+        - `Spectator` (`SpectatorCamera`): el componente entero (la cámara y su canvas: el panel de
+          quien mirás y la ayuda de teclas). Se fue el `SpectatorCamera` suelto de la escena.
+        - Las barras que se llenan usan un sprite blanco nuevo, `Art/UI/UI_White.png` (lo crea la herramienta).
+    - [x] (En `Mercenaries_Gamemode` la limpieza no quedó guardada: Claude sacó `HUD_Mercenarios` y
+          `SpectatorCamera` del archivo de la escena a mano.) Con `Mercenaries_Gamemode` abierta: `Mercenarios ▸ Una vez ▸ Agregar el modo al prefab de
+          partida (5b)` y guardar (agrega las piezas al prefab y saca `HUD_Mercenarios` y
+          `SpectatorCamera` de la escena). Abrir `Mercenaries_Graveyard`, correrla otra vez (solo
+          limpia la escena) y guardar. Después borrar `Assets/Scripts/Editor/MercMatchUi5bSetup.cs`.
+          **Hasta correrla, el marcador y los avisos no se ven** (los objetos viejos quedan sin piezas).
+    - [ ] Probar: el marcador (reloj, niveles, tu fila resaltada, entregas que se llenan), los avisos
+          (aparece el Objetivo, lo toma un equipo, entrega, aniquilación), el rombo del Objetivo (dentro
+          y fuera de cámara, la barra de entrega) y tu punto de entrega; entrar de espectador (volar,
+          seguir con clic, H y M).
+  - [ ] **5c — los menús: CÓDIGO HECHO (14 de octubre), falta correr la herramienta y probar.** Prefab
+        nuevo **`Prefabs/UI/Menus_UI`** con tres partes; cada una es un objeto siempre prendido con su
+        componente y, adentro, su canvas (lo que se prende y se apaga), con el orden de dibujo de siempre
+        y las medidas y colores que tenían las escenas:
+        - `MainMenu` (`UI_MainMenu`): velo, franja, título, subtítulo, Jugar / Ajustes / Salir y la
+          versión. Los textos llevan su `LocalizedText`.
+        - `Settings` (`UI_SettingsPanel`): las secciones y las filas. Cada fila lleva una pieza nueva,
+          **`UI_SettingRow`**, que dice qué ajuste maneja (Idioma, Control, Sensibilidad...) y dónde
+          están su barra, su casilla o sus flechas; el panel las conecta solas. La sección de sonido no
+          se arma (estaba apagada): para prenderla, duplicar una fila de barra y elegirle "Volumen
+          general", "Música" o "Efectos". `LocalizedText` tiene ahora "En mayúsculas" (los títulos de
+          sección).
+        - `Lobby` (`UI_LobbyPanel`): IP, nombre, Start, las cabeceras, los lugares (cada uno con la pieza
+          nueva **`UI_LobbySlot`**: de qué equipo es, su fondo, ícono, nombre y botones), la línea de
+          estado, Confirmar y el selector de clase. Lo que depende de la lista de clases (las pestañas
+          por rol y los íconos) se arma al empezar copiando dos MOLDES del selector (`TabTemplate` y
+          `ClassIconTemplate`); el selector se ensancha solo si las clases de un rol no entran. Los
+          espectadores que no entran en las dos filas armadas copian la última.
+        - La sala de `Mercenaries_Gamemode` tenía 6 clases y la del cementerio 7: el prefab se queda con
+          las 7 (la herramienta agrega las que falten).
+    - [ ] Con `Mercenaries_Gamemode` abierta: `Mercenarios ▸ Una vez ▸ Crear el prefab de menús y ponerlo
+          en la escena (5c)` y **guardar**. Abrir `Mercenaries_Graveyard`, correrla otra vez (pone el
+          prefab, agrega la clase que falta y saca los viejos) y **guardar**. Después borrar
+          `Assets/Scripts/Editor/MercMenusUiSetup.cs`. **Hasta correrla, los menús no se ven.**
+    - [ ] Probar: el menú (Jugar, Ajustes, Salir, ESC abre los ajustes), los ajustes (cada fila: idioma,
+          control, sensibilidad, invertir Y, pantalla, resolución, sincronización; Restablecer y Cerrar),
+          la sala (unirse a un equipo, elegir clase con las pestañas, confirmar, Start, agregar y sacar
+          bots, el nombre, irse a espectadores con varios espectadores), en los dos idiomas.
 - [ ] **Etapa 6 — variables claras en todo lo hecho desde el Guerrero:** nombres y tooltips que
       digan qué es y en qué unidad, sin valores relativos raros; habilidades, efectos, pasivas,
       compañeros, paredes, cámara.
@@ -185,7 +249,7 @@ maneja el `CompanionManager` del Explorador (en `BeastMasterBehaviours`):
       (los fantasmas que se multiplicaban). Ahora el Búho se arma de cero con primitivas (mismo archivo), al Lobo
       y al Oso se les devuelve la raíz a cero y se les sube la barra, y el manager ya no reintenta un prefab sin
       `Entity_Companion` (lo saca y avisa en la consola).
-- [ ] **Arreglos tras la primera prueba (14 de octubre), falta probar:**
+- [x] **Arreglos tras la primera prueba (14 de octubre) — PROBADOS ✅:**
   - Bucle de correr y reaparecer: reaparecía junto al Explorador a 25 m aunque estuviera persiguiendo
     una orden (que llegaba hasta 40 m). Ahora persiguiendo no reaparece, y una orden a más de 40 m del
     Explorador (`Alcance de las órdenes`) se ignora.
@@ -195,12 +259,26 @@ maneja el `CompanionManager` del Explorador (en `BeastMasterBehaviours`):
     para seguir al Explorador. Sección `Saltar entre pisos` del compañero.
   - El panel y la rueda pasaron a ser piezas del prefab de la cámara (ver la revisión de la UI, arriba):
     Gustavo acomodó el panel sobre los buffs y la rueda quedó como estaba (grande, resaltado verde).
-- [ ] Probar en una escena con NavMesh (la del modo): elegir Maestro de bestias, que salga el Lobo, que
+- [x] **Probado (14 de octubre): ataca bien.** Probar en una escena con NavMesh (la del modo): elegir Maestro de bestias, que salga el Lobo, que
       ataque solo, que vaya a lo que le pegás, que defienda, que vuelva si se aleja.
-- [ ] La rueda (E): cambiar al Oso y al Búho; el que murió aparece apagado con su tiempo.
-- [ ] El panel del HUD y el ícono del botón con el compañero activo.
-- [ ] El Oso delante y los fantasmas yendo por él; el Búho apareciendo junto a un invisible.
-- [ ] En un cliente: que se vean moverse y atacar, y su vida.
+- [x] La rueda (E): cambiar al Oso y al Búho; el que murió aparece apagado con su tiempo.
+- [x] El panel del HUD y el ícono del botón con el compañero activo.
+- [x] Las posiciones de los tres están bien. Falta el Búho junto a un invisible.
+- [ ] En un cliente: que se vean moverse y atacar, y **la barra de vida del compañero, para aliados y
+      para enemigos** (Lobo y Oso la traen en su prefab; el Búho no tiene, es indestructible).
+- [ ] **Arreglos tras la segunda prueba (14 de octubre, noche), falta probar:**
+  - **Los fantasmas van por el compañero** si está en su radio, como por cualquier jugador (el más
+    cercano); antes solo el Oso por provocar. El Búho no (indestructible). `MercEnemyAI.FindTarget`.
+  - **La vida se guarda al cambiarlo:** un compañero que sacas herido vuelve con la vida que tenía, y
+    mientras está guardado se cura de a poco: "Curación guardado (% de vida por s)" del
+    `CompanionManager` (en `BeastMasterBehaviours`), 2 % por segundo (lleno en 50 s). Uno que MUERE
+    vuelve lleno tras su espera. Si muere el Explorador, también se guarda.
+  - **El Lobo merodea:** sin nadie a quien pegar, elige puntos alrededor del Explorador (entre 2.5 y
+    6 m), camina hasta ahí, se queda 1 a 3 s y elige otro; si el Explorador se aleja, corre a
+    alcanzarlo. Sección "Merodear (sin pelear)" del compañero (`Merodea alrededor del dueño`, prendido;
+    no vale para el Oso, que se pone delante, ni para el Búho).
+  - [ ] Probar: un fantasma yendo por el Lobo; sacar al Lobo herido, poner al Oso, volver al Lobo (vuelve
+        con lo que tenía, un poco más curado); el Lobo dando vueltas alrededor sin quedarse detrás.
 - [ ] Falta después: la definitiva Ira primal (los tres a la vez), y las otras dos subclases.
 
 ---
@@ -344,7 +422,7 @@ Pedidos de Gustavo después de probar. Compila limpio. Hay que dejar que Unity r
 **Qué probar:**
 
 - [x] Clérigo: 3 curaciones seguidas y cada una vuelve a los 4.5 s. ¿Sigue curando demasiado?
-- [ ] **VFX "Al curar" por habilidad (14 de octubre).** La Palabra de curación del Clérigo base
+- [x] **PROBADO ✅, se ve bien.** **VFX "Al curar" por habilidad (14 de octubre).** La Palabra de curación del Clérigo base
       no tenía ningún VFX propio desde la limpieza del 30 de septiembre (lo único que salía era el
       aura azul de la Bendición, y al curarte sin que te faltara vida, ni eso). Momento nuevo en
       la lista de VFX de cada GA: **"Al curar (en el aliado curado)"**. Sale solo sobre el aliado

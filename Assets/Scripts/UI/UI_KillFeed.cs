@@ -14,37 +14,45 @@ using UnityEngine.UI;
 // mira de espectador, el que acaba de reaparecer, y cualquiera que pase por el stand del
 // showcase. Las líneas donde apareces tú se resaltan.
 //
-// NO HAY NADA QUE CABLEAR: se arma solo la primera vez que llega una baja. La manda el
-// servidor a todos (PlayerController.ObserversKillFeed).
+// VIVE EN EL PREFAB DE PARTIDA (Match_UI ▸ KillFeed), desde el 14 de octubre de 2026:
+//   · "Entries" es la esquina donde se apilan (su posición es el margen contra la esquina).
+//   · "EntryTemplate" es el MOLDE apagado de una línea: su fondo, su texto (tamaño de letra,
+//     sombra) y su alto se cambian ahí. Cada baja es una copia del molde.
+// Este script solo escribe el texto, ajusta el ancho al texto y las apaga con el tiempo.
+//
+// QUIÉN LO LLAMA: el servidor, a todos (PlayerController.ObserversKillFeed).
 // ============================================================
 public class UI_KillFeed : MonoBehaviour
 {
+    [Header("Piezas")]
+    [Tooltip("Donde se apilan las líneas (anclado a la esquina superior derecha).")]
+    [Label("Contenedor de las líneas")]
+    public RectTransform Entries;
+
+    [Tooltip("El MOLDE de una línea (apagado): un fondo (Image) estirado y un texto. Su alto es el alto de cada línea.")]
+    [Label("Molde de una línea")]
+    public RectTransform EntryTemplate;
+
     [Header("Perillas")]
     [Tooltip("Cuántas líneas se ven a la vez; la más vieja se va al llegar una nueva.")]
     [Label("Líneas a la vez")]
     public int MaxEntries = 5;
 
-    [Tooltip("Segundos que dura cada línea (el último se usa para apagarse).")]
+    [Tooltip("Segundos que dura cada línea (el último cuarto se usa para apagarse).")]
     [Label("Duración de cada línea (s)")]
     public float EntrySeconds = 6f;
 
-    [Label("Tamaño de letra")]
-    public float FontSize = 20f;
+    [Tooltip("Espacio entre una línea y la siguiente, en px del canvas.")]
+    [Label("Separación entre líneas (px)")]
+    public float RowGap = 4f;
 
-    [Tooltip("Margen contra la esquina superior derecha. Y bajado para no tapar el reloj " +
-             "ni el marcador de arriba.")]
-    [Label("Margen")]
-    public Vector2 Margin = new Vector2(24f, 120f);
+    [Tooltip("Margen a cada lado del texto, dentro del fondo, en px del canvas.")]
+    [Label("Margen del texto (px)")]
+    public float Padding = 14f;
 
-    [Label("Color del fondo")]
-    public Color BackgroundColor = new Color(0f, 0f, 0f, 0.5f);
-    [Tooltip("Fondo de las líneas donde apareces tú (mataste o te mataron).")]
+    [Tooltip("Fondo de las líneas donde apareces tú (mataste o te mataron). Las demás usan el color del fondo del molde.")]
     [Label("Fondo de tus líneas")]
     public Color LocalBackgroundColor = new Color(1f, 1f, 1f, 0.22f);
-
-    private const float RowHeight = 32f;
-    private const float RowGap    = 4f;
-    private const float Padding   = 14f;
 
     private class Entry
     {
@@ -54,34 +62,28 @@ public class UI_KillFeed : MonoBehaviour
     }
 
     private static UI_KillFeed _instance;
+    private static bool _warnedMissing;
 
+    // El de la escena (el prefab de partida). Null si la escena no lo tiene: avisa una vez.
     public static UI_KillFeed Get()
     {
         if (_instance != null) return _instance;
-
         _instance = FindFirstObjectByType<UI_KillFeed>(FindObjectsInactive.Include);
-        if (_instance != null) return _instance;
-
-        GameObject go = new GameObject("UI_KillFeed");
-        _instance = go.AddComponent<UI_KillFeed>();
+        if (_instance == null && !_warnedMissing)
+        {
+            _warnedMissing = true;
+            Debug.LogWarning("[UI_KillFeed] La escena no tiene el prefab de partida (Match_UI): no hay registro de bajas.");
+        }
         return _instance;
     }
 
-    private Canvas _canvas;
-    private RectTransform _root;
     private readonly List<Entry> _entries = new List<Entry>();
 
     private void Awake()
     {
         if (_instance != null && _instance != this) { Destroy(gameObject); return; }
         _instance = this;
-
-        _canvas = MercUIFactory.CreateCanvas("KillFeedCanvas", 105);
-        _canvas.transform.SetParent(transform, false);
-
-        Vector2 topRight = new Vector2(1f, 1f);
-        _root = MercUIFactory.CreateRect(_canvas.transform, "Entries", topRight, topRight, topRight,
-                                         new Vector2(-Margin.x, -Margin.y), Vector2.zero);
+        if (EntryTemplate != null) EntryTemplate.gameObject.SetActive(false);
     }
 
     private void OnDestroy()
@@ -98,6 +100,8 @@ public class UI_KillFeed : MonoBehaviour
     public void AddKill(string killerName, string killerClass, int killerTeam,
                         string victimName, string victimClass, int victimTeam, bool involvesLocal)
     {
+        if (Entries == null || EntryTemplate == null) return;
+
         string victim = Name(victimName, victimClass, victimTeam);
         string text   = string.IsNullOrEmpty(killerName)
             ? $"{victim}  <color=#BBBBBB>{Loc.T("killfeed.died")}</color>"
@@ -156,34 +160,32 @@ public class UI_KillFeed : MonoBehaviour
     }
 
     // =========================================================
-    // CONSTRUCCIÓN
+    // UNA LÍNEA: copia del molde
     // =========================================================
 
     private Entry BuildEntry(string text, bool highlight)
     {
-        Vector2 topRight = new Vector2(1f, 1f);
-        RectTransform row = MercUIFactory.CreateRect(_root, "Kill", topRight, topRight, topRight,
-                                                     Vector2.zero, new Vector2(100f, RowHeight));
-        CanvasGroup group = row.gameObject.AddComponent<CanvasGroup>();
+        RectTransform row = Instantiate(EntryTemplate, Entries);
+        row.name = "Kill";
+        row.gameObject.SetActive(true);
+
+        CanvasGroup group = row.GetComponent<CanvasGroup>();
+        if (group == null) group = row.gameObject.AddComponent<CanvasGroup>();
         group.blocksRaycasts = false;
         group.interactable   = false;
 
-        Image background = MercUIFactory.CreateImage(row, "Background",
-            highlight ? LocalBackgroundColor : BackgroundColor,
-            Vector2.zero, Vector2.zero, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f));
-        background.rectTransform.sizeDelta = Vector2.zero;   // estirado a la fila
+        Image background = row.GetComponentInChildren<Image>(true);
+        if (background != null && highlight) background.color = LocalBackgroundColor;
 
-        Vector2 mid = new Vector2(0.5f, 0.5f);
-        TextMeshProUGUI label = MercUIFactory.CreateText(row, "Text", text, FontSize, Color.white,
-            TextAlignmentOptions.Center, Vector2.zero, new Vector2(600f, RowHeight), mid, mid, mid);
-        label.richText = true;
-        label.textWrappingMode = TextWrappingModes.NoWrap;
-        MercUIFactory.AddShadow(label);
-
-        // El fondo se ajusta al texto: una baja corta no ocupa media pantalla.
-        float width = label.GetPreferredValues(text, 2000f, RowHeight).x + Padding * 2f;
-        row.sizeDelta = new Vector2(width, RowHeight);
-        label.rectTransform.sizeDelta = new Vector2(width, RowHeight);
+        TMP_Text label = row.GetComponentInChildren<TMP_Text>(true);
+        float height = row.sizeDelta.y;
+        if (label != null)
+        {
+            label.text = text;
+            // El fondo se ajusta al texto: una baja corta no ocupa media pantalla.
+            float width = label.GetPreferredValues(text, 2000f, height).x + Padding * 2f;
+            row.sizeDelta = new Vector2(width, height);
+        }
 
         return new Entry { Root = row, Group = group, BornAt = Time.time };
     }
@@ -193,6 +195,6 @@ public class UI_KillFeed : MonoBehaviour
     {
         for (int i = 0; i < _entries.Count; i++)
             if (_entries[i].Root != null)
-                _entries[i].Root.anchoredPosition = new Vector2(0f, -i * (RowHeight + RowGap));
+                _entries[i].Root.anchoredPosition = new Vector2(0f, -i * (_entries[i].Root.sizeDelta.y + RowGap));
     }
 }

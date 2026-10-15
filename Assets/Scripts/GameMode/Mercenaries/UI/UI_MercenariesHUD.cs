@@ -10,190 +10,70 @@ using UnityEngine.UI;
 // la misma idea que el marcador de The Finals. Debajo, el reloj y el estado del
 // Objetivo.
 //
-// Se arma solo: poné este componente en un GameObject vacío de la escena y listo. Si
-// no cuelga de un Canvas, se crea uno propio. No hay nada que cablear en el Inspector.
+// VIVE EN EL PREFAB DE PARTIDA (Match_UI ▸ Scoreboard), desde el 14 de octubre de 2026: el
+// panel, el reloj, el estado del Objetivo y las tres filas (fondo, franja de color, nombre,
+// nivel, barrita de experiencia y un tramo por punto de victoria) están armados ahí y se
+// acomodan a mano. Este script solo escribe los textos, pinta del color de cada equipo la
+// franja, la barrita y los tramos, y los llena. Para cambiar cuántos puntos hacen falta para
+// ganar, la fila tiene que tener esa cantidad de tramos (en "Tramos de entrega").
 //
 // Lee TODO de MercenariesGameMode (que es quien sincroniza el estado) y no toca nada:
 // es una vista, sin lógica de juego.
 // ============================================================
 public class UI_MercenariesHUD : MonoBehaviour
 {
-    [Header("Colocación")]
-    [Tooltip("Separación desde el borde superior de la pantalla, en píxeles de referencia (1080p).")]
-    [Label("Margen superior")]
-    public float TopMargin = 14f;
-
-    [Tooltip("Ancho del marcador.")]
-    [Label("Ancho del panel")]
-    public float PanelWidth = 520f;
-
-    [Header("Estilo")]
-    [Label("Color del fondo")]
-    public Color PanelBackground     = new Color(0f, 0f, 0f, 0.55f);
-    [Label("Fondo de tu equipo")]
-    public Color LocalTeamBackground = new Color(1f, 1f, 1f, 0.16f);
-    [Label("Color de tramo vacío")]
-    public Color EmptySegmentColor   = new Color(1f, 1f, 1f, 0.14f);
-
-    private const float RowHeight  = 34f;
-    private const float RowSpacing = 38f;
-
-    // Una fila por equipo. Guardamos las piezas que hay que refrescar cada frame.
-    private class TeamRow
+    // Las piezas de la fila de un equipo.
+    [System.Serializable]
+    public class TeamRowPieces
     {
-        public int Team;
+        [Tooltip("El fondo de la fila: se pinta con el color de tu equipo si es el tuyo.")]
+        [Label("Fondo")]
         public Image Background;
+
+        [Tooltip("La franja de color del equipo, a la izquierda.")]
+        [Label("Franja de color")]
         public Image Chip;
-        public TextMeshProUGUI Label;
-        public TextMeshProUGUI Level;
+
+        [Label("Nombre")]
+        public TMP_Text Label;
+
+        [Label("Nivel")]
+        public TMP_Text Level;
+
+        [Tooltip("La barrita de progreso hacia el próximo nivel (Image Filled horizontal).")]
+        [Label("Barrita de experiencia")]
         public Image XpFill;
+
+        [Tooltip("Un tramo por punto de victoria, de izquierda a derecha (Image Filled horizontal). " +
+                 "Su fondo es otra Image detrás.")]
+        [Label("Tramos de entrega")]
         public Image[] Segments;
     }
 
-    private readonly TeamRow[] _rows = new TeamRow[MercenariesGameMode.TeamCount];
+    [Header("Piezas")]
+    [Tooltip("Todo el marcador: se esconde entero en la sala y si el espectador lo apaga.")]
+    [Label("Panel")]
+    public RectTransform Panel;
 
-    private RectTransform _root;
-    private TextMeshProUGUI _clockText;
-    private TextMeshProUGUI _objectiveText;
+    [Label("Reloj")]
+    public TMP_Text ClockText;
 
-    private void Start()
-    {
-        Build();
-    }
+    [Tooltip("La línea de debajo: dónde está el Objetivo.")]
+    [Label("Estado del Objetivo")]
+    public TMP_Text ObjectiveText;
 
-    // =========================================================
-    // CONSTRUCCIÓN
-    // =========================================================
+    [Tooltip("Una por equipo, en orden: equipo 1, 2 y 3.")]
+    [Label("Filas de los equipos")]
+    public TeamRowPieces[] Rows = new TeamRowPieces[MercenariesGameMode.TeamCount];
 
-    private void Build()
-    {
-        Transform parent = ResolveCanvas();
+    [Header("Colores")]
+    [Tooltip("El fondo de las filas de los otros equipos.")]
+    [Label("Fondo de las filas")]
+    public Color PanelBackground     = new Color(0f, 0f, 0f, 0.55f);
 
-        float panelHeight = RowSpacing * MercenariesGameMode.TeamCount + 56f;
-
-        _root = MercUIFactory.CreateRect(parent, "MarcadorMercenarios",
-            anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f),
-            pivot:     new Vector2(0.5f, 1f),
-            anchoredPos: new Vector2(0f, -TopMargin),
-            size:        new Vector2(PanelWidth, panelHeight));
-
-        // --- reloj ---
-        _clockText = MercUIFactory.CreateText(_root, "Reloj", "0:00", 30f, Color.white,
-            TextAlignmentOptions.Center,
-            anchoredPos: new Vector2(0f, -2f), size: new Vector2(PanelWidth, 34f),
-            anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f),
-            pivot: new Vector2(0.5f, 1f));
-        _clockText.fontStyle = FontStyles.Bold;
-        MercUIFactory.AddShadow(_clockText);
-
-        // --- filas de equipo ---
-        for (int i = 0; i < MercenariesGameMode.TeamCount; i++)
-            _rows[i] = BuildRow(i + 1, -38f - i * RowSpacing);
-
-        // --- estado del Objetivo ---
-        _objectiveText = MercUIFactory.CreateText(_root, "EstadoObjetivo", "", 18f,
-            new Color(1f, 0.92f, 0.55f), TextAlignmentOptions.Center,
-            anchoredPos: new Vector2(0f, -(44f + RowSpacing * MercenariesGameMode.TeamCount)),
-            size: new Vector2(PanelWidth, 24f),
-            anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f),
-            pivot: new Vector2(0.5f, 1f));
-        MercUIFactory.AddShadow(_objectiveText);
-    }
-
-    private TeamRow BuildRow(int team, float y)
-    {
-        var row = new TeamRow { Team = team };
-
-        RectTransform rowRect = MercUIFactory.CreateRect(_root, $"Equipo{team}",
-            anchorMin: new Vector2(0.5f, 1f), anchorMax: new Vector2(0.5f, 1f),
-            pivot:     new Vector2(0.5f, 1f),
-            anchoredPos: new Vector2(0f, y),
-            size:        new Vector2(PanelWidth, RowHeight));
-
-        row.Background = MercUIFactory.CreateImage(rowRect, "Fondo", PanelBackground,
-            anchoredPos: Vector2.zero, size: new Vector2(PanelWidth, RowHeight),
-            anchorMin: new Vector2(0f, 0.5f), anchorMax: new Vector2(0f, 0.5f),
-            pivot: new Vector2(0f, 0.5f));
-
-        Color teamColor = MercUIFactory.TeamColor(team);
-
-        // Franja de color: es lo que hace que se lea de un vistazo de qué equipo es
-        // cada fila, igual que el marcador de The Finals.
-        row.Chip = MercUIFactory.CreateImage(rowRect, "Color", teamColor,
-            anchoredPos: new Vector2(0f, 0f), size: new Vector2(6f, RowHeight));
-
-        row.Label = MercUIFactory.CreateText(rowRect, "Nombre",
-            MercenariesGameMode.TeamName(team), 17f, Color.white, TextAlignmentOptions.Left,
-            anchoredPos: new Vector2(16f, 0f), size: new Vector2(120f, RowHeight));
-        row.Label.fontStyle = FontStyles.Bold;
-        // Se achica sola si no entra: "EQUIPO 1 (TÚ)" es más largo que "TEAM 1 (YOU)".
-        row.Label.enableAutoSizing = true;
-        row.Label.fontSizeMin      = 11f;
-        row.Label.fontSizeMax      = 17f;
-        row.Label.textWrappingMode = TextWrappingModes.NoWrap;
-        MercUIFactory.AddShadow(row.Label);
-
-        // Nivel del equipo (sale de la bolsa compartida de experiencia).
-        row.Level = MercUIFactory.CreateText(rowRect, "Nivel", "", 16f,
-            new Color(1f, 1f, 1f, 0.9f), TextAlignmentOptions.Left,
-            anchoredPos: new Vector2(142f, 4f), size: new Vector2(60f, 20f));
-        MercUIFactory.AddShadow(row.Level);
-
-        // Barrita fina de progreso hacia el próximo nivel, debajo del texto del nivel.
-        MercUIFactory.CreateImage(rowRect, "XpFondo", EmptySegmentColor,
-            anchoredPos: new Vector2(142f, -9f), size: new Vector2(56f, 4f));
-        row.XpFill = MercUIFactory.CreateImage(rowRect, "XpRelleno", teamColor,
-            anchoredPos: new Vector2(142f, -9f), size: new Vector2(56f, 4f));
-        row.XpFill.type       = Image.Type.Filled;
-        row.XpFill.fillMethod = Image.FillMethod.Horizontal;
-        row.XpFill.fillOrigin = (int)Image.OriginHorizontal.Left;
-        row.XpFill.fillAmount = 0f;
-
-        // Entregas: una barra partida en tantos trozos como puntos hagan falta para
-        // ganar. Cada entrega enciende un trozo.
-        int points = ResolvePointsToWin();
-        row.Segments = new Image[points];
-
-        const float barLeft = 212f;
-        float barWidth  = PanelWidth - barLeft - 10f;
-        float gap       = 5f;
-        float segWidth  = (barWidth - gap * (points - 1)) / points;
-
-        for (int s = 0; s < points; s++)
-        {
-            float x = barLeft + s * (segWidth + gap);
-            MercUIFactory.CreateImage(rowRect, $"Segmento{s}Fondo", EmptySegmentColor,
-                anchoredPos: new Vector2(x, 0f), size: new Vector2(segWidth, 16f));
-
-            Image fill = MercUIFactory.CreateImage(rowRect, $"Segmento{s}", teamColor,
-                anchoredPos: new Vector2(x, 0f), size: new Vector2(segWidth, 16f));
-            fill.type       = Image.Type.Filled;
-            fill.fillMethod = Image.FillMethod.Horizontal;
-            fill.fillOrigin = (int)Image.OriginHorizontal.Left;
-            fill.fillAmount = 0f;
-            row.Segments[s] = fill;
-        }
-
-        return row;
-    }
-
-    private static int ResolvePointsToWin()
-    {
-        MercenariesGameMode gm = MercenariesGameMode.Instance;
-        return gm != null ? Mathf.Clamp(gm.PointsToWin, 1, 6) : 2;
-    }
-
-    // Busca un Canvas hacia arriba; si no hay ninguno se crea uno propio, así el
-    // componente funciona tanto colgado de un Canvas existente como suelto en la escena.
-    private Transform ResolveCanvas()
-    {
-        Canvas canvas = GetComponentInParent<Canvas>();
-        if (canvas != null) return canvas.transform;
-
-        canvas = MercUIFactory.CreateCanvas("Canvas_HUD_Partida");
-        canvas.transform.SetParent(transform, false);
-        return canvas.transform;
-    }
+    [Tooltip("El fondo de la fila de tu equipo, para encontrarte rápido.")]
+    [Label("Fondo de tu equipo")]
+    public Color LocalTeamBackground = new Color(1f, 1f, 1f, 0.16f);
 
     // =========================================================
     // REFRESCO
@@ -223,7 +103,7 @@ public class UI_MercenariesHUD : MonoBehaviour
 
     private void Update()
     {
-        if (_root == null) return;
+        if (Panel == null) return;
 
         MercenariesGameMode gm = MercenariesGameMode.Instance;
 
@@ -233,7 +113,7 @@ public class UI_MercenariesHUD : MonoBehaviour
         // conectaba el objeto de red, o sea encima del menu de clases y del panel de la
         // sala. Se espera a que el jugador local haya confirmado.
         bool show = gm != null && !IsStillChoosingInLobby() && !ScoreboardHiddenByViewer;
-        if (_root.gameObject.activeSelf != show) _root.gameObject.SetActive(show);
+        if (Panel.gameObject.activeSelf != show) Panel.gameObject.SetActive(show);
         if (!show) return;
 
         int localTeam = MercUIFactory.LocalTeam();
@@ -241,45 +121,60 @@ public class UI_MercenariesHUD : MonoBehaviour
         UpdateClock(gm);
         UpdateObjectiveLine(gm);
 
-        foreach (TeamRow row in _rows)
+        for (int i = 0; i < Rows.Length; i++)
         {
+            TeamRowPieces row = Rows[i];
             if (row == null) continue;
+            int team = i + 1;
+            Color teamColor = gm.GetTeamColor(team);
 
-            row.Level.text = Loc.T("match.level_short", ("level", gm.GetLevel(row.Team)));
-            row.XpFill.fillAmount = gm.GetXpNormalized(row.Team);
+            if (row.Chip != null) row.Chip.color = teamColor;
+            if (row.Level != null) row.Level.text = Loc.T("match.level_short", ("level", gm.GetLevel(team)));
+            if (row.XpFill != null)
+            {
+                row.XpFill.color      = teamColor;
+                row.XpFill.fillAmount = gm.GetXpNormalized(team);
+            }
 
-            int score = gm.GetScore(row.Team);
-            for (int s = 0; s < row.Segments.Length; s++)
-                row.Segments[s].fillAmount = s < score ? 1f : 0f;
+            int score = gm.GetScore(team);
+            if (row.Segments != null)
+                for (int s = 0; s < row.Segments.Length; s++)
+                {
+                    if (row.Segments[s] == null) continue;
+                    row.Segments[s].color      = teamColor;
+                    row.Segments[s].fillAmount = s < score ? 1f : 0f;
+                }
 
             // La fila del equipo propio se resalta para encontrarse rápido.
-            row.Background.color = (row.Team == localTeam) ? LocalTeamBackground : PanelBackground;
-            row.Label.text = row.Team == localTeam
-                ? Loc.T("match.team_you", ("team", MercenariesGameMode.TeamName(row.Team)))
-                : MercenariesGameMode.TeamName(row.Team);
+            if (row.Background != null) row.Background.color = team == localTeam ? LocalTeamBackground : PanelBackground;
+            if (row.Label != null)
+                row.Label.text = team == localTeam
+                    ? Loc.T("match.team_you", ("team", MercenariesGameMode.TeamName(team)))
+                    : MercenariesGameMode.TeamName(team);
         }
     }
 
     private void UpdateClock(MercenariesGameMode gm)
     {
+        if (ClockText == null) return;
         switch (gm.State)
         {
             case EMatchState.Warmup:
-                _clockText.text  = Loc.T("match.get_ready", ("time", MercUIFactory.FormatTime(gm.PhaseTimeRemaining)));
-                _clockText.color = new Color(1f, 0.9f, 0.4f);
+                ClockText.text  = Loc.T("match.get_ready", ("time", MercUIFactory.FormatTime(gm.PhaseTimeRemaining)));
+                ClockText.color = new Color(1f, 0.9f, 0.4f);
                 break;
 
             case EMatchState.Playing:
-                _clockText.text  = MercUIFactory.FormatTime(gm.PhaseTimeRemaining);
-                _clockText.color = Color.white;
+                ClockText.text  = MercUIFactory.FormatTime(gm.PhaseTimeRemaining);
+                ClockText.color = Color.white;
                 break;
 
             case EMatchState.Ended:
                 int winner = gm.WinnerTeam;
-                _clockText.text = winner > 0
+                ClockText.text = winner > 0
                     ? Loc.T("match.wins", ("team", MercenariesGameMode.TeamName(winner)))
                     : Loc.T("match.draw");
-                _clockText.color = winner > 0 ? gm.GetTeamColor(winner) : Color.white;
+                ClockText.color = winner > 0 ? gm.GetTeamColor(winner) : Color.white;
                 break;
         }
     }
@@ -289,12 +184,13 @@ public class UI_MercenariesHUD : MonoBehaviour
     // que lo señala en el mundo.
     private void UpdateObjectiveLine(MercenariesGameMode gm)
     {
+        if (ObjectiveText == null) return;
         if (gm.State != EMatchState.Playing)
         {
-            _objectiveText.text = gm.State == EMatchState.Warmup
+            ObjectiveText.text = gm.State == EMatchState.Warmup
                 ? Loc.T("match.choose_class_in_base")
                 : "";
-            _objectiveText.color = new Color(1f, 1f, 1f, 0.8f);
+            ObjectiveText.color = new Color(1f, 1f, 1f, 0.8f);
             return;
         }
 
@@ -303,22 +199,22 @@ public class UI_MercenariesHUD : MonoBehaviour
         if (objective != null && objective.IsCarried)
         {
             int team = objective.CarrierTeam;
-            _objectiveText.text  = Loc.T("match.objective_carried", ("team", MercenariesGameMode.TeamName(team)));
-            _objectiveText.color = gm.GetTeamColor(team);
+            ObjectiveText.text  = Loc.T("match.objective_carried", ("team", MercenariesGameMode.TeamName(team)));
+            ObjectiveText.color = gm.GetTeamColor(team);
             return;
         }
 
         if (objective != null)
         {
-            _objectiveText.text  = Loc.T("match.objective_on_map");
-            _objectiveText.color = new Color(1f, 0.92f, 0.55f);
+            ObjectiveText.text  = Loc.T("match.objective_on_map");
+            ObjectiveText.color = new Color(1f, 0.92f, 0.55f);
             return;
         }
 
         float eta = gm.ObjectiveEta;
-        _objectiveText.text  = eta > 0f
+        ObjectiveText.text  = eta > 0f
             ? Loc.T("match.next_objective", ("time", MercUIFactory.FormatTime(eta)))
             : "";
-        _objectiveText.color = new Color(1f, 1f, 1f, 0.75f);
+        ObjectiveText.color = new Color(1f, 1f, 1f, 0.75f);
     }
 }

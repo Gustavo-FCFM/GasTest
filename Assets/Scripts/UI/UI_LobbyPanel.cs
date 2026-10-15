@@ -13,10 +13,14 @@ using UnityEngine.UI;
 // lugares, la franja de espectadores, el selector de clase y los botones de Confirmar
 // y Start.
 //
-// SE DIBUJA POR CÓDIGO, como el resto del HUD del modo (ver MercUIFactory). No hay
-// prefab que armar ni referencias que cablear: se pone el componente en cualquier
-// GameObject de la escena y listo. Lo único que pide el inspector son las clases
-// elegibles y los colores.
+// VIVE EN EL PREFAB DE MENÚS (Menus_UI ▸ Lobby), desde el 14 de octubre de 2026: el panel,
+// la IP, el nombre, las cabeceras de las columnas, los lugares (cada uno con su
+// UI_LobbySlot), la línea de estado, los botones y el selector de clase están armados ahí y
+// se acomodan a mano. Lo que depende de la LISTA de clases (las pestañas por rol y los
+// íconos de la grilla) se arma al empezar copiando dos MOLDES del selector
+// ("TabTemplate" y "ClassIconTemplate"): su tamaño y su altura son los del molde. Este
+// componente vive en un objeto siempre prendido (el servidor lo consulta para saber con qué
+// clase aparece cada bot); lo que se prende y se apaga es su canvas.
 //
 // CÓMO FUNCIONA EL FLUJO:
 //   1. Entrás → te anotás con tu nombre y quedás de ESPECTADOR.
@@ -41,55 +45,85 @@ public class UI_LobbyPanel : MonoBehaviour
     [Label("Clases elegibles")]
     public CharacterClassDefinition[] SelectableClasses;
 
-    [Header("Aspecto")]
-    [Tooltip("Medidas de la MAQUETA, sobre un canvas de referencia de 1920x1080. Lo que " +
-             "se ve en pantalla es esto multiplicado por PanelScale.")]
-    [Label("Tamaño del panel")]
-    public Vector2 PanelSize    = new Vector2(1180f, 660f);
-    [Label("Ancho de columna")]
-    public float   ColumnWidth  = 250f;
-    [Label("Alto de fila")]
-    public float   RowHeight    = 56f;
+    [Header("Piezas")]
+    [Tooltip("El canvas de la sala: se prende con la conexión y se apaga al arrancar la partida.")]
+    [Label("Canvas de la sala")]
+    public GameObject LobbyCanvas;
 
-    [Tooltip("Cuánto se agranda el panel entero — fondo, columnas, textos y botones, todo " +
-             "junto y en proporción. 1 es la maqueta original, que ocupaba poco más de la " +
-             "mitad de la pantalla. Con 1.35 llega al 80% y se lee bien de lejos.")]
-    [Range(0.5f, 2f)]
-    [Label("Escala del panel")]
-    public float PanelScale = 1.35f;
+    [Tooltip("El panel (lo que contiene todo; su escala agranda la sala entera).")]
+    [Label("Panel")]
+    public RectTransform Panel;
 
-    [Tooltip("Tamaño del ícono de clase en cada lugar de equipo. Se recorta al alto de la " +
-             "fila, así que para íconos de verdad más grandes hay que subir también " +
-             "RowHeight (el ícono nunca pasa de RowHeight - 8).")]
-    [Label("Tamaño del ícono de lugar")]
-    public float SlotIconSize  = 40f;
+    [Label("IP del host")]
+    public TMP_Text IpText;
 
-    [Tooltip("Tamaño de los íconos en la grilla de elegir clase. El recuadro de la grilla " +
-             "crece solo con ellos.")]
-    [Label("Tamaño del ícono de clase")]
-    public float ClassIconSize = 84f;
+    [Label("Campo del nombre")]
+    public TMP_InputField NameInput;
 
-    [Tooltip("Alto de la línea con el NOMBRE de la clase (la que está bajo el mouse).")]
-    [Label("Alto del nombre")]
-    public float NameHeight        = 30f;
+    [Tooltip("Solo lo ve el host.")]
+    [Label("Botón Start")]
+    public Button StartButton;
 
-    [Tooltip("Alto del bloque de DESCRIPCIÓN de la clase seleccionada. Si tus textos se " +
-             "cortan, subilo.")]
-    [Label("Alto de la descripción")]
-    public float DescriptionHeight = 72f;
+    [Label("Texto de Start")]
+    public TMP_Text StartLabel;
 
-    [Tooltip("Alto que se reserva abajo para el botón Confirm del selector.")]
-    [Label("Alto de confirmar")]
-    public float ConfirmHeight     = 56f;
+    [Label("Botón Confirmar")]
+    public Button ConfirmButton;
 
-    [Tooltip("Alto de las pestañas de rol (Tanks / Damage / Supports) arriba del selector.")]
-    [Label("Alto de las pestañas")]
-    public float RoleTabHeight     = 34f;
+    [Label("Texto de Confirmar")]
+    public TMP_Text ConfirmLabel;
 
-    [Tooltip("Fondo del panel. La grilla de clases usa este mismo color pero SIN " +
-             "transparencia, para que no se lea el panel de atrás mientras elegís.")]
+    [Tooltip("La línea sobre Confirmar: qué falta para arrancar, o qué te falta a vos.")]
+    [Label("Línea de estado")]
+    public TMP_Text StatusText;
+
+    [Tooltip("El texto de la cabecera de cada equipo (\"Equipo 1\"...), en orden.")]
+    [Label("Cabeceras de los equipos")]
+    public TMP_Text[] TeamHeaders = new TMP_Text[LobbyManager.TeamCount];
+
+    [Header("Piezas: selector de clase")]
+    [Tooltip("El recuadro del selector. Su fondo es un botón que lo cierra.")]
+    [Label("Selector de clase")]
+    public RectTransform ClassPicker;
+
+    [Label("Botón de cerrar (el fondo)")]
+    public Button PickerCloseButton;
+
+    [Tooltip("MOLDE de una pestaña de rol (apagado): un botón con un texto. Su altura en el selector es la de las pestañas.")]
+    [Label("Molde de pestaña")]
+    public Button TabTemplate;
+
+    [Tooltip("MOLDE de un ícono de clase (apagado): un botón con su Image. Su tamaño y su altura en el selector son los de la grilla.")]
+    [Label("Molde de ícono de clase")]
+    public Button ClassIconTemplate;
+
+    [Tooltip("El nombre de la clase que está bajo el mouse.")]
+    [Label("Nombre de la clase")]
+    public TMP_Text ClassNameLabel;
+
+    [Tooltip("La descripción de la clase seleccionada.")]
+    [Label("Descripción de la clase")]
+    public TMP_Text ClassDescLabel;
+
+    [Label("Botón Confirmar clase")]
+    public Button PickerConfirm;
+
+    [Header("Selector: separaciones (px del panel)")]
+    [Label("Entre pestañas (px)")]
+    public float TabGap = 8f;
+
+    [Label("Entre íconos (px)")]
+    public float IconGap = 12f;
+
+    [Tooltip("Margen a los costados de la grilla: el selector se ensancha si las clases de un rol no entran.")]
+    [Label("Margen de la grilla (px)")]
+    public float PickerMargin = 32f;
+
+    [Header("Colores (los que cambian en juego)")]
+    [Tooltip("Las pestañas que no están abiertas se mezclan con este color.")]
     [Label("Color del panel")]
     public Color PanelColor   = new Color(0.09f, 0.09f, 0.11f, 0.97f);
+    [Tooltip("El ícono de un lugar sin clase elegida.")]
     [Label("Color del lugar")]
     public Color SlotColor    = new Color(0.20f, 0.24f, 0.32f, 1f);
     [Label("Color: listo")]
@@ -116,61 +150,19 @@ public class UI_LobbyPanel : MonoBehaviour
     [Label("Color de los bots")]
     public Color BotColor     = new Color(0.72f, 0.66f, 0.95f, 1f);
 
-    // --- construidos en runtime ---
-    private Canvas          _canvas;
-    private RectTransform   _root;
-    private TMP_InputField  _nameInput;
-    private TextMeshProUGUI _ipText;
-    private Button          _startButton;
-    private TextMeshProUGUI _startLabel;
-    private Button          _confirmButton;
-    private TextMeshProUGUI _confirmLabel;
-    private RectTransform   _classPicker;
-
-    // El selector de clase: los íconos (para resaltar el elegido), el nombre de la que
-    // está debajo del mouse, la descripción de la SELECCIONADA, y su botón de confirmar.
-    private Image[]         _classIcons;
-    private TextMeshProUGUI _classNameLabel;
-    private TextMeshProUGUI _classDescLabel;
-    private Button          _pickerConfirm;
-    private int             _pickerSelection = -1;
+    // --- armados al empezar ---
+    private bool  _built;
+    private Image[] _classIcons;
+    private int   _pickerSelection = -1;
 
     // Los grupos por rol del selector: qué clases van en cada uno (índices de
     // SelectableClasses), la pestaña de cada grupo, y cuál está abierto.
     private readonly List<EClassRole> _roleGroups = new List<EClassRole>();
     private readonly Dictionary<EClassRole, List<int>> _roleMembers = new Dictionary<EClassRole, List<int>>();
     private readonly List<Image> _roleTabs = new List<Image>();
-    private TextMeshProUGUI _statusText;
 
-    // Un lugar de equipo dibujado: su fondo, su ícono de clase y su etiqueta.
-    private class Slot
-    {
-        public RectTransform   Root;
-        public Image           Background;   // el recuadro de la fila; solo se pinta si está ocupada
-        public Image           Icon;
-        public Button          IconButton;   // solo el TUYO abre el selector de clase
-        public Button          JoinButton;
-        public Button          AddBotButton;   // "+" en un lugar libre: solo lo ve el host
-        public Button          RemoveButton;   // "x" sobre un bot: solo lo ve el host
-        public TextMeshProUGUI Label;
-
-        // Quién ocupa esta fila AHORA. Se reescribe en cada redibujado, y es lo que deja
-        // que los listeners —registrados una sola vez, al construir— sepan sobre quién
-        // actuar sin volver a suscribirse en cada refresh.
-        public int EntryId;
-    }
-
-    private readonly List<Slot>[] _teamSlots = new List<Slot>[LobbyManager.TeamCount];
-    private readonly List<Slot>   _spectatorSlots = new List<Slot>();
-
-    // Cuántas filas de espectadores dibujar. Puede haber cualquier cantidad, así que se
-    // dibuja un mínimo fijo y crece si hacen falta más.
-    private const int MinSpectatorRows = 2;
-
-    // Cupo por equipo. Sale de la sala, que es quien manda; si el panel se construye
-    // antes de que exista, se usa el mismo default para no dibujar de menos.
-    private static int MaxPerTeam =>
-        LobbyManager.Instance != null ? LobbyManager.Instance.MaxPlayersPerTeam : 3;
+    private readonly List<UI_LobbySlot>[] _teamSlots = new List<UI_LobbySlot>[LobbyManager.TeamCount];
+    private readonly List<UI_LobbySlot>   _spectatorSlots = new List<UI_LobbySlot>();
 
     private bool  _spawnRequested;
     private bool  _registered;      // ya me anoté en la sala (aunque sea de espectador)
@@ -229,10 +221,10 @@ public class UI_LobbyPanel : MonoBehaviour
         // en true de la partida anterior y el segundo Start te deja de espectador.
         if (lobby != null && !lobby.MatchStarted) _spawnRequested = false;
 
-        if (_canvas != null && _visible != show)
+        if (LobbyCanvas != null && _visible != show)
         {
             _visible = show;
-            _canvas.gameObject.SetActive(show);
+            LobbyCanvas.SetActive(show);
         }
 
         // El cursor tiene que estar libre para escribir y clickear en la sala. Se pide
@@ -424,22 +416,24 @@ public class UI_LobbyPanel : MonoBehaviour
     private void Refresh()
     {
         LobbyManager lobby = LobbyManager.Instance;
-        if (lobby == null || _root == null) return;
+        if (lobby == null || !_built) return;
 
         lobby.TryGetLocalEntry(out LobbyEntry me);
         int myId = me.ClientId;
 
         // --- IP ---
-        if (_ipText != null)
+        if (IpText != null)
         {
             if (_hud == null) _hud = FindFirstObjectByType<ConnectionHUD>();
-            _ipText.text = Loc.T("lobby.host_ip", ("ip", _hud != null ? _hud.HostAddress : "—"));
+            IpText.text = Loc.T("lobby.host_ip", ("ip", _hud != null ? _hud.HostAddress : "—"));
         }
 
         // --- equipos ---
         for (int t = 0; t < LobbyManager.TeamCount; t++)
         {
             int team = t + 1;
+            if (TeamHeaders != null && t < TeamHeaders.Length && TeamHeaders[t] != null)
+                TeamHeaders[t].text = Loc.T("lobby.team", ("team", team));
             List<LobbyEntry> members = MembersOf(lobby, team);
 
             for (int s = 0; s < _teamSlots[t].Count; s++)
@@ -458,9 +452,9 @@ public class UI_LobbyPanel : MonoBehaviour
 
         for (int s = 0; s < _spectatorSlots.Count; s++)
         {
-            Slot slot = _spectatorSlots[s];
+            UI_LobbySlot slot = _spectatorSlots[s];
             bool used = s <= specs.Count;
-            if (slot.Root.gameObject.activeSelf != used) slot.Root.gameObject.SetActive(used);
+            if (slot.gameObject.activeSelf != used) slot.gameObject.SetActive(used);
             if (!used) continue;
 
             bool occupied = s < specs.Count;
@@ -472,32 +466,32 @@ public class UI_LobbyPanel : MonoBehaviour
         bool canReady = inTeam && me.ClassIndex >= 0;
         bool allReady = lobby.AllReady;
 
-        if (_confirmButton != null)
+        if (ConfirmButton != null)
         {
-            _confirmButton.interactable = canReady;
-            Image bg = _confirmButton.GetComponent<Image>();
+            ConfirmButton.interactable = canReady;
+            Image bg = ConfirmButton.GetComponent<Image>();
             if (bg != null) bg.color = me.Ready ? ReadyColor : IdleColor;
-            if (_confirmLabel != null)
-                _confirmLabel.text = Loc.T(me.Ready ? "lobby.ready" : "lobby.confirm");
+            if (ConfirmLabel != null)
+                ConfirmLabel.text = Loc.T(me.Ready ? "lobby.ready" : "lobby.confirm");
         }
 
-        if (_startButton != null)
+        if (StartButton != null)
         {
             // El Start solo lo ve quien puede apretarlo.
             bool isHost = LobbyManager.LocalIsHost;
-            if (_startButton.gameObject.activeSelf != isHost)
-                _startButton.gameObject.SetActive(isHost);
+            if (StartButton.gameObject.activeSelf != isHost)
+                StartButton.gameObject.SetActive(isHost);
 
-            Image bg = _startButton.GetComponent<Image>();
+            Image bg = StartButton.GetComponent<Image>();
             if (bg != null) bg.color = allReady ? ReadyColor : IdleColor;
-            if (_startLabel != null) _startLabel.color = allReady ? Color.black : Color.white;
+            if (StartLabel != null) StartLabel.color = allReady ? Color.black : Color.white;
         }
 
         // --- linea de estado ---
         // El host puede arrancar cuando se le cante, asi que el verde del Start no
         // alcanza: hay que DECIRLE cuantos faltan. Y al que todavia no confirmo, por que
         // no puede.
-        if (_statusText != null)
+        if (StatusText != null)
         {
             int players = 0, ready = 0;
             foreach (LobbyEntry e in lobby.Entries)
@@ -542,15 +536,15 @@ public class UI_LobbyPanel : MonoBehaviour
                 text += "   " + Loc.T("lobby.status.spectating");
             }
 
-            _statusText.text  = text;
-            _statusText.color = color;
+            StatusText.text  = text;
+            StatusText.color = color;
         }
     }
 
     // Pinta un lugar. Ocupado: ícono de clase + nombre. Libre: "Unirte" en un equipo,
     // "Espectador" en la franja de espectadores (que SÍ es un destino: es como te salís
     // de un equipo sin desconectarte).
-    private void DrawSlot(Slot slot, LobbyEntry entry, bool occupied, int myId, int team)
+    private void DrawSlot(UI_LobbySlot slot, LobbyEntry entry, bool occupied, int myId, int team)
     {
         bool isMine  = occupied && entry.ClientId == myId;
         bool isHost  = LobbyManager.LocalIsHost;
@@ -605,8 +599,7 @@ public class UI_LobbyPanel : MonoBehaviour
 
         slot.JoinButton.interactable = true;
 
-        TextMeshProUGUI joinLabel = slot.JoinButton.GetComponentInChildren<TextMeshProUGUI>();
-        if (joinLabel != null) joinLabel.text = Loc.T(inTeam ? "lobby.join" : "lobby.spectate");
+        if (slot.JoinLabel != null) slot.JoinLabel.text = Loc.T(inTeam ? "lobby.join" : "lobby.spectate");
     }
 
     private List<LobbyEntry> MembersOf(LobbyManager lobby, int team)
@@ -627,272 +620,112 @@ public class UI_LobbyPanel : MonoBehaviour
 
     private string CurrentName()
     {
-        string n = _nameInput != null ? _nameInput.text : null;
+        string n = NameInput != null ? NameInput.text : null;
         return string.IsNullOrWhiteSpace(n) ? Loc.T("lobby.default_name") : n.Trim();
     }
 
     // =========================================================
-    // CONSTRUCCIÓN
+    // CONECTAR LAS PIEZAS (una vez, al empezar)
     // =========================================================
 
     private void Build()
     {
-        _canvas = MercUIFactory.CreateCanvas("Canvas_LobbyPanel", 70);
-
-        _root = MercUIFactory.CreateRect(_canvas.transform, "Panel",
-                                         new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-                                         new Vector2(0.5f, 0.5f), Vector2.zero, PanelSize);
-
-        // Todo el panel se dibuja con medidas fijas (es una maqueta, no un layout), así
-        // que agrandarlo es una escala sobre la raíz: crecen el fondo, las columnas, los
-        // textos y los botones a la vez, sin volver a acomodar nada.
-        _root.localScale = Vector3.one * Mathf.Max(0.5f, PanelScale);
-
-        Image panelBg = _root.gameObject.AddComponent<Image>();
-        panelBg.color = PanelColor;
-
-        BuildHeader();
-        BuildNameRow();
-        BuildColumns();
-        BuildConfirm();
-        BuildClassPicker();
+        if (_built) return;
+        _built = true;
 
         // Nace APAGADO: la sala no existe hasta que hay conexion, y hasta entonces lo
         // unico que va en pantalla es el recuadro para hostear o conectarse.
-        _canvas.gameObject.SetActive(false);
-    }
+        if (LobbyCanvas != null) LobbyCanvas.SetActive(false);
 
-    private void BuildHeader()
-    {
-        _ipText = MercUIFactory.CreateText(_root, "IP", "Host IP: —", 24f, Color.white,
-                                           TextAlignmentOptions.Center,
-                                           new Vector2(0f, -40f), new Vector2(600f, 40f),
-                                           new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
-                                           new Vector2(0.5f, 1f));
+        if (StartButton != null)   { StartButton.onClick.AddListener(AudioManager.Click);   StartButton.onClick.AddListener(RequestStart); }
+        if (ConfirmButton != null) { ConfirmButton.onClick.AddListener(AudioManager.Click); ConfirmButton.onClick.AddListener(ToggleReady); }
 
-        _startButton = CreateButton(_root, "StartButton", "", IdleColor,
-                                    new Vector2(0.5f, 1f), new Vector2(420f, -40f),
-                                    new Vector2(150f, 44f), out _startLabel);
-        LocalizedText.Bind(_startLabel, "lobby.start");
-        _startButton.onClick.AddListener(RequestStart);
-    }
-
-    private void BuildNameRow()
-    {
-        // Etiqueta y campo se posicionan CALCULADOS y no a ojo: puestos a mano el rect
-        // del texto terminaba 10 px adentro del campo y la palabra quedaba pegada al
-        // borde. Las tres medidas de acá abajo son lo único que hay que tocar.
-        const float labelW = 200f;
-        const float inputW = 260f;
-        const float gap    = 24f;
-        const float rowY   = -95f;
-
-        // La fila entera va centrada en el panel: se reparte desde su borde izquierdo.
-        float left    = -(labelW + gap + inputW) * 0.5f;
-        float labelX  = left + labelW * 0.5f;
-        float inputX  = left + labelW + gap + inputW * 0.5f;
-
-        TextMeshProUGUI nameLabel = MercUIFactory.CreateText(_root, "NameLabel", "", 22f, Color.white,
-                                                             TextAlignmentOptions.Right,
-                                                             new Vector2(labelX, rowY), new Vector2(labelW, 36f),
-                                                             new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
-                                                             new Vector2(0.5f, 1f));
-        LocalizedText.Bind(nameLabel, "lobby.username");
-
-        RectTransform inputRect = MercUIFactory.CreateRect(
-            _root, "NameInput", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
-            new Vector2(0.5f, 1f), new Vector2(inputX, rowY), new Vector2(inputW, 36f));
-
-        Image inputBg = inputRect.gameObject.AddComponent<Image>();
-        inputBg.color = SlotColor;
-
-        TextMeshProUGUI text = MercUIFactory.CreateText(
-            inputRect, "Text", "", 20f, Color.white, TextAlignmentOptions.Left,
-            new Vector2(12f, 0f), new Vector2(inputW - 24f, 32f));
-
-        _nameInput = inputRect.gameObject.AddComponent<TMP_InputField>();
-        _nameInput.textComponent = text;
-        _nameInput.text          = Loc.T("lobby.default_name");
-        _nameInput.characterLimit = 16;
-
-        // Al TERMINAR de escribir, no en cada tecla: si no, cada letra sería un pedido
-        // al servidor y un rebote por "nombre repetido" a mitad de palabra.
-        _nameInput.onEndEdit.AddListener(OnNameChanged);
-    }
-
-    private void BuildColumns()
-    {
-        float startX = -(ColumnWidth * 1.5f);
-        const float headerY = -160f;
-
-        for (int t = 0; t < LobbyManager.TeamCount; t++)
+        if (NameInput != null)
         {
-            int team = t + 1;
-            float x = startX + ColumnWidth * t;
-
-            CreateColumnHeader($"Team{team}", () => Loc.T("lobby.team", ("team", team)),
-                               MercUIFactory.TeamColor(team), x, headerY);
-
-            _teamSlots[t] = new List<Slot>();
-            for (int s = 0; s < MaxPerTeam; s++)
-            {
-                int capturedTeam = team;
-                Slot slot = CreateSlot($"T{team}_S{s}", x, headerY - 56f - RowHeight * s);
-                Slot capturedSlot = slot;
-
-                slot.JoinButton.onClick.AddListener(() => JoinTeam(capturedTeam));
-                slot.IconButton.onClick.AddListener(() => ShowClassPickerFor(capturedSlot.EntryId));
-                slot.AddBotButton.onClick.AddListener(() => AddBot(capturedTeam));
-                slot.RemoveButton.onClick.AddListener(() => RemoveBot(capturedSlot.EntryId));
-
-                _teamSlots[t].Add(slot);
-            }
+            NameInput.text = Loc.T("lobby.default_name");
+            // Al TERMINAR de escribir, no en cada tecla: si no, cada letra sería un pedido
+            // al servidor y un rebote por "nombre repetido" a mitad de palabra.
+            NameInput.onEndEdit.AddListener(OnNameChanged);
         }
 
-        float specX = startX + ColumnWidth * LobbyManager.TeamCount;
-        CreateColumnHeader("Spectators", () => Loc.T("lobby.spectators"),
-                           new Color(0.55f, 0.57f, 0.62f, 1f), specX, headerY);
+        // Los lugares, por columna y en el orden de la jerarquía.
+        for (int t = 0; t < _teamSlots.Length; t++) _teamSlots[t] = new List<UI_LobbySlot>();
+        Transform root = Panel != null ? Panel : transform;
+        foreach (UI_LobbySlot slot in root.GetComponentsInChildren<UI_LobbySlot>(true))
+        {
+            if (slot.Team <= 0) { _spectatorSlots.Add(slot); WireSlot(slot); continue; }
+            if (slot.Team <= _teamSlots.Length) { _teamSlots[slot.Team - 1].Add(slot); WireSlot(slot); }
+        }
 
-        for (int s = 0; s < MinSpectatorRows; s++)
-            AddSpectatorRow(specX, headerY - 56f - RowHeight * s);
+        BuildClassPicker();
     }
 
-    // La franja de espectadores no tiene cupo: si entran más de los dibujados, se
-    // agregan filas al vuelo.
+    // Los botones de un lugar. Se registran UNA vez; sobre quién actúan lo dice EntryId,
+    // que se reescribe en cada redibujado.
+    private void WireSlot(UI_LobbySlot slot)
+    {
+        int team = slot.Team;
+        if (slot.JoinButton != null)
+        {
+            slot.JoinButton.onClick.AddListener(AudioManager.Click);
+            slot.JoinButton.onClick.AddListener(() => JoinTeam(team));
+        }
+        if (slot.IconButton != null)   slot.IconButton.onClick.AddListener(() => ShowClassPickerFor(slot.EntryId));
+        if (slot.AddBotButton != null) { slot.AddBotButton.onClick.AddListener(AudioManager.Click); slot.AddBotButton.onClick.AddListener(() => AddBot(team)); }
+        if (slot.RemoveButton != null) { slot.RemoveButton.onClick.AddListener(AudioManager.Click); slot.RemoveButton.onClick.AddListener(() => RemoveBot(slot.EntryId)); }
+    }
+
+    // La franja de espectadores no tiene cupo: si entran más de los armados, se copia el
+    // último lugar y se pone debajo, a la misma distancia que hay entre los dos primeros.
     private void EnsureSpectatorRows(int needed)
     {
-        float startX = -(ColumnWidth * 1.5f);
-        float specX  = startX + ColumnWidth * LobbyManager.TeamCount;
+        if (_spectatorSlots.Count == 0) return;
 
         while (_spectatorSlots.Count < needed)
-            AddSpectatorRow(specX, -160f - 56f - RowHeight * _spectatorSlots.Count);
-    }
+        {
+            UI_LobbySlot last = _spectatorSlots[_spectatorSlots.Count - 1];
+            RectTransform lastRt = (RectTransform)last.transform;
 
-    // El botón de una fila de espectadores te SACA del equipo (equipo 0 = espectador).
-    // Es el mismo camino que usa el panel para anotarte al entrar.
-    private void AddSpectatorRow(float x, float y)
-    {
-        Slot slot = CreateSlot($"Spec_{_spectatorSlots.Count}", x, y);
-        slot.JoinButton.onClick.AddListener(() => JoinTeam(0));
-        _spectatorSlots.Add(slot);
-    }
+            Vector2 step = _spectatorSlots.Count >= 2
+                ? lastRt.anchoredPosition - ((RectTransform)_spectatorSlots[_spectatorSlots.Count - 2].transform).anchoredPosition
+                : new Vector2(0f, -(lastRt.sizeDelta.y + 8f));
 
-    // 'title' arma el texto en el idioma elegido (se vuelve a llamar si cambia); 'name' es
-    // solo el nombre del objeto en la jerarquía.
-    private void CreateColumnHeader(string name, System.Func<string> title, Color color, float x, float y)
-    {
-        RectTransform rect = MercUIFactory.CreateRect(
-            _root, $"Header_{name}", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
-            new Vector2(0.5f, 1f), new Vector2(x, y), new Vector2(ColumnWidth - 40f, 40f));
-
-        Image bg = rect.gameObject.AddComponent<Image>();
-        bg.color = color;
-
-        TextMeshProUGUI text = MercUIFactory.CreateText(rect, "Text", "", 20f, Color.white,
-                                                        TextAlignmentOptions.Center,
-                                                        Vector2.zero, new Vector2(ColumnWidth - 44f, 36f),
-                                                        new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-                                                        new Vector2(0.5f, 0.5f));
-        LocalizedText.Bind(text, title);
-    }
-
-    private Slot CreateSlot(string name, float x, float y)
-    {
-        var slot = new Slot();
-
-        slot.Root = MercUIFactory.CreateRect(
-            _root, $"Slot_{name}", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
-            new Vector2(0.5f, 1f), new Vector2(x, y), new Vector2(ColumnWidth - 40f, RowHeight - 8f));
-
-        // El recuadro de la fila. Va PRIMERO para que quede detrás de todo lo demás: el
-        // orden de los hijos es el orden de dibujado en un Canvas.
-        slot.Background = slot.Root.gameObject.AddComponent<Image>();
-        slot.Background.color = RowColor;
-
-        // Ícono de clase, a la izquierda. Es un botón: el TUYO abre el selector.
-        //
-        // El nombre arranca DESPUÉS del ícono más un aire: antes el rect del texto
-        // empezaba 4 px adentro del ícono y quedaban pegados.
-        const float iconX = 14f;
-        const float gap   = 12f;
-
-        // El ícono no puede ser más alto que la fila: si SlotIconSize se pasa, se recorta
-        // (y para agrandarlo de verdad hay que subir RowHeight).
-        float iconSize = Mathf.Clamp(SlotIconSize, 8f, RowHeight - 8f);
-        float labelX   = iconX + iconSize + gap;
-
-        RectTransform iconRect = MercUIFactory.CreateRect(
-            slot.Root, "Icon", new Vector2(0f, 0.5f), new Vector2(0f, 0.5f),
-            new Vector2(0f, 0.5f), new Vector2(iconX, 0f), new Vector2(iconSize, iconSize));
-
-        slot.Icon = iconRect.gameObject.AddComponent<Image>();
-        slot.Icon.preserveAspect = true;
-        slot.IconButton = iconRect.gameObject.AddComponent<Button>();
-        slot.IconButton.targetGraphic = slot.Icon;
-
-        slot.Label = MercUIFactory.CreateText(
-            slot.Root, "Name", "", 18f, PendingColor, TextAlignmentOptions.Left,
-            new Vector2(labelX, 0f), new Vector2(ColumnWidth - 40f - labelX - 8f, 32f));
-
-        // El "Unirte" deja libre el borde derecho para el "+" de agregar un bot.
-        const float sideW = 34f;
-
-        slot.JoinButton = CreateButton(slot.Root, "Join", "Join", SlotColor,
-                                       new Vector2(0f, 0.5f), new Vector2(14f, 0f),
-                                       new Vector2(ColumnWidth - 100f - sideW, RowHeight - 14f), out _);
-
-        // "+" — agregar un bot en este lugar. Solo lo ve el host (ver DrawSlot).
-        slot.AddBotButton = CreateButton(slot.Root, "AddBot", "+", IdleColor,
-                                         new Vector2(1f, 0.5f), new Vector2(-14f, 0f),
-                                         new Vector2(sideW, RowHeight - 14f), out _);
-
-        // "x" — sacar el bot que ocupa este lugar. Mismo sitio que el "+", porque nunca
-        // se ven los dos a la vez: uno es para el lugar vacío y el otro para el ocupado.
-        slot.RemoveButton = CreateButton(slot.Root, "RemoveBot", "x",
-                                         new Color(0.45f, 0.20f, 0.22f, 1f),
-                                         new Vector2(1f, 0.5f), new Vector2(-14f, 0f),
-                                         new Vector2(sideW, RowHeight - 14f), out _);
-
-        return slot;
-    }
-
-    private void BuildConfirm()
-    {
-        // Una sola línea de texto sobre el botón: dice qué falta para arrancar, y qué
-        // te falta hacer a vos. Ver la parte final de Refresh().
-        _statusText = MercUIFactory.CreateText(_root, "Status", "", 18f, PendingColor,
-                                               TextAlignmentOptions.Center,
-                                               new Vector2(0f, 100f), new Vector2(760f, 30f),
-                                               new Vector2(0.5f, 0f), new Vector2(0.5f, 0f),
-                                               new Vector2(0.5f, 0f));
-
-        _confirmButton = CreateButton(_root, "ConfirmButton", "Confirm", IdleColor,
-                                      new Vector2(0.5f, 0f), new Vector2(0f, 46f),
-                                      new Vector2(180f, 46f), out _confirmLabel);
-        _confirmButton.onClick.AddListener(ToggleReady);
+            UI_LobbySlot copy = Instantiate(last, last.transform.parent);
+            copy.name = $"Slot_Spec_{_spectatorSlots.Count}";
+            ((RectTransform)copy.transform).anchoredPosition = lastRt.anchoredPosition + step;
+            _spectatorSlots.Add(copy);
+            WireSlot(copy);
+        }
     }
 
     // La grilla de clases: íconos arriba, y debajo el nombre y la descripción de la que
-    // estás mirando. Fondo opaco a propósito — con el panel traslúcido de atrás visible,
-    // elegir clase era un ruido visual.
+    // estás mirando.
     //
     // ELEGIR NO ES CONFIRMAR. Tocar un ícono solo la SELECCIONA: se resalta y aparece su
-    // descripción, y recién el botón Confirm la aplica. Antes el primer clic ya te
-    // cambiaba de clase, así que no había forma de leer qué hacía cada una sin quedarte
-    // con ella.
+    // descripción, y recién el botón Confirm la aplica.
     //
     // El nombre sigue al MOUSE (pasar por encima alcanza, sin tocar nada) y la
-    // descripción sigue a la SELECCIÓN. Así se puede recorrer los íconos leyendo nombres
-    // sin perder la descripción de la que estás por elegir.
+    // descripción sigue a la SELECCIÓN.
     //
-    // AGRUPADAS POR ROL (8 de octubre, pedido de Gustavo: con más clases la fila se
-    // estiraba demasiado). Arriba, una pestaña por rol —Tanks, Damage, Supports, y Other
-    // si alguna clase no tiene— y debajo solo las clases del rol abierto. Una clase base no
-    // tiene rol: va con el de sus subclases (CharacterClassDefinition.DisplayRole). El
-    // índice que se manda a la sala sigue siendo la posición en SelectableClasses: agrupar
-    // solo cambia dónde se DIBUJA cada ícono.
+    // AGRUPADAS POR ROL (8 de octubre, pedido de Gustavo). Arriba, una pestaña por rol
+    // —Tanks, Damage, Supports, y Other si alguna clase no tiene— y debajo solo las clases
+    // del rol abierto. Una clase base no tiene rol: va con el de sus subclases
+    // (CharacterClassDefinition.DisplayRole). El índice que se manda a la sala sigue siendo
+    // la posición en SelectableClasses: agrupar solo cambia dónde se DIBUJA cada ícono.
+    //
+    // Las pestañas y los íconos se copian de sus MOLDES: la altura de la fila y el tamaño
+    // son los del molde; acá solo se reparten a lo ancho.
     private void BuildClassPicker()
     {
+        if (ClassPicker == null) return;
+
+        if (PickerCloseButton != null) PickerCloseButton.onClick.AddListener(() => ShowClassPicker(false));
+        if (PickerConfirm != null)
+        {
+            PickerConfirm.onClick.AddListener(AudioManager.Click);
+            PickerConfirm.onClick.AddListener(ConfirmClassSelection);
+        }
+
         int count = SelectableClasses != null ? SelectableClasses.Length : 0;
 
         // Los grupos, en el orden de los menús; solo los que tienen alguna clase.
@@ -912,105 +745,85 @@ public class UI_LobbyPanel : MonoBehaviour
         int widest = 1;
         foreach (List<int> members in _roleMembers.Values) widest = Mathf.Max(widest, members.Count);
 
-        // La grilla se dimensiona a partir del ícono: paso = ícono + aire, y el recuadro
-        // deja un margen alrededor. Así subir ClassIconSize agranda todo junto. El ancho
-        // es el del grupo MÁS grande, para que el recuadro no cambie al cambiar de pestaña.
-        const float tabW = 150f, tabGap = 8f;
-        float iconSize  = Mathf.Max(24f, ClassIconSize);
-        float step      = iconSize + 12f;
-        float tabsWidth = _roleGroups.Count * tabW + Mathf.Max(0, _roleGroups.Count - 1) * tabGap;
-        float width     = Mathf.Max(360f, Mathf.Max(widest * step, tabsWidth) + 32f);
-        float height    = RoleTabHeight + 12f + iconSize + 46f + NameHeight + DescriptionHeight + ConfirmHeight;
+        RectTransform tabRt  = TabTemplate != null ? (RectTransform)TabTemplate.transform : null;
+        RectTransform iconRt = ClassIconTemplate != null ? (RectTransform)ClassIconTemplate.transform : null;
+        float tabW      = tabRt != null ? tabRt.sizeDelta.x : 150f;
+        float iconSize  = iconRt != null ? iconRt.sizeDelta.x : 84f;
+        float step      = iconSize + IconGap;
+        float tabsWidth = _roleGroups.Count * tabW + Mathf.Max(0, _roleGroups.Count - 1) * TabGap;
 
-        _classPicker = MercUIFactory.CreateRect(
-            _root, "ClassPicker", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-            new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(width, height));
+        // El ancho es el del grupo MÁS grande, para que el recuadro no cambie al cambiar de
+        // pestaña. Nunca más angosto que como está armado.
+        float needed = Mathf.Max(widest * step, tabsWidth) + PickerMargin;
+        if (needed > ClassPicker.sizeDelta.x) ClassPicker.sizeDelta = new Vector2(needed, ClassPicker.sizeDelta.y);
 
-        Image bg = _classPicker.gameObject.AddComponent<Image>();
-        bg.color = new Color(PanelColor.r, PanelColor.g, PanelColor.b, 1f); // opaco
-
-        // El fondo cierra el selector: si no, la unica salida era elegir una clase — y
-        // si abriste la grilla sin querer te quedabas trabado ahi.
-        Button close = _classPicker.gameObject.AddComponent<Button>();
-        close.targetGraphic = bg;
-        close.transition    = Selectable.Transition.None;
-        close.onClick.AddListener(() => ShowClassPicker(false));
-
-        // Las pestañas de rol, arriba del todo, del color de su rol.
-        float tabsY = height * 0.5f - 12f - RoleTabHeight * 0.5f;
-        for (int g = 0; g < _roleGroups.Count; g++)
+        // Las pestañas de rol, del color de su rol.
+        if (TabTemplate != null)
         {
-            int capturedGroup = g;
-            EClassRole role = _roleGroups[g];
-            float x = -tabsWidth * 0.5f + tabW * 0.5f + g * (tabW + tabGap);
+            TabTemplate.gameObject.SetActive(false);
+            for (int g = 0; g < _roleGroups.Count; g++)
+            {
+                int capturedGroup = g;
+                EClassRole role = _roleGroups[g];
+                int memberCount = _roleMembers[role].Count;
 
-            int memberCount = _roleMembers[role].Count;
-            Button tab = CreateButton(_classPicker, $"Tab_{role}", "",
-                                      ClassRoleStyle.Color(role), new Vector2(0.5f, 0.5f),
-                                      new Vector2(x, tabsY), new Vector2(tabW, RoleTabHeight),
-                                      out TextMeshProUGUI tabLabel);
-            LocalizedText.Bind(tabLabel, () => $"{ClassRoleStyle.GroupName(role)} ({memberCount})");
-            tab.onClick.AddListener(() => OpenRoleGroup(capturedGroup));
-            _roleTabs.Add(tab.targetGraphic as Image);
+                Button tab = Instantiate(TabTemplate, TabTemplate.transform.parent);
+                tab.name = $"Tab_{role}";
+                tab.gameObject.SetActive(true);
+                RectTransform rt = (RectTransform)tab.transform;
+                rt.anchoredPosition = new Vector2(-tabsWidth * 0.5f + tabW * 0.5f + g * (tabW + TabGap), tabRt.anchoredPosition.y);
+
+                Image bg = tab.targetGraphic as Image;
+                if (bg != null) bg.color = ClassRoleStyle.Color(role);
+
+                TMP_Text label = tab.GetComponentInChildren<TMP_Text>(true);
+                if (label != null) LocalizedText.Bind(label, () => $"{ClassRoleStyle.GroupName(role)} ({memberCount})");
+
+                tab.onClick.AddListener(AudioManager.Click);
+                tab.onClick.AddListener(() => OpenRoleGroup(capturedGroup));
+                _roleTabs.Add(bg);
+            }
         }
 
-        // Los íconos van debajo de las pestañas, dejando abajo el espacio del texto y el
-        // botón. Cada uno se centra dentro de SU grupo: solo se ve el grupo abierto.
-        float iconsY = tabsY - RoleTabHeight * 0.5f - 16f - iconSize * 0.5f;
-
+        // Los íconos: cada uno se centra dentro de SU grupo (solo se ve el grupo abierto).
         _classIcons = new Image[count];
-
-        for (int i = 0; i < count; i++)
+        if (ClassIconTemplate != null)
         {
-            int captured = i;
-            CharacterClassDefinition cls = SelectableClasses[i];
+            ClassIconTemplate.gameObject.SetActive(false);
+            for (int i = 0; i < count; i++)
+            {
+                int captured = i;
+                CharacterClassDefinition cls = SelectableClasses[i];
 
-            List<int> group = _roleMembers[RoleOf(i)];
-            int slot = group.IndexOf(i);
+                List<int> group = _roleMembers[RoleOf(i)];
+                int slot = group.IndexOf(i);
 
-            RectTransform iconRect = MercUIFactory.CreateRect(
-                _classPicker, $"Class_{i}", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-                new Vector2(0.5f, 0.5f),
-                new Vector2((slot - (group.Count - 1) * 0.5f) * step, iconsY), new Vector2(iconSize, iconSize));
+                Button b = Instantiate(ClassIconTemplate, ClassIconTemplate.transform.parent);
+                b.name = $"Class_{i}";
+                b.gameObject.SetActive(true);
+                RectTransform rt = (RectTransform)b.transform;
+                rt.anchoredPosition = new Vector2((slot - (group.Count - 1) * 0.5f) * step, iconRt.anchoredPosition.y);
 
-            Image icon = iconRect.gameObject.AddComponent<Image>();
-            icon.sprite = cls != null ? cls.ClassIcon : null;
-            icon.preserveAspect = true;
-            _classIcons[i] = icon;
+                Image icon = b.targetGraphic as Image;
+                if (icon == null) icon = b.GetComponent<Image>();
+                if (icon != null)
+                {
+                    icon.sprite = cls != null ? cls.ClassIcon : null;
+                    icon.preserveAspect = true;
+                }
+                _classIcons[i] = icon;
 
-            Button b = iconRect.gameObject.AddComponent<Button>();
-            b.targetGraphic = icon;
-            b.onClick.AddListener(() => SelectClassInPicker(captured));
+                b.onClick.AddListener(() => SelectClassInPicker(captured));
 
-            // Pasar el mouse por encima muestra el nombre, sin elegir nada. Se arma con
-            // un EventTrigger y no con un Button aparte porque el Button ya está usado
-            // para seleccionar y su "highlight" no avisa cuál se está mirando.
-            EventTrigger trigger = iconRect.gameObject.AddComponent<EventTrigger>();
-            AddTriggerEntry(trigger, EventTriggerType.PointerEnter, () => ShowClassName(captured));
-            AddTriggerEntry(trigger, EventTriggerType.PointerExit,  () => ShowClassName(_pickerSelection));
+                // Pasar el mouse por encima muestra el nombre, sin elegir nada.
+                EventTrigger trigger = b.GetComponent<EventTrigger>();
+                if (trigger == null) trigger = b.gameObject.AddComponent<EventTrigger>();
+                AddTriggerEntry(trigger, EventTriggerType.PointerEnter, () => ShowClassName(captured));
+                AddTriggerEntry(trigger, EventTriggerType.PointerExit,  () => ShowClassName(_pickerSelection));
+            }
         }
 
-        Vector2 mid = new Vector2(0.5f, 0.5f);
-
-        float nameY = iconsY - iconSize * 0.5f - NameHeight * 0.5f - 6f;
-        _classNameLabel = MercUIFactory.CreateText(
-            _classPicker, "ClassName", "", 22f, Color.white, TextAlignmentOptions.Center,
-            new Vector2(0f, nameY), new Vector2(width - 32f, NameHeight), mid, mid, mid);
-        _classNameLabel.fontStyle = FontStyles.Bold;
-
-        float descY = nameY - NameHeight * 0.5f - DescriptionHeight * 0.5f;
-        _classDescLabel = MercUIFactory.CreateText(
-            _classPicker, "ClassDescription", "", 15f, new Color(0.78f, 0.80f, 0.85f, 1f),
-            TextAlignmentOptions.Top, new Vector2(0f, descY),
-            new Vector2(width - 40f, DescriptionHeight), mid, mid, mid);
-
-        _pickerConfirm = CreateButton(_classPicker, "ConfirmClass", "", SlotColor,
-                                      new Vector2(0.5f, 0f), new Vector2(0f, 14f),
-                                      new Vector2(200f, ConfirmHeight - 10f), out TextMeshProUGUI pickerConfirmLabel);
-        LocalizedText.Bind(pickerConfirmLabel, "lobby.confirm");
-        _pickerConfirm.onClick.AddListener(ConfirmClassSelection);
-
-        _classPicker.gameObject.SetActive(false);
+        ClassPicker.gameObject.SetActive(false);
     }
 
     private static void AddTriggerEntry(EventTrigger trigger, EventTriggerType type, System.Action action)
@@ -1050,7 +863,7 @@ public class UI_LobbyPanel : MonoBehaviour
     private void ShowClassName(int index)
     {
         CharacterClassDefinition cls = ClassAt(index);
-        if (_classNameLabel != null) _classNameLabel.text = cls != null ? cls.DisplayName : "";
+        if (ClassNameLabel != null) ClassNameLabel.text = cls != null ? cls.DisplayName : "";
     }
 
     // Selecciona sin aplicar: resalta el ícono y muestra su descripción.
@@ -1060,7 +873,7 @@ public class UI_LobbyPanel : MonoBehaviour
         ShowClassName(index);
 
         CharacterClassDefinition cls = ClassAt(index);
-        if (_classDescLabel != null) _classDescLabel.text = cls != null ? cls.DisplayDescription : "";
+        if (ClassDescLabel != null) ClassDescLabel.text = cls != null ? cls.DisplayDescription : "";
 
         // El resaltado es el propio ícono, más brillante. Los demás quedan apagados, así
         // se ve de un vistazo cuál está elegida.
@@ -1069,7 +882,7 @@ public class UI_LobbyPanel : MonoBehaviour
                 if (_classIcons[i] != null)
                     _classIcons[i].color = i == index ? Color.white : new Color(0.5f, 0.5f, 0.5f, 1f);
 
-        if (_pickerConfirm != null) _pickerConfirm.interactable = cls != null;
+        if (PickerConfirm != null) PickerConfirm.interactable = cls != null;
     }
 
     // Recién acá se aplica de verdad.
@@ -1081,7 +894,7 @@ public class UI_LobbyPanel : MonoBehaviour
 
     private void ShowClassPicker(bool show)
     {
-        if (_classPicker == null) return;
+        if (ClassPicker == null) return;
 
         // Al abrirlo, arrancar en la clase que ya tenés puesta: así el selector muestra
         // de entrada qué elegiste y se puede confirmar sin volver a tocar el ícono.
@@ -1101,38 +914,14 @@ public class UI_LobbyPanel : MonoBehaviour
             {
                 _pickerSelection = -1;
                 ShowClassName(-1);
-                if (_classDescLabel != null) _classDescLabel.text = "";
-                if (_pickerConfirm != null) _pickerConfirm.interactable = false;
+                if (ClassDescLabel != null) ClassDescLabel.text = "";
+                if (PickerConfirm != null) PickerConfirm.interactable = false;
                 if (_classIcons != null)
                     foreach (Image icon in _classIcons)
                         if (icon != null) icon.color = Color.white;
             }
         }
 
-        _classPicker.gameObject.SetActive(show);
-    }
-
-    // MercUIFactory no tiene botones (el HUD del modo no los necesitaba), así que se
-    // arman acá: un Image de fondo + su Button + el texto encima.
-    private Button CreateButton(Transform parent, string name, string label, Color color,
-                                Vector2 anchor, Vector2 position, Vector2 size,
-                                out TextMeshProUGUI labelText)
-    {
-        RectTransform rect = MercUIFactory.CreateRect(parent, name, anchor, anchor, anchor,
-                                                      position, size);
-
-        Image bg = rect.gameObject.AddComponent<Image>();
-        bg.color = color;
-
-        Button button = rect.gameObject.AddComponent<Button>();
-        button.targetGraphic = bg;
-        button.onClick.AddListener(AudioManager.Click);
-
-        labelText = MercUIFactory.CreateText(rect, "Text", label, 18f, Color.white,
-                                             TextAlignmentOptions.Center,
-                                             Vector2.zero, new Vector2(size.x - 8f, size.y - 6f),
-                                             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-                                             new Vector2(0.5f, 0.5f));
-        return button;
+        ClassPicker.gameObject.SetActive(show);
     }
 }

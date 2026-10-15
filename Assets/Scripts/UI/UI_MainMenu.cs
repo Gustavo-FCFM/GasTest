@@ -19,44 +19,37 @@ using UnityEngine.UI;
 // ninguna carga de escena: "volver al menú" es cortar la conexión y mostrar este panel,
 // exactamente el mismo camino que Desconectar → Iniciar Host, que ya está probado.
 //
-// Se dibuja solo por código, como el resto de la UI del modo. Lo instala
-// `Mercenarios ▸ Instalar el menú principal en la arena`.
+// VIVE EN EL PREFAB DE MENÚS (Menus_UI ▸ MainMenu), desde el 14 de octubre de 2026: el velo,
+// la franja, el título, el subtítulo, los tres botones y la versión están armados ahí y se
+// acomodan a mano (los textos de los botones y el subtítulo llevan su LocalizedText). Este
+// script solo los conecta y prende o apaga el canvas.
 //
 // Los textos salen de Loc (claves menu.*), salvo el título: es el nombre del juego.
 // ============================================================
 public class UI_MainMenu : MonoBehaviour
 {
-    [Header("Textos")]
-    [Tooltip("El nombre del juego: no se traduce. El subtítulo y los botones salen de " +
-             "Resources/Localization.csv (claves menu.*).")]
-    [Label("Título")]
-    public string Title    = "MERCENARIES";
+    [Header("Piezas")]
+    [Tooltip("El canvas del menú: se prende y se apaga entero.")]
+    [Label("Canvas del menú")]
+    public GameObject MenuCanvas;
+
+    [Label("Botón Jugar")]
+    public Button PlayButton;
+
+    [Label("Botón Ajustes")]
+    public Button SettingsButton;
+
+    [Label("Botón Salir")]
+    public Button QuitButton;
+
+    [Tooltip("La versión, abajo a la derecha (se escribe sola con la del proyecto).")]
+    [Label("Versión")]
+    public TMP_Text VersionText;
 
     [Header("Comportamiento")]
     [Tooltip("Mostrar el menú apenas arranca la escena. Apagalo para probar la arena directo.")]
     [Label("Mostrar al arrancar")]
     public bool ShowOnStart = true;
-
-    [Header("Fondo")]
-    [Tooltip("Velo oscuro sobre la arena para que el texto se lea. Transparente del todo si querés ver el mapa limpio.")]
-    [Label("Color del velo")]
-    public Color BackdropColor = new Color(0f, 0f, 0f, 0.35f);
-    [Label("Color de la franja")]
-    public Color BandColor     = new Color(0f, 0f, 0f, 0.35f);
-
-    [Header("Botones")]
-    [Label("Tamaño de botón")]
-    public Vector2 ButtonSize   = new Vector2(320f, 58f);
-    [Label("Separación de botones")]
-    public float   ButtonGap    = 16f;
-    [Label("Color de botón")]
-    public Color   ButtonColor  = new Color(0.20f, 0.22f, 0.26f);
-    [Label("Color de Jugar")]
-    public Color   PlayColor    = new Color(0.95f, 0.65f, 0.20f);
-    [Label("Color del texto")]
-    public Color   TextColor    = new Color(0.94f, 0.94f, 0.94f);
-    [Label("Color del texto tenue")]
-    public Color   DimTextColor = new Color(0.6f, 0.6f, 0.6f);
 
     public static UI_MainMenu Instance { get; private set; }
 
@@ -64,17 +57,18 @@ public class UI_MainMenu : MonoBehaviour
     // dibujarse encima) y la cámara de la sala (para el blur).
     public static bool IsShowing { get; private set; }
 
-    private Canvas _canvas;
-    private Button _playButton;
-
     private void Awake()
     {
         Instance = this;
+
+        if (PlayButton != null)     { PlayButton.onClick.AddListener(AudioManager.Click);     PlayButton.onClick.AddListener(Hide); }
+        if (SettingsButton != null) { SettingsButton.onClick.AddListener(AudioManager.Click); SettingsButton.onClick.AddListener(OpenSettings); }
+        if (QuitButton != null)     { QuitButton.onClick.AddListener(AudioManager.Click);     QuitButton.onClick.AddListener(Quit); }
+        if (VersionText != null) VersionText.text = "v" + Application.version;
     }
 
     private void Start()
     {
-        Build();
         if (ShowOnStart) Show(); else Hide();
     }
 
@@ -84,7 +78,7 @@ public class UI_MainMenu : MonoBehaviour
         if (!IsShowing || !Input.GetKeyDown(KeyCode.Escape)) return;
         if (UI_SettingsPanel.IsAnyOpen || UI_SettingsPanel.LastCloseFrame == Time.frameCount) return;
 
-        UI_SettingsPanel.GetOrCreate().Open();
+        OpenSettings();
     }
 
     private void OnDestroy()
@@ -93,25 +87,25 @@ public class UI_MainMenu : MonoBehaviour
         if (IsShowing) { IsShowing = false; UICursor.Release(this); }
     }
 
+    private static void OpenSettings() => UI_SettingsPanel.Get()?.Open();
+
     // =========================================================
     // MOSTRAR / ESCONDER
     // =========================================================
 
     public void Show()
     {
-        if (_canvas == null) Build();
-
-        _canvas.gameObject.SetActive(true);
+        if (MenuCanvas != null) MenuCanvas.SetActive(true);
         IsShowing = true;
         UICursor.Request(this);
 
-        if (EventSystem.current != null && _playButton != null)
-            EventSystem.current.SetSelectedGameObject(_playButton.gameObject);
+        if (EventSystem.current != null && PlayButton != null)
+            EventSystem.current.SetSelectedGameObject(PlayButton.gameObject);
     }
 
     public void Hide()
     {
-        if (_canvas != null) _canvas.gameObject.SetActive(false);
+        if (MenuCanvas != null) MenuCanvas.SetActive(false);
         IsShowing = false;
         UICursor.Release(this);
     }
@@ -141,89 +135,5 @@ public class UI_MainMenu : MonoBehaviour
 #else
         Application.Quit();
 #endif
-    }
-
-    // =========================================================
-    // CONSTRUCCIÓN
-    // =========================================================
-
-    private void Build()
-    {
-        _canvas = MercUIFactory.CreateCanvas("MainMenuCanvas", 100);
-        _canvas.transform.SetParent(transform, false);
-        Transform root = _canvas.transform;
-
-        Vector2 center = new Vector2(0.5f, 0.5f);
-
-        // Velo sobre la arena. Se traga los clics para que nada de abajo los reciba.
-        Image backdrop = MercUIFactory.CreateImage(root, "Backdrop", BackdropColor,
-                                                   Vector2.zero, Vector2.zero, Vector2.zero, Vector2.one, center);
-        backdrop.raycastTarget = true;
-
-        // Banda un poco más oscura al centro, donde va el texto.
-        MercUIFactory.CreateImage(root, "Band", BandColor,
-                                  Vector2.zero, Vector2.zero,
-                                  new Vector2(0.3f, 0f), new Vector2(0.7f, 1f), center);
-
-        TextMeshProUGUI title = MercUIFactory.CreateText(root, "Title", Title, 92f, TextColor,
-                                                         TextAlignmentOptions.Center,
-                                                         new Vector2(0f, 200f), new Vector2(1200f, 120f),
-                                                         center, center, center);
-        title.fontStyle = FontStyles.Bold;
-        title.characterSpacing = 12f;
-        MercUIFactory.AddShadow(title, 3f);
-
-        TextMeshProUGUI subtitle = MercUIFactory.CreateText(root, "Subtitle", "", 24f, DimTextColor,
-                                                            TextAlignmentOptions.Center,
-                                                            new Vector2(0f, 128f), new Vector2(900f, 34f),
-                                                            center, center, center);
-        LocalizedText.Bind(subtitle, "menu.subtitle");
-
-        float y = 10f;
-        _playButton = MakeButton(root, "Play", "menu.play", PlayColor, new Vector2(0f, y));
-        _playButton.onClick.AddListener(Hide);
-
-        y -= ButtonSize.y + ButtonGap;
-        Button settings = MakeButton(root, "Settings", "menu.settings", ButtonColor, new Vector2(0f, y));
-        settings.onClick.AddListener(() => UI_SettingsPanel.GetOrCreate().Open());
-
-        y -= ButtonSize.y + ButtonGap;
-        Button quit = MakeButton(root, "Quit", "menu.quit", ButtonColor, new Vector2(0f, y));
-        quit.onClick.AddListener(Quit);
-
-        Vector2 corner = new Vector2(1f, 0f);
-        MercUIFactory.CreateText(root, "Version", "v" + Application.version, 15f, DimTextColor,
-                                 TextAlignmentOptions.Right,
-                                 new Vector2(-16f, 10f), new Vector2(300f, 20f),
-                                 corner, corner, corner);
-    }
-
-    // 'labelKey' es la clave del texto en Loc: el botón se reescribe solo si cambia el idioma.
-    private Button MakeButton(Transform parent, string name, string labelKey, Color color, Vector2 position)
-    {
-        Vector2 center = new Vector2(0.5f, 0.5f);
-        RectTransform rect = MercUIFactory.CreateRect(parent, name, center, center, center, position, ButtonSize);
-
-        Image bg = rect.gameObject.AddComponent<Image>();
-        bg.sprite = MercUIFactory.WhiteSprite;
-        bg.color  = color;
-
-        Button button = rect.gameObject.AddComponent<Button>();
-        button.targetGraphic = bg;
-        button.onClick.AddListener(AudioManager.Click);
-
-        ColorBlock colors = button.colors;
-        colors.highlightedColor = Color.Lerp(color, Color.white, 0.25f);
-        colors.selectedColor    = colors.highlightedColor;
-        colors.pressedColor     = Color.Lerp(color, Color.black, 0.25f);
-        button.colors = colors;
-
-        TextMeshProUGUI text = MercUIFactory.CreateText(rect, "Text", "", 24f, Color.white,
-                                                        TextAlignmentOptions.Center,
-                                                        Vector2.zero, new Vector2(ButtonSize.x - 8f, ButtonSize.y - 6f),
-                                                        center, center, center);
-        text.fontStyle = FontStyles.Bold;
-        LocalizedText.Bind(text, labelKey);
-        return button;
     }
 }

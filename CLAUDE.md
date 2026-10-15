@@ -250,8 +250,12 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   relativos raros. El canvas del HUD es de 800×600 con match en ancho: lo pensado para un
   canvas de 1920 va × 800/1920. Una pieza nueva se pone con una herramienta de una vez y
   después se edita a mano. Lo que es de la PARTIDA y no del personaje (registro de bajas,
-  pantalla de muerte, números flotantes, marcador) va a un prefab de partida — falta,
-  PENDIENTES etapa 5. Un `Graphic` propio necesita `[RequireComponent(typeof(CanvasRenderer))]`:
+  pantalla de muerte, números flotantes, marcador) va al **prefab de partida `Prefabs/UI/Match_UI`**
+  (uno por escena; desde el 14 de octubre de 2026: registro de bajas, pantalla de muerte, números,
+  marcador, avisos de partida, marcadores del Objetivo y el espectador). Los menús (inicio, Ajustes
+  y la sala) están en el **prefab de menús `Prefabs/UI/Menus_UI`**: cada fila de Ajustes lleva un
+  `UI_SettingRow` y cada lugar de la sala un `UI_LobbySlot`. Los canvas de los dos prefabs son de
+  1920×1080 y escalan con la pantalla. Un `Graphic` propio necesita `[RequireComponent(typeof(CanvasRenderer))]`:
   sin él no se dibuja y no avisa.
 
 Los detalles finos del GAS (pipeline de daño, acumulación de efectos, animaciones de

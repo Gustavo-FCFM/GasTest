@@ -16,38 +16,63 @@ using UnityEngine.UI;
 //   · TU ENTREGA: el punto de tu base, y solo mientras alguien de tu equipo lo carga —
 //     que es el único momento en que importa saber para dónde correr.
 //
-// Se arma solo (componente en la escena, sin cablear nada) y no toca gameplay.
+// VIVE EN EL PREFAB DE PARTIDA (Match_UI ▸ ObjectiveMarkers), desde el 14 de octubre de
+// 2026: los dos marcadores (el del Objetivo y el de tu entrega) están armados ahí, cada uno
+// con su rombo, su texto de distancia y la barra de entrega. Se acomodan y se les cambia el
+// tamaño a mano; el tamaño del rombo y el ancho de la barra salen de cómo están en el prefab.
+// Este script solo los pone en la pantalla, los pinta y escribe la distancia. No toca gameplay.
 // ============================================================
 public class UI_ObjectiveMarker : MonoBehaviour
 {
-    [Header("Estilo")]
-    [Label("Tamaño del marcador")]
-    public float MarkerSize = 26f;
-    [Label("Color del Objetivo")]
-    public Color ObjectiveColor = new Color(1f, 0.82f, 0.25f);
-
-    [Tooltip("Margen contra el borde de la pantalla cuando el marcador queda fuera de cámara.")]
-    [Label("Margen del borde")]
-    public float EdgePadding = 60f;
-
-    [Tooltip("Ancho de la barra de entrega que aparece bajo el marcador del Objetivo.")]
-    [Label("Ancho de la barra de entrega")]
-    public float DeliveryBarWidth = 90f;
-
-    // Un marcador dibujado: rombo + flecha de borde + texto de distancia, y la barra
-    // de entrega (solo la usa el del Objetivo).
-    private class Marker
+    // Las piezas de un marcador.
+    [System.Serializable]
+    public class MarkerPieces
     {
+        [Tooltip("La raíz del marcador, anclada abajo a la izquierda del canvas (se mueve a la posición en pantalla).")]
+        [Label("Raíz")]
         public RectTransform Root;
+
+        [Tooltip("El rombo (una Image girada 45°): se pinta del color de quien lleva el Objetivo.")]
+        [Label("Rombo")]
         public Image Diamond;
-        public TextMeshProUGUI Label;
+
+        [Label("Distancia")]
+        public TMP_Text Label;
+
+        [Tooltip("El fondo de la barra de entrega (solo la usa el marcador del Objetivo; se prende sola).")]
+        [Label("Barra de entrega")]
         public Image BarBack;
+
+        [Tooltip("El relleno de la barra (anclado a la izquierda: se le cambia el ancho).")]
+        [Label("Relleno de la barra")]
         public Image BarFill;
     }
 
+    [Header("Piezas")]
+    [Label("Marcador del Objetivo")]
+    public MarkerPieces Objective = new MarkerPieces();
+
+    [Tooltip("El punto de entrega de tu base: sale solo mientras alguien de tu equipo lleva el Objetivo.")]
+    [Label("Marcador de tu entrega")]
+    public MarkerPieces Delivery = new MarkerPieces();
+
+    [Header("Estilo")]
+    [Tooltip("El color del Objetivo cuando nadie lo lleva.")]
+    [Label("Color del Objetivo")]
+    public Color ObjectiveColor = new Color(1f, 0.82f, 0.25f);
+
+    [Tooltip("Margen contra el borde de la pantalla cuando el marcador queda fuera de cámara, en px de pantalla.")]
+    [Label("Margen del borde (px)")]
+    public float EdgePadding = 60f;
+
+    [Tooltip("Fuera de cámara el rombo se achica a esta fracción de su tamaño, para distinguir " +
+             "\"está allá\" de \"lo estás mirando\".")]
+    [Label("Rombo fuera de cámara (×)")]
+    public float OffScreenScale = 0.75f;
+
     private Canvas _canvas;
-    private Marker _objectiveMarker;
-    private Marker _deliveryMarker;
+    private Vector2 _objectiveDiamondSize, _deliveryDiamondSize;
+    private float _barWidth;
 
     // Progreso de entrega que se dibuja. El servidor lo manda a saltos (su tick es de
     // 0.15 s), así que acá avanza suave a la velocidad real y se corrige con cada dato.
@@ -55,59 +80,13 @@ public class UI_ObjectiveMarker : MonoBehaviour
 
     private void Start()
     {
-        Transform parent = ResolveCanvas();
-
-        _objectiveMarker = BuildMarker(parent, "MarcadorObjetivo");
-        _deliveryMarker  = BuildMarker(parent, "MarcadorEntrega");
-    }
-
-    private Transform ResolveCanvas()
-    {
         _canvas = GetComponentInParent<Canvas>();
-        if (_canvas == null)
-        {
-            // Order bajo: los marcadores del mundo van por DEBAJO del marcador de
-            // partida y de los avisos, no encima.
-            _canvas = MercUIFactory.CreateCanvas("Canvas_MarcadoresMundo", 45);
-            _canvas.transform.SetParent(transform, false);
-        }
-        return _canvas.transform;
-    }
-
-    private Marker BuildMarker(Transform parent, string name)
-    {
-        var marker = new Marker();
-
-        // Anclado abajo-izquierda: así la posición en pantalla se puede escribir tal
-        // cual (dividida por el factor de escala del Canvas), sin más matemática.
-        marker.Root = MercUIFactory.CreateRect(parent, name,
-            anchorMin: Vector2.zero, anchorMax: Vector2.zero, pivot: new Vector2(0.5f, 0.5f),
-            anchoredPos: Vector2.zero, size: new Vector2(MarkerSize * 2f, MarkerSize * 2f));
-
-        marker.Diamond = MercUIFactory.CreateImage(marker.Root, "Rombo", ObjectiveColor,
-            anchoredPos: Vector2.zero, size: new Vector2(MarkerSize, MarkerSize),
-            anchorMin: new Vector2(0.5f, 0.5f), anchorMax: new Vector2(0.5f, 0.5f),
-            pivot: new Vector2(0.5f, 0.5f));
-        marker.Diamond.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
-
-        marker.Label = MercUIFactory.CreateText(marker.Root, "Distancia", "", 16f, Color.white,
-            TextAlignmentOptions.Center,
-            anchoredPos: new Vector2(0f, -MarkerSize), size: new Vector2(140f, 22f),
-            anchorMin: new Vector2(0.5f, 0.5f), anchorMax: new Vector2(0.5f, 0.5f),
-            pivot: new Vector2(0.5f, 0.5f));
-        marker.Label.fontStyle = FontStyles.Bold;
-        MercUIFactory.AddShadow(marker.Label);
-
-        marker.BarBack = MercUIFactory.CreateImage(marker.Root, "BarraEntrega", new Color(0f, 0f, 0f, 0.55f),
-            anchoredPos: new Vector2(0f, -MarkerSize - 16f), size: new Vector2(DeliveryBarWidth, 6f),
-            anchorMin: new Vector2(0.5f, 0.5f), anchorMax: new Vector2(0.5f, 0.5f),
-            pivot: new Vector2(0.5f, 0.5f));
-        marker.BarFill = MercUIFactory.CreateImage(marker.BarBack.transform, "Relleno", Color.white,
-            anchoredPos: Vector2.zero, size: new Vector2(0f, 6f));
-        marker.BarBack.gameObject.SetActive(false);
-
-        marker.Root.gameObject.SetActive(false);
-        return marker;
+        if (Objective.Diamond != null) _objectiveDiamondSize = Objective.Diamond.rectTransform.sizeDelta;
+        if (Delivery.Diamond != null)  _deliveryDiamondSize  = Delivery.Diamond.rectTransform.sizeDelta;
+        if (Objective.BarBack != null) _barWidth = Objective.BarBack.rectTransform.sizeDelta.x;
+        if (Objective.BarBack != null) Objective.BarBack.gameObject.SetActive(false);
+        if (Delivery.BarBack != null)  Delivery.BarBack.gameObject.SetActive(false);
+        Hide(Objective); Hide(Delivery);
     }
 
     // =========================================================
@@ -121,7 +100,7 @@ public class UI_ObjectiveMarker : MonoBehaviour
 
         if (gm == null || cam == null)
         {
-            Hide(_objectiveMarker); Hide(_deliveryMarker);
+            Hide(Objective); Hide(Delivery);
             return;
         }
 
@@ -172,12 +151,12 @@ public class UI_ObjectiveMarker : MonoBehaviour
         }
         else
         {
-            Hide(_objectiveMarker);
+            Hide(Objective);
             return;
         }
 
-        Place(_objectiveMarker, worldPos, cam, color, prefix);
-        UpdateDeliveryBar(_objectiveMarker, color);
+        Place(Objective, _objectiveDiamondSize, worldPos, cam, color, prefix);
+        UpdateDeliveryBar(Objective, color);
     }
 
     private void UpdateShownDelivery(MercObjective objective)
@@ -197,16 +176,16 @@ public class UI_ObjectiveMarker : MonoBehaviour
                                      target, Mathf.Min(1f, target + rate * 0.15f));
     }
 
-    private void UpdateDeliveryBar(Marker marker, Color color)
+    private void UpdateDeliveryBar(MarkerPieces marker, Color color)
     {
-        if (marker == null || marker.BarBack == null) return;
+        if (marker == null || marker.BarBack == null || marker.BarFill == null) return;
 
         bool show = _shownDelivery > 0f && marker.Root.gameObject.activeSelf;
         if (marker.BarBack.gameObject.activeSelf != show) marker.BarBack.gameObject.SetActive(show);
         if (!show) return;
 
         marker.BarFill.color = color;
-        marker.BarFill.rectTransform.sizeDelta = new Vector2(DeliveryBarWidth * _shownDelivery, 6f);
+        marker.BarFill.rectTransform.sizeDelta = new Vector2(_barWidth * _shownDelivery, marker.BarFill.rectTransform.sizeDelta.y);
     }
 
     // La entrega propia solo se marca cuando tu equipo lleva el Objetivo: el resto del
@@ -218,23 +197,23 @@ public class UI_ObjectiveMarker : MonoBehaviour
 
         if (localTeam <= 0 || objective == null || !objective.IsCarried || objective.CarrierTeam != localTeam)
         {
-            Hide(_deliveryMarker);
+            Hide(Delivery);
             return;
         }
 
         MercTeamBase teamBase = gm.GetBase(localTeam);
-        if (teamBase == null) { Hide(_deliveryMarker); return; }
+        if (teamBase == null) { Hide(Delivery); return; }
 
-        Place(_deliveryMarker, teamBase.DeliveryWorldPoint, cam, gm.GetTeamColor(localTeam),
+        Place(Delivery, _deliveryDiamondSize, teamBase.DeliveryWorldPoint, cam, gm.GetTeamColor(localTeam),
               Loc.T(_shownDelivery > 0f ? "marker.delivering" : "marker.deliver"));
     }
 
     // Coloca un marcador en la pantalla a partir de un punto del mundo. Si el punto
     // está fuera de cámara (o detrás), el marcador se pega al borde en la dirección
     // correcta en vez de desaparecer — así el jugador siempre sabe para dónde girar.
-    private void Place(Marker marker, Vector3 worldPos, Camera cam, Color color, string prefix)
+    private void Place(MarkerPieces marker, Vector2 diamondSize, Vector3 worldPos, Camera cam, Color color, string prefix)
     {
-        if (marker == null) return;
+        if (marker == null || marker.Root == null) return;
 
         Vector3 screenPos = cam.WorldToScreenPoint(worldPos);
         bool behind = screenPos.z < 0f;
@@ -272,19 +251,24 @@ public class UI_ObjectiveMarker : MonoBehaviour
         marker.Root.anchoredPosition = flat / scaleFactor;
 
         float distance = Vector3.Distance(cam.transform.position, worldPos);
-        marker.Label.text = $"{prefix}  {Mathf.RoundToInt(distance)}m";
-        marker.Diamond.color = color;
-        marker.Label.color   = Color.white;
+        if (marker.Label != null)
+        {
+            marker.Label.text  = $"{prefix}  {Mathf.RoundToInt(distance)}m";
+            marker.Label.color = Color.white;
+        }
 
         // Fuera de cámara el rombo se achica un poco, para distinguir "está allá" de
         // "lo estás mirando".
-        float size = offScreen ? MarkerSize * 0.75f : MarkerSize;
-        marker.Diamond.rectTransform.sizeDelta = new Vector2(size, size);
+        if (marker.Diamond != null)
+        {
+            marker.Diamond.color = color;
+            marker.Diamond.rectTransform.sizeDelta = offScreen ? diamondSize * OffScreenScale : diamondSize;
+        }
 
         if (!marker.Root.gameObject.activeSelf) marker.Root.gameObject.SetActive(true);
     }
 
-    private static void Hide(Marker marker)
+    private static void Hide(MarkerPieces marker)
     {
         if (marker != null && marker.Root != null && marker.Root.gameObject.activeSelf)
             marker.Root.gameObject.SetActive(false);

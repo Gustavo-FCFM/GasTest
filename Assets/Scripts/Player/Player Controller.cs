@@ -2423,7 +2423,7 @@ public class PlayerController : NetworkBehaviour
         int localId = LocalPlayer != null ? LocalPlayer.ObjectId : -2;
         bool involvesLocal = localId == killerId || localId == victimId;
 
-        UI_KillFeed.Get().AddKill(ResolveCharacterName(killerName, killerNpc), ResolveClassName(killerClass), killerTeam,
+        UI_KillFeed.Get()?.AddKill(ResolveCharacterName(killerName, killerNpc), ResolveClassName(killerClass), killerTeam,
                                   ResolveCharacterName(victimName, victimNpc), ResolveClassName(victimClass), victimTeam,
                                   involvesLocal);
     }
@@ -2432,7 +2432,7 @@ public class PlayerController : NetworkBehaviour
     private void TargetShowDeath(FishNet.Connection.NetworkConnection conn, string killerName, int killerNpc,
                                  int killerClass, int killerTeam, float respawnSeconds)
     {
-        UI_ScreenFeedback.Get().ShowDeath(ResolveCharacterName(killerName, killerNpc), ResolveClassName(killerClass),
+        UI_ScreenFeedback.Get()?.ShowDeath(ResolveCharacterName(killerName, killerNpc), ResolveClassName(killerClass),
                                           killerTeam, respawnSeconds);
     }
 
@@ -3633,7 +3633,7 @@ public class PlayerController : NetworkBehaviour
                                        int seconds, int stillSeconds)
     {
         string reason = Loc.T(reasonKey, ("seconds", seconds), ("total", stillSeconds));
-        UI_ScreenFeedback.Get().ShowToast(reason, new Color(1f, 0.75f, 0.3f, 1f));
+        UI_ScreenFeedback.Get()?.ShowToast(reason, new Color(1f, 0.75f, 0.3f, 1f));
         Debug.Log($"[Unstuck] Rechazado: {reasonKey}");
     }
 
