@@ -27,10 +27,9 @@ public class GC_Projectile : NetworkBehaviour
     // si la trae, lo de primer golpe), y sus VFX de impacto se replican desde ella.
     private GameplayAbility sourceAbility;
 
-    // El daño principal, pisado por el que traía un proyectil devuelto por un parry (ver
-    // Reflect). null = el de la habilidad.
-    private GameplayEffect PrimaryDamage => _carriedDamage != null ? _carriedDamage
-                                          : sourceAbility != null ? sourceAbility.PrimaryDamageEffect : null;
+    // El daño principal de la habilidad (con el que la barrera mide cuánto frenó). Devuelto
+    // por un parry, su copia congelada (ver Reflect).
+    private GameplayEffect PrimaryDamage => Frozen(sourceAbility != null ? sourceAbility.PrimaryDamageEffect : null);
 
     // Enemigos ya golpeados, para no repetir daño en el mismo frame si el
     // proyectil atraviesa varios colliders del mismo objetivo.
@@ -280,8 +279,8 @@ public class GC_Projectile : NetworkBehaviour
             // hacia donde apunta el dueño de la barrera. Una sola vez por proyectil.
             if (barrier.ReflectsProjectilesNow && !_reflected)
             {
-                float carried = barrier.NotifyProjectileBlocked(PrimaryDamage, sourceASC, transform.position);
-                Reflect(barrier.Owner, barrier.AimDirection, carried);
+                barrier.NotifyProjectileBlocked(PrimaryDamage, sourceASC, transform.position);
+                Reflect(barrier.Owner, barrier.AimDirection);
                 return;
             }
 
@@ -319,10 +318,11 @@ public class GC_Projectile : NetworkBehaviour
                 {
                     // La lista de efectos de la habilidad, en su orden. El PRIMER enemigo de
                     // este proyectil recibe además los de "al primer golpe" (el aturdido del
-                    // Clérigo del Orden). Devuelto por un parry: solo lo que daña, con el
-                    // daño que traía (ver Reflect).
+                    // Clérigo del Orden). Devuelto por un parry: solo lo que va a los enemigos,
+                    // con el daño que traía (sus copias congeladas, ver Reflect).
                     bool first = enemiesHit.Count == 1 && !_reflected;
-                    sourceAbility.ApplyHitEffects(targetASC, first, sourceASC, _carriedDamage, onlyHostile: _reflected);
+                    sourceAbility.ApplyHitEffects(targetASC, first, sourceASC, _reflected ? _frozen : null,
+                                                  onlyHostile: _reflected);
 
                     if (ultChargeAmount > 0)
                         sourceASC.ReduceCooldownByTag(EGameplayTag.Ability_Cooldown_Ultimate, ultChargeAmount);
@@ -364,47 +364,62 @@ public class GC_Projectile : NetworkBehaviour
     // DEVUELTO POR UN PARRY (escudo del Guardián)
     // =========================================================
 
+    // Las copias INSTANTÁNEAS se usan solo al chocar: se van con el proyectil. Las que
+    // duran (la quemadura del Clérigo de la Luz) no: un efecto activo en alguien todavía
+    // puede apuntar a ellas. Son chicas y se liberan al cambiar de escena.
     private void OnDestroy()
     {
-        if (_carriedDamage != null) Destroy(_carriedDamage);
+        foreach (GameplayEffect copy in _frozen.Values)
+            if (copy != null && copy.Duration <= 0f) Destroy(copy);
     }
 
     // True si un parry ya lo devolvió: no se vuelve a devolver, y lo del primer impacto
     // (el aturdido del Orden) era de su lanzador original, no viaja con él.
     private bool _reflected;
 
-    // Cambia de dueño y de dirección, en el servidor (el vuelo lo simula él y el
-    // NetworkTransform lo lleva a los demás). Conserva la velocidad y sus efectos extra:
-    // ahora dañan al equipo del lanzador original. Lo que cura a aliados (la estela del
-    // Castigo divino) se descarta: curaría a los del Guardián con la magia del Paladín.
-    //
-    // EL DAÑO ES EL QUE TRAÍA ('carriedDamage', calculado con los stats del que lo tiró):
-    // con el efecto original, el daño se recalcularía con los stats del nuevo dueño, y un
-    // rayo mágico devuelto por un Guardián (sin daño mágico) haría 1.
-    private GameplayEffect _carriedDamage;
+    // EL DAÑO ES EL QUE TRAÍA. Al devolverlo, cada efecto de la habilidad que escala con un
+    // stat del que lo tiró se cambia por una copia CONGELADA con esos stats (original →
+    // copia; ver GameplayEffect.CreateFrozenCopy). Con el efecto original, el daño se
+    // recalcularía con los stats del Guardián: un rayo mágico devuelto no haría nada, y la
+    // quemadura del Clérigo de la Luz tampoco. La copia conserva además el tipo: un daño
+    // mágico devuelto sigue ignorando la armadura. Lo que no escala va tal cual (la
+    // ralentización del hacha, las heridas).
+    private readonly Dictionary<GameplayEffect, GameplayEffect> _frozen = new Dictionary<GameplayEffect, GameplayEffect>();
 
-    public void Reflect(AbilitySystemComponent newSource, Vector3 direction, float carriedDamage)
+    private GameplayEffect Frozen(GameplayEffect effect)
+        => effect != null && _frozen.TryGetValue(effect, out GameplayEffect copy) ? copy : effect;
+
+    // Congela lo que el proyectil devuelto puede aplicar: lo de "al golpear" que va a los
+    // enemigos (o a todos). Con los stats de 'shooter', el que lo tiró.
+    private void FreezeEffects(AbilitySystemComponent shooter)
+    {
+        if (sourceAbility == null || shooter == null) return;
+
+        List<GameplayEffect> hostile = new List<GameplayEffect>();
+        sourceAbility.GetEffects(EEffectWhen.OnHit, EEffectTarget.Enemies, hostile);
+        sourceAbility.GetEffects(EEffectWhen.OnHit, EEffectTarget.Everyone, hostile);
+
+        foreach (GameplayEffect effect in hostile)
+            if (effect.ScalesWithSource && !_frozen.ContainsKey(effect))
+                _frozen[effect] = effect.CreateFrozenCopy(shooter);
+    }
+
+    // Cambia de dueño y de dirección, en el servidor (el vuelo lo simula él y el
+    // NetworkTransform lo lleva a los demás). Conserva la velocidad y sus efectos: ahora
+    // dañan al equipo del lanzador original, con el daño que traían (ver _frozen). Lo que
+    // cura a aliados (la estela del Castigo divino) se descarta: curaría a los del
+    // Guardián con la magia del Paladín.
+    public void Reflect(AbilitySystemComponent newSource, Vector3 direction)
     {
         if (!IsServerInitialized || newSource == null) return;
+
+        FreezeEffects(sourceASC);   // ANTES de cambiar de dueño: con los stats del que lo tiró
 
         _reflected      = true;
         sourceASC       = newSource;
         ultChargeAmount = 0f;
         enemiesHit.Clear();
         alliesHit.Clear();
-
-        if (carriedDamage > 0f)
-        {
-            _carriedDamage = ScriptableObject.CreateInstance<GameplayEffect>();
-            _carriedDamage.name       = "GE_ReflectedProjectile(runtime)";
-            _carriedDamage.Duration   = 0f;
-            _carriedDamage.EffectType = GameplayEffect.EEffectType.Hidden;
-            _carriedDamage.Modifiers  = new List<Modifier>
-            {
-                new Modifier { Attribute = EAttributeType.Health, Type = Modifier.EModificationType.Add,
-                               Magnitude = -carriedDamage },
-            };
-        }
 
         Vector3 dir = direction.sqrMagnitude > 0.0001f ? direction.normalized : -transform.forward;
 

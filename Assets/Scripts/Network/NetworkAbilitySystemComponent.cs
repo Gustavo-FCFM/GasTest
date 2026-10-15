@@ -666,9 +666,11 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         float longestRemaining = 0f;
         float longestTotal     = 0f;
 
+        // Por su original (Template): la copia congelada de un proyectil devuelto comparte
+        // índice con él, y si cada una contara solo lo suyo se pisarían.
         foreach (var active in _asc.GetActiveEffects())
         {
-            if (active.Definition != effect) continue;
+            if (active.Definition.Template != effect.Template) continue;
             stacks++;
             if (active.DurationRemaining > longestRemaining)
             {

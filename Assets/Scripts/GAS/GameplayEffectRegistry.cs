@@ -42,11 +42,12 @@ public class GameplayEffectRegistry : ScriptableObject
     }
 
     // Busca en qué posición de la lista está un efecto. Devuelve -1 si no
-    // está registrado (ver nota de mantenimiento arriba).
+    // está registrado (ver nota de mantenimiento arriba). Una copia hecha en juego
+    // (GameplayEffect.CreateFrozenCopy) viaja como su original.
     public int GetIndex(GameplayEffect effect)
     {
         if (effect == null) return -1;
-        return Effects.IndexOf(effect);
+        return Effects.IndexOf(effect.Template);
     }
 
     // Inverso de GetIndex: resuelve un índice recibido por red de vuelta

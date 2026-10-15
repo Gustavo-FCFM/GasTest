@@ -997,9 +997,8 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         }
     }
 
-    // El DAÑO PRINCIPAL: la primera entrada "al golpear, a enemigos" sin condición. Lo usan
-    // la barrera (para medir cuánto frenó un proyectil) y el proyectil devuelto por un parry
-    // (que lo reemplaza por el daño que traía).
+    // El DAÑO PRINCIPAL: la primera entrada "al golpear, a enemigos" sin condición. Lo usa
+    // la barrera para medir cuánto frenó un proyectil.
     public GameplayEffect PrimaryDamageEffect
     {
         get
@@ -1124,13 +1123,15 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
 
     // La versión completa, para quien golpea "en nombre" de la habilidad (el proyectil):
     //   · source: quién figura como autor del golpe (el que lo devolvió, tras un parry).
-    //   · primaryOverride: reemplaza al DAÑO PRINCIPAL (el daño que trae un proyectil
-    //     devuelto, calculado con los stats de quien lo tiró).
+    //   · replacements: el efecto que se aplica EN LUGAR de cada uno de la lista (el
+    //     proyectil devuelto pone sus copias congeladas con los stats de quien lo tiró:
+    //     ver GameplayEffect.CreateFrozenCopy). Los que no están, van tal cual.
     //   · onlyHostile: solo lo que va a los enemigos — nada para aliados, ni para el autor,
     //     ni de primer golpe (un proyectil devuelto no premia al que lo devolvió con los
     //     efectos de otra clase).
     public bool ApplyHitEffects(AbilitySystemComponent target, bool firstHit, AbilitySystemComponent source,
-                                GameplayEffect primaryOverride = null, bool onlyHostile = false)
+                                IReadOnlyDictionary<GameplayEffect, GameplayEffect> replacements = null,
+                                bool onlyHostile = false)
     {
         if (target == null || source == null) return false;
 
@@ -1141,8 +1142,6 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         if (Effects == null) return true;
 
         bool wasAlive = !target.HasTag(EGameplayTag.State_Dead);
-        GameplayEffect primary = primaryOverride != null ? PrimaryDamageEffect : null;
-        bool primaryReplaced = false;
         bool healed = false;   // para los VFX "al curar"
 
         foreach (AbilityEffect e in Effects)
@@ -1178,12 +1177,9 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
                 !target.TryStartEffectCooldown(CooldownKey, e.Effect, source, e.PerTargetCooldown)) continue;
 
             GameplayEffect effect = e.Effect;
-            if (!primaryReplaced && primary != null && effect == primary && e.When == EEffectWhen.OnHit &&
-                e.ApplyTo == EEffectTarget.Enemies)
-            {
-                effect = primaryOverride;
-                primaryReplaced = true;
-            }
+            if (replacements != null && replacements.TryGetValue(effect, out GameplayEffect replacement) &&
+                replacement != null)
+                effect = replacement;
 
             if (e.ApplyTo == EEffectTarget.Self) ApplyScaled(source, effect, source, times, duration);
             else                                 ApplyScaled(target, effect, source, times, duration);

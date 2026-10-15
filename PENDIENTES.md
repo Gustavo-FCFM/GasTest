@@ -48,6 +48,35 @@ rm -rf "Assets/FishNet" "Assets/FishNet.meta" "Assets/TextMesh Pro/Examples & Ex
 
 ---
 
+# ★ Parry del Guardián: el proyectil devuelto hace el daño que traía — CÓDIGO HECHO, falta probar (15 de octubre)
+
+Revisando el pendiente viejo ("sigue haciendo el daño que traía") aparecieron dos fallas:
+
+- **La quemadura del Clérigo de la Luz devuelta no hacía nada.** Su Haz guía radiante y su Arco
+  radiante dañan con una quemadura que escala con el daño MÁGICO. Devuelta, se recalculaba con
+  los stats del Guardián, que no tiene daño mágico: 0 por segundo.
+- **Un daño mágico devuelto pasaba a ser físico.** El Haz guía, los arcos de luz, los orbes
+  del Maestro elemental y el Castigo divino volvían como un golpe plano: la armadura del que lo
+  tiró se lo recortaba, cuando lo mágico la ignora.
+
+**Cómo queda:** al devolverlo, cada efecto del proyectil que escala con un stat del que lo
+tiró se cambia por una COPIA CONGELADA con esos stats (`GameplayEffect.CreateFrozenCopy`): el
+número queda fijo y el tipo también (lo mágico sigue siendo mágico). La quemadura vuelve como
+quemadura, con su ícono y su VFX en todas las pantallas (la copia viaja por red como el original:
+`GameplayEffect.SourceTemplate`). Lo que no escala va tal cual (la ralentización del hacha, las
+heridas de la daga). La baja sigue siendo del Guardián. Antes se devolvía solo el daño principal,
+como un número plano y físico.
+
+- [ ] Probar con el Guardián, en un cliente (no en el host), haciendo parry a:
+  - el **Haz guía radiante del Clérigo de la Luz**: le vuelve quemando (números cada segundo) y
+    el ícono de la quemadura sale en su barra;
+  - el **Haz guía** del Clérigo base o un **orbe** del Maestro elemental: el número devuelto es el
+    mismo que el que le haría a alguien sin armadura (lo mágico la ignora);
+  - una **flecha cargada entera** del Explorador: vuelve con el daño de la carga completa;
+  - una **daga** del Pícaro: además del daño, le deja las heridas.
+
+---
+
 # ★ Revisión: la UI vive en el prefab y variables claras — LAS 6 ETAPAS HECHAS Y PROBADAS ✅ (15 de octubre)
 
 Pedido de Gustavo: la UI tiene que vivir en el prefab de la cámara del jugador y no "ponerse por
@@ -616,7 +645,8 @@ Resurrección, Intercepción) aplican también sus efectos "al golpear" al elegi
 - [x] VFX de golpe e impacto en las DOS pantallas (cambió la RPC de "al golpear"; Unity
       tiene que recompilar).
 - [x] Rueda de tótems: nombres, descripciones y cooldowns como estaban.
-- [ ] Proyectil devuelto por el parry del Guardián: sigue haciendo el daño que traía.
+- [ ] Proyectil devuelto por el parry del Guardián: sigue haciendo el daño que traía. **Revisado el 15 de
+      octubre: tenía dos fallas, arregladas; se prueba en su sección de arriba ("Parry del Guardián").**
 - [x] Bots: siguen usando sus buffs (Comida de emergencia, Emboscada sombría) y sus aturdidos.
 
 **Detalles que cambian (a propósito):**

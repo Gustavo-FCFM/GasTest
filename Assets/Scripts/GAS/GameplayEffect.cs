@@ -271,4 +271,63 @@ public class GameplayEffect : ScriptableObject
              "cooldown y se reconoce el efecto en la red y en la UI.")]
     [Label("Tags que da")]
     public List<EGameplayTag> GrantedTags = new List<EGameplayTag>();
+
+    // =========================================================
+    // COPIAS CONGELADAS (el proyectil devuelto por un parry)
+    // =========================================================
+
+    // Cuando este efecto es una COPIA hecha en juego (CreateFrozenCopy), apunta al asset
+    // original. La red y la UI la tratan como el original: mismo índice en
+    // GameplayEffectRegistry, mismo ícono y mismo VFX. NonSerialized: es de runtime.
+    [System.NonSerialized] public GameplayEffect SourceTemplate;
+
+    // El asset que este efecto "es": el original si es una copia, él mismo si no.
+    public GameplayEffect Template => SourceTemplate != null ? SourceTemplate : this;
+
+    // Una copia de este efecto con los stats de 'statsFrom' ya puestos como número fijo:
+    // cada modificador que escala con un stat del autor deja de leerlo y se queda con lo
+    // que valía AHORA. Todo lo demás queda igual (duración, ticks, tags, VFX), y también el
+    // tipo de daño: un daño mágico sigue diciendo que escala del daño mágico, con
+    // coeficiente 0, así que sigue ignorando la armadura.
+    //
+    // La usa el proyectil devuelto por un parry (GC_Projectile.Reflect): lo firma el que
+    // lo devolvió (la baja es suya), pero hace el daño que traía, calculado con los stats
+    // de quien lo tiró. Con el efecto original, el daño se recalcularía con los del
+    // Guardián, y un rayo mágico devuelto (el Guardián no tiene daño mágico) no haría nada.
+    public GameplayEffect CreateFrozenCopy(AbilitySystemComponent statsFrom)
+    {
+        // Instantiate copia la lista de modificadores entera (objetos nuevos): tocar los
+        // de la copia no toca el asset.
+        GameplayEffect copy = Instantiate(this);
+        copy.name           = name + "(congelado)";
+        copy.SourceTemplate = Template;
+        if (statsFrom == null) return copy;
+
+        foreach (Modifier m in copy.Modifiers)
+        {
+            if (!m.UseAttributeScaling) continue;
+
+            float value = m.Magnitude + statsFrom.GetAttributeValue(m.SourceAttribute) * m.AttributeCoefficient;
+
+            // Con el stat en 0 quedaría en 0, y el piso (MinMagnitude) ya no sabría si era daño
+            // o curación (lo saca del coeficiente): se deja una pizca con el signo que tenía.
+            if (m.MinMagnitude != 0f && Mathf.Abs(value) < 0.0001f)
+                value = (m.Magnitude != 0f ? Mathf.Sign(m.Magnitude) : Mathf.Sign(m.AttributeCoefficient)) * 0.0001f;
+
+            m.Magnitude            = value;
+            m.AttributeCoefficient = 0f;
+        }
+        return copy;
+    }
+
+    // ¿Algún modificador depende de los stats del autor? Si no, congelarlo no cambia nada.
+    public bool ScalesWithSource
+    {
+        get
+        {
+            foreach (Modifier m in Modifiers)
+                if (m.UseAttributeScaling) return true;
+            return false;
+        }
+    }
 }
