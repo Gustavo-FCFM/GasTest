@@ -1018,8 +1018,10 @@ public class AbilitySystemComponent : MonoBehaviour
             // lista y resolvemos el crítico. Solo aplica a daño directo a la vida.
             if (sourceASC != null && mod.Attribute == EAttributeType.Health && calculatedMagnitude < 0)
             {
+                // "Crítico si el objetivo tiene" (GameplayEffect.CritIfTargetHas): lo decide el efecto.
+                bool forceCrit = effect.CritIfTargetHas != EGameplayTag.None && HasTag(effect.CritIfTargetHas);
                 calculatedMagnitude = sourceASC.ResolveOutgoingDamage(this, calculatedMagnitude, isPeriodicTick,
-                                                                      out bool critical);
+                                                                      out bool critical, forceCrit);
                 // Un crítico que no entra (inmunidad) no se festeja: se anota al ver
                 // que el golpe pasó, más abajo.
                 if (critical && !HasTag(EGameplayTag.Status_Immunity)) anyCritical = true;
@@ -1789,8 +1791,9 @@ public class AbilitySystemComponent : MonoBehaviour
 
     // Igual, pero además dice si el golpe salió CRÍTICO (cualquiera de las dos capas):
     // lo usan el número amarillo y la X de crítico.
+    // forceCrit: el efecto que pega pide crítico ("Crítico si el objetivo tiene"); los ticks no critean.
     public float ResolveOutgoingDamage(AbilitySystemComponent target, float magnitude, bool isPeriodicTick,
-                                       out bool critical)
+                                       out bool critical, bool forceCrit = false)
     {
         DamageContext ctx = new DamageContext
         {
@@ -1810,7 +1813,7 @@ public class AbilitySystemComponent : MonoBehaviour
         // acá y no en un modificador. Es otra forma de "es crítico" —no se apila con
         // el backstab— y se consume al usarlo, haya criteado o no. Los ticks de DoT
         // no lo consumen (no critean).
-        bool isCrit = ctx.IsCrit;
+        bool isCrit = ctx.IsCrit || (forceCrit && !isPeriodicTick);
         if (!isPeriodicTick && HasTag(EGameplayTag.Status_GuaranteedCrit))
         {
             isCrit = true;

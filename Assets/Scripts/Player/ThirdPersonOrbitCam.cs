@@ -213,7 +213,11 @@ public class ThirdPersonOrbitCam : MonoBehaviour
         // 1. Leer la mira (acción "Look" del Input System: mouse o stick derecho).
         // (Si estás en el menú de pausa, deberías bloquear esto)
         PlayerInputProvider input = PlayerInputProvider.Local;
-        if (Time.timeScale > 0 && input != null && input.IsReady)
+        // Con un menú que libera el cursor (la RUEDA, que no apaga el input de juego porque elige
+        // con el stick) la cámara NO gira: el mouse mueve el cursor para elegir, y la mira se queda
+        // donde estaba. Así lo que se lanza al soltar (una trampa, un tótem) cae donde apuntabas al
+        // abrirla (pedido de Gustavo, 15 de octubre). Los demás menús ya apagan el input entero.
+        if (Time.timeScale > 0 && input != null && input.IsReady && !UICursor.Free)
         {
             Vector2 look = input.LookValue;
 

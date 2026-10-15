@@ -204,6 +204,12 @@ public class GameplayEffect : ScriptableObject
     [Label("Ejecutar con vida bajo (0 a 1)")]
     [Range(0f, 1f)] public float ExecuteBelowHealth = 0f;
 
+    [Tooltip("El daño de este efecto sale CRÍTICO si el que lo recibe tiene este tag (la estocada " +
+             "del Trampero: crítica contra un enemigo con heridas, Status_Wound). Es la misma capa que " +
+             "el golpe por la espalda: no se suma a ella. Nada = como siempre.")]
+    [Label("Crítico si el objetivo tiene")]
+    public EGameplayTag CritIfTargetHas = EGameplayTag.None;
+
     [Section(EffectSection.Visuals)]
     [Tooltip("VFX que aparece sobre QUIEN RECIBE este efecto y vive lo que viva el efecto. " +
              "Pensado para que un debuff importante se vea encima del jugador afectado (las " +

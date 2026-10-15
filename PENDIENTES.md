@@ -308,9 +308,60 @@ maneja el `CompanionManager` del Explorador (en `BeastMasterBehaviours`):
   - [x] Probar: R con el Lobo elegido (salen Oso y Búho), con el elegido muerto (sale igual), que ataquen
         más rápido, la presencia doble en la barra del Explorador y de un aliado, que la E no cambie, y que
         al terminar quede solo el elegido con su vida. En un cliente, que el panel muestre bien la vida.
-- [ ] Después: el Trampero (la otra subclase del Explorador): trampas puestas en el piso, invisibles
-      para el enemigo, que explotan al acercarse alguien (espinas, frío con retraso, explosiva que
-      repele desde la trampa).
+- [x] Después: el Trampero (ver su sección, arriba del Cazador). Hecho y probado el 15 de octubre.
+
+---
+
+# ★ Trampero (subclase del Explorador) — HECHO Y PROBADO ✅ (15 de octubre)
+
+**La rueda ya no mueve la cámara** (pedido de Gustavo): con un menú que libera el cursor (la rueda),
+`ThirdPersonOrbitCam` no gira con el mouse; la mira se queda donde estaba y lo que sale al soltar (una
+trampa, un tótem) cae donde apuntabas al abrirla.
+- [x] Probar: abrir la rueda (tótem del Chamán o compañero) y mover el mouse: la cámara no se mueve.
+
+**Lo acordado hasta ahora** (15 de octubre):
+- **Las trampas**: una pieza genérica en red (`Entity_Trap`, con su propio ASC como los tótems, así el
+  empuje sale DESDE la trampa) configurada por datos. Se eligen en la rueda (E) y caen en el piso donde
+  apunta la mira; 1 s para armarse; invisibles para los enemigos (las ve su equipo); saltan con un
+  JUGADOR o bot enemigo cerca, **nunca con NPCs**; el daño y las bajas son del Trampero.
+  Duran **3 minutos**, **hasta 6 puestas** (la séptima saca la más vieja) y **3 s de espera** entre una y otra.
+  - Espinas: zona de 5 m, 4 s: ralentiza 40 %, 0.3× del ataque por segundo y una herida por segundo.
+  - Frío: al pisarla se escarcha (1.5 s de aviso visible) y explota en 3 m: 1× del ataque y aturde 1.5 s.
+  - Explosiva: explota en 4 m: 2× del ataque y repele 6 m desde la trampa.
+- **Apuntado (clic derecho)**: la lanza del Comandante, "tribal" de mano y media: estocada en línea de
+  **2.5 m**, ×1.1 del ataque, abre una herida; **crítica si el enemigo ya tiene una herida**.
+- **Cazador paciente (pasiva)**: 4 s sin recibir ni hacer daño → invisible, +20 % velocidad, 2 % de vida
+  por segundo; el primer golpe al salir es crítico seguro.
+- **Bombas súper explosivas (R)**: con las mismas perillas que las zonas del Aliento de dragón (cuántas
+  caen y cómo se reparten en el círculo, para ajustarlas en el Inspector). Las bombas son TRAMPAS de 60 s
+  (menos que las otras) que explotan al pisarlas o al vencerse.
+- [x] **Modelos de las bombas** (corrida y borrada; a Gustavo le encantaron y les puso base a las trampas normales): correr
+      `Mercenarios ▸ Una vez ▸ Crear los modelos de las bombas (Trampero)` y borrar `MercTrapModelsSetup.cs`.
+      Crea con primitivas `Art/Models/Traps/Bomb_Spikes`, `Bomb_Cold`, `Bomb_Explosive` y
+      `Bomb_BlackPowder` (solo modelo, sin colliders ni scripts, ~0.5 m, pivote en el piso), con sus
+      materiales en `Art/Materials/Traps`. Gustavo los retoca o los reemplaza.
+- [x] **Código de la subclase** (15 de octubre):
+  - `Entity_Trap` (Scripts/GAS/Entities): UNA pieza en red para todas las trampas, configurada por datos
+    (se arma en, salta a, dura, aviso antes de explotar, radio, efectos del Trampero, efectos DESDE la
+    trampa —el empuje—, zona con golpes cada tanto, explota al vencerse, cuenta para el límite). Lleva
+    un ASC para que el empuje salga desde ella. Su equipo viaja en un SyncVar y cada pantalla dibuja el
+    modelo solo si es de su equipo (o durante el aviso). Solo jugadores y bots la activan y la sufren.
+  - `GA_PlaceTrap` (la rueda; límite por dueño, la más vieja se va), `GA_BombBarrage` (la R: zona en el
+    piso; "Distribución de las bombas" al azar / en anillo / rellenar el círculo, "Cantidad", "Separación",
+    "Radio del círculo", "Caen durante"; con gizmo), `PatientHunterPassive` (todos sus efectos llevan
+    Status_Invisible: se cortan juntos al pelear).
+  - **Campo nuevo en los efectos: "Crítico si el objetivo tiene"** (`GameplayEffect.CritIfTargetHas`):
+    el daño de ese efecto sale crítico si el golpeado tiene el tag (la estocada: Status_Wound).
+- [x] (Corrida y borrada el 15 de octubre.) Correr `Mercenarios ▸ Una vez ▸ Crear el Trampero (subclase del Explorador)` y borrar
+      `MercTrapperSetup.cs`. Crea los efectos, las 4 trampas en `Prefabs/Summons` (con el modelo de
+      `Art/Models/Traps` anidado), la rueda, la estocada, la definitiva, `TrapperBehaviours`,
+      `Class_Trapper` con `ASDef_Trapper` y la lanza del Comandante, y lo agrega como subclase.
+      Después: acomodar en `Class_Trapper` (Armas) la lanza guardada en la espalda.
+- [x] **Después de la primera prueba (15 de octubre):** las trampas también se ponen en PAREDES (quedan pegadas a la superficie donde apunta la mira, con su base contra ella; mirando al aire caen al piso) y tardan **1.5 s** en armarse (antes 1 s), para que no exploten en el acto.
+- [x] Probar: poner cada trampa (cae donde apuntabas), que el enemigo no la vea y el aliado sí, que
+      salte solo con jugadores, la de frío con su aviso, la explosiva que empuja desde ella, el límite
+      de 6 y los 3 s; la estocada (crítica contra un herido); quedarse 4 s quieto (invisible, más
+      rápido, se cura; el primer golpe crítico); la R (las bombas, y que exploten al vencerse). En un cliente.
 
 ---
 
@@ -339,7 +390,7 @@ Tags nuevos al final: `Status_Prey`, `Status_ApexPredator`, `Status_DefensiveTac
 
 ---
 
-# ★ Explorador (Ranger): kit base — HECHO Y PROBADO ✅ (13-14 de octubre; faltan los bots); el Maestro de bestias, también
+# ★ Explorador (Ranger): kit base — HECHO Y PROBADO ✅ (13-14 de octubre; faltan los bots); las 3 subclases, también: EL EXPLORADOR QUEDA COMPLETO
 
 Pedido de Gustavo: primero el kit base, después la mascota del Maestro de bestias (el Lobo,
 con una figura de primitivas mientras no haya modelo). Sin modelos ni animaciones nuevas: las
@@ -1072,7 +1123,7 @@ marcados "Pospuesto".
 **Estado al 5 de octubre:** Clérigo completo y probado. Guerrero: kit base, Maestro de
 batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 9).
 **Guardián: hecho y probado ✅** (5 de octubre). **El Guerrero queda completo** (kit base y las 3 subclases).
-**6 de octubre:** barra de carga por etapas del ataque cargado (`UI_ChargeBar`), repeler / atraer y vuelo libre: hechos y probados. **Monje: kit base hecho y probado (8 de octubre). Barra de canalizar (`UI_CastBar`): hecha.** Queda la mascota con IA en red. **13 de octubre: Explorador (Ranger), kit base hecho; sigue el Maestro de bestias con su Lobo (la mascota con IA en red). Documentos al día (diseño de clases, arquitectura del GAS y de red, guía y glosario).** **14 de octubre: Maestro de bestias (los tres compañeros) y la UI del jugador pasada al prefab de la cámara (barras, avisos de combate, viñeta, rueda, curva de los lanzamientos y silueta); la curva sale ahora en todos los lanzamientos apuntados. Documentos al día.** **15 de octubre: probado todo lo de la UI (las 6 etapas) y lo viejo pendiente; variables claras con su unidad en los 1 247 campos del Inspector; la Ira primal (la definitiva del Maestro de bestias), falta probarla; 50 de experiencia por eliminar a un jugador. Cazador (subclase del Explorador) hecho y probado. Documentos al día.**
+**6 de octubre:** barra de carga por etapas del ataque cargado (`UI_ChargeBar`), repeler / atraer y vuelo libre: hechos y probados. **Monje: kit base hecho y probado (8 de octubre). Barra de canalizar (`UI_CastBar`): hecha.** Queda la mascota con IA en red. **13 de octubre: Explorador (Ranger), kit base hecho; sigue el Maestro de bestias con su Lobo (la mascota con IA en red). Documentos al día (diseño de clases, arquitectura del GAS y de red, guía y glosario).** **14 de octubre: Maestro de bestias (los tres compañeros) y la UI del jugador pasada al prefab de la cámara (barras, avisos de combate, viñeta, rueda, curva de los lanzamientos y silueta); la curva sale ahora en todos los lanzamientos apuntados. Documentos al día.** **15 de octubre: probado todo lo de la UI (las 6 etapas) y lo viejo pendiente; variables claras con su unidad en los 1 247 campos del Inspector; la Ira primal (la definitiva del Maestro de bestias), falta probarla; 50 de experiencia por eliminar a un jugador. Cazador (subclase del Explorador) hecho y probado. Trampero hecho y probado (trampas en el piso o en paredes, se arman en 1.5 s; la rueda deja la cámara quieta): **el Explorador queda completo** (kit base y las 3 subclases). Documentos al día.**
 
 1. **Clases nuevas — DECIDIDO (28 de septiembre): Clérigo + Guerrero completos**, en ese
    orden. Detalle y estimación en la sección 6.

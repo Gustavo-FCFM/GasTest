@@ -45,6 +45,7 @@ MonoBehaviour:
   AvailableSubclasses:
   - {fileID: 11400000, guid: 2900a930ee39ff34d8e591834daa38ac, type: 2}
   - {fileID: 11400000, guid: e4bed3cabd28caa41a12cc24e7f6f24f, type: 2}
+  - {fileID: 11400000, guid: ffd41730a481d164ba1f4b62e0ee03e1, type: 2}
   ClassAnimatorOverride: {fileID: 22100000, guid: f175085a22aa728459655748dd969669, type: 2}
   StanceAnimatorOverride: {fileID: 0}
   StanceAnimatorTag: 0

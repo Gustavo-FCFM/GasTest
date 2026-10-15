@@ -1,0 +1,62 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 749805704a6088741af34d91f0891ced, type: 3}
+  m_Name: Class_Trapper
+  m_EditorClassIdentifier: 
+  ClassName: Trapper
+  ClassNameEs: Trampero
+  ClassIcon: {fileID: 21300000, guid: 7663760d12274a440863132cd7aebcae, type: 3}
+  Description: Trades the short blades for a tribal spear that crits wounded foes,
+    and fills the map with traps only his team can see.
+  DescriptionEs: "Cambia las espadas cortas por una lanza tribal que hace cr\xEDtico
+    a los heridos, y llena el mapa de trampas que solo ve su equipo."
+  Role: 2
+  MenuRole: 0
+  BaseAttributes: {fileID: 11400000, guid: e48b83cc96c731c42be91513d167dfd4, type: 2}
+  Abilities:
+  - InputSlot: 1
+    Ability: {fileID: 11400000, guid: a8133b6c4880e6449971278fd877ff22, type: 2}
+  - InputSlot: 2
+    Ability: {fileID: 11400000, guid: 99586d06872dad643889c5ab21f0da77, type: 2}
+  - InputSlot: 3
+    Ability: {fileID: 11400000, guid: 38b4a901257ce2f4994ff125db298229, type: 2}
+  - InputSlot: 6
+    Ability: {fileID: 11400000, guid: c620036cb752b6e45a2beffe30b28d74, type: 2}
+  - InputSlot: 4
+    Ability: {fileID: 11400000, guid: 08d3dffe9c295714881f771a018e5162, type: 2}
+  - InputSlot: 5
+    Ability: {fileID: 11400000, guid: 6c8f81586e3b2864aa221a6818a7226c, type: 2}
+  PassiveBehaviorsPrefab: {fileID: 7573284683755726708, guid: bde91057efb2c34418f15aeebbec756d, type: 3}
+  PassiveEffects: []
+  WallMovement: {fileID: 11400000, guid: 0909e17f538cef540ba16708b593b2db, type: 2}
+  StatGrowthPerLevel: []
+  AvailableSubclasses: []
+  ClassAnimatorOverride: {fileID: 22100000, guid: f175085a22aa728459655748dd969669, type: 2}
+  StanceAnimatorOverride: {fileID: 0}
+  StanceAnimatorTag: 0
+  MainHandWeaponPrefab: {fileID: 6409903527971818013, guid: 7bea6d1a74f72294d8df22a0cdea31aa, type: 3}
+  OffHandWeaponPrefab: {fileID: 6751337086952172511, guid: 93671539c61430f4a8deda9514111581, type: 3}
+  MainHandRotationOffset: {x: 0, y: 0, z: 0}
+  MainHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandPositionOffset: {x: -0.1, y: 0, z: 0}
+  OffHandPose: {fileID: 0}
+  OffHandPoseRequiredTag: 0
+  DrawMainHandTag: 71
+  StowedMainHandPositionOffset: {x: 0.2, y: 0.2, z: -0.2}
+  StowedMainHandRotationOffset: {x: 0, y: 180, z: -135}
+  StowOffHandTag: 0
+  StowedOffHandPositionOffset: {x: 0, y: 0, z: 0}
+  StowedOffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandScale: 1
+  GrowTag: 0
+  GrowScale: 1.5
