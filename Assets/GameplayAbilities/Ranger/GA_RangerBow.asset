@@ -49,13 +49,13 @@ MonoBehaviour:
   Stages:
   - MinChargeTime: 0
     Ability: {fileID: 11400000, guid: 1d4c22f91b41d9549a5ae26e2bfee4c5, type: 2}
-    CameraZoom: 0.5
+    CameraZoom: 0.75
   - MinChargeTime: 0.5
     Ability: {fileID: 11400000, guid: 1fa02feefb66bd7408a95d80e28fd12c, type: 2}
-    CameraZoom: 0.25
+    CameraZoom: 0.5
   - MinChargeTime: 1
     Ability: {fileID: 11400000, guid: db5091fc1172bcc4d80d4362fba96902, type: 2}
-    CameraZoom: 0.05
+    CameraZoom: 0.25
   MaxChargeTime: 0
   WhileChargingEffects:
   - {fileID: 11400000, guid: cb446d1ea0347e744b37236a3721437f, type: 2}

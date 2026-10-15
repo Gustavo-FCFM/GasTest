@@ -138,4 +138,10 @@ public enum EGameplayTag
     Cooldown_CompanionWolf,    // El Lobo murió y todavía no puede volver (GE de reaparición del Lobo, en el dueño)
     Cooldown_CompanionBear,    // El Oso murió y todavía no puede volver
     Status_PrimalFury,         // Ira primal (definitiva del Maestro de bestias): mientras dure, salen los tres compañeros, atacan el doble de rápido y su presencia vale doble. Lo da GE_PrimalFury; lo mira el CompanionManager
+
+    // --- CAZADOR (subclase del Explorador) ---
+    Status_Prey,               // Marcado como Presa por un Cazador: sus golpes le hacen más según el ROL del marcado (Tanque/Daño), o recibe menos curación (Soporte). Lo da GE_Prey; quién lo marcó y su rol los guarda HunterPreyPassive
+    Status_ApexPredator,       // Depredador definitivo (definitiva del Cazador): todos los enemigos son su Presa y su equipo los ve a través de paredes; cada baja la alarga. Lo da GE_ApexPredator; lo mira HunterPreyPassive
+    Status_DefensiveTactics,   // UNA por acumulación de Tácticas defensivas (pasiva del Cazador): cada golpe recibido suma una (velocidad y resistencia). Lo da GE_DefensiveTactics
+    Status_TacticsReady,       // Tácticas defensivas al máximo: la próxima Retirada lo vuelve invisible y las gasta (DefensiveTacticsPassive)
 }

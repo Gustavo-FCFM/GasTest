@@ -217,7 +217,7 @@ Una herramienta de una vez arma la pieza en el prefab la primera vez; después s
 
 ---
 
-# ★ Maestro de bestias: los compañeros — HECHO Y PROBADO ✅ (15 de octubre); la Ira primal, código hecho (falta probar)
+# ★ Maestro de bestias: los compañeros — HECHO Y PROBADO ✅ (15 de octubre); la Ira primal, probada ✅
 
 Diseño de Gustavo (14 de octubre). Cada compañero es una IA del servidor (`Entity_Companion`) que
 maneja el `CompanionManager` del Explorador (en `BeastMasterBehaviours`):
@@ -288,7 +288,7 @@ maneja el `CompanionManager` del Explorador (en `BeastMasterBehaviours`):
     no vale para el Oso, que se pone delante, ni para el Búho).
   - [x] Probar: un fantasma yendo por el Lobo; sacar al Lobo herido, poner al Oso, volver al Lobo (vuelve
         con lo que tenía, un poco más curado); el Lobo dando vueltas alrededor sin quedarse detrás.
-- [ ] **Ira primal (la definitiva) — HECHA (15 de octubre; herramienta corrida y borrada), falta probar.**
+- [x] **Ira primal (la definitiva) — HECHA Y PROBADA ✅ (15 de octubre).**
       Lo acordado con Gustavo: dura 10 s; salen los otros dos compañeros junto al elegido (y el elegido
       también si estaba muerto esperando: lo trae igual y al terminar sigue su espera donde estaba);
       los tres pelean con su comportamiento y su rango; atacan el doble de rápido ("Ira primal: entre
@@ -305,10 +305,37 @@ maneja el `CompanionManager` del Explorador (en `BeastMasterBehaviours`):
         (`GE_Presence*Fury`, ocultas) y se las pone a cada compañero, `GA_PrimalFury` (copia de la definitiva
         del Guardián, con su espera de definitiva) en la R de `Class_BeastMaster`, bloquea la E durante la
         Ira primal y actualiza los registros de red.
-  - [ ] Probar: R con el Lobo elegido (salen Oso y Búho), con el elegido muerto (sale igual), que ataquen
+  - [x] Probar: R con el Lobo elegido (salen Oso y Búho), con el elegido muerto (sale igual), que ataquen
         más rápido, la presencia doble en la barra del Explorador y de un aliado, que la E no cambie, y que
         al terminar quede solo el elegido con su vida. En un cliente, que el panel muestre bien la vida.
-- [ ] Después: las otras dos subclases del Explorador (Cazador y Trampero).
+- [ ] Después: el Trampero (la otra subclase del Explorador): trampas puestas en el piso, invisibles
+      para el enemigo, que explotan al acercarse alguien (espinas, frío con retraso, explosiva que
+      repele desde la trampa).
+
+---
+
+# ★ Cazador (subclase del Explorador) — HECHO Y PROBADO ✅ (15 de octubre)
+
+Lo acordado con Gustavo (15 de octubre):
+
+| Ranura | Qué hace | Cómo |
+|---|---|---|
+| Clic izq. — Arco largo | 3 fases a los 0 / 0.8 / 1.6 s; ×1.2 / ×2 / ×3 del ataque; vuela recto 30 / 55 m y la 3.ª no cae nunca | `GA_HunterBow` (copia del arco) con `GA_HunterArrow1..3` y `GE_ArrowDamage_Hunter1..3` |
+| E — Presa | Marca 8 s al enemigo de la mira (hasta 30 m). Solo jugadores y bots, nunca NPCs. Tanque: sus golpes le hacen +2 % de su vida máx.; Daño: +3 % de su vida faltante; Soporte: −40 % de curación recibida. Si lo mata marcado, ese beneficio vale contra todos 6 s. Espera 15 s | `GA_Prey` (nueva) + `HunterPreyPassive` (nueva, el daño extra por el pipeline) + `GE_Prey`, `GE_PreyHealingCut`, `GE_PreyHunt` |
+| Pasiva — Tácticas defensivas | Cada golpe recibido: +5 % velocidad y +5 % resistencia (6 s, máx. 3). Con las 3, la próxima Retirada lo vuelve invisible 3 s y las gasta | `DefensiveTacticsPassive` (nueva) + `GE_DefensiveTactics`, `GE_TacticsReady`, `GE_HunterVanish`; `GA_HunterRetreat` (copia de la Retirada con un "al activarse, solo si tiene Status_TacticsReady") |
+| R — Depredador definitivo | 8 s: todos los jugadores y bots enemigos son su presa (los NPCs no) (cada uno según su rol), con la Marca del cazador y revelados a su equipo. Cada baja suma 3 s | `GA_ApexPredator` (copia de la Ira primal) + `GE_ApexPredator`; lo hace `HunterPreyPassive` |
+
+Tags nuevos al final: `Status_Prey`, `Status_ApexPredator`, `Status_DefensiveTactics`, `Status_TacticsReady`.
+
+- [x] (Corrida y borrada el 15 de octubre.) Correr `Mercenarios ▸ Una vez ▸ Crear el Cazador (subclase del Explorador)` y borrar
+      `MercHunterSetup.cs`. Crea los efectos, el arco largo y sus flechas, la Presa, la Retirada del
+      Cazador, el Depredador definitivo, `HunterBehaviours` (copia de las pasivas del Explorador con la
+      Presa y las Tácticas), `Class_Hunter` con `ASDef_Hunter` (copia de las stats del Maestro de
+      bestias) y lo agrega a las subclases del Explorador; actualiza los registros de red.
+- [x] Probar: el arco largo (las 3 fases, el daño, la 3.ª que no cae y la curva); la Presa a un Tanque,
+      a un Daño y a un Soporte (que se cure menos), que a un NPC no se pueda, y matarla (6 s contra todos); recibir 3
+      golpes y la Retirada invisible; el Depredador (todos marcados y vistos por el equipo, una baja
+      lo alarga). En un cliente.
 
 ---
 
@@ -1045,7 +1072,7 @@ marcados "Pospuesto".
 **Estado al 5 de octubre:** Clérigo completo y probado. Guerrero: kit base, Maestro de
 batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 9).
 **Guardián: hecho y probado ✅** (5 de octubre). **El Guerrero queda completo** (kit base y las 3 subclases).
-**6 de octubre:** barra de carga por etapas del ataque cargado (`UI_ChargeBar`), repeler / atraer y vuelo libre: hechos y probados. **Monje: kit base hecho y probado (8 de octubre). Barra de canalizar (`UI_CastBar`): hecha.** Queda la mascota con IA en red. **13 de octubre: Explorador (Ranger), kit base hecho; sigue el Maestro de bestias con su Lobo (la mascota con IA en red). Documentos al día (diseño de clases, arquitectura del GAS y de red, guía y glosario).** **14 de octubre: Maestro de bestias (los tres compañeros) y la UI del jugador pasada al prefab de la cámara (barras, avisos de combate, viñeta, rueda, curva de los lanzamientos y silueta); la curva sale ahora en todos los lanzamientos apuntados. Documentos al día.** **15 de octubre: probado todo lo de la UI (las 6 etapas) y lo viejo pendiente; variables claras con su unidad en los 1 247 campos del Inspector; la Ira primal (la definitiva del Maestro de bestias), falta probarla; 50 de experiencia por eliminar a un jugador. Documentos al día.**
+**6 de octubre:** barra de carga por etapas del ataque cargado (`UI_ChargeBar`), repeler / atraer y vuelo libre: hechos y probados. **Monje: kit base hecho y probado (8 de octubre). Barra de canalizar (`UI_CastBar`): hecha.** Queda la mascota con IA en red. **13 de octubre: Explorador (Ranger), kit base hecho; sigue el Maestro de bestias con su Lobo (la mascota con IA en red). Documentos al día (diseño de clases, arquitectura del GAS y de red, guía y glosario).** **14 de octubre: Maestro de bestias (los tres compañeros) y la UI del jugador pasada al prefab de la cámara (barras, avisos de combate, viñeta, rueda, curva de los lanzamientos y silueta); la curva sale ahora en todos los lanzamientos apuntados. Documentos al día.** **15 de octubre: probado todo lo de la UI (las 6 etapas) y lo viejo pendiente; variables claras con su unidad en los 1 247 campos del Inspector; la Ira primal (la definitiva del Maestro de bestias), falta probarla; 50 de experiencia por eliminar a un jugador. Cazador (subclase del Explorador) hecho y probado. Documentos al día.**
 
 1. **Clases nuevas — DECIDIDO (28 de septiembre): Clérigo + Guerrero completos**, en ese
    orden. Detalle y estimación en la sección 6.

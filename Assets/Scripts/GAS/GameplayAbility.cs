@@ -1325,7 +1325,8 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     protected AbilitySystemComponent FindBestTargetInAim(float maxRange, float selectionAngle,
                                                         ETargetAffiliation affiliation,
                                                         bool includeSelf = false,
-                                                        bool allowDead   = false)
+                                                        bool allowDead   = false,
+                                                        System.Func<AbilitySystemComponent, bool> filter = null)
     {
         if (OwnerASC == null) return null;
 
@@ -1386,6 +1387,7 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
                 ? IsAlly(asc, includeSelf)
                 : IsEnemy(asc);
             if (!valid) continue;
+            if (filter != null && !filter(asc)) continue;   // ej. la Presa: solo jugadores
 
             // Se apunta al TORSO, no a los pies: el transform de un personaje está en el
             // suelo, y desde una cámara que mira un poco hacia abajo los pies de alguien
