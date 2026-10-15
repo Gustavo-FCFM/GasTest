@@ -344,6 +344,19 @@ Pedidos de Gustavo después de probar. Compila limpio. Hay que dejar que Unity r
 **Qué probar:**
 
 - [x] Clérigo: 3 curaciones seguidas y cada una vuelve a los 4.5 s. ¿Sigue curando demasiado?
+- [ ] **VFX "Al curar" por habilidad (14 de octubre).** La Palabra de curación del Clérigo base
+      no tenía ningún VFX propio desde la limpieza del 30 de septiembre (lo único que salía era el
+      aura azul de la Bendición, y al curarte sin que te faltara vida, ni eso). Momento nuevo en
+      la lista de VFX de cada GA: **"Al curar (en el aliado curado)"**. Sale solo sobre el aliado
+      (o uno mismo) que esa habilidad cura, nunca sobre un enemigo golpeado, y una vez por golpe;
+      lo detecta `ApplyHitEffects` (un efecto que sube la vida, `GameplayEffect.HealsHealth`).
+      Cada habilidad elige el suyo: por ahora todas con "Healing buff" (pegado, 1 s) en la
+      Palabra de curación, los tres arcos de luz, los dos Castigos (rayo) y la Imposición de
+      manos (pasada de "al golpear" a "al curar"). Sin cargar a propósito: las zonas (Luz del
+      amanecer, Fuego sagrado, Zona de verdad) y las curaciones con el tiempo (Palabra radiante,
+      Quemadura santa), porque curan en cada tick y ya tienen el VFX de su efecto. El aura del
+      Paladín no es un GA: sigue con su "Heal VFX". Probar: Palabra a uno mismo y a un aliado,
+      el arco pasando por un aliado y un enemigo (solo el aliado), el Castigo, la Imposición.
 - [x] Paladín: el número verde del aura al pegar, un poco más alto.
 - [x] Con dos ventanas (o la prueba en red): el Desarme del Maestro de batalla a un Clérigo o
       Paladín que se mueve; el desarmado no puede atacar 2 s (sí bloquear y lanzar magia).

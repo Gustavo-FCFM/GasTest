@@ -102,7 +102,7 @@ public class GA_Teleport : GameplayAbility, IGroundTargetAbility
     // de antes, FlashVFX). No busca personajes con TargetLayer ni golpea a nadie.
     public override bool UsesTargetLayer => false;
     public override bool UsesHitEffects  => false;
-    public override bool SupportsVisualTiming(EVisualWhen when) => when != EVisualWhen.OnHit || UsesHitEffects;
+    public override bool SupportsVisualTiming(EVisualWhen when) => (when != EVisualWhen.OnHit && when != EVisualWhen.OnHeal) || UsesHitEffects;
 
     [Tooltip("Mirando una pared VERTICAL a su alcance, aparece contra ella (el pecho a la altura " +
              "del punto apuntado), si el cuerpo cabe ahí; y si su clase se engancha a las paredes, " +

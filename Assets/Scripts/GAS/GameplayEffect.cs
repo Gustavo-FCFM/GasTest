@@ -123,6 +123,25 @@ public class GameplayEffect : ScriptableObject
     [Label("Es control")]
     public bool IsCrowdControl = false;
 
+    // ¿Sube la vida? Un modificador sumado sobre Health con algo positivo (fijo o escalado).
+    // Lo usa la habilidad para sus VFX "al curar" (ver GameplayAbility.ApplyHitEffects).
+    public bool HealsHealth
+    {
+        get
+        {
+            if (Modifiers == null) return false;
+            foreach (Modifier m in Modifiers)
+            {
+                if (m.Attribute != EAttributeType.Health || m.Type != Modifier.EModificationType.Add) continue;
+                if (m.Magnitude > 0f ||
+                    (m.UseAttributeScaling && m.AttributeCoefficient > 0f) ||
+                    (m.UseTargetHealthScaling && m.TargetHealthCoefficient > 0f))
+                    return true;
+            }
+            return false;
+        }
+    }
+
     // Tags de control "duros" del core: un efecto que otorgue cualquiera de estos cuenta
     // como CC aunque no tenga la casilla marcada. Existe para que los GEs que YA estaban
     // (GE_Stun y compañía) obedezcan la resistencia sin tener que editarlos uno por uno.

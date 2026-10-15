@@ -48,6 +48,7 @@ public class AbilityVisualDrawer : PropertyDrawer
         {
             case EVisualWhen.OnCast: return "Pegado al lanzador";
             case EVisualWhen.OnHit:  return "Pegado al objetivo";
+            case EVisualWhen.OnHeal: return "Pegado al curado";
             default:                 return "Sigue al lanzador (si el área lo sigue)";
         }
     }
@@ -149,9 +150,9 @@ public class AbilityVisualDrawer : PropertyDrawer
         if (v.VFXPrefab == null) return "está vacía (le falta el prefab).";
 
         if (!ability.SupportsVisualTiming(v.When))
-            return v.When == EVisualWhen.OnHit
-                ? $"'Al golpear' no aplica: {ability.GetType().Name} no golpea a nadie."
-                : $"'En el impacto' no aplica: {ability.GetType().Name} no tiene un punto donde cae.";
+            return v.When == EVisualWhen.OnHit  ? $"'Al golpear' no aplica: {ability.GetType().Name} no golpea a nadie."
+                 : v.When == EVisualWhen.OnHeal ? $"'Al curar' no aplica: {ability.GetType().Name} no le aplica efectos a nadie."
+                 : $"'En el impacto' no aplica: {ability.GetType().Name} no tiene un punto donde cae.";
 
         if (v.When == EVisualWhen.OnImpact && v.MatchAreaSize && ability.VisualAreaRadius <= 0f)
             return "'Calzar con el área' no aplica: esta habilidad no tiene radio de área.";

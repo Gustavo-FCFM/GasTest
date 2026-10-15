@@ -2052,11 +2052,13 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // pegarle el VFX y que lo siga (la curación de GA_Target sobre un aliado que se mueve).
     // withSound = false cuando ese golpe ya suena por su impacto (el proyectil).
     [Server]
-    public void ServerPlayAbilityVFXOn(GameplayAbility ability, AbilitySystemComponent target, bool withSound = true)
+    // when: "al golpear" o "al curar" (ver GameplayAbility.BroadcastHealVFX).
+    public void ServerPlayAbilityVFXOn(GameplayAbility ability, AbilitySystemComponent target, bool withSound = true,
+                                       EVisualWhen when = EVisualWhen.OnHit)
     {
         if (ability == null || target == null) return;
 
-        ability.PlayImpactVFXOnFor(_asc, target);
+        ability.PlayImpactVFXOnFor(_asc, target, when);
         if (withSound) AudioManager.Play(ability.ImpactSound, target.transform.position);
 
         int abilityIndex = GameplayAbilityRegistry.Instance != null
@@ -2066,15 +2068,15 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         if (abilityIndex < 0)
             Debug.LogWarning($"[NetworkASC] '{ability.AbilityName}' no está en GameplayAbilityRegistry — su VFX de impacto no se replicará a los clientes remotos.");
         else if (targetNob != null)
-            ObserversPlayAbilityVFXOn(abilityIndex, targetNob, withSound);
+            ObserversPlayAbilityVFXOn(abilityIndex, targetNob, withSound, (byte)when);
         else
             // Sin NetworkObject no se lo puede nombrar por red: en las demás pantallas sale
             // donde estaba (sin seguirlo), que es mejor que no verlo.
-            ObserversPlayAbilityHitVFXAt(abilityIndex, target.transform.position, withSound);
+            ObserversPlayAbilityHitVFXAt(abilityIndex, target.transform.position, withSound, (byte)when);
     }
 
     [ObserversRpc]
-    private void ObserversPlayAbilityVFXOn(int abilityIndex, NetworkObject target, bool withSound)
+    private void ObserversPlayAbilityVFXOn(int abilityIndex, NetworkObject target, bool withSound, byte when)
     {
         // El servidor ya lo reprodujo en ServerPlayAbilityVFXOn() de arriba.
         if (IsServerInitialized || target == null) return;
@@ -2083,19 +2085,19 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         AbilitySystemComponent targetAsc = target.GetComponent<AbilitySystemComponent>();
         if (ability == null || targetAsc == null) return;
 
-        ability.PlayImpactVFXOnFor(_asc, targetAsc);
+        ability.PlayImpactVFXOnFor(_asc, targetAsc, (EVisualWhen)when);
         if (withSound) AudioManager.Play(ability.ImpactSound, targetAsc.transform.position);
     }
 
     [ObserversRpc]
-    private void ObserversPlayAbilityHitVFXAt(int abilityIndex, Vector3 position, bool withSound)
+    private void ObserversPlayAbilityHitVFXAt(int abilityIndex, Vector3 position, bool withSound, byte when)
     {
         if (IsServerInitialized || _asc == null) return;
 
         GameplayAbility ability = GameplayAbilityRegistry.Instance?.GetAbility(abilityIndex);
         if (ability == null) return;
 
-        ability.PlayHitVFXAtFor(_asc, position);
+        ability.PlayHitVFXAtFor(_asc, position, (EVisualWhen)when);
         if (withSound) AudioManager.Play(ability.ImpactSound, position);
     }
 

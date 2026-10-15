@@ -46,20 +46,8 @@ MonoBehaviour:
     OnlyIfTargetHas: 0
     StackScaling: 0
     PerStack: 0
-  Visuals:
-  - When: 1
-    VFXPrefab: {fileID: 1374770465800164, guid: d0e33492ce1ba064291b3ff95ce32e4e, type: 3}
-    Delay: 0
-    Offset: {x: 0, y: 0, z: 0}
-    RotationOffset: {x: 0, y: 0, z: 0}
-    Scale: {x: 0, y: 0, z: 0}
-    Attach: 1
-    MatchAreaSize: 0
-    AreaSizeMultiplier: 0
-    DestroyTime: 1
-    EndWithTag: 0
-    EndWhenAttributeDepleted: 0
-    DepletedAttribute: 0
+    PerTargetCooldown: 0
+  Visuals: []
   IsInterruptible: 0
   TargetLayer:
     serializedVersion: 2

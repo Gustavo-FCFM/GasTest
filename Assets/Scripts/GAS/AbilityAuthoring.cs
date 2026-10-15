@@ -248,6 +248,9 @@ public enum EVisualWhen
     [InspectorName("Al lanzar (en el lanzador)")]      OnCast   = 0,
     [InspectorName("Al golpear (en cada objetivo)")]   OnHit    = 1,
     [InspectorName("En el impacto (punto o área)")]    OnImpact = 2,
+    // Sobre el aliado (o uno mismo) que esta habilidad CURA, nunca sobre un enemigo
+    // golpeado. Lo dispara ApplyHitEffects solo, cuando aplica un efecto que sube la vida.
+    [InspectorName("Al curar (en el aliado curado)")]  OnHeal   = 3,
 }
 
 // Una entrada de GameplayAbility.Visuals. El valor 0 de When es OnCast, que es lo que

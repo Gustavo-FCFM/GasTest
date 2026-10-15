@@ -1143,6 +1143,7 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         bool wasAlive = !target.HasTag(EGameplayTag.State_Dead);
         GameplayEffect primary = primaryOverride != null ? PrimaryDamageEffect : null;
         bool primaryReplaced = false;
+        bool healed = false;   // para los VFX "al curar"
 
         foreach (AbilityEffect e in Effects)
         {
@@ -1186,10 +1187,16 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
 
             if (e.ApplyTo == EEffectTarget.Self) ApplyScaled(source, effect, source, times, duration);
             else                                 ApplyScaled(target, effect, source, times, duration);
+
+            if (ally && e.ApplyTo != EEffectTarget.Self && effect.HealsHealth) healed = true;
         }
 
         if (enemy && !onlyHostile && wasAlive && target.HasTag(EGameplayTag.State_Dead))
             ApplyKillEffects(target, source);
+
+        // Los VFX "al curar": sobre el aliado curado, una vez por golpe, sin importar cuántas
+        // entradas lo curaron. Cada habilidad elige el suyo (o ninguno) en su lista de VFX.
+        if (healed) BroadcastHealVFX(target);
 
         return true;
     }
@@ -1220,7 +1227,8 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // ¿Qué VFX acepta? "Al lanzar" todas; "al golpear" las que golpean; "en el impacto" las
     // que tienen un punto donde caen.
     public virtual bool SupportsVisualTiming(EVisualWhen when)
-        => when == EVisualWhen.OnCast || (when == EVisualWhen.OnHit && UsesHitEffects);
+        => when == EVisualWhen.OnCast ||
+           ((when == EVisualWhen.OnHit || when == EVisualWhen.OnHeal) && UsesHitEffects);
 
     // =========================================================
     // AFILIACIÓN — atajos hacia AbilitySystemComponent.IsEnemyOf/IsAllyOf
@@ -1536,6 +1544,19 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         else                PlayImpactVFXOn(target);   // sin red (escena de pruebas suelta)
     }
 
+    // SERVIDOR: los VFX "al curar" sobre el aliado curado, en todas las pantallas. Lo llama
+    // ApplyHitEffects solo; sin entradas "al curar" no manda nada.
+    public void BroadcastHealVFX(AbilitySystemComponent target)
+    {
+        if (target == null || !HasVisuals(EVisualWhen.OnHeal)) return;
+
+        NetworkAbilitySystemComponent netAsc = OwnerASC != null
+            ? OwnerASC.GetComponent<NetworkAbilitySystemComponent>() : null;
+
+        if (netAsc != null) netAsc.ServerPlayAbilityVFXOn(this, target, false, EVisualWhen.OnHeal);
+        else                SpawnVisuals(EVisualWhen.OnHeal, OwnerASC, target, target.transform.position);
+    }
+
     // SERVIDOR: los VFX "en el impacto" en un punto del mundo (y el sonido), en todas las
     // pantallas: donde estalla un área, donde aterriza un salto, donde choca un tiro.
     public void BroadcastImpactVFX(Vector3 point)
@@ -1576,18 +1597,22 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         OwnerASC = prev;
     }
 
-    public void PlayImpactVFXOnFor(AbilitySystemComponent owner, AbilitySystemComponent target)
+    // when: "al golpear" (lo de siempre) o "al curar".
+    public void PlayImpactVFXOnFor(AbilitySystemComponent owner, AbilitySystemComponent target,
+                                   EVisualWhen when = EVisualWhen.OnHit)
     {
         AbilitySystemComponent prev = OwnerASC;
         OwnerASC = owner;
-        PlayImpactVFXOn(target);
+        if (when == EVisualWhen.OnHit)  PlayImpactVFXOn(target);
+        else if (target != null)        SpawnVisuals(when, owner, target, target.transform.position);
         OwnerASC = prev;
     }
 
-    // Los VFX "al golpear" en una POSICIÓN: el respaldo para un objetivo sin NetworkObject
-    // (no se lo puede mandar por red), que en las demás pantallas sale donde estaba.
-    public void PlayHitVFXAtFor(AbilitySystemComponent owner, Vector3 position)
-        => SpawnVisuals(EVisualWhen.OnHit, owner, null, position);
+    // Los VFX "al golpear" (o "al curar") en una POSICIÓN: el respaldo para un objetivo sin
+    // NetworkObject (no se lo puede mandar por red), que en las demás pantallas sale donde estaba.
+    public void PlayHitVFXAtFor(AbilitySystemComponent owner, Vector3 position,
+                                EVisualWhen when = EVisualWhen.OnHit)
+        => SpawnVisuals(when, owner, null, position);
 
     // ---------------------------------------------------------
     // Lo que cada habilidad le aporta a sus VFX de impacto

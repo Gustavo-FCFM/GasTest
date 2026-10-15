@@ -79,7 +79,8 @@ public class GA_SpawnTotem : GameplayAbility, IRadialMenuAbility
     // No busca personajes ni golpea: invoca. Sus VFX "en el impacto" salen donde aparece.
     public override bool UsesTargetLayer => false;
     public override bool UsesHitEffects  => false;
-    public override bool SupportsVisualTiming(EVisualWhen when) => when != EVisualWhen.OnHit;
+    public override bool SupportsVisualTiming(EVisualWhen when)
+        => when == EVisualWhen.OnCast || when == EVisualWhen.OnImpact;
 
     // En la rueda, el tótem se ve apagado mientras corre su cooldown propio. Corre en el
     // dueño, con los tags sincronizados.

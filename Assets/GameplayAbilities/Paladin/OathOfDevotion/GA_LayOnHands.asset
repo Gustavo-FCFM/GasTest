@@ -47,7 +47,7 @@ MonoBehaviour:
     StackScaling: 0
     PerStack: 0
   Visuals:
-  - When: 1
+  - When: 3
     VFXPrefab: {fileID: 1374770465800164, guid: d0e33492ce1ba064291b3ff95ce32e4e, type: 3}
     Delay: 0
     Offset: {x: 0, y: 1, z: 0}

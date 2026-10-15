@@ -217,7 +217,9 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   `BroadcastImpactVFX(punto)` — nunca un `Instantiate` a mano ni un campo `HitVFX` nuevo.
   Un GE tiene UN `TargetVFX`: si el buff necesita dos piezas, van juntas en un prefab
   (`VFX_AvengingAngel`, `VFX_FrenzyBuff`). Los `GE_*` se guardan en `Effects/`, nunca al
-  lado de la habilidad.
+  lado de la habilidad. El VFX de **curar a un aliado** va en el momento **"Al curar"** de la
+  habilidad (desde el 14 de octubre de 2026): sale solo sobre el curado, nunca sobre un enemigo;
+  lo dispara `ApplyHitEffects` al aplicar un efecto que sube la vida. Cada GA elige el suyo.
 
 - **Los efectos de una habilidad van en su lista `Effects`** (desde el 7 de octubre de
   2026): cada entrada dice cuándo (al golpear, al primer golpe, al activarse, al matar),
