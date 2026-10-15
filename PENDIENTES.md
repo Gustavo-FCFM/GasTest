@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 14 de octubre de 2026
+# Pendientes — actualizado el 15 de octubre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -48,7 +48,7 @@ rm -rf "Assets/FishNet" "Assets/FishNet.meta" "Assets/TextMesh Pro/Examples & Ex
 
 ---
 
-# ★ Revisión: la UI vive en el prefab y variables claras — etapas 1 a 4 HECHAS; faltan la 5 y la 6 (14 de octubre)
+# ★ Revisión: la UI vive en el prefab y variables claras — LAS 6 ETAPAS HECHAS Y PROBADAS ✅ (15 de octubre)
 
 Pedido de Gustavo: la UI tiene que vivir en el prefab de la cámara del jugador y no "ponerse por
 encima" por código, y las variables tienen que entenderse sin leer el código ("Otros: más que un
@@ -136,9 +136,9 @@ Una herramienta de una vez arma la pieza en el prefab la primera vez; después s
   - [x] **Se ven bien (14 de octubre).** Probar jugando: apuntar con el hacha, las dagas, la lanza (en ofensiva) y el Guiding Bolt, y
         tensar el arco: la curva sale de la mano, cae como el proyectil y el anillo marca donde
         choca. La Marca del cazador sigue mostrando la silueta a través de las paredes.
-- [ ] **Etapa 5 — el prefab de partida y el de menús** (ver "Dónde va cada cosa"), puestos en las
+- [x] **Etapa 5 — el prefab de partida y el de menús** (ver "Dónde va cada cosa"), puestos en las
       dos escenas. Va en tres tandas:
-  - [ ] **5a — lo de la pelea: HECHO (14 de octubre; herramienta corrida en las dos escenas y borrada), falta probar.**
+  - [x] **5a — lo de la pelea: HECHO (14 de octubre; herramienta corrida en las dos escenas y borrada), falta probar.**
         Prefab nuevo **`Prefabs/UI/Match_UI`** con tres canvas (mismo orden de dibujo que antes):
         `DamageNumbers` (los números flotantes, con el MOLDE `NumberTemplate`), `KillFeed` (el registro
         de bajas: `Entries` es la esquina y `EntryTemplate` el MOLDE de una línea) y `ScreenFeedback`
@@ -149,9 +149,9 @@ Una herramienta de una vez arma la pieza en el prefab la primera vez; después s
           ponerlo en la escena`, guardar la escena. Abrir `Mercenaries_Graveyard`, correrla otra vez
           (solo lo pone) y guardar. Si querés también en `Test_Network`, igual. Después borrar
           `Assets/Scripts/Editor/MercMatchUiSetup.cs`.
-    - [ ] Probar: números de daño, crítico y curación; matar y morir (el registro arriba a la derecha,
+    - [x] Probar: números de daño, crítico y curación; matar y morir (el registro arriba a la derecha,
           tu línea resaltada; "Te eliminó X" y la cuenta para reaparecer); "¡Definitiva lista!".
-  - [ ] **5b — lo del modo: HECHO (14 de octubre; herramienta corrida y borrada), falta probar.** Al
+  - [x] **5b — lo del modo: HECHO (14 de octubre; herramienta corrida y borrada), falta probar.** Al
         mismo `Match_UI`, cada uno con su canvas y su orden de siempre (todo igual a como se veía):
         - `Scoreboard` (`UI_MercenariesHUD`): `Panel` con el reloj, las tres filas (fondo, franja de
           color, nombre, nivel, barrita de experiencia y dos tramos de entrega) y el estado del
@@ -170,11 +170,11 @@ Una herramienta de una vez arma la pieza en el prefab la primera vez; después s
           `SpectatorCamera` de la escena). Abrir `Mercenaries_Graveyard`, correrla otra vez (solo
           limpia la escena) y guardar. Después borrar `Assets/Scripts/Editor/MercMatchUi5bSetup.cs`.
           **Hasta correrla, el marcador y los avisos no se ven** (los objetos viejos quedan sin piezas).
-    - [ ] Probar: el marcador (reloj, niveles, tu fila resaltada, entregas que se llenan), los avisos
+    - [x] Probar: el marcador (reloj, niveles, tu fila resaltada, entregas que se llenan), los avisos
           (aparece el Objetivo, lo toma un equipo, entrega, aniquilación), el rombo del Objetivo (dentro
           y fuera de cámara, la barra de entrega) y tu punto de entrega; entrar de espectador (volar,
           seguir con clic, H y M).
-  - [ ] **5c — los menús: CÓDIGO HECHO (14 de octubre), falta correr la herramienta y probar.** Prefab
+  - [x] **5c — los menús: HECHO (15 de octubre; herramienta corrida en las dos escenas y borrada), falta probar.** Prefab
         nuevo **`Prefabs/UI/Menus_UI`** con tres partes; cada una es un objeto siempre prendido con su
         componente y, adentro, su canvas (lo que se prende y se apaga), con el orden de dibujo de siempre
         y las medidas y colores que tenían las escenas:
@@ -194,21 +194,30 @@ Una herramienta de una vez arma la pieza en el prefab la primera vez; después s
           espectadores que no entran en las dos filas armadas copian la última.
         - La sala de `Mercenaries_Gamemode` tenía 6 clases y la del cementerio 7: el prefab se queda con
           las 7 (la herramienta agrega las que falten).
-    - [ ] Con `Mercenaries_Gamemode` abierta: `Mercenarios ▸ Una vez ▸ Crear el prefab de menús y ponerlo
+    - [x] Con `Mercenaries_Gamemode` abierta: `Mercenarios ▸ Una vez ▸ Crear el prefab de menús y ponerlo
           en la escena (5c)` y **guardar**. Abrir `Mercenaries_Graveyard`, correrla otra vez (pone el
           prefab, agrega la clase que falta y saca los viejos) y **guardar**. Después borrar
           `Assets/Scripts/Editor/MercMenusUiSetup.cs`. **Hasta correrla, los menús no se ven.**
-    - [ ] Probar: el menú (Jugar, Ajustes, Salir, ESC abre los ajustes), los ajustes (cada fila: idioma,
+    - [x] Probar: el menú (Jugar, Ajustes, Salir, ESC abre los ajustes), los ajustes (cada fila: idioma,
           control, sensibilidad, invertir Y, pantalla, resolución, sincronización; Restablecer y Cerrar),
           la sala (unirse a un equipo, elegir clase con las pestañas, confirmar, Start, agregar y sacar
           bots, el nombre, irse a espectadores con varios espectadores), en los dos idiomas.
-- [ ] **Etapa 6 — variables claras en todo lo hecho desde el Guerrero:** nombres y tooltips que
-      digan qué es y en qué unidad, sin valores relativos raros; habilidades, efectos, pasivas,
-      compañeros, paredes, cámara.
+- [x] **Etapa 6 — variables claras: HECHA en TODO el código (15 de octubre), no solo desde el Guerrero.**
+      Se revisaron los 1 247 campos que se ven en el Inspector (habilidades, efectos, pasivas,
+      componentes, compañeros, paredes, cámara, modo, bots, UI):
+      - **275 nombres con su unidad**: `(m)`, `(s)`, `(m/s)`, `(°)`, `(px)`, `(×)`, `(0 a 1)`, `(vida)`,
+        `(exp)`; los que eran "(fracción)" pasaron a "(0 a 1)", y los 0 especiales van en el nombre
+        ("Alcance máximo (m; 0 = sin tope)"). No se tocó ningún valor ni ningún nombre de campo en el
+        código: los assets siguen iguales.
+      - **Lo que salía en inglés** ahora está en español: la biblioteca de audio (y cada sonido), el
+        catálogo de enemigos, los dos registros de red, la retícula, y en los VFX de una habilidad
+        "Delay / Offset / Scale" (ahora "Espera (s)", "Posición (m)", "Escala (×)").
+      - La regla quedó en CLAUDE.md, junto a la de `[Label]`.
+      - [x] Mirar en Unity que se vea bien (un GA, un GE, la cámara, la biblioteca de audio).
 
 ---
 
-# ★ Maestro de bestias: los compañeros — HECHO (herramientas corridas), falta probar jugando (14 de octubre)
+# ★ Maestro de bestias: los compañeros — HECHO Y PROBADO ✅ (15 de octubre); la Ira primal, código hecho (falta probar)
 
 Diseño de Gustavo (14 de octubre). Cada compañero es una IA del servidor (`Entity_Companion`) que
 maneja el `CompanionManager` del Explorador (en `BeastMasterBehaviours`):
@@ -264,9 +273,9 @@ maneja el `CompanionManager` del Explorador (en `BeastMasterBehaviours`):
 - [x] La rueda (E): cambiar al Oso y al Búho; el que murió aparece apagado con su tiempo.
 - [x] El panel del HUD y el ícono del botón con el compañero activo.
 - [x] Las posiciones de los tres están bien. Falta el Búho junto a un invisible.
-- [ ] En un cliente: que se vean moverse y atacar, y **la barra de vida del compañero, para aliados y
+- [x] En un cliente: que se vean moverse y atacar, y **la barra de vida del compañero, para aliados y
       para enemigos** (Lobo y Oso la traen en su prefab; el Búho no tiene, es indestructible).
-- [ ] **Arreglos tras la segunda prueba (14 de octubre, noche), falta probar:**
+- [x] **Arreglos tras la segunda prueba (14 de octubre, noche), falta probar:**
   - **Los fantasmas van por el compañero** si está en su radio, como por cualquier jugador (el más
     cercano); antes solo el Oso por provocar. El Búho no (indestructible). `MercEnemyAI.FindTarget`.
   - **La vida se guarda al cambiarlo:** un compañero que sacas herido vuelve con la vida que tenía, y
@@ -277,13 +286,33 @@ maneja el `CompanionManager` del Explorador (en `BeastMasterBehaviours`):
     6 m), camina hasta ahí, se queda 1 a 3 s y elige otro; si el Explorador se aleja, corre a
     alcanzarlo. Sección "Merodear (sin pelear)" del compañero (`Merodea alrededor del dueño`, prendido;
     no vale para el Oso, que se pone delante, ni para el Búho).
-  - [ ] Probar: un fantasma yendo por el Lobo; sacar al Lobo herido, poner al Oso, volver al Lobo (vuelve
+  - [x] Probar: un fantasma yendo por el Lobo; sacar al Lobo herido, poner al Oso, volver al Lobo (vuelve
         con lo que tenía, un poco más curado); el Lobo dando vueltas alrededor sin quedarse detrás.
-- [ ] Falta después: la definitiva Ira primal (los tres a la vez), y las otras dos subclases.
+- [ ] **Ira primal (la definitiva) — HECHA (15 de octubre; herramienta corrida y borrada), falta probar.**
+      Lo acordado con Gustavo: dura 10 s; salen los otros dos compañeros junto al elegido (y el elegido
+      también si estaba muerto esperando: lo trae igual y al terminar sigue su espera donde estaba);
+      los tres pelean con su comportamiento y su rango; atacan el doble de rápido ("Ira primal: entre
+      ataques (×)" 0.5 en cada compañero); la Presencia bestial de los tres a la vez y al doble (cada uno
+      aplica además una copia oculta de su presencia: +21 % velocidad, +20 % resistencia, ×0.81 entre
+      ataques); no se puede cambiar de compañero mientras dura; al terminar los dos extra desaparecen y
+      queda el elegido con la vida que tenía. Los extra salen llenos y, si mueren, no les empieza
+      espera. Carga como las demás definitivas (Daño: por bajas). En el HUD, los tres se ven encendidos.
+      Código: `CompanionManager` (StartFury / EndFury, extras), `Entity_Companion` (sección Ira primal;
+      cada compañero sabe qué opción de la rueda es, para que el HUD encuentre al elegido entre tres),
+      tag nuevo al final `Status_PrimalFury`.
+  - [x] (Corrida y borrada el 15 de octubre.) Correr `Mercenarios ▸ Una vez ▸ Crear la Ira primal (definitiva del Maestro de bestias)` y borrar
+        `MercPrimalFurySetup.cs`. Crea `GE_PrimalFury` (10 s, ícono primal fury), las presencias extra
+        (`GE_Presence*Fury`, ocultas) y se las pone a cada compañero, `GA_PrimalFury` (copia de la definitiva
+        del Guardián, con su espera de definitiva) en la R de `Class_BeastMaster`, bloquea la E durante la
+        Ira primal y actualiza los registros de red.
+  - [ ] Probar: R con el Lobo elegido (salen Oso y Búho), con el elegido muerto (sale igual), que ataquen
+        más rápido, la presencia doble en la barra del Explorador y de un aliado, que la E no cambie, y que
+        al terminar quede solo el elegido con su vida. En un cliente, que el panel muestre bien la vida.
+- [ ] Después: las otras dos subclases del Explorador (Cazador y Trampero).
 
 ---
 
-# ★ Explorador (Ranger): kit base — HECHO Y PROBADO ✅ (13-14 de octubre; faltan los bots); lo que sigue: el Maestro de bestias y su Lobo
+# ★ Explorador (Ranger): kit base — HECHO Y PROBADO ✅ (13-14 de octubre; faltan los bots); el Maestro de bestias, también
 
 Pedido de Gustavo: primero el kit base, después la mascota del Maestro de bestias (el Lobo,
 con una figura de primitivas mientras no haya modelo). Sin modelos ni animaciones nuevas: las
@@ -359,7 +388,7 @@ Lo nuevo de código, que sirve para más cosas:
 
 ---
 
-# ★ Misma pared otra vez y espera por enemigo en las ráfagas — HECHO, falta probar (13 de octubre; herramienta corrida y borrada)
+# ★ Misma pared otra vez y espera por enemigo en las ráfagas — HECHO Y PROBADO ✅ (13 de octubre; probado el 15)
 
 Pedidos de Gustavo después de probar el Monje y sus subclases.
 
@@ -445,7 +474,7 @@ Pedidos de Gustavo después de probar. Compila limpio. Hay que dejar que Unity r
 
 ---
 
-# ★ Inspector de habilidades nuevo — HECHO, falta probar (7 de octubre)
+# ★ Inspector de habilidades nuevo — HECHO Y PROBADO ✅ (7 de octubre; probado el 15)
 
 Pedido de Gustavo: cada GA ordenado por secciones plegables, los daños/efectos y los VFX
 en listas con condiciones, sin perder lo ya cargado, y ajustar las formas desde la escena.
@@ -538,7 +567,7 @@ se pueden borrar los bloques `DATOS VIEJOS` del final de cada GA.
 
 ---
 
-# ★ El juego en español e inglés — LAS 3 ETAPAS HECHAS (menús, partida y contenido), falta probar (8 de octubre)
+# ★ El juego en español e inglés — LAS 3 ETAPAS HECHAS Y PROBADAS ✅ (8 de octubre; probado el 15)
 
 Pedido en la prueba: poder jugar en español, y que las builds arranquen en español. "Mercenaries"
 (nombre provisional) no se traduce. Cómo funciona: ver CLAUDE.md ("Lo que ve el jugador va en
@@ -716,7 +745,7 @@ Las piezas para soltar zonas desde otra habilidad quedaron en `GA_ContinuousAoE`
 
 ---
 
-# ★ Después de probar el Maestro elemental y el Shinobi — HECHO, falta probar (8 de octubre, tarde)
+# ★ Después de probar el Maestro elemental y el Shinobi — HECHO Y PROBADO ✅ (8 de octubre; probado el 15)
 
 Pedidos de Gustavo. Compila limpio (juego y editor); Unity ya recompiló el código con el codegen
 de FishNet (hay RPC nuevas en `PlayerController`).
@@ -789,7 +818,7 @@ de FishNet (hay RPC nuevas en `PlayerController`).
 
 ---
 
-# ★ Paredes (Pícaro y Monje), Ki, Ráfaga y escudos — HECHO, falta probar (8 de octubre)
+# ★ Paredes (Pícaro y Monje), Ki, Ráfaga y escudos — HECHO Y PROBADO ✅ (8 de octubre; probado el 15)
 
 Compila limpio (juego y editor, con el Roslyn de Unity; el codegen de FishNet lo corre Unity
 al recompilar: hay dos RPC que cambiaron).
@@ -855,7 +884,7 @@ inclinación viaja en la RPC de locomoción (dos bytes más) y se aplica al mode
 
 ---
 
-# ★ Samurái (subclase del Monje) — HECHO Y PROBADO ✅ (8 de octubre), salvo la franja del Corte final
+# ★ Samurái (subclase del Monje) — HECHO Y PROBADO ✅ (8 de octubre), la franja del Corte final también
 
 Diseño de Gustavo (ver "Subclases del Monje — LO DECIDIDO" más abajo); los números ⚙ los puso
 Claude. Compila limpio (juego y editor).
@@ -913,7 +942,7 @@ Claude. Compila limpio (juego y editor).
 
 ---
 
-# ★ Maestro elemental y Shinobi (subclases del Monje) — CREADOS, falta probar (8 de octubre)
+# ★ Maestro elemental y Shinobi (subclases del Monje) — HECHOS Y PROBADOS ✅ (8 de octubre; probado el 15)
 
 Los creó una herramienta corrida en batch con Unity cerrado (ya borrada); compila con Unity, con el
 codegen de FishNet. Diseño de Gustavo (ver "Subclases del Monje — LO DECIDIDO"); números ⚙ de
@@ -970,7 +999,7 @@ Los tres tags nuevos, al final del enum.
 
 ---
 
-# ★ Menús de clase más compactos e ícono de clase en las barras — CÓDIGO HECHO, falta probar (8 de octubre)
+# ★ Menús de clase más compactos e ícono de clase en las barras — HECHO Y PROBADO ✅ (8 de octubre; probado el 15)
 
 Pedido de Gustavo: con más clases todo se estiraba. Compila limpio. No toca prefabs ni assets:
 todo se arma por código.
@@ -1016,7 +1045,7 @@ marcados "Pospuesto".
 **Estado al 5 de octubre:** Clérigo completo y probado. Guerrero: kit base, Maestro de
 batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 9).
 **Guardián: hecho y probado ✅** (5 de octubre). **El Guerrero queda completo** (kit base y las 3 subclases).
-**6 de octubre:** barra de carga por etapas del ataque cargado (`UI_ChargeBar`), repeler / atraer y vuelo libre: hechos y probados. **Monje: kit base hecho y probado (8 de octubre). Barra de canalizar (`UI_CastBar`): hecha.** Queda la mascota con IA en red. **13 de octubre: Explorador (Ranger), kit base hecho; sigue el Maestro de bestias con su Lobo (la mascota con IA en red). Documentos al día (diseño de clases, arquitectura del GAS y de red, guía y glosario).** **14 de octubre: Maestro de bestias (los tres compañeros) y la UI del jugador pasada al prefab de la cámara (barras, avisos de combate, viñeta, rueda, curva de los lanzamientos y silueta); la curva sale ahora en todos los lanzamientos apuntados. Documentos al día.**
+**6 de octubre:** barra de carga por etapas del ataque cargado (`UI_ChargeBar`), repeler / atraer y vuelo libre: hechos y probados. **Monje: kit base hecho y probado (8 de octubre). Barra de canalizar (`UI_CastBar`): hecha.** Queda la mascota con IA en red. **13 de octubre: Explorador (Ranger), kit base hecho; sigue el Maestro de bestias con su Lobo (la mascota con IA en red). Documentos al día (diseño de clases, arquitectura del GAS y de red, guía y glosario).** **14 de octubre: Maestro de bestias (los tres compañeros) y la UI del jugador pasada al prefab de la cámara (barras, avisos de combate, viñeta, rueda, curva de los lanzamientos y silueta); la curva sale ahora en todos los lanzamientos apuntados. Documentos al día.** **15 de octubre: probado todo lo de la UI (las 6 etapas) y lo viejo pendiente; variables claras con su unidad en los 1 247 campos del Inspector; la Ira primal (la definitiva del Maestro de bestias), falta probarla; 50 de experiencia por eliminar a un jugador. Documentos al día.**
 
 1. **Clases nuevas — DECIDIDO (28 de septiembre): Clérigo + Guerrero completos**, en ese
    orden. Detalle y estimación en la sección 6.
@@ -1666,39 +1695,42 @@ de esta noche es lo que la gente diga y lo que se vea en la grabación.
 
 ## Qué observar durante las partidas
 
+**Cerrado por Gustavo el 15 de octubre:** todo lo de esta lista quedó visto y decidido, igual que el
+mapa del Cementerio (recorrido, rutas con bots, NavMesh, techo) y el arte (lo lleva el artista).
+
 Son las perillas y dudas que quedaron abiertas y que solo se contestan jugando:
 
 - [x] **Subida a 6 s (30 de septiembre, `MercObjective.DeliverSeconds`).** **La entrega de 3 s**: ¿los rivales llegan a cortarla? ¿3 s es poco o mucho?
       ¿Una herida o un veneno encima reiniciándola se siente justo o frustrante? De
       paso: salir de la zona a mitad vuelve la barra a 0, y en un cliente la barra
       avanza suave, no a saltos.
-- [ ] **El mapa**: con la entrega de 3 s, ¿se sigue sintiendo chico? Si sí, la regla
+- [x] **El mapa**: con la entrega de 3 s, ¿se sigue sintiendo chico? Si sí, la regla
       siguiente es que cargar la bolsa bloquee el Shift (sección 7).
-- [ ] **La definitiva por rol**: ¿llega a tiempo para usarla en la partida? ¿Qué rol la
+- [x] **La definitiva por rol**: ¿llega a tiempo para usarla en la partida? ¿Qué rol la
       carga demasiado rápido o demasiado lento?
-- [ ] **La retroalimentación del combate**: la X, la calavera y el círculo de daño
+- [x] **La retroalimentación del combate**: la X, la calavera y el círculo de daño
       (`DamageRingRadius` 190). ¿Se entienden? ¿El círculo molesta?
-- [ ] **El Asesino invisible** (`GhostAlpha` 0.35): ¿el que lo usa entiende que es
+- [x] **El Asesino invisible** (`GhostAlpha` 0.35): ¿el que lo usa entiende que es
       invisible?
-- [ ] **Apuntar al objetivo** (Blink, Enemigo jurado, Intercepción): ¿demasiado exacto
+- [x] **Apuntar al objetivo** (Blink, Enemigo jurado, Intercepción): ¿demasiado exacto
       contra alguien que se mueve?
-- [ ] **Botiquines**: ¿se usan? ¿están donde pasa la gente?
-- [ ] **La red con 9**: animaciones de los demás (ataques, lanzamientos, torso), lag,
+- [x] **Botiquines**: ¿se usan? ¿están donde pasa la gente?
+- [x] **La red con 9**: animaciones de los demás (ataques, lanzamientos, torso), lag,
       desconexiones, y los FPS del host.
-- [ ] **Blink** (nuevo, sin probar): al aparecer en la espalda, la cámara gira hacia el
+- [x] **Blink** (nuevo, sin probar): al aparecer en la espalda, la cámara gira hacia el
       enemigo y le puedes seguir pegando. ¿Marea o se siente bien?
-- [ ] **Tótems del Chamán** (nuevo, sin probar): ahora tienen collider y barra de vida
+- [x] **Tótems del Chamán** (nuevo, sin probar): ahora tienen collider y barra de vida
       (roja para los rivales, verde para los aliados) y se pueden romper. Romper uno da
       15 de experiencia al equipo. Los de la definitiva son indestructibles
       (inmunidad real: su barra se queda llena). El equipo del tótem viaja por la red.
-- [ ] **La retroalimentación nueva con 9** (sección 8, probada solo de a pocos):
+- [x] **La retroalimentación nueva con 9** (sección 8, probada solo de a pocos):
       ¿los números de daño se leen o ensucian la pelea grande? ¿El registro de bajas
       tapa algo? ¿La viñeta roja molesta? ¿La pantalla de muerte dice lo que hace falta?
       ¿Alguien no entendió algún aviso por estar en inglés?
-- [ ] **El Chamán y la velocidad de ataque**: los bonos ahora se multiplican y el tope es
+- [x] **El Chamán y la velocidad de ataque**: los bonos ahora se multiplican y el tope es
       0.3 s. ¿El Chamán con Enfurecer + Tigre se siente bien, o quedó lento? ¿El
       Berserker sigue rápido? (ver sección 3, velocidad de ataque)
-- [ ] **Balance**: qué clase o subclase dominó, cuál no eligió nadie, qué se sintió
+- [x] **Balance**: qué clase o subclase dominó, cuál no eligió nadie, qué se sintió
       injusto.
 
 ## Después
@@ -1969,7 +2001,7 @@ Portador de la bolsa (×0.75) con `GE_Slow` (×0.3): antes ×0.05, ahora ×0.225
 
 - [x] Probar: el Chamán con Enfurecer + Tigre ya no ataca al tope, el Berserker sigue
       sintiéndose rápido con 0.3 s, y un portador ralentizado todavía se mueve.
-- [ ] Decidir los valores del Tigre: tu 0.9 / 0.8 era para frenar la suma. Multiplicando,
+- [x] Decidir los valores del Tigre: tu 0.9 / 0.8 era para frenar la suma. Multiplicando,
       el potenciado deja al Chamán en 0.48 s; si se siente lento, volver al 0.8 / 0.5
       original (0.3 s, justo el tope).
 
@@ -2775,7 +2807,7 @@ ver la retícula justo cuando más la estás mirando. `HitMarkLength` alarga las
       del golpeado se lee (que vaya poniéndose más sólida a medida que baja).
 - [x] Probar la calavera matando a un bot, y que NO salga al matar un monstruo.
 - [x] Probar el arco con un bot pegándote de frente y por la espalda.
-- [ ] Mirar si el círculo (`DamageRingRadius`, 190) queda donde molesta o donde se ve.
+- [x] Mirar si el círculo (`DamageRingRadius`, 190) queda donde molesta o donde se ve.
       Es la perilla que más se va a querer tocar.
 
 ### El robo de vida se quedaba pegado al cambiar de clase — ARREGLADO Y PROBADO ✅
@@ -2951,13 +2983,13 @@ El bosquejo que te gustó, para después:
 - Se arma **un sector de 120° y se rota 3 veces**, como la decoración.
 
 Lo que cuesta o hay que cuidar:
-- [ ] NavMesh con niveles: NavMesh Links para bordes y saltos; los bots ya batallaban
+- [x] NavMesh con niveles: NavMesh Links para bordes y saltos; los bots ya batallaban
       saltando
-- [ ] Subir `MercArenaBounds.CeilingHeight` (20 m): el salto del Bárbaro sube ~11.5 m, y
+- [x] Subir `MercArenaBounds.CeilingHeight` (20 m): el salto del Bárbaro sube ~11.5 m, y
       desde una torre de +8 m llega a ~19.5 m
-- [ ] Túneles anchos: la cámara en tercera persona sufre en lo estrecho
-- [ ] Mover bases, campamentos, botiquines y plataformas de entrega
-- [ ] Greybox con cubos y probar con bots ANTES de decorar
+- [x] Túneles anchos: la cámara en tercera persona sufre en lo estrecho
+- [x] Mover bases, campamentos, botiquines y plataformas de entrega
+- [x] Greybox con cubos y probar con bots ANTES de decorar
 - Estimación: 1–2 semanas de editor. Compite con Clérigo + Guerrero (sección 6).
 
 ## El Cementerio de los Tres Panteones — el mapa para la demo (bosquejo del 24 de sept.)
@@ -3018,9 +3050,9 @@ campanas sonando cuando aparece el Objetivo (cuando haya sonido).
       las paredes de afuera (el salto del Bárbaro las pasaba)
 - [x] Spawns, campamentos (jefe en la capilla, magos arriba de cada torre, fantasmas en
       el campo de tumbas y en la explanada), botiquines y `ObjectiveSpawnPoint` en la cripta
-- [ ] **Abrir la escena en el editor, darle Play y recorrerla** (ver abajo qué mirar)
-- [ ] Probar con bots cuánto tardan en volver por cada ruta, y jugarlo, ANTES de decorar
-- [ ] Decoración al final: nichos, cruces, velas, pétalos
+- [x] **Abrir la escena en el editor, darle Play y recorrerla** (ver abajo qué mirar)
+- [x] Probar con bots cuánto tardan en volver por cada ruta, y jugarlo, ANTES de decorar
+- [x] Decoración al final: nichos, cruces, velas, pétalos
 
 ### Lo que quedó armado (29 de septiembre)
 

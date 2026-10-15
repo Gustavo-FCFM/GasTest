@@ -10976,7 +10976,7 @@ MonoBehaviour:
   - 100
   - 150
   XpPerNpcKill: 15
-  XpPerPlayerTakedown: 40
+  XpPerPlayerTakedown: 50
   MinutesToGuaranteedMaxLevel: 10
   PassiveXpPerSecondOverride: 0
   ClassChangeOnlyInSafeRoom: 1

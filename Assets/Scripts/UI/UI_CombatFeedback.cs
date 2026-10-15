@@ -51,7 +51,7 @@ public class UI_CombatFeedback : MonoBehaviour
     [Tooltip("Opacidad MÍNIMA de la X (0 a 1). Sin esto, pegarle a alguien con la vida llena " +
              "no se vería casi nada y parecería que el golpe no entró.")]
     [Range(0f, 1f)]
-    [Label("X: opacidad mínima")]
+    [Label("X: opacidad mínima (0 a 1)")]
     public float HitMinAlpha = 0.25f;
 
     [Label("X: color")]
@@ -64,7 +64,7 @@ public class UI_CombatFeedback : MonoBehaviour
     [Tooltip("Opacidad mínima de la X de crítico (0 a 1): un crítico siempre se tiene que " +
              "notar, aunque el golpeado tenga la vida llena.")]
     [Range(0f, 1f)]
-    [Label("X: opacidad mínima de crítico")]
+    [Label("X: opacidad mínima de crítico (0 a 1)")]
     public float HitCriticalMinAlpha = 0.85f;
 
     [Header("Calavera de baja")]
@@ -86,7 +86,7 @@ public class UI_CombatFeedback : MonoBehaviour
 
     [Tooltip("Cuántos grados a cada lado de por donde vino el golpe se encienden. Los del borde " +
              "se encienden menos.")]
-    [Label("Daño recibido: grados a cada lado")]
+    [Label("Daño recibido: grados a cada lado (°)")]
     public float DamageArcHalfWidth = 38f;
 
     [Tooltip("Segundos que tarda en apagarse el arco.")]

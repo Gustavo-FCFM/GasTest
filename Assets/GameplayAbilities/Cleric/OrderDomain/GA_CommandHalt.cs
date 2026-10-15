@@ -24,7 +24,7 @@ public class GA_CommandHalt : TargetImpactAbility
 {
     [Section(AbilitySection.Targeting)]
     [Tooltip("Alcance máximo para buscar al enemigo a marcar. 10 m = alcance medio.")]
-    [Label("Alcance máximo")]
+    [Label("Alcance máximo (m)")]
     public float MaxRange = 10f;
 
     [Tooltip("Ángulo máximo (grados) entre la mira y el enemigo para que cuente como objetivo.")]

@@ -29,7 +29,7 @@ public class GA_ChanneledCone : GameplayAbility, IChanneledAbility
 {
     [Section(AbilitySection.Shape)]
     [Tooltip("Alcance del cono, en metros, desde el punto de salida.")]
-    [Label("Alcance")]
+    [Label("Alcance (m)")]
     public float Range = 6f;
 
     [Range(0f, 360f)]
@@ -44,7 +44,7 @@ public class GA_ChanneledCone : GameplayAbility, IChanneledAbility
 
     [Tooltip("Desde dónde sale el cono, en espacio local del dueño (X = derecha, Y = arriba, " +
              "Z = adelante). Un aliento sale de la boca: (0, 1.5, 0).")]
-    [Label("Punto de salida")]
+    [Label("Punto de salida (m)")]
     public Vector3 OriginOffset = new Vector3(0f, 1.5f, 0f);
 
     [Section(AbilitySection.Timing)]
@@ -88,14 +88,14 @@ public class GA_ChanneledCone : GameplayAbility, IChanneledAbility
     [Tooltip("Distancia entre los centros de dos zonas vecinas, en metros. En fila, el doble del radio " +
              "de la zona = se tocan. Rellenando el cono, ~1.7 veces el radio no deja huecos; más " +
              "grande = menos zonas.")]
-    [Label("Separación de zonas")]
+    [Label("Separación de zonas (m)")]
     public float ZoneSpacing = 5f;
 
     [ShowIf(nameof(TickZone))]
     [ShowIf(nameof(ZoneLayout), GA_ContinuousAoE.EZoneLayout.Row)]
     [Tooltip("Hasta qué distancia del lanzador puede caer la fila. Mirando más lejos, cae a esta " +
              "distancia en esa dirección.")]
-    [Label("Alcance de las zonas")]
+    [Label("Alcance de las zonas (m)")]
     public float ZoneMaxRange = 6f;
 
     [Section(AbilitySection.Animation)]

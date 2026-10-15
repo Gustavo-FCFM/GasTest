@@ -531,8 +531,8 @@ Cada equipo tiene **una bolsa**. Entra experiencia de tres fuentes:
 | Fuente | Cuánto |
 |---|---|
 | Pasiva (todo el tiempo, para todos) | se calcula sola: lo justo para llegar a nivel 3 en el minuto 10 |
-| Matar un NPC | 15 |
-| Derribar a un jugador | 40 |
+| Matar un NPC | lo que diga su prefab (`ExperienceReward`): fantasma 10, mago 40, jefe 175; en 0, el general (15) |
+| Derribar a un jugador | 50 (desde el 15 de octubre; antes 40) |
 
 Cuando la bolsa cruza un umbral (100 para el nivel 2, 250 acumulados para el 3), el
 servidor le sube el nivel **a los tres jugadores** con
@@ -577,7 +577,7 @@ que es la pregunta de diseño de verdad.
 | `MaxTeamLevel` | 3 | Tiene que coincidir con el `MaxLevel` del ASC del jugador. |
 | `XpPerLevel` | 100, 150 | Experiencia de 1→2 y de 2→3. |
 | `XpPerNpcKill` | 15 | |
-| `XpPerPlayerTakedown` | 40 | Vale más que un NPC a propósito. |
+| `XpPerPlayerTakedown` | 50 | Vale más que un NPC a propósito (40 hasta el 15 de octubre). |
 | `MinutesToGuaranteedMaxLevel` | 10 | La red de seguridad: sin pelear, nivel 3 en el minuto 10. |
 | `PassiveXpPerSecondOverride` | 0 (auto) | Solo si querés fijar la pasiva a mano. |
 | `ClassChangeOnlyInSafeRoom` | sí | Apagalo y se puede cambiar de clase en cualquier lado. |
@@ -597,7 +597,7 @@ Todo lo tocable del modo, con lo que vale hoy y en qué archivo vive.
 | Qué | Dónde | Hoy |
 |---|---|---|
 | Cuánta experiencia cuesta cada nivel | `MercenariesGameMode` → `XpPerLevel` | 100 (1→2), 150 (2→3) |
-| Cuánto da un NPC / un jugador | `MercenariesGameMode` → `XpPerNpcKill`, `XpPerPlayerTakedown` | 15 / 40 |
+| Cuánto da un NPC / un jugador | `MercenariesGameMode` → `XpPerNpcKill`, `XpPerPlayerTakedown` | 15 / 50 |
 | La red de seguridad (pasiva) | `MercenariesGameMode` → `MinutesToGuaranteedMaxLevel` | 10 min |
 | Nivel máximo | `MercenariesGameMode` → `MaxTeamLevel` **y** el `MaxLevel` del `AbilitySystemComponent` del prefab `Player` | 3 en los dos |
 | **Qué gana el personaje al subir** | El asset de cada clase → `StatGrowthPerLevel` | Bárbaro: **+70 vida máx** y **+1 ataque** por nivel |
@@ -630,7 +630,7 @@ O sea, en la escena del modo:
 
 **Recomendación:** dejá `Experience Reward` en **0** en el fantasma común, así todos los
 normales se ajustan desde un solo lugar (`XpPerNpcKill`), y ponele número solo a los que
-valen distinto — magos 75, jefes 250.
+valen distinto — hoy magos 40 y el jefe 175 (el fantasma, 10).
 
 Ojo con la última fila de la tabla de arriba: el modo decide *cuándo* subís de nivel, pero
 *qué te da* subir es de la clase. Si el nivel 3 se siente flojo, se toca ahí (`Assets/Attributes/…/Class_X.asset`),
@@ -688,13 +688,13 @@ no se tiraba. Convertía lo seleccionado en el Project, o todos si no selecciona
 
 | Sale como | Vida / Ataque | Cómo pelea | Experiencia |
 |---|---|---|---|
-| `Net_Enemy` (fantasma) | 5 / 5 | melee, alcance 2, cada 1,6 s | la general (15) |
-| `Net_Mage` · `Net_IceMage` · `Net_RockMage` | 3 / 15 | **a distancia**, alcance 10, cada 1,5 s, con `GA_Fireball` / `GA_Iceball` / `GA_Rock` | 75 |
-| `Net_Boss` · `Net_IceBoss` · `Net_DamageBoss` | 10 / 10 | alcance 20 / 5, cada 10 s, con sus AoE y combos | 250 |
+| `Net_Enemy` (fantasma) | 5 / 5 | melee, alcance 2, cada 1,6 s | hoy 10 (al convertirlo, la general) |
+| `Net_Mage` · `Net_IceMage` · `Net_RockMage` | 3 / 15 | **a distancia**, alcance 10, cada 1,5 s, con `GA_Fireball` / `GA_Iceball` / `GA_Rock` | hoy 40 (al convertirlo, 75) |
+| `Net_Boss` · `Net_IceBoss` · `Net_DamageBoss` | 10 / 10 | alcance 20 / 5, cada 10 s, con sus AoE y combos | hoy 175 (al convertirlo, 250) |
 
 La recompensa por matarlos ahora vive en `MercEnemyAI.ExperienceReward`: en 0 usa el valor
-general del modo, y con un número puesto manda ese. Es lo que permite que un jefe valga 250
-y un fantasma 15 sin tocar nada más.
+general del modo, y con un número puesto manda ese. Es lo que permite que un jefe valga 175
+y un fantasma 10 sin tocar nada más.
 
 **Los que pelean de lejos se comportan distinto**, y eso lo configura solo el conversor
 cuando ve que el enemigo tiene una habilidad asignada:

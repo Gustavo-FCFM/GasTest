@@ -54,22 +54,22 @@ public class WallMovementProfile : ScriptableObject
     [Section("Engancharse")]
     [Tooltip("Qué tan vertical tiene que ser la superficie. 0.3 acepta hasta unos 17° de inclinación; " +
              "más alto acepta paredes más inclinadas.")]
-    [Label("Verticalidad mínima")]
+    [Label("Verticalidad mínima (0 a 0.7)")]
     [Range(0f, 0.7f)] public float MaxNormalY = 0.3f;
 
     [Tooltip("Cuánto tiene que empujar el WASD contra la pared para engancharse. 0 = con cualquier " +
              "roce; 1 = solo yendo derecho contra ella.")]
-    [Label("Empuje mínimo contra la pared")]
+    [Label("Empuje mínimo contra la pared (0 a 1)")]
     [Range(0f, 1f)] public float MinInputIntoWall = 0.3f;
 
     [Tooltip("No se engancha si el piso está más cerca que esto (metros). Así saltar al lado de una " +
              "pared no lo pega por accidente.")]
-    [Label("Altura mínima sobre el piso")]
+    [Label("Altura mínima sobre el piso (m)")]
     public float MinHeightAboveGround = 0.8f;
 
     [Tooltip("Hasta qué distancia de la cápsula busca la pared mientras está enganchado (metros). " +
              "Si deja de encontrarla —se acabó la pared—, se suelta.")]
-    [Label("Distancia de agarre")]
+    [Label("Distancia de agarre (m)")]
     public float StickDistance = 0.3f;
 
     [Section("Pegarse")]
@@ -96,7 +96,7 @@ public class WallMovementProfile : ScriptableObject
 
     [ShowIf(nameof(Mode), EWallMode.Run)]
     [Tooltip("Qué tan rápido va bajando (m/s por segundo). Bajo = baja de a poco.")]
-    [Label("Gravedad al bajar")]
+    [Label("Gravedad al bajar (m/s²)")]
     public float SlideGravity = 2f;
 
     [ShowIf(nameof(Mode), EWallMode.Run)]
@@ -107,16 +107,16 @@ public class WallMovementProfile : ScriptableObject
     [ShowIf(nameof(Mode), EWallMode.Run)]
     [Tooltip("Qué parte de la velocidad de SUBIDA conserva al engancharse: si llega saltando, sigue " +
              "subiendo un poco antes de empezar a bajar. 0 = se frena en seco.")]
-    [Label("Conserva la subida")]
+    [Label("Conserva la subida (0 a 1)")]
     [Range(0f, 1f)] public float KeepUpwardSpeed = 0.5f;
 
     [Section("Saltar de la pared")]
     [Tooltip("Velocidad hacia AFUERA de la pared al saltar (m/s).")]
-    [Label("Velocidad hacia afuera")]
+    [Label("Velocidad hacia afuera (m/s)")]
     public float JumpOffSpeed = 7f;
 
     [Tooltip("Velocidad hacia ARRIBA al saltar (m/s). El salto normal del piso es 8.")]
-    [Label("Velocidad hacia arriba")]
+    [Label("Velocidad hacia arriba (m/s)")]
     public float JumpOffUp = 7f;
 
     [Tooltip("Cuánto se puede desviar el salto hacia donde mira la cámara, en grados a cada lado " +
@@ -131,7 +131,7 @@ public class WallMovementProfile : ScriptableObject
     public float JumpOffLockTime = 0.25f;
 
     [Tooltip("Qué tan rápido se disipa el impulso del salto. Más alto = vuela menos lejos.")]
-    [Label("Disipación del impulso")]
+    [Label("Disipación del impulso (más = vuela menos)")]
     [Range(0.5f, 10f)] public float JumpOffDamping = 1.5f;
 
     [Tooltip("Después de SALTAR de una pared se puede volver a engancharse a esa MISMA pared (ir y " +

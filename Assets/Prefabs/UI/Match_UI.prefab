@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 2732751856859056201}
   - component: {fileID: 9124179050837189594}
   - component: {fileID: 8710161301961598747}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -86,7 +86,7 @@ GameObject:
   - component: {fileID: 4935188339686727401}
   - component: {fileID: 108581592328311480}
   - component: {fileID: 3012474423124966464}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: HealthFill
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -161,7 +161,7 @@ GameObject:
   - component: {fileID: 580685993490261469}
   - component: {fileID: 3995282124343090005}
   - component: {fileID: 7357117025700699431}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Segment1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -236,7 +236,7 @@ GameObject:
   - component: {fileID: 12385912186165264}
   - component: {fileID: 1551259640176700321}
   - component: {fileID: 2299817646524960707}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Segment1Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -312,7 +312,7 @@ GameObject:
   - component: {fileID: 5059086370952919943}
   - component: {fileID: 3436493860769540371}
   - component: {fileID: 7980398675511896844}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Name
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -388,7 +388,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -464,7 +464,7 @@ GameObject:
   - component: {fileID: 8983545267578693205}
   - component: {fileID: 8420843736592251684}
   - component: {fileID: 8005439726572684156}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Level
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -527,7 +527,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 3875536895
   m_fontColor: {r: 1, g: 1, b: 1, a: 0.9}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -540,7 +540,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -616,7 +616,7 @@ GameObject:
   - component: {fileID: 2764934067022872980}
   - component: {fileID: 358614796876771595}
   - component: {fileID: 2715532708660587868}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Text
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -765,7 +765,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4055649579725733241}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: NumberTemplate
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -803,7 +803,7 @@ GameObject:
   - component: {fileID: 5277258101742880670}
   - component: {fileID: 2261070433838971517}
   - component: {fileID: 6394949020843508734}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Segment0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -879,7 +879,7 @@ GameObject:
   - component: {fileID: 6385379560470529486}
   - component: {fileID: 8825448851380137163}
   - component: {fileID: 3039333206340832588}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Clock
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -955,7 +955,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -1030,7 +1030,7 @@ GameObject:
   - component: {fileID: 485704829689067464}
   - component: {fileID: 6918697195971788124}
   - component: {fileID: 629328268719523025}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: DeliveryBar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1104,7 +1104,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7106902563042475983}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Team1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1152,7 +1152,7 @@ GameObject:
   - component: {fileID: 5023740546766936036}
   - component: {fileID: 8086551768338575677}
   - component: {fileID: 5991733371388669558}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Countdown
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1228,7 +1228,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -1303,7 +1303,7 @@ GameObject:
   - component: {fileID: 1175961747687368851}
   - component: {fileID: 963176444858222437}
   - component: {fileID: 384170380488156709}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1376,7 +1376,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2156582694739245431}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Team3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1423,7 +1423,7 @@ GameObject:
   - component: {fileID: 602337032423007872}
   - component: {fileID: 9076569982688331929}
   - component: {fileID: 7701991206549951752}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Fill
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1497,7 +1497,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4743363110230581893}
   - component: {fileID: 2827501000435690195}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: DeathPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1550,7 +1550,7 @@ GameObject:
   - component: {fileID: 3786476433617524385}
   - component: {fileID: 1828604956007733272}
   - component: {fileID: 3721352899109352053}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Level
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1613,7 +1613,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 3875536895
   m_fontColor: {r: 1, g: 1, b: 1, a: 0.9}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -1626,7 +1626,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -1701,7 +1701,7 @@ GameObject:
   - component: {fileID: 7913481309370436628}
   - component: {fileID: 1307016390172929544}
   - component: {fileID: 2078798137735898887}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: XpBackground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1777,7 +1777,7 @@ GameObject:
   - component: {fileID: 4879033390149609838}
   - component: {fileID: 1275934288517185499}
   - component: {fileID: 5363375704517681587}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: MessageTemplate
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1926,7 +1926,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 104305179789778858}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: DeliveryMarker
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1966,7 +1966,7 @@ GameObject:
   - component: {fileID: 8615457616901294536}
   - component: {fileID: 2226610389349815175}
   - component: {fileID: 7750265550389601860}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Name
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2102,7 +2102,7 @@ GameObject:
   - component: {fileID: 557878105192401876}
   - component: {fileID: 4446678430145865947}
   - component: {fileID: 7759850699754019088}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Segment1Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2175,7 +2175,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1106401064404437900}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Panel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2217,7 +2217,7 @@ GameObject:
   - component: {fileID: 1281130184185495767}
   - component: {fileID: 3318830779308278406}
   - component: {fileID: 3190845173521689441}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: TeamColor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2293,7 +2293,7 @@ GameObject:
   - component: {fileID: 2584252077073109092}
   - component: {fileID: 1105689233662342751}
   - component: {fileID: 4584773046145504363}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Distance
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2445,7 +2445,7 @@ GameObject:
   - component: {fileID: 3000934485482812119}
   - component: {fileID: 4396409331332981990}
   - component: {fileID: 7153919225085407124}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: ObjectiveStatus
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2521,7 +2521,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -2596,7 +2596,7 @@ GameObject:
   - component: {fileID: 5260442143749428704}
   - component: {fileID: 7958966612243058921}
   - component: {fileID: 7709070599903761591}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Segment1Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2672,7 +2672,7 @@ GameObject:
   - component: {fileID: 7121767487158439714}
   - component: {fileID: 3259573548539064030}
   - component: {fileID: 1818326328478583411}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: ScreenFeedback
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2776,7 +2776,7 @@ GameObject:
   - component: {fileID: 319166153253891336}
   - component: {fileID: 1875886826329169053}
   - component: {fileID: 6455505114997725028}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Diamond
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2851,7 +2851,7 @@ GameObject:
   - component: {fileID: 2816819253762638287}
   - component: {fileID: 8697475917642691488}
   - component: {fileID: 918898831484072816}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: HealthBackground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2927,7 +2927,7 @@ GameObject:
   - component: {fileID: 5133279833996418190}
   - component: {fileID: 2919146100350795678}
   - component: {fileID: 6441538245548587881}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Hint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3063,7 +3063,7 @@ GameObject:
   - component: {fileID: 8827560883044841182}
   - component: {fileID: 1408578429483633976}
   - component: {fileID: 3138307511105266212}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Segment1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3139,7 +3139,7 @@ GameObject:
   - component: {fileID: 8755315259486477752}
   - component: {fileID: 631458445258378653}
   - component: {fileID: 3529936810116404009}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Killer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3215,7 +3215,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -3288,7 +3288,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5424732705493360062}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Match_UI
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3328,7 +3328,7 @@ GameObject:
   - component: {fileID: 1993724744203366501}
   - component: {fileID: 3337193919558458368}
   - component: {fileID: 835757144197716863}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3404,7 +3404,7 @@ GameObject:
   - component: {fileID: 232501920228634667}
   - component: {fileID: 5995872083537154879}
   - component: {fileID: 3070020469771082122}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Text
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3480,7 +3480,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -3554,7 +3554,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7156928762420425341}
   - component: {fileID: 9160060901175928765}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Spectator
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3617,7 +3617,7 @@ GameObject:
   - component: {fileID: 2791771867906931880}
   - component: {fileID: 8032751372014290527}
   - component: {fileID: 1582522983330422382}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: ObjectiveMarkers
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3729,7 +3729,7 @@ GameObject:
   - component: {fileID: 6910961388126888714}
   - component: {fileID: 6480931581566039891}
   - component: {fileID: 467970317405918576}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Segment0Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3804,7 +3804,7 @@ GameObject:
   - component: {fileID: 7610324436791734825}
   - component: {fileID: 8221787645502960370}
   - component: {fileID: 9157660733308935515}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Segment1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3878,7 +3878,7 @@ GameObject:
   m_Component:
   - component: {fileID: 571712355585373646}
   - component: {fileID: 4984655754583624385}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Toast
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3929,7 +3929,7 @@ GameObject:
   - component: {fileID: 7537776593288441829}
   - component: {fileID: 3619253369004563335}
   - component: {fileID: 5149452049282351447}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Distance
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4081,7 +4081,7 @@ GameObject:
   - component: {fileID: 5151058404351532765}
   - component: {fileID: 8386792813970497824}
   - component: {fileID: 4015691235999344379}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: KillFeed
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4185,7 +4185,7 @@ GameObject:
   - component: {fileID: 8835060322428473325}
   - component: {fileID: 1135995726777065934}
   - component: {fileID: 6478895657943074225}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Name
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4261,7 +4261,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -4336,7 +4336,7 @@ GameObject:
   - component: {fileID: 8141916392655497244}
   - component: {fileID: 3782800922963810112}
   - component: {fileID: 3065727931866944458}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Segment0Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4412,7 +4412,7 @@ GameObject:
   - component: {fileID: 8559776986071193109}
   - component: {fileID: 3391102577759970322}
   - component: {fileID: 5033383006966721405}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: DamageNumbers
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4524,7 +4524,7 @@ GameObject:
   - component: {fileID: 566822886778290253}
   - component: {fileID: 5986479940125641436}
   - component: {fileID: 5158763394293322350}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: XpBackground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4597,7 +4597,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6860902930471881381}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Team2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4642,7 +4642,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4363521809802603171}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Entries
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4680,7 +4680,7 @@ GameObject:
   - component: {fileID: 1796609624327815128}
   - component: {fileID: 5899984717209572429}
   - component: {fileID: 3437771799477171373}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Segment0Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4755,7 +4755,7 @@ GameObject:
   - component: {fileID: 5709860508252137385}
   - component: {fileID: 2050617856861168432}
   - component: {fileID: 2643268489867536060}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: XpBackground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4830,7 +4830,7 @@ GameObject:
   - component: {fileID: 4541846265303492737}
   - component: {fileID: 6527848988876534072}
   - component: {fileID: 4715250119659358924}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: HealthText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4964,7 +4964,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5238401006504802733}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Messages
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5003,7 +5003,7 @@ GameObject:
   - component: {fileID: 6823529939594778905}
   - component: {fileID: 8611338714079673980}
   - component: {fileID: 5465094037081301152}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Scoreboard
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5048,7 +5048,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
-  m_AdditionalShaderChannelsFlag: 0
+  m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
   m_SortingOrder: 50
@@ -5129,7 +5129,7 @@ GameObject:
   - component: {fileID: 2647709233922638794}
   - component: {fileID: 7241361883983679230}
   - component: {fileID: 3487182228503250263}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: XpFill
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5204,7 +5204,7 @@ GameObject:
   - component: {fileID: 4039131361545071515}
   - component: {fileID: 2391873191601780465}
   - component: {fileID: 7668038850396906000}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5279,7 +5279,7 @@ GameObject:
   - component: {fileID: 5998870231294220348}
   - component: {fileID: 5165650093462547542}
   - component: {fileID: 8644872734062478281}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Segment0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5354,7 +5354,7 @@ GameObject:
   - component: {fileID: 1388053467841788071}
   - component: {fileID: 1204361882798162953}
   - component: {fileID: 6063108996333049825}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Segment0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5429,7 +5429,7 @@ GameObject:
   - component: {fileID: 9187780660422015198}
   - component: {fileID: 6079594298768390759}
   - component: {fileID: 5694994196609323195}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: XpFill
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5504,7 +5504,7 @@ GameObject:
   - component: {fileID: 7662862991278525750}
   - component: {fileID: 2590623243642433655}
   - component: {fileID: 2127143358371697254}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5579,7 +5579,7 @@ GameObject:
   - component: {fileID: 7123031185447477302}
   - component: {fileID: 591171083196082733}
   - component: {fileID: 9057370184305360993}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: SpectatorCanvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5662,7 +5662,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2005046603467692089}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: ObjectiveMarker
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5700,7 +5700,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2411339256135179256}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: EntryTemplate
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5740,7 +5740,7 @@ GameObject:
   - component: {fileID: 8014890489755131718}
   - component: {fileID: 774642089524874715}
   - component: {fileID: 8489418986641285253}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Announcer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5845,7 +5845,7 @@ GameObject:
   - component: {fileID: 5653033543354049257}
   - component: {fileID: 3027573810119823401}
   - component: {fileID: 4122678933399303232}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: WatchedPlayer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5923,7 +5923,7 @@ GameObject:
   - component: {fileID: 8043127072199332418}
   - component: {fileID: 4295223080592910858}
   - component: {fileID: 7287129326433373607}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: TeamColor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5999,7 +5999,7 @@ GameObject:
   - component: {fileID: 7788192419150190074}
   - component: {fileID: 5189819191041083566}
   - component: {fileID: 8606143165545433870}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Name
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6075,7 +6075,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -6150,7 +6150,7 @@ GameObject:
   - component: {fileID: 4821621605372648766}
   - component: {fileID: 1950552087927671825}
   - component: {fileID: 1156478948357169259}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: DeliveryBar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6227,7 +6227,7 @@ GameObject:
   - component: {fileID: 7131545206699452869}
   - component: {fileID: 233431573314989398}
   - component: {fileID: 6242087959068944701}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Level
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6290,7 +6290,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 3875536895
   m_fontColor: {r: 1, g: 1, b: 1, a: 0.9}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -6303,7 +6303,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -6378,7 +6378,7 @@ GameObject:
   - component: {fileID: 5609857876652345626}
   - component: {fileID: 6306850552831923208}
   - component: {fileID: 4108341366955265559}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Diamond
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6454,7 +6454,7 @@ GameObject:
   - component: {fileID: 5160537953444636483}
   - component: {fileID: 7898757068183552661}
   - component: {fileID: 7518084461871201418}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Text
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6530,7 +6530,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -6605,7 +6605,7 @@ GameObject:
   - component: {fileID: 8642088427517631874}
   - component: {fileID: 2384887445979641323}
   - component: {fileID: 1685878228741517810}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: TeamColor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6680,7 +6680,7 @@ GameObject:
   - component: {fileID: 999343168805847097}
   - component: {fileID: 868322536528177992}
   - component: {fileID: 7678730235916595732}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Fill
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6755,7 +6755,7 @@ GameObject:
   - component: {fileID: 3188984086720486629}
   - component: {fileID: 1877927947916382741}
   - component: {fileID: 8742944394054776929}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: XpFill
   m_TagString: Untagged
   m_Icon: {fileID: 0}

@@ -42,7 +42,7 @@ public class GA_ChargedAttack : GameplayAbility, IHoldAbility
         [Tooltip("ZOOM de la cámara del que carga al llegar a esta etapa: su campo de visión " +
                  "multiplicado por esto (0.8 = se acerca un 20 %). 0 o 1 = sin zoom. El arco del " +
                  "Explorador se acerca un poco más en cada fase.")]
-        [Label("Zoom de cámara")]
+        [Label("Zoom de cámara (× visión; 1 = sin zoom)")]
         [Range(0f, 1f)] public float CameraZoom;
     }
 

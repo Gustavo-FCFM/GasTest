@@ -29,10 +29,10 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
     [Label("Prefab del proyectil")]
     public GameObject ProjectilePrefab;
     [Tooltip("Velocidad de salida del proyectil.")]
-    [Label("Velocidad")]
+    [Label("Velocidad (m/s)")]
     public float      LaunchForce  = 20f;
     [Tooltip("Punto de salida, en espacio local del dueño (X = derecha, Y = arriba, Z = adelante): la mano.")]
-    [Label("Punto de salida")]
+    [Label("Punto de salida (m)")]
     public Vector3    SpawnOffset  = new Vector3(0.5f, 1.5f, 1.0f);
     [Tooltip("Si el proyectil gira sobre sí mismo mientras vuela (solo estético).")]
     [Label("Girar en el aire")]
@@ -67,7 +67,7 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
              "torcido. Con esto se apunta a un punto del MISMO rayo pero a esta " +
              "distancia, así el tiro sale derecho y igual pasa por donde apuntaste. " +
              "Subirlo endereza más el tiro de cerca; bajarlo lo hace más literal.")]
-    [Label("Convergencia mínima")]
+    [Label("Convergencia mínima (m)")]
     public float MinConvergeDistance = 4f;
 
     [Section(AbilitySection.Timing)]

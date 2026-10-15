@@ -32,13 +32,13 @@ public class DeadAllyHighlighter : MonoBehaviour
     public Color NotReadyColor = new Color(1f, 0.25f, 0.2f);
 
     [Tooltip("Grosor del contorno, en metros.")]
-    [Label("Grosor del contorno")]
+    [Label("Grosor del contorno (m)")]
     public float Width = 0.025f;
 
     [Tooltip("Latido del color: cuántas veces por segundo, y cuánto se oscurece (0 = fijo).")]
     [Label("Latidos por segundo")]
     public float PulseSpeed = 3f;
-    [Label("Cuánto se oscurece")]
+    [Label("Cuánto se oscurece (0 a 1)")]
     [Range(0f, 1f)] public float PulseAmount = 0.35f;
 
     [Tooltip("Cada cuánto se buscan cuerpos nuevos y se recalcula verde/rojo.")]

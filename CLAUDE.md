@@ -228,7 +228,11 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   `CommitAbility`. Nada de campos sueltos `DamageEffect` / `AdditionalEffects` nuevos.
   Los campos nuevos de un GA (y de un GE, una clase, un ASDef, un perfil de pared o un componente) llevan
   **`[Label("...")]`** con su nombre en español: el Inspector se ve en español (desde el 13 de
-  octubre de 2026) y sin `[Label]` el campo sale en inglés. Un enum nuevo que se elige en el
+  octubre de 2026) y sin `[Label]` el campo sale en inglés. **El nombre dice la unidad** (desde
+  el 15 de octubre de 2026, etapa 6 de la revisión): `(m)`, `(s)`, `(m/s)`, `(°)`, `(px)`, `(×)` para
+  multiplicadores, `(0 a 1)` para fracciones (los de juego van así, nunca "%" si el valor es 0.3),
+  `(%)` solo si de verdad se escribe 30, `(vida)` / `(exp)` para puntos, y `(más = más rápido)`
+  en los suavizados sin unidad. Un 0 especial va en el nombre: `Alcance máximo (m; 0 = sin tope)`. Un enum nuevo que se elige en el
   Inspector lleva `[InspectorName("...")]` en cada valor. Los campos nuevos de un GA llevan **`[Section]`** (con las constantes de
   `AbilitySection`) y, si dependen de otro, **`[ShowIf]`**; si tiene forma, que
   sobreescriba `DrawGizmos` y `DrawSceneHandles` (manijas con `AbilityHandles`).
@@ -255,7 +259,8 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   marcador, avisos de partida, marcadores del Objetivo y el espectador). Los menús (inicio, Ajustes
   y la sala) están en el **prefab de menús `Prefabs/UI/Menus_UI`**: cada fila de Ajustes lleva un
   `UI_SettingRow` y cada lugar de la sala un `UI_LobbySlot`. Los canvas de los dos prefabs son de
-  1920×1080 y escalan con la pantalla. Un `Graphic` propio necesita `[RequireComponent(typeof(CanvasRenderer))]`:
+  1920×1080 y escalan con la pantalla. Están en la capa UI: si tapan la vista de escena, se apaga esa capa en el
+  desplegable Layers del editor (no cambia el juego). Un `Graphic` propio necesita `[RequireComponent(typeof(CanvasRenderer))]`:
   sin él no se dibuja y no avisa.
 
 Los detalles finos del GAS (pipeline de daño, acumulación de efectos, animaciones de

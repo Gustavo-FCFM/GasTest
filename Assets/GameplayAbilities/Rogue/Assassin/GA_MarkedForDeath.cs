@@ -26,10 +26,10 @@ public class GA_MarkedForDeath : TargetImpactAbility, IGroundTargetAbility
 {
     [Section(AbilitySection.Shape)]
     [Tooltip("Distancia máxima a la que se puede marcar la zona.")]
-    [Label("Alcance máximo")]
+    [Label("Alcance máximo (m)")]
     public float MaxRange = 15f;
     [Tooltip("Radio de la zona: a quiénes alcanza el daño.")]
-    [Label("Radio de la zona")]
+    [Label("Radio de la zona (m)")]
     public float ZoneRadius = 5f;
 
     // IGroundTargetAbility: mantener el botón muestra la "X" en el suelo siguiendo

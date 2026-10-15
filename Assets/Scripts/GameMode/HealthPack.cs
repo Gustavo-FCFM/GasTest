@@ -27,7 +27,7 @@ public class HealthPack : NetworkBehaviour
     [Header("Curación")]
     [Tooltip("Vida que devuelve. 75 es un tercio de un tanque y casi toda la de un pícaro: " +
              "suficiente para salvar una pelea, no tanto como para no volver nunca a la base.")]
-    [Label("Curación")]
+    [Label("Curación (vida)")]
     public float HealAmount = 75f;
 
     [Tooltip("Segundos hasta que vuelve a aparecer.")]
@@ -35,7 +35,7 @@ public class HealthPack : NetworkBehaviour
     public float RespawnSeconds = 20f;
 
     [Tooltip("Radio en el que se recoge. Se aplica al SphereCollider del objeto.")]
-    [Label("Radio de recogida")]
+    [Label("Radio de recogida (m)")]
     public float PickupRadius = 1.6f;
 
     [Tooltip("No lo levanta quien está a full: así no se desperdicia al pasar caminando.")]
@@ -48,7 +48,7 @@ public class HealthPack : NetworkBehaviour
     public GameObject CrossVisual;
 
     [Tooltip("Altura a la que flota la cruz sobre el piso.")]
-    [Label("Altura de la cruz")]
+    [Label("Altura de la cruz (m)")]
     public float CrossHeight = 1.1f;
 
     [Tooltip("Color de la cruz y del disco.")]

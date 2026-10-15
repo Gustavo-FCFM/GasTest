@@ -37,7 +37,7 @@ public class MercObjective : NetworkBehaviour
 
     [Header("Recolección")]
     [Tooltip("A qué distancia se levanta el Objetivo con solo acercarse.")]
-    [Label("Radio de recogida")]
+    [Label("Radio de recogida (m)")]
     public float PickupRadius = 2.2f;
 
     [Tooltip("Segundos que queda bloqueado tras caer al piso, antes de poder levantarse otra vez.")]
@@ -50,11 +50,11 @@ public class MercObjective : NetworkBehaviour
 
     [Header("Cómo lo carga el portador")]
     [Tooltip("Dónde se ve la bolsa respecto del portador (espacio local del personaje).")]
-    [Label("Posición al llevarlo")]
+    [Label("Posición al llevarlo (m)")]
     public Vector3 CarryOffset = new Vector3(0f, 2.1f, -0.35f);
 
     [Tooltip("Cuánta velocidad de movimiento pierde el que lo lleva. 0.25 = un 25% más lento.")]
-    [Label("Ralentización al llevarlo")]
+    [Label("Ralentización al llevarlo (0 a 1)")]
     [Range(0f, 0.9f)] public float CarrySlowPercent = 0.25f;
 
     [Tooltip("Opcional: efecto propio para el portador. Si lo dejás vacío se arma uno en código " +
@@ -70,22 +70,22 @@ public class MercObjective : NetworkBehaviour
 
     [Header("Presentación")]
     [Tooltip("Altura del flotado cuando está en el piso.")]
-    [Label("Altura del flotado")]
+    [Label("Altura del flotado (m)")]
     public float BobHeight = 0.25f;
-    [Label("Velocidad del flotado")]
+    [Label("Rapidez del flotado (más = más rápido)")]
     public float BobSpeed  = 2f;
     [Label("Giro (°/s)")]
     public float SpinSpeed = 45f;
 
     [Header("Columna de luz mientras se entrega")]
     [Tooltip("Alto de la columna. Alta a propósito: se tiene que ver desde todo el mapa.")]
-    [Label("Columna: alto")]
+    [Label("Columna: alto (m)")]
     public float BeaconHeight = 40f;
     [Tooltip("Radio de la columna.")]
-    [Label("Columna: radio")]
+    [Label("Columna: radio (m)")]
     public float BeaconRadius = 1.6f;
     [Tooltip("Opacidad con la entrega casi terminada (arranca más tenue y se va encendiendo).")]
-    [Label("Columna: opacidad")]
+    [Label("Columna: opacidad (0 a 1)")]
     [Range(0f, 1f)] public float BeaconAlpha = 0.4f;
 
     // =========================================================

@@ -25,7 +25,7 @@ public class VengeancePassive : MonoBehaviour
 
     [Tooltip("Fracción de la vida a la que se llega al máximo (0.5 = a la mitad).")]
     [Range(0.05f, 1f)]
-    [Label("Máximo con vida al")]
+    [Label("Máximo con vida al (0 a 1)")]
     public float FullAtHealthFraction = 0.5f;
 
     [Tooltip("Cada cuánto se revisa la vida.")]

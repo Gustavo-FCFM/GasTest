@@ -21,13 +21,16 @@ public class MercEnemyCatalog : ScriptableObject
     [System.Serializable]
     public struct Entry
     {
+        [Label("Tipo")]
         public EMercEnemyType Type;
 
         [Tooltip("Prefab EN RED de ese enemigo (los que crea 'Mercenarios ▸ 7 · Convertir enemigos').")]
+        [Label("Prefab")]
         public GameObject Prefab;
     }
 
     [Tooltip("Un renglón por tipo de enemigo. Los tipos que no estén acá simplemente no aparecen.")]
+    [Label("Enemigos")]
     public List<Entry> Enemies = new List<Entry>();
 
     private static MercEnemyCatalog _instance;

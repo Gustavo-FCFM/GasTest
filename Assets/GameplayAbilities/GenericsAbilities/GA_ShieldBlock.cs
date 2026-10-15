@@ -43,7 +43,7 @@ public class GA_ShieldBlock : GameplayAbility, IHoldAbility
     [Section("Energía")]
     [Tooltip("Energía mínima necesaria para poder levantar el escudo. Con 0 se puede levantar " +
              "mientras quede cualquier resto (pero se cae al primer golpe).")]
-    [Label("Energía mínima")]
+    [Label("Energía mínima para levantarlo")]
     public float MinEnergyToActivate = 5f;
 
     [Tooltip("Energía que se consume por segundo con solo sostener el escudo, además de la que " +

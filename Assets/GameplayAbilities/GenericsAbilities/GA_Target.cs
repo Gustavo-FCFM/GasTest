@@ -46,7 +46,7 @@ public class GA_Target : TargetImpactAbility
     public ETargetSide Targets = ETargetSide.Allies;
 
     [Tooltip("Alcance máximo para buscar al objetivo.")]
-    [Label("Alcance máximo")]
+    [Label("Alcance máximo (m)")]
     public float MaxRange = 12f;
 
     [Tooltip("Ángulo máximo (grados) entre la mira y el aliado para que cuente como objetivo. " +

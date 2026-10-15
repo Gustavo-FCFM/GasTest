@@ -27,12 +27,12 @@ public class MercArenaBounds : MonoBehaviour
     [Header("Forma")]
     [Tooltip("Radio del anillo invisible. Ponelo un poco MÁS que el muro visible para que " +
              "nadie quede trabado entre las dos paredes.")]
-    [Label("Radio del anillo")]
+    [Label("Radio del anillo (m)")]
     public float Radius = 43f;
 
     [Tooltip("Altura del techo invisible. Alto a propósito: tiene que frenar al que salta o " +
              "vuela, no molestar a nadie que juegue normal.")]
-    [Label("Altura del techo")]
+    [Label("Altura del techo (m)")]
     public float CeilingHeight = 20f;
 
     [Tooltip("En cuántos bloques se divide el anillo. Más bloques = curva más fina.")]
@@ -55,7 +55,7 @@ public class MercArenaBounds : MonoBehaviour
 
     [Tooltip("Cuánto se pasa el techo del radio del anillo. Sirve para que también tape las " +
              "salas de los equipos si las pusiste afuera de la arena.")]
-    [Label("Margen del techo")]
+    [Label("Margen del techo (m)")]
     public float CeilingMargin = 18f;
 
     [Header("Capa")]
@@ -64,7 +64,7 @@ public class MercArenaBounds : MonoBehaviour
              "la capa — pero dejan de contar en los raycasts que filtran por capa.\n\n" +
              "Si quedan en Default, la oclusión de las barras de vida los trata como una pared " +
              "y esconde a TODOS los enemigos apenas la cámara mira desde arriba del techo.")]
-    [Label("Capa de los límites")]
+    [Label("Capa de los límites (número de capa)")]
     public int BoundsLayer = 2;
 
     [Header("Cuándo")]

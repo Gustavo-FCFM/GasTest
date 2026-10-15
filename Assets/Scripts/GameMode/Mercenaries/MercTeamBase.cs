@@ -39,7 +39,7 @@ public class MercTeamBase : MonoBehaviour
     public Transform SafeRoomCenter;
 
     [Tooltip("Tamaño de la caja de la sala segura, en metros.")]
-    [Label("Tamaño de la sala segura")]
+    [Label("Tamaño de la sala segura (m)")]
     public Vector3 SafeRoomSize = new Vector3(14f, 6f, 14f);
 
     [Tooltip("Capa donde viven los personajes. En este proyecto es 'Character' (7).")]
@@ -52,7 +52,7 @@ public class MercTeamBase : MonoBehaviour
     public Transform DeliveryPoint;
 
     [Tooltip("Radio de entrega en metros: con acercarse a esta distancia alcanza.")]
-    [Label("Radio de entrega")]
+    [Label("Radio de entrega (m)")]
     public float DeliveryRadius = 4f;
 
     [Header("Aparición de jugadores")]
@@ -76,7 +76,7 @@ public class MercTeamBase : MonoBehaviour
     public bool EjectObjectiveCarrier = true;
 
     [Tooltip("Cuántos metros afuera del borde queda el intruso al ser expulsado.")]
-    [Label("Margen de expulsión")]
+    [Label("Margen de expulsión (m)")]
     public float EjectMargin = 1.5f;
 
     // Buffer reutilizado por el OverlapBox: evita una alocación por chequeo.

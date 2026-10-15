@@ -20,14 +20,14 @@ public class GA_ElementalFury : GameplayAbility
     [Label("Prefabs de tótem")]
     public GameObject[] TotemPrefabs;
     [Tooltip("Distancia del centro a cada esquina donde aparecen los tótems.")]
-    [Label("Distancia a las esquinas")]
+    [Label("Distancia a las esquinas (m)")]
     public float SquareRadius = 4f;
 
     [Section(AbilitySection.Shape)]
     [Tooltip("Radio del tornado: a quiénes alcanza cada tick. El VFX del tornado es una entrada " +
              "'En el impacto' (con 'Calzar con el área' mide lo mismo; con 'Lo sigue' sigue al " +
              "dueño si el tornado lo sigue).")]
-    [Label("Radio de daño")]
+    [Label("Radio de daño (m)")]
     public float DamageRadius = 5f;
     [Tooltip("El tornado sigue al dueño. Apagado = queda fijo donde se activó.")]
     [Label("Sigue al dueño")]

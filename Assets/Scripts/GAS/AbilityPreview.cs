@@ -43,7 +43,7 @@ public class AbilityPreview : MonoBehaviour
     [Label("Anillos de distancia")]
     public bool DrawDistanceRings = true;
     [Tooltip("Separación entre anillos, en metros.")]
-    [Label("Separación de anillos")]
+    [Label("Separación de anillos (m)")]
     public float RingSpacing = 1f;
     [Tooltip("Cuántos anillos dibujar.")]
     [Label("Cantidad de anillos")]

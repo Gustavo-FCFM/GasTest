@@ -27,17 +27,17 @@ public class GA_FinalBlow : GameplayAbility, IChanneledAbility
 
     [Section(AbilitySection.Shape)]
     [Tooltip("Qué tan lejos del dueño está el centro de la caja de golpe.")]
-    [Label("Distancia de la caja")]
+    [Label("Distancia de la caja (m)")]
     public float   HitboxOffsetZ     = 1.5f;
 
     [Tooltip("A qué ALTURA queda el centro de la caja, respecto del pivote del dueño — que está " +
              "a los PIES.\n\nEn 0 la caja nace a ras del suelo y la mitad de su alto queda " +
              "enterrada, así que el golpe apenas llega a la cintura del que tenés enfrente. " +
              "Subilo a la altura del pecho (1.2-1.5) para que conecte donde se lo ve.")]
-    [Label("Altura de la caja")]
+    [Label("Altura de la caja (m)")]
     public float   HitboxOffsetY     = 0f;
     [Tooltip("Mitad del tamaño de la caja de golpe en cada eje (X ancho, Y alto, Z largo).")]
-    [Label("Mitad de la caja")]
+    [Label("Mitad de la caja (m)")]
     public Vector3 HitboxHalfExtents = new Vector3(1f, 1f, 1f);
 
     [Section(AbilitySection.Animation)]

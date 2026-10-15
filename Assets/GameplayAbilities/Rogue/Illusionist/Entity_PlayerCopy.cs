@@ -55,7 +55,7 @@ public class Entity_PlayerCopy : NetworkBehaviour
 
     [Header("Movimiento")]
     [Tooltip("A qué distancia (horizontal) del objetivo se considera que llegó y se queda idle.")]
-    [Label("Distancia de llegada")]
+    [Label("Distancia de llegada (m)")]
     public float StopDistance = 0.4f;
     [Tooltip("Nombre del parámetro float del Animator que controla la mezcla caminar/idle.")]
     [Label("Parámetro de velocidad")]
@@ -64,7 +64,7 @@ public class Entity_PlayerCopy : NetworkBehaviour
     [Label("Capas que frenan")]
     public LayerMask WallLayer;
     [Tooltip("Radio del chequeo de pared al caminar.")]
-    [Label("Radio de chequeo de pared")]
+    [Label("Radio de chequeo de pared (m)")]
     public float WallCheckRadius = 0.4f;
 
     // Índice de clase del jugador COPIADO, sincronizado a todos los peers. Cada peer

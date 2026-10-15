@@ -17,18 +17,18 @@ public class GA_LeapAttack : GameplayAbility, ILeapAbility
 {
     [Section(AbilitySection.Movement)]
     [Tooltip("Impulso vertical inicial del salto.")]
-    [Label("Impulso hacia arriba")]
+    [Label("Impulso hacia arriba (m/s)")]
     public float JumpVelocity = 15f;
     [Tooltip("Impulso hacia adelante (hacia donde mira la cámara del dueño). NEGATIVO = hacia " +
              "atrás (la Retirada del Explorador).")]
-    [Label("Impulso hacia adelante")]
+    [Label("Impulso hacia adelante (m/s)")]
     public float ForwardForce = 5f;
 
     [Section(AbilitySection.Shape)]
     [Tooltip("Radio del golpe al aterrizar, en metros. A los alcanzados les aplica la lista de " +
              "efectos; el VFX del aterrizaje es una entrada 'En el impacto' (con 'Calzar con el " +
              "área' mide lo mismo que este radio).")]
-    [Label("Radio del golpe")]
+    [Label("Radio del golpe (m)")]
     public float AbilityRadius = 3f;
 
     [Tooltip("El golpe sale al DESPEGAR, en el lugar de donde salta, y no al aterrizar (la " +

@@ -32,7 +32,7 @@ public class MercGate : MonoBehaviour
 
     [Tooltip("Cuánto sube la reja al abrirse. Tiene que ser suficiente para que el hueco " +
              "quede libre de verdad.")]
-    [Label("Altura al abrirse")]
+    [Label("Altura al abrirse (m)")]
     public float OpenHeight = 5f;
 
     [Tooltip("Cuánto tarda en subir o bajar, en segundos.")]
@@ -103,13 +103,13 @@ public class MercGate : MonoBehaviour
     // =========================================================
 
     [Header("Barrotes generados (opcional)")]
-    [Label("Ancho de la reja")]
+    [Label("Ancho de la reja (m)")]
     public float BarsWidth  = 5.5f;
-    [Label("Alto de la reja")]
+    [Label("Alto de la reja (m)")]
     public float BarsHeight = 4.5f;
     [Label("Cantidad de barrotes")]
     [Range(3, 15)] public int BarCount = 7;
-    [Label("Grosor de los barrotes")]
+    [Label("Grosor de los barrotes (m)")]
     public float BarThickness = 0.18f;
 
     [ContextMenu("Generar reja de barrotes")]

@@ -72,10 +72,10 @@ public class UI_WorldHealthbar : MonoBehaviour
     [Label("Mostrar ícono de clase")]
     public bool ShowClassIcon = true;
     [Tooltip("Lado del ícono, en unidades del canvas del nameplate (la barra mide 100 × 10).")]
-    [Label("Tamaño del ícono de clase")]
+    [Label("Tamaño del ícono de clase (px)")]
     public float ClassIconSize = 26f;
     [Tooltip("Corrimiento del ícono desde el borde DERECHO de la barra (a la izquierda están los buffs).")]
-    [Label("Posición del ícono de clase")]
+    [Label("Posición del ícono de clase (px)")]
     public Vector2 ClassIconOffset = new Vector2(4f, 0f);
 
     private AbilitySystemComponent        _asc;

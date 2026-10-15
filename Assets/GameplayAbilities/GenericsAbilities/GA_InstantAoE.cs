@@ -34,7 +34,7 @@ public class GA_InstantAoE : GameplayAbility, IGroundTargetAbility
 {
     [Section(AbilitySection.Shape)]
     [Tooltip("Radio del área, en metros.")]
-    [Label("Radio")]
+    [Label("Radio (m)")]
     public float Radius = 4f;
 
     [Tooltip("AtOwner: el área estalla sobre el dueño. AtReticle: se apunta con el marcador " +
@@ -44,7 +44,7 @@ public class GA_InstantAoE : GameplayAbility, IGroundTargetAbility
 
     [ShowIf(nameof(DeployMode), GA_ContinuousAoE.EAoEDeploy.AtReticle)]
     [Tooltip("Alcance máximo al que se puede lanzar la zona.")]
-    [Label("Alcance máximo")]
+    [Label("Alcance máximo (m)")]
     public float MaxRange = 15f;
 
     // IGroundTargetAbility: valores del marcador del suelo (solo se muestra si

@@ -60,11 +60,14 @@ public class AbilityVisualDrawer : PropertyDrawer
             case "Attach":                   return AttachLabel(when);
             case "DestroyTime":              return "Dura (s)";
             case "MatchAreaSize":            return "Calzar con el área";
-            case "AreaSizeMultiplier":       return "Multiplicador del área";
+            case "AreaSizeMultiplier":       return "Multiplicador del área (×)";
             case "EndWithTag":               return "Termina sin el tag";
             case "EndWhenAttributeDepleted": return "Termina sin atributo";
             case "DepletedAttribute":        return "Atributo";
-            case "RotationOffset":           return "Rotación";
+            case "RotationOffset":           return "Rotación (°)";
+            case "Delay":                    return "Espera (s)";
+            case "Offset":                   return "Posición (m)";
+            case "Scale":                    return "Escala (×)";
             default:                         return ObjectNames.NicifyVariableName(field);
         }
     }

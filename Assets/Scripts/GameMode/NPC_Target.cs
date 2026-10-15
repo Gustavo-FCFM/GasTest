@@ -27,7 +27,7 @@ public class NPC_Target : MonoBehaviour
 
     [Header("Recompensa")]
     // Experiencia que le da al jugador al morir este NPC.
-    [Label("Experiencia que da")]
+    [Label("Experiencia que da (exp)")]
     public float ExperienceReward = 150f;
 
     // Cachea el ASC y el collider principal si no fue asignado a mano.

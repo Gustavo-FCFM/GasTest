@@ -39,11 +39,11 @@ public class FloatingVisual : MonoBehaviour
 
     [Header("Subir y bajar")]
     [Tooltip("Cuánto sube y baja respecto de su posición original, en metros.")]
-    [Label("Altura del flotado")]
+    [Label("Altura del flotado (m)")]
     public float BobHeight = 0.22f;
 
     [Tooltip("Ciclos por segundo. 0.6 = una subida y bajada completa cada segundo y medio.")]
-    [Label("Velocidad del flotado")]
+    [Label("Flotado (veces por s)")]
     public float BobSpeed = 0.6f;
 
     [Tooltip("Cada copia arranca en un momento distinto del ciclo. Dejalo prendido: es lo " +
@@ -59,7 +59,7 @@ public class FloatingVisual : MonoBehaviour
 
     [Tooltip("Velocidad del bamboleo. A propósito NO es la misma que la de subir y bajar: " +
              "si las dos coincidieran, el movimiento se repetiría de forma obvia.")]
-    [Label("Velocidad del bamboleo")]
+    [Label("Bamboleo (veces por s)")]
     public float SwaySpeed = 0.37f;
 
     [Header("Inclinarse al avanzar")]
@@ -69,11 +69,11 @@ public class FloatingVisual : MonoBehaviour
     public float LeanAngle = 8f;
 
     [Tooltip("A qué velocidad de movimiento llega a la inclinación máxima (m/s).")]
-    [Label("Velocidad de inclinación máxima")]
+    [Label("Velocidad de inclinación máxima (m/s)")]
     public float LeanReferenceSpeed = 3.5f;
 
     [Tooltip("Qué tan rápido acompaña los cambios de velocidad. Bajo = más perezoso.")]
-    [Label("Suavizado de la inclinación")]
+    [Label("Rapidez de la inclinación (más = más rápida)")]
     public float LeanSmoothing = 4f;
 
     // Posición y rotación de partida: todo se calcula COMO OFFSET de esto, así podés

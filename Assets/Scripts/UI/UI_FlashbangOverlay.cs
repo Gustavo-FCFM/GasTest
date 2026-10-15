@@ -31,7 +31,7 @@ public class UI_FlashbangOverlay : MonoBehaviour
     public float FadeDuration = 2f;
     [Range(0f, 1f)]
     [Tooltip("Opacidad máxima del flash (1 = blanco total en el instante del golpe).")]
-    [Label("Opacidad máxima")]
+    [Label("Opacidad máxima (0 a 1)")]
     public float MaxAlpha = 1f;
     [Tooltip("Curva del desvanecimiento (X = progreso 0..1 del fade, Y = intensidad). Por defecto lineal descendente.")]
     [Label("Curva del desvanecimiento")]

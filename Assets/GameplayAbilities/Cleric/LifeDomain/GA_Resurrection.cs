@@ -24,7 +24,7 @@ public class GA_Resurrection : TargetImpactAbility
 {
     [Section(AbilitySection.Targeting)]
     [Tooltip("Distancia máxima desde el Clérigo hasta el cuerpo.")]
-    [Label("Alcance máximo")]
+    [Label("Alcance máximo (m)")]
     public float MaxRange = 8f;
 
     [Tooltip("Ángulo máximo (grados) entre la mira y el cuerpo. Un cuerpo en el piso queda " +
@@ -35,7 +35,7 @@ public class GA_Resurrection : TargetImpactAbility
     [Section("Resurrección")]
     [Tooltip("Con cuánta vida vuelve, como fracción de su vida máxima. 0.5 = la mitad.")]
     [Range(0.05f, 1f)]
-    [Label("Vida al volver (fracción)")]
+    [Label("Vida al volver (0 a 1)")]
     public float HealthFraction = 0.5f;
 
     // =========================================================

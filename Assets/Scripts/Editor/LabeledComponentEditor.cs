@@ -94,3 +94,10 @@ public class LabeledComponentEditor : Editor
         return labels;
     }
 }
+
+// Los assets de configuración que no tienen inspector propio usan el mismo (un CustomEditor por
+// tipo: Unity no deja repetir el atributo en una clase).
+[CustomEditor(typeof(AudioLibrary))]            public class AudioLibraryEditor            : LabeledComponentEditor { }
+[CustomEditor(typeof(MercEnemyCatalog))]        public class MercEnemyCatalogEditor        : LabeledComponentEditor { }
+[CustomEditor(typeof(GameplayAbilityRegistry))] public class GameplayAbilityRegistryEditor : LabeledComponentEditor { }
+[CustomEditor(typeof(GameplayEffectRegistry))]  public class GameplayEffectRegistryEditor  : LabeledComponentEditor { }

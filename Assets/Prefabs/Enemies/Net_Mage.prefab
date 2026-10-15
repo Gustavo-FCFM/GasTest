@@ -427,6 +427,7 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 1177414633948404015}
   _networkObjectCache: {fileID: 1177414633948404015}
   ExperiencePerKill: 0
+  HealNumberBatchSeconds: 0.35
 --- !u!114 &2379363721211620052
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -490,6 +491,9 @@ MonoBehaviour:
   ObstacleLayer:
     serializedVersion: 2
     m_Bits: 1
+  ShowClassIcon: 1
+  ClassIconSize: 26
+  ClassIconOffset: {x: 4, y: 0}
 --- !u!1 &2405534297340935160
 GameObject:
   m_ObjectHideFlags: 0
@@ -591,7 +595,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6973597008634053179}
-  m_LocalRotation: {x: -0.5, y: -0.5, z: 0.5, w: -0.5}
+  m_LocalRotation: {x: 0, y: 0, z: -0.7071068, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: -0.0063848374}
   m_LocalScale: {x: 0.0002, y: 0.00019999995, z: 0.0004412798}
   m_ConstrainProportionsScale: 0
@@ -599,7 +603,7 @@ RectTransform:
   - {fileID: 7729210923100413624}
   - {fileID: 8327141498723117224}
   m_Father: {fileID: 4059266281740560249}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -90}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0.025, y: 0.000096321106}

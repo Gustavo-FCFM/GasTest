@@ -28,10 +28,10 @@ public class UI_UltimateSlot : MonoBehaviour
 
     [Header("Lista para usar")]
     [Tooltip("Cuánto crece el ícono al latir con la definitiva cargada. 0.08 = un 8 %.")]
-    [Label("Latido: tamaño")]
+    [Label("Latido: cuánto crece (0 a 1)")]
     public float ReadyPulseScale = 0.08f;
     [Tooltip("Latidos por segundo con la definitiva cargada.")]
-    [Label("Latido: velocidad")]
+    [Label("Latido: veces por s")]
     public float ReadyPulseSpeed = 1.5f;
     [Label("Color del aviso de lista")]
     public Color ReadyToastColor = new Color(1f, 0.82f, 0.25f, 1f);

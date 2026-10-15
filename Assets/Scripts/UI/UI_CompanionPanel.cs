@@ -115,6 +115,7 @@ public class UI_CompanionPanel : MonoBehaviour
     private void Refresh()
     {
         int active = _manager.ActiveIndex;
+        bool fury  = _manager.FuryActive;   // Ira primal: los tres están afuera
         Entity_Companion companion = _manager.FindCompanionHere();
         float x = 0f;
 
@@ -133,7 +134,7 @@ public class UI_CompanionPanel : MonoBehaviour
             if (s.Frame != null) s.Frame.color = isActive ? ActiveFrameColor : OtherFrameColor;
             if (s.Dim != null)
             {
-                s.Dim.enabled = wait > 0f || !isActive;
+                s.Dim.enabled = !fury && (wait > 0f || !isActive);
                 s.Dim.color   = wait > 0f ? RespawnDimColor : IdleDimColor;
             }
             if (s.RespawnTimer != null) s.RespawnTimer.text = wait > 0f ? Mathf.CeilToInt(wait).ToString() : "";

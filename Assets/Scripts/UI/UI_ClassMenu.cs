@@ -63,21 +63,21 @@ public class UI_ClassMenu : MonoBehaviour
     [Label("Dos filas desde")]
     public int TwoRowsFrom = 5;
     [Tooltip("Tamaño MÁXIMO de cada tarjeta, en unidades del canvas. Si no entran en el panel, se achican solas.")]
-    [Label("Tamaño máximo de tarjeta")]
+    [Label("Tamaño máximo de tarjeta (px)")]
     public Vector2 MaxCardSize = new Vector2(230f, 170f);
     [Tooltip("Espacio entre tarjetas (horizontal, vertical).")]
-    [Label("Separación de tarjetas")]
+    [Label("Separación de tarjetas (px)")]
     public Vector2 CardSpacing = new Vector2(20f, 16f);
     [Tooltip("Lado del ícono de clase en cada tarjeta.")]
-    [Label("Tamaño del ícono")]
+    [Label("Tamaño del ícono (px)")]
     public float CardIconSize = 56f;
     [Tooltip("Tamaño del nombre de la clase (se achica si no entra en un renglón).")]
-    [Label("Tamaño del nombre")]
+    [Label("Tamaño de letra del nombre")]
     public float CardTitleSize = 16f;
     [Tooltip("Tamaño de la descripción. Si no entra en la tarjeta, se achica sola hasta el mínimo.")]
-    [Label("Tamaño de la descripción")]
+    [Label("Tamaño de letra de la descripción")]
     public float CardDescriptionSize = 10f;
-    [Label("Tamaño mínimo de la descripción")]
+    [Label("Tamaño de letra mínimo de la descripción")]
     public float CardDescriptionMinSize = 6f;
 
     // La grilla donde van las tarjetas (ver EnsureGrid).

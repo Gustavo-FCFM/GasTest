@@ -25,6 +25,8 @@ using UnityEditor;
 [CustomPropertyDrawer(typeof(MercEnemySpawner.SpawnRule))]
 [CustomPropertyDrawer(typeof(PaladinAuraPassive.AuraRing))]
 [CustomPropertyDrawer(typeof(CompanionManager.CompanionOption))]
+[CustomPropertyDrawer(typeof(SfxCue))]
+[CustomPropertyDrawer(typeof(MercEnemyCatalog.Entry))]
 public class LabeledFieldsDrawer : PropertyDrawer
 {
     private const float Spacing = 2f;

@@ -64,13 +64,13 @@ public class MercEnemyAI : NetworkBehaviour
 
         [Tooltip("Alcance propio. En 0 usa el Attack Range del enemigo. Sirve para el golpe " +
                  "de área que solo tiene sentido cuando lo tenés encima.")]
-        [Label("Alcance (0 = el de ataque)")]
+        [Label("Alcance (m; 0 = el de ataque)")]
         public float Range = 0f;
 
         [Tooltip("Usarla solo cuando al enemigo le quede ESTA fracción de vida o menos " +
                  "(0.5 = de la mitad para abajo). En 1 se puede usar siempre. Es la forma " +
                  "barata de que un jefe tenga 'segunda fase'.")]
-        [Label("Usar bajo (vida)")]
+        [Label("Usar con vida bajo (0 a 1)")]
         [Range(0.05f, 1f)] public float UseBelowHealthPercent = 1f;
 
         [Tooltip("Esperar este tanto desde que aparece antes de usarla por primera vez.")]
@@ -81,11 +81,11 @@ public class MercEnemyAI : NetworkBehaviour
     [Header("Percepción")]
     [Tooltip("A qué distancia detecta a un jugador. Corto a propósito: no queremos que " +
              "todo el mapa se le venga encima al que pasa corriendo.")]
-    [Label("Radio de detección")]
+    [Label("Radio de detección (m)")]
     public float DetectionRadius = 9f;
 
     [Tooltip("Cuánto se puede alejar de su puesto persiguiendo. Pasado eso, vuelve.")]
-    [Label("Radio de persecución")]
+    [Label("Radio de persecución (m)")]
     public float LeashRadius = 18f;
 
     [Tooltip("Cada cuánto vuelve a buscar objetivo (segundos). No hace falta cada frame.")]
@@ -98,7 +98,7 @@ public class MercEnemyAI : NetworkBehaviour
 
     [Header("Combate")]
     [Tooltip("Desde qué distancia puede atacar. Un fantasma a melee: 2. Un mago: 10.")]
-    [Label("Alcance de ataque")]
+    [Label("Alcance de ataque (m)")]
     public float AttackRange = 2.2f;
 
     [Label("Entre ataques (s)")]
@@ -106,13 +106,13 @@ public class MercEnemyAI : NetworkBehaviour
 
     [Tooltip("Distancia que trata de MANTENER con su objetivo. En 0 se le tira encima (melee); " +
              "con un valor, retrocede si lo tiene más cerca que eso (magos y jefes a distancia).")]
-    [Label("Distancia a mantener")]
+    [Label("Distancia a mantener (m)")]
     public float KeepDistance = 0f;
 
     [Tooltip("Qué tan rápido gira para encarar. Importa más de lo que parece en los enemigos a " +
              "distancia: el proyectil sale hacia ADELANTE, así que si todavía no terminó de girar, " +
              "el tiro se va a cualquier lado.")]
-    [Label("Velocidad de giro")]
+    [Label("Rapidez de giro (más = más rápido)")]
     public float TurnSpeed = 10f;
 
     [Tooltip("Cuánto puede estar desalineado y aun así disparar, en grados. Hasta que no encara, " +
@@ -131,7 +131,7 @@ public class MercEnemyAI : NetworkBehaviour
     public LayerMask SightBlockers = ~(1 << 7);
 
     [Tooltip("Altura de los 'ojos' desde donde se traza la línea de tiro.")]
-    [Label("Altura de los ojos")]
+    [Label("Altura de los ojos (m)")]
     public float EyeHeight = 1.4f;
 
     [Tooltip("Efecto de daño que aplica al golpear. Podés reusar el GE_EnemyDamage de la jam.")]
@@ -139,7 +139,7 @@ public class MercEnemyAI : NetworkBehaviour
     public GameplayEffect DamageEffect;
 
     [Tooltip("Daño plano si no asignaste un GameplayEffect arriba.")]
-    [Label("Daño sin efecto")]
+    [Label("Daño sin efecto (vida)")]
     public float FallbackDamage = 8f;
 
     [Tooltip("Opcional: en vez de pegar a melee, activa esta habilidad (enemigos a distancia). " +
@@ -161,7 +161,7 @@ public class MercEnemyAI : NetworkBehaviour
     [Tooltip("Experiencia que le da a la bolsa del equipo que lo mate. En 0 usa el valor general " +
              "del modo de juego (XpPerNpcKill). Se pone un número acá cuando este enemigo vale " +
              "más que el resto — un jefe no puede dar lo mismo que un fantasma.")]
-    [Label("Experiencia que da")]
+    [Label("Experiencia que da (exp; 0 = la del modo)")]
     public float ExperienceReward = 0f;
 
     [Header("Muerte")]

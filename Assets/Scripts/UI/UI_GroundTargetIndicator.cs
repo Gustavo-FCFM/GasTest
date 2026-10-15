@@ -51,7 +51,7 @@ public class UI_GroundTargetIndicator : MonoBehaviour
     [Label("Color del borde")]
     public Color LineColor = new Color(1f, 0.85f, 0.3f, 0.95f);
     [Tooltip("Grosor del borde, en metros.")]
-    [Label("Grosor del borde")]
+    [Label("Grosor del borde (m)")]
     public float LineThickness = 0.1f;
 
     [Header("Franja (Corte final)")]
@@ -59,7 +59,7 @@ public class UI_GroundTargetIndicator : MonoBehaviour
     [Label("Color del contorno")]
     public Color TargetOutlineColor = new Color(1f, 0.35f, 0.25f, 1f);
     [Tooltip("Grosor del contorno, en metros.")]
-    [Label("Grosor del contorno")]
+    [Label("Grosor del contorno (m)")]
     public float TargetOutlineWidth = 0.03f;
     [Tooltip("Lo que CORTA la franja (las paredes, también las invisibles). Los personajes no la cortan.")]
     [Label("Capas que cortan la franja")]

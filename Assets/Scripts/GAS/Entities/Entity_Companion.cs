@@ -32,6 +32,11 @@ using UnityEngine.AI;
 //     para el picotazo y vuelve.
 //   · Si queda lejos del dueño o trabado, reaparece a su lado.
 //
+// IRA PRIMAL (la definitiva del Maestro de bestias, 15 de octubre de 2026): mientras el dueño
+// tiene Status_PrimalFury, el CompanionManager saca a los tres, ataca cada uno el doble de
+// rápido (Ira primal: entre ataques) y su presencia suma su versión extra (la misma otra vez:
+// la Presencia bestial vale doble).
+//
 // SU DAÑO ES DEL EXPLORADOR: sus efectos se aplican con el dueño como autor (escalan con
 // su ataque, la baja es suya y le carga la definitiva). El CompanionManager ignora esos
 // golpes al escuchar "el Explorador pegó", si no la mascota se daría órdenes sola.
@@ -45,7 +50,7 @@ public class Entity_Companion : NetworkBehaviour
 {
     [Header("Vida")]
     [Tooltip("Su vida máxima, como fracción de la del Explorador al aparecer (0.5 = la mitad).")]
-    [Label("Vida (fracción de la del dueño)")]
+    [Label("Vida (0 a 1 de la del dueño)")]
     public float HealthFraction = 0.5f;
 
     [Tooltip("No se le puede hacer daño (el Búho). Igual conviene que su prefab no tenga collider.")]
@@ -54,7 +59,7 @@ public class Entity_Companion : NetworkBehaviour
 
     [Header("Moverse")]
     [Tooltip("Metros por segundo caminando.")]
-    [Label("Velocidad")]
+    [Label("Velocidad (m/s)")]
     public float MoveSpeed = 6f;
 
     [Tooltip("Velocidad mientras va a cumplir una orden (el Explorador le pegó a alguien) o a defenderlo.")]
@@ -63,7 +68,7 @@ public class Entity_Companion : NetworkBehaviour
 
     [Tooltip("Dónde se queda junto al dueño cuando no pelea, en el espacio del dueño (X = derecha, " +
              "Y = arriba, Z = adelante). El Búho flota: su Y es la altura.")]
-    [Label("Lugar junto al dueño")]
+    [Label("Lugar junto al dueño (m)")]
     public Vector3 FollowOffset = new Vector3(1.5f, 0f, -2.5f);
 
     [Tooltip("Se pone DELANTE del dueño, entre él y el enemigo más cercano (el Oso).")]
@@ -168,7 +173,7 @@ public class Entity_Companion : NetworkBehaviour
     [Label("Efecto del aullido")]
     public GameplayEffect HowlEffect;
 
-    [Label("Radio del aullido")]
+    [Label("Radio del aullido (m)")]
     public float HowlRadius = 10f;
 
     [Tooltip("Cuánto tiempo después de morderlo cuenta su muerte para aullar.")]
@@ -181,8 +186,19 @@ public class Entity_Companion : NetworkBehaviour
     [Label("Efecto de presencia")]
     public GameplayEffect PresenceEffect;
 
-    [Label("Radio de presencia")]
+    [Label("Radio de presencia (m)")]
     public float PresenceRadius = 8f;
+
+    [Header("Ira primal (la definitiva)")]
+    [Tooltip("Durante la Ira primal, el tiempo entre ataques se multiplica por esto. 0.5 = ataca " +
+             "el doble de rápido.")]
+    [Label("Ira primal: entre ataques (×)")]
+    public float FuryAttackIntervalMultiplier = 0.5f;
+
+    [Tooltip("Durante la Ira primal, además de su presencia, los mismos aliados reciben este efecto " +
+             "(una copia oculta de la presencia: así vale doble). Vacío = la presencia no sube.")]
+    [Label("Ira primal: presencia extra")]
+    public GameplayEffect FuryPresenceEffect;
 
     [Header("Provocar (Oso)")]
     [Tooltip("Los fantasmas lo atacan a él si cerca no hay otro jugador que su dueño.")]
@@ -200,6 +216,11 @@ public class Entity_Companion : NetworkBehaviour
     // Quién es su dueño, para todas las pantallas (el HUD del dueño busca a su compañero).
     private readonly SyncVar<NetworkObject> _ownerNob = new SyncVar<NetworkObject>();
     public NetworkObject OwnerObject => _ownerNob.Value;
+
+    // Qué opción de la rueda es (0 = la primera), para todas las pantallas: con la Ira primal hay
+    // tres del mismo dueño y el HUD tiene que encontrar al elegido.
+    private readonly SyncVar<int> _optionIndex = new SyncVar<int>(-1);
+    public int OptionIndex => _optionIndex.Value;
 
     public AbilitySystemComponent OwnerASC { get; private set; }
     public AbilitySystemComponent ASC => _asc;
@@ -256,11 +277,13 @@ public class Entity_Companion : NetworkBehaviour
     }
 
     // Lo llama el CompanionManager en el servidor, justo después de spawnearlo. healthFraction:
-    // con cuánta vida sale (la que tenía guardada si se lo cambió herido; 1 = llena).
+    // con cuánta vida sale (la que tenía guardada si se lo cambió herido; 1 = llena). optionIndex:
+    // qué opción de la rueda es.
     [Server]
-    public void Initialize(AbilitySystemComponent owner, CompanionManager manager, float healthFraction = 1f)
+    public void Initialize(AbilitySystemComponent owner, CompanionManager manager, float healthFraction = 1f, int optionIndex = -1)
     {
         OwnerASC = owner;
+        _optionIndex.Value = optionIndex;
         _manager = manager;
         _ownerNob.Value = owner.GetComponent<NetworkObject>();
 
@@ -430,7 +453,7 @@ public class Entity_Companion : NetworkBehaviour
 
     private void Attack()
     {
-        _attackReadyAt = Time.time + AttackInterval;
+        _attackReadyAt = Time.time + AttackInterval * (OwnerInFury ? FuryAttackIntervalMultiplier : 1f);
 
         bool outOfRange = FlatDistance(OwnerASC.transform.position, _target.transform.position) > PassiveRange;
         AbilitySystemComponent victim = _target;
@@ -813,8 +836,17 @@ public class Entity_Companion : NetworkBehaviour
         GivePresenceAround(transform.position);
         GivePresenceAround(OwnerASC.transform.position);
         // El compañero también la lleva (el Búho no tiene collider: no sale en la búsqueda).
-        if (_seen.Add(_asc) && !_asc.HasTag(EGameplayTag.State_Dead)) _asc.ApplyGameplayEffect(PresenceEffect, OwnerASC);
+        if (_seen.Add(_asc) && !_asc.HasTag(EGameplayTag.State_Dead)) GivePresence(_asc);
     }
+
+    // La presencia, y con la Ira primal también la extra (vale doble).
+    private void GivePresence(AbilitySystemComponent ally)
+    {
+        ally.ApplyGameplayEffect(PresenceEffect, OwnerASC);
+        if (FuryPresenceEffect != null && OwnerInFury) ally.ApplyGameplayEffect(FuryPresenceEffect, OwnerASC);
+    }
+
+    private bool OwnerInFury => OwnerASC != null && OwnerASC.HasTag(EGameplayTag.Status_PrimalFury);
 
     private void GivePresenceAround(Vector3 center)
     {
@@ -824,7 +856,7 @@ public class Entity_Companion : NetworkBehaviour
             AbilitySystemComponent other = _hits[i] != null ? _hits[i].GetComponentInParent<AbilitySystemComponent>() : null;
             if (other == null || !_seen.Add(other)) continue;
             if (!OwnerASC.IsAllyOf(other, includeSelf: true) || other.HasTag(EGameplayTag.State_Dead)) continue;
-            other.ApplyGameplayEffect(PresenceEffect, OwnerASC);
+            GivePresence(other);
         }
     }
 

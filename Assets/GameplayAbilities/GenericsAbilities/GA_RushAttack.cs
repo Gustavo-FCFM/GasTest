@@ -51,7 +51,7 @@ public class GA_RushAttack : GameplayAbility, IChanneledAbility, IGroundTargetAb
 
     [Section(AbilitySection.Movement)]
     [Tooltip("Metros que recorre si nada la corta.")]
-    [Label("Distancia")]
+    [Label("Distancia (m)")]
     public float Distance = 14f;
 
     [Tooltip("Metros por segundo, constantes. Más bajo = más larga y más fácil de guiar.")]
@@ -60,7 +60,7 @@ public class GA_RushAttack : GameplayAbility, IChanneledAbility, IGroundTargetAb
 
     [Tooltip("Metros por segundo que la corren de costado izquierda/derecha mientras dura, SIN " +
              "girarla: sigue mirando y avanzando hacia el mismo lado. 0 = recta.")]
-    [Label("Velocidad de costado")]
+    [Label("Velocidad de costado (m/s)")]
     public float StrafeSpeed = 5f;
 
     [Tooltip("Sale con el ángulo vertical de la mira, como el dash: mirando arriba se eleva (para " +
@@ -87,7 +87,7 @@ public class GA_RushAttack : GameplayAbility, IChanneledAbility, IGroundTargetAb
 
     [Section(AbilitySection.Shape)]
     [Tooltip("Radio alrededor del dueño en el que un enemigo cuenta como alcanzado.")]
-    [Label("Radio de golpe")]
+    [Label("Radio de golpe (m)")]
     public float HitRadius = 1.2f;
 
     [Section(AbilitySection.Animation)]

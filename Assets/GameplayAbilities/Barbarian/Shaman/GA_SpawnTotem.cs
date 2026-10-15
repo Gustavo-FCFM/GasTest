@@ -59,7 +59,7 @@ public class GA_SpawnTotem : GameplayAbility, IRadialMenuAbility
 
     [Section(AbilitySection.Shape)]
     [Tooltip("Hasta dónde se puede poner el tótem desde el jugador.")]
-    [Label("Alcance máximo")]
+    [Label("Alcance máximo (m)")]
     public float MaxSpawnRange = 10f;
 
     // Implementación de IRadialMenuAbility (la rueda lee arrays: se arman de la lista).

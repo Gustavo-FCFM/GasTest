@@ -27,6 +27,7 @@ public class GameplayAbilityRegistry : ScriptableObject
     // Todas las habilidades registradas; su posición en la lista ES el índice
     // que viaja por red. No reordenar mientras el juego esté corriendo en red
     // (el índice tiene que significar lo mismo en todos los peers de un build).
+    [Label("Habilidades")]
     public List<GameplayAbility> Abilities = new List<GameplayAbility>();
 
     private static GameplayAbilityRegistry _instance;

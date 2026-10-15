@@ -21,7 +21,7 @@ public class GA_Flight : GA_SelfBuff
 {
     [Section("Vuelo")]
     [Tooltip("Velocidad hacia arriba del despegue. Se disipa sola en menos de un segundo.")]
-    [Label("Velocidad de despegue")]
+    [Label("Velocidad de despegue (m/s)")]
     public float LaunchSpeed = 12f;
 
     [Tooltip("Velocidad de vuelo = velocidad de movimiento × esto.")]
@@ -29,7 +29,7 @@ public class GA_Flight : GA_SelfBuff
     public float SpeedMultiplier = 1.5f;
 
     [Tooltip("Extra si SOLO va hacia adelante (sin moverse de lado): × esto encima de lo anterior.")]
-    [Label("Extra hacia adelante")]
+    [Label("Extra hacia adelante (×)")]
     public float ForwardBoost = 1.5f;
 
     [Tooltip("Metros por segundo al subir (Espacio) o bajar (Ctrl).")]

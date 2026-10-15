@@ -28,24 +28,24 @@ public class MercSafeRoomBarrier : MonoBehaviour
     [Header("Forma")]
     [Tooltip("Cuánto se agranda la pared respecto del área de la sala. Un poco más grande " +
              "para que nadie quede justo en el borde, medio adentro y medio afuera.")]
-    [Label("Margen")]
+    [Label("Margen (m)")]
     public float Padding = 0.5f;
 
     [Tooltip("Altura de la pared. Alta a propósito: tiene que frenar también al que entra " +
              "saltando, no solo al que camina.")]
-    [Label("Alto de la pared")]
+    [Label("Alto de la pared (m)")]
     public float Height = 14f;
 
     [Tooltip("Grosor de cada pared. Gruesa para que un dash rápido no la atraviese en un " +
              "solo frame.")]
-    [Label("Grosor")]
+    [Label("Grosor (m)")]
     public float Thickness = 1.2f;
 
     [Header("Capa")]
     [Tooltip("Capa de las paredes. Por defecto 'Ignore Raycast' (2), igual que los límites " +
              "de la arena: siguen frenando —eso lo decide la matriz de colisiones— pero no " +
              "ensucian los raycasts de puntería ni la oclusión de las barras de vida.")]
-    [Label("Capa de las paredes")]
+    [Label("Capa de las paredes (número de capa)")]
     public int BarrierLayer = 2;
 
     [Header("Ritmo")]
@@ -56,7 +56,7 @@ public class MercSafeRoomBarrier : MonoBehaviour
 
     [Tooltip("Hasta dónde busca personajes a los que darles permiso. Con el tamaño de la " +
              "sala más un margen alcanza.")]
-    [Label("Radio de revisión")]
+    [Label("Radio de revisión (m)")]
     public float RefreshRadius = 40f;
 
     public int TeamID => _base != null ? _base.TeamID : 0;

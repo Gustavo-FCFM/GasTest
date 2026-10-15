@@ -90,7 +90,7 @@ public class GC_Projectile : NetworkBehaviour
 
     [Range(-0.1f, 0.1f)]
     [Tooltip("Opacidad de las copias fantasma. El rango es chico a proposito: es el del paquete.")]
-    [Label("Blur: opacidad")]
+    [Label("Blur: opacidad (0 a 1)")]
     public float SpinBlurAlpha = 0f;
 
     [Tooltip("Por debajo de esta velocidad angular no se dibuja nada. Es lo que hace que el " +

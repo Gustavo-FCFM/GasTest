@@ -40,10 +40,10 @@ public class GA_Dash : GameplayAbility
 {
     [Section(AbilitySection.Movement)]
     [Tooltip("Distancia objetivo del dash (se recorta si hay una pared antes).")]
-    [Label("Distancia")]
+    [Label("Distancia (m)")]
     public float DashDistance = 8f;
     [Tooltip("Velocidad del impulso. El frenado/inercia lo da la atenuación de PlayerController.")]
-    [Label("Velocidad")]
+    [Label("Velocidad (m/s)")]
     public float DashSpeed = 30f;
     [Tooltip("Esquiva direccional (estilo shooter): el dash va hacia donde APUNTA el " +
              "movimiento (WASD/stick) y el cuerpo NO gira — sigue mirando a la mira, así " +
@@ -59,7 +59,7 @@ public class GA_Dash : GameplayAbility
              "costados y hacia atrás siempre quedan horizontales (no elevan).")]
     [Range(0f, 1f)]
     [ShowIf(nameof(DirectionalDodge))]
-    [Label("Umbral hacia adelante")]
+    [Label("Umbral hacia adelante (−1 a 1)")]
     public float ForwardDashElevationDot = 0.5f;
 
     [Tooltip("Qué fracción de la velocidad del dash se CONSERVA cuando termina el impulso, en vez " +
@@ -67,13 +67,13 @@ public class GA_Dash : GameplayAbility
              "todavía corriendo y se va disipando. Se conserva también la parte VERTICAL, así que " +
              "un dash hacia arriba sigue subiendo un poco antes de caer en lugar de desplomarse.")]
     [Range(0f, 1f)]
-    [Label("Inercia al terminar")]
+    [Label("Inercia al terminar (0 a 1)")]
     public float ExitSpeedPercent = 0.35f;
 
     [Tooltip("Qué tan rápido se disipa esa inercia, en 1/segundos. Más alto = se va antes " +
              "(3 deja alrededor de un 5% al segundo y medio). Mientras dura, el jugador conserva " +
              "el control normal: puede girar, frenar y saltar.")]
-    [Label("Disipación de la inercia")]
+    [Label("Disipación de la inercia (más = frena antes)")]
     public float ExitDamping = 3f;
 
     [Tooltip("Capas que FRENAN el dash (paredes/entorno). Se usa para recortar la distancia.")]
@@ -96,7 +96,7 @@ public class GA_Dash : GameplayAbility
 
     [Section(AbilitySection.Shape)]
     [Tooltip("Radio del barrido de daño a lo largo del recorrido.")]
-    [Label("Radio de golpe")]
+    [Label("Radio de golpe (m)")]
     public float HitRadius = 1.2f;
 
     [Section("Reinicio por muerte")]

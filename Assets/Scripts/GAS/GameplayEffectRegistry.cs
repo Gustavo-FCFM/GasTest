@@ -22,6 +22,7 @@ public class GameplayEffectRegistry : ScriptableObject
     // Todos los efectos registrados; su posición en la lista ES el índice
     // que viaja por red. No reordenar mientras el juego esté corriendo en
     // red (el índice tiene que significar lo mismo en todos los peers).
+    [Label("Efectos")]
     public List<GameplayEffect> Effects = new List<GameplayEffect>();
 
     private static GameplayEffectRegistry _instance;

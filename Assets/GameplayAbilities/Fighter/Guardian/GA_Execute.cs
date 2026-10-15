@@ -15,7 +15,7 @@ public class GA_Execute : GA_ConeAttack
     [Section("Al ejecutar")]
     [Tooltip("Fracción de la vida MÁXIMA del ejecutado que se cura el Guardián (0.2 = 20 %).")]
     [Range(0f, 1f)]
-    [Label("Curación (fracción de su vida máx.)")]
+    [Label("Curación (0 a 1 de su vida máx.)")]
     public float HealFractionOfVictimMaxHealth = 0.2f;
 
     [Tooltip("Si matar reinicia el tiempo de reutilización.")]

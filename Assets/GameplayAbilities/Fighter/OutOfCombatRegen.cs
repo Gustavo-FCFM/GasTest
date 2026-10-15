@@ -39,11 +39,11 @@ public class OutOfCombatRegen : MonoBehaviour
     public ERegenMode Mode = ERegenMode.PercentOfMissing;
 
     [Tooltip("PercentOfMissing / PercentOfMax: fracción (0.05 = 5 %). Flat: puntos de vida.")]
-    [Label("Cantidad")]
+    [Label("Cantidad (0 a 1, o vida si es fija)")]
     public float Amount = 0.05f;
 
     [Tooltip("Curación mínima por tick, para que casi lleno no salgan números de 0.")]
-    [Label("Mínimo por curación")]
+    [Label("Mínimo por curación (vida)")]
     public float MinPerTick = 1f;
 
     private AbilitySystemComponent        _asc;

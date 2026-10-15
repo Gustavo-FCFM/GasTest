@@ -25,14 +25,19 @@ public class Reticle : Graphic
 {
     [Header("Forma")]
     [Tooltip("Largo total de cada línea de la cruz, en píxeles.")]
+    [Label("Largo de cada línea (px)")]
     public float Size = 18f;
     [Tooltip("Grosor de cada línea, en píxeles.")]
+    [Label("Grosor (px)")]
     public float Thickness = 2f;
     [Tooltip("Hueco central (espacio en el medio para no tapar el objetivo).")]
+    [Label("Hueco central (px)")]
     public float Gap = 4f;
     [Tooltip("Dibuja también un punto central.")]
+    [Label("Punto central")]
     public bool  CenterDot = false;
     [Tooltip("Tamaño del punto central, en píxeles.")]
+    [Label("Tamaño del punto (px)")]
     public float CenterDotSize = 2f;
 
     // El color lo hereda de Graphic (campo "Color" en el Inspector). No hace

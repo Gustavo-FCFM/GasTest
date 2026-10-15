@@ -48,25 +48,25 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
              "0.7 = te llega el 30%. Se aplica ANTES de Resistencia/Defensa, así que las dos " +
              "cosas se acumulan.")]
     [Range(0f, 1f)]
-    [Label("Daño frenado (fracción)")]
+    [Label("Daño que frena (0 a 1)")]
     public float DamageReduction = 0.7f;
 
     [Tooltip("Energía que cuesta frenar 1 punto de daño. Con 1, un golpe de 40 frenado al 70% " +
              "gasta 28 de energía. Si no queda energía para frenar todo, frena solo la parte " +
              "que alcance y el resto pasa.")]
-    [Label("Energía por punto frenado")]
+    [Label("Energía por punto de daño frenado")]
     public float EnergyPerDamageBlocked = 1f;
 
     [Tooltip("Altura (desde los pies) a la que se mide la trayectoria del golpe. Si midiéramos " +
              "de pie a pie, el segmento atacante→víctima pasaría por DEBAJO de la barrera y no " +
              "bloquearía nunca. ~1.2 = a la altura del pecho.")]
-    [Label("Altura de medición")]
+    [Label("Altura de medición (m)")]
     public float AimHeight = 1.2f;
 
     [Tooltip("Energía que cuesta parar UN proyectil físico. Los proyectiles se resuelven por " +
              "colisión con este collider (no por el pipeline de daño), así que no sabemos cuánto " +
              "daño traían: se cobra un costo fijo por proyectil detenido.")]
-    [Label("Energía por proyectil")]
+    [Label("Energía por proyectil frenado")]
     public float EnergyPerProjectileBlocked = 10f;
 
     [Header("Parry (Guerrero)")]
@@ -78,7 +78,7 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
     [Tooltip("Hasta qué distancia del dueño de la barrera un atacante cuenta como cuerpo a cuerpo. " +
              "A esos, el parry además los aturde (ParryStunEffect); a los de lejos solo se les " +
              "frena el golpe entero.")]
-    [Label("Alcance del parry")]
+    [Label("Alcance del parry (m)")]
     public float ParryMeleeRange = 3.5f;
 
     [Tooltip("Lo que recibe el atacante cuerpo a cuerpo al que le hacen parry (GE_ParryStun).")]
@@ -104,7 +104,7 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
              "(el Guardián). 0 = nada (el resto de los escudos). Lo devuelto no se puede volver " +
              "a devolver, así dos Guardianes no se rebotan el daño.")]
     [Range(0f, 1f)]
-    [Label("Daño devuelto (fracción)")]
+    [Label("Daño devuelto (0 a 1)")]
     public float ReflectMeleeFraction = 0f;
 
     [Tooltip("En la ventana del parry, los proyectiles no se paran: cambian de dueño (pasan a " +
@@ -139,7 +139,7 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
     public bool Omnidirectional = false;
 
     [Tooltip("Solo con Omnidirectional: a qué distancia del pecho del dueño sale el destello del golpe.")]
-    [Label("Radio del destello")]
+    [Label("Radio del destello (m)")]
     public float OmniFlashRadius = 0.8f;
 
     [Header("Inclinación con la Mira")]
@@ -150,12 +150,12 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
     public bool FollowAimPitch = true;
 
     [Tooltip("Altura del punto sobre el que gira la barrera, medida desde los pies (el pecho).")]
-    [Label("Altura del pivote")]
+    [Label("Altura del pivote (m)")]
     public float PitchPivotHeight = 1.2f;
 
     [Tooltip("Cuánto de la inclinación de la mira sigue la barrera. 1 = toda.")]
     [Range(0f, 1.5f)]
-    [Label("Cuánto sigue la mira")]
+    [Label("Cuánto sigue la mira (0 a 1)")]
     public float PitchFactor = 1f;
 
     [Header("Protección a Aliados")]
@@ -167,7 +167,7 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
     [Tooltip("Solo con Protect Allies: a qué distancia del dueño se buscan aliados a los que " +
              "cubrir. No define el bloqueo (eso lo decide la geometría de la barrera), solo a " +
              "quiénes se les consulta — poner un valor holgado.")]
-    [Label("Alcance para aliados")]
+    [Label("Alcance para aliados (m)")]
     public float AllyScanRange = 12f;
 
     [Tooltip("Capa de los personajes, para buscar a los aliados a cubrir.")]

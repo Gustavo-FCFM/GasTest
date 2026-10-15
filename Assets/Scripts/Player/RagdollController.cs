@@ -27,17 +27,17 @@ public class RagdollController : MonoBehaviour
 {
     [Tooltip("Fuerza del empujón al morir, en la dirección contraria al golpe. Se aplica " +
              "como impulso sobre la cadera. 300–600 se ve bien con la masa por defecto (~70).")]
-    [Label("Fuerza del empujón")]
+    [Label("Fuerza del empujón (impulso)")]
     public float ImpulseForce = 450f;
 
     [Tooltip("Cuánto del empujón va hacia arriba, para que el cuerpo se despegue un poco del " +
              "piso en vez de deslizarse.")]
-    [Label("Hacia arriba")]
+    [Label("Hacia arriba (0 a 1)")]
     public float UpwardBias = 0.35f;
 
     [Tooltip("Capa de los colliders del ragdoll mientras está activo. 2 = Ignore Raycast: los " +
              "ataques buscan la capa Character y los cadáveres no la tienen.")]
-    [Label("Capa del ragdoll")]
+    [Label("Capa del ragdoll (número de capa)")]
     public int RagdollLayer = 2;
 
     public bool IsActive { get; private set; }

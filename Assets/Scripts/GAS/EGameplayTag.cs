@@ -137,4 +137,5 @@ public enum EGameplayTag
     Status_CompanionOwl,       // El compañero elegido es el Búho
     Cooldown_CompanionWolf,    // El Lobo murió y todavía no puede volver (GE de reaparición del Lobo, en el dueño)
     Cooldown_CompanionBear,    // El Oso murió y todavía no puede volver
+    Status_PrimalFury,         // Ira primal (definitiva del Maestro de bestias): mientras dure, salen los tres compañeros, atacan el doble de rápido y su presencia vale doble. Lo da GE_PrimalFury; lo mira el CompanionManager
 }

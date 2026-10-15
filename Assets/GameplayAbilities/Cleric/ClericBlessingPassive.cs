@@ -25,7 +25,7 @@ public class ClericBlessingPassive : MonoBehaviour
 
     [Tooltip("Curación mínima para bendecir: el goteo de 1 punto de un efecto con el tiempo " +
              "no tiene por qué renovarla en cada tick. 0 = cualquier curación.")]
-    [Label("Curación mínima")]
+    [Label("Curación mínima (vida)")]
     public float MinHealToBless = 1f;
 
     private AbilitySystemComponent        _asc;

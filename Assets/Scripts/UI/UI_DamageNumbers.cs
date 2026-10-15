@@ -50,19 +50,19 @@ public class UI_DamageNumbers : MonoBehaviour
     public Color DamageOverTimeColor = new Color(1f, 0.55f, 0.5f, 1f);
 
     [Header("Tamaños (de letra)")]
-    [Label("Tamaño: daño")]
+    [Label("Tamaño de letra: daño")]
     public float DamageFontSize         = 30f;
-    [Label("Tamaño: crítico")]
+    [Label("Tamaño de letra: crítico")]
     public float CriticalFontSize       = 42f;
-    [Label("Tamaño: curación")]
+    [Label("Tamaño de letra: curación")]
     public float HealFontSize           = 28f;
-    [Label("Tamaño: daño periódico")]
+    [Label("Tamaño de letra: daño periódico")]
     public float DamageOverTimeFontSize = 21f;
 
     [Header("Movimiento")]
     [Tooltip("A qué altura nacen, como fracción entre los pies (0) y la barra de vida (1). " +
              "0.6 = a la altura del pecho, que es donde uno apunta casi siempre.")]
-    [Label("Altura de nacimiento")]
+    [Label("Altura de nacimiento (0 a 1)")]
     [Range(0f, 1.2f)] public float HeightFraction = 0.6f;
 
     [Tooltip("Cuánto dura cada número en pantalla, en segundos.")]

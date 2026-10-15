@@ -78,13 +78,13 @@ public class UI_LobbyMenu : MonoBehaviour
     public string[] HiddenCardParts = { "ClassDescription" };
     [Tooltip("Lado de cada tarjeta en píxeles: quedan cuadradas y todas iguales. El Canvas Scaler " +
              "es el que las escala según el tamaño de pantalla.")]
-    [Label("Tamaño de tarjeta")]
+    [Label("Tamaño de tarjeta (px)")]
     public float CardSize = 180f;
     [Tooltip("Color del contorno que marca la clase elegida.")]
     [Label("Color: clase elegida")]
     public Color SelectedClassColor = new Color(0.3f, 0.8f, 1f, 1f);
     [Tooltip("Grosor de ese contorno.")]
-    [Label("Grosor del contorno")]
+    [Label("Grosor del contorno (px)")]
     public float SelectedOutlineSize = 4f;
 
     [Header("Confirmar")]

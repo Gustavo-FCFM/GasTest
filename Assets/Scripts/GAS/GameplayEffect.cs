@@ -67,7 +67,7 @@ public class GameplayEffect : ScriptableObject
     [Tooltip("Máximo de acumulaciones. 0 = sin límite. Al llegar al tope, aplicarlo de nuevo " +
              "refresca la acumulación que esté por expirar en vez de agregar otra (salvo que uses " +
              "OnMaxStacksEffect).")]
-    [Label("Acumulaciones máximas")]
+    [Label("Acumulaciones máximas (0 = sin límite)")]
     public int MaxStacks = 0;
 
     [ShowIf(nameof(StackingPolicy), EStackingType.Stack)]
@@ -85,7 +85,7 @@ public class GameplayEffect : ScriptableObject
 
     [ShowIf(nameof(EffectGroup), EGameplayTag.None, true)]
     [Tooltip("Dentro de un EffectGroup, mayor Priority gana. Aplicar uno de Priority MENOR a uno ya activo del grupo no hace nada; uno de Priority MAYOR reemplaza a los inferiores.")]
-    [Label("Prioridad")]
+    [Label("Prioridad (mayor gana)")]
     public int Priority = 0;
 
     [ShowIf(nameof(EffectGroup), EGameplayTag.None, true)]
@@ -188,7 +188,7 @@ public class GameplayEffect : ScriptableObject
 
     [ShowIf(nameof(KnockbackDistance), ShowIfAttribute.Positive)]
     [Tooltip("Velocidad hacia arriba al empujar (lo levanta un poco del piso). 0 = a ras del piso.")]
-    [Label("Impulso hacia arriba")]
+    [Label("Impulso hacia arriba (m/s)")]
     public float KnockbackUpVelocity = 0f;
 
     [ShowIf(nameof(KnockbackDistance), ShowIfAttribute.Positive)]
@@ -201,7 +201,7 @@ public class GameplayEffect : ScriptableObject
              "máxima o menos, muere (0.05 = al 5 %). Se mira al recibir el efecto y en cada daño " +
              "mientras dura. La baja es de quien le puso el efecto. No mata a un inmortal (Preservar " +
              "vida) ni a un inmune. 0 = no ejecuta (el Corte final del Samurái).")]
-    [Label("Ejecutar bajo (vida)")]
+    [Label("Ejecutar con vida bajo (0 a 1)")]
     [Range(0f, 1f)] public float ExecuteBelowHealth = 0f;
 
     [Section(EffectSection.Visuals)]
@@ -219,17 +219,17 @@ public class GameplayEffect : ScriptableObject
     [Tooltip("Desplazamiento del VFX respecto al pivote del objetivo, en su espacio local. " +
              "Los pivotes están a los pies, así que casi siempre vas a querer subirlo en Y " +
              "(2-3 para algo que flote sobre la cabeza).")]
-    [Label("VFX: posición")]
+    [Label("VFX: posición (m)")]
     public Vector3 TargetVFXOffset;
 
     [ShowIf(nameof(TargetVFX))]
     [Tooltip("Rotación extra del VFX respecto al objetivo, en grados.")]
-    [Label("VFX: rotación")]
+    [Label("VFX: rotación (°)")]
     public Vector3 TargetVFXRotation;
 
     [ShowIf(nameof(TargetVFX))]
     [Tooltip("Escala del VFX. En CERO usa la escala del prefab tal cual.")]
-    [Label("VFX: escala")]
+    [Label("VFX: escala (×)")]
     public Vector3 TargetVFXScale;
 
     [ShowIf(nameof(TargetVFX))]

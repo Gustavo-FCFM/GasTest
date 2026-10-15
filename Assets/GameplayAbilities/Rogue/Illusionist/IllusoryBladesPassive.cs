@@ -35,7 +35,7 @@ public class IllusoryBladesPassive : MonoBehaviour
 
     [Header("Búsqueda de Objetivo")]
     [Tooltip("Alcance para buscar al enemigo más cercano (distinto al golpeado).")]
-    [Label("Radio de búsqueda")]
+    [Label("Radio de búsqueda (m)")]
     public float SearchRadius = 15f;
     [Label("Capa de personajes")]
     public LayerMask CharacterLayer;

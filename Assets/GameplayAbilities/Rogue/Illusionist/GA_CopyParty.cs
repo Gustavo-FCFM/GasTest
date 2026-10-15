@@ -23,13 +23,13 @@ public class GA_CopyParty : GameplayAbility
     [Label("Copias por jugador")]
     public int CopiesPerPlayer = 4;
     [Tooltip("Radio para encontrar aliados (y a vos mismo) a copiar.")]
-    [Label("Radio de búsqueda")]
+    [Label("Radio de búsqueda (m)")]
     public float Range = 15f;
     [Tooltip("Qué tan lejos camina cada copia al dispersarse desde su jugador.")]
-    [Label("Distancia de dispersión")]
+    [Label("Distancia de dispersión (m)")]
     public float DisperseDistance = 8f;
     [Tooltip("Velocidad de caminado de las copias. 0 = usar la MovSpeed del jugador copiado.")]
-    [Label("Velocidad de las copias")]
+    [Label("Velocidad de las copias (m/s; 0 = la del jugador)")]
     public float MoveSpeedOverride = 0f;
     [Tooltip("Capa de personajes para buscar a los jugadores (Character).")]
     [Label("Capa de personajes")]

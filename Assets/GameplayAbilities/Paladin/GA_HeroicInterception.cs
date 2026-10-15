@@ -32,7 +32,7 @@ public class GA_HeroicInterception : TargetImpactAbility
 {
     [Section(AbilitySection.Targeting)]
     [Tooltip("Alcance máximo para buscar al aliado al que interceptar.")]
-    [Label("Alcance máximo")]
+    [Label("Alcance máximo (m)")]
     public float MaxRange = 14f;
 
     [Tooltip("Ángulo máximo (grados) entre la mira y el aliado para que cuente como objetivo. " +
@@ -47,7 +47,7 @@ public class GA_HeroicInterception : TargetImpactAbility
 
     [Section(AbilitySection.Movement)]
     [Tooltip("A qué distancia por DELANTE del aliado (según hacia dónde mira él) aterriza el Paladín.")]
-    [Label("Distancia delante")]
+    [Label("Distancia delante (m)")]
     public float FrontDistance = 2.5f;
 
     [Tooltip("Si el Paladín queda mirando hacia donde miraba el aliado (o sea, dándole la espalda " +

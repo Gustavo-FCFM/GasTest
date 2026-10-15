@@ -25,7 +25,7 @@ public class GA_HeroicLeap : GA_Teleport
     [Section(AbilitySection.Shape)]
     [Tooltip("Radio del golpe alrededor del punto de llegada. También conviene ponerlo en " +
              "Marker Radius, así el marcador muestra a quién va a alcanzar.")]
-    [Label("Radio del impacto")]
+    [Label("Radio del impacto (m)")]
     public float ImpactRadius = 3f;
 
     [Section(AbilitySection.Timing)]

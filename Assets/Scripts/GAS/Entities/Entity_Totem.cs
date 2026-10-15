@@ -31,7 +31,7 @@ public class Entity_Totem : NetworkBehaviour
     [Label("Tag de enfurecido")]
     public EGameplayTag RageTag;
 
-    [Label("Radio del aura")]
+    [Label("Radio del aura (m)")]
     public float AuraRadius = 7f;
     // Cada cuánto se reaplica el aura a los aliados dentro del radio.
     [Label("Cada cuánto (s)")]
@@ -42,7 +42,7 @@ public class Entity_Totem : NetworkBehaviour
     [Header("Visuales")]
     [Label("VFX del aura")]
     public GameObject AuraVFXPrefab;
-    [Label("Escala del VFX")]
+    [Label("Escala del VFX (×)")]
     public float VfxScaleMultiplier = 2.0f;
     private GameObject currentAuraVFX;
 

@@ -22,7 +22,7 @@ public class GA_ChainStrike : GameplayAbility
 {
     [Section(AbilitySection.Targeting)]
     [Tooltip("Alcance para elegir al PRIMER enemigo, con la mira.")]
-    [Label("Alcance máximo")]
+    [Label("Alcance máximo (m)")]
     public float MaxRange = 15f;
 
     [Tooltip("Ángulo máximo (grados) entre la mira y el primer enemigo.")]
@@ -31,7 +31,7 @@ public class GA_ChainStrike : GameplayAbility
 
     [Section("Cadena")]
     [Tooltip("A qué distancia del último golpeado busca al siguiente.")]
-    [Label("Alcance del salto")]
+    [Label("Alcance del salto (m)")]
     public float JumpRange = 10f;
 
     [Tooltip("Segundos que se queda sobre cada enemigo antes de saltar al siguiente.")]
@@ -53,7 +53,7 @@ public class GA_ChainStrike : GameplayAbility
 
     [Section(AbilitySection.Movement)]
     [Tooltip("A qué distancia detrás de cada enemigo aparece.")]
-    [Label("Distancia detrás")]
+    [Label("Distancia detrás (m)")]
     public float BehindDistance = 1.2f;
 
     public override bool MovesThroughOwner => true;

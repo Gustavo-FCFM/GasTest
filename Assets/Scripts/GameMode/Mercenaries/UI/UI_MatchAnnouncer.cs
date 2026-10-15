@@ -36,14 +36,14 @@ public class UI_MatchAnnouncer : MonoBehaviour
 
     [Header("Tamaños de letra")]
     [Tooltip("Fin de partida, entrega y aparición del Objetivo.")]
-    [Label("Tamaño: lo más importante")]
+    [Label("Tamaño de letra: lo más importante")]
     public float BigFontSize = 44f;
 
     [Tooltip("Equipo aniquilado y comienzo de partida.")]
-    [Label("Tamaño: importante")]
+    [Label("Tamaño de letra: importante")]
     public float MediumFontSize = 38f;
 
-    [Label("Tamaño: el resto")]
+    [Label("Tamaño de letra: el resto")]
     public float SmallFontSize = 30f;
 
     [Header("Tiempos")]

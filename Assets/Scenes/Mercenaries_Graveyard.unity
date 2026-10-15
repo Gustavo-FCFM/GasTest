@@ -4171,6 +4171,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Match_UI
       objectReference: {fileID: 0}
+    - target: {fileID: 4800273811501711699, guid: 73175db72e90b0e45951685c28f70918, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5424732705493360062, guid: 73175db72e90b0e45951685c28f70918, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -4720,7 +4724,7 @@ MonoBehaviour:
   - 100
   - 150
   XpPerNpcKill: 15
-  XpPerPlayerTakedown: 40
+  XpPerPlayerTakedown: 50
   MinutesToGuaranteedMaxLevel: 10
   PassiveXpPerSecondOverride: 0
   ClassChangeOnlyInSafeRoom: 1
@@ -10232,6 +10236,10 @@ PrefabInstance:
     - target: {fileID: 289977332255075787, guid: 3d7973e9671e6ca4e8f5573979dba932, type: 3}
       propertyPath: m_Name
       value: Menus_UI
+      objectReference: {fileID: 0}
+    - target: {fileID: 289977332255075787, guid: 3d7973e9671e6ca4e8f5573979dba932, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1692416265024170923, guid: 3d7973e9671e6ca4e8f5573979dba932, type: 3}
       propertyPath: m_AdditionalShaderChannelsFlag

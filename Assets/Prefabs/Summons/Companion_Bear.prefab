@@ -1176,6 +1176,17 @@ MonoBehaviour:
   GuardOwner: 1
   BlinkAttack: 0
   TeleportDistance: 25
+  CommandRange: 40
+  Roam: 1
+  RoamRadius: 6
+  RoamMinRadius: 2.5
+  RoamSpeedFactor: 0.6
+  RoamPauseMin: 1
+  RoamPauseMax: 3
+  JumpRange: 14
+  JumpHeight: 9
+  JumpDetourFactor: 1.8
+  JumpCooldown: 1.5
   PassiveRange: 12
   AttackInterval: 2.2
   AttackReach: 2.6
@@ -1211,6 +1222,8 @@ MonoBehaviour:
   HowlMemory: 5
   PresenceEffect: {fileID: 11400000, guid: 97927fc933f36a744ab48c502a7c6980, type: 2}
   PresenceRadius: 8
+  FuryAttackIntervalMultiplier: 0.5
+  FuryPresenceEffect: {fileID: 11400000, guid: 0020393964a65934e8252dcd27357528, type: 2}
   TauntsNpcs: 1
   CharacterLayer:
     serializedVersion: 2

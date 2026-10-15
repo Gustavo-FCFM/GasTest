@@ -36,7 +36,7 @@ public class MercEnemySpawner : MonoBehaviour
         [Tooltip("Peso del sorteo. NO tiene que sumar 100 entre todos: el porcentaje real " +
                  "se calcula sobre los tipos que estén desbloqueados en ese momento. Poner " +
                  "70 y 30 es lo mismo que poner 7 y 3.")]
-        [Label("Peso")]
+        [Label("Peso (relativo a los otros tipos)")]
         [Range(0f, 100f)] public float Weight = 100f;
 
         [Tooltip("Minuto de partida a partir del cual PUEDE aparecer. En 0 aparece desde el " +
@@ -70,7 +70,7 @@ public class MercEnemySpawner : MonoBehaviour
     public int Count = 3;
 
     [Tooltip("Radio en el que se reparten alrededor de este punto.")]
-    [Label("Radio de aparición")]
+    [Label("Radio de aparición (m)")]
     public float SpawnRadius = 5f;
 
     [Header("Reposición")]

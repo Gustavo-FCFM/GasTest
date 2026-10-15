@@ -49,7 +49,7 @@ public class PaladinAuraPassive : MonoBehaviour, IPassiveTargetVFX
         public string Name = "Aura";
 
         [Tooltip("Radio del aura, en metros.")]
-        [Label("Radio")]
+        [Label("Radio (m)")]
         public float Radius = 8f;
 
         [Tooltip("A quién alcanza este anillo. El aura de protección apunta a Allies; " +
@@ -96,20 +96,20 @@ public class PaladinAuraPassive : MonoBehaviour, IPassiveTargetVFX
     [Tooltip("Fracción del daño infligido que se cura a los aliados en el aura. 0.3 = cada golpe " +
              "de 50 les cura 15 a todos los aliados al alcance. 0 = desactivado.")]
     [Range(0f, 2f)]
-    [Label("Curación (fracción del daño)")]
+    [Label("Curación (0 a 1 del daño)")]
     public float HealPercentOfDamage = 0.3f;
 
     [Header("Curación al Bloquear")]
     [Tooltip("Lo mismo pero cuando el ESCUDO frena daño ('cada vez que evite daño, el jugador " +
              "sanará a los aliados que estén en su aura'). 0 = desactivado.")]
     [Range(0f, 2f)]
-    [Label("Curación (fracción de lo frenado)")]
+    [Label("Curación (0 a 1 de lo frenado)")]
     public float HealPercentOfBlocked = 0.3f;
 
     [Header("Alcance de la Curación")]
     [Tooltip("Qué anillo define hasta dónde llega la curación (0 = el primero de la lista, " +
              "normalmente el de protección). Si el índice no existe, se usa el primero.")]
-    [Label("Anillo de la curación")]
+    [Label("Anillo de la curación (n.º en la lista)")]
     public int HealRingIndex = 0;
 
     [Tooltip("Efectos extra que se le aplican al aliado curado (un VFX de destello, un buff " +
@@ -125,7 +125,7 @@ public class PaladinAuraPassive : MonoBehaviour, IPassiveTargetVFX
 
     [Tooltip("Dónde aparece, medido desde los pies del curado. (0, 1, 0) es el pecho; un " +
              "efecto pensado para el piso va con (0, 0, 0).")]
-    [Label("VFX: posición")]
+    [Label("VFX: posición (m)")]
     public Vector3 HealVFXOffset = new Vector3(0f, 1f, 0f);
 
     [Tooltip("Pegarlo al curado, así lo sigue si se mueve. Apagado, queda donde apareció.")]

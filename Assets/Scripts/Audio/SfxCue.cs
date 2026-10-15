@@ -21,18 +21,22 @@ using UnityEngine;
 public class SfxCue
 {
     [Tooltip("Uno o varios clips. Con varios se elige uno al azar (sin repetir el último).")]
+    [Label("Clips")]
     public AudioClip[] Clips;
 
     [Range(0f, 1f)]
+    [Label("Volumen (0 a 1)")]
     public float Volume = 1f;
 
     [Tooltip("Variación de tono al azar, ± este valor. 0.08 = ±8 %, suficiente para que dos " +
              "golpes seguidos no suenen idénticos.")]
     [Range(0f, 0.5f)]
+    [Label("Variación de tono (0 a 0.5)")]
     public float PitchVariance = 0.08f;
 
     [Tooltip("Hasta qué distancia se escucha (solo para sonidos 3D). Un paso 20 m; un grito o " +
              "una explosión 40–60 m.")]
+    [Label("Se escucha hasta (m)")]
     public float MaxDistance = 35f;
 
     [NonSerialized] private int _lastIndex = -1;

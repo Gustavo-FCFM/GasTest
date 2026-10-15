@@ -179,24 +179,24 @@ public class CharacterClassDefinition : ScriptableObject
     [ShowIf(nameof(MainHandWeaponPrefab))]
     [Tooltip("Rotación extra (grados) del arma principal respecto del hueso de la mano. " +
              "En cero queda pegada al hueso. Usalo si el modelo aparece torcido o al revés.")]
-    [Label("Arma principal: rotación")]
+    [Label("Arma principal: rotación (°)")]
     public Vector3 MainHandRotationOffset;
 
     [ShowIf(nameof(MainHandWeaponPrefab))]
     [Tooltip("Desplazamiento extra del arma principal respecto del hueso, en espacio local.")]
-    [Label("Arma principal: posición")]
+    [Label("Arma principal: posición (m)")]
     public Vector3 MainHandPositionOffset;
 
     [ShowIf(nameof(OffHandWeaponPrefab))]
     [Tooltip("Rotación extra (grados) del arma secundaria. Ojo: el socket de esta mano viene " +
              "con 180° de giro respecto del de la principal, así que un escudo suele necesitar " +
              "compensarlo acá (probá 180 en Z).")]
-    [Label("Arma secundaria: rotación")]
+    [Label("Arma secundaria: rotación (°)")]
     public Vector3 OffHandRotationOffset;
 
     [ShowIf(nameof(OffHandWeaponPrefab))]
     [Tooltip("Desplazamiento extra del arma secundaria respecto del hueso, en espacio local.")]
-    [Label("Arma secundaria: posición")]
+    [Label("Arma secundaria: posición (m)")]
     public Vector3 OffHandPositionOffset;
 
     // ============================================================
@@ -245,13 +245,13 @@ public class CharacterClassDefinition : ScriptableObject
     [ShowIf(nameof(DrawMainHandTag), EGameplayTag.None, true)]
     [Tooltip("Posición del arma principal guardada, en el espacio del hueso del pecho. Se " +
              "ajusta mirando en Play (cambiar la clase y volver a equiparla la recoloca).")]
-    [Label("Principal guardada: posición")]
+    [Label("Principal guardada: posición (m)")]
     public Vector3 StowedMainHandPositionOffset = new Vector3(0f, 0f, -0.2f);
 
     [ShowIf(nameof(MainHandWeaponPrefab))]
     [ShowIf(nameof(DrawMainHandTag), EGameplayTag.None, true)]
     [Tooltip("Rotación (grados) del arma principal guardada, en el espacio del hueso del pecho.")]
-    [Label("Principal guardada: rotación")]
+    [Label("Principal guardada: rotación (°)")]
     public Vector3 StowedMainHandRotationOffset = new Vector3(0f, 180f, 45f);
 
     // ============================================================
@@ -274,19 +274,19 @@ public class CharacterClassDefinition : ScriptableObject
     [ShowIf(nameof(StowOffHandTag), EGameplayTag.None, true)]
     [Tooltip("Posición del arma guardada, en el espacio del hueso del pecho. Se ajusta mirando " +
              "en Play (cambiar la clase y volver a equiparla la recoloca).")]
-    [Label("Arma guardada: posición")]
+    [Label("Arma guardada: posición (m)")]
     public Vector3 StowedOffHandPositionOffset;
 
     [ShowIf(nameof(OffHandWeaponPrefab))]
     [ShowIf(nameof(StowOffHandTag), EGameplayTag.None, true)]
     [Tooltip("Rotación (grados) del arma guardada, en el espacio del hueso del pecho.")]
-    [Label("Arma guardada: rotación")]
+    [Label("Arma guardada: rotación (°)")]
     public Vector3 StowedOffHandRotationOffset;
 
     [ShowIf(nameof(OffHandWeaponPrefab))]
     [Tooltip("Tamaño del arma secundaria respecto del prefab. 1 = como viene. El Guardián lleva " +
              "el escudo de siempre más grande (1.3) mientras no haya un modelo propio.")]
-    [Label("Arma secundaria: tamaño")]
+    [Label("Arma secundaria: tamaño (×)")]
     public float OffHandScale = 1f;
 
     // ============================================================
@@ -305,7 +305,7 @@ public class CharacterClassDefinition : ScriptableObject
 
     [ShowIf(nameof(GrowTag), EGameplayTag.None, true)]
     [Tooltip("Tamaño del modelo con el tag (1.5 = 50 % más grande).")]
-    [Label("Tamaño al crecer")]
+    [Label("Tamaño al crecer (×)")]
     public float GrowScale = 1.5f;
 }
 

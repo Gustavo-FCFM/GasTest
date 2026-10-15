@@ -362,9 +362,9 @@ public class PlayerController : NetworkBehaviour
     [HideInInspector] public GameplayAbility AimAbility;
 
     [Header("Físicas")]
-    [Label("Fuerza de salto")]
+    [Label("Fuerza de salto (m/s)")]
     public float jumpForce  = 8f;
-    [Label("Gravedad")]
+    [Label("Gravedad (m/s²)")]
     public float gravity    = -9.8f;
 
     [Header("Caída de Pluma / Aleteo")]
@@ -377,13 +377,13 @@ public class PlayerController : NetworkBehaviour
     [Tooltip("Impulso de cada ALETEO. Mientras dure la caída de pluma se puede volver a saltar en " +
              "el aire las veces que se quiera, y cada aleteo vale esto. Conviene por debajo de " +
              "jumpForce, porque se encadenan uno atrás del otro.")]
-    [Label("Caída de pluma: aleteo")]
+    [Label("Caída de pluma: aleteo (m/s)")]
     public float flapForce = 3f;
 
     [Tooltip("Tope de velocidad de caída mientras dura (valor positivo). Sin esto, la gravedad se " +
              "sigue acumulando entre aleteo y aleteo y caer desde muy alto termina en picada. " +
              "0 = sin tope.")]
-    [Label("Caída de pluma: velocidad máx.")]
+    [Label("Caída de pluma: velocidad máx. (m/s)")]
     public float featherFallMaxSpeed = 6f;
 
     [Header("Apuntado (Third Person Shooter)")]
@@ -391,13 +391,13 @@ public class PlayerController : NetworkBehaviour
     // Más alto = casi instantáneo; más bajo = giro más suave/perezoso.
     // Si algún día querés que el cuerpo SOLO gire mientras te movés o apuntás
     // (y no mientras estás quieto girando la cámara), ver FaceCameraForward.
-    [Label("Giro al apuntar")]
+    [Label("Rapidez del giro al apuntar (más = más rápido)")]
     public float aimTurnSpeed = 15f;
 
     [Tooltip("Cuánto control conserva un jugador mientras lo repelen o lo atraen: su movimiento normal, " +
              "multiplicado por esto, se SUMA al empuje (y el cuerpo sigue a la cámara). 0 = ninguno, " +
              "1 = camina normal encima del empuje. Aturdido o enraizado no tiene control igual.")]
-    [Label("Control al ser empujado")]
+    [Label("Control al ser empujado (0 a 1)")]
     [Range(0f, 1f)] public float knockbackSteerControl = 0.6f;
 
     private float   verticalVelocity;
@@ -2571,24 +2571,24 @@ public class PlayerController : NetworkBehaviour
              "0.5 = la mitad. Existe para que no se pueda cargar la definitiva con una " +
              "clase y gastarla con otra.")]
     [Range(0f, 1f)]
-    [Label("Definitiva conservada al cambiar")]
+    [Label("Definitiva conservada al cambiar (0 a 1)")]
     public float UltimateKeptOnClassChange = 0.5f;
 
     [Tooltip("TANQUE: segundos de definitiva por cada punto de daño que aguanta de un " +
              "enemigo (después de las defensas, antes del escudo). Con 0.1, aguantar " +
              "100 de daño adelanta 10 s de los 180.")]
-    [Label("Tanque: carga por daño")]
+    [Label("Tanque: carga por punto de daño (s)")]
     public float TankChargePerDamage = 0.1f;
 
     [Tooltip("DAÑO: segundos de definitiva por cada personaje enemigo que mata (jugador " +
              "o bot; los monstruos no cuentan).")]
-    [Label("Daño: carga por baja")]
+    [Label("Daño: carga por baja (s)")]
     public float DamageChargePerKill = 20f;
 
     [Tooltip("SOPORTE: segundos de definitiva por cada punto de vida que le cura a un " +
              "ALIADO. No cuenta curarse a sí mismo ni lo que se pasa de la vida máxima. " +
              "Con 0.15, curar 100 adelanta 15 s.")]
-    [Label("Soporte: carga por curación")]
+    [Label("Soporte: carga por punto curado (s)")]
     public float SupportChargePerHeal = 0.15f;
 
     // Carga guardada al dejar una clase con definitiva, para la próxima subclase.
@@ -3490,7 +3490,7 @@ public class PlayerController : NetworkBehaviour
     [Label("Desatascarse: quieto (s)")]
     public float UnstuckStillSeconds = 5f;
     [Tooltip("Cuánto te puedes mover (en metros) y seguir contando como quieto.")]
-    [Label("Desatascarse: radio quieto")]
+    [Label("Desatascarse: radio quieto (m)")]
     public float UnstuckStillRadius = 0.75f;
     [Tooltip("Si te pegaron hace menos que esto, no se puede usar: no es un escape de peleas.")]
     [Label("Desatascarse: bloqueo en combate (s)")]

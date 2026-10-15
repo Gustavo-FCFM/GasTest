@@ -40,26 +40,26 @@ public class ThirdPersonOrbitCam : MonoBehaviour
     [HideInInspector] public Transform FollowOverride;
 
     [Tooltip("Suavizado del seguimiento al ragdoll (segundos hasta alcanzarlo). 0 = pegado.")]
-    [Label("Suavizado al ragdoll")]
+    [Label("Suavizado al ragdoll (s)")]
     public float FollowOverrideSmooth = 0.15f;
     private Vector3 _followVelocity;
     private Vector3 _lastFocus;
 
     [Header("Configuración de Hombro")]
     // (0, 1.5, 0) es la altura de la cabeza/pivote
-    [Label("Pivote")]
+    [Label("Pivote (m)")]
     public Vector3 PivotOffset = new Vector3(0, 1.5f, 0);
     // (0.8, 0, -2.5) lo mueve a la derecha y atrás (Shoulder View)
-    [Label("Posición de la cámara")]
+    [Label("Posición de la cámara (m)")]
     public Vector3 CamOffset = new Vector3(0.8f, 0f, -2.5f);
 
     [Header("Input - Mouse")]
     // Sensibilidad del mouse. Se aplica al delta puntual del mouse (acción Look,
     // Input System). El *0.1 interno compensa la escala del viejo eje "Mouse X"
     // (que tenía sensibilidad 0.1) para que estos valores se sientan igual que antes.
-    [Label("Sensibilidad X")]
+    [Label("Sensibilidad X (×)")]
     public float SensitivityX = 2.0f;
-    [Label("Sensibilidad Y")]
+    [Label("Sensibilidad Y (×)")]
     public float SensitivityY = 2.0f;
 
     [Tooltip("Cuánto puede mirar hacia ABAJO, en grados. -85 es prácticamente a los pies. " +
@@ -77,7 +77,7 @@ public class ThirdPersonOrbitCam : MonoBehaviour
     // inclinado, a diferencia del mouse que manda un delta puntual — por
     // eso necesita su propia sensibilidad y se multiplica por
     // Time.deltaTime (grados por segundo), no se suma directo como el mouse.
-    [Label("Sensibilidad del control")]
+    [Label("Sensibilidad del control (°/s)")]
     public float GamepadSensitivity = 120f;
 
     [Header("Colisión con el escenario")]
@@ -93,25 +93,25 @@ public class ThirdPersonOrbitCam : MonoBehaviour
     [Tooltip("Grosor de la cámara. Se usa un SphereCast y no un Raycast para que no se cuele " +
              "por las esquinas: un rayo pasa por el filo de una pared y la cámara termina " +
              "media adentro.")]
-    [Label("Grosor de la cámara")]
+    [Label("Grosor de la cámara (m)")]
     public float CameraRadius = 0.28f;
 
     [Tooltip("Cuánto se despega de la pared con la que chocó.")]
-    [Label("Separación de la pared")]
+    [Label("Separación de la pared (m)")]
     public float CollisionSkin = 0.15f;
 
     [Tooltip("Lo más cerca del jugador que puede quedar.")]
-    [Label("Distancia mínima")]
+    [Label("Distancia mínima (m)")]
     public float MinDistance = 0.4f;
 
     [Tooltip("Qué tan rápido se ACERCA al chocar. Alto a propósito: si se acercara despacio, " +
              "durante esos instantes ya estaría del otro lado de la pared.")]
-    [Label("Velocidad al acercarse")]
+    [Label("Velocidad al acercarse (m/s)")]
     public float PullInSpeed = 60f;
 
     [Tooltip("Qué tan rápido vuelve a su distancia normal al despejarse. Lento, porque un " +
              "regreso brusco marea.")]
-    [Label("Velocidad al alejarse")]
+    [Label("Velocidad al alejarse (m/s)")]
     public float PushOutSpeed = 8f;
 
     [Header("Ocultar al jugador de cerca")]
@@ -120,27 +120,27 @@ public class ThirdPersonOrbitCam : MonoBehaviour
     public bool HideTargetWhenClose = true;
 
     [Tooltip("A esta distancia o menos, el modelo se deja de dibujar.")]
-    [Label("Ocultar a")]
+    [Label("Ocultar el modelo a (m)")]
     public float HideDistance = 1.2f;
 
     [Tooltip("A esta distancia vuelve a aparecer. Tiene que ser MAYOR que la de ocultar: la " +
              "diferencia entre las dos evita el parpadeo cuando quedás justo en el límite.")]
-    [Label("Mostrar a")]
+    [Label("Mostrar el modelo a (m)")]
     public float ShowDistance = 1.5f;
 
     [Header("Apuntar (mantener un lanzamiento)")]
     [Tooltip("Dónde queda la cámara mientras se apunta: más cerca y pegada al hombro. Se " +
              "pasa de CamOffset a este suavemente.")]
-    [Label("Posición al apuntar")]
+    [Label("Posición al apuntar (m)")]
     public Vector3 AimCamOffset = new Vector3(0.6f, 0.05f, -1.4f);
 
     [Tooltip("Qué tan rápido entra y sale del modo apuntar (1/segundos: 6 ≈ 0.17 s).")]
-    [Label("Velocidad al apuntar")]
+    [Label("Rapidez al apuntar (más = más rápido)")]
     public float AimBlendSpeed = 6f;
 
     [Tooltip("Sensibilidad mientras se apunta, como fracción de la normal. Más baja = más fino.")]
     [Range(0.1f, 1f)]
-    [Label("Sensibilidad al apuntar")]
+    [Label("Sensibilidad al apuntar (0 a 1 de la normal)")]
     public float AimSensitivity = 0.75f;
 
     [Tooltip("Mientras se apunta, el modelo del jugador se deja de dibujar en SU pantalla (sigue " +
@@ -158,7 +158,7 @@ public class ThirdPersonOrbitCam : MonoBehaviour
              "creció. 0.6 = creciendo ×1.5, la cámara se aleja ×1.3. La altura del punto que " +
              "mira sube entera con el tamaño.")]
     [Range(0f, 1.5f)]
-    [Label("Alejarse al crecer")]
+    [Label("Alejarse al crecer (0 a 1)")]
     public float GrowDistanceFactor = 0.6f;
 
     // Tamaño actual del modelo respecto del normal (1 = normal). Lo pone PlayerController

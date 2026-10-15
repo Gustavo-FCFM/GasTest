@@ -33,7 +33,7 @@ public class PlayerVisibility : MonoBehaviour
     [Tooltip("Opacidad del modelo mientras estás invisible. 0 = no te ves nada, 1 = normal. " +
              "0.35 alcanza para ubicarte sin que parezca que la habilidad no hizo nada.")]
     [Range(0f, 1f)]
-    [Label("Opacidad invisible")]
+    [Label("Opacidad invisible (0 a 1)")]
     public float GhostAlpha = 0.35f;
 
     [Tooltip("Que tus ALIADOS también te vean fantasma. Apagado, ellos te ven normal. " +

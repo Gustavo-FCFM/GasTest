@@ -18,6 +18,13 @@ using UnityEngine.AI;
 //   · Le pasa las órdenes: el Explorador pegó a alguien (OnDealtDamage) → Command; le
 //     pegaron al Explorador (OnTookDamage) → Defend. Los golpes del propio compañero
 //     (que cuentan como del dueño) se ignoran: BeginPetHit/EndPetHit.
+//   · IRA PRIMAL (la definitiva, 15 de octubre de 2026): mientras el dueño tiene
+//     Status_PrimalFury (GE_PrimalFury, 10 s), salen los otros dos compañeros junto al elegido
+//     (y el elegido también, si estaba muerto esperando). Son EXTRAS: salen con la vida llena,
+//     si mueren no les empieza ninguna espera, y al terminar desaparecen; queda el elegido con
+//     la vida que tenía. Las órdenes y la defensa van a todos. Mientras dura no se puede
+//     cambiar de compañero. Lo que cada uno hace distinto (atacar más rápido, presencia doble)
+//     lo resuelve Entity_Companion mirando el mismo tag.
 //   · Lo que se ve en el HUD lo lee UI_CompanionPanel (en el prefab de la cámara): el manager
 //     no sabe nada de la UI.
 //
@@ -75,7 +82,11 @@ public class CompanionManager : MonoBehaviour
     private Entity_Companion _current;        // servidor
     private int _petHitDepth;
     private float _spawnDelayUntil;
-    private readonly HashSet<int> _broken = new HashSet<int>();   // prefabs que no sirven (ver SpawnCompanion)
+    private readonly HashSet<int> _broken = new HashSet<int>();   // prefabs que no sirven (ver SpawnOne)
+
+    // Ira primal: los compañeros que salieron de más, por índice. Solo servidor.
+    private readonly Dictionary<int, Entity_Companion> _extras = new Dictionary<int, Entity_Companion>();
+    private bool _furyActive;
 
     // La vida guardada de cada compañero (0 a 1), por índice. Solo servidor. Sin entrada = llena.
     private readonly Dictionary<int, float> _storedHealth = new Dictionary<int, float>();
@@ -108,6 +119,7 @@ public class CompanionManager : MonoBehaviour
         if (IsServer)
         {
             DespawnCurrent();
+            EndFury();
             if (_asc != null && _active >= 0 && _active < Companions.Count && Companions[_active].ActiveEffect != null)
                 _asc.RemoveEffectsByDefinition(Companions[_active].ActiveEffect);
         }
@@ -122,10 +134,48 @@ public class CompanionManager : MonoBehaviour
 
         TickStoredRegen();
 
-        if (_asc.HasTag(EGameplayTag.State_Dead)) { DespawnCurrent(); return; }
+        if (_asc.HasTag(EGameplayTag.State_Dead)) { DespawnCurrent(); EndFury(); return; }
 
         if (_current == null && Time.time >= _spawnDelayUntil && !IsOnCooldown(_active) && !_broken.Contains(_active))
             SpawnCompanion(_active);
+
+        bool fury = _asc.HasTag(EGameplayTag.Status_PrimalFury);
+        if (fury && !_furyActive)      StartFury();
+        else if (!fury && _furyActive) EndFury();
+    }
+
+    // =========================================================
+    // IRA PRIMAL
+    // =========================================================
+
+    // Salen los que faltan: los otros dos, y el elegido si estaba muerto esperando.
+    private void StartFury()
+    {
+        _furyActive = true;
+        int slot = 0;
+        for (int i = 0; i < Companions.Count; i++)
+        {
+            if (i == _active && (_current != null || !IsOnCooldown(i))) continue;   // el elegido ya está (o sale solo)
+            if (_broken.Contains(i)) continue;
+            Vector3 offset = slot % 2 == 0 ? new Vector3(-1.5f, 0f, -1.5f) : new Vector3(0f, 0f, -2.8f);
+            slot++;
+            Entity_Companion extra = SpawnOne(i, offset, 1f);
+            if (extra != null) _extras[i] = extra;
+        }
+    }
+
+    // Se van los extras (sin guardar su vida ni empezarles espera).
+    private void EndFury()
+    {
+        _furyActive = false;
+        foreach (Entity_Companion extra in _extras.Values)
+        {
+            if (extra == null) continue;
+            NetworkObject nob = extra.GetComponent<NetworkObject>();
+            if (nob != null && nob.IsSpawned) InstanceFinder.ServerManager.Despawn(nob);
+            else Destroy(extra.gameObject);
+        }
+        _extras.Clear();
     }
 
     // Los guardados heridos (los que no están afuera) se curan de a poco.
@@ -163,6 +213,7 @@ public class CompanionManager : MonoBehaviour
     public bool ServerSwitch(int index)
     {
         if (!IsServer || index < 0 || index >= Companions.Count) return false;
+        if (_furyActive) return false;   // durante la Ira primal no se cambia (también lo bloquea el tag en la habilidad)
         if (index == _active && _current != null) return false;
         if (IsOnCooldown(index)) return false;
 
@@ -178,11 +229,19 @@ public class CompanionManager : MonoBehaviour
 
     private void SpawnCompanion(int index)
     {
+        _current = SpawnOne(index, new Vector3(1.5f, 0f, -1.5f), StoredHealth(index));
+        if (_current != null) _storedHealth.Remove(index);   // ya está afuera: su vida es la del compañero
+    }
+
+    // Hace aparecer al compañero 'index' junto al dueño (offset en su espacio, girado por su yaw)
+    // con esa vida (0 a 1). null si no se pudo.
+    private Entity_Companion SpawnOne(int index, Vector3 offset, float health)
+    {
         GameObject prefab = Companions[index].Prefab;
-        if (prefab == null || !InstanceFinder.IsServerStarted) return;
+        if (prefab == null || !InstanceFinder.IsServerStarted) return null;
 
         Transform owner = _asc.transform;
-        Vector3 spot = owner.position + Quaternion.Euler(0f, owner.eulerAngles.y, 0f) * new Vector3(1.5f, 0f, -1.5f);
+        Vector3 spot = owner.position + Quaternion.Euler(0f, owner.eulerAngles.y, 0f) * offset;
         if (NavMesh.SamplePosition(spot, out NavMeshHit hit, 4f, NavMesh.AllAreas)) spot = hit.position;
 
         GameObject obj = Instantiate(prefab, spot, owner.rotation);
@@ -191,22 +250,22 @@ public class CompanionManager : MonoBehaviour
         {
             Debug.LogWarning($"[Compañero] '{prefab.name}' no tiene NetworkObject.");
             Destroy(obj);
-            return;
+            return null;
         }
         InstanceFinder.ServerManager.Spawn(nob);
 
-        _current = obj.GetComponent<Entity_Companion>();
-        if (_current == null)
+        Entity_Companion companion = obj.GetComponent<Entity_Companion>();
+        if (companion == null)
         {
             // Un prefab sin Entity_Companion no se reconocería nunca y se sacaría otro en cada
             // frame (pasó con el primer Búho): se saca y no se vuelve a intentar.
             Debug.LogError($"[Compañero] '{prefab.name}' no tiene Entity_Companion: no se puede usar.");
             InstanceFinder.ServerManager.Despawn(nob);
             _broken.Add(index);
-            return;
+            return null;
         }
-        _current.Initialize(_asc, this, StoredHealth(index));
-        _storedHealth.Remove(index);   // ya está afuera: su vida es la del compañero
+        companion.Initialize(_asc, this, health, index);
+        return companion;
     }
 
     // Lo saca de la escena VIVO (cambio de compañero, muerte del dueño): guarda su vida.
@@ -228,6 +287,10 @@ public class CompanionManager : MonoBehaviour
     // Lo avisa el compañero al morir: el dueño recibe su espera para volver.
     public void OnCompanionDied(Entity_Companion companion)
     {
+        // Un extra de la Ira primal: se va y listo (no le empieza ninguna espera).
+        foreach (var pair in _extras)
+            if (pair.Value == companion) { _extras.Remove(pair.Key); return; }
+
         if (companion != _current) return;
         _current = null;
         _storedHealth.Remove(_active);   // muerto vuelve lleno, tras su espera
@@ -244,14 +307,16 @@ public class CompanionManager : MonoBehaviour
 
     private void HandleDealtDamage(AbilitySystemComponent victim, float damage)
     {
-        if (!IsServer || _petHitDepth > 0 || _current == null || victim == null) return;
-        _current.Command(victim);
+        if (!IsServer || _petHitDepth > 0 || victim == null) return;
+        if (_current != null) _current.Command(victim);
+        foreach (Entity_Companion extra in _extras.Values) if (extra != null) extra.Command(victim);
     }
 
     private void HandleTookDamage(AbilitySystemComponent attacker)
     {
-        if (!IsServer || _current == null || attacker == null) return;
-        _current.Defend(attacker);
+        if (!IsServer || attacker == null) return;
+        if (_current != null) _current.Defend(attacker);
+        foreach (Entity_Companion extra in _extras.Values) if (extra != null) extra.Defend(attacker);
     }
 
     // =========================================================
@@ -273,6 +338,9 @@ public class CompanionManager : MonoBehaviour
         }
     }
 
+    // ¿Está la Ira primal? (los tres afuera). Lee los tags sincronizados: sirve en cualquier pantalla.
+    public bool FuryActive => _asc != null && _asc.HasTag(EGameplayTag.Status_PrimalFury);
+
     public bool IsOnCooldown(int index)
     {
         if (_asc == null || index < 0 || index >= Companions.Count) return false;
@@ -292,20 +360,22 @@ public class CompanionManager : MonoBehaviour
         return effectIndex >= 0 && _net.TryGetNetActiveEffect(effectIndex, out float remaining, out _) ? remaining : 0f;
     }
 
-    // El compañero vivo de este dueño en ESTA pantalla (null si no hay). Lo busca entre los
-    // que hay en la escena por su dueño sincronizado.
+    // El compañero ELEGIDO vivo de este dueño en ESTA pantalla (null si no hay). Lo busca entre
+    // los que hay en la escena por su dueño y su opción sincronizados (con la Ira primal hay tres).
     private Entity_Companion _cachedCompanion;
     private float _nextSearch;
     public Entity_Companion FindCompanionHere()
     {
         if (_current != null) return _current;   // en el servidor ya se sabe
-        if (_cachedCompanion != null && _cachedCompanion.OwnerObject == OwnerObject) return _cachedCompanion;
+        int active = ActiveIndex;
+        if (_cachedCompanion != null && _cachedCompanion.OwnerObject == OwnerObject && _cachedCompanion.OptionIndex == active)
+            return _cachedCompanion;
         if (Time.time < _nextSearch) return null;
         _nextSearch = Time.time + 0.5f;
 
         NetworkObject me = OwnerObject;
         foreach (Entity_Companion c in FindObjectsByType<Entity_Companion>(FindObjectsSortMode.None))
-            if (c.OwnerObject != null && c.OwnerObject == me) { _cachedCompanion = c; return c; }
+            if (c.OwnerObject != null && c.OwnerObject == me && c.OptionIndex == active) { _cachedCompanion = c; return c; }
         return null;
     }
 

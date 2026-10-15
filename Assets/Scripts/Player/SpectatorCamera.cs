@@ -62,7 +62,7 @@ public class SpectatorCamera : MonoBehaviour
     [Tooltip("Cuánto multiplica la velocidad el Shift.")]
     [Label("Rápido (×)")]
     public float FastMultiplier  = 3f;
-    [Label("Sensibilidad")]
+    [Label("Sensibilidad (×)")]
     public float LookSensitivity = 2.4f;
 
     [Header("Dónde arranca")]
@@ -80,7 +80,7 @@ public class SpectatorCamera : MonoBehaviour
     [Label("Posición al seguir (m)")]
     public Vector3 FollowOffset = new Vector3(0f, 2.4f, -4.8f);
     [Tooltip("Qué tan rápido persigue. Bajo = más suave, y en una grabación se nota.")]
-    [Label("Suavizado al seguir")]
+    [Label("Rapidez al seguir (más = más rápido)")]
     public float FollowLerp = 8f;
 
     [Header("Teclas")]

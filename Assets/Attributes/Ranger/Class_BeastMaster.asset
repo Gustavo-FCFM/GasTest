@@ -35,6 +35,8 @@ MonoBehaviour:
     Ability: {fileID: 11400000, guid: c620036cb752b6e45a2beffe30b28d74, type: 2}
   - InputSlot: 4
     Ability: {fileID: 11400000, guid: 8b00e2a074e16e04cbf19c1172803406, type: 2}
+  - InputSlot: 5
+    Ability: {fileID: 11400000, guid: 218d94d70d8882e41823575c973ca2db, type: 2}
   PassiveBehaviorsPrefab: {fileID: 1798604898553192926, guid: 03ff9b4623169c04a9e7152c18e1fdb2, type: 3}
   PassiveEffects: []
   WallMovement: {fileID: 11400000, guid: 0909e17f538cef540ba16708b593b2db, type: 2}

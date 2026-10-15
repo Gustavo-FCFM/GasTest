@@ -124,16 +124,16 @@ public class MercenariesGameMode : NetworkBehaviour
     public int MaxTeamLevel = 3;
 
     [Tooltip("Experiencia para pasar de nivel 1 a 2, de 2 a 3, etc. Un valor por salto.")]
-    [Label("Experiencia por nivel")]
+    [Label("Experiencia para cada nivel (exp)")]
     public float[] XpPerLevel = { 100f, 150f };
 
     [Tooltip("Experiencia que la bolsa del equipo gana por cada NPC derrotado.")]
-    [Label("Experiencia por NPC")]
+    [Label("Experiencia por NPC (exp)")]
     public float XpPerNpcKill = 15f;
 
     [Tooltip("Experiencia por derribar a un JUGADOR enemigo. Vale bastante más que un NPC a propósito.")]
-    [Label("Experiencia por jugador")]
-    public float XpPerPlayerTakedown = 40f;
+    [Label("Experiencia por jugador (exp)")]
+    public float XpPerPlayerTakedown = 50f;
 
     [Tooltip("Minuto en el que un equipo que no hizo NADA llega igual al nivel máximo. Es la red de " +
              "seguridad para que nadie se quede atrás: la experiencia pasiva se calcula sola a partir " +
@@ -806,7 +806,7 @@ public class MercenariesGameMode : NetworkBehaviour
     // la planta de su sala durante la preparación vuelve a su punto de aparición.
     [Tooltip("Cuánto (en metros) puede pasarse alguien del borde de su sala durante la " +
              "preparación antes de que lo devuelvan adentro.")]
-    [Label("Margen de salida en la preparación")]
+    [Label("Margen de salida en la preparación (m)")]
     public float WarmupEscapeMargin = 1.5f;
 
     [Server]

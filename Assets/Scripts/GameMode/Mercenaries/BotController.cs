@@ -51,7 +51,7 @@ public class BotController : MonoBehaviour
     [Header("Percepción")]
     [Tooltip("Hasta dónde ve enemigos. Es generoso a propósito: la arena mide 42 m de radio " +
              "y con poca vista los bots se quedan dando vueltas en su base.")]
-    [Label("Radio de visión")]
+    [Label("Radio de visión (m)")]
     public float VisionRadius = 35f;
 
     [Tooltip("La capa 7 (Character), donde viven jugadores y NPCs.")]
@@ -65,19 +65,19 @@ public class BotController : MonoBehaviour
 
     [Header("Distancias de pelea")]
     [Tooltip("A qué distancia pega el Bárbaro. Es el alcance de un ataque cuerpo a cuerpo.")]
-    [Label("Alcance cuerpo a cuerpo")]
+    [Label("Alcance cuerpo a cuerpo (m)")]
     public float MeleeRange = 2.6f;
     [Tooltip("El Pícaro se retira a curarse cuando su vida baja de esta fracción.")]
-    [Label("Pícaro: se retira bajo (vida)")]
+    [Label("Pícaro: se retira con vida bajo (0 a 1)")]
     [Range(0.05f, 0.9f)] public float AssassinRetreatBelowHealth = 0.35f;
 
     [Tooltip("Y vuelve a la pelea cuando se recuperó hasta esta otra. La diferencia entre " +
              "las dos evita que entre y salga sin parar en el borde exacto.")]
-    [Label("Pícaro: vuelve sobre (vida)")]
+    [Label("Pícaro: vuelve con vida sobre (0 a 1)")]
     [Range(0.1f, 1f)] public float AssassinReturnAboveHealth = 0.75f;
 
     [Tooltip("A qué distancia sigue el Paladín a su compañero cuando no hay a quién pegarle.")]
-    [Label("Soporte: distancia de seguimiento")]
+    [Label("Soporte: distancia de seguimiento (m)")]
     public float SupportFollowDistance = 6f;
 
     [Tooltip("Cuánto sostiene una habilidad de MANTENER (el escudo del Paladín) antes de " +
@@ -94,11 +94,11 @@ public class BotController : MonoBehaviour
 
     [Tooltip("Radio de la esfera que barre el camino. Un poco menos que el ancho del " +
              "personaje, para no engancharse en cada esquina.")]
-    [Label("Radio del barrido")]
+    [Label("Radio del barrido (m)")]
     public float CollisionProbeRadius = 0.35f;
 
     [Tooltip("A qué altura del pie se hace el barrido, para no chocar contra el propio suelo.")]
-    [Label("Altura del barrido")]
+    [Label("Altura del barrido (m)")]
     public float CollisionProbeHeight = 0.9f;
 
     [Header("Que no parezcan estatuas")]
@@ -142,25 +142,25 @@ public class BotController : MonoBehaviour
     [Header("Criterio")]
     [Tooltip("Radio con el que se cuenta si hay VARIOS enemigos juntos. Decide si vale la " +
              "pena un área, un salto encima del grupo, o la definitiva del Bárbaro.")]
-    [Label("Radio para grupos")]
+    [Label("Radio para grupos (m)")]
     public float AoeRadius = 5f;
 
     [Tooltip("Por debajo de esta vida, el Pícaro considera que puede EJECUTAR y suelta su " +
              "definitiva.")]
-    [Label("Ejecutar bajo (vida)")]
+    [Label("Ejecutar con vida bajo (0 a 1)")]
     [Range(0.05f, 0.9f)] public float ExecuteBelowHealth = 0.4f;
 
     [Tooltip("Por debajo de esta vida se considera que alguien está EN PELIGRO. Es lo que " +
              "hace que el Paladín deje de pegar y pase a curar, escudar y soltar su " +
              "definitiva.")]
-    [Label("Aliado en peligro bajo (vida)")]
+    [Label("Aliado en peligro con vida bajo (0 a 1)")]
     [Range(0.05f, 0.9f)] public float AllyDangerHealth = 0.3f;
 
     [Tooltip("Vida a partir de la cual el Paladín SOSTIENE a alguien: escudos y curaciones " +
              "de objetivo. Más alta que AllyDangerHealth a propósito — el Escudo de fe se " +
              "pone ANTES de que la cosa se ponga fea; la definitiva se guarda para cuando ya " +
              "lo está.")]
-    [Label("Sostener aliado bajo (vida)")]
+    [Label("Sostener aliado con vida bajo (0 a 1)")]
     [Range(0.1f, 1f)] public float AllySupportHealth = 0.5f;
 
     [Tooltip("Cuántos segundos de combate trabado antes de gastar un buff. Sin esto se los " +

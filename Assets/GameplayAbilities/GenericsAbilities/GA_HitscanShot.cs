@@ -33,22 +33,22 @@ public class GA_HitscanShot : GameplayAbility
 {
     [Section(AbilitySection.Shape)]
     [Tooltip("Alcance máximo del disparo.")]
-    [Label("Alcance máximo")]
+    [Label("Alcance máximo (m)")]
     public float MaxRange = 50f;
 
     [Tooltip("Grosor de la bala. 0 = línea fina (puntería exacta); > 0 perdona un poco la puntería.")]
-    [Label("Grosor de la bala")]
+    [Label("Grosor de la bala (m)")]
     public float BulletRadius = 0.15f;
 
     [Tooltip("Altura del cañón sobre el pivote del personaje (desde dónde sale el rayo).")]
-    [Label("Altura del cañón")]
+    [Label("Altura del cañón (m)")]
     public float MuzzleHeight = 1.4f;
 
     [Tooltip("Distancia mínima a la que se considera que la retícula y el disparo se " +
              "juntan. La retícula sale de la cámara y el tiro del arma: apuntando a algo " +
              "muy cerca, esas dos líneas se abren y el disparo sale visiblemente torcido. " +
              "Con esto se apunta a un punto del MISMO rayo pero a esta distancia.")]
-    [Label("Convergencia mínima")]
+    [Label("Convergencia mínima (m)")]
     public float MinConvergeDistance = 4f;
 
     [Tooltip("Capas que FRENAN el disparo (paredes/entorno).")]
@@ -58,7 +58,7 @@ public class GA_HitscanShot : GameplayAbility
     [Section("Retroceso")]
     [Tooltip("Velocidad del empujón hacia atrás (contrario al tiro: disparar al piso te eleva). " +
              "0 = sin retroceso.")]
-    [Label("Retroceso: velocidad")]
+    [Label("Retroceso: velocidad (m/s)")]
     public float RecoilSpeed = 0f;
 
     [ShowIf(nameof(RecoilSpeed), ShowIfAttribute.Positive)]
@@ -72,13 +72,13 @@ public class GA_HitscanShot : GameplayAbility
              "jump mantiene el arco en vez de caer a plomo apenas termina el impulso.")]
     [Range(0f, 1f)]
     [ShowIf(nameof(RecoilSpeed), ShowIfAttribute.Positive)]
-    [Label("Retroceso: inercia al terminar")]
+    [Label("Retroceso: inercia al terminar (0 a 1)")]
     public float RecoilExitSpeedPercent = 0.35f;
 
     [ShowIf(nameof(RecoilSpeed), ShowIfAttribute.Positive)]
     [Tooltip("Qué tan rápido se disipa esa inercia, en 1/segundos. Más alto = se va antes. " +
              "Mientras dura, el jugador conserva el control normal: puede girar, frenar y saltar.")]
-    [Label("Retroceso: disipación")]
+    [Label("Retroceso: disipación (más = frena antes)")]
     public float RecoilExitDamping = 3f;
 
     [ShowIf(nameof(RecoilSpeed), ShowIfAttribute.Positive)]

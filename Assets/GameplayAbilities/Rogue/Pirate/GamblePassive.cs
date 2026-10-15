@@ -50,7 +50,7 @@ public class GamblePassive : MonoBehaviour, IDamageModifier
     public float MarkInterval = 15f;
 
     [Tooltip("Radio en el que busca enemigos a los que apostarle.")]
-    [Label("Radio de búsqueda")]
+    [Label("Radio de búsqueda (m)")]
     public float SearchRadius = 20f;
 
     [Tooltip("Apostar SOLO a jugadores, nunca a NPCs.\n\n" +

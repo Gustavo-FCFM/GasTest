@@ -52,7 +52,7 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
 
     [Section(AbilitySection.Shape)]
     [Tooltip("Radio del área, en metros.")]
-    [Label("Radio")]
+    [Label("Radio (m)")]
     public float Radius        = 4f;
 
     [Tooltip("AtOwner: el área nace sobre el dueño (comportamiento clásico). AtReticle: se apunta " +
@@ -62,7 +62,7 @@ public class GA_ContinuousAoE : GameplayAbility, IGroundTargetAbility
 
     [ShowIf(nameof(DeployMode), EAoEDeploy.AtReticle)]
     [Tooltip("Alcance máximo al que se puede desplegar la zona.")]
-    [Label("Alcance máximo")]
+    [Label("Alcance máximo (m)")]
     public float MaxRange = 15f;
 
     // Si el área se mueve con el dueño o queda fija donde se activó. Se ignora con

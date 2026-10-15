@@ -19,7 +19,7 @@ public class GA_ConeAttack : GameplayAbility
 {
     [Section(AbilitySection.Shape)]
     [Tooltip("Alcance del cono, en metros, desde el punto de salida.")]
-    [Label("Alcance")]
+    [Label("Alcance (m)")]
     public float Range = 2.5f;
 
     [Range(0f, 360f)]
@@ -44,7 +44,7 @@ public class GA_ConeAttack : GameplayAbility
              "donde de verdad sale el golpe.\n\n" +
              "Importa MÁS con puntería vertical encendida, porque ahí el ángulo se mide en 3D.\n\n" +
              "En CERO (el default) sale del pivote, como se comportó siempre.")]
-    [Label("Punto de salida")]
+    [Label("Punto de salida (m)")]
     public Vector3 OriginOffset = Vector3.zero;
 
     [Section("Zonas donde apunta")]
@@ -74,14 +74,14 @@ public class GA_ConeAttack : GameplayAbility
     [Tooltip("Distancia entre los centros de dos zonas vecinas, en metros. En fila, el doble del radio " +
              "de la zona = se tocan. Rellenando el cono, ~1.7 veces el radio no deja huecos; más " +
              "grande = menos zonas.")]
-    [Label("Separación de zonas")]
+    [Label("Separación de zonas (m)")]
     public float ZoneSpacing = 5f;
 
     [ShowIf(nameof(ImpactZone))]
     [ShowIf(nameof(ZoneLayout), GA_ContinuousAoE.EZoneLayout.Row)]
     [Tooltip("Hasta qué distancia del lanzador puede caer la fila. Mirando más lejos, cae a esta " +
              "distancia en esa dirección.")]
-    [Label("Alcance de las zonas")]
+    [Label("Alcance de las zonas (m)")]
     public float ZoneMaxRange = 10f;
 
     // Las zonas salen con el PRIMER frame de impacto de cada lanzamiento (no con cada uno
