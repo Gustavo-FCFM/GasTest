@@ -72,6 +72,11 @@ public class Entity_PlayerCopy : NetworkBehaviour
     // su arma y animator override. -1 = todavía sin asignar.
     private readonly SyncVar<int> _sourceClassIndex = new SyncVar<int>(-1);
 
+    // El jugador COPIADO, en todos los peers: su barra de vida (UI_WorldHealthbar.Mirror)
+    // muestra la de él —nombre, vida, buffs, clase—, así el enemigo no sabe cuál es el real.
+    private readonly SyncVar<NetworkObject> _sourcePlayer = new SyncVar<NetworkObject>();
+    private bool _nameplateMirrored;
+
     // Estado solo-servidor.
     private AbilitySystemComponent _ownerASC;
     private Vector3 _target;     // punto objetivo (se camina hacia su proyección horizontal)
@@ -157,12 +162,15 @@ public class Entity_PlayerCopy : NetworkBehaviour
     // La llama PlayerCopyManager en el servidor justo después de spawnear.
     // sourceClassIndex = índice de clase del jugador COPIADO (para su arma/anim); en la
     // Copia exacta es el propio Ilusionista, en Fiesta puede ser un aliado.
-    public void ServerInit(AbilitySystemComponent owner, Vector3 target, float speed, int sourceClassIndex)
+    // source = el jugador copiado (su barra de vida es la que muestra la copia).
+    public void ServerInit(AbilitySystemComponent owner, Vector3 target, float speed, int sourceClassIndex,
+                           AbilitySystemComponent source = null)
     {
         _ownerASC = owner;
         _target   = target;
         _speed    = Mathf.Max(0f, speed);
         _sourceClassIndex.Value = sourceClassIndex;
+        _sourcePlayer.Value     = source != null ? source.GetComponent<NetworkObject>() : null;
 
         if (Asc != null)
         {
@@ -191,6 +199,14 @@ public class Entity_PlayerCopy : NetworkBehaviour
     {
         // Copia el arma/animator del jugador origen apenas se pueda (todos los peers).
         TryApplyVisuals();
+
+        // Y su barra de vida, apenas llega quién es.
+        if (!_nameplateMirrored && _sourcePlayer.Value != null)
+        {
+            _nameplateMirrored = true;
+            UI_WorldHealthbar bar = GetComponent<UI_WorldHealthbar>();
+            if (bar != null) bar.Mirror(_sourcePlayer.Value.gameObject);
+        }
 
         // Animación (todos los peers): velocidad horizontal observada → parámetros del
         // Animator, así la copia camina mientras se mueve y queda idle al llegar. Como

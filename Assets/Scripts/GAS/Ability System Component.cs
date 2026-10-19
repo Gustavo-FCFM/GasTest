@@ -222,6 +222,9 @@ public class AbilitySystemComponent : MonoBehaviour
     // ejemplo, para saber cuántas Heridas apiladas hay.
     public int GetTagCount(EGameplayTag tag) => GameplayTags.TryGetValue(tag, out int count) ? count : 0;
 
+    // Los tags que tiene ahora (para diagnósticos: el registro del desatascarse).
+    public IEnumerable<EGameplayTag> ActiveTags => GameplayTags.Keys;
+
     // Suma una fuente del tag. Solo notifica OnTagAddedCallback cuando pasa de
     // 0 a 1 (recién ahí el personaje "gana" el tag de verdad).
     public void AddTag(EGameplayTag tag)

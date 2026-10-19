@@ -125,10 +125,16 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
     [System.NonSerialized] private bool _aiming;
     [System.NonSerialized] private float _aimStartedAt;
 
+    // CANALIZANDO MIENTRAS APUNTA (sección Canalizar; el Haz guía): desde cuándo se puede
+    // soltar, y si ya soltó antes de tiempo (sale apenas se llena). Solo servidor.
+    [System.NonSerialized] private float _castReadyAt;
+    [System.NonSerialized] private bool  _releaseQueued;
+
     // IHoldAbility: solo con la casilla puesta se maneja como mantenido.
     public bool UsesHoldInput => AimBeforeThrow;
     public bool IsHolding     => _aiming;
-    public AnimationClip HoldLoopClip   => AimBeforeThrow ? AimHoldClip : null;
+    // Sin pose de apuntar propia, la de canalizar (el Haz guía no tiene una de apuntar).
+    public AnimationClip HoldLoopClip   => AimBeforeThrow ? (AimHoldClip != null ? AimHoldClip : CastLoopAnimation) : null;
     public AnimationClip HoldStartClip  => null;
     public AnimationClip HoldEndClip    => null;   // al soltar va el clip de soltar, por la ranura de acción
     public AnimationClip HoldImpactClip => null;
@@ -209,8 +215,10 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
     {
         if (_aiming || OwnerASC == null) return;
 
-        _aiming       = true;
-        _aimStartedAt = Time.time;
+        _aiming        = true;
+        _aimStartedAt  = Time.time;
+        _releaseQueued = false;
+        _castReadyAt   = Time.time + HoldCastSeconds;
 
         PlayerController pc = OwnerASC.GetComponent<PlayerController>();
         if (pc != null) pc.PlayHoldAnimation(this);
@@ -219,28 +227,61 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
         if (netAsc != null)
             netAsc.ServerBroadcastHoldAnimation(this, NetworkAbilitySystemComponent.EHoldAnimationPhase.Start);
 
+        // Canaliza mientras apunta: la barra del dueño se llena hasta que se puede soltar.
+        if (HoldCastSeconds > 0f) ShowCastBar(HoldCastSeconds, channel: false);
+
         OwnerASC.StartAbilityCoroutine(AimWatch());
     }
 
     // Vigila el apuntado en el servidor: un aturdido o la muerte lo cortan SIN lanzar (y
     // sin cobrar), y el corte de seguridad lanza si el aviso de soltar nunca llega.
+    //
+    // CANALIZANDO (sección Canalizar): lo corta lo mismo que corta una canalización (lo que
+    // la bloquea —el aturdido, el silencio si es magia—, morir y, si se marcó, el daño), y
+    // cortado CUENTA COMO LANZADO (cobra costo y cooldown). Al llenarse la barra, si ya había
+    // soltado, sale ahí mismo.
     private IEnumerator AimWatch()
     {
-        while (_aiming)
-        {
-            if (OwnerASC == null || OwnerASC.HasTag(EGameplayTag.State_Dead) ||
-                OwnerASC.HasTag(EGameplayTag.State_Stunned))
-            {
-                CancelAim();
-                yield break;
-            }
+        bool hasCast    = HoldCastSeconds > 0f;
+        bool channeling = hasCast;
+        bool damaged    = false;
+        System.Action<AbilitySystemComponent> onDamaged = _ => damaged = true;
+        if (hasCast && CastBreaksOnDamage && OwnerASC != null) OwnerASC.OnTookDamage += onDamaged;
+        int cancelSerial = OwnerASC != null ? OwnerASC.CancelSerial : 0;
 
-            if (AimSafetyTimeout > 0f && Time.time - _aimStartedAt >= AimSafetyTimeout)
+        try
+        {
+            while (_aiming)
             {
-                EndHold();
-                yield break;
+                bool cut = hasCast
+                    ? CastInterrupted(OwnerASC, cancelSerial, damaged)
+                    : OwnerASC == null || OwnerASC.HasTag(EGameplayTag.State_Dead) ||
+                      OwnerASC.HasTag(EGameplayTag.State_Stunned);
+                if (cut)
+                {
+                    if (channeling) HideCastBar(true);
+                    CancelAim(countsAsCast: hasCast);
+                    yield break;
+                }
+
+                if (channeling && Time.time >= _castReadyAt)
+                {
+                    channeling = false;
+                    HideCastBar(false);
+                    if (_releaseQueued) { EndHold(); yield break; }
+                }
+
+                if (AimSafetyTimeout > 0f && Time.time - _aimStartedAt >= AimSafetyTimeout)
+                {
+                    EndHold();
+                    yield break;
+                }
+                yield return null;
             }
-            yield return null;
+        }
+        finally
+        {
+            if (hasCast && CastBreaksOnDamage && OwnerASC != null) OwnerASC.OnTookDamage -= onDamaged;
         }
     }
 
@@ -252,7 +293,14 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
 
         if (OwnerASC.HasTag(EGameplayTag.State_Dead) || OwnerASC.HasTag(EGameplayTag.State_Stunned))
         {
-            CancelAim();
+            CancelAim(countsAsCast: HoldCastSeconds > 0f);
+            return;
+        }
+
+        // Todavía canalizando: no sale hasta que se llene la barra (lo suelta AimWatch).
+        if (Time.time < _castReadyAt)
+        {
+            _releaseQueued = true;
             return;
         }
 
@@ -271,12 +319,14 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
         OwnerASC.StartAbilityCoroutine(ShootSequence(fromAim: true));
     }
 
-    // Cortado sin lanzar: no sale nada ni se cobra nada.
-    private void CancelAim()
+    // Cortado sin lanzar: no sale nada ni se cobra nada… salvo que estuviera canalizando
+    // (sección Canalizar): ahí cuenta como lanzado.
+    private void CancelAim(bool countsAsCast = false)
     {
         if (!_aiming) return;
         _aiming = false;
         StopAimAnimation();
+        if (countsAsCast) PayCostAndCooldown();
         EndAbility();
     }
 

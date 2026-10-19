@@ -72,7 +72,7 @@ public class GA_ExactCopy : GameplayAbility
 
         // La Copia exacta copia al PROPIO Ilusionista → su índice de clase.
         int sourceClassIndex = pc != null ? pc.VisualClassIndex : -1;
-        manager.SpawnCopy(spawnPos, target, speed, sourceClassIndex);
+        manager.SpawnCopy(spawnPos, target, speed, sourceClassIndex, OwnerASC);
 
         if (pc != null) pc.PlayAnimation(this);
 

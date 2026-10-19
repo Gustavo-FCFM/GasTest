@@ -994,6 +994,16 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
 
         ability.CommittedThisActivation = false;
         ability.StartedThisActivation   = false;
+
+        // CANALIZA (sección Canalizar del GA): primero la canalización, y la habilidad sale
+        // al terminar (o se repite mientras dura). Las animaciones las manda ella: el bucle a
+        // todos y, al soltar, el clip de la habilidad (ver GameplayAbility.CastRoutine).
+        if (ability.UsesCast)
+        {
+            ability.BeginCast();
+            return;
+        }
+
         ability.Activate();
 
         // Una habilidad de MANTENER no anima con un clip one-shot sino con un estado
@@ -1188,10 +1198,17 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
 
         GameplayAbility ability = abilityIndex >= 0
             ? GameplayAbilityRegistry.Instance?.GetAbility(abilityIndex) : null;
-        if (ability is not IChanneledAbility channel) return;
+        if (ability == null) return;
 
-        pc.ApplyChannelAnimation(channel.ChannelStartClip, channel.ChannelLoopClip, channel.ChannelEndClip);
-        pc.SetModelSpin(channel.SpinSpeed);
+        if (ability is IChanneledAbility channel)
+        {
+            pc.ApplyChannelAnimation(channel.ChannelStartClip, channel.ChannelLoopClip, channel.ChannelEndClip);
+            pc.SetModelSpin(channel.SpinSpeed);
+            return;
+        }
+
+        // Cualquier otra que canaliza por su sección Canalizar.
+        pc.ApplyChannelAnimation(ability.CastStartAnimation, ability.CastLoopAnimation, ability.CastReleaseAnimation);
     }
 
     // =========================================================
@@ -1377,6 +1394,29 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     [ObserversRpc]
     private void ObserversPlayAbilityAnimationOnAll(int abilityIndex, float animationSpeed)
     {
+        GameplayAbility ability = abilityIndex >= 0
+            ? GameplayAbilityRegistry.Instance?.GetAbility(abilityIndex) : null;
+        PlayerController pc = GetComponent<PlayerController>();
+        if (ability != null && pc != null) pc.ApplyAbilityAnimation(ability, animationSpeed);
+    }
+
+    // La animación de SOLTAR de una habilidad canalizada (sección Canalizar), al terminar de
+    // canalizar. Va también al dueño (no la anticipó al apretar: lo que se ve al apretar es
+    // el bucle), pero NO al personaje del host: ahí Activate() ya la hizo con PlayAnimation.
+    [Server]
+    public void ServerPlayAbilityAnimationAfterCast(GameplayAbility ability)
+    {
+        if (ability == null) return;
+        int index = GameplayAbilityRegistry.Instance != null
+            ? GameplayAbilityRegistry.Instance.GetIndex(ability) : -1;
+        ObserversPlayAbilityAnimationAfterCast(index, ability.ResolveAnimationSpeed());
+    }
+
+    [ObserversRpc]
+    private void ObserversPlayAbilityAnimationAfterCast(int abilityIndex, float animationSpeed)
+    {
+        if (IsServerInitialized && IsOwner) return;
+
         GameplayAbility ability = abilityIndex >= 0
             ? GameplayAbilityRegistry.Instance?.GetAbility(abilityIndex) : null;
         PlayerController pc = GetComponent<PlayerController>();

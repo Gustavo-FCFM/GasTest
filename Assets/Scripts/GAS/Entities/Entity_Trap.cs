@@ -1,37 +1,37 @@
 using System.Collections.Generic;
 using FishNet.Object;
-using FishNet.Object.Synchronizing;
 using UnityEngine;
 
 // ============================================================
 // Entity_Trap  (las trampas y las bombas del Trampero — 15 de octubre de 2026)
 //
 // UNA pieza para todas: cada trampa es este script con otros números y efectos en su prefab.
+// Desde el 19 de octubre de 2026 es una invocación (Entity_Summon): la base resuelve el equipo
+// del Trampero, que la vean solo los suyos ("La ven: solo su equipo"), "Dura", el límite de
+// trampas por Trampero (la más vieja se va; las bombas no cuentan) y desaparecer si el Trampero
+// se va o cambia de clase. Y la zona de espinas es una Summon_Zone. Acá queda lo propio:
 //
-//   1. La pone una habilidad (GA_PlaceTrap con la rueda, GA_BombBarrage la definitiva) y la
-//      prepara con Initialize: su dueño (el Trampero) y su equipo.
-//   2. Puede estar en el piso o en una pared (su "arriba" sale de la superficie).
-//      Tarda "Se arma en" segundos; desde ahí salta cuando un JUGADOR o bot enemigo (nunca un
+//   1. La pone una habilidad (GA_PlaceTrap con la rueda, GA_BombBarrage la definitiva) con
+//      Entity_Summon.Spawn. Puede estar en el piso o en una pared (su "arriba" sale de la
+//      superficie).
+//   2. Tarda "Se arma en" segundos; desde ahí salta cuando un JUGADOR o bot enemigo (nunca un
 //      NPC, pedido de Gustavo) entra a "Salta a".
 //   3. Al saltar: "Aviso antes de explotar" (la de frío se escarcha a la vista de todos) y
-//      después EXPLOTA (los efectos, una vez, en su radio) o deja una ZONA ("Zona: dura" > 0:
-//      la de espinas, que golpea cada tanto mientras dura).
-//   4. Si no la pisa nadie, desaparece a los "Dura" segundos; con "Explota al vencerse"
-//      explota ahí (las bombas de la definitiva).
-//
-// INVISIBLE PARA LOS ENEMIGOS: cada pantalla dibuja el modelo solo si la trampa es de su
-// equipo (o si ya saltó y se ve el aviso). El equipo viaja en un SyncVar; nada más.
+//      después EXPLOTA (los efectos, una vez, en su radio) o prende su ZONA (la de espinas, que
+//      golpea cada tanto mientras dura: su Summon_Zone).
+//   4. Si no la pisa nadie, se va a los "Dura" segundos; con "Explota al vencerse" explota ahí
+//      (las bombas de la definitiva).
 //
 // EL DAÑO ES DEL TRAMPERO: los "Efectos" se aplican con él como autor (escalan con su ataque, la
 // baja es suya y le carga la definitiva). Los "Efectos desde la trampa" se aplican con la propia
-// trampa como autor: el EMPUJE sale desde la trampa (por eso lleva un AbilitySystemComponent,
-// como los tótems).
+// trampa como autor: el EMPUJE sale desde ella (por eso lleva un AbilitySystemComponent).
 //
-// LÍMITE: cada dueño tiene hasta N trampas que "cuentan para el límite"; al pasar el límite se
-// saca la más vieja (lo decide quien la pone, ver Initialize). Todo corre en el servidor.
+// PREFABS: Trap_Base (todo lo común) y una VARIANTE por trampa (Trap_Spikes, Trap_Cold,
+// Trap_Explosive, Trap_Bomb) con su modelo y sus números: lo que se cambie en la base cambia
+// en todas.
 // ============================================================
 [RequireComponent(typeof(AbilitySystemComponent))]
-public class Entity_Trap : NetworkBehaviour
+public class Entity_Trap : Entity_Summon
 {
     [Header("Armado")]
     [Tooltip("Segundos desde que se pone hasta que puede saltar: así no explota en el acto si la " +
@@ -43,17 +43,9 @@ public class Entity_Trap : NetworkBehaviour
     [Label("Salta a (m)")]
     public float TriggerRadius = 2f;
 
-    [Tooltip("Segundos que dura puesta si nadie la pisa.")]
-    [Label("Dura (s)")]
-    public float LifeSeconds = 180f;
-
-    [Tooltip("Al vencerse, explota igual (las bombas de la definitiva). Apagado = desaparece sin más.")]
+    [Tooltip("Al vencerse (\"Dura\"), explota igual (las bombas de la definitiva). Apagado = desaparece sin más.")]
     [Label("Explota al vencerse")]
     public bool ExplodeOnExpire;
-
-    [Tooltip("Cuenta para el límite de trampas puestas del dueño (las de la definitiva no).")]
-    [Label("Cuenta para el límite")]
-    public bool CountsTowardLimit = true;
 
     [Header("Al saltar")]
     [Tooltip("Segundos entre que salta y que explota (la de frío: el aviso de escarcha). 0 = en el acto.")]
@@ -64,7 +56,7 @@ public class Entity_Trap : NetworkBehaviour
     [Label("VFX del aviso")]
     public GameObject WarningVFX;
 
-    [Tooltip("Radio en el que alcanza a los jugadores al explotar (o el de la zona).")]
+    [Tooltip("Radio en el que alcanza a los jugadores al explotar.")]
     [Label("Radio (m)")]
     public float EffectRadius = 3f;
 
@@ -86,114 +78,58 @@ public class Entity_Trap : NetworkBehaviour
     [Label("VFX: escala por metro de radio (×)")]
     public float VfxScalePerMeter = 0.5f;
 
-    [Header("Zona (la de espinas)")]
-    [Tooltip("Si es más que 0, en vez de explotar una vez deja una zona en el radio que golpea cada " +
-             "tanto durante estos segundos.")]
-    [Label("Zona: dura (s)")]
-    public float ZoneSeconds = 0f;
-
-    [Tooltip("Cada cuántos segundos golpea la zona (el primero, en el acto).")]
-    [Label("Zona: cada cuánto (s)")]
-    public float ZoneTickSeconds = 1f;
-
-    [Tooltip("Lo que recibe cada jugador enemigo dentro de la zona en cada golpe, con el Trampero como autor.")]
-    [Label("Zona: efectos por golpe")]
-    public List<GameplayEffect> ZoneEffects = new List<GameplayEffect>();
-
     [Header("Referencias")]
     [Label("Capa de personajes")]
     public LayerMask CharacterLayer = 1 << 7;
 
-    [Tooltip("El modelo (el prefab de la bomba): se esconde para los enemigos y al explotar. Vacío = " +
-             "todo lo que cuelga de la trampa.")]
-    [Label("Modelo")]
-    public Transform Visual;
-
-    // --- todas las pantallas ---
-    private readonly SyncVar<int>  _team     = new SyncVar<int>();
-    private readonly SyncVar<bool> _revealed = new SyncVar<bool>();   // saltó: el aviso lo ven todos
-    private readonly SyncVar<bool> _spent    = new SyncVar<bool>();   // explotó: ya no hay modelo
-    private Renderer[] _renderers;
-    private bool _lastVisible = true;
-
     // --- servidor ---
-    private AbilitySystemComponent _owner;
-    private AbilitySystemComponent _asc;
-    private float _armedAt, _expireAt, _detonateAt, _zoneEndsAt, _nextZoneTick;
+    private float _armedAt, _detonateAt;
     private bool  _triggered, _detonated;
+    private Summon_Zone _zone;
     private readonly Collider[] _hits = new Collider[32];
     private readonly HashSet<AbilitySystemComponent> _seen = new HashSet<AbilitySystemComponent>();
+    private readonly List<AbilitySystemComponent> _targets = new List<AbilitySystemComponent>();
 
-    // Las trampas que cuentan para el límite, por dueño, en orden (la primera es la más vieja).
-    private static readonly Dictionary<AbilitySystemComponent, List<Entity_Trap>> _byOwner =
-        new Dictionary<AbilitySystemComponent, List<Entity_Trap>>();
-
-    private void Awake()
+    protected override void Awake()
     {
-        _asc = GetComponent<AbilitySystemComponent>();
-        Transform root = Visual != null ? Visual : transform;
-        _renderers = root.GetComponentsInChildren<Renderer>(true);
+        base.Awake();
+        _zone = GetComponent<Summon_Zone>();
     }
 
-    // Lo llama quien la pone, en el servidor, justo después de spawnearla. maxAlive: cuántas
-    // trampas que cuentan para el límite puede tener este dueño (0 = sin límite).
-    [Server]
-    public void Initialize(AbilitySystemComponent owner, int maxAlive)
+    protected override void OnSummoned()
     {
-        _owner = owner;
-        _team.Value = owner != null ? owner.TeamID : 0;
-        if (_asc != null) _asc.TeamID = _team.Value;
-
-        _armedAt  = Time.time + ArmSeconds;
-        _expireAt = Time.time + LifeSeconds;
-
-        if (!CountsTowardLimit || owner == null) return;
-        if (!_byOwner.TryGetValue(owner, out List<Entity_Trap> list))
-            _byOwner[owner] = list = new List<Entity_Trap>();
-        list.RemoveAll(t => t == null);
-        list.Add(this);
-        while (maxAlive > 0 && list.Count > maxAlive)
-        {
-            Entity_Trap oldest = list[0];
-            list.RemoveAt(0);
-            if (oldest != null) oldest.ServerDespawn();
-        }
-    }
-
-    public override void OnStopServer()
-    {
-        base.OnStopServer();
-        if (_owner != null && _byOwner.TryGetValue(_owner, out List<Entity_Trap> list)) list.Remove(this);
+        _armedAt = Time.time + ArmSeconds;
     }
 
     // =========================================================
     // SERVIDOR
     // =========================================================
 
-    private void Update()
+    protected override void Update()
     {
-        UpdateVisibility();
-        if (!IsServerInitialized || (_detonated && ZoneSeconds <= 0f)) return;
-
-        // Sin dueño (se fue, cambió de clase) la trampa no tiene a quién darle el daño.
-        if (_owner == null) { ServerDespawn(); return; }
-
-        if (_detonated) { TickZone(); return; }
+        base.Update();
+        if (!IsLiveOnServer || _detonated) return;
 
         if (!_triggered)
         {
-            if (Time.time >= _expireAt)
-            {
-                if (ExplodeOnExpire) Detonate();
-                else ServerDespawn();
-                return;
-            }
             if (Time.time >= _armedAt && EnemyPlayerNear()) Trigger();
             return;
         }
 
         if (Time.time >= _detonateAt) Detonate();
     }
+
+    // "Dura" se cumplió sin que nadie la pisara: explota (las bombas) o se va. Si ya saltó, lo
+    // que sigue (el aviso, la zona) termina solo.
+    protected override void OnExpired()
+    {
+        if (_triggered || _detonated) return;
+        if (ExplodeOnExpire) Detonate();
+        else ServerDespawn();
+    }
+
+    // La zona de espinas se terminó: la trampa ya no tiene nada que hacer.
+    protected override void OnZoneEnded() => ServerDespawn();
 
     private bool EnemyPlayerNear()
     {
@@ -205,8 +141,8 @@ public class Entity_Trap : NetworkBehaviour
 
     // Solo jugadores y bots enemigos, vivos (nunca NPCs).
     private bool IsTarget(AbilitySystemComponent other)
-        => other != null && other != _owner && other.GetComponent<PlayerController>() != null &&
-           !other.HasTag(EGameplayTag.State_Dead) && _owner.IsEnemyOf(other);
+        => other != null && other.GetComponent<PlayerController>() != null &&
+           !other.HasTag(EGameplayTag.State_Dead) && IsEnemy(other);
 
     private void Trigger()
     {
@@ -214,7 +150,7 @@ public class Entity_Trap : NetworkBehaviour
         _detonateAt = Time.time + DetonateDelay;
         if (DetonateDelay > 0f)
         {
-            _revealed.Value = true;   // el aviso lo ven todos
+            SetRevealed(true);   // el aviso lo ven todos
             ObserversWarning();
         }
     }
@@ -222,36 +158,25 @@ public class Entity_Trap : NetworkBehaviour
     private void Detonate()
     {
         _detonated = true;
-        _spent.Value = true;
+        SetModelHidden(true);
         ObserversExplosion();
 
-        if (ZoneSeconds > 0f)
+        // La de espinas: su zona golpea cada tanto y, al terminar, la trampa se va (OnZoneEnded).
+        if (_zone != null)
         {
-            _zoneEndsAt   = Time.time + ZoneSeconds;
-            _nextZoneTick = Time.time;
-            TickZone();
+            _zone.Begin();
             return;
         }
 
+        AbilitySystemComponent owner = Summoner;
         foreach (AbilitySystemComponent target in TargetsInRadius())
         {
-            foreach (GameplayEffect e in Effects)            if (e != null) target.ApplyGameplayEffect(e, _owner);
-            foreach (GameplayEffect e in TrapSourcedEffects) if (e != null) target.ApplyGameplayEffect(e, _asc);
+            if (owner != null)  foreach (GameplayEffect e in Effects)            if (e != null) target.ApplyGameplayEffect(e, owner);
+            if (OwnASC != null) foreach (GameplayEffect e in TrapSourcedEffects) if (e != null) target.ApplyGameplayEffect(e, OwnASC);
         }
         Invoke(nameof(ServerDespawn), 0.5f);   // que alcance a verse la explosión
     }
 
-    private void TickZone()
-    {
-        if (Time.time >= _zoneEndsAt) { ServerDespawn(); return; }
-        if (Time.time < _nextZoneTick) return;
-        _nextZoneTick = Time.time + Mathf.Max(0.1f, ZoneTickSeconds);
-
-        foreach (AbilitySystemComponent target in TargetsInRadius())
-            foreach (GameplayEffect e in ZoneEffects) if (e != null) target.ApplyGameplayEffect(e, _owner);
-    }
-
-    private readonly List<AbilitySystemComponent> _targets = new List<AbilitySystemComponent>();
     private List<AbilitySystemComponent> TargetsInRadius()
     {
         _targets.Clear();
@@ -265,28 +190,9 @@ public class Entity_Trap : NetworkBehaviour
         return _targets;
     }
 
-    [Server]
-    public void ServerDespawn()
-    {
-        if (IsSpawned) ServerManager.Despawn(gameObject);
-    }
-
     // =========================================================
     // LO QUE VEN TODOS
     // =========================================================
-
-    // El modelo: lo ve su equipo (y nadie una vez que explotó); los enemigos solo durante el aviso.
-    private void UpdateVisibility()
-    {
-        bool visible;
-        if (_spent.Value) visible = false;
-        else if (_revealed.Value) visible = true;
-        else visible = !IsClientInitialized || _team.Value == 0 || MercUIFactory.LocalTeam() == _team.Value;
-
-        if (visible == _lastVisible) return;
-        _lastVisible = visible;
-        foreach (Renderer r in _renderers) if (r != null) r.enabled = visible;
-    }
 
     [ObserversRpc(RunLocally = true)]
     private void ObserversWarning()
@@ -298,10 +204,12 @@ public class Entity_Trap : NetworkBehaviour
     private void ObserversExplosion()
     {
         if (ExplosionVFX == null) return;
-        // Con la rotación de la trampa: en una pared, las espinas salen de la pared.
+        // Con la rotación de la trampa: en una pared, las espinas salen de la pared. Con zona, el
+        // VFX dura lo que ella.
+        float zoneSeconds = _zone != null ? _zone.Seconds : 0f;
         GameObject vfx = Instantiate(ExplosionVFX, transform.position, transform.rotation);
-        VFX_AreaVisual.Configure(vfx, EffectRadius, VfxScalePerMeter, ZoneSeconds > 0f ? ZoneSeconds : 0f);
-        Destroy(vfx, Mathf.Max(2f, ZoneSeconds + 1f));
+        VFX_AreaVisual.Configure(vfx, _zone != null ? _zone.Radius : EffectRadius, VfxScalePerMeter, zoneSeconds);
+        Destroy(vfx, Mathf.Max(2f, zoneSeconds + 1f));
     }
 
     private void OnDrawGizmosSelected()
@@ -311,4 +219,14 @@ public class Entity_Trap : NetworkBehaviour
         Gizmos.color = new Color(1f, 0.3f, 0.2f, 0.8f);
         Gizmos.DrawWireSphere(transform.position, EffectRadius);
     }
+
+    // =========================================================
+    // DATOS VIEJOS: la zona de espinas vivía acá. "Mercenarios ▸ Una vez ▸ Pasar las trampas a la
+    // base de invocaciones" los copia a una Summon_Zone. Después de correrla no se usan.
+    // =========================================================
+#pragma warning disable CS0414   // solo los lee la herramienta, por SerializedObject
+    [SerializeField, HideInInspector] private float ZoneSeconds = 0f;
+    [SerializeField, HideInInspector] private float ZoneTickSeconds = 1f;
+    [SerializeField, HideInInspector] private List<GameplayEffect> ZoneEffects = new List<GameplayEffect>();
+#pragma warning restore CS0414
 }

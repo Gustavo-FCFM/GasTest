@@ -83,7 +83,7 @@ public class GA_BombBarrage : GameplayAbility, IGroundTargetAbility
         Vector3 center = pc != null ? pc.GetAimPoint(MaxRange) : origin + OwnerASC.transform.forward * MaxRange;
         Vector3 flat = center - origin; flat.y = 0f;
         if (flat.magnitude > MaxRange) center = origin + flat.normalized * MaxRange;
-        center = GA_PlaceTrap.GroundBelow(center);
+        center = Entity_Summon.GroundUnderAim(center, origin + Vector3.up * 1.6f);
 
         if (pc != null)
         {
@@ -101,17 +101,12 @@ public class GA_BombBarrage : GameplayAbility, IGroundTargetAbility
         foreach (Vector3 spot in spots)
         {
             if (OwnerASC == null) yield break;
-            Vector3 ground = GA_PlaceTrap.GroundBelow(spot);
-            GameObject obj = Instantiate(BombPrefab, ground, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f));
-            NetworkObject nob = obj.GetComponent<NetworkObject>();
-            if (nob != null)
-            {
-                InstanceFinder.ServerManager.Spawn(nob);
-                Entity_Trap bomb = obj.GetComponent<Entity_Trap>();
-                if (bomb != null) bomb.Initialize(OwnerASC, 0);
+            Vector3 ground = Entity_Summon.GroundNear(spot, spot.y);   // los puntos están a la altura del centro, ya en el piso
+            // Las bombas no cuentan para el límite de trampas (lo dice su prefab: "Cuenta para el
+            // límite" apagado; y por las dudas, también acá).
+            if (Entity_Summon.Spawn(BombPrefab, OwnerASC, ground, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f),
+                                    countsTowardLimit: false) != null)
                 BroadcastImpactVFX(ground);
-            }
-            else Destroy(obj);
 
             if (wait > 0f) yield return new WaitForSeconds(wait);
         }

@@ -559,7 +559,16 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     public virtual bool CanActivate()
     {
         if (OwnerASC == null) return false;
+
+        // Una repetición de un canalizado continuo: lo que la cortaría ya lo mira la
+        // canalización en cada frame, y el cooldown (ya cobrado) o el tag de canalizar la
+        // frenarían sin razón. Lo propio de cada habilidad (tener a alguien a tiro) sigue.
+        if (_castTicking) return true;
+
         if (OwnerASC.HasTag(EGameplayTag.State_Dead)) return false;
+
+        // Ya canalizándose (el cooldown recién se cobra al soltar): no se arranca otra vez.
+        if (_castRunning) return false;
 
         if (ActivationBlockedTags != null)
             foreach (EGameplayTag tag in ActivationBlockedTags)
@@ -626,9 +635,31 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
 
         CommittedThisActivation = true;
 
+        // Canalizado CONTINUO ya cobrado: cada repetición sale gratis (el costo y el cooldown
+        // se cobran una vez, al empezar). Solo los VFX "al lanzar", que marcan cada pulso.
+        if (_castPaid)
+        {
+            PlayCastVisuals();
+            return;
+        }
+
         // Las acumulaciones, ANTES de los efectos "al activarse": esos ya pueden escalar.
         ReadStacks();
 
+        PayCostAndCooldown();
+        if (_castRunning) _castPaid = true;
+
+        // Los efectos "al activarse" (un buff propio al lanzar). Una habilidad que tiene que
+        // aplicarlos en otro momento (la Ira inmortal, que primero revive) los pide ella.
+        if (ApplyActivationEffectsOnCommit) ApplyActivationEffects();
+
+        PlayCastVisuals();
+    }
+
+    // Gasta una carga, cobra el costo y pone el cooldown. Es lo de CommitAbility que también
+    // se cobra cuando una canalización se corta (cuenta como lanzada).
+    protected void PayCostAndCooldown()
+    {
         // Gasta una carga y arranca la recarga. Con MaxCharges <= 1 no hace nada:
         // la habilidad se comporta como siempre (cooldown en cada uso).
         bool spentLastCharge = ConsumeCharge();
@@ -653,12 +684,6 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
 
             OwnerASC.ApplyGameplayEffect(CooldownEffect, this, ResolveCooldownDuration());
         }
-
-        // Los efectos "al activarse" (un buff propio al lanzar). Una habilidad que tiene que
-        // aplicarlos en otro momento (la Ira inmortal, que primero revive) los pide ella.
-        if (ApplyActivationEffectsOnCommit) ApplyActivationEffects();
-
-        PlayCastVisuals();
     }
 
     // Los VFX "al lanzar" de la lista, en todas las pantallas. Lo hace CommitAbility; las
@@ -680,6 +705,197 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
             if (netAsc != null) netAsc.ServerPlayAbilityVisualsSequence(this);
             else OwnerASC.StartAbilityCoroutine(PlayVisualsSequence()); // fallback sin red
         }
+    }
+
+    // =========================================================
+    // CANALIZAR (cualquier habilidad; 19 de octubre de 2026, pedido de Gustavo)
+    //
+    // Antes de salir, la habilidad se sostiene un rato: la barra de canalizar del dueño, una
+    // pose en bucle en todas las pantallas y, si la cortan, CUENTA COMO LANZADA (cobra costo
+    // y cooldown). Dos formas:
+    //   · Se lanza al terminar: canaliza "Dura" segundos y recién ahí corre la habilidad de
+    //     siempre, con su animación (el Haz guía del Clérigo: 1 s y sale el rayo).
+    //   · Continuo: la habilidad se repite cada "Hace efecto cada" mientras dura. El costo y
+    //     el cooldown se cobran una vez, en la primera.
+    // La corta lo mismo que la bloquea (sus "Bloqueada por tags": el aturdido siempre; el
+    // silencio si es magia), morir, otra habilidad si es interrumpible y, si se marca,
+    // recibir daño. Mientras dura, la mira del dueño le llega al servidor en vivo: lo que
+    // sale, sale hacia donde apunta AHORA, no hacia donde apuntaba al apretar.
+    //
+    // Lo arranca el servidor: NetworkAbilitySystemComponent.ServerActivateAbility llama a
+    // BeginCast en vez de Activate. No vale para las de mantener ni las de rueda (tienen su
+    // propio ciclo con el botón) ni para las que ya canalizan solas (IChanneledAbility: el
+    // molinete, el Aliento del dragón, el Golpe final).
+    // =========================================================
+
+    [Section(AbilitySection.Channel)]
+    [Tooltip("Si se sostiene un rato antes de salir.\n\n" +
+             "· Canaliza y se lanza al terminar: barra de canalizar y pose en bucle; al terminar, " +
+             "sale la habilidad de siempre con su animación (la de la sección Animación es la de " +
+             "soltar).\n" +
+             "· Continuo: la habilidad se repite cada tanto mientras dura (un rayo que quema " +
+             "mientras se sostiene). El costo y el cooldown, una vez.\n\n" +
+             "Si la cortan (aturdido, el silencio si es magia, morir...), cuenta como lanzada: " +
+             "cobra costo y cooldown.\n\n" +
+             "En un LANZAMIENTO APUNTADO (mantener y soltar, como el Haz guía): mantener canaliza; " +
+             "si se suelta antes de que se llene la barra, sale apenas se llena. No vale en las " +
+             "de rueda ni en los demás mantenidos (el escudo).")]
+    [Label("Canalizar")]
+    public ECastMode CastMode = ECastMode.None;
+
+    [ShowIf(nameof(CastMode), ECastMode.None, true)]
+    [Tooltip("Cuánto dura la canalización.")]
+    [Label("Dura (s)")]
+    public float CastSeconds = 1f;
+
+    [ShowIf(nameof(CastMode), ECastMode.Continuous)]
+    [Tooltip("Cada cuánto se repite la habilidad mientras canaliza. La primera sale al empezar.")]
+    [Label("Hace efecto cada (s)")]
+    public float CastTickSeconds = 0.5f;
+
+    [ShowIf(nameof(CastMode), ECastMode.None, true)]
+    [Tooltip("Mientras canaliza no puede usar otras habilidades (salvo las marcadas 'Usable " +
+             "canalizando'). Moverse, sí.")]
+    [Label("Bloquea las demás habilidades")]
+    public bool CastBlocksOthers = true;
+
+    [ShowIf(nameof(CastMode), ECastMode.None, true)]
+    [Tooltip("Cualquier golpe que reciba la corta (y cuenta como lanzada).")]
+    [Label("Se corta al recibir daño")]
+    public bool CastBreaksOnDamage = false;
+
+    [ShowIf(nameof(CastMode), ECastMode.None, true)]
+    [Tooltip("OPCIONAL: el gesto de empezar, una vez, antes del bucle.")]
+    [Label("Clip: empezar a canalizar")]
+    public AnimationClip CastStartAnimation;
+
+    [ShowIf(nameof(CastMode), ECastMode.None, true)]
+    [Tooltip("La pose EN BUCLE mientras canaliza. Vacío = sin pose (solo la barra). Usa las " +
+             "ranuras del mantenido en el Animator, como el escudo: no hay estados que crear.")]
+    [Label("Clip: canalizando (bucle)")]
+    public AnimationClip CastLoopAnimation;
+
+    [ShowIf(nameof(CastMode), ECastMode.Continuous)]
+    [Tooltip("OPCIONAL: el remate al terminar de canalizar. (Al lanzar al terminar no hace falta: " +
+             "el de soltar es el clip de la sección Animación.)")]
+    [Label("Clip: soltar")]
+    public AnimationClip CastReleaseAnimation;
+
+    // ¿Pasa por la canalización? Las que tienen su propio ciclo no.
+    public bool UsesCast => CastMode != ECastMode.None && CastSeconds > 0f &&
+                            !(this is IChanneledAbility) && !(this is IRadialMenuAbility) && !HoldInput.IsHold(this);
+
+    // Lo que canaliza un MANTENIDO (el lanzamiento apuntado: el Haz guía): mantener el botón
+    // canaliza, y soltar antes de que se llene no lanza todavía — sale apenas se llena. Lo
+    // resuelve el propio mantenido (GA_ProjectileShoot) y, del lado del dueño,
+    // PlayerController.ProcessHoldRelease. 0 = no canaliza.
+    public float HoldCastSeconds => CastMode != ECastMode.None && CastSeconds > 0f && HoldInput.IsHold(this)
+                                    ? CastSeconds : 0f;
+
+    // Mientras canaliza un CONTINUO, sus repeticiones no animan (la pose en bucle sigue).
+    // Lo mira PlayerController.PlayAnimation.
+    public bool SuppressesOwnAnimation => _castRunning && CastMode == ECastMode.Continuous;
+
+    // Servidor: canalizando ahora / ya cobrado en esta canalización (ver CommitAbility).
+    [System.NonSerialized] private bool _castRunning;
+    [System.NonSerialized] private bool _castPaid;
+    [System.NonSerialized] private bool _castTicking;   // dentro de una repetición del continuo
+
+    // La llama ServerActivateAbility en vez de Activate() (ya pasó CanActivate).
+    public void BeginCast()
+    {
+        if (OwnerASC == null) return;
+
+        _castPaid             = false;
+        StartedThisActivation = true;
+        OwnerASC.StartAbilityCoroutine(CastRoutine());
+    }
+
+    private IEnumerator CastRoutine()
+    {
+        AbilitySystemComponent        asc = OwnerASC;
+        PlayerController              pc  = asc.GetComponent<PlayerController>();
+        NetworkAbilitySystemComponent net = asc.GetComponent<NetworkAbilitySystemComponent>();
+        bool continuous = CastMode == ECastMode.Continuous;
+
+        _castRunning = true;
+        if (CastBlocksOthers) asc.AddTag(EGameplayTag.Status_Channeling);
+        if (CastLoopAnimation != null && net != null) net.ServerPlayChannelAnimation(this, true);
+        ShowCastBar(CastSeconds, channel: continuous);
+        if (pc != null) pc.ServerStreamAimFor(CastSeconds + 0.5f);
+
+        bool damaged = false;
+        System.Action<AbilitySystemComponent> onDamaged = _ => damaged = true;
+        if (CastBreaksOnDamage) asc.OnTookDamage += onDamaged;
+        int cancelSerial = asc.CancelSerial;
+
+        float elapsed  = 0f;
+        float nextTick = 0f;
+        bool  interrupted = false;
+
+        while (elapsed < CastSeconds)
+        {
+            if (CastInterrupted(asc, cancelSerial, damaged)) { interrupted = true; break; }
+
+            if (continuous && elapsed >= nextTick)
+            {
+                _castTicking = true;
+                try     { Activate(); }   // la primera cobra (CommitAbility); las demás salen gratis
+                finally { _castTicking = false; }
+                nextTick += Mathf.Max(0.05f, CastTickSeconds);
+            }
+
+            yield return null;
+            elapsed += Time.deltaTime;
+        }
+
+        if (CastBreaksOnDamage) asc.OnTookDamage -= onDamaged;
+        if (CastBlocksOthers)   asc.RemoveTag(EGameplayTag.Status_Channeling);
+        _castRunning = false;
+        if (CastLoopAnimation != null && net != null) net.ServerPlayChannelAnimation(this, false);
+        HideCastBar(interrupted);
+
+        // Cortada (o un continuo que terminó): no sale nada más. Cortada cuenta como lanzada.
+        if (interrupted || continuous)
+        {
+            if (!_castPaid) { PayCostAndCooldown(); _castPaid = true; }
+            EndAbility();
+            yield break;
+        }
+
+        // Se lanza al terminar: la habilidad de siempre, ahora.
+        CommittedThisActivation = false;
+        StartedThisActivation   = false;
+        Activate();
+
+        // Se plantó sola (la de objetivo único sin nadie a tiro): igual se canalizó, cuenta
+        // como lanzada.
+        if (!CommittedThisActivation && !StartedThisActivation)
+        {
+            PayCostAndCooldown();
+            EndAbility();
+            yield break;
+        }
+
+        // La animación de soltar, a todas las pantallas: el dueño no la anticipó al apretar
+        // (ver PlayerController.ProcessAbilityPress). El personaje del host ya la hizo en
+        // Activate(); la RPC lo saltea.
+        if (net != null && !BroadcastsOwnAnimation)
+            net.ServerPlayAbilityAnimationAfterCast(ResolveAnimationSource() ?? this);
+    }
+
+    // ¿Algo corta la canalización? Lo que la bloquea (el aturdido, el silencio si es magia),
+    // morir, otra habilidad si es interrumpible y, si se marcó, recibir daño.
+    protected bool CastInterrupted(AbilitySystemComponent asc, int cancelSerial, bool damaged)
+    {
+        if (asc == null || asc.HasTag(EGameplayTag.State_Dead)) return true;
+
+        if (ActivationBlockedTags != null)
+            foreach (EGameplayTag tag in ActivationBlockedTags)
+                if (asc.HasTag(tag)) return true;
+
+        if (IsInterruptible && asc.CancelSerial != cancelSerial) return true;
+        return CastBreaksOnDamage && damaged;
     }
 
     // =========================================================
@@ -858,6 +1074,10 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
             _consumeStacksOnEnd = false;
             if (OwnerASC != null) OwnerASC.RemoveEffectsWithTag(StacksTag);
         }
+
+        // Una repetición de un canalizado continuo: el fin de verdad lo avisa la
+        // canalización al terminar (ver CastRoutine). Si no, el dueño quedaría libre a mitad.
+        if (_castRunning) return;
 
         // Esto corre en el servidor (Activate() ya lo garantiza). Si el dueño
         // es un cliente remoto (no el host), pc.FinishAttack() de acá solo

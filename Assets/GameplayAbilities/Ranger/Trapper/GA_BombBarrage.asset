@@ -45,10 +45,18 @@ MonoBehaviour:
   TargetLayer:
     serializedVersion: 2
     m_Bits: 0
+  CastMode: 0
+  CastSeconds: 1
+  CastTickSeconds: 0.5
+  CastBlocksOthers: 1
+  CastBreaksOnDamage: 0
+  CastStartAnimation: {fileID: 0}
+  CastLoopAnimation: {fileID: 0}
+  CastReleaseAnimation: {fileID: 0}
   MaxCharges: 1
   MaxRange: 30
   CircleRadius: 6
-  BombPrefab: {fileID: 7408157575238673018, guid: 0e01829ee8f229e4c9a427b0db7f75fd, type: 3}
+  BombPrefab: {fileID: 6174407659575248835, guid: 0e01829ee8f229e4c9a427b0db7f75fd, type: 3}
   Layout: 0
   BombCount: 8
   Spacing: 3

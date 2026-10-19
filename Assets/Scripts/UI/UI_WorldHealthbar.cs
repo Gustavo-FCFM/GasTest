@@ -9,6 +9,11 @@ using System.Collections.Generic;
 // coloreada por equipo, sus buffs/debuffs, y (para enemigos) el aviso de Crítico
 // mejorado. Reemplazó al viejo HealthBarNPC de la game jam, que ya no existe.
 //
+// LA BARRA ES UN PREFAB (desde el 19 de octubre de 2026): Prefabs/UI/Nameplate, con su
+// UI_Nameplate (las piezas y cómo se ve). Cada personaje lleva una instancia a la altura de
+// su cabeza y este componente, en su raíz, la encuentra sola. Cambiar cómo se ven las vidas
+// es cambiar ese prefab: vale para todos.
+//
 // REGLAS DE VISIBILIDAD (según la relación con el jugador LOCAL):
 //  - Aliado (mismo TeamID) → barra VERDE, se ve a TRAVÉS de las paredes.
 //  - Enemigo               → barra ROJA, se OCULTA tras las paredes.
@@ -24,63 +29,37 @@ using System.Collections.Generic;
 // personaje sale rojo/oculto para el enemigo y verde/X-ray para el aliado. La vida
 // y los efectos salen de lo ya sincronizado (NetworkASC). Sirve también para NPCs
 // (sin NetworkASC lee el ASC local directo).
-//
-// SETUP (prefab del Player): este componente va en la RAÍZ (junto al ASC), y se le
-// asignan las referencias del canvas world-space hijo (barra y relleno). A los
-// enemigos se lo pone solo el paso 1 del menú Mercenarios, al convertirlos a red.
 // ============================================================
 [RequireComponent(typeof(AbilitySystemComponent))]
 public class UI_WorldHealthbar : MonoBehaviour
 {
-    [Header("Canvas del Nameplate (hijo, World Space)")]
-    [Tooltip("Raíz del nameplate: se orienta a la cámara (billboard) y se prende/apaga.")]
-    [Label("Raíz de la barra")]
-    public Transform BarRoot;
+    [Tooltip("La barra (una instancia del prefab Prefabs/UI/Nameplate, hija de este personaje). " +
+             "Vacío = la busca sola entre los hijos.")]
+    [Label("Barra (prefab Nameplate)")]
+    public UI_Nameplate Nameplate;
 
-    [Header("UI")]
-    [Tooltip("Barra de vida (Image Type: Filled). Se usa su fillAmount y su color.")]
-    [Label("Relleno de vida")]
-    public Image HealthFill;
-    [Tooltip("Alternativa/complemento: un Slider de vida. Opcional.")]
-    [Label("Barra de vida (opcional)")]
-    public Slider HealthSlider;
-    [Tooltip("Muestra los buffs/debuffs del personaje. Se le setea el TargetASC solo. Opcional.")]
-    [Label("Contenedor de efectos")]
-    public UI_EffectContainer EffectContainer;
-    [Tooltip("Aviso de Crítico mejorado disponible contra ESTE enemigo. Solo en enemigos. Opcional.")]
-    [Label("Aviso de crítico mejorado")]
-    public GameObject FirstStrikeMarker;
-    [Tooltip("Nombre del jugador (el que eligió al entrar). Se pinta del color de su equipo. Opcional.")]
-    [Label("Texto del nombre")]
-    public TMPro.TMP_Text NameText;
+    // =========================================================
+    // DATOS VIEJOS: la barra armada a mano en cada prefab, antes del prefab Nameplate. Si un
+    // prefab todavía no tiene su Nameplate, se usan estos (y con ellos la herramienta encuentra
+    // la barra vieja para reemplazarla). Con Nameplate, se llenan solos desde él.
+    // =========================================================
+    [HideInInspector] public Transform BarRoot;
+    [HideInInspector] public Image HealthFill;
+    [HideInInspector] public Slider HealthSlider;
+    [HideInInspector] public UI_EffectContainer EffectContainer;
+    [HideInInspector] public GameObject FirstStrikeMarker;
+    [HideInInspector] public TMPro.TMP_Text NameText;
+    [HideInInspector] public Color AllyColor  = new Color(0.2f, 0.9f, 0.2f, 1f);
+    [HideInInspector] public Color EnemyColor = new Color(0.9f, 0.2f, 0.2f, 1f);
+    [HideInInspector] public LayerMask ObstacleLayer;
 
-    [Header("Colores por Equipo")]
-    [Label("Color aliado")]
-    public Color AllyColor  = new Color(0.2f, 0.9f, 0.2f, 1f);
-    [Label("Color enemigo")]
-    public Color EnemyColor = new Color(0.9f, 0.2f, 0.2f, 1f);
-
-    [Header("Oclusión")]
-    [Tooltip("Capas del entorno que TAPAN la barra de un enemigo (paredes/piso). Los aliados no se ocultan.")]
-    [Label("Capas que tapan")]
-    public LayerMask ObstacleLayer;
-
-    [Header("Ícono de clase")]
-    [Tooltip("El ícono de la clase del personaje a la derecha de su barra de vida, para saber " +
-             "quién es cada uno mientras no hay modelos por clase. Solo jugadores y bots (los " +
-             "NPCs no tienen clase). Se crea solo: no hay que armar nada en el prefab.")]
-    [Label("Mostrar ícono de clase")]
-    public bool ShowClassIcon = true;
-    [Tooltip("Lado del ícono, en unidades del canvas del nameplate (la barra mide 100 × 10).")]
-    [Label("Tamaño del ícono de clase (px)")]
-    public float ClassIconSize = 26f;
-    [Tooltip("Corrimiento del ícono desde el borde DERECHO de la barra (a la izquierda están los buffs).")]
-    [Label("Posición del ícono de clase (px)")]
-    public Vector2 ClassIconOffset = new Vector2(4f, 0f);
-
+    // De quién se MUESTRAN los datos (vida, nombre, buffs, clase): el propio personaje, o el
+    // que imita (ver Mirror). _ownAsc es siempre el propio: con él se decide si se esconde
+    // (invisible para los enemigos).
     private AbilitySystemComponent        _asc;
     private NetworkAbilitySystemComponent _netAsc;
     private PlayerController               _pc;
+    private AbilitySystemComponent        _ownAsc;
 
     // Material ZTest Always para el X-ray de aliados (se crea en runtime desde el
     // shader). Los gráficos del nameplate alternan entre este (aliado) y su
@@ -97,7 +76,7 @@ public class UI_WorldHealthbar : MonoBehaviour
     private AbilitySystemComponent        _cachedLocalASC;
     private NetworkAbilitySystemComponent _cachedLocalNet;
 
-    // El ícono de la clase (ver CreateClassIcon) y el sprite que muestra ahora.
+    // El ícono de la clase (una pieza del prefab Nameplate) y el sprite que muestra ahora.
     private Image  _classIcon;
     private Sprite _shownClassSprite;
 
@@ -106,6 +85,27 @@ public class UI_WorldHealthbar : MonoBehaviour
         _asc    = GetComponent<AbilitySystemComponent>();
         _netAsc = GetComponent<NetworkAbilitySystemComponent>();
         _pc     = GetComponent<PlayerController>();
+        _ownAsc = _asc;
+
+        // Las piezas salen del prefab Nameplate.
+        if (Nameplate == null) Nameplate = GetComponentInChildren<UI_Nameplate>(true);
+        if (Nameplate != null)
+        {
+            BarRoot           = Nameplate.transform;
+            HealthFill        = Nameplate.HealthFill;
+            HealthSlider      = Nameplate.HealthSlider;
+            EffectContainer   = Nameplate.EffectContainer;
+            FirstStrikeMarker = Nameplate.FirstStrikeMarker;
+            NameText          = Nameplate.NameText;
+            AllyColor         = Nameplate.AllyColor;
+            EnemyColor        = Nameplate.EnemyColor;
+            ObstacleLayer     = Nameplate.ObstacleLayer;
+            _classIcon        = Nameplate.ShowClassIcon ? Nameplate.ClassIcon : null;
+            if (Nameplate.ClassIcon != null) Nameplate.ClassIcon.enabled = false;   // hasta que haya clase
+        }
+
+        // Sin nombre hasta que llegue (un NPC no tiene): que no se vea el texto de ejemplo del prefab.
+        if (NameText != null) NameText.text = "";
 
         if (EffectContainer != null) EffectContainer.SetTargetASC(_asc);
 
@@ -115,42 +115,37 @@ public class UI_WorldHealthbar : MonoBehaviour
             if (s != null) _xrayMaterial = new Material(s);
         }
 
-        // Antes de juntar los gráficos: así el ícono también recibe el X-ray de los aliados.
-        CreateClassIcon();
         RefreshGraphics();
     }
 
-    // Un Image a la DERECHA de la barra (a la izquierda, arriba de la barra, van los buffs),
-    // hijo del nameplate: se prende, se apaga y se orienta con él. Solo en jugadores y
-    // bots: un NPC no tiene clase.
-    private void CreateClassIcon()
+    // Muestra los datos de OTRO personaje: su vida, su nombre, sus buffs y su ícono de clase.
+    // La copia del Ilusionista lo usa con el jugador que copia (19 de octubre de 2026, pedido
+    // de Gustavo): un señuelo sin barra, o con una barra distinta, se reconocía de lejos. La
+    // barra sigue siendo de ESTE objeto (aparece sobre él y se tapa con sus paredes).
+    public void Mirror(GameObject source)
     {
-        if (!ShowClassIcon || _pc == null || BarRoot == null) return;
+        if (source == null) return;
+        AbilitySystemComponent asc = source.GetComponent<AbilitySystemComponent>();
+        if (asc == null) return;
 
-        var go = new GameObject("ClassIcon", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        go.layer = BarRoot.gameObject.layer;
+        _asc    = asc;
+        _netAsc = source.GetComponent<NetworkAbilitySystemComponent>();
+        _pc     = source.GetComponent<PlayerController>();
 
-        var rect = (RectTransform)go.transform;
-        rect.SetParent(BarRoot, false);
-        rect.anchorMin = rect.anchorMax = new Vector2(1f, 0.5f);   // borde derecho de la barra
-        rect.pivot            = new Vector2(0f, 0.5f);             // crece hacia la derecha
-        rect.anchoredPosition = ClassIconOffset;
-        rect.sizeDelta        = new Vector2(ClassIconSize, ClassIconSize);
-
-        _classIcon = go.GetComponent<Image>();
-        _classIcon.preserveAspect = true;
-        _classIcon.raycastTarget  = false;
-        _classIcon.enabled        = false;   // hasta que haya clase
+        if (EffectContainer != null) EffectContainer.SetTargetASC(_asc);
+        _shownClassSprite = null;
+        RefreshGraphics();
+        _lastWasAlly = null;
     }
 
     // La clase puede cambiar en cualquier momento (cambio de clase, evolución): se mira
-    // cada frame, pero el sprite solo se reescribe si cambió.
+    // cada frame, pero el sprite solo se reescribe si cambió. Un NPC no tiene clase: apagado.
     private void UpdateClassIcon()
     {
         if (_classIcon == null) return;
 
-        Sprite sprite = _pc.CurrentClassDef != null ? _pc.CurrentClassDef.ClassIcon : null;
-        if (sprite == _shownClassSprite) return;
+        Sprite sprite = _pc != null && _pc.CurrentClassDef != null ? _pc.CurrentClassDef.ClassIcon : null;
+        if (sprite == _shownClassSprite && _classIcon.enabled == (sprite != null)) return;
 
         _shownClassSprite  = sprite;
         _classIcon.sprite  = sprite;
@@ -175,9 +170,9 @@ public class UI_WorldHealthbar : MonoBehaviour
         Camera cam = _cam;
         if (cam == null || BarRoot == null) { SetVisible(false); return; }
 
-        // Uno mismo: sin nameplate (para eso está el HUD).
+        // Uno mismo: sin nameplate (para eso está el HUD). Una copia que te imita sí lo muestra.
         PlayerController local = PlayerController.LocalPlayer;
-        if (local != null && _pc == local) { SetVisible(false); return; }
+        if (local != null && local.gameObject == gameObject) { SetVisible(false); return; }
 
         // Relación con el jugador local. Sin jugador local no hay a quién comparar.
         // El caché se rehace si cambia el jugador local (respawn, cambio de clase).
@@ -194,7 +189,7 @@ public class UI_WorldHealthbar : MonoBehaviour
         // debe verse — una barra de vida flotando delata la posición exacta y hacía
         // inútil la invisibilidad. Los ALIADOS sí lo siguen viendo, y además le notan
         // el buff en su barra de efectos.
-        if (isEnemy && _asc != null && _asc.IsHiddenFromEnemies)
+        if (isEnemy && _ownAsc != null && _ownAsc.IsHiddenFromEnemies)
         {
             SetVisible(false);
             return;

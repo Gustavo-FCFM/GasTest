@@ -187,6 +187,13 @@ public class CharacterClassDefinition : ScriptableObject
     [Label("Arma principal: posición (m)")]
     public Vector3 MainHandPositionOffset;
 
+    [ShowIf(nameof(MainHandWeaponPrefab))]
+    [Tooltip("Tamaño del arma principal respecto del prefab. 1 = como viene. Sirve cuando varias " +
+             "clases comparten un modelo: el bastón del Clérigo es la misma pieza que la lanza del " +
+             "Comandante y del Trampero, más chico.")]
+    [Label("Arma principal: tamaño (×)")]
+    public float MainHandScale = 1f;
+
     [ShowIf(nameof(OffHandWeaponPrefab))]
     [Tooltip("Rotación extra (grados) del arma secundaria. Ojo: el socket de esta mano viene " +
              "con 180° de giro respecto del de la principal, así que un escudo suele necesitar " +

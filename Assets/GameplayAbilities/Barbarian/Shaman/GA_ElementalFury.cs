@@ -82,7 +82,7 @@ public class GA_ElementalFury : GameplayAbility
         if (pc != null) pc.FinishAttack();
 
         // Crear tótems en esquinas del cuadrado
-        List<GameObject> ultimateTotems = new List<GameObject>();
+        List<Entity_Summon> ultimateTotems = new List<Entity_Summon>();
         Vector3[] corners = new Vector3[]
         {
             new Vector3( 1, 0,  1).normalized * SquareRadius,
@@ -95,40 +95,29 @@ public class GA_ElementalFury : GameplayAbility
         {
             if (TotemPrefabs[i] == null) continue;
 
-            Vector3 spawnPos = centerPos + corners[i];
-            if (Physics.Raycast(spawnPos + Vector3.up * 5f, Vector3.down, out RaycastHit hit, 15f))
-                spawnPos = hit.point;
+            // El piso de cada esquina, a la altura del Chamán (no desde el cielo: bajo techo
+            // quedaban arriba del techo).
+            Vector3 spawnPos = Entity_Summon.GroundNear(centerPos + corners[i], centerPos.y);
 
-            GameObject totemObj = Instantiate(TotemPrefabs[i], spawnPos, Quaternion.identity);
-
-            Entity_Totem totemScript = totemObj.GetComponent<Entity_Totem>();
-            if (totemScript != null)
-            {
-                totemScript.MyTeamID   = OwnerASC.TeamID;
-                totemScript.CreatorASC = OwnerASC;
-            }
+            // La invocación (Entity_Summon): en red y con el equipo del Chamán. No cuentan para el
+            // límite de los tótems de la rueda; se van al terminar la Furia (abajo) o si el
+            // Chamán muere.
+            Entity_Summon totem = Entity_Summon.Spawn(TotemPrefabs[i], OwnerASC, spawnPos, Quaternion.identity,
+                                                      countsTowardLimit: false);
+            if (totem == null) continue;
 
             // Indestructibles, como pide el diseño. Status_Immunity es la inmunidad
             // REAL (el daño ni entra, la barra se queda llena); Status_Immortal solo
             // impide bajar de 1 de vida, y con eso la barra caía a casi nada y el tótem
             // se veía roto sin romperse. Se dejan los dos: el segundo es la red por si
             // algún daño llegara a saltearse la inmunidad.
-            AbilitySystemComponent totemASC = totemObj.GetComponent<AbilitySystemComponent>();
-            if (totemASC != null)
+            if (totem.OwnASC != null)
             {
-                totemASC.AddTag(EGameplayTag.Status_Immunity);
-                totemASC.AddTag(EGameplayTag.Status_Immortal);
+                totem.OwnASC.AddTag(EGameplayTag.Status_Immunity);
+                totem.OwnASC.AddTag(EGameplayTag.Status_Immortal);
             }
 
-            // Instantiate() normal solo crea el tótem en el servidor — sin
-            // esto, es invisible para cualquier cliente que no sea el host.
-            NetworkObject totemNob = totemObj.GetComponent<NetworkObject>();
-            if (totemNob != null)
-                InstanceFinder.ServerManager.Spawn(totemNob);
-            else
-                Debug.LogWarning("[GA_ElementalFury] El TotemPrefab no tiene NetworkObject — no se va a replicar a los clientes.");
-
-            ultimateTotems.Add(totemObj);
+            ultimateTotems.Add(totem);
         }
 
         // Instanciar tornado visual. Instantiate() acá solo se vería en el
@@ -160,14 +149,9 @@ public class GA_ElementalFury : GameplayAbility
             timeElapsed += tick;
         }
 
-        // Limpieza
-        foreach (var t in ultimateTotems)
-        {
-            if (t == null) continue;
-            NetworkObject nob = t.GetComponent<NetworkObject>();
-            if (nob != null && nob.IsSpawned) InstanceFinder.ServerManager.Despawn(nob);
-            else Destroy(t);
-        }
+        // Limpieza (los que sigan: si el Chamán murió, ya se fueron solos)
+        foreach (Entity_Summon t in ultimateTotems)
+            if (t != null) t.ServerDespawn();
 
         EndAbility();
     }

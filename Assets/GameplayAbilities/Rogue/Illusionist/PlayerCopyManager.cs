@@ -42,7 +42,8 @@ public class PlayerCopyManager : MonoBehaviour
 
     // Copia exacta: una copia con límite FIFO. sourceClassIndex = clase del jugador
     // COPIADO (para su arma/anim). La llama GA_ExactCopy.
-    public void SpawnCopy(Vector3 spawnPos, Vector3 target, float speed, int sourceClassIndex)
+    public void SpawnCopy(Vector3 spawnPos, Vector3 target, float speed, int sourceClassIndex,
+                          AbilitySystemComponent source = null)
     {
         _copies.RemoveAll(c => c == null);
 
@@ -55,22 +56,24 @@ public class PlayerCopyManager : MonoBehaviour
             if (oldest != null) oldest.Dissipate();
         }
 
-        Entity_PlayerCopy copy = InstantiateCopy(spawnPos, target, speed, sourceClassIndex);
+        Entity_PlayerCopy copy = InstantiateCopy(spawnPos, target, speed, sourceClassIndex, source);
         if (copy != null) _copies.Add(copy);
     }
 
     // Fiesta de copias: una copia SIN límite (se limpia solo por explosión o muerte
     // del Ilusionista). La llama GA_CopyParty (una por aliado en rango).
-    public void SpawnPartyCopy(Vector3 spawnPos, Vector3 target, float speed, int sourceClassIndex)
+    public void SpawnPartyCopy(Vector3 spawnPos, Vector3 target, float speed, int sourceClassIndex,
+                               AbilitySystemComponent source = null)
     {
         _partyCopies.RemoveAll(c => c == null);
-        Entity_PlayerCopy copy = InstantiateCopy(spawnPos, target, speed, sourceClassIndex);
+        Entity_PlayerCopy copy = InstantiateCopy(spawnPos, target, speed, sourceClassIndex, source);
         if (copy != null) _partyCopies.Add(copy);
     }
 
     // Instancia + spawnea + inicializa una copia en el servidor. Devuelve null si no
     // se puede (sin prefab, sin servidor, prefab sin NetworkObject).
-    private Entity_PlayerCopy InstantiateCopy(Vector3 spawnPos, Vector3 target, float speed, int sourceClassIndex)
+    private Entity_PlayerCopy InstantiateCopy(Vector3 spawnPos, Vector3 target, float speed, int sourceClassIndex,
+                                              AbilitySystemComponent source)
     {
         if (CopyPrefab == null || _asc == null || !InstanceFinder.IsServerStarted) return null;
 
@@ -86,7 +89,7 @@ public class PlayerCopyManager : MonoBehaviour
         InstanceFinder.ServerManager.Spawn(nob);
 
         Entity_PlayerCopy copy = obj.GetComponent<Entity_PlayerCopy>();
-        if (copy != null) copy.ServerInit(_asc, target, speed, sourceClassIndex);
+        if (copy != null) copy.ServerInit(_asc, target, speed, sourceClassIndex, source);
         return copy;
     }
 

@@ -67,6 +67,14 @@ MonoBehaviour:
     EndWhenAttributeDepleted: 0
     DepletedAttribute: 0
   IsInterruptible: 0
+  CastMode: 1
+  CastSeconds: 1
+  CastTickSeconds: 0.5
+  CastBlocksOthers: 1
+  CastBreaksOnDamage: 0
+  CastStartAnimation: {fileID: 0}
+  CastLoopAnimation: {fileID: 3094330708855449807, guid: ab2eeeec69d32d142ac0d781f97a2577, type: 3}
+  CastReleaseAnimation: {fileID: 0}
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128

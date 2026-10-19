@@ -1,170 +1,36 @@
 using UnityEngine;
-using System.Collections;
-using FishNet.Object;
 
 // ============================================================
-// Entity_Totem
+// Entity_Totem  (los tótems del Chamán)
 //
-// Tótem invocado que le aplica un aura periódica a los aliados
-// dentro de su radio (potenciada si el chamán que lo creó está
-// enfurecido). A diferencia de las habilidades, este SÍ es un
-// NetworkObject de verdad, así que su VFX de aura es puramente
-// local (cada peer lo instancia en su propio Start()) y solo la
-// aplicación del efecto en sí corre con autoridad de servidor.
+// Desde el 19 de octubre de 2026 es una invocación (Entity_Summon) con una zona (Summon_Zone)
+// para el aura, y no le queda nada propio: el equipo, el límite de tótems por Chamán (la base
+// saca el más viejo), irse si el Chamán muere (pedido de Gustavo) y romperse con su vida a 0 los
+// resuelve la base; el aura a los aliados del radio, potenciada si el Chamán está enfurecido,
+// la zona.
+//
+// La clase sigue existiendo para que los prefabs y las habilidades (GA_SpawnTotem,
+// GA_ElementalFury) la sigan reconociendo como tótem.
+//
+// PREFAB: NetworkObject + AbilitySystemComponent (con su vida) + NetworkAbilitySystemComponent
+// + un collider en la capa de personajes + este script + una Summon_Zone.
 // ============================================================
 [RequireComponent(typeof(AbilitySystemComponent))]
-public class Entity_Totem : NetworkBehaviour
+public class Entity_Totem : Entity_Summon
 {
-    private AbilitySystemComponent ASC;
+    // =========================================================
+    // DATOS VIEJOS: el aura vivía acá. "Mercenarios ▸ Una vez ▸ Pasar los tótems a la base de
+    // invocaciones" los copia a la Summon_Zone de cada prefab. Después de correrla no se usan.
+    // =========================================================
 
-    [Header("Configuración del Tótem")]
-    [Tooltip("El efecto (GameplayEffect) normal que este tótem aplicará a los aliados.")]
-    [Label("Efecto del aura")]
-    public GameplayEffect AuraEffect;
-
-    [Header("Sinergia: Ira del Tótem")]
-    [Tooltip("El efecto potenciado que se aplica si el Chamán está Enfurecido.")]
-    [Label("Efecto potenciado")]
-    public GameplayEffect EmpoweredAuraEffect;
-
-    [Tooltip("La etiqueta que el tótem buscará en el creador para saber si está Enfurecido (Ej. Status_Frenzy).")]
-    [Label("Tag de enfurecido")]
-    public EGameplayTag RageTag;
-
-    [Label("Radio del aura (m)")]
-    public float AuraRadius = 7f;
-    // Cada cuánto se reaplica el aura a los aliados dentro del radio.
-    [Label("Cada cuánto (s)")]
-    public float TickRate = 0.5f;
-    [Label("Capa de personajes")]
-    public LayerMask CharacterLayer;
-
-    [Header("Visuales")]
-    [Label("VFX del aura")]
-    public GameObject AuraVFXPrefab;
-    [Label("Escala del VFX (×)")]
-    public float VfxScaleMultiplier = 2.0f;
-    private GameObject currentAuraVFX;
-
-    // Equipo del tótem (heredado de quien lo invocó) y referencia a su
-    // creador, para chequear la sinergia de Ira. Los asigna quien lo
-    // spawnea (GA_SpawnTotem/GA_ElementalFury) antes de Spawn().
-    [HideInInspector] public int MyTeamID;
-    [HideInInspector] public AbilitySystemComponent CreatorASC;
-
-    // Cachea el ASC local.
-    private void Awake()
-    {
-        ASC = GetComponent<AbilitySystemComponent>();
-    }
-
-    // Configura el equipo del ASC, reproduce el VFX de aura (local en
-    // cada peer), y arranca el bucle de aplicación de efecto solo en el
-    // servidor.
-    private void Start()
-    {
-        if (ASC != null)
-        {
-            ASC.OnDeath += HandleTotemDestruction;
-
-            // El equipo solo lo conoce el servidor (MyTeamID lo asigna quien lo
-            // spawnea). En un cliente vale 0, y escribirlo pisaría el equipo que ya
-            // llegó por red. Con NetworkASC, AssignTeam lo manda a todos: sin eso, en
-            // los clientes el tótem sería neutral — su barra de vida no sabría si
-            // pintarse de aliado o de enemigo.
-            if (IsServerInitialized)
-            {
-                NetworkAbilitySystemComponent netAsc = GetComponent<NetworkAbilitySystemComponent>();
-                if (netAsc != null) netAsc.AssignTeam(MyTeamID);
-                else                ASC.TeamID = MyTeamID;
-            }
-        }
-
-        // Puramente visual: cada copia (servidor Y cada cliente, una vez que
-        // el tótem es un NetworkObject spawneado de verdad) corre su propio
-        // Start() localmente, así que esto ya se ve igual en todos lados sin
-        // necesidad de RPC.
-        if (AuraVFXPrefab != null)
-        {
-            currentAuraVFX = Instantiate(AuraVFXPrefab, transform.position, Quaternion.identity, transform);
-
-            // Con VFX_AreaVisual el círculo calza EXACTO con AuraRadius (si no, cae al
-            // multiplicador a ojo). Duración 0: el aura vive lo que viva el tótem, así
-            // que su VFX se destruye con él y no se apaga solo.
-            VFX_AreaVisual.Configure(currentAuraVFX, AuraRadius, VfxScaleMultiplier, 0f);
-        }
-
-        // La aplicación del aura (ApplyGameplayEffect) sí es autoridad del
-        // servidor — si cada cliente también la corriera sobre su propia
-        // copia local del tótem, aplicaría el efecto por duplicado.
-        if (IsServerInitialized)
-            StartCoroutine(AuraRoutine());
-    }
-
-    // Reaplica el aura a los aliados cada TickInterval segundos, mientras
-    // el tótem exista.
-    private IEnumerator AuraRoutine()
-    {
-        while (true)
-        {
-            ApplyAuraToAllies();
-            yield return new WaitForSeconds(TickRate);
-        }
-    }
-
-    // Busca aliados (mismo TeamID, no neutral, no muertos) dentro de
-    // AuraRadius y les aplica AuraEffect — o EmpoweredAuraEffect si el
-    // creador del tótem tiene el tag RageTag.
-    private void ApplyAuraToAllies()
-    {
-        GameplayEffect effectToApply = AuraEffect;
-
-        if (CreatorASC != null && CreatorASC.HasTag(RageTag))
-        {
-            if (EmpoweredAuraEffect != null)
-            {
-                effectToApply = EmpoweredAuraEffect;
-            }
-        }
-
-        if (effectToApply == null) return;
-
-        Collider[] hits = Physics.OverlapSphere(transform.position, AuraRadius, CharacterLayer);
-
-        foreach (Collider hit in hits)
-        {
-            AbilitySystemComponent targetASC = hit.GetComponentInParent<AbilitySystemComponent>();
-
-            // Los tótems no se dan el aura entre ellos (ni a sí mismos): con collider
-            // en la capa de personajes, el OverlapSphere también los encuentra.
-            if (targetASC != null && targetASC.GetComponent<Entity_Totem>() != null) continue;
-
-            if (targetASC != null && !targetASC.HasTag(EGameplayTag.State_Dead))
-            {
-                if (targetASC.TeamID == MyTeamID && MyTeamID != 0)
-                {
-                    targetASC.ApplyGameplayEffect(effectToApply, ASC);
-                }
-            }
-        }
-    }
-
-    // Al "morir" (vida en 0), despawnea el tótem para todos los peers.
-    private void HandleTotemDestruction()
-    {
-        // La salud del tótem solo es autoritativa en el servidor (nada la
-        // sincroniza a los clientes todavía), así que este evento solo
-        // dispara de verdad ahí. Despawn (no Destroy) para que se borre
-        // también en todos los clientes.
-        if (!IsServerInitialized) return;
-
-        if (IsSpawned) ServerManager.Despawn(gameObject);
-    }
-
-    // Vista previa del radio de aura en el Editor.
-    private void OnDrawGizmosSelected()
-    {
-        Gizmos.color = new Color(0f, 1f, 0.5f, 0.3f);
-        Gizmos.DrawSphere(transform.position, AuraRadius);
-    }
+#pragma warning disable CS0414   // solo los lee la herramienta, por SerializedObject
+    [SerializeField, HideInInspector] private GameplayEffect AuraEffect;
+    [SerializeField, HideInInspector] private GameplayEffect EmpoweredAuraEffect;
+    [SerializeField, HideInInspector] private EGameplayTag   RageTag;
+    [SerializeField, HideInInspector] private float          AuraRadius = 7f;
+    [SerializeField, HideInInspector] private float          TickRate   = 0.5f;
+    [SerializeField, HideInInspector] private LayerMask      CharacterLayer;
+    [SerializeField, HideInInspector] private GameObject     AuraVFXPrefab;
+    [SerializeField, HideInInspector] private float          VfxScaleMultiplier = 2f;
+#pragma warning restore CS0414
 }

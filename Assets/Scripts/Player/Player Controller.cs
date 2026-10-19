@@ -1794,8 +1794,25 @@ public class PlayerController : NetworkBehaviour
 
     // Revisa cada botón/tecla de habilidad y dispara su activación o
     // liberación (para las de tipo menú radial).
+    // Soltó antes de que se llenara la canalización de un lanzamiento apuntado: se suelta
+    // ahora, si ya se llenó (ver ProcessHoldRelease). Si el servidor la cortó, ya no hay
+    // mantenido y no pasa nada.
+    private bool _holdReleaseQueued;
+
+    private void TickQueuedHoldRelease()
+    {
+        if (!_holdReleaseQueued) return;
+        if (_holdAbility == null) { _holdReleaseQueued = false; return; }
+        if (Time.time - HoldStartedAt < _holdAbility.HoldCastSeconds) return;
+
+        _holdReleaseQueued = false;
+        ProcessHoldRelease();
+    }
+
     private void HandleAbilityInput()
     {
+        TickQueuedHoldRelease();
+
         if (ASC.HasTag(EGameplayTag.State_Silenced)) return;
 
         // Ocupado con una habilidad: nada más entra… salvo que la que corre sea
@@ -1955,11 +1972,12 @@ public class PlayerController : NetworkBehaviour
             // watchdog del medio (un escudo puede durar más que MaxAttackSeconds).
             if (!ability.CanActivate()) return;
 
-            isAttacking      = true;
-            _attackStartTime = Time.time;
-            _holdAbility     = ability;
-            _holdSlot        = slot;
-            HoldStartedAt    = Time.time;
+            isAttacking        = true;
+            _attackStartTime   = Time.time;
+            _holdAbility       = ability;
+            _holdSlot          = slot;
+            HoldStartedAt      = Time.time;
+            _holdReleaseQueued = false;
 
             // Predicción local del "levantar", mismo criterio que el camino normal:
             // solo en cliente remoto (en el host la dispara el Activate del servidor).
@@ -1994,7 +2012,9 @@ public class PlayerController : NetworkBehaviour
                 if (slot != EAbilityInput.PrimaryAttack) CancelWeaponHide();
 
                 isAttacking = true;
-                _attackStartTime = Time.time;
+                // Una que canaliza dura además su canalización: el watchdog empieza a contar
+                // al terminar, no al apretar.
+                _attackStartTime = Time.time + (ability.UsesCast ? ability.CastSeconds : 0f);
                 // Lo decide la HABILIDAD, no el slot. Cuando esto miraba además que
                 // fuera el slot del ataque principal, un lanzamiento marcado como
                 // interrumpible igual bloqueaba el input mientras corría: el pedido de
@@ -2018,7 +2038,10 @@ public class PlayerController : NetworkBehaviour
                 // Y solo si la habilidad dice que tiene sentido: el Golpe mortal del
                 // Pícaro sin nadie a tiro no hace nada, así que anticipar su animación
                 // sería hacer el gesto en el vacío (ver CanPredictActivation).
-                if (!IsServerInitialized && ability.CanPredictActivation())
+                //
+                // Tampoco si CANALIZA: al apretar se ve el bucle, que lo manda el servidor a
+                // todos; la de soltar llega al terminar (GameplayAbility.CastRoutine).
+                if (!IsServerInitialized && ability.CanPredictActivation() && !ability.UsesCast)
                 {
                     PlayAnimation(ability);
                     // Y lo que acompaña a la animación: el hacha que sale de la mano.
@@ -2084,6 +2107,15 @@ public class PlayerController : NetworkBehaviour
     // servidor todavía lo tiene con el escudo arriba.
     private void ProcessHoldRelease()
     {
+        // Un lanzamiento apuntado que CANALIZA (el Haz guía): soltar antes de que se llene la
+        // barra no lanza todavía. Se guarda y se suelta al llenarse (TickQueuedHoldRelease),
+        // con todo lo de un soltar normal: la animación de lanzar y el aviso al servidor.
+        if (_holdAbility != null && Time.time - HoldStartedAt < _holdAbility.HoldCastSeconds)
+        {
+            _holdReleaseQueued = true;
+            return;
+        }
+
         if (!ReleaseHold(forceFinish: false)) return;
 
         // Recién ahora isAttacking pasa a contar para el watchdog (mientras se
@@ -2271,6 +2303,7 @@ public class PlayerController : NetworkBehaviour
         isAttacking = false;
         _attackInterruptible = false;
         _runningSlot         = EAbilityInput.None;
+        _holdReleaseQueued   = false;
 
         if (_holdAbility == null) return;
         _holdAbility = null;
@@ -2925,6 +2958,10 @@ public class PlayerController : NetworkBehaviour
                 newClass.MainHandPositionOffset,
                 Quaternion.Euler(newClass.MainHandRotationOffset));
 
+            // Un modelo compartido a otro tamaño (el bastón del Clérigo es la lanza, más chica).
+            if (newClass.MainHandScale > 0f && !Mathf.Approximately(newClass.MainHandScale, 1f))
+                currentMainWeapon.transform.localScale *= newClass.MainHandScale;
+
             Transform trail = currentMainWeapon.transform.Find("WeaponTrail");
             if (trail != null)
             {
@@ -3468,9 +3505,13 @@ public class PlayerController : NetworkBehaviour
     // que se traba, cualquier arreglo "en el lugar" es adivinar; un personaje nuevo no
     // arrastra nada de lo anterior (input, tags, mantenidos, estado de combate).
     //
-    // Y ANTES DE REEMPLAZARLO, DEJA DICHO QUÉ ENCONTRÓ TRABADO (en la consola del host y
-    // en la del que lo pidió). Cada uso es una pista: si el log dice siempre lo mismo,
-    // ahí está la causa.
+    // Y ANTES DE REEMPLAZARLO, DEJA DICHO QUÉ ENCONTRÓ TRABADO. Cada uso es una pista: si
+    // el log dice siempre lo mismo, ahí está la causa. Desde el 19 de octubre de 2026 eso
+    // queda GUARDADO en un archivo, no solo en la consola (que se pierde al cerrar): el
+    // cliente le manda al servidor una foto de su lado (input, menús, movimiento, tags) y el
+    // HOST escribe las dos partes juntas en Unstuck.log — en el editor, en la carpeta Logs
+    // del proyecto; en una build, junto al Player.log. También los pedidos rechazados: un
+    // "quédate quieto" de alguien que jura estar trabado también dice algo.
     //
     // CONDICIONES (las valida el servidor): un botón que te manda a tu base con la vida
     // llena y sin estados es un atajo si se puede usar en cualquier momento — con la bolsa
@@ -3522,22 +3563,101 @@ public class PlayerController : NetworkBehaviour
         // Lo local, que es barato y no le da ventaja a nadie: el modo de input según los
         // menús que de verdad estén abiertos (Apply limpia los ya destruidos) y el
         // estado de combate local.
+        // La foto ANTES de tocar nada: después de Apply y FinishAttack ya no se vería qué estaba
+        // trabado.
+        string clientReport = DescribeLocalState();
+
         UICursor.Apply();
         FinishAttack();
 
-        Debug.Log($"[Unstuck] Pedido local. Cursor/input: {UICursor.DescribeHolders()} · " +
-                  $"input listo: {(_input != null && _input.IsReady)} · bloqueado: {_inputLocked}");
+        Debug.Log($"[Unstuck] Pedido local. {clientReport}");
 
-        // Y la decisión, que es del servidor.
-        if (IsSpawned) ServerUnstuck();
+        // Y la decisión, que es del servidor (con la foto, para que el host la guarde).
+        if (IsSpawned) ServerUnstuck(clientReport);
+    }
+
+    // Lo que ve el DUEÑO de su personaje: lo que el servidor no puede saber (el input, los
+    // menús, el cursor, el movimiento, que son de este lado).
+    private string DescribeLocalState()
+    {
+        var parts = new List<string>
+        {
+            $"cursor/input: {UICursor.DescribeHolders()}",
+            $"input listo: {(_input != null && _input.IsReady)}",
+            $"bloqueado por menú: {_inputLocked}",
+            $"atacando: {isAttacking}" + (isAttacking ? $" ({Time.time - _attackStartTime:0.0} s, ranura {_runningSlot})" : ""),
+        };
+        if (_holdAbility != null)          parts.Add($"mantenido: {_holdAbility.AbilityName}");
+        if (isRadialMenuOpen)              parts.Add($"rueda abierta: {(currentRadialAbility != null ? currentRadialAbility.AbilityName : "?")}");
+        if (_groundTargetAbility != null)  parts.Add($"apuntando zona: {_groundTargetAbility.AbilityName}");
+
+        var moving = new List<string>();
+        if (_knockbackActive)        moving.Add("empujado");
+        if (_rushActive)             moving.Add("embestida");
+        if (_dashActive)             moving.Add("dash");
+        if (_abilityVelocityActive)  moving.Add("impulso de habilidad");
+        if (_leapTakeoffPending)     moving.Add("despegue de salto pendiente");
+        if (_wallActive)             moving.Add("en una pared");
+        if (IsFlying || _flightFalling) moving.Add("vuelo");
+        if (moving.Count > 0) parts.Add($"movimiento especial: {string.Join(", ", moving)}");
+
+        if (characterController != null)
+            parts.Add($"CharacterController: {(characterController.enabled ? "prendido" : "APAGADO")}, " +
+                      $"en el piso: {characterController.isGrounded}");
+        if (_ragdoll != null && _ragdoll.IsActive) parts.Add("ragdoll ACTIVO");
+        parts.Add($"posición: {transform.position:F1}");
+        parts.Add($"clase: {(CurrentClassDef != null ? CurrentClassDef.ClassName : "ninguna")}");
+        if (ASC != null) parts.Add($"tags (vistos acá): {DescribeTags()}");
+        parts.Add($"cursor: {Cursor.lockState}, timeScale: {Time.timeScale}");
+        return string.Join(" · ", parts);
+    }
+
+    private string DescribeTags()
+    {
+        var tags = new List<string>();
+        foreach (EGameplayTag tag in ASC.ActiveTags) tags.Add(tag.ToString());
+        return tags.Count > 0 ? string.Join(", ", tags) : "ninguno";
+    }
+
+    // Agrega una entrada al Unstuck.log de ESTA máquina (el servidor la llama con las dos
+    // partes). En el editor va a la carpeta Logs del proyecto; en una build, junto al
+    // Player.log (Application.persistentDataPath). Nunca rompe el juego si no puede escribir.
+    private static bool _unstuckPathAnnounced;
+
+    private static void WriteUnstuckLog(string entry)
+    {
+        try
+        {
+            string folder = Application.isEditor
+                ? System.IO.Path.GetFullPath(System.IO.Path.Combine(Application.dataPath, "..", "Logs"))
+                : Application.persistentDataPath;
+            System.IO.Directory.CreateDirectory(folder);
+            string path = System.IO.Path.Combine(folder, "Unstuck.log");
+            System.IO.File.AppendAllText(path, $"[{System.DateTime.Now:yyyy-MM-dd HH:mm:ss}] {entry}\n\n");
+
+            if (!_unstuckPathAnnounced)
+            {
+                _unstuckPathAnnounced = true;
+                Debug.Log($"[Unstuck] Guardado en {path}");
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"[Unstuck] No se pudo guardar el registro: {e.Message}");
+        }
     }
 
     [ServerRpc]
-    private void ServerUnstuck()
+    private void ServerUnstuck(string clientReport)
     {
+        string who = Owner != null && Owner.IsValid ? $"'{name}' (cliente {Owner.ClientId})" : $"'{name}'";
+
         string rejection = UnstuckRejection(out int seconds);
         if (rejection != null)
         {
+            WriteUnstuckLog($"{who} pidió desatascarse — RECHAZADO ({rejection}).\n" +
+                            $"  Su lado: {clientReport}\n" +
+                            $"  Servidor: {DescribeServerState()}");
             TargetUnstuckRejected(Owner, rejection, seconds, Mathf.RoundToInt(UnstuckStillSeconds));
             return;
         }
@@ -3556,9 +3676,12 @@ public class PlayerController : NetworkBehaviour
         }
         if (isAttacking) found.Add("isAttacking trabado en el servidor");
 
-        Debug.LogWarning($"[Unstuck] '{name}' pidió desatascarse. Encontrado: " +
-                         (found.Count > 0 ? string.Join(" · ", found)
-                                          : "nada trabado del lado del servidor (mirar el log del cliente)"));
+        string foundText = found.Count > 0 ? string.Join(" · ", found)
+                                           : "nada trabado del lado del servidor (mirar su lado)";
+        Debug.LogWarning($"[Unstuck] {who} pidió desatascarse. Encontrado: {foundText}");
+        WriteUnstuckLog($"{who} se desatascó. Encontrado: {foundText}\n" +
+                        $"  Su lado: {clientReport}\n" +
+                        $"  Servidor: {DescribeServerState()}");
 
         // --- 2) Personaje nuevo, misma clase ---
         int   classIndex = VisualClassIndex;
@@ -3615,6 +3738,29 @@ public class PlayerController : NetworkBehaviour
         }
 
         return null;
+    }
+
+    // Lo que ve el SERVIDOR del mismo personaje: lo de juego (tags, efectos, si está atacando).
+    [Server]
+    private string DescribeServerState()
+    {
+        var parts = new List<string>
+        {
+            $"quieto hace {Time.time - _stillSince:0.0} s",
+            $"último golpe recibido hace {Time.time - _lastDamagedAt:0.0} s",
+            $"atacando: {isAttacking}",
+            $"posición: {transform.position:F1}",
+        };
+        if (ASC != null)
+        {
+            parts.Add($"tags: {DescribeTags()}");
+            var effects = new List<string>();
+            foreach (ActiveGameplayEffect e in ASC.GetActiveEffects())
+                if (e != null && e.Definition != null && e.Definition.EffectType != GameplayEffect.EEffectType.Hidden)
+                    effects.Add($"{e.Definition.name} ({e.DurationRemaining:0.0} s)");
+            parts.Add($"efectos: {(effects.Count > 0 ? string.Join(", ", effects) : "ninguno")}");
+        }
+        return string.Join(" · ", parts);
     }
 
     // ¿Hay un efecto ACTIVO que otorgue este tag? Si sí, el control es legítimo; si el
@@ -4062,6 +4208,8 @@ public class PlayerController : NetworkBehaviour
         // Mismo guard que abajo: Activate() corre en el servidor y no debe animar
         // copias ajenas (los observadores reciben la animación por su propio RPC).
         if (IsSpawned && !IsOwner) return;
+        // Las repeticiones de un canalizado continuo no animan: la pose en bucle sigue.
+        if (ability.SuppressesOwnAnimation) return;
 
         ApplyAbilityAnimation(ability);
     }

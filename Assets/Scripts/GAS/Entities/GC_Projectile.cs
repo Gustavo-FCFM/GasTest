@@ -67,6 +67,24 @@ public class GC_Projectile : NetworkBehaviour
 
     private Rigidbody _body;
 
+    [Header("Choque")]
+    [Tooltip("La caja que choca con paredes y escudos toma el tamaño del ARMA que se ve volar (el " +
+             "hacha, la daga). Con la caja grande de antes, un tiro que pasaba cerca de una pared " +
+             "'pegaba' en ella aunque el arma no la tocara. Solo con 'Usar el arma del que lo tira' " +
+             "y un BoxCollider; con el modelo propio (la flecha) vale la caja del prefab.")]
+    [Label("Caja al tamaño del arma")]
+    public bool FitColliderToWeapon = true;
+
+    [Tooltip("Lo más fina que puede quedar la caja en cada lado.")]
+    [Label("Caja: grosor mínimo (m)")]
+    public float MinColliderSize = 0.1f;
+
+    [Tooltip("Con qué radio le pega a los PERSONAJES, aparte de la caja: puede ser más generoso " +
+             "que el arma para que no cueste acertar (la caja solo decide contra paredes y " +
+             "escudos). 0 = la misma caja.")]
+    [Label("Radio contra personajes (m; 0 = la caja)")]
+    public float CharacterHitRadius = 0.5f;
+
     [Header("Blur de giro (opcional)")]
     [Tooltip("Material translucido del efecto (el paquete Simple Spin Blur trae uno listo: " +
              "'Spin Blur Material').\n\nVACIO = sin blur; el proyectil vuela como siempre.\n\n" +
@@ -127,10 +145,15 @@ public class GC_Projectile : NetworkBehaviour
         if (_body != null && !_body.isKinematic) _body.useGravity = true;
     }
 
-    // La flecha mira hacia donde va (solo en el servidor; el NetworkTransform lo lleva a todos).
+    // Solo en el servidor: el choque (ver CHOQUE POR BARRIDO) y, la flecha, mirar hacia donde
+    // va (el NetworkTransform lo lleva a todos).
     private void FixedUpdate()
     {
-        if (!AlignToVelocity || !IsServerInitialized) return;
+        if (!IsServerInitialized) return;
+
+        Sweep();
+
+        if (!AlignToVelocity) return;
         if (_body == null) _body = GetComponent<Rigidbody>();
         if (_body == null || _body.isKinematic) return;
 
@@ -226,7 +249,15 @@ public class GC_Projectile : NetworkBehaviour
 
         // Solo el servidor decide cuándo se destruye/despawnea el proyectil.
         if (IsServerInitialized)
+        {
+            // El arma también en el servidor, YA: la caja que choca toma su tamaño (ver
+            // FitColliderToModel). En el host ya venía por el SyncVar; en un servidor sin
+            // pantalla no llegaría nunca.
+            if (_shooterNob.Value != null) TryApplyShooterWeaponVisuals(_shooterNob.Value);
+
+            StartSweep(source);
             StartCoroutine(DespawnAfterLifetime());
+        }
     }
 
     // Despawnea el proyectil solo tras lifeTime segundos, si nadie lo
@@ -238,21 +269,140 @@ public class GC_Projectile : NetworkBehaviour
     }
 
     // =========================================================
+    // CHOQUE POR BARRIDO — autoridad de servidor (19 de octubre de 2026)
+    //
+    // Antes el choque era OnTriggerEnter: el collider del proyectil tenía que TOCAR algo en
+    // un paso de física. Eso tenía dos problemas:
+    //   · A velocidad alta salta lo que hay en el medio: a 100 m/s (el Haz guía) avanza 2 m
+    //     por paso, y una pared o un escudo más finos que eso se los podía saltar.
+    //   · La caja tenía que ser grande (1 m) para acertarle a la gente, y con esa caja un
+    //     tiro que pasaba cerca de una pared "pegaba" en ella (pedido de Gustavo).
+    // Ahora, en cada paso, el servidor BARRE el tramo que recorrió el proyectil: su forma
+    // (la caja, del tamaño del arma; ver FitColliderToModel) contra paredes, escudos y
+    // gente, y además una esfera de "Radio contra personajes" solo contra personajes. Lo
+    // que encuentra lo procesa en ORDEN de distancia, así un escudo frena antes que el que
+    // está detrás. Cada collider cuenta una vez (como un OnTriggerEnter). El primer tramo
+    // sale del cuerpo del que lo tira: tirar pegado a una pared pega en la pared, no la cruza.
+    // =========================================================
+
+    private Collider _shape;
+    private int      _mask;
+    private Vector3  _lastCenter;
+    private bool     _sweeping;
+    private bool     _gone;          // ya chocó con algo que lo despawneó
+    private int      _trajectory;    // sube en cada Reflect: lo del tramo viejo ya no cuenta
+    private readonly HashSet<Collider> _touched = new HashSet<Collider>();
+    private readonly HashSet<AbilitySystemComponent> _impactShown = new HashSet<AbilitySystemComponent>();
+
+    private static readonly RaycastHit[] s_hits     = new RaycastHit[32];
+    private static readonly Collider[]   s_overlaps = new Collider[32];
+    private static readonly List<KeyValuePair<float, Collider>> s_found = new List<KeyValuePair<float, Collider>>();
+
+    // Desde el cuerpo del que lo tira (a la altura a la que sale) hasta donde aparece.
+    private void StartSweep(AbilitySystemComponent shooter)
+    {
+        _shape = GetComponent<Collider>();
+        // Las mismas capas con las que chocaba antes (la matriz de colisiones de Physics).
+        _mask  = CollisionMask(gameObject.layer);
+        Vector3 center = ShapeCenter();
+        _lastCenter = shooter != null
+            ? new Vector3(shooter.transform.position.x, center.y, shooter.transform.position.z)
+            : center;
+        _sweeping = true;
+    }
+
+    private Vector3 ShapeCenter()
+    {
+        if (_shape is BoxCollider box)       return transform.TransformPoint(box.center);
+        if (_shape is SphereCollider sphere) return transform.TransformPoint(sphere.center);
+        return transform.position;
+    }
+
+    private void Sweep()
+    {
+        if (!_sweeping || _gone || _shape == null) return;
+
+        Vector3 from = _lastCenter;
+        Vector3 to   = ShapeCenter();
+        _lastCenter  = to;
+
+        Vector3 delta = to - from;
+        float   dist  = delta.magnitude;
+        Vector3 dir   = dist > 0.0001f ? delta / dist : transform.forward;
+
+        int mask = _mask;
+
+        s_found.Clear();
+        CollectShape(from, dir, dist, mask);
+        if (CharacterHitRadius > 0f) CollectSphere(from, dir, dist, CharacterHitRadius, mask, charactersOnly: true);
+        s_found.Sort((a, b) => a.Key.CompareTo(b.Key));
+
+        int trajectory = _trajectory;
+        foreach (KeyValuePair<float, Collider> found in s_found)
+        {
+            if (_gone || trajectory != _trajectory) break;   // chocó, o un parry lo dio vuelta
+            if (found.Value == null || !_touched.Add(found.Value)) continue;
+            HandleHit(found.Value, from + dir * found.Key);
+        }
+    }
+
+    // La forma del proyectil (su caja o su esfera), contra todo: paredes, escudos y gente.
+    private void CollectShape(Vector3 from, Vector3 dir, float dist, int mask)
+    {
+        Vector3 scale = transform.lossyScale;
+        if (_shape is BoxCollider box)
+        {
+            Vector3 half = new Vector3(Mathf.Abs(box.size.x * scale.x), Mathf.Abs(box.size.y * scale.y),
+                                       Mathf.Abs(box.size.z * scale.z)) * 0.5f;
+            int n = Physics.OverlapBoxNonAlloc(from, half, s_overlaps, transform.rotation, mask, QueryTriggerInteraction.Collide);
+            for (int i = 0; i < n; i++) AddFound(0f, s_overlaps[i], false);
+            if (dist <= 0f) return;
+            n = Physics.BoxCastNonAlloc(from, half, dir, s_hits, transform.rotation, dist, mask, QueryTriggerInteraction.Collide);
+            for (int i = 0; i < n; i++) AddFound(s_hits[i].distance, s_hits[i].collider, false);
+            return;
+        }
+
+        float radius = _shape is SphereCollider sphere
+            ? sphere.radius * Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.y), Mathf.Abs(scale.z))
+            : Mathf.Min(_shape.bounds.extents.x, _shape.bounds.extents.y, _shape.bounds.extents.z);
+        CollectSphere(from, dir, dist, radius, mask, charactersOnly: false);
+    }
+
+    private void CollectSphere(Vector3 from, Vector3 dir, float dist, float radius, int mask, bool charactersOnly)
+    {
+        QueryTriggerInteraction triggers = charactersOnly ? QueryTriggerInteraction.Ignore : QueryTriggerInteraction.Collide;
+        int n = Physics.OverlapSphereNonAlloc(from, radius, s_overlaps, mask, triggers);
+        for (int i = 0; i < n; i++) AddFound(0f, s_overlaps[i], charactersOnly);
+        if (dist <= 0f) return;
+        n = Physics.SphereCastNonAlloc(from, radius, dir, s_hits, dist, mask, triggers);
+        for (int i = 0; i < n; i++) AddFound(s_hits[i].distance, s_hits[i].collider, charactersOnly);
+    }
+
+    // Las capas que chocan con 'layer' según la matriz de Project Settings ▸ Physics.
+    private static int CollisionMask(int layer)
+    {
+        int mask = 0;
+        for (int i = 0; i < 32; i++)
+            if (!Physics.GetIgnoreLayerCollision(layer, i)) mask |= 1 << i;
+        return mask;
+    }
+
+    private void AddFound(float distance, Collider col, bool charactersOnly)
+    {
+        if (col == null || col.transform.IsChildOf(transform)) return;   // el propio proyectil
+        if (charactersOnly && col.GetComponentInParent<AbilitySystemComponent>() == null) return;
+        s_found.Add(new KeyValuePair<float, Collider>(distance, col));
+    }
+
+    // =========================================================
     // IMPACTO — autoridad de servidor
     // =========================================================
 
-    // Al chocar: reproduce el VFX de impacto en todos los peers y, si es
-    // un personaje enemigo, le aplica daño (o lo atraviesa si es aliado);
-    // si es un obstáculo sólido, despawnea el proyectil. Usa OnTriggerEnter
-    // porque el collider está marcado "Is Trigger".
-    private void OnTriggerEnter(Collider other)
+    // Lo que pasa al encontrar algo en el barrido ('point': dónde estaba el proyectil al
+    // tocarlo): el VFX de impacto en todos los peers y, si es un personaje enemigo, sus
+    // efectos (un aliado se atraviesa); si es un obstáculo sólido, se despawnea.
+    private void HandleHit(Collider other, Vector3 point)
     {
-        // TODA la lógica de daño/impacto es autoridad del servidor. Sin este
-        // guard, la copia del proyectil en un cliente remoto también corre
-        // esto — con sourceASC/damageEffect en null porque Initialize() solo
-        // se llamó del lado servidor — y explota con NullReferenceException.
-        if (!IsServerInitialized) return;
-
         // Se ignora TODO lo que cuelgue del lanzador, no solo el GameObject exacto de su
         // ASC: el arma que lleva en la mano tiene colliders propios y cuelga del hueso
         // del rig, así que un proyectil que sale cerca del cuerpo chocaba contra su
@@ -279,15 +429,18 @@ public class GC_Projectile : NetworkBehaviour
             // hacia donde apunta el dueño de la barrera. Una sola vez por proyectil.
             if (barrier.ReflectsProjectilesNow && !_reflected)
             {
-                barrier.NotifyProjectileBlocked(PrimaryDamage, sourceASC, transform.position);
+                barrier.NotifyProjectileBlocked(PrimaryDamage, sourceASC, point);
+                // Sale desde donde tocó el escudo: el barrido lo encuentra un paso tarde, y
+                // para entonces el proyectil ya podía estar del otro lado.
+                transform.position += point - ShapeCenter();
                 Reflect(barrier.Owner, barrier.AimDirection);
                 return;
             }
 
             // Le pasamos el efecto de daño (no un número) para que la barrera pueda
             // reportar cuánto daño evitó de verdad — ver NotifyProjectileBlocked.
-            barrier.NotifyProjectileBlocked(PrimaryDamage, sourceASC, transform.position);
-            PlayImpactVFXEverywhere();
+            barrier.NotifyProjectileBlocked(PrimaryDamage, sourceASC, point);
+            PlayImpactVFXEverywhere(point);
             DespawnSelf();
             return;
         }
@@ -302,8 +455,9 @@ public class GC_Projectile : NetworkBehaviour
             sourceASC.IsEnemyOf(targetASC))
             return;
 
-        // 1. VFX de impacto, sea lo que sea lo que golpeamos.
-        PlayImpactVFXEverywhere();
+        // 1. VFX de impacto, sea lo que sea lo que golpeamos (a un personaje, una vez aunque
+        // tenga varios colliders).
+        if (targetASC == null || _impactShown.Add(targetASC)) PlayImpactVFXEverywhere(point);
 
         // 2. ¿Es un personaje?
         if (targetASC != null && sourceAbility != null && sourceASC != null)
@@ -429,28 +583,36 @@ public class GC_Projectile : NetworkBehaviour
         // Un poco hacia afuera, para que no siga adentro de la barrera que lo devolvió.
         transform.SetPositionAndRotation(transform.position + dir * 0.5f, Quaternion.LookRotation(dir));
         if (rb != null) rb.linearVelocity = dir * speed;
+
+        // El barrido arranca de nuevo desde acá, sin recordar lo del tramo de ida: a la
+        // vuelta puede pegarle al que lo tiró (o a uno de los suyos que ya atravesó).
+        _trajectory++;
+        _touched.Clear();
+        _impactShown.Clear();
+        _lastCenter = ShapeCenter();
     }
 
     // Reproduce el VFX de impacto en TODOS los peers. Un Instantiate() local acá
-    // solo existiría en el proceso servidor (que es donde corre OnTriggerEnter), así
+    // solo existiría en el proceso servidor (que es donde corre el choque), así
     // que reusamos el mismo mecanismo que las demás habilidades: el servidor lo
     // reproduce y le avisa a cada cliente que haga lo mismo con SU PROPIA copia de
     // esta habilidad, sin sincronizar el GameObject del VFX en sí.
-    private void PlayImpactVFXEverywhere()
+    private void PlayImpactVFXEverywhere(Vector3 position)
     {
         if (sourceAbility == null || sourceASC == null || !sourceAbility.HasImpactFeedback) return;
 
         NetworkAbilitySystemComponent shooterNetAsc = sourceASC.GetComponent<NetworkAbilitySystemComponent>();
         if (shooterNetAsc != null)
-            shooterNetAsc.ServerPlayAbilityVFX(sourceAbility, transform.position);
+            shooterNetAsc.ServerPlayAbilityVFX(sourceAbility, position);
         else
-            sourceAbility.PlayImpactVFX(transform.position); // fallback sin red
+            sourceAbility.PlayImpactVFX(position); // fallback sin red
     }
 
     // Despawnea el proyectil en red (avisa a todos los clientes que
     // borren su copia) — un Destroy() normal solo lo sacaría del servidor.
     private void DespawnSelf()
     {
+        _gone = true;
         if (IsServerInitialized && IsSpawned)
             ServerManager.Despawn(gameObject);
     }
@@ -557,6 +719,52 @@ public class GC_Projectile : NetworkBehaviour
             Destroy(trail);
 
         ApplySpinBlur(weaponClone);
+        FitColliderToModel(weaponClone);
+    }
+
+    // La caja del proyectil, del tamaño del arma que se ve volar (pedido de Gustavo, 19 de
+    // octubre de 2026): con la caja de 1 m de antes, tirar cerca de una pared pegaba en la
+    // pared. Se mide con las mallas (no con los Renderer, que pueden estar apagados) en el
+    // espacio del proyectil, así gira con él (el hacha que da vueltas). Corre en todos los
+    // peers; el que choca es el servidor (ver Sweep). Acertarle a la gente no se achica: eso
+    // lo decide aparte el "Radio contra personajes".
+    private void FitColliderToModel(GameObject model)
+    {
+        if (!FitColliderToWeapon || !(GetComponent<Collider>() is BoxCollider box)) return;
+
+        Matrix4x4 toLocal = transform.worldToLocalMatrix;
+        Bounds bounds = default;
+        bool any = false;
+
+        foreach (Renderer r in model.GetComponentsInChildren<Renderer>(true))
+        {
+            Mesh mesh = null;
+            if (r is SkinnedMeshRenderer skinned) mesh = skinned.sharedMesh;
+            else if (r is MeshRenderer)
+            {
+                MeshFilter filter = r.GetComponent<MeshFilter>();
+                if (filter != null) mesh = filter.sharedMesh;
+            }
+            if (mesh == null) continue;   // partículas, estelas: no son el arma
+
+            Matrix4x4 m = toLocal * r.transform.localToWorldMatrix;
+            Vector3 c = mesh.bounds.center, e = mesh.bounds.extents;
+            for (int i = 0; i < 8; i++)
+            {
+                Vector3 corner = c + new Vector3((i & 1) == 0 ? -e.x : e.x,
+                                                 (i & 2) == 0 ? -e.y : e.y,
+                                                 (i & 4) == 0 ? -e.z : e.z);
+                Vector3 p = m.MultiplyPoint3x4(corner);
+                if (!any) { bounds = new Bounds(p, Vector3.zero); any = true; }
+                else bounds.Encapsulate(p);
+            }
+        }
+        if (!any) return;
+
+        float min = Mathf.Max(0.01f, MinColliderSize);
+        box.center = bounds.center;
+        box.size   = new Vector3(Mathf.Max(min, bounds.size.x), Mathf.Max(min, bounds.size.y),
+                                 Mathf.Max(min, bounds.size.z));
     }
 
     // Le monta el blur de giro (paquete Simple Spin Blur) a cada malla del arma

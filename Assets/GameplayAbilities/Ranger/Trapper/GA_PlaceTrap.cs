@@ -87,24 +87,17 @@ public class GA_PlaceTrap : GameplayAbility, IRadialMenuAbility
         }
         else
         {
-            spot = GroundBelow(aimed);
+            spot = Entity_Summon.GroundUnderAim(aimed, OwnerASC.transform.position + Vector3.up * 1.6f);
             rotation = Quaternion.Euler(0f, OwnerASC.transform.eulerAngles.y, 0f);
         }
 
-        GameObject obj = Instantiate(Traps[index].Prefab, spot, rotation);
-        NetworkObject nob = obj.GetComponent<NetworkObject>();
-        if (nob == null)
+        // La invocación (Entity_Summon): en red, del equipo del Trampero, y si se pasa de MaxTraps
+        // se va la más vieja.
+        if (Entity_Summon.Spawn(Traps[index].Prefab, OwnerASC, spot, rotation, MaxTraps) == null)
         {
-            Debug.LogWarning($"[{AbilityName}] '{Traps[index].Prefab.name}' no tiene NetworkObject.");
-            Destroy(obj);
             EndAbility();
             return;
         }
-        InstanceFinder.ServerManager.Spawn(nob);
-
-        Entity_Trap trap = obj.GetComponent<Entity_Trap>();
-        if (trap != null) trap.Initialize(OwnerASC, MaxTraps);
-        else Debug.LogWarning($"[{AbilityName}] '{Traps[index].Prefab.name}' no tiene Entity_Trap.");
 
         BroadcastImpactVFX(spot);
         PlayerController pc = OwnerASC.GetComponent<PlayerController>();
@@ -147,15 +140,6 @@ public class GA_PlaceTrap : GameplayAbility, IRadialMenuAbility
         if (forward.sqrMagnitude < 0.001f) forward = Vector3.ProjectOnPlane(Vector3.up, normal);
         if (forward.sqrMagnitude < 0.001f) forward = Vector3.forward;
         return Quaternion.LookRotation(forward.normalized, normal);
-    }
-
-    // El piso debajo del punto (sin contar personajes ni las paredes invisibles).
-    public static Vector3 GroundBelow(Vector3 point)
-    {
-        int mask = ~((1 << 7) | (1 << 2));
-        if (Physics.Raycast(point + Vector3.up * 3f, Vector3.down, out RaycastHit hit, 40f, mask, QueryTriggerInteraction.Ignore))
-            return hit.point;
-        return point;
     }
 
     public override void DrawGizmos(Transform origin)

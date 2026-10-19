@@ -46,12 +46,14 @@ MonoBehaviour:
     OnlyIfTargetHas: 0
     StackScaling: 0
     PerStack: 0
+    PerTargetCooldown: 0
   - When: 0
     ApplyTo: 0
     Effect: {fileID: 11400000, guid: 381d2ca3a8c01bd4a977295ad4336717, type: 2}
     OnlyIfTargetHas: 0
     StackScaling: 0
     PerStack: 0
+    PerTargetCooldown: 0
   Visuals:
   - When: 2
     VFXPrefab: {fileID: 2944396702758532163, guid: e190bf97c041e58448af6b043116cba0, type: 3}
@@ -70,6 +72,14 @@ MonoBehaviour:
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
+  CastMode: 1
+  CastSeconds: 1
+  CastTickSeconds: 0.5
+  CastBlocksOthers: 1
+  CastBreaksOnDamage: 0
+  CastStartAnimation: {fileID: 0}
+  CastLoopAnimation: {fileID: 3094330708855449807, guid: ab2eeeec69d32d142ac0d781f97a2577, type: 3}
+  CastReleaseAnimation: {fileID: 0}
   MaxCharges: 1
   ProjectilePrefab: {fileID: 406129108226925510, guid: 29b7325ea45914c4bb7592ed1cdc376b, type: 3}
   LaunchForce: 100
@@ -77,6 +87,7 @@ MonoBehaviour:
   AddSpin: 1
   HideWeaponWhileFlying: 0
   LifeTime: 0
+  StraightFlightTime: 0
   MinConvergeDistance: 4
   SpawnDelay: 0.3
   FirstHitCooldownPerTarget: 3
@@ -85,6 +96,7 @@ MonoBehaviour:
   AimReleaseClip: {fileID: 0}
   AimReleaseDelay: 0.1
   AimSafetyTimeout: 30
+  ShowTrajectoryWhileAiming: 1
   InstantDamageEffect: {fileID: 0}
   DurationEffect: {fileID: 0}
   AdditionalEffects: []

@@ -48,6 +48,143 @@ rm -rf "Assets/FishNet" "Assets/FishNet.meta" "Assets/TextMesh Pro/Examples & Ex
 
 ---
 
+# ★ Base de las invocaciones (Entity_Summon + Summon_Zone) — HECHA; el TÓTEM pasado, falta correr y probar (19 de octubre)
+
+Lo de abajo ("Canalizar, choque de los proyectiles...") lo probó Gustavo: funciona.
+
+**Las dos piezas** (`Scripts/GAS/Entities`):
+- **`Entity_Summon`**: lo que tiene toda invocación, en el Inspector: **Dura** (0 = hasta que la quiten),
+  **Máximo por dueño** (la más vieja se va; quien la invoca puede pedir otro número), **Grupo del límite**,
+  **Si el dueño muere** (se queda / desaparece; si se va del juego o cambia de clase, desaparece siempre),
+  **La ven** (todos / solo su equipo), **Modelo**, **Recibe zonas**. Por dentro: el equipo del dueño en red,
+  una sola regla de enemigo/aliado (la del ASC), su propio ASC opcional (con la vida a 0 desaparece; puede ser
+  autor de efectos), y `Entity_Summon.Spawn(...)` para crearla. Lo propio de cada una, en una subclase.
+- **`Summon_Zone`**: "a los que estén en el radio, cada tanto, estos efectos". **A quién** (aliados / enemigos),
+  **Solo jugadores**, **Autor** (el dueño / la invocación), **Potenciada** (otros efectos si el dueño tiene un
+  tag), **Empieza prendida** o la prende la invocación, **Dura**, y su **VFX** del tamaño del radio en todas las
+  pantallas. Una invocación + una zona, sin código, ya es un muro de fuego o un aura.
+
+**El tótem, ya pasado:** `Entity_Totem` ahora es una invocación sin nada propio; el aura es su zona.
+`GA_SpawnTotem` tiene **Máximo a la vez** (2) en vez del número fijo en el código, y los tótems de la Furia
+elemental no cuentan para ese límite. **Si el Chamán muere, sus tótems desaparecen** (pedido de Gustavo; también
+los de la Furia).
+
+- [x] (Corrida y borrada el 19 de octubre; el aura funciona.) Correr `Mercenarios ▸ Una vez ▸ Pasar los tótems a la base de invocaciones` y borrar
+      `Assets/Scripts/Editor/MercSummonTotems.cs`. Le agrega a cada prefab de tótem su zona con el aura que
+      tenía (efecto, potenciado con el Frenesí, radio, cada cuánto, VFX) y le pone: máximo 2, desaparece si
+      el Chamán muere, no recibe zonas. **Sin correrla, los tótems no dan aura.**
+- [ ] Probar: poner tótems (dan el aura a los aliados y al Chamán, potenciada con el Frenesí; el VFX del aura en
+      las dos pantallas); el tercero saca al más viejo; romper uno a golpes; **morir con tótems puestos (se van)**;
+      la Furia elemental (sus 4 tótems no sacan a los de la rueda, se van al terminar y si el Chamán muere).
+- [x] **PROBADO ✅ — Barras de vida** (19 de octubre, lo vio Gustavo): la del tótem salía VACÍA (ya pasaba antes de la base: la vida
+      solo viajaba al cambiar; ahora la base la manda al aparecer). El Lobo y el Oso no tenían barra armada, y la
+      COPIA del Ilusionista no tenía ninguna. Correr `Mercenarios ▸ Una vez ▸ Poner barras de vida a compañeros y
+      copias` y borrar `Assets/Scripts/Editor/MercSummonHealthbars.cs` (corrida y borrada): copia la barra de los tótems al Lobo y al
+      Oso (a la altura de su modelo) y la del JUGADOR a la copia. En juego, la copia muestra la barra del jugador
+      copiado (nombre, vida, buffs, ícono de clase: `UI_WorldHealthbar.Mirror`), así el enemigo no sabe cuál es
+      el real. Probar: barra llena del tótem al ponerlo; las del Lobo y el Oso (bajan al pegarles); la copia con
+      el nombre y la vida del Ilusionista (y en la Fiesta, la de cada aliado copiado), en las dos pantallas.
+- [x] **PROBADO ✅ — UN prefab para las barras de vida** (19 de octubre, pedido de Gustavo): `Prefabs/UI/Nameplate`, con
+      `UI_Nameplate` (las piezas: vida, buffs, nombre, aviso de crítico, ícono de clase —antes lo armaba el
+      código—, y los colores). Antes cada prefab tenía su copia de la barra de la jam, cada una de otro tamaño.
+      Correr `Mercenarios ▸ Una vez ▸ Hacer el prefab de las barras de vida` y borrar
+      `Assets/Scripts/Editor/MercNameplatePrefab.cs` (corrida y borrada el 19 de octubre): crea el prefab desde la barra del jugador y, en cada prefab
+      con barra (jugador, enemigos, tótems, compañeros, copia, muñeco), cambia la vieja por una instancia del
+      prefab a la misma altura. **El tamaño pasa a ser el mismo para todos** (el del jugador). **Sin correrla,
+      los jugadores no muestran el ícono de clase.** Probar: barras de jugadores, enemigos, tótems, Lobo, Oso y
+      copias; cambiar algo en el prefab (el color) y que cambie en todos.
+- [x] **PROBADO ✅ — Tótems arriba del techo** (lo vio Gustavo): se buscaba el piso desde 10 m arriba del punto (las trampas
+      desde 3 m) y bajo techo quedaba encima del techo. Ahora `Entity_Summon.GroundUnderAim` lo busca desde un
+      poco antes del punto, del lado desde donde se miró (apuntando al techo, cae al piso de abajo), y
+      `GroundNear` para lo que se reparte alrededor (los tótems de la Furia, las bombas). Probar bajo techo:
+      tótems, trampas al aire y la definitiva del Trampero.
+- [ ] **Otros prefabs que valdrían la pena** (revisado el 19 de octubre, por decidir):
+  - **Variantes**: los 4 tótems, las 4 trampas y los enemigos (`Net_Enemy`, `Net_Mage`, `Net_Boss`) son casi
+    iguales entre sí. Con un prefab base y variantes, agregarles algo a todos es tocar uno. Las trampas, al
+    pasarlas a la base de invocaciones (lo siguiente).
+  - **Plantilla de invocación** para el Mago: NetworkObject + ASC + NetworkASC + Entity_Summon + Nameplate +
+    collider, lista para duplicar.
+  - **UI que todavía se arma por código** (va contra "la UI vive en el prefab"): el marcador de zona en el piso
+    (`UI_GroundTargetIndicator`, se crea la primera vez), el dibujo del botiquín (`HealthPackVisual`: disco,
+    cruz, texto), la grilla de tarjetas del menú de clases y los `EventSystem` que crean tres menús por su
+    cuenta (uno en `Menus_UI` alcanza).
+  - No hace falta: el audio (fuentes de sonido en juego), las siluetas (`TeamReveal`, `CharacterOutline`) y los
+    bordes invisibles de la arena (son constructores de geometría).
+- [ ] **La TRAMPA pasada a la base** (19 de octubre): `Entity_Trap` es una invocación. La base resuelve el equipo,
+      que la vean solo los suyos, "Dura", el límite de 6 (las bombas no cuentan: campo nuevo de la base,
+      **Cuenta para el límite**) y desaparecer si el Trampero se va o cambia de clase; si muere, siguen puestas
+      (como antes). La zona de espinas pasa a ser una `Summon_Zone`. Quedan suyos: armarse, saltar, el aviso y
+      explotar. Y las 4 trampas pasan a ser **VARIANTES de `Prefabs/Summons/Trap_Base`**: lo que se cambie en la
+      base cambia en todas.
+- [ ] Correr `Mercenarios ▸ Una vez ▸ Pasar las trampas a la base de invocaciones` y borrar
+      `Assets/Scripts/Editor/MercSummonTraps.cs`. Crea la base, convierte cada trampa en variante EN SU MISMO
+      ARCHIVO (el modelo se mueve tal cual, con la pieza que le quitaste a la bomba), pasa la zona de espinas a
+      su `Summon_Zone` y reconecta las trampas a `GA_PlaceTrap` y `GA_BombBarrage`. **Sin correrla, la de
+      espinas no hace su zona.**
+- [ ] Probar: las 4 trampas (se arman en 1.5 s, invisibles para el enemigo, saltan solo con jugadores; la de
+      espinas con su zona; la de frío con su aviso; la explosiva empuja desde ella), el límite de 6, la R (las
+      bombas no sacan trampas y explotan al vencerse), en el piso y en una pared; en un cliente.
+- [ ] Después, de a una y probando cada una: ~~la trampa~~ (arriba), la cuchilla ilusoria, la copia del Ilusionista y el
+      compañero (el más grande, al final).
+
+---
+
+# ★ Canalizar, choque de los proyectiles y registro del desatascarse — HECHO Y PROBADO ✅ (19 de octubre)
+
+**1. Canalizar, en cualquier habilidad.** Todo GA tiene una sección nueva **Canalizar**:
+- **Canalizar:** "No canaliza" / "Canaliza y se lanza al terminar" / "Continuo: hace efecto mientras canaliza".
+- **Dura (s)**; en el continuo, **Hace efecto cada (s)** (la habilidad se repite; el costo y el cooldown, una vez).
+- **Bloquea las demás habilidades** (sí por defecto; moverse siempre se puede) y **Se corta al recibir daño** (no por defecto).
+- Clips: **empezar a canalizar** (opcional), **canalizando (bucle)** y, en el continuo, **soltar**. Al lanzar al
+  terminar, el de soltar es el clip de siempre de la habilidad (sección Animación).
+- **Si la cortan, cuenta como lanzada** (cobra costo y cooldown). La corta lo que la bloquea (el aturdido; el
+  silencio si es magia; el desarme si es de arma), morir, otra habilidad si es interrumpible y, si se marcó, el daño.
+- Mientras canaliza, la mira del dueño le llega al servidor en vivo: sale hacia donde apuntas AL SOLTAR.
+- La barra de canalizar del HUD se llena (al terminar) o se vacía (continuo); roja si la cortan.
+- No vale en las de mantener, las de rueda ni las que ya canalizan solas (molinete, Aliento del dragón, Golpe final).
+- **El Haz guía del Clérigo (y el radiante del Clérigo de la Luz): 1 s de canalización**, con la pose
+  `MagicAttackDirect1H01_L - Load` en bucle (la pareja del "- Cast" con el que ya lanzaba). Se cambia en el Inspector.
+
+**2. El choque de los proyectiles, por barrido** (`GC_Projectile`). Pediste que la caja tomara el tamaño del arma:
+- **Caja al tamaño del arma** (casilla nueva del prefab, prendida): el hacha, la daga, el kunai y la lanza chocan
+  con paredes y escudos con SU tamaño, no con la caja de 1 m de antes. **Grosor mínimo** 0.1 m.
+- Pero achicar la caja también hacía más difícil acertarle a la gente, así que eso va aparte: **Radio contra
+  personajes** (0.5 m, lo mismo que daba la caja de antes). La flecha queda en 0 (su caja de siempre, precisa).
+- Y el choque ya no espera a que la caja TOQUE algo en un paso de física: el servidor barre el tramo que
+  recorrió. Antes, a 100 m/s (el Haz guía) avanzaba 2 m por paso y se podía saltar una pared o un escudo finos.
+  Lo encontrado se procesa en orden: un escudo frena antes que el que está detrás. El primer tramo sale del cuerpo
+  del que tira: tirar de frente pegado a una pared pega en la pared (no la cruza); de costado ya no.
+
+**3. El desatascarse queda guardado.** Cada pedido (aceptado o rechazado) se escribe en **`Unstuck.log`** del HOST:
+en el editor, `GasTest/Logs/Unstuck.log`; en una build, junto al `Player.log`. Junta las dos partes: lo que ve el
+que lo pidió (input, menús abiertos, cursor, si estaba atacando y con qué, movimientos especiales, el
+CharacterController, ragdoll, tags) y lo que ve el servidor (tags, efectos, cuánto lleva quieto, último golpe).
+
+- [ ] Probar el **Haz guía** (es un lanzamiento APUNTADO: mantener y soltar): mantener canaliza con la pose
+      y la barra; soltando antes de que se llene, el rayo sale apenas se llena (hacia donde apuntas en ese
+      momento); aturdido o silenciado a mitad, se corta (barra roja) y queda en cooldown. (19 de octubre: la
+      primera versión no canalizaba porque los mantenidos tienen su propio ciclo con el botón; arreglado.)
+- [ ] El **bastón del Clérigo**, a 0.8 (campo nuevo de la clase "Arma principal: tamaño", en el Clérigo y en
+      sus dominios de la Vida y de la Luz). Es el mismo modelo que la lanza del Comandante y del Trampero:
+      ellos no cambian. En un cliente: que se vea igual (el bucle
+      y el lanzamiento) en las dos pantallas.
+- [ ] Probar un **Continuo** en cualquier habilidad (por ejemplo, ponerle a un ataque "Continuo, 2 s, cada 0.4 s").
+- [ ] Probar el **choque**: tirar el hacha o la daga pasando cerca de una pared (ya no pega en ella); acertarle
+      a alguien (igual de fácil que antes); el Haz guía contra un escudo (lo frena, no lo cruza); el parry del
+      Guardián (sigue devolviendo).
+- [ ] La próxima vez que alguien se atasque: traer `Logs/Unstuck.log`.
+
+**Después de probar esto (decidido el 19 de octubre): una base para las entidades invocadas, antes del Mago.**
+Tótems, trampas, compañeros, copias del Ilusionista y cuchillas ilusorias siguen la misma receta pero cada una
+está escrita por su cuenta: el límite "la más vieja se va" está tres veces (`GA_SpawnTotem`, `PlayerCopyManager`,
+`Entity_Trap`), "quién es enemigo" se decide de tres formas, y qué pasa si el dueño muere varía (las copias se van;
+trampas y tótems siguen). Plan: `Entity_Summon` (dueño y equipo, duración, límite por dueño, irse o no si el dueño
+muere o cambia de clase, regla de enemigo/aliado, ASC propio opcional, visibilidad por equipo) y una pieza de
+**zona** (aplicar algo a los que estén dentro cada X s: el aura del tótem, la zona de espinas, las áreas
+continuas). Pasar las cinco existentes de a una, probando cada una.
+
+---
+
 # ★ Parry del Guardián: el proyectil devuelto hace el daño que traía — CÓDIGO HECHO, falta probar (15 de octubre)
 
 Revisando el pendiente viejo ("sigue haciendo el daño que traía") aparecieron dos fallas:
@@ -1692,9 +1829,9 @@ batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 
    - [x] **PROBADO ✅ (8 de octubre).** Con dos ventanas: el molinete gira y sostiene la pose en la del otro; el Golpe final
          levanta el arma, la sostiene y baja el mandoble, en las dos (también cortado con un
          aturdido: baja el arma sin mandoble).
-   - [ ] Canalizar como MECÁNICA genérica (un tiempo de lanzamiento antes de que salga
-         cualquier habilidad, que se corta si te aturden): no está; la barra ya sirve para
-         cuando se haga.
+   - [x] Canalizar como MECÁNICA genérica (un tiempo de lanzamiento antes de que salga
+         cualquier habilidad, que se corta si te aturden). **Hecho el 19 de octubre: sección
+         Canalizar de cualquier GA (ver arriba).**
 
 2. **El mapa del cementerio — GREYBOX ARMADO (29 de septiembre), falta jugarlo.** Escena
    nueva `Scenes/Mercenaries_Graveyard.unity` (copia de la del modo, con sala, red y menús;
@@ -1703,7 +1840,7 @@ batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 
 3. **Sonido**: el sistema está; faltan los clips (y volver a prender la sección de
    sonido de Ajustes).
 4. **Animaciones que se ven raras** (sección 5).
-5. **Quedarse sin control al spawnear**: juntar los logs `[Unstuck]` cuando pase.
+5. **Quedarse sin control al spawnear**: cuando pase, traer `Logs/Unstuck.log` del host (se guarda solo).
 
 ---
 
@@ -1754,8 +1891,8 @@ no se cancelaba con daño sin atacante (segundo detector mirando la vida), el bo
   cooldown ya pagado no se devuelve.
 - [x] Paladín: clic izquierdo e inmediatamente clic derecho → no pega, sube el escudo.
       Con Castigo divino cargado, lo mismo (la estela tampoco sale).
-- [ ] Cuando alguien se atasque de verdad: guardar el `[Unstuck]` de la consola (host y
-      cliente) y traerlo a la siguiente sesión.
+- [ ] Cuando alguien se atasque de verdad: traer `Logs/Unstuck.log` del host (desde el 19 de
+      octubre se guarda solo, con el lado del cliente y el del servidor juntos).
 
 **Pendiente de decidir:** la escena trae por defecto tu dirección de playit.gg
 (`ssh-buried.tun.ply.gg:60625`). Cómodo para tus amigos, pero para probar en tu PC con dos

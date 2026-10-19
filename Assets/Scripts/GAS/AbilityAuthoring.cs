@@ -88,6 +88,7 @@ public static class AbilitySection
     public const string Shape        = "Forma y alcance";
     public const string Movement     = "Movimiento";
     public const string Timing       = "Tiempos";
+    public const string Channel      = "Canalizar";
     public const string Stacks       = "Acumulaciones";
     public const string Effects      = "Efectos (GE)";
     public const string Visuals      = "VFX";
@@ -99,7 +100,7 @@ public static class AbilitySection
     // "Tótems"...), en el orden en que se declaran.
     public static readonly string[] Order =
     {
-        General, CostCooldown, Rules, Targeting, Shape, Movement, Timing, "*",
+        General, CostCooldown, Rules, Targeting, Shape, Movement, Timing, Channel, "*",
         Stacks, Effects, Visuals, Animation, Sound, Advanced,
     };
 }
@@ -159,6 +160,18 @@ public static class ClassSection
     public const string Grow      = "Crecer (Avatar)";
 
     public static readonly string[] Order = { Identity, Stats, Abilities, Passives, Movement, Evolution, Animation, Weapons, Grow, "*" };
+}
+
+// =========================================================
+// CANALIZAR (sección Canalizar de cualquier GA)
+// =========================================================
+
+// Si la habilidad se sostiene un rato antes de salir, y cómo.
+public enum ECastMode
+{
+    [InspectorName("No canaliza")]                            None       = 0,
+    [InspectorName("Canaliza y se lanza al terminar")]        CastAtEnd  = 1,   // el Haz guía: 1 s y sale el rayo
+    [InspectorName("Continuo: hace efecto mientras canaliza")] Continuous = 2,  // se repite cada tanto mientras dura
 }
 
 // =========================================================

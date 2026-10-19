@@ -45,6 +45,14 @@ MonoBehaviour:
   TargetLayer:
     serializedVersion: 2
     m_Bits: 0
+  CastMode: 0
+  CastSeconds: 1
+  CastTickSeconds: 0.5
+  CastBlocksOthers: 1
+  CastBreaksOnDamage: 0
+  CastStartAnimation: {fileID: 0}
+  CastLoopAnimation: {fileID: 0}
+  CastReleaseAnimation: {fileID: 0}
   MaxCharges: 1
   Traps:
   - Name: Spike trap
@@ -52,18 +60,18 @@ MonoBehaviour:
     Description: A wide zone that slows, damages and opens wounds.
     DescriptionEs: "Zona amplia que ralentiza, da\xF1a y abre heridas."
     Icon: {fileID: 21300000, guid: 88970bdacb4fe224eb755341dfa17862, type: 3}
-    Prefab: {fileID: 5299795670231967235, guid: c08004b1db393274db00477d946e6cb5, type: 3}
+    Prefab: {fileID: 4018961193699023741, guid: c08004b1db393274db00477d946e6cb5, type: 3}
   - Name: Frost trap
     NameEs: "Trampa de fr\xEDo"
     Description: Frosts over, then damages and stuns.
     DescriptionEs: "Se escarcha y despu\xE9s da\xF1a y aturde."
     Icon: {fileID: 21300000, guid: 10b6bf9e4f8d3e241b3acab09d461d56, type: 3}
-    Prefab: {fileID: 4209561298484524280, guid: 1200aa1aaad8f70419a8748b0e2b61a1, type: 3}
+    Prefab: {fileID: 179164463118048248, guid: 1200aa1aaad8f70419a8748b0e2b61a1, type: 3}
   - Name: Explosive trap
     NameEs: Trampa explosiva
     Description: Heavy damage and knocks everyone back.
     DescriptionEs: "Mucho da\xF1o y repele a todos hacia atr\xE1s."
     Icon: {fileID: 21300000, guid: 29fb9439cd499704a91aaf84cca83d95, type: 3}
-    Prefab: {fileID: 4345202378042216651, guid: 323bc21263896794d849ffc02d3deb03, type: 3}
+    Prefab: {fileID: 6890790913167218702, guid: 323bc21263896794d849ffc02d3deb03, type: 3}
   MaxPlaceRange: 15
   MaxTraps: 6

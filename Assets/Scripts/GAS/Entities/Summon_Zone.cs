@@ -1,0 +1,174 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+// ============================================================
+// Summon_Zone  (la zona de una invocación — 19 de octubre de 2026)
+//
+// "A los que estén dentro de este radio, cada tanto, aplicarles estos efectos." Estaba repetida
+// en el aura del tótem, en la zona de espinas de la trampa y en las áreas continuas; ahora es
+// una pieza que se pone al lado de un Entity_Summon (o de una subclase) en el prefab:
+//
+//   · A quién: aliados (y el dueño) o enemigos; si se quiere, solo jugadores (sin NPCs).
+//   · Autor de los efectos: el DUEÑO (escalan con sus stats y la baja es suya: el daño) o la
+//     INVOCACIÓN (necesita su propio ASC: el empuje sale desde ella; el aura del tótem).
+//   · Potenciada: si el dueño tiene un tag (el Frenesí del Chamán), otros efectos.
+//   · Empieza prendida al aparecer, o la prende la invocación cuando quiere (Begin; la trampa
+//     de espinas al explotar). Dura lo que la invocación, o sus propios segundos.
+//   · El VFX de la zona sale en todas las pantallas mientras está prendida, del tamaño del radio
+//     (con VFX_AreaVisual calza exacto). El "prendida" viaja en un SyncVar de la invocación.
+//
+// Una zona por invocación. Los efectos se aplican solo en el servidor.
+// ============================================================
+[RequireComponent(typeof(Entity_Summon))]
+public class Summon_Zone : MonoBehaviour
+{
+    public enum ETargets
+    {
+        [InspectorName("Aliados (y el dueño)")] Allies,
+        [InspectorName("Enemigos")]             Enemies,
+    }
+
+    public enum EAuthor
+    {
+        [InspectorName("El dueño")]       Owner,
+        [InspectorName("La invocación")]  Summon,
+    }
+
+    [Header("Zona")]
+    [Tooltip("Se prende sola al aparecer la invocación. Apagado = la prende la invocación cuando " +
+             "quiere (la trampa de espinas, al explotar).")]
+    [Label("Empieza prendida")]
+    public bool StartActive = true;
+
+    [Tooltip("Cuánto dura prendida. 0 = lo que dure la invocación.")]
+    [Label("Dura (s; 0 = lo que la invocación)")]
+    public float Seconds = 0f;
+
+    [Label("Radio (m)")]
+    public float Radius = 5f;
+
+    [Tooltip("Cada cuánto aplica los efectos. El primero, en el acto.")]
+    [Label("Cada cuánto (s)")]
+    public float TickSeconds = 0.5f;
+
+    [Label("A quién")]
+    public ETargets Targets = ETargets.Allies;
+
+    [Tooltip("Solo jugadores y bots: los NPCs no la sienten (las trampas).")]
+    [Label("Solo jugadores (sin NPCs)")]
+    public bool PlayersOnly = false;
+
+    [Tooltip("Quién figura como autor de los efectos.\n\n" +
+             "· El dueño: escalan con sus stats, la baja es suya y le carga la definitiva (el daño).\n" +
+             "· La invocación: necesita su propio AbilitySystemComponent. Un empuje sale desde ella.")]
+    [Label("Autor de los efectos")]
+    public EAuthor Author = EAuthor.Owner;
+
+    [Tooltip("Lo que recibe cada uno dentro del radio, en cada vez.")]
+    [Label("Efectos")]
+    public List<GameplayEffect> Effects = new List<GameplayEffect>();
+
+    [Header("Potenciada")]
+    [Tooltip("Si el DUEÑO tiene este tag, se aplican los efectos potenciados en vez de los normales " +
+             "(el tótem con el Chamán enfurecido). None = nunca.")]
+    [Label("Si el dueño tiene")]
+    public EGameplayTag EmpowerTag = EGameplayTag.None;
+
+    [Label("Efectos potenciados")]
+    public List<GameplayEffect> EmpoweredEffects = new List<GameplayEffect>();
+
+    [Header("Visual")]
+    [Tooltip("En todas las pantallas mientras la zona está prendida, del tamaño del radio.")]
+    [Label("VFX de la zona")]
+    public GameObject VFX;
+
+    [Tooltip("Si el VFX no trae VFX_AreaVisual (con él calza solo con el radio): su tamaño por " +
+             "cada metro de radio.")]
+    [Label("VFX: escala (×)")]
+    public float VfxScale = 1f;
+
+    [Label("Capa de personajes")]
+    public LayerMask CharacterLayer = 1 << 7;
+
+    private Entity_Summon _summon;
+    private GameObject    _vfx;
+    private float _endsAt = float.MaxValue, _nextTick;
+
+    private static readonly Collider[] s_hits = new Collider[64];
+    private readonly HashSet<AbilitySystemComponent> _seen = new HashSet<AbilitySystemComponent>();
+
+    private void Awake() => _summon = GetComponent<Entity_Summon>();
+
+    // La prende (servidor). La llama la invocación: sola al aparecer si "Empieza prendida", o
+    // cuando decide.
+    public void Begin()
+    {
+        if (_summon == null || !_summon.IsServerInitialized) return;
+        _endsAt   = Seconds > 0f ? Time.time + Seconds : float.MaxValue;
+        _nextTick = Time.time;
+        _summon.SetZoneFlag(true);
+    }
+
+    private void Update()
+    {
+        if (_summon == null) return;
+        bool on = _summon.ZoneActive;
+
+        // Todas las pantallas: el VFX sigue al "prendida" sincronizado.
+        if (on && _vfx == null && VFX != null)
+        {
+            _vfx = Instantiate(VFX, transform.position, transform.rotation, transform);
+            VFX_AreaVisual.Configure(_vfx, Radius, VfxScale, 0f);
+        }
+        else if (!on && _vfx != null)
+        {
+            Destroy(_vfx);
+            _vfx = null;
+        }
+
+        // Servidor: los efectos.
+        if (!on || !_summon.IsServerInitialized) return;
+        if (Time.time >= _endsAt) { _endsAt = float.MaxValue; _summon.NotifyZoneEnded(); return; }
+        if (Time.time < _nextTick) return;
+        _nextTick = Time.time + Mathf.Max(0.05f, TickSeconds);
+        Apply();
+    }
+
+    private void Apply()
+    {
+        AbilitySystemComponent owner  = _summon.Summoner;
+        AbilitySystemComponent author = Author == EAuthor.Owner ? owner : _summon.OwnASC;
+        if (author == null) author = Author == EAuthor.Owner ? _summon.OwnASC : owner;
+        if (author == null) return;
+
+        List<GameplayEffect> effects = EmpowerTag != EGameplayTag.None && owner != null && owner.HasTag(EmpowerTag) &&
+                                       EmpoweredEffects != null && EmpoweredEffects.Count > 0
+                                       ? EmpoweredEffects : Effects;
+        if (effects == null || effects.Count == 0) return;
+
+        _seen.Clear();
+        int count = Physics.OverlapSphereNonAlloc(transform.position, Radius, s_hits, CharacterLayer,
+                                                  QueryTriggerInteraction.Collide);
+        for (int i = 0; i < count; i++)
+        {
+            AbilitySystemComponent target = s_hits[i] != null ? s_hits[i].GetComponentInParent<AbilitySystemComponent>() : null;
+            if (target == null || !_seen.Add(target) || target.HasTag(EGameplayTag.State_Dead)) continue;
+
+            Entity_Summon other = target.GetComponent<Entity_Summon>();
+            if (other != null && !other.ReceivesZones) continue;
+
+            bool fits = Targets == ETargets.Allies ? _summon.IsAlly(target) : _summon.IsEnemy(target);
+            if (!fits) continue;
+            if (PlayersOnly && target.GetComponent<PlayerController>() == null) continue;
+
+            foreach (GameplayEffect e in effects)
+                if (e != null) target.ApplyGameplayEffect(e, author);
+        }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Targets == ETargets.Allies ? new Color(0f, 1f, 0.5f, 0.3f) : new Color(1f, 0.3f, 0.2f, 0.3f);
+        Gizmos.DrawWireSphere(transform.position, Radius);
+    }
+}

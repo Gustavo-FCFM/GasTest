@@ -111,7 +111,7 @@ public class GA_CopyParty : GameplayAbility
             {
                 Vector3 dir    = DisperseDirection(i, perPlayer);
                 Vector3 target = spawnPos + dir * DisperseDistance;
-                manager.SpawnPartyCopy(spawnPos, target, speed, classIdx);
+                manager.SpawnPartyCopy(spawnPos, target, speed, classIdx, src);
             }
         }
 

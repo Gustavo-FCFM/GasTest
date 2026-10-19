@@ -57,6 +57,11 @@ public class GA_SpawnTotem : GameplayAbility, IRadialMenuAbility
     [Label("Tótems")]
     public List<TotemOption> Totems = new List<TotemOption>();
 
+    [Tooltip("Cuántos tótems puede tener puestos a la vez (de cualquier tipo): al poner uno más, se va " +
+             "el más viejo.")]
+    [Label("Máximo a la vez")]
+    public int MaxTotems = 2;
+
     [Section(AbilitySection.Shape)]
     [Tooltip("Hasta dónde se puede poner el tótem desde el jugador.")]
     [Label("Alcance máximo (m)")]
@@ -95,11 +100,6 @@ public class GA_SpawnTotem : GameplayAbility, IRadialMenuAbility
         return OwnerASC.HasTag(cd.GrantedTags[0]);
     }
 
-    // Tótems actualmente invocados por este jugador, en orden de
-    // aparición (para despawnear el más viejo al pasar el límite).
-    private Queue<GameObject> activeTotems = new Queue<GameObject>();
-    private const int MAX_TOTEMS = 2;
-
     // Vacío a propósito: esta habilidad se activa vía el menú radial
     // (ActivateWithSelection), no con un click normal.
     public override void Activate() { }
@@ -135,51 +135,14 @@ public class GA_SpawnTotem : GameplayAbility, IRadialMenuAbility
 
         CommitAbility();
 
-        // Ground snapping
-        Vector3 groundPosition = spawnPosition;
-        RaycastHit[] hits = Physics.RaycastAll(spawnPosition + Vector3.up * 10f, Vector3.down, 20f);
-        float closestDistance = float.MaxValue;
-        foreach (var hit in hits)
-        {
-            if (!hit.collider.isTrigger && hit.collider.GetComponentInParent<AbilitySystemComponent>() == null)
-            {
-                if (hit.distance < closestDistance)
-                {
-                    closestDistance  = hit.distance;
-                    groundPosition   = hit.point;
-                }
-            }
-        }
+        // El piso donde apuntó (apuntando al techo, el de abajo; ver Entity_Summon.GroundUnderAim).
+        // Antes se buscaba desde 10 m arriba y quedaba el más alto: bajo techo, el techo.
+        Vector3 eyes = OwnerASC.transform.position + Vector3.up * 1.6f;
+        Vector3 groundPosition = Entity_Summon.GroundUnderAim(spawnPosition, eyes);
 
-        GameObject totemObj = Instantiate(option.Prefab, groundPosition, Quaternion.identity);
-
-        Entity_Totem totemScript = totemObj.GetComponent<Entity_Totem>();
-        if (totemScript != null)
-        {
-            totemScript.MyTeamID   = OwnerASC.TeamID;
-            totemScript.CreatorASC = OwnerASC;
-        }
-
-        // Instantiate() normal solo crea el tótem en el servidor — sin esto,
-        // es invisible para cualquier cliente que no sea el host.
-        NetworkObject totemNob = totemObj.GetComponent<NetworkObject>();
-        if (totemNob != null)
-            InstanceFinder.ServerManager.Spawn(totemNob);
-        else
-            Debug.LogWarning("[GA_SpawnTotem] El prefab del tótem no tiene NetworkObject — no se va a replicar a los clientes.");
-
-        // Límite de tótems activos
-        activeTotems.Enqueue(totemObj);
-        if (activeTotems.Count > MAX_TOTEMS)
-        {
-            GameObject oldestTotem = activeTotems.Dequeue();
-            if (oldestTotem != null)
-            {
-                NetworkObject oldestNob = oldestTotem.GetComponent<NetworkObject>();
-                if (oldestNob != null && oldestNob.IsSpawned) InstanceFinder.ServerManager.Despawn(oldestNob);
-                else Destroy(oldestTotem);
-            }
-        }
+        // La invocación (Entity_Summon): la crea en red, le da el equipo del Chamán y saca el
+        // tótem más viejo si se pasa de MaxTotems. Si el Chamán muere, se van (lo dice el prefab).
+        Entity_Summon.Spawn(option.Prefab, OwnerASC, groundPosition, Quaternion.identity, MaxTotems);
 
         // Cooldown individual
         if (option.Cooldown != null) OwnerASC.ApplyGameplayEffect(option.Cooldown, OwnerASC);

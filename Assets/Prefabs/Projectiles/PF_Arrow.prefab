@@ -243,6 +243,9 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 994776573448183946}
   UseShooterWeapon: 0
   AlignToVelocity: 1
+  FitColliderToWeapon: 0
+  MinColliderSize: 0.1
+  CharacterHitRadius: 0
   SpinBlurMaterial: {fileID: 2100000, guid: 22c1ed1b274ae4f43b3fce9c8067dedc, type: 2}
   SpinBlurShutterSpeed: 4
   SpinBlurSamples: 8
