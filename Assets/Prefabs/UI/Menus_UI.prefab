@@ -16917,6 +16917,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a21d4d368c00b2340b6b78faed3e3b22, type: 2}
   - {fileID: 11400000, guid: c2ea37ab2ac5bb7418974642d08d3cc8, type: 2}
   - {fileID: 11400000, guid: b5a13448c6c3eaf42887e470ad037aa1, type: 2}
+  - {fileID: 11400000, guid: 51ffa076a29cfe14e8b6ee238ea6df61, type: 2}
   LobbyCanvas: {fileID: 4357567542853223044}
   Panel: {fileID: 7523801541846235199}
   IpText: {fileID: 8611905061629163578}

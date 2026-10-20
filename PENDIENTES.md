@@ -7,6 +7,26 @@ siguen abiertas, más el plan.
 El proyecto compila limpio: 0 errores y 0 warnings en código propio (los 312 warnings
 del log son todos de packs importados).
 
+## ★ Al retomar: lo abierto, en orden (20 de octubre)
+
+1. **Probar la etapa 1 del Mago** (ver "★ El Mago" abajo: qué mirar).
+2. **Etapa 2 del Mago — el libro:** la rueda (ARRIBA los misiles); que la variante cobre su maná
+   y canalice (la pieza delicada: toca la red); la vuelta sola a los misiles sin maná; y los 4
+   hechizos del clic: Bola de fuego (canaliza 0.5 s, explota y deja la zona del dragón), Flecha
+   helada (canaliza 1 s), Terremoto (la grieta que avanza por el piso) y Descarga eléctrica (el
+   grafo de rebotes). Todo decidido: ver la tabla del Mago.
+3. **Etapa 3 — la Q** (recarga, muro, tumba, levantamiento, tormenta) y **etapa 4** (bots, y
+   pasar el Mago al documento de diseño de clases y a la guía).
+4. **Probar lo de antes:** el parry del Guardián en un cliente; los bots con el Explorador, el
+   Monje y el Guerrero; `GA_SpawnSummon` con una variante de las plantillas de invocación.
+5. **Cuando alguien se atasque:** traer `Logs/Unstuck.log`.
+6. **Decisiones de Gustavo, sin prisa:** más prefabs (variantes de tótems y enemigos, la UI que
+   todavía arma el código), acomodar los botiquines, la puntería si se siente mal.
+7. **Después del Mago:** las animaciones raras (sección 5, con la pose del bloqueo del Monje) y
+   el sonido (faltan los clips).
+8. **Íconos del Mago:** provisionales (el de la Flecha mágica del Clérigo). Pedirle al artista
+   los de la clase, los misiles y el punto arcano.
+
 ## Cómo retomar en la otra máquina
 
 ```bash
@@ -48,7 +68,113 @@ rm -rf "Assets/FishNet" "Assets/FishNet.meta" "Assets/TextMesh Pro/Examples & Ex
 
 ---
 
-# ★ Base de las invocaciones (Entity_Summon + Summon_Zone) — HECHA; el TÓTEM pasado, falta correr y probar (19 de octubre)
+# ★ El Mago: kit base — ETAPA 1 HECHA (20 de octubre), falta probarla; siguen las etapas 2, 3 y 4
+
+Decidido con Gustavo el 20 de octubre. Cambia cosas del documento de diseño (la Tumba helada
+congela al MAGO, no a los demás; la Q no gasta maná; el Terremoto avanza por el piso; la
+Descarga rebota): pasarlo al documento de diseño de clases al armarlo. **Los visuales son
+provisionales** hasta los del artista. Sin arma por ahora (el libro se borró en septiembre):
+manos vacías, con los clips de magia de Kevin Iglesias (los del Haz guía).
+
+**Maná:** 100. Se regenera solo, 10 por segundo. Los hechizos del clic izquierdo cuestan maná;
+sin el suficiente no salen, y en cuanto no alcanza para el elegido, el clic vuelve SOLO a los
+misiles (aunque tengas el botón apretado). La Q no gasta maná. La barra del HUD ya existe y ya
+es azul (aparece sola en las clases con maná: el Mago es la primera).
+
+**Puntos arcanos (pasiva — Vulnerabilidad arcana):** solo los dan los Misiles arcanos, 1 por
+golpe; tope 5; duran 6 s y se refrescan. Cada punto suma **+2 de daño FIJO** a cada golpe del
+Mago contra ese objetivo (con 5, +10), no a los ticks de la quemadura. Se ven como debuff en la
+barra (con su número) y como **bolas azules que giran alrededor** del marcado soltando
+estrellitas azules (una bola por punto).
+
+| Ranura | Qué hace | Maná | Con los puntos del objetivo |
+|---|---|---|---|
+| Clic izq. — Misiles arcanos | Bolita azul; vuela hasta chocar; daño mágico; da 1 punto. Se repite al mantener | 0 | +2 por punto |
+| Clic der. — Libro de hechizos | Rueda: ARRIBA los misiles (lo normal) y los 4 hechizos. El elegido se queda hasta cambiarlo o hasta que no alcance el maná. Cambia el clic izquierdo y la Q | — | — |
+| Clic izq. con Fuego — Bola de fuego | Canaliza 0.5 s. Explota en 3 m: daño + quemadura, y deja la zona del dragón del Monje tal cual (2.5 m, 5 s, `GE_DragonBurn` cada 1 s). No se repite al mantener | 25 | La quemadura dura +1 s por punto |
+| Clic izq. con Hielo — Flecha helada | Canaliza 1 s y sale al terminar. Proyectil que ralentiza. No se repite al mantener | 50 | La ralentización dura +0.5 s por punto |
+| Clic izq. con Tierra — Terremoto | Una grieta que AVANZA por el piso desde el Mago (se ve venir y se esquiva) siguiendo el terreno: si está arriba de algo, baja por el borde. Pega solo a lo pegado al piso (caja de 0.5 m de alto, ajustable): el que salta alto la esquiva. Solo daño. Lanzado VOLANDO: se corta el vuelo, cae en picada y la grieta sale al tocar el piso (como el terremoto de Spellbreak). Se repite al mantener | 20 | Aturde 0.5 s por punto y GASTA los puntos de ese enemigo (si no, manteniendo el botón quedaba aturdido sin parar) |
+| Clic izq. con Rayo — Descarga eléctrica | Hitscan, con un rayito azul que dibuja la trayectoria al instante. Se repite al mantener | 10 | Rebota (ver abajo) |
+| Q sin hechizo — Recargar maná | Canaliza 3 s y recarga el 100 % de a poco (+33 por segundo, como el Segundo aliento del Guerrero pero con maná); cortada, se queda con lo ganado. Cooldown 10 s, completa o cortada | — | — |
+| Q con Fuego — Muro de fuego | Mantener Q muestra el muro en el piso y la RUEDA DEL MOUSE lo gira (15° por paso; con control, la cruceta izquierda y derecha). 5 zonas CUADRADAS de 2 m en fila de lado a lado (10 m), con daño hasta 2 m de alto; quema como la zona del dragón. Dura 5 s. Cooldown 8 s | 0 | (los +2 de la pasiva) |
+| Q con Hielo — Tumba helada | Se congela a SÍ MISMO (el bloque de hielo de WoW / la crio-congelación de Mei): 3 s inmune a daño y a control, sin moverse ni atacar; apretar Q otra vez sale antes; no cura. Un cubo de hielo traslúcido lo encierra. Cooldown 20 s | 0 | — |
+| Q con Tierra — Levantamiento | Área de 3 m donde apunta: daño y los lanza hacia arriba. Cooldown 8 s | 0 | (los +2 de la pasiva) |
+| Q con Rayo — Tormenta eléctrica | Un tornado AZUL (copia de `Art/VFX/Tornado.prefab`) fijo donde apunta: 6 s, daño cada 1 s en 4 m. Si una Descarga eléctrica LE PEGA, tira un rayo a CADA enemigo a 8 m (ajustable) y cada uno arranca su rebote. Cada Descarga que le pegue lo dispara otra vez. Cooldown 8 s | 0 | Los rebotes |
+| Shift — Vuelo | `GA_Flight` + `GE_Fly` (hecho y probado el 6 de octubre) | — | — |
+
+**El rebote de la Descarga es un grafo:** el golpeado salta a tantos enemigos como puntos tenga, y
+cada uno de esos vuelve a saltar según los suyos (A con 2 → B y C; B con 1 → D). Pesan primero
+los PUNTOS y, entre empatados, el MÁS CERCANO; a 4 m o menos y VISIBLE desde el anterior (sin
+pared en medio, como si apuntara y disparara). Cada enemigo recibe un solo rayo por ataque, con
+el daño completo. Con 0 puntos no rebota. Opción en el Inspector **Ramas / Cadena** para probar
+también la cadena simple (A → B → C); la recomendada es Ramas.
+
+**Lo que ya hay y se reusa:** `GA_ProjectileShoot` (misiles, bola y flecha; vuela hasta chocar como
+el arco de luz del Clérigo), `GA_HitscanShot` (la descarga), `GA_TagSwitch` (el clic izquierdo y la
+Q cambian según el hechizo; ya pasa el marcador del piso de la variante), `GA_InstantAoE`
+(Levantamiento), `GA_ContinuousAoE` (la zona del dragón, el daño de la tormenta), Canalizar (hielo,
+fuego, recarga), "Repetir ataque al mantener", los efectos de un mismo grupo que se reemplazan (el
+hechizo elegido, como las posturas del Guerrero), las acumulaciones de un GE (los puntos), el "VFX
+en el objetivo" de un GE (orbes, cubo), `GE_DragonBurn`, `GE_Slow`, el empuje con "Impulso hacia
+arriba", `Status_Immunity` + `Status_Unstoppable` (los de la Muerte silenciosa), `GA_Flight`, el
+atributo Maná con su red y su barra, y `GE_EnergyRegen` como molde de la regeneración.
+
+**Lo nuevo (código):**
+1. **La variante cobra y canaliza lo suyo** (`GA_TagSwitch`): hoy les quita el costo, y canalizar
+   solo funciona en la habilidad de la ranura. Toca la red. Con eso: la vuelta sola a los misiles
+   sin maná, y que las que canalizan no se repitan al mantener.
+2. **Rueda genérica**: cada opción aplica un GE (el hechizo elegido). Le sirve después al Filo
+   danzante (sus espadas).
+3. **Pasiva Vulnerabilidad arcana**: +2 fijos por punto del objetivo (`IDamageModifier`) y los
+   orbes que giran según los puntos.
+4. **Escalar con los puntos del OBJETIVO**: duración por punto (fuego, hielo) y aturdido por punto
+   que gasta los puntos (terremoto). Las acumulaciones de hoy cuentan las del LANZADOR.
+5. **Explotar al chocar**: el proyectil suelta un área y una zona donde pega.
+6. **El Terremoto**: la grieta que avanza pegada al piso, baja por los bordes, con su caja de 0.5 m;
+   y cortar el vuelo con la caída en picada.
+7. **La Descarga**: el grafo de rebotes con línea de vista, y el rayito de cada salto en todas
+   las pantallas.
+8. **La Tormenta**: que la Descarga le pegue al tornado (colisión propia) y dispare los rayos.
+9. **El Muro**: zona cuadrada con alto, y el marcador del muro que gira con la rueda del mouse (el
+   marcador de hoy es un círculo armado por código: pasarlo a prefab de paso).
+10. **Tumba helada**: congelarse a sí mismo y salir antes con Q.
+
+Los visuales provisionales (bolita, orbes con estrellas, rayito, grieta, cubo de hielo, tornado
+azul) los crea una herramienta de una vez, como prefabs.
+
+**Por etapas, probando entre una y otra:**
+- [ ] **Etapa 1 — la clase: HECHA (20 de octubre; herramienta corrida y borrada), falta probar.**
+      Stats de Gustavo en `ASDef_Wizard`: 60 de vida (+40 por nivel), 100 de maná (+50 por nivel),
+      2 de defensa, 8 de ataque, 10 de daño mágico, velocidad 6, 0.8 s entre ataques; por nivel
+      también +1 de ataque y +1 de daño mágico, como el Clérigo. Código nuevo: el tag
+      `Status_ArcanePoint` (al final de la lista), `ArcaneVulnerabilityPassive` (+2 fijos por punto
+      del objetivo), `ArcaneOrbsVisual` (una bola por punto, lee las acumulaciones que ya viajan
+      por red) y, para CUALQUIER `GA_ProjectileShoot`, la casilla **Se deshace en el primer
+      enemigo** (hasta hoy todos los proyectiles atravesaban; los demás siguen igual).
+  - [x] (Corrida y borrada el 20 de octubre.) Correr `Mercenarios ▸ Una vez ▸ Crear el Mago (etapa 1)` y borrar
+        `Assets/Scripts/Editor/MercWizardStage1.cs`. Crea `Class_Wizard` y `ASDef_Wizard`
+        (Attributes/Wizard), `GA_ArcaneMissiles` y `WizardBehaviours` (GameplayAbilities/Wizard),
+        `GE_ArcanePoint` (Debuffs) y `GE_ManaRegen` (Buffs), `PF_ArcaneMissile` (copia del orbe del
+        Monje, en azul), el material azul y `VFX_ArcaneOrbs` (Art/VFX/Wizard) y `AOC_Wizard`
+        (la pose de lanzar hechizos). Agrega el Mago al FINAL de las clases del jugador y de la
+        sala, y actualiza los registros de red. El Shift es el `GA_Flight` de siempre. Íconos
+        PROVISIONALES (el de la Flecha mágica del Clérigo).
+  - [ ] Probar, en el host y en un cliente: elegir el Mago en la sala; la barra de maná aparece
+        (azul) y llena (todavía nada gasta maná); los misiles salen al ritmo de 0.8 s (y al mantener), vuelan
+        derecho hasta lejos y se deshacen en el primer enemigo; cada misil deja un punto (el
+        debuff con su número, hasta 5) y una bola más girando alrededor del enemigo, en las dos
+        pantallas; con puntos, el número de daño sube 2 por punto; a los 6 s sin misiles se van
+        todos; el vuelo; subir de nivel (vida y maná). Ajustar la "Espera al lanzar" de
+        `GA_ArcaneMissiles` si la bolita no sale de la mano.
+- [ ] **Etapa 2 — el libro:** la rueda, la variante que cobra y canaliza, y los 4 hechizos del clic
+      (bola, flecha, terremoto, descarga con su grafo).
+- [ ] **Etapa 3 — la Q:** recarga, muro, tumba, levantamiento y tormenta (con la descarga contra el
+      tornado).
+- [ ] **Etapa 4:** los bots, y pasarlo al documento de diseño de clases y a la guía.
+
+---
+
+# ★ Base de las invocaciones (Entity_Summon + Summon_Zone) — HECHA Y PROBADA ✅ (19-20 de octubre: todas las invocaciones funcionan)
 
 Lo de abajo ("Canalizar, choque de los proyectiles...") lo probó Gustavo: funciona.
 
@@ -73,7 +199,7 @@ los de la Furia).
       `Assets/Scripts/Editor/MercSummonTotems.cs`. Le agrega a cada prefab de tótem su zona con el aura que
       tenía (efecto, potenciado con el Frenesí, radio, cada cuánto, VFX) y le pone: máximo 2, desaparece si
       el Chamán muere, no recibe zonas. **Sin correrla, los tótems no dan aura.**
-- [ ] Probar: poner tótems (dan el aura a los aliados y al Chamán, potenciada con el Frenesí; el VFX del aura en
+- [x] **PROBADO ✅ (20 de octubre).** Probar: poner tótems (dan el aura a los aliados y al Chamán, potenciada con el Frenesí; el VFX del aura en
       las dos pantallas); el tercero saca al más viejo; romper uno a golpes; **morir con tótems puestos (se van)**;
       la Furia elemental (sus 4 tótems no sacan a los de la rueda, se van al terminar y si el Chamán muere).
 - [x] **PROBADO ✅ — Barras de vida** (19 de octubre, lo vio Gustavo): la del tótem salía VACÍA (ya pasaba antes de la base: la vida
@@ -98,7 +224,7 @@ los de la Furia).
       poco antes del punto, del lado desde donde se miró (apuntando al techo, cae al piso de abajo), y
       `GroundNear` para lo que se reparte alrededor (los tótems de la Furia, las bombas). Probar bajo techo:
       tótems, trampas al aire y la definitiva del Trampero.
-- [ ] **Plantillas de invocación** (20 de octubre, pedido de Gustavo): correr `Mercenarios ▸ Una vez ▸ Crear las
+- [x] **Plantillas de invocación** (20 de octubre, pedido de Gustavo; corrida y borrada el 20, falta probar `GA_SpawnSummon` con una variante): correr `Mercenarios ▸ Una vez ▸ Crear las
       plantillas de invocación` y borrar `Assets/Scripts/Editor/MercSummonTemplates.cs`. Crea en `Prefabs/Summons`:
       **`Summon_Base`** (con vida: NetworkObject, NetworkTransform, ASC con `ASDef_SummonBase` de 100 de vida,
       NetworkASC, collider trigger en la capa 7, Entity_Summon que desaparece si el dueño muere, barra de vida y
@@ -117,7 +243,7 @@ los de la Furia).
     cuenta (uno en `Menus_UI` alcanza).
   - No hace falta: el audio (fuentes de sonido en juego), las siluetas (`TeamReveal`, `CharacterOutline`) y los
     bordes invisibles de la arena (son constructores de geometría).
-- [ ] **La TRAMPA pasada a la base** (19 de octubre): `Entity_Trap` es una invocación. La base resuelve el equipo,
+- [x] **PROBADO ✅ — La TRAMPA pasada a la base** (19 de octubre; probada el 20): `Entity_Trap` es una invocación. La base resuelve el equipo,
       que la vean solo los suyos, "Dura", el límite de 6 (las bombas no cuentan: campo nuevo de la base,
       **Cuenta para el límite**) y desaparecer si el Trampero se va o cambia de clase; si muere, siguen puestas
       (como antes). La zona de espinas pasa a ser una `Summon_Zone`. Quedan suyos: armarse, saltar, el aviso y
@@ -128,7 +254,7 @@ los de la Furia).
       ARCHIVO (el modelo se mueve tal cual, con la pieza que le quitaste a la bomba), pasa la zona de espinas a
       su `Summon_Zone` y reconecta las trampas a `GA_PlaceTrap` y `GA_BombBarrage`. **Sin correrla, la de
       espinas no hace su zona.**
-- [ ] Probar: las 4 trampas (se arman en 1.5 s, invisibles para el enemigo, saltan solo con jugadores; la de
+- [x] **PROBADO ✅ (20 de octubre).** Probar: las 4 trampas (se arman en 1.5 s, invisibles para el enemigo, saltan solo con jugadores; la de
       espinas con su zona; la de frío con su aviso; la explosiva empuja desde ella), el límite de 6, la R (las
       bombas no sacan trampas y explotan al vencerse), en el piso y en una pared; en un cliente.
 - [x] **PROBADO ✅ — La CUCHILLA ILUSORIA y la COPIA del Ilusionista, pasadas a la base** (20 de octubre). Sin herramienta que
@@ -1317,7 +1443,7 @@ marcados "Pospuesto".
 **Estado al 5 de octubre:** Clérigo completo y probado. Guerrero: kit base, Maestro de
 batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 9).
 **Guardián: hecho y probado ✅** (5 de octubre). **El Guerrero queda completo** (kit base y las 3 subclases).
-**6 de octubre:** barra de carga por etapas del ataque cargado (`UI_ChargeBar`), repeler / atraer y vuelo libre: hechos y probados. **Monje: kit base hecho y probado (8 de octubre). Barra de canalizar (`UI_CastBar`): hecha.** Queda la mascota con IA en red. **13 de octubre: Explorador (Ranger), kit base hecho; sigue el Maestro de bestias con su Lobo (la mascota con IA en red). Documentos al día (diseño de clases, arquitectura del GAS y de red, guía y glosario).** **14 de octubre: Maestro de bestias (los tres compañeros) y la UI del jugador pasada al prefab de la cámara (barras, avisos de combate, viñeta, rueda, curva de los lanzamientos y silueta); la curva sale ahora en todos los lanzamientos apuntados. Documentos al día.** **15 de octubre: probado todo lo de la UI (las 6 etapas) y lo viejo pendiente; variables claras con su unidad en los 1 247 campos del Inspector; la Ira primal (la definitiva del Maestro de bestias), falta probarla; 50 de experiencia por eliminar a un jugador. Cazador (subclase del Explorador) hecho y probado. Trampero hecho y probado (trampas en el piso o en paredes, se arman en 1.5 s; la rueda deja la cámara quieta): **el Explorador queda completo** (kit base y las 3 subclases). Documentos al día.** **19 y 20 de octubre: canalizar en cualquier habilidad (el Haz guía canaliza 1 s), el choque de los proyectiles por barrido (caja al tamaño del arma), el desatascarse guardado en Unstuck.log, el parry devuelve el daño que traía, la BASE DE INVOCACIONES (Entity_Summon + Summon_Zone: tótems, trampas como variantes, cuchilla, copia y compañero ya la usan), un solo prefab para las barras de vida (la copia muestra la del copiado) y las invocaciones bien apoyadas bajo techo. Documentos al día.**
+**6 de octubre:** barra de carga por etapas del ataque cargado (`UI_ChargeBar`), repeler / atraer y vuelo libre: hechos y probados. **Monje: kit base hecho y probado (8 de octubre). Barra de canalizar (`UI_CastBar`): hecha.** Queda la mascota con IA en red. **13 de octubre: Explorador (Ranger), kit base hecho; sigue el Maestro de bestias con su Lobo (la mascota con IA en red). Documentos al día (diseño de clases, arquitectura del GAS y de red, guía y glosario).** **14 de octubre: Maestro de bestias (los tres compañeros) y la UI del jugador pasada al prefab de la cámara (barras, avisos de combate, viñeta, rueda, curva de los lanzamientos y silueta); la curva sale ahora en todos los lanzamientos apuntados. Documentos al día.** **15 de octubre: probado todo lo de la UI (las 6 etapas) y lo viejo pendiente; variables claras con su unidad en los 1 247 campos del Inspector; la Ira primal (la definitiva del Maestro de bestias), falta probarla; 50 de experiencia por eliminar a un jugador. Cazador (subclase del Explorador) hecho y probado. Trampero hecho y probado (trampas en el piso o en paredes, se arman en 1.5 s; la rueda deja la cámara quieta): **el Explorador queda completo** (kit base y las 3 subclases). Documentos al día.** **19 y 20 de octubre: canalizar en cualquier habilidad (el Haz guía canaliza 1 s), el choque de los proyectiles por barrido (caja al tamaño del arma), el desatascarse guardado en Unstuck.log, el parry devuelve el daño que traía, la BASE DE INVOCACIONES (Entity_Summon + Summon_Zone: tótems, trampas como variantes, cuchilla, copia y compañero ya la usan), un solo prefab para las barras de vida (la copia muestra la del copiado) y las invocaciones bien apoyadas bajo techo. Documentos al día.** **20 de octubre (tarde): el plan del Mago, decidido con Gustavo, y su etapa 1 armada (la clase, el maná, los misiles, los puntos arcanos con sus bolas y el vuelo); falta probarla.**
 
 1. **Clases nuevas — DECIDIDO (28 de septiembre): Clérigo + Guerrero completos**, en ese
    orden. Detalle y estimación en la sección 6.
@@ -1860,7 +1986,7 @@ batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 
          cualquier habilidad, que se corta si te aturden). **Hecho el 19 de octubre: sección
          Canalizar de cualquier GA (ver arriba).**
 
-2. **El mapa del cementerio — GREYBOX ARMADO (29 de septiembre), falta jugarlo.** Escena
+2. **El mapa del cementerio — JUGADO Y APROBADO ✅ (20 de octubre: Gustavo lo probó varias veces, le gusta y ya le puso texturas).** Escena
    nueva `Scenes/Mercenaries_Graveyard.unity` (copia de la del modo, con sala, red y menús;
    la vieja no se tocó). Ya la estás editando a mano. Detalle, rutas
    medidas y lo que falta en la sección 7.
@@ -3192,7 +3318,7 @@ nuevo vive casi todo en las subclases). Contra: al llegar a nivel 3 no hay qué 
 
 - [x] Decidir: Clérigo + Guerrero completos (28 de septiembre). Clérigo: kit base hecho;
       Clérigo completo; Guerrero: kit base, Maestro de batalla, Comandante y Guardián probados (5 de octubre): Guerrero completo.
-- [x] Antes del Mago: definir la extra de Filo danzante — DECIDIDO (13 de octubre): **Espada mágica** (Magic blade): por un tiempo sus ataques hacen daño MÁGICO; sin ella, la espada solo hace daño físico. Falta pasarlo al documento de diseño de clases.
+- [x] Antes del Mago: definir la extra de Filo danzante — DECIDIDO (13 de octubre): **Espada mágica** (Magic blade): por un tiempo sus ataques hacen daño MÁGICO; sin ella, la espada solo hace daño físico. Ya está en el documento de diseño de clases.
 
 ---
 
@@ -3264,7 +3390,7 @@ Lo que cuesta o hay que cuidar:
 - [x] Greybox con cubos y probar con bots ANTES de decorar
 - Estimación: 1–2 semanas de editor. Compite con Clérigo + Guerrero (sección 6).
 
-## El Cementerio de los Tres Panteones — el mapa para la demo (bosquejo del 24 de sept.)
+## El Cementerio de los Tres Panteones — el mapa para la demo (bosquejo del 24 de sept.) — JUGADO Y APROBADO ✅, ya con texturas (20 de octubre)
 
 Es el mapa del foso de arriba, con tema de cementerio, pasillos y pasadizos. **Este es el
 plan**; lo de arriba queda como el origen de la idea.
@@ -3340,8 +3466,8 @@ del Objetivo, y horneó el NavMesh. **Desde ahí se edita a mano**: la herramien
 borró el 29 de septiembre, sin commitear (volver a correrla pisaba los cambios): las
 mallas de los pisos con hoyos quedan como están en `Art/Models/Graveyard`.
 
-- **Escena en Build Settings DESACTIVADA**: la build sigue abriendo el mapa viejo. Para
-  probar el cementerio en una build, ponerla primera y activarla.
+- **En Build Settings es la ÚNICA escena activa** (revisado el 20 de octubre): la build abre el cementerio.
+  Las otras dos (el mapa viejo y Test_Network) siguen en la lista, desactivadas.
 - **Pisos con hoyos**: el piso de cada sector es una malla en anillos (coordenadas
   polares), así los hoyos de las escaleras cortan exacto y el sector gira sin costuras.
   Todo hoyo cae sobre algo caminable (la cripta o una catacumba).

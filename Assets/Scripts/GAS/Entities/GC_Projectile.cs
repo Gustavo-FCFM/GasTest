@@ -485,9 +485,14 @@ public class GC_Projectile : NetworkBehaviour
                     if (!_reflected) sourceAbility.BroadcastHitVFX(targetASC, withSound: false);
                 }
 
-                // NOTA: Si quieres que el proyectil se DESTRUYA al golpear a un enemigo
-                // en lugar de atravesarlo, descomenta la siguiente línea:
-                // DespawnSelf();
+                // "Se deshace en el primer enemigo" (GA_ProjectileShoot.StopAtFirstEnemy: los
+                // Misiles arcanos del Mago): le pegó a uno y se va. Sin la casilla, lo atraviesa
+                // y sigue (cada enemigo, una vez), como siempre.
+                if (sourceAbility is GA_ProjectileShoot shot && shot.StopAtFirstEnemy)
+                {
+                    DespawnSelf();
+                    return;
+                }
             }
             // B) Es aliado
             else

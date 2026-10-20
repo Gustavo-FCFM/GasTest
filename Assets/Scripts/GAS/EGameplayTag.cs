@@ -144,4 +144,7 @@ public enum EGameplayTag
     Status_ApexPredator,       // Depredador definitivo (definitiva del Cazador): todos los enemigos son su Presa y su equipo los ve a través de paredes; cada baja la alarga. Lo da GE_ApexPredator; lo mira HunterPreyPassive
     Status_DefensiveTactics,   // UNA por acumulación de Tácticas defensivas (pasiva del Cazador): cada golpe recibido suma una (velocidad y resistencia). Lo da GE_DefensiveTactics
     Status_TacticsReady,       // Tácticas defensivas al máximo: la próxima Retirada lo vuelve invisible y las gasta (DefensiveTacticsPassive)
+
+    // --- MAGO ---
+    Status_ArcanePoint,        // UNA por punto arcano (GE_ArcanePoint, tope 5, 6 s): los dejan los Misiles arcanos y cada golpe del Mago le hace +2 por punto (ArcaneVulnerabilityPassive)
 }

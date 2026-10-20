@@ -70,6 +70,12 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
     [Label("Convergencia mínima (m)")]
     public float MinConvergeDistance = 4f;
 
+    [Tooltip("Se deshace al tocar al PRIMER enemigo: le pega a uno solo (los Misiles arcanos del " +
+             "Mago). Apagado (lo de siempre) = lo atraviesa y sigue, y le pega a cada enemigo que " +
+             "cruce, una vez a cada uno. A los aliados los atraviesa igual.")]
+    [Label("Se deshace en el primer enemigo")]
+    public bool StopAtFirstEnemy = false;
+
     [Section(AbilitySection.Timing)]
     [Tooltip("Espera entre activar la habilidad y que el proyectil realmente salga, si el clip " +
              "no trae el evento AnimationEvent_HitFrame (con el evento, sale en ese frame).")]
