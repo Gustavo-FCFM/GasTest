@@ -52,8 +52,9 @@ public class Entity_Summon : NetworkBehaviour
     [Label("Máximo por dueño (0 = sin límite)")]
     public int MaxPerOwner = 0;
 
-    [Tooltip("Las que comparten límite. Vacío = todas las de este tipo (todos los tótems juntos, todas " +
-             "las trampas juntas).")]
+    [Tooltip("Las que comparten límite. Vacío = las de su tipo: todos los tótems juntos, todas las " +
+             "trampas juntas; una invocación genérica (este componente solo, sin subclase), solo las " +
+             "de su mismo prefab.")]
     [Label("Grupo del límite (vacío = las de su tipo)")]
     public string LimitGroup = "";
 
@@ -109,6 +110,7 @@ public class Entity_Summon : NetworkBehaviour
     private float _expireAt = float.MaxValue;
     private CharacterClassDefinition _ownerClass;
     private (AbilitySystemComponent, string) _limitKey;
+    private string _prefabName;   // el prefab del que salió (grupo del límite de una genérica)
     private bool  _inLimit;
 
     // Las que cuentan para el límite, por dueño y grupo, en orden (la primera es la más vieja).
@@ -145,6 +147,7 @@ public class Entity_Summon : NetworkBehaviour
         else Debug.LogWarning($"[Entity_Summon] '{prefab.name}' no tiene NetworkObject: solo existe en el servidor.");
 
         Entity_Summon summon = obj.GetComponent<Entity_Summon>();
+        summon._prefabName = prefab.name;
         summon.Setup(owner, maxPerOwner >= 0 ? maxPerOwner : summon.MaxPerOwner, countsTowardLimit);
         return summon;
     }
@@ -187,7 +190,11 @@ public class Entity_Summon : NetworkBehaviour
 
     private void JoinLimit(AbilitySystemComponent owner, int max)
     {
-        _limitKey = (owner, string.IsNullOrEmpty(LimitGroup) ? GetType().Name : LimitGroup);
+        // Sin grupo: las de su clase (los tótems, las trampas); una genérica, las de su prefab (el
+        // muro de fuego no comparte límite con el elemental).
+        string group = !string.IsNullOrEmpty(LimitGroup) ? LimitGroup
+                     : GetType() == typeof(Entity_Summon) ? "prefab:" + _prefabName : GetType().Name;
+        _limitKey = (owner, group);
         if (!s_byOwner.TryGetValue(_limitKey, out List<Entity_Summon> list))
             s_byOwner[_limitKey] = list = new List<Entity_Summon>();
 

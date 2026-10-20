@@ -98,12 +98,19 @@ los de la Furia).
       poco antes del punto, del lado desde donde se miró (apuntando al techo, cae al piso de abajo), y
       `GroundNear` para lo que se reparte alrededor (los tótems de la Furia, las bombas). Probar bajo techo:
       tótems, trampas al aire y la definitiva del Trampero.
+- [ ] **Plantillas de invocación** (20 de octubre, pedido de Gustavo): correr `Mercenarios ▸ Una vez ▸ Crear las
+      plantillas de invocación` y borrar `Assets/Scripts/Editor/MercSummonTemplates.cs`. Crea en `Prefabs/Summons`:
+      **`Summon_Base`** (con vida: NetworkObject, NetworkTransform, ASC con `ASDef_SummonBase` de 100 de vida,
+      NetworkASC, collider trigger en la capa 7, Entity_Summon que desaparece si el dueño muere, barra de vida y
+      una cápsula de muestra como modelo) y **`SummonZone_Base`** (solo zona: Entity_Summon de 6 s + Summon_Zone a
+      enemigos, cada 0.5 s, en 4 m). Una invocación nueva = clic derecho ▸ Create ▸ Prefab Variant. La pone el
+      genérico nuevo **`GA_SpawnSummon`** (Create ▸ GAS ▸ Generics ▸ Spawn Summon: donde apunta con marcador, a
+      los pies o delante; "Máximo a la vez"). Los pasos, en la guía de habilidades (7.1). El límite de una
+      invocación genérica ahora se agrupa por su prefab (el muro de fuego no comparte límite con el elemental).
 - [ ] **Otros prefabs que valdrían la pena** (revisado el 19 de octubre, por decidir):
   - **Variantes**: los 4 tótems, las 4 trampas y los enemigos (`Net_Enemy`, `Net_Mage`, `Net_Boss`) son casi
     iguales entre sí. Con un prefab base y variantes, agregarles algo a todos es tocar uno. Las trampas, al
     pasarlas a la base de invocaciones (lo siguiente).
-  - **Plantilla de invocación** para el Mago: NetworkObject + ASC + NetworkASC + Entity_Summon + Nameplate +
-    collider, lista para duplicar.
   - **UI que todavía se arma por código** (va contra "la UI vive en el prefab"): el marcador de zona en el piso
     (`UI_GroundTargetIndicator`, se crea la primera vez), el dibujo del botiquín (`HealthPackVisual`: disco,
     cruz, texto), la grilla de tarjetas del menú de clases y los `EventSystem` que crean tres menús por su

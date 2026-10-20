@@ -223,7 +223,9 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   equipo. Lo que aplica algo a los de cerca cada tanto es una **`Summon_Zone`**, sin código. Una
   subclase sobreescribe `Awake`/`Update` como `override` llamando a `base.` (si no, la base no
   corre). Para apoyarla en el piso: `GroundUnderAim` (nunca arriba de un techo) o `GroundNear`.
-  No se hace `Instantiate` + `Spawn` a mano.
+  No se hace `Instantiate` + `Spawn` a mano. Una nueva sale de una VARIANTE de las plantillas
+  `Prefabs/Summons/Summon_Base` (con vida) o `SummonZone_Base` (solo zona), y la pone el genérico
+  `GA_SpawnSummon`: los pasos están en la guía de habilidades (7.1).
 
 - **El choque de los proyectiles es un barrido del servidor** (`GC_Projectile.Sweep`, desde el 19
   de octubre de 2026), no `OnTriggerEnter`: el tramo recorrido en cada paso, con la forma del
