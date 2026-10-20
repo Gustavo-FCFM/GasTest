@@ -85,6 +85,11 @@ public class Entity_Summon : NetworkBehaviour
     private readonly SyncVar<bool> _revealed   = new SyncVar<bool>();   // la ven todos (el aviso de la trampa)
     private readonly SyncVar<bool> _hidden     = new SyncVar<bool>();   // no la ve nadie (ya explotó)
     private readonly SyncVar<bool> _zoneActive = new SyncVar<bool>();   // su Summon_Zone está prendida
+    private readonly SyncVar<NetworkObject> _summonerNob = new SyncVar<NetworkObject>();   // el dueño, en todas las pantallas
+
+    // El dueño (su NetworkObject), en TODAS las pantallas: el HUD del dueño encuentra así a su
+    // compañero. Summoner (abajo) es el ASC y solo existe en el servidor.
+    public NetworkObject SummonerObject => _summonerNob.Value;
 
     private Renderer[] _renderers;
     private bool       _lastVisible = true;
@@ -148,6 +153,7 @@ public class Entity_Summon : NetworkBehaviour
     {
         Summoner    = owner;
         _team.Value = owner != null ? owner.TeamID : 0;
+        _summonerNob.Value = owner != null ? owner.GetComponent<NetworkObject>() : null;
         _expireAt   = LifeSeconds > 0f ? Time.time + LifeSeconds : float.MaxValue;
 
         if (OwnASC != null)
@@ -264,7 +270,7 @@ public class Entity_Summon : NetworkBehaviour
     // =========================================================
 
     // Sin personajes (7) ni Ignore Raycast (2: las paredes invisibles).
-    private const int GroundMask = ~((1 << 7) | (1 << 2));
+    protected const int GroundMask = ~((1 << 7) | (1 << 2));
 
     // El piso donde va algo apuntado a 'aimed', mirando desde 'viewFrom' (los ojos del que la
     // pone). Se busca hacia abajo desde un poco ANTES del punto, del lado desde donde se miró:

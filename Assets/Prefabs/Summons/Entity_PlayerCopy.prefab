@@ -231,6 +231,14 @@ MonoBehaviour:
   _componentIndexCache: 1
   _addedNetworkObject: {fileID: 4476957916214017658}
   _networkObjectCache: {fileID: 4476957916214017658}
+  LifeSeconds: 0
+  MaxPerOwner: 4
+  LimitGroup: 
+  CountsTowardLimit: 1
+  IfOwnerDies: 1
+  VisibleTo: 0
+  Visual: {fileID: 0}
+  ReceivesZones: 1
   Asc: {fileID: 7915255226965009303}
   WalkAnimator: {fileID: 0}
   MainHandSocketName: Socket_MainHand

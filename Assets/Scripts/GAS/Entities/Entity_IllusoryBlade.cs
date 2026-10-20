@@ -20,11 +20,15 @@ using FishNet.Object;
 // y se replica por NetworkTransform; el giro visual corre local en cada peer (no
 // necesita red). Solo el servidor resuelve impactos.
 //
+// Desde el 20 de octubre de 2026 es una invocación (Entity_Summon): el equipo del Ilusionista, la
+// regla de enemigo y desaparecer si el Ilusionista se va o cambia de clase los resuelve la base.
+// Su "Modelo" (de la base) es la malla que gira.
+//
 // PREFAB: NetworkObject + NetworkTransform (server-authoritative, SIN Rigidbody) +
-// una malla hija para "Visual" (la que gira) + este script.
+// una malla hija para "Modelo" (la que gira) + este script.
 // ============================================================
 [RequireComponent(typeof(NetworkObject))]
-public class Entity_IllusoryBlade : NetworkBehaviour
+public class Entity_IllusoryBlade : Entity_Summon
 {
     [Header("Fase 1 · Elevación")]
     [Tooltip("Segundos que se eleva girando antes de lanzarse.")]
@@ -33,9 +37,6 @@ public class Entity_IllusoryBlade : NetworkBehaviour
     [Tooltip("Cuánto sube por encima del Ilusionista.")]
     [Label("Altura de subida (m)")]
     public float RiseHeight = 2f;
-    [Tooltip("Malla que gira durante la elevación (hijo). El giro es solo visual, no se sincroniza.")]
-    [Label("Malla visual")]
-    public Transform Visual;
     [Tooltip("Velocidad del giro visual, en grados/seg.")]
     [Label("Giro (°/s)")]
     public float SpinSpeed = 720f;
@@ -58,8 +59,6 @@ public class Entity_IllusoryBlade : NetworkBehaviour
     public LayerMask CharacterLayer;
 
     // Estado solo-servidor.
-    private AbilitySystemComponent _source;
-    private int                    _sourceTeamId;
     private AbilitySystemComponent _target;
     private GameplayEffect         _woundEffect;
 
@@ -68,25 +67,25 @@ public class Entity_IllusoryBlade : NetworkBehaviour
     private bool    _launched;
     private Vector3 _travelDir;
     private float   _travelTimer;
-    private bool    _resolved;
 
     // Giro visual local (corre en todos los peers durante la elevación).
     private float _spinTimer;
 
-    // La llama IllusoryBladesPassive en el servidor justo después de spawnear.
-    public void ServerInit(AbilitySystemComponent target, AbilitySystemComponent source, GameplayEffect wound)
-    {
-        _target       = target;
-        _source       = source;
-        _sourceTeamId = source != null ? source.TeamID : 0;
-        _woundEffect  = wound;
+    // Punto de nacimiento FIJO: desde acá se eleva (no sigue al Ilusionista).
+    protected override void OnSummoned() => _riseBase = transform.position;
 
-        // Punto de nacimiento FIJO: desde acá se eleva (no sigue al Ilusionista).
-        _riseBase = transform.position;
+    // La llama IllusoryBladesPassive en el servidor, justo después de crearla con
+    // Entity_Summon.Spawn: a quién va y qué le deja.
+    public void Launch(AbilitySystemComponent target, GameplayEffect wound)
+    {
+        _target      = target;
+        _woundEffect = wound;
     }
 
-    private void Update()
+    protected override void Update()
     {
+        base.Update();
+
         // Giro visual (cosmético) durante la elevación — en todos los peers, sin red.
         if (Visual != null && _spinTimer < RiseDuration)
         {
@@ -95,7 +94,7 @@ public class Entity_IllusoryBlade : NetworkBehaviour
         }
 
         // La lógica (movimiento e impactos) es autoridad del servidor.
-        if (!IsServerInitialized || _resolved) return;
+        if (!IsLiveOnServer) return;
 
         if (!_launched) RiseAndLaunch();
         else            Travel();
@@ -151,27 +150,15 @@ public class Entity_IllusoryBlade : NetworkBehaviour
         foreach (Collider c in cols)
         {
             AbilitySystemComponent asc = c.GetComponentInParent<AbilitySystemComponent>();
+            // IsEnemy es la regla de la base, con el equipo del Ilusionista al nacer.
             if (asc == null || asc.HasTag(EGameplayTag.State_Dead) || !IsEnemy(asc)) continue;
 
-            if (_woundEffect != null) asc.ApplyGameplayEffect(_woundEffect, _source);
+            if (_woundEffect != null && Summoner != null) asc.ApplyGameplayEffect(_woundEffect, Summoner);
             Dissipate();
             return;
         }
     }
 
-    // Afiliación por el equipo capturado al nacer (el _source podría haber muerto).
-    private bool IsEnemy(AbilitySystemComponent target)
-    {
-        if (target == null) return false;
-        if (_sourceTeamId == 0 || target.TeamID == 0) return true;
-        return _sourceTeamId != target.TeamID;
-    }
-
     // Despawnea en red (borra la cuchilla en todos los peers).
-    private void Dissipate()
-    {
-        if (_resolved) return;
-        _resolved = true;
-        if (IsServerInitialized && IsSpawned) ServerManager.Despawn(gameObject);
-    }
+    private void Dissipate() => ServerDespawn();
 }

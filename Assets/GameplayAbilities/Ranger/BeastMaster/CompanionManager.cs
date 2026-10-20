@@ -169,12 +169,7 @@ public class CompanionManager : MonoBehaviour
     {
         _furyActive = false;
         foreach (Entity_Companion extra in _extras.Values)
-        {
-            if (extra == null) continue;
-            NetworkObject nob = extra.GetComponent<NetworkObject>();
-            if (nob != null && nob.IsSpawned) InstanceFinder.ServerManager.Despawn(nob);
-            else Destroy(extra.gameObject);
-        }
+            if (extra != null) extra.ServerDespawn();
         _extras.Clear();
     }
 
@@ -244,27 +239,19 @@ public class CompanionManager : MonoBehaviour
         Vector3 spot = owner.position + Quaternion.Euler(0f, owner.eulerAngles.y, 0f) * offset;
         if (NavMesh.SamplePosition(spot, out NavMeshHit hit, 4f, NavMesh.AllAreas)) spot = hit.position;
 
-        GameObject obj = Instantiate(prefab, spot, owner.rotation);
-        NetworkObject nob = obj.GetComponent<NetworkObject>();
-        if (nob == null)
-        {
-            Debug.LogWarning($"[Compañero] '{prefab.name}' no tiene NetworkObject.");
-            Destroy(obj);
-            return null;
-        }
-        InstanceFinder.ServerManager.Spawn(nob);
-
-        Entity_Companion companion = obj.GetComponent<Entity_Companion>();
-        if (companion == null)
+        // La invocación (Entity_Summon): en red y del equipo del Explorador. Los compañeros no
+        // tienen límite de la base: cuál está afuera lo decide este manager.
+        Entity_Summon summon = Entity_Summon.Spawn(prefab, _asc, spot, owner.rotation, countsTowardLimit: false);
+        if (!(summon is Entity_Companion companion))
         {
             // Un prefab sin Entity_Companion no se reconocería nunca y se sacaría otro en cada
             // frame (pasó con el primer Búho): se saca y no se vuelve a intentar.
             Debug.LogError($"[Compañero] '{prefab.name}' no tiene Entity_Companion: no se puede usar.");
-            InstanceFinder.ServerManager.Despawn(nob);
+            if (summon != null) summon.ServerDespawn();
             _broken.Add(index);
             return null;
         }
-        companion.Initialize(_asc, this, health, index);
+        companion.Begin(this, health, index);
         return companion;
     }
 
@@ -278,9 +265,7 @@ public class CompanionManager : MonoBehaviour
             if (f < 0.999f) _storedHealth[_active] = Mathf.Max(0.01f, f);
             else            _storedHealth.Remove(_active);
         }
-        NetworkObject nob = _current.GetComponent<NetworkObject>();
-        if (nob != null && nob.IsSpawned) InstanceFinder.ServerManager.Despawn(nob);
-        else if (_current != null) Destroy(_current.gameObject);
+        _current.ServerDespawn();
         _current = null;
     }
 

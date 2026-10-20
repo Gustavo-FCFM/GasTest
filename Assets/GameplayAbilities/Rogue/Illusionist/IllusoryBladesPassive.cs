@@ -64,15 +64,10 @@ public class IllusoryBladesPassive : MonoBehaviour
         AbilitySystemComponent target = FindBladeTarget(victim);
         if (target == null) return; // no hay ningún enemigo válido (ni siquiera la víctima)
 
+        // La invocación (Entity_Summon): en red y del equipo del Ilusionista.
         Vector3 spawnPos = _asc.transform.position + Vector3.up * 1.2f;
-        GameObject bladeObj = Instantiate(BladePrefab, spawnPos, Quaternion.identity);
-
-        NetworkObject nob = bladeObj.GetComponent<NetworkObject>();
-        if (nob != null) InstanceFinder.ServerManager.Spawn(nob);
-        else Debug.LogWarning("[IllusoryBladesPassive] El BladePrefab no tiene NetworkObject — no se replicará.");
-
-        Entity_IllusoryBlade blade = bladeObj.GetComponent<Entity_IllusoryBlade>();
-        if (blade != null) blade.ServerInit(target, _asc, WoundEffect);
+        if (Entity_Summon.Spawn(BladePrefab, _asc, spawnPos, Quaternion.identity) is Entity_IllusoryBlade blade)
+            blade.Launch(target, WoundEffect);
     }
 
     // Objetivo de la cuchilla: el enemigo vivo más cercano dentro de SearchRadius,

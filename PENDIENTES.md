@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 15 de octubre de 2026
+# Pendientes — actualizado el 20 de octubre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -116,7 +116,7 @@ los de la Furia).
       (como antes). La zona de espinas pasa a ser una `Summon_Zone`. Quedan suyos: armarse, saltar, el aviso y
       explotar. Y las 4 trampas pasan a ser **VARIANTES de `Prefabs/Summons/Trap_Base`**: lo que se cambie en la
       base cambia en todas.
-- [ ] Correr `Mercenarios ▸ Una vez ▸ Pasar las trampas a la base de invocaciones` y borrar
+- [x] (Corrida y borrada el 19 de octubre.) Correr `Mercenarios ▸ Una vez ▸ Pasar las trampas a la base de invocaciones` y borrar
       `Assets/Scripts/Editor/MercSummonTraps.cs`. Crea la base, convierte cada trampa en variante EN SU MISMO
       ARCHIVO (el modelo se mueve tal cual, con la pieza que le quitaste a la bomba), pasa la zona de espinas a
       su `Summon_Zone` y reconecta las trampas a `GA_PlaceTrap` y `GA_BombBarrage`. **Sin correrla, la de
@@ -124,8 +124,28 @@ los de la Furia).
 - [ ] Probar: las 4 trampas (se arman en 1.5 s, invisibles para el enemigo, saltan solo con jugadores; la de
       espinas con su zona; la de frío con su aviso; la explosiva empuja desde ella), el límite de 6, la R (las
       bombas no sacan trampas y explotan al vencerse), en el piso y en una pared; en un cliente.
-- [ ] Después, de a una y probando cada una: ~~la trampa~~ (arriba), la cuchilla ilusoria, la copia del Ilusionista y el
-      compañero (el más grande, al final).
+- [x] **PROBADO ✅ — La CUCHILLA ILUSORIA y la COPIA del Ilusionista, pasadas a la base** (20 de octubre). Sin herramienta que
+      correr. La cuchilla: su "Malla visual" pasa a ser el "Modelo" de la base (el mismo dato); la crea
+      `IllusoryBladesPassive` con `Entity_Summon.Spawn` + `Launch`. La copia: el límite de la Copia exacta (4, la
+      más vieja se va; las de la Fiesta no cuentan), irse si el Ilusionista muere (puesto en su prefab), se va o
+      cambia de clase: todo de la base; `PlayerCopyManager` quedó solo para crearlas. Probar: las cuchillas al
+      pegar (suben, viajan, dejan herida, se cortan en paredes); la Copia exacta (la quinta saca a la más vieja;
+      camina, explota al golpearla con ceguera y herida al que pegó; su barra imita al Ilusionista); la Fiesta
+      (no saca a las exactas); morir con copias puestas (se van); en un cliente. **Las cuchillas, probadas ✅ (20 de
+      octubre).** La copia lanzada en el aire se quedaba flotando (caminaba a la altura en que nacía): ahora
+      sigue el piso (cae con gravedad, sube escalones chicos). Probar: lanzarla saltando y en una rampa.
+- [x] **PROBADO ✅ — El COMPAÑERO del Explorador, pasado a la base** (20 de octubre; con esto TODAS las invocaciones usan la
+      base). Sin herramienta que correr: su "Modelo" pasa a ser el de la base (mismo dato). La base le da el
+      equipo, la regla de enemigo, irse si el Explorador se va o cambia de clase, el dueño sincronizado a todas
+      las pantallas (`SummonerObject`: el panel del HUD encuentra así a su compañero) y su propia muerte, que
+      ahora se resuelve en Update y no en medio del daño. Si el Explorador muere NO se va solo: lo guarda el
+      `CompanionManager` (anota su vida), que sigue con lo suyo (cuál está afuera, Ira primal, vida guardada,
+      espera para volver, órdenes). Probar: Lobo, Oso y Búho (atacan solos, órdenes al pegar, defienden, el Oso
+      provoca a los fantasmas, el Búho caza invisibles, el aullido, la presencia); cambiarlos con la rueda (vuelve
+      con su vida); que muera uno (su espera); morir con uno afuera; la Ira primal (salen los tres y al terminar
+      queda el elegido); el panel del HUD y sus barras; en un cliente.
+- [x] ~~Después: la trampa, la cuchilla ilusoria, la copia del Ilusionista y el
+      compañero (el más grande, al final).~~
 
 ---
 
@@ -160,16 +180,16 @@ en el editor, `GasTest/Logs/Unstuck.log`; en una build, junto al `Player.log`. J
 que lo pidió (input, menús abiertos, cursor, si estaba atacando y con qué, movimientos especiales, el
 CharacterController, ragdoll, tags) y lo que ve el servidor (tags, efectos, cuánto lleva quieto, último golpe).
 
-- [ ] Probar el **Haz guía** (es un lanzamiento APUNTADO: mantener y soltar): mantener canaliza con la pose
+- [x] Probar el **Haz guía** (es un lanzamiento APUNTADO: mantener y soltar): mantener canaliza con la pose
       y la barra; soltando antes de que se llene, el rayo sale apenas se llena (hacia donde apuntas en ese
       momento); aturdido o silenciado a mitad, se corta (barra roja) y queda en cooldown. (19 de octubre: la
       primera versión no canalizaba porque los mantenidos tienen su propio ciclo con el botón; arreglado.)
-- [ ] El **bastón del Clérigo**, a 0.8 (campo nuevo de la clase "Arma principal: tamaño", en el Clérigo y en
+- [x] El **bastón del Clérigo**, a 0.8 (campo nuevo de la clase "Arma principal: tamaño", en el Clérigo y en
       sus dominios de la Vida y de la Luz). Es el mismo modelo que la lanza del Comandante y del Trampero:
       ellos no cambian. En un cliente: que se vea igual (el bucle
       y el lanzamiento) en las dos pantallas.
-- [ ] Probar un **Continuo** en cualquier habilidad (por ejemplo, ponerle a un ataque "Continuo, 2 s, cada 0.4 s").
-- [ ] Probar el **choque**: tirar el hacha o la daga pasando cerca de una pared (ya no pega en ella); acertarle
+- [x] Probar un **Continuo** en cualquier habilidad (por ejemplo, ponerle a un ataque "Continuo, 2 s, cada 0.4 s").
+- [x] Probar el **choque**: tirar el hacha o la daga pasando cerca de una pared (ya no pega en ella); acertarle
       a alguien (igual de fácil que antes); el Haz guía contra un escudo (lo frena, no lo cruza); el parry del
       Guardián (sigue devolviendo).
 - [ ] La próxima vez que alguien se atasque: traer `Logs/Unstuck.log`.
@@ -1290,7 +1310,7 @@ marcados "Pospuesto".
 **Estado al 5 de octubre:** Clérigo completo y probado. Guerrero: kit base, Maestro de
 batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 9).
 **Guardián: hecho y probado ✅** (5 de octubre). **El Guerrero queda completo** (kit base y las 3 subclases).
-**6 de octubre:** barra de carga por etapas del ataque cargado (`UI_ChargeBar`), repeler / atraer y vuelo libre: hechos y probados. **Monje: kit base hecho y probado (8 de octubre). Barra de canalizar (`UI_CastBar`): hecha.** Queda la mascota con IA en red. **13 de octubre: Explorador (Ranger), kit base hecho; sigue el Maestro de bestias con su Lobo (la mascota con IA en red). Documentos al día (diseño de clases, arquitectura del GAS y de red, guía y glosario).** **14 de octubre: Maestro de bestias (los tres compañeros) y la UI del jugador pasada al prefab de la cámara (barras, avisos de combate, viñeta, rueda, curva de los lanzamientos y silueta); la curva sale ahora en todos los lanzamientos apuntados. Documentos al día.** **15 de octubre: probado todo lo de la UI (las 6 etapas) y lo viejo pendiente; variables claras con su unidad en los 1 247 campos del Inspector; la Ira primal (la definitiva del Maestro de bestias), falta probarla; 50 de experiencia por eliminar a un jugador. Cazador (subclase del Explorador) hecho y probado. Trampero hecho y probado (trampas en el piso o en paredes, se arman en 1.5 s; la rueda deja la cámara quieta): **el Explorador queda completo** (kit base y las 3 subclases). Documentos al día.**
+**6 de octubre:** barra de carga por etapas del ataque cargado (`UI_ChargeBar`), repeler / atraer y vuelo libre: hechos y probados. **Monje: kit base hecho y probado (8 de octubre). Barra de canalizar (`UI_CastBar`): hecha.** Queda la mascota con IA en red. **13 de octubre: Explorador (Ranger), kit base hecho; sigue el Maestro de bestias con su Lobo (la mascota con IA en red). Documentos al día (diseño de clases, arquitectura del GAS y de red, guía y glosario).** **14 de octubre: Maestro de bestias (los tres compañeros) y la UI del jugador pasada al prefab de la cámara (barras, avisos de combate, viñeta, rueda, curva de los lanzamientos y silueta); la curva sale ahora en todos los lanzamientos apuntados. Documentos al día.** **15 de octubre: probado todo lo de la UI (las 6 etapas) y lo viejo pendiente; variables claras con su unidad en los 1 247 campos del Inspector; la Ira primal (la definitiva del Maestro de bestias), falta probarla; 50 de experiencia por eliminar a un jugador. Cazador (subclase del Explorador) hecho y probado. Trampero hecho y probado (trampas en el piso o en paredes, se arman en 1.5 s; la rueda deja la cámara quieta): **el Explorador queda completo** (kit base y las 3 subclases). Documentos al día.** **19 y 20 de octubre: canalizar en cualquier habilidad (el Haz guía canaliza 1 s), el choque de los proyectiles por barrido (caja al tamaño del arma), el desatascarse guardado en Unstuck.log, el parry devuelve el daño que traía, la BASE DE INVOCACIONES (Entity_Summon + Summon_Zone: tótems, trampas como variantes, cuchilla, copia y compañero ya la usan), un solo prefab para las barras de vida (la copia muestra la del copiado) y las invocaciones bien apoyadas bajo techo. Documentos al día.**
 
 1. **Clases nuevas — DECIDIDO (28 de septiembre): Clérigo + Guerrero completos**, en ese
    orden. Detalle y estimación en la sección 6.

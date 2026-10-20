@@ -22,11 +22,15 @@ using FishNet.Object.Synchronizing;
 // PREFAB: raíz con NetworkObject + NetworkTransform + AbilitySystemComponent (con un
 // CharacterRoleDefinition mínimo que tenga Health/MaxHealth, para que el daño lo
 // registre) + un Collider en la capa de personajes (CharacterLayer) + la malla y el
-// Animator del jugador (con la animación de caminar) + este script. Las copias las
-// gestiona PlayerCopyManager (FIFO, límite, limpieza por muerte).
+// Animator del jugador (con la animación de caminar) + este script.
+//
+// Desde el 20 de octubre de 2026 es una invocación (Entity_Summon): el límite de la Copia
+// exacta (la más vieja se va; las de la Fiesta no cuentan), irse si el Ilusionista muere
+// ("Si el dueño muere: desaparece"), se va o cambia de clase, los resuelve la base.
+// PlayerCopyManager solo las crea.
 // ============================================================
 [RequireComponent(typeof(NetworkObject))]
-public class Entity_PlayerCopy : NetworkBehaviour
+public class Entity_PlayerCopy : Entity_Summon
 {
     [Header("Referencias")]
     [Tooltip("ASC del señuelo (normalmente en la misma raíz). Da el equipo y recibe el golpe.")]
@@ -78,7 +82,6 @@ public class Entity_PlayerCopy : NetworkBehaviour
     private bool _nameplateMirrored;
 
     // Estado solo-servidor.
-    private AbilitySystemComponent _ownerASC;
     private Vector3 _target;     // punto objetivo (se camina hacia su proyección horizontal)
     private float   _speed;      // velocidad de caminado (la del jugador al invocar)
     private bool    _arrived;
@@ -98,8 +101,9 @@ public class Entity_PlayerCopy : NetworkBehaviour
     // El Animator del modelo. Se resuelve solo si la ranura quedó vacía: el prefab del
     // señuelo ya se quedó una vez sin animación de caminar por eso, y el arreglo no puede
     // depender de acordarse de arrastrarlo cada vez que se cambia el modelo.
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         if (WalkAnimator == null) WalkAnimator = GetComponentInChildren<Animator>();
     }
 
@@ -159,14 +163,13 @@ public class Entity_PlayerCopy : NetworkBehaviour
         return null;
     }
 
-    // La llama PlayerCopyManager en el servidor justo después de spawnear.
+    // La llama PlayerCopyManager en el servidor, justo después de crearla con Entity_Summon.Spawn
+    // (que ya le dio el dueño y el equipo).
     // sourceClassIndex = índice de clase del jugador COPIADO (para su arma/anim); en la
     // Copia exacta es el propio Ilusionista, en Fiesta puede ser un aliado.
     // source = el jugador copiado (su barra de vida es la que muestra la copia).
-    public void ServerInit(AbilitySystemComponent owner, Vector3 target, float speed, int sourceClassIndex,
-                           AbilitySystemComponent source = null)
+    public void Begin(Vector3 target, float speed, int sourceClassIndex, AbilitySystemComponent source = null)
     {
-        _ownerASC = owner;
         _target   = target;
         _speed    = Mathf.Max(0f, speed);
         _sourceClassIndex.Value = sourceClassIndex;
@@ -174,7 +177,6 @@ public class Entity_PlayerCopy : NetworkBehaviour
 
         if (Asc != null)
         {
-            Asc.TeamID = owner != null ? owner.TeamID : 0;
             // Inmortal: un golpe no debe "matar" al señuelo antes de explotar; la
             // reacción la maneja OnTookDamage (abajo).
             Asc.AddTag(EGameplayTag.Status_Immortal);
@@ -190,13 +192,15 @@ public class Entity_PlayerCopy : NetworkBehaviour
     // se difiere a Update para no mutar/despawnear en medio de ExecuteInstantEffect.
     private void HandleTookDamage(AbilitySystemComponent attacker)
     {
-        if (_exploding || attacker == null || ReferenceEquals(attacker, _ownerASC)) return;
+        if (_exploding || attacker == null || ReferenceEquals(attacker, Summoner)) return;
         _exploding = true;
         _attacker  = attacker;
     }
 
-    private void Update()
+    protected override void Update()
     {
+        base.Update();
+
         // Copia el arma/animator del jugador origen apenas se pueda (todos los peers).
         TryApplyVisuals();
 
@@ -239,15 +243,44 @@ public class Entity_PlayerCopy : NetworkBehaviour
         }
 
         // La lógica (caminar y explotar) es autoridad del servidor.
-        if (!IsServerInitialized || _resolved) return;
+        if (!IsLiveOnServer || _resolved) return;
 
         if (_exploding) { Explode(); return; }
 
         if (!_arrived) Walk();
+        StickToGround();
     }
 
-    // Camina en línea recta (horizontal) hacia el objetivo, manteniendo su altura
-    // de spawn (no sigue el ángulo vertical del punto de mira). Al llegar, idle.
+    // Que pise el piso (20 de octubre de 2026: lanzada en pleno salto se quedaba flotando, porque
+    // caminaba a la altura en la que había nacido). Mira el piso desde la cintura: si está abajo,
+    // cae (cada vez más rápido, como el jugador); si está un poco arriba (un escalón, una rampa),
+    // lo sube. Corre siempre, también quieta: una copia que llegó en el aire baja igual.
+    private const float FallGravity = 20f;
+    private float _fallSpeed;
+
+    private void StickToGround()
+    {
+        Vector3 pos = transform.position;
+        if (!Physics.Raycast(pos + Vector3.up * 0.9f, Vector3.down, out RaycastHit hit, 60f, GroundMask,
+                             QueryTriggerInteraction.Ignore))
+            return;   // sin piso abajo (fuera del mapa): se queda donde está
+
+        float gap = pos.y - hit.point.y;
+        if (gap <= 0.02f)
+        {
+            pos.y      = hit.point.y;   // en el piso (o subiendo un escalón)
+            _fallSpeed = 0f;
+        }
+        else
+        {
+            _fallSpeed += FallGravity * Time.deltaTime;
+            pos.y       = Mathf.Max(hit.point.y, pos.y - _fallSpeed * Time.deltaTime);
+        }
+        transform.position = pos;
+    }
+
+    // Camina en línea recta (horizontal) hacia el objetivo (no sigue el ángulo vertical del
+    // punto de mira); la altura la pone el piso (StickToGround). Al llegar, idle.
     // No atraviesa paredes: si hay una en el tramo, frena ahí y se queda quieta.
     private void Walk()
     {
@@ -280,20 +313,20 @@ public class Entity_PlayerCopy : NetworkBehaviour
     {
         if (_attacker != null && !_attacker.HasTag(EGameplayTag.State_Dead))
         {
-            if (BlindEffect != null) _attacker.ApplyGameplayEffect(BlindEffect, _ownerASC);
-            if (WoundEffect != null) _attacker.ApplyGameplayEffect(WoundEffect, _ownerASC);
+            if (BlindEffect != null) _attacker.ApplyGameplayEffect(BlindEffect, Summoner);
+            if (WoundEffect != null) _attacker.ApplyGameplayEffect(WoundEffect, Summoner);
         }
         Dissipate();
     }
 
-    // Despawn en red (borra la copia en todos los peers). La usa la explosión y el
-    // PlayerCopyManager (límite FIFO / muerte del invocador).
+    // Despawn en red (borra la copia en todos los peers), al explotar. El límite y la muerte
+    // del Ilusionista los resuelve la base (Entity_Summon).
     public void Dissipate()
     {
         if (_resolved) return;
         _resolved = true;
         if (Asc != null) Asc.OnTookDamage -= HandleTookDamage;
-        if (IsServerInitialized && IsSpawned) ServerManager.Despawn(gameObject);
+        ServerDespawn();
     }
 
     public override void OnStopServer()

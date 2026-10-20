@@ -41,12 +41,17 @@ using UnityEngine.AI;
 // su ataque, la baja es suya y le carga la definitiva). El CompanionManager ignora esos
 // golpes al escuchar "el Explorador pegó", si no la mascota se daría órdenes sola.
 //
+// Desde el 20 de octubre de 2026 es una invocación (Entity_Summon): el equipo, la regla de
+// enemigo, irse si el Explorador se va o cambia de clase, y su propia muerte (resuelta fuera
+// del daño, en Update) los resuelve la base. Su "Modelo" es el de la base. Lo de cuál está
+// afuera, la Ira primal, la vida guardada y las órdenes sigue en el CompanionManager.
+//
 // El prefab: NetworkObject, NetworkTransform, AbilitySystemComponent,
 // NetworkAbilitySystemComponent, este script y (Lobo y Oso) NavMeshAgent y un collider en
 // la capa Character. El Búho, sin collider: no se le puede pegar.
 // ============================================================
 [RequireComponent(typeof(AbilitySystemComponent))]
-public class Entity_Companion : NetworkBehaviour
+public class Entity_Companion : Entity_Summon
 {
     [Header("Vida")]
     [Tooltip("Su vida máxima, como fracción de la del Explorador al aparecer (0.5 = la mitad).")]
@@ -209,20 +214,18 @@ public class Entity_Companion : NetworkBehaviour
     [Label("Capa de personajes")]
     public LayerMask CharacterLayer = 1 << 7;
 
-    [Tooltip("El modelo (hijo): se adelanta un poco en cada golpe. Vacío = el primer hijo.")]
-    [Label("Modelo")]
-    public Transform Visual;
-
-    // Quién es su dueño, para todas las pantallas (el HUD del dueño busca a su compañero).
-    private readonly SyncVar<NetworkObject> _ownerNob = new SyncVar<NetworkObject>();
-    public NetworkObject OwnerObject => _ownerNob.Value;
+    // Quién es su dueño, para todas las pantallas (el HUD del dueño busca a su compañero). Lo
+    // sincroniza la base. Su "Modelo" (Visual, de la base) se adelanta un poco en cada golpe;
+    // vacío = el primer hijo.
+    public NetworkObject OwnerObject => SummonerObject;
 
     // Qué opción de la rueda es (0 = la primera), para todas las pantallas: con la Ira primal hay
     // tres del mismo dueño y el HUD tiene que encontrar al elegido.
     private readonly SyncVar<int> _optionIndex = new SyncVar<int>(-1);
     public int OptionIndex => _optionIndex.Value;
 
-    public AbilitySystemComponent OwnerASC { get; private set; }
+    // El Explorador (solo servidor). Es el dueño de la invocación.
+    public AbilitySystemComponent OwnerASC => Summoner;
     public AbilitySystemComponent ASC => _asc;
 
     private AbilitySystemComponent _asc;
@@ -255,8 +258,9 @@ public class Entity_Companion : NetworkBehaviour
     private Vector3 _visualRest;
     private float   _lungeUntil;
 
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake();
         _asc   = GetComponent<AbilitySystemComponent>();
         _agent = GetComponent<NavMeshAgent>();
         if (Visual == null && transform.childCount > 0) Visual = transform.GetChild(0);
@@ -270,26 +274,19 @@ public class Entity_Companion : NetworkBehaviour
         if (!IsServerInitialized && _agent != null) _agent.enabled = false;
     }
 
-    public override void OnStopServer()
-    {
-        base.OnStopServer();
-        if (_asc != null) _asc.OnDeath -= HandleDeath;
-    }
-
-    // Lo llama el CompanionManager en el servidor, justo después de spawnearlo. healthFraction:
-    // con cuánta vida sale (la que tenía guardada si se lo cambió herido; 1 = llena). optionIndex:
-    // qué opción de la rueda es.
+    // Lo llama el CompanionManager en el servidor, justo después de crearlo con
+    // Entity_Summon.Spawn (que ya le dio el dueño y el equipo). healthFraction: con cuánta vida
+    // sale (la que tenía guardada si se lo cambió herido; 1 = llena). optionIndex: qué opción de
+    // la rueda es.
     [Server]
-    public void Initialize(AbilitySystemComponent owner, CompanionManager manager, float healthFraction = 1f, int optionIndex = -1)
+    public void Begin(CompanionManager manager, float healthFraction = 1f, int optionIndex = -1)
     {
-        OwnerASC = owner;
+        AbilitySystemComponent owner = OwnerASC;
+        if (owner == null) return;
         _optionIndex.Value = optionIndex;
         _manager = manager;
-        _ownerNob.Value = owner.GetComponent<NetworkObject>();
 
         NetworkAbilitySystemComponent net = GetComponent<NetworkAbilitySystemComponent>();
-        if (net != null) net.AssignTeam(owner.TeamID);
-        else _asc.TeamID = owner.TeamID;
 
         float max = Indestructible ? 100f
                   : Mathf.Max(1f, owner.GetAttributeValue(EAttributeType.MaxHealth) * HealthFraction);
@@ -299,8 +296,8 @@ public class Entity_Companion : NetworkBehaviour
 
         if (Indestructible) _asc.AddTag(EGameplayTag.Status_Immunity);
         if (TauntsNpcs)     _asc.AddTag(EGameplayTag.Status_Taunting);
-        _asc.OnDeath += HandleDeath;
 
+        // La vida nueva (la de su dueño), a todas las pantallas.
         if (net != null) net.SyncAllAttributesToNet();
 
         if (_agent != null && !BlinkAttack)
@@ -350,10 +347,11 @@ public class Entity_Companion : NetworkBehaviour
     // SERVIDOR
     // =========================================================
 
-    private void Update()
+    protected override void Update()
     {
+        base.Update();
         TickLunge();
-        if (!IsServerInitialized || _dead || OwnerASC == null) return;
+        if (!IsLiveOnServer || _dead || OwnerASC == null) return;
         if (OwnerASC.HasTag(EGameplayTag.State_Dead)) return;   // el manager lo saca
 
         TickPresence();
@@ -377,7 +375,7 @@ public class Entity_Companion : NetworkBehaviour
     private bool IsValidEnemy(AbilitySystemComponent other)
     {
         if (other == null || OwnerASC == null || other == _asc || other == OwnerASC) return false;
-        if (!OwnerASC.IsEnemyOf(other)) return false;
+        if (!IsEnemy(other)) return false;   // la regla de la base (la del ASC)
         if (other.HasTag(EGameplayTag.State_Dead) || other.HasTag(EGameplayTag.Status_SafeZone)) return false;
         if (other.HasTag(EGameplayTag.Status_Immunity) && other.GetComponent<Entity_Companion>() != null) return false;
         if (!HuntsInvisible && other.IsHiddenFromEnemies) return false;
@@ -892,21 +890,19 @@ public class Entity_Companion : NetworkBehaviour
     // MUERTE
     // =========================================================
 
-    [Server]
-    private void HandleDeath()
+    // Su vida llegó a 0 (la base lo avisa en Update, fuera del cálculo del daño): el manager le
+    // empieza la espera para volver y el cuerpo se va un poco después.
+    protected override void OnOwnDeath()
     {
         if (_dead) return;
         _dead = true;
         Halt();
         if (_manager != null) _manager.OnCompanionDied(this);
-        Invoke(nameof(ServerDespawnSelf), 1.2f);
+        Invoke(nameof(ServerDespawn), 1.2f);
     }
 
-    [Server]
-    private void ServerDespawnSelf()
-    {
-        if (IsSpawned) ServerManager.Despawn(gameObject);
-    }
+    // Si el Explorador muere, NO se va solo ("Si el dueño muere: se queda"): lo guarda el
+    // CompanionManager, que antes anota la vida que le quedaba.
 
     // =========================================================
     // LO QUE VEN TODOS

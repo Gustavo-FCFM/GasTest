@@ -208,6 +208,27 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   es un mantenido con su casilla `AimBeforeThrow` (los lanzamientos apuntados). Un
   mantenido nuevo implementa `UsesHoldInput => true`.
 
+- **Canalizar es una sección de cualquier GA, no código por habilidad** (desde el 19 de octubre
+  de 2026): `CastMode` (se lanza al terminar / continuo), `CastSeconds`, clips de bucle.
+  `ServerActivateAbility` llama a `BeginCast` en vez de `Activate`; cortada (lo que la bloquea,
+  morir, otra habilidad si es interrumpible) **cuenta como lanzada**. En un lanzamiento apuntado
+  lo resuelve `GA_ProjectileShoot` (mantener canaliza). Las que ya canalizan solas
+  (`IChanneledAbility`) y las de rueda no pasan por ahí.
+
+- **Todo lo que una habilidad deja en el mundo es una INVOCACIÓN: hereda de `Entity_Summon` y
+  se crea con `Entity_Summon.Spawn(prefab, dueño, punto, giro, máximo)`** (desde el 19-20 de
+  octubre de 2026; tótems, trampas, cuchillas, copias y compañeros). La base resuelve el equipo,
+  el dueño en red (`SummonerObject`), "Dura", el máximo por dueño, si se va cuando el dueño muere,
+  irse si el dueño se va o cambia de clase, su vida (`OnOwnDeath`, en Update) y la visibilidad por
+  equipo. Lo que aplica algo a los de cerca cada tanto es una **`Summon_Zone`**, sin código. Una
+  subclase sobreescribe `Awake`/`Update` como `override` llamando a `base.` (si no, la base no
+  corre). Para apoyarla en el piso: `GroundUnderAim` (nunca arriba de un techo) o `GroundNear`.
+  No se hace `Instantiate` + `Spawn` a mano.
+
+- **El choque de los proyectiles es un barrido del servidor** (`GC_Projectile.Sweep`, desde el 19
+  de octubre de 2026), no `OnTriggerEnter`: el tramo recorrido en cada paso, con la forma del
+  proyectil (la caja toma el tamaño del arma) y un radio aparte contra personajes.
+
 - **Dónde va cada VFX.** Lo que dura lo que dura un buff o un debuff va en el
   `TargetVFX` del **GE** (aparece pegado a quien lo recibe, en todas las pantallas, y se
   va cuando el efecto termina; `TargetVFXLoop` repite las partículas de un solo
@@ -261,7 +282,10 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   `UI_SettingRow` y cada lugar de la sala un `UI_LobbySlot`. Los canvas de los dos prefabs son de
   1920×1080 y escalan con la pantalla. Están en la capa UI: si tapan la vista de escena, se apaga esa capa en el
   desplegable Layers del editor (no cambia el juego). Un `Graphic` propio necesita `[RequireComponent(typeof(CanvasRenderer))]`:
-  sin él no se dibuja y no avisa.
+  sin él no se dibuja y no avisa. La **barra de vida de arriba de la cabeza** es UN prefab para todos,
+  **`Prefabs/UI/Nameplate`** (`UI_Nameplate`: piezas y colores; desde el 19 de octubre de 2026): cada
+  personaje lleva una instancia a su altura y `UI_WorldHealthbar` la encuentra sola. Un personaje o
+  invocación nueva con vida lleva una instancia de ese prefab, nunca una barra armada aparte.
 
 Los detalles finos del GAS (pipeline de daño, acumulación de efectos, animaciones de
 combo) están en `DesignDocuments/GAS_Arquitectura.docx`.
