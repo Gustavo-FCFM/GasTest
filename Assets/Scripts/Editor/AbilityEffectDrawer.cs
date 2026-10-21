@@ -23,16 +23,17 @@ public class AbilityEffectDrawer : PropertyDrawer
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
     {
         float line = EditorGUIUtility.singleLineHeight;
-        return ShowDetails(property) ? line * 4f + 8f : line + 2f;
+        return ShowDetails(property) ? line * 5f + 10f : line + 2f;
     }
 
-    // La condición, el escalado y la espera por enemigo se ven desplegando la flechita, o
-    // solos si ya tienen algo.
+    // La condición, el escalado, la espera por enemigo y los puntos del objetivo se ven
+    // desplegando la flechita, o solos si ya tienen algo.
     private static bool ShowDetails(SerializedProperty property)
         => property.isExpanded
         || property.FindPropertyRelative("OnlyIfTargetHas").intValue != (int)EGameplayTag.None
         || property.FindPropertyRelative("StackScaling").intValue != (int)EStackScaling.None
-        || property.FindPropertyRelative("PerTargetCooldown").floatValue > 0f;
+        || property.FindPropertyRelative("PerTargetCooldown").floatValue > 0f
+        || property.FindPropertyRelative("TargetScaling").intValue != (int)ETargetStackScaling.None;
 
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
@@ -106,6 +107,36 @@ public class AbilityEffectDrawer : PropertyDrawer
             EditorGUI.PropertyField(new Rect(cd.x + labelW, cd.y, cd.width - labelW - 46f, line), perTarget,
                                     new GUIContent("", perTarget.tooltip));
             EditorGUI.LabelField(new Rect(cd.xMax - 44f, cd.y, 44f, line), "s", EditorStyles.miniLabel);
+
+            // Con los puntos del OBJETIVO (los puntos arcanos del Mago): tag · modo · s c/u · gasta.
+            SerializedProperty tTag   = property.FindPropertyRelative("TargetStacksTag");
+            SerializedProperty tMode  = property.FindPropertyRelative("TargetScaling");
+            SerializedProperty tPer   = property.FindPropertyRelative("TargetPerStack");
+            SerializedProperty tSpend = property.FindPropertyRelative("ConsumeTargetStacks");
+            Rect tp = new Rect(x, cd.y + line + 2f, w, line);
+            EditorGUI.LabelField(new Rect(tp.x, tp.y, labelW, line),
+                                 new GUIContent("Con los puntos del objetivo", tMode.tooltip), EditorStyles.miniLabel);
+            float rest = tp.width - labelW;
+            bool scales = tMode.intValue != (int)ETargetStackScaling.None;
+            if (!scales)
+            {
+                EditorGUI.PropertyField(new Rect(tp.x + labelW, tp.y, rest, line), tMode, GUIContent.none);
+            }
+            else
+            {
+                float tx = tp.x + labelW;
+                EditorGUI.PropertyField(new Rect(tx, tp.y, rest * 0.30f - 2f, line), tTag, new GUIContent("", tTag.tooltip));
+                tx += rest * 0.30f;
+                EditorGUI.PropertyField(new Rect(tx, tp.y, rest * 0.34f - 2f, line), tMode, GUIContent.none);
+                tx += rest * 0.34f;
+                EditorGUI.PropertyField(new Rect(tx, tp.y, rest * 0.12f - 2f, line), tPer, new GUIContent("", tPer.tooltip));
+                tx += rest * 0.12f;
+                EditorGUI.LabelField(new Rect(tx, tp.y, rest * 0.08f, line), "s c/u", EditorStyles.miniLabel);
+                tx += rest * 0.08f;
+                tSpend.boolValue = EditorGUI.ToggleLeft(new Rect(tx, tp.y, tp.xMax - tx, line),
+                                                        new GUIContent("Los gasta", tSpend.tooltip), tSpend.boolValue,
+                                                        EditorStyles.miniLabel);
+            }
         }
 
         EditorGUI.indentLevel = indent;

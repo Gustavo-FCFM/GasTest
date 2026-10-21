@@ -147,4 +147,9 @@ public enum EGameplayTag
 
     // --- MAGO ---
     Status_ArcanePoint,        // UNA por punto arcano (GE_ArcanePoint, tope 5, 6 s): los dejan los Misiles arcanos y cada golpe del Mago le hace +2 por punto (ArcaneVulnerabilityPassive)
+    Status_SpellSelected,      // Tiene un hechizo elegido en el libro (lo dan los GE_Spell_*; sin él, el clic izquierdo son los misiles y la Q recarga maná)
+    Status_SpellFire,          // Hechizo elegido: fuego (GE_Spell_Fire)
+    Status_SpellIce,           // Hechizo elegido: hielo (GE_Spell_Ice)
+    Status_SpellEarth,         // Hechizo elegido: tierra (GE_Spell_Earth)
+    Status_SpellLightning,     // Hechizo elegido: rayo (GE_Spell_Lightning)
 }

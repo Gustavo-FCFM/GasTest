@@ -94,6 +94,36 @@ public class GA_TagSwitch : GameplayAbility, IGroundTargetAbility
     [Label("Variantes")]
     public List<TagVariant> Variants;
 
+    [Tooltip("Cada variante cobra SU costo (el maná de cada hechizo del Mago) y canaliza con SU " +
+             "sección Canalizar (la Bola de fuego, 0.5 s; los misiles, nada). El ritmo (el cooldown) " +
+             "sigue siendo del switch. Apagado = lo de siempre: cobra el switch y la variante sale gratis.")]
+    [Label("Las variantes cobran y canalizan lo suyo")]
+    public bool VariantsPayOwnCost = false;
+
+    [ShowIf(nameof(VariantsPayOwnCost))]
+    [Tooltip("Si no alcanza para el costo de una variante, sale la habilidad por defecto y se le " +
+             "quita al dueño el tag de esa variante (el Mago sin maná vuelve a los misiles). También " +
+             "apenas la lanza, si ya no le alcanza para otra.")]
+    [Label("Sin para pagarla: vuelve a la de por defecto")]
+    public bool FallBackWhenUnaffordable = true;
+
+    // ¿Alcanza para pagar esta variante? Solo cuenta si cada una cobra lo suyo y se vuelve a la
+    // de por defecto sin con qué pagarla. Corre en el dueño y en el servidor (el maná viaja).
+    private bool CanPay(GameplayAbility template)
+        => !VariantsPayOwnCost || !FallBackWhenUnaffordable || template == null || OwnerASC == null ||
+           template.CostEffect == null || OwnerASC.CanAffordGameplayEffect(template.CostEffect);
+
+    // Sin con qué pagar la variante elegida: se le quita su tag (el hechizo del Mago vuelve a los
+    // misiles, y la Q a recargar maná). Servidor.
+    protected void DropUnpayableVariants()
+    {
+        if (!VariantsPayOwnCost || !FallBackWhenUnaffordable || OwnerASC == null || Variants == null) return;
+        foreach (var variant in Variants)
+            if (variant.Ability != null && variant.RequiredTag != EGameplayTag.None &&
+                OwnerASC.HasTag(variant.RequiredTag) && !CanPay(variant.Ability))
+                OwnerASC.RemoveEffectsWithTag(variant.RequiredTag);
+    }
+
     // Envoltorio: busca y golpea la variante que se ejecuta, no esta.
     public override bool UsesTargetLayer => false;
     public override bool UsesHitEffects  => false;
@@ -117,6 +147,8 @@ public class GA_TagSwitch : GameplayAbility, IGroundTargetAbility
     {
         if (!IsServer) return;
         if (!CanActivate()) return;
+
+        DropUnpayableVariants();
 
         // Se resuelve ANTES de cobrar: si no hay ninguna variante ni habilidad por
         // defecto configurada, no gastamos cooldown por nada.
@@ -149,6 +181,9 @@ public class GA_TagSwitch : GameplayAbility, IGroundTargetAbility
         instance.IsInterruptible = IsInterruptible;
 
         instance.Activate();
+
+        // Ya cobró: si no le alcanza para otra, vuelve ya a la de por defecto (el botón cambia).
+        DropUnpayableVariants();
 
         // El fin de la habilidad lo maneja la VARIANTE (su propio EndAbility, que
         // llega cuando termina su secuencia). Llamarlo también acá liberaría
@@ -185,7 +220,7 @@ public class GA_TagSwitch : GameplayAbility, IGroundTargetAbility
                 foreach (var variant in Variants)
                 {
                     if (variant.Ability == null || variant.RequiredTag == EGameplayTag.None) continue;
-                    if (!IsVariantActive(variant, out _)) continue;
+                    if (!IsVariantActive(variant, out _) || !CanPay(variant.Ability)) continue;
                     return variant.Icon != null ? variant.Icon
                          : variant.Ability.AbilityIcon != null ? variant.Ability.AbilityIcon : AbilityIcon;
                 }
@@ -220,6 +255,7 @@ public class GA_TagSwitch : GameplayAbility, IGroundTargetAbility
             {
                 if (variant.Ability == null || variant.RequiredTag == EGameplayTag.None) continue;
                 if (!IsVariantActive(variant, out bool free)) continue;
+                if (!CanPay(variant.Ability)) continue;   // sin con qué pagarla: la que sigue (o la de por defecto)
 
                 consumeTag = variant.ConsumeTag && !free;
                 usedTag    = variant.RequiredTag;
@@ -270,12 +306,32 @@ public class GA_TagSwitch : GameplayAbility, IGroundTargetAbility
         if (StripVariantCooldowns)
         {
             instance.CooldownEffect = null;
-            instance.CostEffect     = null;
+            if (!VariantsPayOwnCost) instance.CostEffect = null;   // si cobra lo suyo, el costo se queda
             instance.DisableCharges();
         }
 
         _instances[template] = instance;
         return instance;
+    }
+
+    // =========================================================
+    // CANALIZAR CON LA VARIANTE ("Las variantes cobran y canalizan lo suyo")
+    // =========================================================
+
+    // Canaliza con los datos de la que va a salir: la Bola de fuego 0.5 s, la Flecha helada 1 s,
+    // los misiles nada. Corre en el dueño y en el servidor: los dos ven los mismos tags y el
+    // mismo maná.
+    public override GameplayAbility CastSettingsSource
+        => VariantsPayOwnCost && OwnerASC != null ? (ResolveTemplate(out _, out _) ?? this) : this;
+
+    // Cortada a mitad de canalizar cuenta como lanzada: cobra también lo de la variante que iba
+    // a salir (el maná del hechizo y, en un switch de mantener, su ritmo).
+    protected override void PayCutCast()
+    {
+        if (!VariantsPayOwnCost || OwnerASC == null) return;
+        GameplayAbility template = ResolveTemplate(out _, out _);
+        if (template != null) GetOrCreateInstance(template).PayAsCast();
+        DropUnpayableVariants();
     }
 
     // =========================================================

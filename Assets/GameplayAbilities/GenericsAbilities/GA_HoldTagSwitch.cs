@@ -60,6 +60,8 @@ public class GA_HoldTagSwitch : GA_TagSwitch, IHoldAbility
         if (!IsServer) return;
         if (!CanActivate()) return;
 
+        DropUnpayableVariants();   // sin maná para el hechizo elegido: vuelve a la de por defecto
+
         GameplayAbility template = ResolveTemplate(out bool consumeTag, out EGameplayTag usedTag);
         GameplayAbility instance = template != null ? GetOrCreateInstance(template) : null;
         if (instance == null)
@@ -71,10 +73,16 @@ public class GA_HoldTagSwitch : GA_TagSwitch, IHoldAbility
         _lastResolved      = instance;
         _lastResolvedFrame = Time.frameCount;
         instance.AnimationSpeedOverride = AnimationSpeedOverride;
+        // Los hechizos del Mago: los corta lo que corta al switch, como en el GA_TagSwitch. (El
+        // escudo y el bloqueo de las demás clases siguen con lo suyo.)
+        if (VariantsPayOwnCost) instance.IsInterruptible = IsInterruptible;
         instance.Activate();   // la variante cobra lo suyo y arranca el mantenido
 
         // La de un solo uso (el Ki) se gasta al usarla.
         if (consumeTag) ConsumeTagFromOwner(usedTag);
+
+        // Ya cobró: si no le alcanza para otra, vuelve ya a la de por defecto (el botón cambia).
+        DropUnpayableVariants();
     }
 
     // =========================================================
@@ -101,6 +109,10 @@ public class GA_HoldTagSwitch : GA_TagSwitch, IHoldAbility
     public void EndHold()
     {
         if (_lastResolved is IHoldAbility held) held.EndHold();
+
+        // El lanzamiento apuntado cobra al soltar (la Flecha helada del Mago): si ya no le
+        // alcanza para otra, vuelve a la de por defecto.
+        if (IsServer) DropUnpayableVariants();
     }
 
     public AnimationClip HoldLoopClip   => ActiveHold?.HoldLoopClip;

@@ -76,6 +76,42 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
     [Label("Se deshace en el primer enemigo")]
     public bool StopAtFirstEnemy = false;
 
+    [Section("Al chocar")]
+    [Tooltip("Una explosión donde choca (contra un enemigo, una pared o un escudo): un GA_InstantAoE " +
+             "que se reusa tal cual —su radio, sus efectos y su VFX—, sin su costo, su cooldown ni su " +
+             "animación (la Bola de fuego del Mago). La lista de efectos de ESTA habilidad sigue yendo " +
+             "al que toca. Vacío = nada.")]
+    [Label("Explosión (GA_InstantAoE)")]
+    public GA_InstantAoE ImpactExplosion;
+
+    [Tooltip("Una zona que queda en el piso donde choca: un GA_ContinuousAoE tal cual (la zona de " +
+             "fuego del dragón del Monje). Vacío = nada.")]
+    [Label("Zona que deja (GA_ContinuousAoE)")]
+    public GA_ContinuousAoE ImpactZone;
+
+    // Las copias con este dueño de la explosión y la zona, guardadas entre lanzamientos.
+    [System.NonSerialized] private GA_InstantAoE    _impactExplosion;
+    [System.NonSerialized] private GA_ContinuousAoE _impactZone;
+
+    // Lo llama el proyectil (GC_Projectile, en el servidor) donde choca y se deshace.
+    public void OnProjectileImpact(Vector3 point)
+    {
+        if (!IsServer || OwnerASC == null) return;
+
+        if (ImpactExplosion != null)
+        {
+            _impactExplosion = GA_InstantAoE.Deployable(ImpactExplosion, OwnerASC, _impactExplosion);
+            _impactExplosion.DetonateAt(point);
+        }
+
+        // La zona, en el piso de abajo del choque (contra una pared, cae al pie de la pared).
+        if (ImpactZone != null && GA_ContinuousAoE.TryGroundPoint(point, point.y, out Vector3 ground))
+        {
+            _impactZone = GA_ContinuousAoE.Deployable(ImpactZone, OwnerASC, _impactZone);
+            _impactZone.DeployZoneAt(ground);
+        }
+    }
+
     [Section(AbilitySection.Timing)]
     [Tooltip("Espera entre activar la habilidad y que el proyectil realmente salga, si el clip " +
              "no trae el evento AnimationEvent_HitFrame (con el evento, sale en ese frame).")]

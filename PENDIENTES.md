@@ -9,7 +9,7 @@ del log son todos de packs importados).
 
 ## ★ Al retomar: lo abierto, en orden (20 de octubre)
 
-1. **Etapa 2 del Mago — el libro:** la rueda (ARRIBA los misiles); que la variante cobre su maná
+1. **Etapa 2 del Mago — el libro** (la 2a, el libro, el fuego y el hielo, HECHA Y PROBADA ✅ el 21 de octubre; sigue la 2b, el Terremoto y la Descarga): la rueda (ARRIBA los misiles); que la variante cobre su maná
    y canalice (la pieza delicada: toca la red); la vuelta sola a los misiles sin maná; y los 4
    hechizos del clic: Bola de fuego (canaliza 0.5 s, explota y deja la zona del dragón), Flecha
    helada (canaliza 1 s), Terremoto (la grieta que avanza por el piso) y Descarga eléctrica (el
@@ -165,8 +165,38 @@ azul) los crea una herramienta de una vez, como prefabs.
         pantallas; con puntos, el número de daño sube 2 por punto; a los 6 s sin misiles se van
         todos; el vuelo; subir de nivel (vida y maná). Ajustar la "Espera al lanzar" de
         `GA_ArcaneMissiles` si la bolita no sale de la mano.
-- [ ] **Etapa 2 — el libro:** la rueda, la variante que cobra y canaliza, y los 4 hechizos del clic
-      (bola, flecha, terremoto, descarga con su grafo).
+- [ ] **Etapa 2 — el libro**, en dos partes:
+  - [x] **2a — el libro, fuego y hielo: HECHA Y PROBADA ✅ (21 de octubre).**
+        Código nuevo, todo genérico:
+        · `GA_RadialChoice` (Create ▸ GAS ▸ Generics ▸ Radial Choice): una rueda donde cada opción deja
+          PUESTO un estado (un GE con su tag); una opción sin efecto vuelve a lo normal; "Disponible si
+          alcanza para" la apaga sin maná. Le va a servir al Filo danzante.
+        · `GA_TagSwitch` con **Las variantes cobran y canalizan lo suyo** (cada variante paga SU costo y
+          canaliza con SU sección Canalizar; el ritmo sigue siendo del switch) y **Sin para pagarla:
+          vuelve a la de por defecto** (sin maná, el clic sale con los misiles y se quita el tag del
+          hechizo). Por dentro: `GameplayAbility.CastSettingsSource` (de dónde salen los datos de
+          canalizar) y `PayCutCast` (cortada, también se cobra el maná).
+        · Lo que canaliza no se repite al mantener el clic izquierdo.
+        · `GA_ProjectileShoot` "Al chocar": **Explosión** (un `GA_InstantAoE` tal cual, con
+          `DetonateAt`) y **Zona que deja** (un `GA_ContinuousAoE` tal cual).
+        · Cada entrada de efectos: **Con los puntos del objetivo** (cuenta un tag en el golpeado:
+          duración por punto, o + duración por punto, y si los gasta). Tags nuevos: `Status_SpellSelected`,
+          `Status_SpellFire`, `_Ice`, `_Earth`, `_Lightning` (al final de la lista).
+  - [x] (Corrida y borrada el 21 de octubre.) Correr `Mercenarios ▸ Una vez ▸ Crear el Mago (etapa 2a: libro, fuego y hielo)` y borrar
+        `Assets/Scripts/Editor/MercWizardStage2a.cs`. Crea `GA_SpellBook` (clic derecho),
+        `GA_WizardSpells` (clic izquierdo: misiles o el hechizo), `GA_Fireball` + `GA_FireballExplosion`,
+        `GA_FrostBolt`, los GE (`GE_Spell_Fire`/`_Ice`, `GE_Cost_Fireball` 25 y `GE_Cost_FrostBolt` 50,
+        ⚙ `GE_FireballDamage` 1.5 × daño mágico, ⚙ `GE_FrostBoltDamage` 2 ×, ⚙ `GE_FrostSlow` mitad
+        de velocidad 2 s) y los proyectiles `PF_WizardFireball` y `PF_FrostBolt`; pone el libro y el
+        clic izquierdo en `Class_Wizard` y actualiza los registros. ⚙ = número provisional, ajustarlo.
+  - [x] **PROBADO ✅ (21 de octubre).** Probar, en el host y en un cliente (21 de octubre: la Flecha helada ahora se MANTIENE, pedido de Gustavo: el clic izquierdo pasó a `GA_HoldTagSwitch`, cada hechizo lleva el ritmo de ataque): la rueda (arriba los misiles; fuego y hielo apagados sin
+        maná); el ícono del clic izquierdo cambia con el hechizo; la Bola de fuego canaliza 0.5 s (barra
+        y pose), cobra 25, explota en el enemigo y en una pared, quema más con puntos y deja la zona de
+        fuego; la Flecha helada: mantener canaliza 1 s, se puede seguir manteniendo y apuntando, sale al soltar (soltar antes, sale apenas se llena), cobra 50 al soltar y ralentiza más con puntos; cortarlas a mitad
+        (aturdido) cobra igual y no sale; mantener el clic no las repite (los misiles sí); sin maná
+        vuelve solo a los misiles (con la Flecha: 60 de maná, se lanza una y vuelve).
+  - [ ] **2b — el Terremoto y la Descarga eléctrica** (la grieta que avanza por el piso; el grafo de
+        rebotes): falta.
 - [ ] **Etapa 3 — la Q:** recarga, muro, tumba, levantamiento y tormenta (con la descarga contra el
       tornado).
 - [ ] **Etapa 4:** los bots, y pasarlo al documento de diseño de clases y a la guía.

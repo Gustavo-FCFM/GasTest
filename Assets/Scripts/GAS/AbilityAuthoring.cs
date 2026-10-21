@@ -131,6 +131,15 @@ public enum EStackScaling
     [InspectorName("Duración: segundos por acumulación")] DurationPerStack = 3,
 }
 
+// Cómo escala UNA entrada de efectos con las acumulaciones del OBJETIVO alcanzado (no las del
+// lanzador): los puntos arcanos que el Mago le dejó al enemigo (21 de octubre de 2026).
+public enum ETargetStackScaling
+{
+    [InspectorName("No escala")]                               None                  = 0,
+    [InspectorName("Duración: segundos por punto (sin, nada)")] DurationPerStack      = 1,   // el aturdido del Terremoto
+    [InspectorName("Duración: + segundos por punto")]           ExtraDurationPerStack = 2,   // la quemadura de la Bola de fuego
+}
+
 // Las secciones de un GameplayEffect, en el orden en que se muestran.
 public static class EffectSection
 {
@@ -238,6 +247,24 @@ public struct AbilityEffect
              "próxima ráfaga, recién pasada la espera. 0 = sin espera.")]
     public float PerTargetCooldown;
 
+    [Tooltip("CON LOS PUNTOS DEL OBJETIVO (opcional): el tag que se cuenta en el objetivo alcanzado, " +
+             "una vez por acumulación (los puntos arcanos del Mago: Status_ArcanePoint). None = no escala.")]
+    public EGameplayTag TargetStacksTag;
+
+    [Tooltip("Cómo escala con esos puntos.\n\n" +
+             "· Duración: segundos por punto: dura 'Por punto' segundos por cada uno; sin puntos, no se " +
+             "aplica (el Terremoto aturde 0.5 s por punto).\n" +
+             "· Duración: + segundos por punto: la duración del efecto y, además, 'Por punto' segundos " +
+             "por cada uno (la quemadura de la Bola de fuego, +1 s por punto).")]
+    public ETargetStackScaling TargetScaling;
+
+    [Tooltip("Segundos por cada punto del objetivo.")]
+    public float TargetPerStack;
+
+    [Tooltip("Al aplicarse, le saca al objetivo esos puntos (el Terremoto: aturdir los gasta). Las " +
+             "entradas de arriba en la lista ya los usaron; las de abajo los ven en 0.")]
+    public bool ConsumeTargetStacks;
+
     public AbilityEffect(GameplayEffect effect, EEffectWhen when = EEffectWhen.OnHit,
                          EEffectTarget applyTo = EEffectTarget.Enemies)
     {
@@ -248,6 +275,10 @@ public struct AbilityEffect
         StackScaling    = EStackScaling.None;
         PerStack        = 0f;
         PerTargetCooldown = 0f;
+        TargetStacksTag     = EGameplayTag.None;
+        TargetScaling       = ETargetStackScaling.None;
+        TargetPerStack      = 0f;
+        ConsumeTargetStacks = false;
     }
 }
 

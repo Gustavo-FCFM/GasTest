@@ -491,10 +491,12 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // Barra de canalizar del DUEÑO (UI_CastBar), estilo WoW. channel = se vacía mientras
     // dura (un canalizado, el molinete); si no, se llena hasta que la habilidad sale (una
     // carga, el Golpe final). Llamarlas en el servidor; HideCastBar(true) la pone roja.
-    protected void ShowCastBar(float duration, bool channel)
+    // 'shown': la habilidad cuyo nombre e ícono muestra la barra (la variante que canaliza un
+    // switch). Null = esta.
+    protected void ShowCastBar(float duration, bool channel, GameplayAbility shown = null)
     {
         NetworkAbilitySystemComponent netAsc = OwnerASC != null ? OwnerASC.GetComponent<NetworkAbilitySystemComponent>() : null;
-        if (netAsc != null && netAsc.IsServerInitialized) netAsc.ServerShowCastBar(this, duration, channel);
+        if (netAsc != null && netAsc.IsServerInitialized) netAsc.ServerShowCastBar(shown ?? this, duration, channel);
     }
 
     protected void HideCastBar(bool interrupted)
@@ -781,23 +783,53 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     [Label("Clip: soltar")]
     public AnimationClip CastReleaseAnimation;
 
+    // De dónde salen los datos de la canalización (modo, segundos, clips): de la propia
+    // habilidad, salvo un ENVOLTORIO que canaliza con los de la que va a ejecutar (GA_TagSwitch
+    // con "Las variantes cobran y canalizan lo suyo": la Bola de fuego del Mago canaliza 0.5 s y
+    // los misiles nada, en el mismo botón). Se resuelve en el dueño y en el servidor por los
+    // tags, que los dos ven.
+    public virtual GameplayAbility CastSettingsSource => this;
+
     // ¿Pasa por la canalización? Las que tienen su propio ciclo no.
-    public bool UsesCast => CastMode != ECastMode.None && CastSeconds > 0f &&
-                            !(this is IChanneledAbility) && !(this is IRadialMenuAbility) && !HoldInput.IsHold(this);
+    public bool UsesCast
+    {
+        get
+        {
+            GameplayAbility s = CastSettingsSource ?? this;
+            return s.CastMode != ECastMode.None && s.CastSeconds > 0f &&
+                   !(s is IChanneledAbility) && !(s is IRadialMenuAbility) && !HoldInput.IsHold(s) &&
+                   !(this is IChanneledAbility) && !(this is IRadialMenuAbility) && !HoldInput.IsHold(this);
+        }
+    }
+
+    // Cuánto dura la canalización que haría ahora (la de su fuente).
+    public float CastDuration => (CastSettingsSource ?? this).CastSeconds;
 
     // Lo que canaliza un MANTENIDO (el lanzamiento apuntado: el Haz guía): mantener el botón
     // canaliza, y soltar antes de que se llene no lanza todavía — sale apenas se llena. Lo
     // resuelve el propio mantenido (GA_ProjectileShoot) y, del lado del dueño,
     // PlayerController.ProcessHoldRelease. 0 = no canaliza.
-    public float HoldCastSeconds => CastMode != ECastMode.None && CastSeconds > 0f && HoldInput.IsHold(this)
-                                    ? CastSeconds : 0f;
+    // Un switch de mantener lo toma de la variante que va a salir (la Flecha helada del Mago).
+    public float HoldCastSeconds
+    {
+        get
+        {
+            GameplayAbility s = CastSettingsSource ?? this;
+            return s.CastMode != ECastMode.None && s.CastSeconds > 0f && HoldInput.IsHold(this) ? s.CastSeconds : 0f;
+        }
+    }
+
+    // Cobra su costo y su cooldown como si se hubiera lanzado. La usa un switch para cobrar la
+    // variante que iba a salir cuando le cortan la canalización (ver GA_TagSwitch.PayCutCast).
+    public void PayAsCast() => PayCostAndCooldown();
 
     // Mientras canaliza un CONTINUO, sus repeticiones no animan (la pose en bucle sigue).
     // Lo mira PlayerController.PlayAnimation.
-    public bool SuppressesOwnAnimation => _castRunning && CastMode == ECastMode.Continuous;
+    public bool SuppressesOwnAnimation => _castRunning && (_castSource ?? this).CastMode == ECastMode.Continuous;
 
     // Servidor: canalizando ahora / ya cobrado en esta canalización (ver CommitAbility).
     [System.NonSerialized] private bool _castRunning;
+    [System.NonSerialized] private GameplayAbility _castSource;   // de dónde salieron los datos de esta canalización
     [System.NonSerialized] private bool _castPaid;
     [System.NonSerialized] private bool _castTicking;   // dentro de una repetición del continuo
 
@@ -816,24 +848,33 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         AbilitySystemComponent        asc = OwnerASC;
         PlayerController              pc  = asc.GetComponent<PlayerController>();
         NetworkAbilitySystemComponent net = asc.GetComponent<NetworkAbilitySystemComponent>();
-        bool continuous = CastMode == ECastMode.Continuous;
+
+        // Los datos, de su fuente (la variante de un switch), fijos para toda esta canalización:
+        // si su tag cambia a mitad, sigue con lo que empezó.
+        GameplayAbility src = CastSettingsSource ?? this;
+        _castSource = src;
+        bool  continuous = src.CastMode == ECastMode.Continuous;
+        float seconds    = src.CastSeconds;
+        bool  blocks     = src.CastBlocksOthers;
+        bool  breaks     = src.CastBreaksOnDamage;
+        bool  loops      = src.CastLoopAnimation != null;
 
         _castRunning = true;
-        if (CastBlocksOthers) asc.AddTag(EGameplayTag.Status_Channeling);
-        if (CastLoopAnimation != null && net != null) net.ServerPlayChannelAnimation(this, true);
-        ShowCastBar(CastSeconds, channel: continuous);
-        if (pc != null) pc.ServerStreamAimFor(CastSeconds + 0.5f);
+        if (blocks) asc.AddTag(EGameplayTag.Status_Channeling);
+        if (loops && net != null) net.ServerPlayChannelAnimation(src, true);
+        ShowCastBar(seconds, channel: continuous, shown: src);
+        if (pc != null) pc.ServerStreamAimFor(seconds + 0.5f);
 
         bool damaged = false;
         System.Action<AbilitySystemComponent> onDamaged = _ => damaged = true;
-        if (CastBreaksOnDamage) asc.OnTookDamage += onDamaged;
+        if (breaks) asc.OnTookDamage += onDamaged;
         int cancelSerial = asc.CancelSerial;
 
         float elapsed  = 0f;
         float nextTick = 0f;
         bool  interrupted = false;
 
-        while (elapsed < CastSeconds)
+        while (elapsed < seconds)
         {
             if (CastInterrupted(asc, cancelSerial, damaged)) { interrupted = true; break; }
 
@@ -842,23 +883,29 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
                 _castTicking = true;
                 try     { Activate(); }   // la primera cobra (CommitAbility); las demás salen gratis
                 finally { _castTicking = false; }
-                nextTick += Mathf.Max(0.05f, CastTickSeconds);
+                nextTick += Mathf.Max(0.05f, src.CastTickSeconds);
             }
 
             yield return null;
             elapsed += Time.deltaTime;
         }
 
-        if (CastBreaksOnDamage) asc.OnTookDamage -= onDamaged;
-        if (CastBlocksOthers)   asc.RemoveTag(EGameplayTag.Status_Channeling);
+        if (breaks) asc.OnTookDamage -= onDamaged;
+        if (blocks) asc.RemoveTag(EGameplayTag.Status_Channeling);
         _castRunning = false;
-        if (CastLoopAnimation != null && net != null) net.ServerPlayChannelAnimation(this, false);
+        _castSource  = null;
+        if (loops && net != null) net.ServerPlayChannelAnimation(src, false);
         HideCastBar(interrupted);
 
         // Cortada (o un continuo que terminó): no sale nada más. Cortada cuenta como lanzada.
         if (interrupted || continuous)
         {
-            if (!_castPaid) { PayCostAndCooldown(); _castPaid = true; }
+            if (!_castPaid)
+            {
+                PayCostAndCooldown();
+                if (interrupted) PayCutCast();
+                _castPaid = true;
+            }
             EndAbility();
             yield break;
         }
@@ -895,8 +942,13 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
                 if (asc.HasTag(tag)) return true;
 
         if (IsInterruptible && asc.CancelSerial != cancelSerial) return true;
-        return CastBreaksOnDamage && damaged;
+        return (_castSource ?? CastSettingsSource ?? this).CastBreaksOnDamage && damaged;
     }
+
+    // Una canalización CORTADA ya cobró su costo y su cooldown (PayCostAndCooldown). Un
+    // envoltorio cobra además lo de la variante que iba a salir (GA_TagSwitch: el maná del
+    // hechizo del Mago): cortada cuenta como lanzada.
+    protected virtual void PayCutCast() { }
 
     // =========================================================
     // CARGAS  (varios usos antes de tener que esperar la recarga)
@@ -1387,6 +1439,24 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
             int times = StackApplications(e, out float duration);
             if (times <= 0) continue;
 
+            // Con los puntos del OBJETIVO (los puntos arcanos del Mago): más duración por cada uno.
+            int targetStacks = 0;
+            if (e.TargetScaling != ETargetStackScaling.None && e.TargetStacksTag != EGameplayTag.None &&
+                e.ApplyTo != EEffectTarget.Self)
+            {
+                targetStacks = target.GetTagCount(e.TargetStacksTag);
+                if (e.TargetScaling == ETargetStackScaling.DurationPerStack)
+                {
+                    if (targetStacks <= 0 || e.TargetPerStack <= 0f) continue;
+                    duration = e.TargetPerStack * targetStacks;
+                }
+                else
+                {
+                    float baseDuration = duration >= 0f ? duration : e.Effect.Duration;
+                    duration = baseDuration + Mathf.Max(0f, e.TargetPerStack) * targetStacks;
+                }
+            }
+
             // El filtro del primer golpe va al final: puede ANOTAR algo (el proyectil anota
             // cuándo se puede volver a aturdir a ese enemigo), y no tiene que anotar nada que
             // después no se aplique.
@@ -1403,6 +1473,9 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
 
             if (e.ApplyTo == EEffectTarget.Self) ApplyScaled(source, effect, source, times, duration);
             else                                 ApplyScaled(target, effect, source, times, duration);
+
+            // Gastarlos (el aturdido del Terremoto): las entradas de abajo ya los ven en 0.
+            if (e.ConsumeTargetStacks && targetStacks > 0) target.RemoveEffectsWithTag(e.TargetStacksTag);
 
             if (ally && e.ApplyTo != EEffectTarget.Self && effect.HealsHealth) healed = true;
         }

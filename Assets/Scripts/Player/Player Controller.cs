@@ -1904,6 +1904,9 @@ public class PlayerController : NetworkBehaviour
 
         GameplayAbility ability = PrimaryAttackAbility;
         if (ability is IRadialMenuAbility || HoldInput.IsHold(ability)) return;
+        // Lo que canaliza pide su clic: la Bola de fuego y la Flecha helada del Mago no se
+        // repiten solas (manteniendo, se gastaría el maná sin querer); los misiles sí.
+        if (ability.UsesCast) return;
         if (ability is IGroundTargetAbility ground && ground.UsesGroundTarget) return;
         if (!ability.CanActivate()) return;
 
@@ -2034,7 +2037,7 @@ public class PlayerController : NetworkBehaviour
                 isAttacking = true;
                 // Una que canaliza dura además su canalización: el watchdog empieza a contar
                 // al terminar, no al apretar.
-                _attackStartTime = Time.time + (ability.UsesCast ? ability.CastSeconds : 0f);
+                _attackStartTime = Time.time + (ability.UsesCast ? ability.CastDuration : 0f);
                 // Lo decide la HABILIDAD, no el slot. Cuando esto miraba además que
                 // fuera el slot del ataque principal, un lanzamiento marcado como
                 // interrumpible igual bloqueaba el input mientras corría: el pedido de

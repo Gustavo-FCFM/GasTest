@@ -441,6 +441,7 @@ public class GC_Projectile : NetworkBehaviour
             // reportar cuánto daño evitó de verdad — ver NotifyProjectileBlocked.
             barrier.NotifyProjectileBlocked(PrimaryDamage, sourceASC, point);
             PlayImpactVFXEverywhere(point);
+            Impact(point);
             DespawnSelf();
             return;
         }
@@ -490,6 +491,7 @@ public class GC_Projectile : NetworkBehaviour
                 // y sigue (cada enemigo, una vez), como siempre.
                 if (sourceAbility is GA_ProjectileShoot shot && shot.StopAtFirstEnemy)
                 {
+                    Impact(point);
                     DespawnSelf();
                     return;
                 }
@@ -515,8 +517,20 @@ public class GC_Projectile : NetworkBehaviour
         {
             // 3. ¿Es una pared / entorno sólido?
             // Si llegamos aquí, no tiene ASC y no es trigger.
+            Impact(point);
             DespawnSelf();
         }
+    }
+
+    // Donde choca y se deshace: la explosión y la zona de su habilidad, si tiene (la Bola de
+    // fuego del Mago; ver GA_ProjectileShoot "Al chocar"). Devuelto por un parry, no: el autor
+    // ya no es el que la tiró. Una sola vez.
+    private bool _impacted;
+    private void Impact(Vector3 point)
+    {
+        if (_impacted || _gone || _reflected) return;
+        _impacted = true;
+        if (sourceAbility is GA_ProjectileShoot shot) shot.OnProjectileImpact(point);
     }
 
     // =========================================================

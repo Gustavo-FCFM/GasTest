@@ -180,6 +180,33 @@ public class GA_InstantAoE : GameplayAbility, IGroundTargetAbility
         }
     }
 
+    // =========================================================
+    // ESTALLIDO QUE PIDE OTRA HABILIDAD (la Bola de fuego del Mago, al chocar)
+    // =========================================================
+
+    // Solo el estallido en 'center' (sus efectos y su VFX), sin el ciclo de vida de una
+    // habilidad: ni costo, ni cooldown, ni animación, ni EndAbility. Servidor.
+    public void DetonateAt(Vector3 center)
+    {
+        if (!IsServer || OwnerASC == null) return;
+        Detonate(center);
+    }
+
+    // Una copia de 'template' con este dueño, lista para DetonateAt. Devuelve 'cached' si ya era
+    // eso (quien la usa la guarda y la reusa en cada lanzamiento).
+    public static GA_InstantAoE Deployable(GA_InstantAoE template, AbilitySystemComponent owner, GA_InstantAoE cached)
+    {
+        if (cached != null && cached.SourceTemplate == template && cached.OwnerASC == owner) return cached;
+
+        GA_InstantAoE area = Instantiate(template);
+        area.Initialize(owner);
+        area.SourceTemplate = template;   // su identidad en la red (el VFX del estallido)
+        area.CooldownEffect = null;
+        area.CostEffect     = null;
+        area.DisableCharges();
+        return area;
+    }
+
     // Gancho para que una habilidad concreta reaccione a cada enemigo alcanzado
     // (ej: los Cañones del Pirata, que además le apuestan a quien golpean).
     protected virtual void OnTargetHit(AbilitySystemComponent target) { }
