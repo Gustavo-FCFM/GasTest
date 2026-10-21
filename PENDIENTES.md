@@ -9,22 +9,21 @@ del log son todos de packs importados).
 
 ## ★ Al retomar: lo abierto, en orden (20 de octubre)
 
-1. **Probar la etapa 1 del Mago** (ver "★ El Mago" abajo: qué mirar).
-2. **Etapa 2 del Mago — el libro:** la rueda (ARRIBA los misiles); que la variante cobre su maná
+1. **Etapa 2 del Mago — el libro:** la rueda (ARRIBA los misiles); que la variante cobre su maná
    y canalice (la pieza delicada: toca la red); la vuelta sola a los misiles sin maná; y los 4
    hechizos del clic: Bola de fuego (canaliza 0.5 s, explota y deja la zona del dragón), Flecha
    helada (canaliza 1 s), Terremoto (la grieta que avanza por el piso) y Descarga eléctrica (el
    grafo de rebotes). Todo decidido: ver la tabla del Mago.
-3. **Etapa 3 — la Q** (recarga, muro, tumba, levantamiento, tormenta) y **etapa 4** (bots, y
+2. **Etapa 3 — la Q** (recarga, muro, tumba, levantamiento, tormenta) y **etapa 4** (bots, y
    pasar el Mago al documento de diseño de clases y a la guía).
-4. **Probar lo de antes:** el parry del Guardián en un cliente; los bots con el Explorador, el
+3. **Probar lo de antes:** el parry del Guardián en un cliente; los bots con el Explorador, el
    Monje y el Guerrero; `GA_SpawnSummon` con una variante de las plantillas de invocación.
-5. **Cuando alguien se atasque:** traer `Logs/Unstuck.log`.
-6. **Decisiones de Gustavo, sin prisa:** más prefabs (variantes de tótems y enemigos, la UI que
+4. **Cuando alguien se atasque:** traer `Logs/Unstuck.log`.
+5. **Decisiones de Gustavo, sin prisa:** más prefabs (variantes de tótems y enemigos, la UI que
    todavía arma el código), acomodar los botiquines, la puntería si se siente mal.
-7. **Después del Mago:** las animaciones raras (sección 5, con la pose del bloqueo del Monje) y
+6. **Después del Mago:** las animaciones raras (sección 5, con la pose del bloqueo del Monje) y
    el sonido (faltan los clips).
-8. **Íconos del Mago:** provisionales (el de la Flecha mágica del Clérigo). Pedirle al artista
+7. **Íconos del Mago:** provisionales (el de la Flecha mágica del Clérigo). Pedirle al artista
    los de la clase, los misiles y el punto arcano.
 
 ## Cómo retomar en la otra máquina
@@ -68,7 +67,7 @@ rm -rf "Assets/FishNet" "Assets/FishNet.meta" "Assets/TextMesh Pro/Examples & Ex
 
 ---
 
-# ★ El Mago: kit base — ETAPA 1 HECHA (20 de octubre), falta probarla; siguen las etapas 2, 3 y 4
+# ★ El Mago: kit base — ETAPA 1 HECHA Y PROBADA ✅ (21 de octubre); siguen las etapas 2, 3 y 4
 
 Decidido con Gustavo el 20 de octubre. Cambia cosas del documento de diseño (la Tumba helada
 congela al MAGO, no a los demás; la Q no gasta maná; el Terremoto avanza por el piso; la
@@ -143,7 +142,7 @@ Los visuales provisionales (bolita, orbes con estrellas, rayito, grieta, cubo de
 azul) los crea una herramienta de una vez, como prefabs.
 
 **Por etapas, probando entre una y otra:**
-- [ ] **Etapa 1 — la clase: HECHA (20 de octubre; herramienta corrida y borrada), falta probar.**
+- [x] **Etapa 1 — la clase: HECHA Y PROBADA ✅ (20-21 de octubre).** El despegue del vuelo va ahora HACIA LA MIRA (pedido de Gustavo, 21 de octubre): `GA_Flight` tiene "Despegue" (hacia arriba / hacia donde mira) y, desde el piso, un ángulo mínimo hacia arriba (20°); en el aire sale exacto a la mira (en picada si mira abajo). Despegue probado ✅ (21 de octubre).
       Stats de Gustavo en `ASDef_Wizard`: 60 de vida (+40 por nivel), 100 de maná (+50 por nivel),
       2 de defensa, 8 de ataque, 10 de daño mágico, velocidad 6, 0.8 s entre ataques; por nivel
       también +1 de ataque y +1 de daño mágico, como el Clérigo. Código nuevo: el tag

@@ -430,7 +430,7 @@ public class PlayerController : NetworkBehaviour
     private float _flightVerticalSpeed   = 6f;
     private float _flightIdleSink        = 1.5f;  // hasta cuánto cae (m/s) si no se mueve
     private float _flightSinkNow;         // lo que está cayendo ahora por quedarse quieto
-    private float _flightLaunch;          // impulso de despegue que se disipa solo
+    private Vector3 _flightLaunch;        // impulso de despegue que se disipa solo (hacia arriba o hacia la mira)
     private float _flightVerticalNow;     // velocidad vertical del vuelo, para el Animator
     private bool  _wasFlying;
     private bool  _flightFalling;         // terminó el vuelo en el aire: cae lento hasta el piso
@@ -990,9 +990,10 @@ public class PlayerController : NetworkBehaviour
             _flightSinkNow = idle ? Mathf.MoveTowards(_flightSinkNow, _flightIdleSink, _flightIdleSink * Time.deltaTime) : 0f;
 
             _flightLaunch *= Mathf.Exp(-3f * Time.deltaTime);
-            if (_flightLaunch < 0.05f) _flightLaunch = 0f;
+            if (_flightLaunch.sqrMagnitude < 0.0025f) _flightLaunch = Vector3.zero;
 
-            Vector3 flyVelocity = dir * flySpeed + Vector3.up * (climb * _flightVerticalSpeed + _flightLaunch - _flightSinkNow);
+            Vector3 flyVelocity = dir * flySpeed + _flightLaunch +
+                                  Vector3.up * (climb * _flightVerticalSpeed - _flightSinkNow);
             _flightVerticalNow = flyVelocity.y;
             verticalVelocity   = 0f;
             _inertiaVelocity   = Vector3.zero;
@@ -1705,10 +1706,29 @@ public class PlayerController : NetworkBehaviour
     // Lo llama NetworkAbilitySystemComponent.TargetStartFlight en el DUEÑO al activar un
     // GA_Flight: los números de ese vuelo y el impulso de despegue. El vuelo en sí dura lo
     // que dure Status_Flying.
+    //
+    // towardAim: el impulso sale hacia donde mira la cámara (solo el dueño la tiene, por eso se
+    // resuelve acá). Desde el piso, por lo menos minUpAngle grados hacia arriba, así despega en
+    // vez de chocar contra el suelo; en el aire, exacto a la mira (mirando abajo, en picada).
     public void StartFlight(float launchSpeed, float speedMultiplier, float forwardBoost, float verticalSpeed,
-                            float idleSink)
+                            float idleSink, bool towardAim = false, float minUpAngle = 0f)
     {
-        _flightLaunch          = Mathf.Max(0f, launchSpeed);
+        Vector3 launchDir = Vector3.up;
+        Camera cam = MainCamera;
+        if (towardAim && cam != null)
+        {
+            launchDir = cam.transform.forward;
+            float minUp = Mathf.Clamp(minUpAngle, 0f, 89f);
+            if (characterController.isGrounded && Mathf.Asin(Mathf.Clamp(launchDir.y, -1f, 1f)) * Mathf.Rad2Deg < minUp)
+            {
+                Vector3 flat = Vector3.ProjectOnPlane(launchDir, Vector3.up);
+                if (flat.sqrMagnitude < 0.0001f) flat = transform.forward;
+                flat.Normalize();
+                launchDir = flat * Mathf.Cos(minUp * Mathf.Deg2Rad) + Vector3.up * Mathf.Sin(minUp * Mathf.Deg2Rad);
+            }
+        }
+
+        _flightLaunch          = launchDir.normalized * Mathf.Max(0f, launchSpeed);
         _flightSpeedMultiplier = Mathf.Max(0.1f, speedMultiplier);
         _flightForwardBoost    = Mathf.Max(1f, forwardBoost);
         _flightVerticalSpeed   = Mathf.Max(0f, verticalSpeed);
@@ -1724,7 +1744,7 @@ public class PlayerController : NetworkBehaviour
         if (_wasFlying && !flying)
         {
             _flightFalling = true;
-            _flightLaunch  = 0f;
+            _flightLaunch  = Vector3.zero;
             verticalVelocity = 0f;
         }
         _wasFlying = flying;

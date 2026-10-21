@@ -54,6 +54,8 @@ MonoBehaviour:
   MaxCharges: 1
   BuffEffect: {fileID: 0}
   AdditionalEffects: []
+  LaunchDirection: 1
+  MinLaunchUpAngle: 20
   LaunchSpeed: 16
   SpeedMultiplier: 1.5
   ForwardBoost: 1.5

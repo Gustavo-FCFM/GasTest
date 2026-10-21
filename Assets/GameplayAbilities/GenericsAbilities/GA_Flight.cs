@@ -4,7 +4,8 @@ using UnityEngine;
 // GA_Flight  (genérico — vuelo libre)
 //
 // Como el vuelo de Iron Man (Marvel Rivals) o el de Spellbreak: al activarla da un
-// impulso hacia arriba y, mientras dure Status_Flying, el dueño vuela libre: sin gravedad,
+// impulso (hacia arriba, o hacia donde mira: "Despegue") y, mientras dure Status_Flying,
+// el dueño vuela libre: sin gravedad,
 // WASD lo mueve en 3D hacia donde mira la cámara (más rápido si solo va hacia adelante),
 // Espacio sube y Ctrl baja. No aterriza aunque toque el piso. Quieto en el aire va
 // cayendo despacio (IdleSinkSpeed): para mantenerse arriba hay que moverse.
@@ -19,8 +20,29 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "GA_Flight", menuName = "GAS/Generics/Flight")]
 public class GA_Flight : GA_SelfBuff
 {
+    public enum ELaunchDirection
+    {
+        [InspectorName("Hacia arriba")]     Up,
+        [InspectorName("Hacia donde mira")] TowardAim,
+    }
+
     [Section("Vuelo")]
-    [Tooltip("Velocidad hacia arriba del despegue. Se disipa sola en menos de un segundo.")]
+    [Tooltip("Hacia dónde sale el impulso del despegue.\n\n" +
+             "· Hacia arriba: sube y desde ahí vuela.\n" +
+             "· Hacia donde mira: sale disparado hacia la mira (el Mago, 21 de octubre de 2026). " +
+             "Desde el piso, siempre un poco hacia arriba (ver el ángulo mínimo); en el aire, exacto " +
+             "a la mira: mirando abajo, en picada.")]
+    [Label("Despegue")]
+    public ELaunchDirection LaunchDirection = ELaunchDirection.Up;
+
+    [ShowIf(nameof(LaunchDirection), ELaunchDirection.TowardAim)]
+    [Tooltip("Desde el piso, el impulso sale por lo menos con este ángulo hacia arriba aunque mire " +
+             "al frente o al piso: así despega en vez de arrastrarse o chocar contra el suelo.")]
+    [Label("Desde el piso: ángulo mínimo hacia arriba (°)")]
+    public float MinLaunchUpAngle = 20f;
+
+    [Tooltip("Velocidad del impulso del despegue (hacia arriba o hacia la mira). Se disipa sola en " +
+             "menos de un segundo: recorre unos velocidad ÷ 3 metros.")]
     [Label("Velocidad de despegue (m/s)")]
     public float LaunchSpeed = 12f;
 
@@ -54,6 +76,7 @@ public class GA_Flight : GA_SelfBuff
         base.Activate();
 
         NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
-        if (netAsc != null) netAsc.ServerStartFlight(LaunchSpeed, SpeedMultiplier, ForwardBoost, VerticalSpeed, IdleSinkSpeed);
+        if (netAsc != null) netAsc.ServerStartFlight(LaunchSpeed, SpeedMultiplier, ForwardBoost, VerticalSpeed, IdleSinkSpeed,
+                                                     LaunchDirection == ELaunchDirection.TowardAim, MinLaunchUpAngle);
     }
 }

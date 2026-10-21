@@ -1845,20 +1845,23 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // no vuela (GA_Flight.MovesThroughOwner).
     // =========================================================
 
+    // towardAim: el despegue sale hacia la mira del dueño (la resuelve él, que tiene la cámara).
     [Server]
     public void ServerStartFlight(float launchSpeed, float speedMultiplier, float forwardBoost, float verticalSpeed,
-                                  float idleSink)
+                                  float idleSink, bool towardAim = false, float minUpAngle = 0f)
     {
         if (!HasOwnerConnection()) return;
-        TargetStartFlight(Owner, launchSpeed, speedMultiplier, forwardBoost, verticalSpeed, idleSink);
+        TargetStartFlight(Owner, launchSpeed, speedMultiplier, forwardBoost, verticalSpeed, idleSink, towardAim, minUpAngle);
     }
 
     [TargetRpc]
     private void TargetStartFlight(NetworkConnection conn, float launchSpeed, float speedMultiplier,
-                                   float forwardBoost, float verticalSpeed, float idleSink)
+                                   float forwardBoost, float verticalSpeed, float idleSink,
+                                   bool towardAim, float minUpAngle)
     {
         PlayerController pc = GetComponent<PlayerController>();
-        if (pc != null) pc.StartFlight(launchSpeed, speedMultiplier, forwardBoost, verticalSpeed, idleSink);
+        if (pc != null) pc.StartFlight(launchSpeed, speedMultiplier, forwardBoost, verticalSpeed, idleSink,
+                                       towardAim, minUpAngle);
     }
 
     // =========================================================
