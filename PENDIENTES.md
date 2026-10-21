@@ -9,10 +9,9 @@ del log son todos de packs importados).
 
 ## ★ Al retomar: lo abierto, en orden (21 de octubre)
 
-1. **Etapa 4 del Mago:** los bots (que usen la Q: recarga, tumba, levantamiento, muro y tormenta), y
-   pasar el Mago al documento de diseño de clases y a la guía. Las etapas 1, 2 y 3 están hechas y
-   probadas ✅ (21 de octubre: el kit entero; ver "★ El Mago"). Quedó por confirmar que la Tumba
-   cura y que la Flecha helada vuela más rápido.
+1. **Probar los bots del Mago (etapa 4: código y documentos HECHOS, 21 de octubre):** ver "★ El
+   Mago" ▸ Etapa 4. Las etapas 1, 2 y 3 están hechas y probadas ✅ (el kit entero). Quedó por
+   confirmar que la Tumba cura y que la Flecha helada vuela más rápido.
 2. **Probar lo de antes:** el parry del Guardián en un cliente; los bots con el Explorador, el
    Monje y el Guerrero. (`GA_SpawnSummon` con variantes de las plantillas ya quedó probado: el Muro
    y la Tormenta del Mago.)
@@ -65,11 +64,11 @@ rm -rf "Assets/FishNet" "Assets/FishNet.meta" "Assets/TextMesh Pro/Examples & Ex
 
 ---
 
-# ★ El Mago: kit base — ETAPAS 1, 2 Y 3 HECHAS Y PROBADAS ✅ (21 de octubre); sigue la etapa 4
+# ★ El Mago: kit base — ETAPAS 1, 2 Y 3 HECHAS Y PROBADAS ✅ (21 de octubre); la 4 (bots y documentos) hecha, falta probar los bots
 
 Decidido con Gustavo el 20 de octubre. Cambia cosas del documento de diseño (la Tumba helada
 congela al MAGO, no a los demás; la Q no gasta maná; el Terremoto avanza por el piso; la
-Descarga rebota): pasarlo al documento de diseño de clases al armarlo. **Los visuales son
+Descarga rebota): ya está en el documento de diseño de clases (21 de octubre). **Los visuales son
 provisionales** hasta los del artista. Sin arma por ahora (el libro se borró en septiembre):
 manos vacías, con los clips de magia de Kevin Iglesias (los del Haz guía).
 
@@ -301,7 +300,36 @@ azul) los crea una herramienta de una vez, como prefabs.
         8 m (no a través de paredes), cada uno rebota según sus puntos; cada Descarga lo dispara otra
         vez. Si una invocación no aparece en el cliente, revisar que FishNet la haya sumado a
         `DefaultPrefabObjects`.
-- [ ] **Etapa 4:** los bots, y pasarlo al documento de diseño de clases y a la guía.
+- [ ] **Etapa 4 — bots y documentos: HECHA (21 de octubre), falta probar los bots.**
+      Bots (`BotController`):
+      · Rol nuevo **A distancia** (`EBotRole.Ranged`, al final del enum): un Daño cuyo básico pega de
+        lejos —el Mago (el default de su clic izquierdo son los misiles) y TAMBIÉN EL EXPLORADOR (su arco)—
+        se queda a 11 m rodeando, se aleja si se le acercan, se acerca si no lo ve, tira el básico hasta
+        25 m solo si lo ve, y herido se va a curar como el Pícaro. El rol de una clase sin subclases sale
+        de su rol de los menús (antes el Mago caía en Bárbaro y peleaba cuerpo a cuerpo).
+      · **El libro** (`GA_RadialChoice`): en apuros elige el hielo si la Q está lista (para la Tumba),
+        con poco maná vuelve a los misiles, y si no cambia a otro hechizo al azar cada ~8 s (usa todo
+        el libro y todas las Q).
+      · **La Q** se juzga por la variante que saldría (solo los switches con "Las variantes cobran y
+        canalizan lo suyo"; las posturas y el Ki siguen como antes): Recarga con poco maná y nadie
+        encima; Tumba en apuros (y no la vuelve a apretar adentro); Levantamiento, Muro y Tormenta
+        sobre el que pelea si está a tiro y a la vista (el muro sale atravesado a la línea bot-enemigo).
+      · Mientras canaliza algo propio (la Bola de fuego, la recarga) no pide otra cosa: la cortaría.
+      · **Aturdido o enraizado ya no camina** (antes el agente seguía andando con un aturdido encima).
+      · El Vuelo no lo usan (se mueve por el dueño).
+      Documentos: el Mago entero en `Mercenaries_Diseno_de_Clases` (kit base, estado, bots, vuelo); en
+      la guía, el catálogo al día (`GA_RadialChoice`, `GA_GroundFissure`, y lo nuevo de proyectiles, hitscan,
+      switches, `GA_SelfBuff`, `GA_SpawnSummon` y `GA_Flight`), "3.2 Un kit entero con genéricos: el Mago",
+      los puntos del objetivo, canalizar en un switch, el muro y el marcador del piso en la cámara; en
+      la arquitectura del GAS y la de red, lo técnico (canalizar por un switch, buffs que no son control,
+      la caja de la zona y el pararrayos, los tags del Mago, `IWallTargetAbility`, `placementYaw`,
+      `ServerLaunch`, la picada y los rayos en red).
+  - [ ] Probar: un bot Mago se queda a distancia y tira misiles; cambia de hechizo en el libro cada
+        tanto (y usa la Bola de fuego, la Flecha, el Terremoto y la Descarga); usa la Q de cada hechizo
+        (muro y tormenta sobre el enemigo, levantamiento, recarga con poco maná); con poca vida y alguien
+        cerca elige el hielo y se encierra en la Tumba (y espera adentro); sin maná vuelve a los misiles.
+        El Explorador bot ahora también pelea a distancia con el arco: revisar que se vea bien. Un bot
+        aturdido (o en la Tumba) se queda quieto.
 
 ---
 

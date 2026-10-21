@@ -280,6 +280,10 @@ public class GA_TagSwitch : GameplayAbility, IGroundTargetAbility, IWallTargetAb
         return DefaultAbility;
     }
 
+    // La habilidad que saldría AHORA (la variante, o la de por defecto). Corre en el dueño y en el
+    // servidor. La usa el cerebro de los bots para juzgar la Q del Mago por lo que es en este momento.
+    public GameplayAbility CurrentVariant => ResolveTemplate(out _, out _);
+
     // Consume el tag de un solo uso. Primero se retira el EFECTO que lo otorga (que
     // es como llegan estos estados: un GE con duración de un GA_SelfBuff); si aun así
     // el tag sigue puesto, se lo quita a mano — hay mecánicas que lo otorgan sueltas,

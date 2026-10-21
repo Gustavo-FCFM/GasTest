@@ -269,7 +269,10 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
 
 - **La UI del jugador vive en el prefab `Player Camera`** (desde el 14 de octubre de 2026,
   pedido de Gustavo): las barras de canalizar y de carga, los avisos de combate, la viñeta,
-  la rueda, los compañeros, la curva de los lanzamientos y el material de la silueta están
+  la rueda, los compañeros, la curva de los lanzamientos, el material de la silueta y el
+  marcador del piso de las habilidades apuntadas (`GroundTargetIndicator`: zona, franja y la
+  casilla del muro como molde; desde el 21 de octubre de 2026, al jugar se suelta de la cámara
+  para no temblar al girarla) están
   ARMADOS ahí (con un MOLDE apagado si algo se repite), y cada script los tiene por
   referencia: solo lee el juego y los anima. **Nada de crear canvas ni objetos de UI por
   código "encima".** Lo que se ve quieto se cambia en las piezas mismas; lo que cambia en

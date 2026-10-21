@@ -11,6 +11,7 @@ public enum EBotRole
     Bruiser,   // Bárbaro: se le tira encima y no lo suelta
     Assassin,  // Pícaro: espera a que esté débil y recién ahí entra
     Support,   // Paladín: se queda con los suyos y los sostiene
+    Ranged,    // Mago (y todo el que pega de lejos con el básico): se queda a distancia de tiro
 }
 
 // ============================================================
@@ -79,6 +80,32 @@ public class BotController : MonoBehaviour
     [Tooltip("A qué distancia sigue el Paladín a su compañero cuando no hay a quién pegarle.")]
     [Label("Soporte: distancia de seguimiento (m)")]
     public float SupportFollowDistance = 6f;
+
+    [Tooltip("El que pega de lejos (el Mago): a qué distancia se queda del que está peleando, " +
+             "rodeándolo. Más cerca que esto se aleja.")]
+    [Label("A distancia: se queda a (m)")]
+    public float RangedDistance = 11f;
+
+    [Tooltip("El que pega de lejos: hasta dónde tira el ataque básico (y solo si lo ve, sin pared " +
+             "en medio).")]
+    [Label("A distancia: tira el básico hasta (m)")]
+    public float RangedAttackRange = 25f;
+
+    [Tooltip("Una rueda que deja un estado (el libro de hechizos del Mago): cada cuánto, más o " +
+             "menos, cambia a otra opción de las que le alcanzan. Así usa todo el libro (y la Q, que " +
+             "cambia con él).")]
+    [Label("Rueda de estados: cambia cada (s)")]
+    public float ChoiceSeconds = 8f;
+
+    [Tooltip("Con el maná por debajo de esta fracción vuelve a lo normal de su rueda (los misiles, " +
+             "que no gastan) y puede recargar.")]
+    [Label("Poco maná bajo (0 a 1)")]
+    [Range(0.05f, 0.9f)] public float LowManaFraction = 0.3f;
+
+    [Tooltip("Con la vida por debajo de esta fracción y alguien encima, usa lo que lo salva (la " +
+             "Tumba helada: si hace falta, primero elige el hielo en el libro).")]
+    [Label("En apuros con vida bajo (0 a 1)")]
+    [Range(0.05f, 0.9f)] public float EmergencyHealth = 0.35f;
 
     [Tooltip("Cuánto sostiene una habilidad de MANTENER (el escudo del Paladín) antes de " +
              "soltarla. Un bot no suelta botones: sin esto se quedaría con el escudo " +
@@ -206,6 +233,10 @@ public class BotController : MonoBehaviour
     private bool      _dashing;      // corriendo un dash: el agente no manda mientras dure
     private Coroutine _dashRoutine;
     private Coroutine _leapRoutine;
+
+    private float _castingUntil;     // canalizando algo propio (la Bola de fuego, la recarga): no se corta solo
+    private float _nextChoiceAt;     // cuándo puede cambiar de opción en su rueda de estados
+    private int   _pendingChoice = -1;   // la opción que eligió ShouldUse para la rueda
 
 
     // Se reusa entre búsquedas para no generar basura: la percepción corre 4 veces por
@@ -614,7 +645,9 @@ public class BotController : MonoBehaviour
 
         if (_agent != null && _agent.enabled && _agent.isOnNavMesh)
         {
-            _agent.isStopped = false;
+            // Aturdido o enraizado (o adentro de la Tumba helada) no camina, igual que un jugador:
+            // hasta el 21 de octubre el agente seguía andando con un aturdido encima.
+            _agent.isStopped = _asc.HasTag(EGameplayTag.State_Stunned) || _asc.HasTag(EGameplayTag.State_Rooted);
             _agent.speed     = ResolveMoveSpeed();   // cambia con buffs y con la carga
         }
 
@@ -701,11 +734,13 @@ public class BotController : MonoBehaviour
         _target     = FindBestTarget();
         TrackCombatContext();
 
-        // 1 · El Pícaro herido se va a curar y no se distrae con nada. Salvo que lleve el
-        //     Objetivo: con la bolsa no puede entrar a su sala, y la entrega queda en el
-        //     mismo camino, así que primero entrega.
+        // 1 · El Pícaro herido se va a curar y no se distrae con nada (el Mago también: de lejos
+        //     y frágil, herido no aguanta un cuerpo a cuerpo). Salvo que lleve el Objetivo: con
+        //     la bolsa no puede entrar a su sala, y la entrega queda en el mismo camino, así que
+        //     primero entrega.
         bool carryingObjective = _asc != null && _asc.HasTag(EGameplayTag.Status_Carrying_Objective);
-        if (_retreating && ResolveRole() == EBotRole.Assassin && !carryingObjective)
+        EBotRole thinkRole = ResolveRole();
+        if (_retreating && (thinkRole == EBotRole.Assassin || thinkRole == EBotRole.Ranged) && !carryingObjective)
         {
             _destination = ResolveHealSpot(gm);
             _target      = null;
@@ -875,6 +910,18 @@ public class BotController : MonoBehaviour
                 return targetPos + toAlly.normalized * (MeleeRange * 0.85f);
             }
 
+            case EBotRole.Ranged:
+            {
+                // El Mago pelea DE LEJOS: a distancia de tiro, rodeando para no ser un blanco
+                // quieto, y alejándose si se le vienen encima (el anillo es el mismo: si está más
+                // cerca, el punto queda más afuera). Sin verlo (una pared en medio) se acerca
+                // hasta tenerlo a tiro. Persiguiendo al portador de la carga, se acerca a la mitad
+                // de la distancia: le tira mientras lo alcanza.
+                if (_chasing) return PositionNear(targetPos, RangedDistance * 0.6f);
+                if (!CanSee(target)) return PositionNear(targetPos, RangedDistance * 0.5f);
+                return OrbitPoint(targetPos, RangedDistance);
+            }
+
             case EBotRole.Assassin:
             {
                 // El Pícaro pega POR DETRÁS: su daño a la espalda es mayor (ver
@@ -905,6 +952,15 @@ public class BotController : MonoBehaviour
             }
         }
     }
+
+    // ¿Lo ve? Sin pared en medio, de pecho a pecho. Lo que tapa: todo menos personajes,
+    // paredes invisibles y UI (lo mismo que frena los rayos del Mago).
+    private static readonly int SightMask = ~((1 << 7) | (1 << 2) | (1 << 5));
+
+    private bool CanSee(AbilitySystemComponent target)
+        => target != null && !Physics.Linecast(transform.position + Vector3.up * 1.4f,
+                                               target.transform.position + Vector3.up * 1.2f,
+                                               SightMask, QueryTriggerInteraction.Ignore);
 
     // ¿Puede pegar ya? Se mira el cooldown REAL de la habilidad, no mi propio
     // temporizador: así el "entrar y salir" coincide con lo que el jugador ve pasar.
@@ -1160,6 +1216,10 @@ public class BotController : MonoBehaviour
     {
         if (_netASC == null) return;
 
+        // Canalizando algo propio (la Bola de fuego, la Recarga de maná del Mago): pedir otra
+        // habilidad la cortaría. Se espera a que termine; moverse sí puede.
+        if (Time.time < _castingUntil) return;
+
         // LLEVANDO LA CARGA no hay a quién pegarle, pero SÍ hay algo que hacer: gastar la
         // habilidad de movimiento para llegar antes al punto de entrega. Es lo que haría
         // cualquiera con la carga en la mano.
@@ -1194,7 +1254,10 @@ public class BotController : MonoBehaviour
                 _nextAbilityAt = Time.time + (approaching ? ApproachAbilityInterval : AbilityInterval);
         }
 
-        if (Time.time >= _nextPrimaryAt && dist <= MeleeRange * 1.3f)
+        // El básico: cuerpo a cuerpo, en contacto; el que pega de lejos (el Mago), a distancia de
+        // tiro y solo si lo ve (tirar contra una pared es regalar el ritmo).
+        if (Time.time >= _nextPrimaryAt &&
+            (role == EBotRole.Ranged ? dist <= RangedAttackRange && CanSee(_target) : dist <= MeleeRange * 1.3f))
         {
             if (Activate(EAbilityInput.PrimaryAttack, aim, moveDir))
                 _nextPrimaryAt = Time.time + PrimaryInterval;
@@ -1237,7 +1300,10 @@ public class BotController : MonoBehaviour
 
         if (a is GA_ProjectileShoot || a is GA_HitscanShot) return EAbilityKind.Ranged;
 
-        if (a is GA_InstantAoE || a is GA_ContinuousAoE || a is GA_ConeAttack || a is GA_LineAttack)
+        // Lo que se pone en el piso con una zona (el Muro de fuego y la Tormenta del Mago) se
+        // juzga como un área: donde están los enemigos.
+        if (a is GA_InstantAoE || a is GA_ContinuousAoE || a is GA_ConeAttack || a is GA_LineAttack ||
+            a is GA_SpawnSummon)
             return EAbilityKind.Aoe;
 
         return EAbilityKind.Melee;
@@ -1280,6 +1346,28 @@ public class BotController : MonoBehaviour
         // "un buff más" las desperdicia.
         switch (ability)
         {
+            // Un SWITCH cuyas variantes son habilidades enteras (cada una cobra y canaliza lo
+            // suyo: la Q del Mago, que es otra según el hechizo elegido) se juzga por la que
+            // saldría AHORA. Los demás switches (las posturas, el Ki) siguen siendo un buff.
+            case GA_TagSwitch sw when sw.VariantsPayOwnCost:
+            {
+                GameplayAbility variant = sw.CurrentVariant;
+                return variant != null && variant != ability && ShouldUse(variant, slot, role, dist);
+            }
+
+            // Una rueda que DEJA UN ESTADO (el libro de hechizos del Mago): se cambia cuando
+            // conviene otra opción (ver DesiredChoice). Activate usa la que eligió.
+            case GA_RadialChoice choice:
+            {
+                _pendingChoice = DesiredChoice(choice, dist);
+                return _pendingChoice >= 0 && _pendingChoice != choice.CurrentIndex;
+            }
+
+            // Un buff que se termina apretándolo otra vez (la Tumba helada): ya puesto, apretarlo
+            // lo sacaría antes. Se deja correr.
+            case GA_SelfBuff selfBuff when selfBuff.EndTag != EGameplayTag.None && _asc.HasTag(selfBuff.EndTag):
+                return false;
+
             // La auto-revivida del Inmortal la dispara la MUERTE (ver
             // PlayerController.HandlePlayerDeath). Gastarla a mano lo deja muriendo de
             // verdad la próxima vez.
@@ -1349,7 +1437,7 @@ public class BotController : MonoBehaviour
         switch (Classify(ability))
         {
             case EAbilityKind.Buff:
-                return ShouldUseBuff(ability, engaged);
+                return ShouldUseBuff(ability, engaged, dist);
 
             case EAbilityKind.Ranged:
                 // Antes del contacto, o cuando el otro se está yendo: es justo cuando un
@@ -1358,6 +1446,11 @@ public class BotController : MonoBehaviour
                 return !engaged || _targetFleeing || HealthFraction(_asc) < 0.4f;
 
             case EAbilityKind.Aoe:
+                // El que pega de lejos (el Mago) apunta sus áreas al piso donde está el que
+                // pelea, aunque esté solo: el Levantamiento, el Muro, la Tormenta son su daño.
+                if (role == EBotRole.Ranged && ability is IGroundTargetAbility ground && ground.UsesGroundTarget)
+                    return _target != null && dist <= ground.MaxTargetRange && CanSee(_target);
+
                 // Vale la pena con dos o más juntos; con uno solo, el básico alcanza.
                 return EnemiesNear(_target.transform.position, AoeRadius) >= 2;
 
@@ -1376,9 +1469,12 @@ public class BotController : MonoBehaviour
     //    la regla general (trabado en combate) el Asesino no lo usaba nunca, que es
     //    justamente lo contrario de para qué existe.
     //  · Sube la vida         → es una curación de emergencia: solo con poca vida.
+    //  · Da Status_Immunity   → es un salvavidas (la Tumba helada): solo en apuros, con
+    //    alguien encima.
+    //  · Devuelve maná        → una recarga (la del Mago): con poco maná y nadie encima.
     //  · Cualquier otro       → buff de pelea: trabado y después de un momento, para no
     //    gastarlo caminando apenas sale de cooldown.
-    private bool ShouldUseBuff(GameplayAbility ability, bool engaged)
+    private bool ShouldUseBuff(GameplayAbility ability, bool engaged, float dist)
     {
         // Lo que se aplica a sí mismo al lanzarla (las entradas "al activarse → el lanzador").
         _selfBuffEffects.Clear();
@@ -1386,6 +1482,13 @@ public class BotController : MonoBehaviour
 
         if (AnyGrants(_selfBuffEffects, EGameplayTag.Status_Invisible))
             return !engaged && _target != null;
+
+        if (AnyGrants(_selfBuffEffects, EGameplayTag.Status_Immunity))
+            return InTrouble(dist);
+
+        foreach (GameplayEffect effect in _selfBuffEffects)
+            if (RestoresMana(effect))
+                return ManaFraction() <= LowManaFraction && (_target == null || dist > MeleeRange * 3f);
 
         foreach (GameplayEffect effect in _selfBuffEffects)
             if (HealsHealth(effect))
@@ -1398,6 +1501,91 @@ public class BotController : MonoBehaviour
             return true;
 
         return engaged && Time.time - _engagedSince >= BuffAfterSeconds;
+    }
+
+    // ¿Estoy en apuros? Con poca vida y el que peleo encima (o cerca: el Mago no espera a que
+    // lo toquen).
+    private bool InTrouble(float dist)
+        => _target != null && HealthFraction(_asc) <= EmergencyHealth && dist <= RangedDistance;
+
+    // Cuánto maná le queda (1 si la clase no usa maná).
+    private float ManaFraction()
+    {
+        float max = _asc.GetAttributeValue(EAttributeType.MaxMana);
+        return max > 0f ? _asc.GetAttributeValue(EAttributeType.Mana) / max : 1f;
+    }
+
+    private static bool RestoresMana(GameplayEffect effect)
+    {
+        if (effect == null || effect.Modifiers == null) return false;
+
+        foreach (Modifier m in effect.Modifiers)
+            if (m != null && m.Attribute == EAttributeType.Mana &&
+                (m.Magnitude > 0f || (m.UseAttributeScaling && m.AttributeCoefficient > 0f)))
+                return true;
+
+        return false;
+    }
+
+    // =========================================================
+    // RUEDA DE ESTADOS (el libro de hechizos del Mago)
+    //
+    // Un jugador elige el hechizo según lo que pasa; el bot lo decide así, de más urgente a
+    // menos:
+    //   1. En apuros: la opción que vuelve SALVAVIDAS a otra de sus habilidades (en el Mago, el
+    //      hielo: la Q pasa a ser la Tumba helada), si esa habilidad está lista.
+    //   2. Con poco maná: la opción normal (los misiles, que no gastan; y la Q recarga).
+    //   3. Cada tanto (ChoiceSeconds), otra de las que le alcanzan, al azar: así usa todo el
+    //      libro y todas las Q.
+    // No sabe nada del Mago: mira los estados que da cada opción y las variantes de sus switches.
+    // =========================================================
+
+    private int DesiredChoice(GA_RadialChoice choice, float dist)
+    {
+        if (choice.Options == null || choice.Options.Count == 0) return -1;
+        int current = choice.CurrentIndex;
+
+        if (InTrouble(dist))
+        {
+            int rescue = RescueChoice(choice);
+            if (rescue >= 0) return rescue;
+        }
+
+        int normal = choice.Options.FindIndex(o => o.Effect == null);
+        if (normal >= 0 && ManaFraction() <= LowManaFraction) return normal;
+
+        if (Time.time < _nextChoiceAt) return current;
+        _nextChoiceAt = Time.time + ChoiceSeconds * Random.Range(0.7f, 1.3f);
+
+        var candidates = new List<int>();
+        for (int i = 0; i < choice.Options.Count; i++)
+            if (i != current && choice.IsRadialOptionAvailable(i)) candidates.Add(i);
+        return candidates.Count > 0 ? candidates[Random.Range(0, candidates.Count)] : current;
+    }
+
+    // La opción cuyo estado hace que otra habilidad del kit (un switch) salga como salvavidas:
+    // un buff propio que da Status_Immunity, listo para usarse. -1 si no hay.
+    private int RescueChoice(GA_RadialChoice choice)
+    {
+        foreach (EAbilityInput slot in CombatSlots)
+        {
+            if (!(FindAbility(slot) is GA_TagSwitch sw) || sw.Variants == null) continue;
+
+            foreach (GA_TagSwitch.TagVariant variant in sw.Variants)
+            {
+                if (!(variant.Ability is GA_SelfBuff buff)) continue;
+
+                _selfBuffEffects.Clear();
+                buff.GetEffects(EEffectWhen.OnActivate, EEffectTarget.Self, _selfBuffEffects);
+                if (!AnyGrants(_selfBuffEffects, EGameplayTag.Status_Immunity)) continue;
+                if (!sw.CanActivate()) continue;   // la Q en cooldown: elegir el hielo no salva a nadie
+
+                for (int i = 0; i < choice.Options.Count; i++)
+                    if (GrantsTag(choice.Options[i].Effect, variant.RequiredTag) && choice.IsRadialOptionAvailable(i))
+                        return i;
+            }
+        }
+        return -1;
     }
 
     // ¿Hay alguien de los míos en problemas? Es lo que hace que el Paladín deje de pegar y
@@ -1572,6 +1760,19 @@ public class BotController : MonoBehaviour
         // Lo único que un bot todavía no puede ejecutar. Ver GameplayAbility.MovesThroughOwner.
         if (ability.MovesThroughOwner) return false;
 
+        // Una rueda que deja un estado (el libro del Mago): la opción que eligió ShouldUse
+        // (DesiredChoice), no una al azar.
+        if (ability is GA_RadialChoice choice)
+        {
+            int pick = _pendingChoice;
+            _pendingChoice = -1;
+            if (pick < 0 || pick == choice.CurrentIndex || !choice.IsRadialOptionAvailable(pick)) return false;
+
+            choice.ActivateWithSelection(pick, transform.position);
+            _netASC.ServerBroadcastAbilityAnimation(ability);
+            return true;
+        }
+
         // Las de RUEDA (los tótems del Chamán) no se activan con Activate(): esperan que
         // alguien elija una opción del menú circular. Un bot no abre menús, así que elige
         // una al azar — que además hace que dos partidas no se vean iguales.
@@ -1601,7 +1802,14 @@ public class BotController : MonoBehaviour
         if (ability is IGroundTargetAbility ground && ground.UsesGroundTarget)
             aim = GroundAimPoint(aim, ground.MaxTargetRange);
 
+        // Lo que va a canalizar se mira ANTES de activar (después, un switch ya resolvió otra cosa).
+        float castSeconds = ability.UsesCast ? ability.CastDuration : 0f;
+
         _netASC.ServerActivateAbility(slot, aim, moveDir);
+
+        // Si canaliza (la Bola de fuego, la Recarga de maná), no pide otra cosa hasta que
+        // termine: la cortaría (ver Fight).
+        if (castSeconds > 0f) _castingUntil = Time.time + castSeconds + 0.1f;
 
         // Una habilidad de MANTENER queda abierta hasta que alguien suelta el botón, y un
         // bot no tiene botones. Se la anota para soltarla sola (ver Update).
@@ -1665,7 +1873,9 @@ public class BotController : MonoBehaviour
         switch (ResolveClassRole())
         {
             case EClassRole.Tank:    return EBotRole.Bruiser;
-            case EClassRole.Damage:  return EBotRole.Assassin;
+            // Un daño cuyo básico pega de lejos (el Mago, el arco del Explorador) pelea a
+            // distancia; si no, como el Pícaro.
+            case EClassRole.Damage:  return PrimaryIsRanged() ? EBotRole.Ranged : EBotRole.Assassin;
             case EClassRole.Support: return EBotRole.Support;
         }
 
@@ -1691,7 +1901,17 @@ public class BotController : MonoBehaviour
             foreach (CharacterClassDefinition sub in cls.AvailableSubclasses)
                 if (sub != null && sub.Role != EClassRole.None) return sub.Role;
 
-        return EClassRole.None;
+        // Una clase sin subclases todavía (el Mago): el rol con el que se lista en los menús.
+        return cls.MenuRole;
+    }
+
+    // ¿El ataque básico pega de lejos? El de un switch se juzga por su habilidad por defecto
+    // (los misiles del Mago); un cargado, por lo que suelta (la flecha del Explorador).
+    private bool PrimaryIsRanged()
+    {
+        GameplayAbility primary = _pc != null ? _pc.PrimaryAttackAbility : null;
+        if (primary is GA_TagSwitch sw && sw.DefaultAbility != null) primary = sw.DefaultAbility;
+        return primary != null && Classify(primary) == EAbilityKind.Ranged;
     }
 
     private int ResolveBaseClassIndex()
