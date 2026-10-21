@@ -68,5 +68,15 @@ MonoBehaviour:
     ConsumeTag: 0
     Icon: {fileID: 21300000, guid: f4f9181881f0f3b4c9c341d9316e2cd6, type: 3}
     AlsoActiveWithTag: 0
+  - RequiredTag: 85
+    Ability: {fileID: 11400000, guid: b62e0d009beba7245816edea19795afb, type: 2}
+    ConsumeTag: 0
+    Icon: {fileID: 21300000, guid: 7201ce93f2ad9bb499f5ac43bf49bf1c, type: 3}
+    AlsoActiveWithTag: 0
+  - RequiredTag: 88
+    Ability: {fileID: 11400000, guid: 686c4c37969791346878e039be3cf85b, type: 2}
+    ConsumeTag: 0
+    Icon: {fileID: 21300000, guid: c5904e95133d68742b85788536aeb3f5, type: 3}
+    AlsoActiveWithTag: 0
   VariantsPayOwnCost: 1
   FallBackWhenUnaffordable: 0

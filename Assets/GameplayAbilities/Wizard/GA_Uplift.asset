@@ -93,7 +93,7 @@ MonoBehaviour:
   MaxCharges: 1
   Radius: 5
   DeployMode: 1
-  MaxRange: 10
+  MaxRange: 15
   StartDelay: 0
   ExtraHitsPerStack: 0
   RepeatInterval: 0.3

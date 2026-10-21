@@ -43,6 +43,24 @@
                     "initialStateCheck": false
                 },
                 {
+                    "name": "RotatePlacementLeft",
+                    "type": "Button",
+                    "id": "81bc360c-d40e-485e-a74e-f20ea38e906f",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "RotatePlacementRight",
+                    "type": "Button",
+                    "id": "d03ef3db-70c6-4b56-b54f-c5aaba80f4e0",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "PrimaryAttack",
                     "type": "Button",
                     "id": "a1000001-0000-4000-8000-000000000001",
@@ -476,6 +494,50 @@
                     "processors": "",
                     "groups": "Gamepad",
                     "action": "ChangeClass",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "474a2ecf-3c98-454b-a1bb-6dad11c3ba14",
+                    "path": "<Mouse>/scroll/down",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "RotatePlacementLeft",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "4f8c1da0-c42b-45e3-a3be-34fdd2e267e1",
+                    "path": "<Gamepad>/dpad/left",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Gamepad",
+                    "action": "RotatePlacementLeft",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a0f6cbd1-aeff-43dd-bda5-dbc70f47ef29",
+                    "path": "<Mouse>/scroll/up",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "RotatePlacementRight",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "75e4581d-9e14-4aae-abc0-e4bacbcb54aa",
+                    "path": "<Gamepad>/dpad/right",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Gamepad",
+                    "action": "RotatePlacementRight",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

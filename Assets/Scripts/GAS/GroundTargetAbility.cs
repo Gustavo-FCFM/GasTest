@@ -47,3 +47,23 @@ public interface ILineTargetAbility
     // Qué se marca adentro de la franja (los mismos que la habilidad puede golpear).
     UnityEngine.LayerMask LineTargetLayer { get; }
 }
+
+// ============================================================
+// IWallTargetAbility
+//
+// Una habilidad de apuntar (IGroundTargetAbility) cuyo marcador es un MURO: un rectángulo de
+// WallWidth (de lado a lado) × WallDepth, atravesado a la mira y partido en WallSegments
+// casillas (el Muro de fuego del Mago). Con WallRotationStep > 0, mientras se apunta, la rueda
+// del mouse (con control, la cruceta izquierda/derecha) lo gira de a esos grados. El giro viaja
+// al servidor con el pedido (NetworkASC.ServerRequestActivateAbility) y la habilidad lo lee en
+// PlayerController.NetworkPlacementYaw. Solo es la vista previa del dueño.
+// ============================================================
+public interface IWallTargetAbility
+{
+    // Si ESTA configuración se apunta con el muro (la de siempre usa el círculo).
+    bool  UsesWallMarker   { get; }
+    float WallWidth        { get; }
+    float WallDepth        { get; }
+    int   WallSegments     { get; }
+    float WallRotationStep { get; }
+}

@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 // ============================================================
 // UI_GroundTargetIndicator
@@ -14,69 +13,78 @@ using UnityEngine.Rendering;
 //  · FRANJA (ILineTargetAbility, el Corte final del Samurái): una caja rellena con borde
 //    que sale del jugador hacia la mira, recortada en la primera pared, y un contorno en
 //    los enemigos que quedan adentro (los que va a alcanzar).
+//  · MURO (IWallTargetAbility, el Muro de fuego del Mago): una fila de casillas atravesada a
+//    la mira, cada una apoyada en el piso que tiene debajo. La rueda del mouse la gira (eso
+//    lo lleva PlayerController; acá llega el giro ya hecho).
 //
-// SE CREA SOLO (8 de octubre de 2026): no estaba puesto en ninguna escena ni prefab, así
-// que hasta entonces ninguna habilidad de zona mostraba nada. Ahora Get() lo crea la
-// primera vez que hace falta, y todo se dibuja por código (si se le asigna un
-// MarkerPrefab, la zona usa ese en vez del círculo).
+// VIVE EN EL PREFAB DE LA CÁMARA (Player Camera ▸ GroundTargetIndicator; desde el 21 de
+// octubre de 2026 — antes se armaba entero por código): sus piezas están armadas ahí, y el
+// COLOR, el GROSOR y el MATERIAL se cambian en cada una (los rellenos en su MeshRenderer, los
+// bordes en su LineRenderer). La casilla del muro es un MOLDE apagado que se clona una vez por
+// casilla. Al jugar arrancan apagadas.
 //
-// Solo es visual y solo corre en el DUEÑO (nadie más necesita ver a dónde está por
-// apuntar), así que no lleva nada de red.
+// Solo es visual y solo corre en el DUEÑO (la cámara solo existe para él), así que no lleva
+// nada de red. Cuelga de la cámara solo para vivir en su prefab: al arrancar se SUELTA de ella
+// (si no, cada vez que la cámara gira se llevaría el marcador un frame, y a 15 m se nota) y se
+// borra solo cuando la cámara se va. Las piezas se ubican en coordenadas de mundo.
 // ============================================================
 public class UI_GroundTargetIndicator : MonoBehaviour
 {
-    // Instancia única de la escena. Para MOSTRAR se usa Get(), que la crea si no está.
+    // El del jugador local (vive en su cámara). PlayerController lo busca en su cámara.
     public static UI_GroundTargetIndicator Instance;
 
-    public static UI_GroundTargetIndicator Get()
-    {
-        if (Instance == null) new GameObject("GroundTargetIndicator").AddComponent<UI_GroundTargetIndicator>();
-        return Instance;
-    }
+    [Header("Piezas")]
+    [Tooltip("El relleno de la zona: un disco de radio 1 acostado en el piso (se escala al radio).")]
+    [Label("Zona: relleno")]
+    public Transform ZoneFill;
 
-    [Header("Marcador")]
-    [Tooltip("OPCIONAL: un prefab propio para la ZONA (un quad de 1×1 que se escala al diámetro). " +
-             "Vacío = un círculo relleno con borde, dibujado por código.")]
-    [Label("Prefab del marcador")]
-    public GameObject MarkerPrefab;
+    [Tooltip("El borde de la zona: una línea cerrada (sus puntos son los del círculo).")]
+    [Label("Zona: borde")]
+    public LineRenderer ZoneBorder;
 
+    [Tooltip("El relleno de la franja: un rectángulo de 1×1 acostado (el largo va en Z).")]
+    [Label("Franja: relleno")]
+    public Transform LineFill;
+
+    [Tooltip("El borde de la franja: una línea cerrada de 4 puntos.")]
+    [Label("Franja: borde")]
+    public LineRenderer LineBorder;
+
+    [Tooltip("MOLDE apagado de una casilla del muro: un relleno (rectángulo de 1×1 acostado) y su " +
+             "borde (una línea cerrada de 4 puntos) como hijos. Se clona una vez por casilla.")]
+    [Label("Muro: casilla (molde)")]
+    public Transform WallSquareTemplate;
+
+    [Tooltip("El contorno de los enemigos que la franja alcanzaría. Vacío = uno con el shader del " +
+             "contorno (MercOutline) y el ancho de abajo.")]
+    [Label("Material del contorno")]
+    public Material TargetOutlineMaterial;
+
+    [Header("Piso")]
     [Tooltip("Capas del suelo/entorno sobre las que se apoya el marcador.")]
     [Label("Capas del suelo")]
     public LayerMask GroundLayer = ~((1 << 7) | (1 << 2));
 
-    [Tooltip("Color del relleno (zona y franja). Transparente: que se vea el piso.")]
-    [Label("Color del relleno")]
-    public Color FillColor = new Color(1f, 0.8f, 0.25f, 0.22f);
-    [Tooltip("Color del borde (zona y franja).")]
-    [Label("Color del borde")]
-    public Color LineColor = new Color(1f, 0.85f, 0.3f, 0.95f);
-    [Tooltip("Grosor del borde, en metros.")]
-    [Label("Grosor del borde (m)")]
-    public float LineThickness = 0.1f;
-
-    [Header("Franja (Corte final)")]
-    [Tooltip("Color del contorno de los enemigos que la franja alcanzaría.")]
-    [Label("Color del contorno")]
-    public Color TargetOutlineColor = new Color(1f, 0.35f, 0.25f, 1f);
-    [Tooltip("Grosor del contorno, en metros.")]
-    [Label("Grosor del contorno (m)")]
-    public float TargetOutlineWidth = 0.03f;
     [Tooltip("Lo que CORTA la franja (las paredes, también las invisibles). Los personajes no la cortan.")]
     [Label("Capas que cortan la franja")]
     public LayerMask LineBlockLayers = ~(1 << 7);
 
-    private const int CircleSegments = 48;
+    [Tooltip("Hueco entre una casilla del muro y la siguiente, para que se vean separadas.")]
+    [Label("Muro: hueco entre casillas (m)")]
+    public float WallGap = 0.12f;
 
-    // Lo dibujado: el relleno (una malla) y el borde (una línea) de la zona y de la franja.
-    // Todo vive SUELTO en la escena, no de hijo de nada: el borde se acuesta según la
-    // rotación de su propio transform (ver CreateBorder).
-    private GameObject   _marker;          // el MarkerPrefab, si hay
-    private Transform    _zoneFill;
-    private LineRenderer _zoneBorder;
-    private Transform    _lineFill;
-    private LineRenderer _lineBorder;
-    private Material     _fillMaterial, _borderMaterial, _outlineMaterial;
-    private readonly List<GameObject> _created = new List<GameObject>();
+    private const float Lift = 0.04f;   // un poco arriba del piso, para que no pelee con él (z-fighting)
+
+    // Las casillas del muro (clones del molde), cada una con su relleno y su borde.
+    private struct WallSquare { public Transform Root, Fill; public LineRenderer Border; }
+    private readonly List<WallSquare> _wallSquares = new List<WallSquare>();
+    private int   _wallSegments = 1;
+    private float _wallWidth = 1f, _wallDepth = 1f;
+    private float _zoneRadius = 1f;
+
+    private Material  _fallbackOutline;
+    private Transform _camera;   // de quien se soltó al arrancar: si se va, el marcador también
+    private bool      _hadCamera;
 
     // Los enemigos marcados por la franja (con los renderers de su contorno).
     private readonly Dictionary<AbilitySystemComponent, List<SkinnedMeshRenderer>> _marked =
@@ -86,22 +94,32 @@ public class UI_GroundTargetIndicator : MonoBehaviour
     private readonly Collider[] _overlap = new Collider[32];
     private readonly RaycastHit[] _castHits = new RaycastHit[16];
 
-    private float _zoneRadius = 1f;
-
     private void Awake()
     {
-        if (Instance == null) Instance = this;
+        Instance = this;
+        PrepareBorder(ZoneBorder);
+        PrepareBorder(LineBorder);
+        if (WallSquareTemplate != null) WallSquareTemplate.gameObject.SetActive(false);
+        Hide();
+
+        _camera    = transform.parent;
+        _hadCamera = _camera != null;
+        transform.SetParent(null, false);
+        transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+        transform.localScale = Vector3.one;
+    }
+
+    // La cámara se fue (desconectarse, cambiar de escena): el marcador también.
+    private void LateUpdate()
+    {
+        if (_hadCamera && _camera == null) Destroy(gameObject);
     }
 
     private void OnDestroy()
     {
         if (Instance == this) Instance = null;
         ClearMarked();
-        foreach (GameObject go in _created) if (go != null) Destroy(go);
-        if (_marker != null)          Destroy(_marker);
-        if (_fillMaterial != null)    Destroy(_fillMaterial);
-        if (_borderMaterial != null)  Destroy(_borderMaterial);
-        if (_outlineMaterial != null) Destroy(_outlineMaterial);
+        if (_fallbackOutline != null) Destroy(_fallbackOutline);
     }
 
     // =========================================================
@@ -112,23 +130,8 @@ public class UI_GroundTargetIndicator : MonoBehaviour
     public void Show(float radius)
     {
         _zoneRadius = Mathf.Max(0.1f, radius);
-
-        if (MarkerPrefab != null)
-        {
-            if (_marker == null) _marker = Instantiate(MarkerPrefab);
-            _marker.transform.localScale = new Vector3(_zoneRadius * 2f, 1f, _zoneRadius * 2f);
-            _marker.SetActive(true);
-            return;
-        }
-
-        if (_zoneFill == null)
-        {
-            _zoneFill   = CreateFill("GroundTarget_ZoneFill", DiscMesh());
-            _zoneBorder = CreateBorder("GroundTarget_ZoneBorder", CircleSegments);
-        }
-        _zoneFill.localScale = new Vector3(_zoneRadius, 1f, _zoneRadius);
-        _zoneFill.gameObject.SetActive(true);
-        _zoneBorder.gameObject.SetActive(true);
+        SetActive(ZoneFill, true);
+        SetActive(ZoneBorder, true);
     }
 
     // Mueve la zona al punto apuntado, apoyada en el suelo. El punto de mira puede quedar
@@ -137,24 +140,29 @@ public class UI_GroundTargetIndicator : MonoBehaviour
     {
         Vector3 center = OnGround(aimPoint, 10f, 30f);
 
-        if (_marker != null && _marker.activeSelf) _marker.transform.position = center;
-        if (_zoneFill == null || !_zoneFill.gameObject.activeSelf) return;
-
-        _zoneFill.position = center;
-        for (int i = 0; i < CircleSegments; i++)
+        if (ZoneFill != null && ZoneFill.gameObject.activeSelf)
         {
-            float a = i * Mathf.PI * 2f / CircleSegments;
-            _zoneBorder.SetPosition(i, center + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * _zoneRadius);
+            ZoneFill.SetPositionAndRotation(center, Quaternion.identity);
+            ZoneFill.localScale = new Vector3(_zoneRadius, 1f, _zoneRadius);
+        }
+
+        if (ZoneBorder == null || !ZoneBorder.gameObject.activeSelf) return;
+        FlatBorder(ZoneBorder);
+        int points = ZoneBorder.positionCount;
+        for (int i = 0; i < points; i++)
+        {
+            float a = i * Mathf.PI * 2f / points;
+            ZoneBorder.SetPosition(i, center + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * _zoneRadius);
         }
     }
 
     public void Hide()
     {
-        if (_marker != null)     _marker.SetActive(false);
-        if (_zoneFill != null)   _zoneFill.gameObject.SetActive(false);
-        if (_zoneBorder != null) _zoneBorder.gameObject.SetActive(false);
-        if (_lineFill != null)   _lineFill.gameObject.SetActive(false);
-        if (_lineBorder != null) _lineBorder.gameObject.SetActive(false);
+        SetActive(ZoneFill, false);
+        SetActive(ZoneBorder, false);
+        SetActive(LineFill, false);
+        SetActive(LineBorder, false);
+        foreach (WallSquare square in _wallSquares) SetActive(square.Root, false);
         ClearMarked();
     }
 
@@ -164,13 +172,8 @@ public class UI_GroundTargetIndicator : MonoBehaviour
 
     public void ShowLine()
     {
-        if (_lineFill == null)
-        {
-            _lineFill   = CreateFill("GroundTarget_LineFill", RectMesh());
-            _lineBorder = CreateBorder("GroundTarget_LineBorder", 4);
-        }
-        _lineFill.gameObject.SetActive(true);
-        _lineBorder.gameObject.SetActive(true);
+        SetActive(LineFill, true);
+        SetActive(LineBorder, true);
     }
 
     // origin: los pies del jugador. direction: hacia la mira (se aplana). viewer: el ASC del
@@ -178,7 +181,7 @@ public class UI_GroundTargetIndicator : MonoBehaviour
     public void UpdateLine(Vector3 origin, Vector3 direction, float length, float width,
                            LayerMask targets, AbilitySystemComponent viewer)
     {
-        if (_lineFill == null) return;
+        if (LineFill == null || LineBorder == null) return;
 
         Vector3 dir = new Vector3(direction.x, 0f, direction.z);
         if (dir.sqrMagnitude < 0.0001f) return;
@@ -191,17 +194,85 @@ public class UI_GroundTargetIndicator : MonoBehaviour
         Vector3 middle = OnGround(origin + dir * (length * 0.5f), 2f, 6f);
 
         // La caja rellena: la malla mide 1×1 en el plano del piso; se estira al ancho y al largo.
-        _lineFill.SetPositionAndRotation(middle, Quaternion.LookRotation(dir));
-        _lineFill.localScale = new Vector3(width, 1f, length);
+        LineFill.SetPositionAndRotation(middle, Quaternion.LookRotation(dir));
+        LineFill.localScale = new Vector3(width, 1f, length);
 
-        _lineBorder.SetPosition(0, OnGround(origin - side, 2f, 6f));
-        _lineBorder.SetPosition(1, OnGround(end - side, 2f, 6f));
-        _lineBorder.SetPosition(2, OnGround(end + side, 2f, 6f));
-        _lineBorder.SetPosition(3, OnGround(origin + side, 2f, 6f));
+        FlatBorder(LineBorder);
+        LineBorder.positionCount = 4;
+        LineBorder.SetPosition(0, OnGround(origin - side, 2f, 6f));
+        LineBorder.SetPosition(1, OnGround(end - side, 2f, 6f));
+        LineBorder.SetPosition(2, OnGround(end + side, 2f, 6f));
+        LineBorder.SetPosition(3, OnGround(origin + side, 2f, 6f));
 
         MarkInside(origin + dir * (length * 0.5f) + Vector3.up,
                    new Vector3(width * 0.5f, 1.2f, length * 0.5f), Quaternion.LookRotation(dir), targets, viewer);
     }
+
+    // =========================================================
+    // MURO (IWallTargetAbility)
+    // =========================================================
+
+    // Muestra el muro: 'segments' casillas en fila que suman 'width' de lado a lado, de 'depth'
+    // de largo.
+    public void ShowWall(float width, float depth, int segments)
+    {
+        if (WallSquareTemplate == null) return;
+
+        _wallWidth    = Mathf.Max(0.1f, width);
+        _wallDepth    = Mathf.Max(0.1f, depth);
+        _wallSegments = Mathf.Max(1, segments);
+
+        while (_wallSquares.Count < _wallSegments)
+        {
+            Transform root = Instantiate(WallSquareTemplate, WallSquareTemplate.parent);
+            root.name = $"WallSquare_{_wallSquares.Count}";
+            LineRenderer border = root.GetComponentInChildren<LineRenderer>(true);
+            MeshRenderer fill   = root.GetComponentInChildren<MeshRenderer>(true);
+            PrepareBorder(border);
+            _wallSquares.Add(new WallSquare { Root = root, Fill = fill != null ? fill.transform : null, Border = border });
+        }
+
+        for (int i = 0; i < _wallSquares.Count; i++) SetActive(_wallSquares[i].Root, i < _wallSegments);
+    }
+
+    // El centro del muro (donde apunta) y su giro: X de lado a lado, Z hacia adelante. Cada
+    // casilla se apoya en el piso que tiene debajo.
+    public void UpdateWall(Vector3 aimPoint, Quaternion rotation)
+    {
+        Vector3 center  = OnGround(aimPoint, 10f, 30f);
+        Vector3 right   = rotation * Vector3.right;
+        Vector3 forward = rotation * Vector3.forward;
+        float   cell    = _wallWidth / _wallSegments;
+        float   halfW   = Mathf.Max(0.05f, cell - WallGap) * 0.5f;
+        float   halfD   = _wallDepth * 0.5f;
+
+        for (int i = 0; i < _wallSegments && i < _wallSquares.Count; i++)
+        {
+            WallSquare square = _wallSquares[i];
+            float   offset = (i - (_wallSegments - 1) * 0.5f) * cell;
+            Vector3 c      = OnGround(center + right * offset, 2f, 6f);
+
+            if (square.Root != null) square.Root.SetPositionAndRotation(c, rotation);
+            if (square.Fill != null)
+            {
+                square.Fill.SetPositionAndRotation(c, rotation);
+                square.Fill.localScale = new Vector3(halfW * 2f, 1f, halfD * 2f);
+            }
+            if (square.Border != null)
+            {
+                FlatBorder(square.Border);
+                square.Border.positionCount = 4;
+                square.Border.SetPosition(0, c - right * halfW - forward * halfD);
+                square.Border.SetPosition(1, c - right * halfW + forward * halfD);
+                square.Border.SetPosition(2, c + right * halfW + forward * halfD);
+                square.Border.SetPosition(3, c + right * halfW - forward * halfD);
+            }
+        }
+    }
+
+    // =========================================================
+    // AYUDAS
+    // =========================================================
 
     // Hasta dónde llega la franja antes de la primera pared. No cuentan los personajes (ni el
     // propio) ni los triggers: la embestida los atraviesa.
@@ -226,7 +297,7 @@ public class UI_GroundTargetIndicator : MonoBehaviour
         if (Physics.Raycast(p + Vector3.up * above, Vector3.down, out RaycastHit hit, above + depth, GroundLayer,
                             QueryTriggerInteraction.Ignore))
             p.y = hit.point.y;
-        return p + Vector3.up * 0.04f;
+        return p + Vector3.up * Lift;
     }
 
     // Marca con un contorno a los enemigos dentro de la caja y se lo saca a los que salieron.
@@ -263,95 +334,30 @@ public class UI_GroundTargetIndicator : MonoBehaviour
         _marked.Clear();
     }
 
-    // =========================================================
-    // LO DIBUJADO
-    // =========================================================
-
     private Material OutlineMaterial()
     {
-        if (_outlineMaterial != null) return _outlineMaterial;
-        _outlineMaterial = CharacterOutline.CreateMaterial(TargetOutlineWidth);
-        if (_outlineMaterial != null) _outlineMaterial.SetColor("_Color", TargetOutlineColor);
-        return _outlineMaterial;
+        if (TargetOutlineMaterial != null) return TargetOutlineMaterial;
+        if (_fallbackOutline == null) _fallbackOutline = CharacterOutline.CreateMaterial(0.03f);
+        return _fallbackOutline;
     }
 
-    // Sin luces ni sombras, transparente, se ve de los dos lados (el de los sprites).
-    private Material UnlitMaterial(Color color)
+    // Los bordes van en coordenadas de mundo y cerrados.
+    private static void PrepareBorder(LineRenderer border)
     {
-        Shader shader = Shader.Find("Sprites/Default");
-        if (shader == null) shader = Shader.Find("Universal Render Pipeline/Unlit");
-        var material = new Material(shader) { color = color };
-        return material;
+        if (border == null) return;
+        border.useWorldSpace = true;
+        border.loop          = true;
     }
 
-    // El relleno: una malla acostada en el piso.
-    private Transform CreateFill(string name, Mesh mesh)
+    // El borde se acuesta según el giro de su propio transform (alineado en TransformZ, mirando
+    // hacia abajo). Cuelga de la cámara, así que se lo vuelve a acostar en el mundo cada vez.
+    private static void FlatBorder(LineRenderer border)
     {
-        if (_fillMaterial == null) _fillMaterial = UnlitMaterial(FillColor);
-
-        var go = new GameObject(name);
-        go.AddComponent<MeshFilter>().sharedMesh = mesh;
-        MeshRenderer renderer = go.AddComponent<MeshRenderer>();
-        renderer.sharedMaterial    = _fillMaterial;
-        renderer.shadowCastingMode = ShadowCastingMode.Off;
-        renderer.receiveShadows    = false;
-        _created.Add(go);
-        return go.transform;
+        if (border != null) border.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
     }
 
-    // El borde: una línea cerrada de 'points' puntos, acostada en el piso (con TransformZ
-    // mirando hacia abajo, la línea queda plana).
-    private LineRenderer CreateBorder(string name, int points)
+    private static void SetActive(Component piece, bool on)
     {
-        if (_borderMaterial == null) _borderMaterial = UnlitMaterial(Color.white);
-
-        var go = new GameObject(name);
-        go.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
-
-        LineRenderer line = go.AddComponent<LineRenderer>();
-        line.useWorldSpace     = true;
-        line.loop              = true;
-        line.positionCount     = points;
-        line.widthMultiplier   = LineThickness;
-        line.numCornerVertices = 2;
-        line.alignment         = LineAlignment.TransformZ;
-        line.shadowCastingMode = ShadowCastingMode.Off;
-        line.receiveShadows    = false;
-        line.sharedMaterial    = _borderMaterial;
-        line.startColor        = LineColor;
-        line.endColor          = LineColor;
-        _created.Add(go);
-        return line;
-    }
-
-    // Un rectángulo de 1×1 en el plano del piso, centrado (el largo va en Z).
-    private static Mesh RectMesh()
-    {
-        var mesh = new Mesh { name = "GroundTargetRect" };
-        mesh.vertices  = new[] { new Vector3(-0.5f, 0f, -0.5f), new Vector3(-0.5f, 0f, 0.5f),
-                                 new Vector3(0.5f, 0f, 0.5f),   new Vector3(0.5f, 0f, -0.5f) };
-        mesh.triangles = new[] { 0, 1, 2, 0, 2, 3 };
-        mesh.RecalculateBounds();
-        return mesh;
-    }
-
-    // Un disco de radio 1 en el plano del piso (abanico de triángulos).
-    private static Mesh DiscMesh()
-    {
-        var vertices  = new Vector3[CircleSegments + 1];
-        var triangles = new int[CircleSegments * 3];
-        vertices[0] = Vector3.zero;
-        for (int i = 0; i < CircleSegments; i++)
-        {
-            float a = i * Mathf.PI * 2f / CircleSegments;
-            vertices[i + 1] = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
-            triangles[i * 3]     = 0;
-            triangles[i * 3 + 1] = i + 1;
-            triangles[i * 3 + 2] = i == CircleSegments - 1 ? 1 : i + 2;
-        }
-
-        var mesh = new Mesh { name = "GroundTargetDisc", vertices = vertices, triangles = triangles };
-        mesh.RecalculateBounds();
-        return mesh;
+        if (piece != null && piece.gameObject.activeSelf != on) piece.gameObject.SetActive(on);
     }
 }

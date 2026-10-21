@@ -79,7 +79,7 @@ MonoBehaviour:
   CastReleaseAnimation: {fileID: 0}
   MaxCharges: 1
   ProjectilePrefab: {fileID: 406129108226925510, guid: 9b8cc99036f6c474f92b55f1870872d8, type: 3}
-  LaunchForce: 100
+  LaunchForce: 40
   SpawnOffset: {x: 0, y: 1.5, z: 1.5}
   AddSpin: 0
   HideWeaponWhileFlying: 0

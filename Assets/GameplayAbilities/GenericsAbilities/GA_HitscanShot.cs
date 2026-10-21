@@ -157,6 +157,15 @@ public class GA_HitscanShot : GameplayAbility
             impactPoint = wallHit.point;
         }
 
+        // 1b) Algo propio de la habilidad que también lo frena antes (el tornado de la Tormenta
+        // eléctrica frena la Descarga del Mago).
+        float stop = StopDistance(origin, dir, distance);
+        if (stop < distance)
+        {
+            distance    = Mathf.Max(0f, stop);
+            impactPoint = origin + dir * distance;
+        }
+
         // 2) Primer enemigo dentro de ese tramo. SphereCastAll no viene ordenado, así
         // que buscamos el de menor distancia a mano.
         RaycastHit[] hits = Physics.SphereCastAll(origin, Mathf.Max(0.01f, BulletRadius), dir,
@@ -199,6 +208,11 @@ public class GA_HitscanShot : GameplayAbility
     // alcance máximo) y a quién le pegó (null = a nadie). La Descarga eléctrica del Mago dibuja
     // ahí su rayo y rebota.
     protected virtual void OnShotResolved(Vector3 origin, Vector3 impactPoint, AbilitySystemComponent victim) { }
+
+    // Hasta dónde llega el tiro antes de que lo frene algo PROPIO de la habilidad, además de las
+    // paredes (ya recortado a 'maxDistance'). Los enemigos que haya más allá no reciben el tiro.
+    // La Descarga del Mago se frena en el tornado de una Tormenta eléctrica aliada.
+    protected virtual float StopDistance(Vector3 origin, Vector3 dir, float maxDistance) => maxDistance;
 
     // Vista previa del disparo en el Editor.
     public override void DrawGizmos(Transform origin)

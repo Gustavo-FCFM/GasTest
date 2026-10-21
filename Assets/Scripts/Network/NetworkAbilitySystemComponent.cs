@@ -903,10 +903,12 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // Valida y ejecuta la habilidad de un slot, y replica su animación a los
     // observadores. El dueño ya la disparó por predicción (o, en el host, vía
     // Activate()); ObserversPlayAbilityAnimation la reproduce en los demás.
+    // placementYaw: el giro que el dueño le dio con la rueda a lo que pone (el Muro de fuego del
+    // Mago), en grados sobre "atravesado a la mira". 0 en todo lo demás.
     [ServerRpc]
     public void ServerRequestActivateAbility(EAbilityInput inputSlot, Vector3 aimPoint, Vector3 moveDir,
-                                             Vector3 aimOrigin)
-        => ServerActivateAbility(inputSlot, aimPoint, moveDir, aimOrigin);
+                                             Vector3 aimOrigin, float placementYaw)
+        => ServerActivateAbility(inputSlot, aimPoint, moveDir, aimOrigin, placementYaw);
 
     // Valida y ejecuta la habilidad de un slot con autoridad de servidor, y
     // replica su animación a los observadores. Separado del ServerRpc de arriba
@@ -916,7 +918,7 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // remoto (fallaría por RequireOwnership) y dejaba al Inmortal remoto tirado—.
     [Server]
     public void ServerActivateAbility(EAbilityInput inputSlot, Vector3 aimPoint, Vector3 moveDir = default,
-                                      Vector3 aimOrigin = default)
+                                      Vector3 aimOrigin = default, float placementYaw = 0f)
     {
         if (_asc == null) return;
 
@@ -959,6 +961,9 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
             // auto-revivida del Inmortal); ahí se deja el último que haya, que es mejor
             // que un punto en el origen del mundo.
             if (aimOrigin != Vector3.zero) pc.NetworkAimOrigin = aimOrigin;
+
+            // El giro de lo que pone (la rueda, mientras apuntaba el muro).
+            pc.NetworkPlacementYaw = placementYaw;
         }
 
         if (!ability.CanActivate())

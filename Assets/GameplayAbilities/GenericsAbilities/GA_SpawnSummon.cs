@@ -14,11 +14,14 @@ using UnityEngine;
 //     0 = lo que diga el prefab.
 //   · Cobra costo y cooldown al ponerla; sus VFX "en el impacto" salen donde aparece. Puede
 //     canalizar (sección Canalizar) como cualquier habilidad.
+//   · Si la zona del prefab es una CAJA (el Muro de fuego del Mago), el marcador es el muro:
+//     atravesado a la mira, partido en "Casillas", y con "Giro con la rueda" se gira mientras se
+//     apunta (la rueda del mouse; con control, la cruceta). Sale con ese giro.
 //
 // Lo que la invocación HACE (cuánto dura, su zona, su vida) está en su prefab, no acá.
 // ============================================================
 [CreateAssetMenu(fileName = "GA_SpawnSummon", menuName = "GAS/Generics/Spawn Summon")]
-public class GA_SpawnSummon : GameplayAbility, IGroundTargetAbility
+public class GA_SpawnSummon : GameplayAbility, IGroundTargetAbility, IWallTargetAbility
 {
     public enum EWhere
     {
@@ -59,10 +62,30 @@ public class GA_SpawnSummon : GameplayAbility, IGroundTargetAbility
     [Label("Máximo a la vez (0 = el del prefab)")]
     public int MaxAlive = 0;
 
+    [ShowIf(nameof(Where), EWhere.AtAim)]
+    [Tooltip("Solo si la zona del prefab es una CAJA (el marcador es el muro): en cuántas casillas " +
+             "se dibuja (el Muro de fuego: 5).")]
+    [Label("Marcador del muro: casillas")]
+    public int MarkerSegments = 1;
+
+    [ShowIf(nameof(Where), EWhere.AtAim)]
+    [Tooltip("Solo con el marcador del muro: cuántos grados lo gira cada paso de la rueda del mouse " +
+             "(con control, la cruceta izquierda/derecha) mientras se apunta. 0 = no se gira: sale " +
+             "atravesado a la mira.")]
+    [Label("Giro con la rueda (°; 0 = no gira)")]
+    public float RotationStep = 0f;
+
     // IGroundTargetAbility: el marcador, solo si se pone donde apunta.
     public float MaxTargetRange   => MaxRange;
     public float TargetRadius     => MarkerRadius > 0f ? MarkerRadius : PrefabZoneRadius();
     public bool  UsesGroundTarget => Where == EWhere.AtAim;
+
+    // IWallTargetAbility: el muro, si la zona del prefab es una caja.
+    public bool  UsesWallMarker   => Where == EWhere.AtAim && PrefabZone() is Summon_Zone z && z.Shape == Summon_Zone.EShape.Box;
+    public float WallWidth        => PrefabZone() is Summon_Zone z ? z.BoxWidth : 1f;
+    public float WallDepth        => PrefabZone() is Summon_Zone z ? z.BoxDepth : 1f;
+    public int   WallSegments     => Mathf.Max(1, MarkerSegments);
+    public float WallRotationStep => RotationStep;
 
     // No busca personajes ni golpea: invoca. Sus VFX "en el impacto" salen donde aparece.
     public override bool UsesTargetLayer => false;
@@ -70,9 +93,11 @@ public class GA_SpawnSummon : GameplayAbility, IGroundTargetAbility
     public override bool SupportsVisualTiming(EVisualWhen when)
         => when == EVisualWhen.OnCast || when == EVisualWhen.OnImpact;
 
+    private Summon_Zone PrefabZone() => SummonPrefab != null ? SummonPrefab.GetComponent<Summon_Zone>() : null;
+
     private float PrefabZoneRadius()
     {
-        Summon_Zone zone = SummonPrefab != null ? SummonPrefab.GetComponent<Summon_Zone>() : null;
+        Summon_Zone zone = PrefabZone();
         return zone != null ? zone.Radius : 1f;
     }
 
@@ -106,9 +131,19 @@ public class GA_SpawnSummon : GameplayAbility, IGroundTargetAbility
                 break;
         }
 
+        // El muro sale atravesado a la línea del lanzador al punto (lo mismo que dibujó el marcador)
+        // y, si se gira, con el giro que eligió el dueño con la rueda.
+        Quaternion rotation = Quaternion.LookRotation(forward);
+        if (UsesWallMarker)
+        {
+            Vector3 toSpot = spot - owner.position; toSpot.y = 0f;
+            if (toSpot.sqrMagnitude > 0.01f) rotation = Quaternion.LookRotation(toSpot.normalized);
+            if (RotationStep > 0f && pc != null) rotation *= Quaternion.Euler(0f, pc.NetworkPlacementYaw, 0f);
+        }
+
         CommitAbility();
 
-        Entity_Summon summon = Entity_Summon.Spawn(SummonPrefab, OwnerASC, spot, Quaternion.LookRotation(forward),
+        Entity_Summon summon = Entity_Summon.Spawn(SummonPrefab, OwnerASC, spot, rotation,
                                                    MaxAlive > 0 ? MaxAlive : -1);
         if (summon != null) BroadcastImpactVFX(spot);
 

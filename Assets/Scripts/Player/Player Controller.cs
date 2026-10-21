@@ -534,6 +534,10 @@ public class PlayerController : NetworkBehaviour
     // NetworkAbilitySystemComponent.ServerActivateAbility). Cero = quieto.
     [HideInInspector] public Vector3 NetworkMoveDirection;
 
+    // El giro (en grados, sobre "atravesado a la mira") que el dueño le dio con la rueda a lo que
+    // pone: el Muro de fuego del Mago (IWallTargetAbility). Viaja con el pedido, igual que la mira.
+    [HideInInspector] public float NetworkPlacementYaw;
+
     // Índice de clase sincronizado a los observadores remotos (ver
     // EquipCharacterClass/ServerSetClass) — mandamos el índice y no el
     // asset porque FishNet no serializa referencias a ScriptableObjects.
@@ -565,6 +569,29 @@ public class PlayerController : NetworkBehaviour
     // mientras se mantiene su botón. Ver UI_GroundTargetIndicator.
     private GameplayAbility _groundTargetAbility;
     private EAbilityInput   _groundTargetSlot;
+
+    // El giro del muro que se está apuntando (IWallTargetAbility): la rueda lo cambia de a pasos
+    // y arranca en 0 (atravesado a la mira) cada vez que se aprieta. Va con el pedido.
+    private float _placementYaw;
+
+    // El marcador del piso: vive en el prefab de la cámara (solo el dueño la tiene) y al arrancar
+    // se suelta de ella, así que se lo pide por su Instance.
+    private bool _warnedNoGroundIndicator;
+
+    private UI_GroundTargetIndicator GroundIndicator
+    {
+        get
+        {
+            UI_GroundTargetIndicator indicator = UI_GroundTargetIndicator.Instance;
+            if (indicator == null && !_warnedNoGroundIndicator)
+            {
+                _warnedNoGroundIndicator = true;
+                Debug.LogWarning("[PlayerController] El prefab de la cámara no tiene el marcador del piso " +
+                                 "(UI_GroundTargetIndicator): las habilidades de zona se apuntan sin marcador.");
+            }
+            return indicator;
+        }
+    }
 
     // Habilidad de MANTENER (IHoldAbility) que el dueño está sosteniendo ahora
     // mismo, y en qué slot está. null = no hay ninguna. Ver ProcessHoldRelease.
@@ -2037,12 +2064,17 @@ public class PlayerController : NetworkBehaviour
             _attackStartTime     = Time.time;
             _groundTargetAbility = ability;
             _groundTargetSlot    = slot;
+            _placementYaw        = 0f;   // el muro arranca atravesado a la mira
 
-            // Una franja (el Corte final) en vez de la zona en el piso. Get() crea el
-            // marcador la primera vez: no está puesto en ninguna escena.
-            UI_GroundTargetIndicator indicator = UI_GroundTargetIndicator.Get();
-            if (ability is ILineTargetAbility) indicator.ShowLine();
-            else                               indicator.Show(ground.TargetRadius);
+            // Una franja (el Corte final) o un muro (el Muro de fuego) en vez de la zona en el
+            // piso. El marcador vive en el prefab de la cámara.
+            UI_GroundTargetIndicator indicator = GroundIndicator;
+            if (indicator != null)
+            {
+                if (ability is ILineTargetAbility)                                  indicator.ShowLine();
+                else if (ability is IWallTargetAbility wall && wall.UsesWallMarker) indicator.ShowWall(wall.WallWidth, wall.WallDepth, wall.WallSegments);
+                else                                                                 indicator.Show(ground.TargetRadius);
+            }
         }
         else
         {
@@ -2120,9 +2152,9 @@ public class PlayerController : NetworkBehaviour
         {
             // Zona confirmada: escondemos el marcador y la lanzamos por el camino
             // NORMAL — RequestAbility ya le manda el punto de mira al servidor
-            // (NetworkAimPoint), que es justo la zona que el jugador venía viendo.
-            if (UI_GroundTargetIndicator.Instance != null)
-                UI_GroundTargetIndicator.Instance.Hide();
+            // (NetworkAimPoint), que es justo la zona que el jugador venía viendo, y el
+            // giro del muro si lo es.
+            if (GroundIndicator != null) GroundIndicator.Hide();
 
             // Predicción local de la animación, mismo criterio que arriba: solo en
             // cliente remoto (en el host la dispara el propio Activate del servidor).
@@ -2210,18 +2242,33 @@ public class PlayerController : NetworkBehaviour
     private void UpdateGroundTargetIndicator()
     {
         if (_groundTargetAbility is not IGroundTargetAbility ground) return;
-        if (UI_GroundTargetIndicator.Instance == null) return;
+        UI_GroundTargetIndicator indicator = GroundIndicator;
+        if (indicator == null) return;
 
         // La franja sale de los pies hacia la mira (la misma dirección con la que el
         // servidor va a salir: la del punto de mira que se le manda al soltar).
         if (_groundTargetAbility is ILineTargetAbility line)
         {
-            UI_GroundTargetIndicator.Instance.UpdateLine(transform.position, GetAimPoint() - transform.position,
-                                                         line.LineLength, line.LineWidth, line.LineTargetLayer, ASC);
+            indicator.UpdateLine(transform.position, GetAimPoint() - transform.position,
+                                 line.LineLength, line.LineWidth, line.LineTargetLayer, ASC);
             return;
         }
 
-        UI_GroundTargetIndicator.Instance.UpdatePosition(GetClampedAimPoint(ground.MaxTargetRange));
+        // El muro: atravesado a la línea de los pies al punto (lo mismo que hace el servidor) y
+        // girado con la rueda.
+        if (_groundTargetAbility is IWallTargetAbility wall && wall.UsesWallMarker)
+        {
+            if (wall.WallRotationStep > 0f && _input != null)
+                _placementYaw = Mathf.Repeat(_placementYaw + _input.PlacementRotateStep * wall.WallRotationStep + 180f, 360f) - 180f;
+
+            Vector3 center  = GetClampedAimPoint(ground.MaxTargetRange);
+            Vector3 forward = center - transform.position; forward.y = 0f;
+            if (forward.sqrMagnitude < 0.01f) forward = new Vector3(transform.forward.x, 0f, transform.forward.z);
+            indicator.UpdateWall(center, Quaternion.LookRotation(forward.normalized) * Quaternion.Euler(0f, _placementYaw, 0f));
+            return;
+        }
+
+        indicator.UpdatePosition(GetClampedAimPoint(ground.MaxTargetRange));
     }
 
     // Punto de mira recortado a maxRange desde el jugador.
@@ -2232,6 +2279,10 @@ public class PlayerController : NetworkBehaviour
         if (offset.magnitude > maxRange) point = transform.position + offset.normalized * maxRange;
         return point;
     }
+
+    // El giro que va con el pedido: el del muro que se estaba apuntando, o 0.
+    private float CurrentPlacementYaw
+        => _groundTargetAbility is IWallTargetAbility wall && wall.UsesWallMarker ? _placementYaw : 0f;
 
     // Calcula el punto de mira y rota al dueño hacia él ANTES de pedirle
     // al servidor que active la habilidad (para que la rotación correcta
@@ -2261,10 +2312,13 @@ public class PlayerController : NetworkBehaviour
             // el daño. Rotando acá, la rotación correcta es la que se sincroniza.
             RotateToAim(aimPoint);
 
-            NetASC.ServerRequestActivateAbility(slot, aimPoint, moveDir, aimOrigin);
+            NetASC.ServerRequestActivateAbility(slot, aimPoint, moveDir, aimOrigin, CurrentPlacementYaw);
         }
         else
+        {
+            NetworkPlacementYaw = CurrentPlacementYaw;
             ActivateAbilityBySlot(slot); // Fallback singleplayer
+        }
     }
 
     // Ejecuta en el servidor la habilidad de menú radial elegida y replica su

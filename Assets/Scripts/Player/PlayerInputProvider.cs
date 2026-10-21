@@ -61,6 +61,38 @@ public class PlayerInputProvider : MonoBehaviour
         ? Descend.IsPressed()
         : Keyboard.current != null && Keyboard.current.leftCtrlKey.isPressed;
 
+    // Girar lo que se pone (el Muro de fuego del Mago) mientras se apunta: la rueda del mouse y,
+    // con control, la cruceta izquierda/derecha. Pueden faltar si el asset todavía no tiene las
+    // acciones: entonces PlacementRotateStep lee la rueda y la cruceta directo.
+    public InputAction RotatePlacementLeft  { get; private set; }
+    public InputAction RotatePlacementRight { get; private set; }
+
+    // -1, 0 o +1: si en este frame se pidió girar a un lado o al otro (rueda arriba / cruceta
+    // derecha = +1). Leerlo una vez por frame.
+    public int PlacementRotateStep
+    {
+        get
+        {
+            if (!_initialized) return 0;
+            if (RotatePlacementLeft != null && RotatePlacementRight != null)
+                return (RotatePlacementRight.WasPressedThisFrame() ? 1 : 0) - (RotatePlacementLeft.WasPressedThisFrame() ? 1 : 0);
+
+            int step = 0;
+            if (Mouse.current != null)
+            {
+                float scroll = Mouse.current.scroll.ReadValue().y;
+                if (scroll > 0.01f) step++;
+                else if (scroll < -0.01f) step--;
+            }
+            if (Gamepad.current != null)
+            {
+                if (Gamepad.current.dpad.right.wasPressedThisFrame) step++;
+                if (Gamepad.current.dpad.left.wasPressedThisFrame)  step--;
+            }
+            return Mathf.Clamp(step, -1, 1);
+        }
+    }
+
     // Acciones del mapa "UI" (para navegar menús con control sin chocar con las
     // de juego). Se leen solo cuando el jugador está en modo UI (ver SetUIMode).
     public InputAction Navigate { get; private set; }
@@ -122,6 +154,8 @@ public class PlayerInputProvider : MonoBehaviour
         Cheat           = _playerMap.FindAction("Cheat", true);
         ChangeClass     = _playerMap.FindAction("ChangeClass", true);
         Descend         = _playerMap.FindAction("Descend", false);
+        RotatePlacementLeft  = _playerMap.FindAction("RotatePlacementLeft", false);
+        RotatePlacementRight = _playerMap.FindAction("RotatePlacementRight", false);
 
         _uiMap   = _assetInstance.FindActionMap("UI", true);
         Navigate = _uiMap.FindAction("Navigate", true);

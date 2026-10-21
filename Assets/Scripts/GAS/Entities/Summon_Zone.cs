@@ -16,12 +16,22 @@ using UnityEngine;
 //     de espinas al explotar). Dura lo que la invocación, o sus propios segundos.
 //   · El VFX de la zona sale en todas las pantallas mientras está prendida, del tamaño del radio
 //     (con VFX_AreaVisual calza exacto). El "prendida" viaja en un SyncVar de la invocación.
+//   · Forma: un círculo (el radio, a cualquier altura) o una CAJA apoyada en el piso, girada con
+//     la invocación (el Muro de fuego del Mago: 10 m de lado a lado, 2 de largo y 2 de alto; el
+//     que salta más alto no se quema). Con caja, el VFX va como hijo del prefab (las llamas de
+//     cada casilla) y el de acá se deja vacío.
 //
 // Una zona por invocación. Los efectos se aplican solo en el servidor.
 // ============================================================
 [RequireComponent(typeof(Entity_Summon))]
 public class Summon_Zone : MonoBehaviour
 {
+    public enum EShape
+    {
+        [InspectorName("Círculo (el radio)")]           Sphere,
+        [InspectorName("Caja (ancho × alto × largo)")]  Box,
+    }
+
     public enum ETargets
     {
         [InspectorName("Aliados (y el dueño)")] Allies,
@@ -44,8 +54,26 @@ public class Summon_Zone : MonoBehaviour
     [Label("Dura (s; 0 = lo que la invocación)")]
     public float Seconds = 0f;
 
+    [Tooltip("Círculo: todo lo que esté a 'Radio' metros. Caja: un rectángulo apoyado en el piso, " +
+             "girado como la invocación (de lado a lado × alto × hacia adelante).")]
+    [Label("Forma")]
+    public EShape Shape = EShape.Sphere;
+
+    [Tooltip("Solo con forma Círculo.")]
     [Label("Radio (m)")]
     public float Radius = 5f;
+
+    [Tooltip("Solo con forma Caja: de lado a lado (el eje X de la invocación).")]
+    [Label("Caja: ancho de lado a lado (m)")]
+    public float BoxWidth = 10f;
+
+    [Tooltip("Solo con forma Caja: desde el piso hacia arriba. El que salta más alto no la toca.")]
+    [Label("Caja: alto (m)")]
+    public float BoxHeight = 2f;
+
+    [Tooltip("Solo con forma Caja: hacia adelante (el eje Z de la invocación).")]
+    [Label("Caja: largo hacia adelante (m)")]
+    public float BoxDepth = 2f;
 
     [Tooltip("Cada cuánto aplica los efectos. El primero, en el acto.")]
     [Label("Cada cuánto (s)")]
@@ -147,8 +175,11 @@ public class Summon_Zone : MonoBehaviour
         if (effects == null || effects.Count == 0) return;
 
         _seen.Clear();
-        int count = Physics.OverlapSphereNonAlloc(transform.position, Radius, s_hits, CharacterLayer,
-                                                  QueryTriggerInteraction.Collide);
+        int count = Shape == EShape.Box
+            ? Physics.OverlapBoxNonAlloc(BoxCenter, BoxHalfExtents, s_hits, transform.rotation, CharacterLayer,
+                                         QueryTriggerInteraction.Collide)
+            : Physics.OverlapSphereNonAlloc(transform.position, Radius, s_hits, CharacterLayer,
+                                            QueryTriggerInteraction.Collide);
         for (int i = 0; i < count; i++)
         {
             AbilitySystemComponent target = s_hits[i] != null ? s_hits[i].GetComponentInParent<AbilitySystemComponent>() : null;
@@ -166,9 +197,20 @@ public class Summon_Zone : MonoBehaviour
         }
     }
 
+    // La caja: apoyada en el piso (el pivote de la invocación) y girada con ella.
+    private Vector3 BoxCenter      => transform.position + transform.up * (BoxHeight * 0.5f);
+    private Vector3 BoxHalfExtents => new Vector3(BoxWidth * 0.5f, BoxHeight * 0.5f, BoxDepth * 0.5f);
+
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Targets == ETargets.Allies ? new Color(0f, 1f, 0.5f, 0.3f) : new Color(1f, 0.3f, 0.2f, 0.3f);
+        if (Shape == EShape.Box)
+        {
+            Gizmos.matrix = Matrix4x4.TRS(BoxCenter, transform.rotation, Vector3.one);
+            Gizmos.DrawWireCube(Vector3.zero, BoxHalfExtents * 2f);
+            Gizmos.matrix = Matrix4x4.identity;
+            return;
+        }
         Gizmos.DrawWireSphere(transform.position, Radius);
     }
 }

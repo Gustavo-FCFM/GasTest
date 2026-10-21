@@ -26,7 +26,7 @@ using System.Collections.Generic;
 // aplicar y no se ejecuta, en silencio).
 // ============================================================
 [CreateAssetMenu(fileName = "GA_TagSwitch", menuName = "GAS/Generics/Tag Switch")]
-public class GA_TagSwitch : GameplayAbility, IGroundTargetAbility
+public class GA_TagSwitch : GameplayAbility, IGroundTargetAbility, IWallTargetAbility
 {
     // Si la variante que se dispararía AHORA se apunta en el piso (el Aliento de dragón rojo
     // del Maestro elemental: una zona en la retícula), el switch también: mantener → apuntar
@@ -34,6 +34,13 @@ public class GA_TagSwitch : GameplayAbility, IGroundTargetAbility
     public float MaxTargetRange   => ResolveTemplate(out _, out _) is IGroundTargetAbility g ? g.MaxTargetRange : 0f;
     public float TargetRadius     => ResolveTemplate(out _, out _) is IGroundTargetAbility g ? g.TargetRadius : 0f;
     public bool  UsesGroundTarget => ResolveTemplate(out _, out _) is IGroundTargetAbility g && g.UsesGroundTarget;
+
+    // Y si su marcador es un muro (el Muro de fuego de la Q del Mago), también.
+    public bool  UsesWallMarker   => ResolveTemplate(out _, out _) is IWallTargetAbility w && w.UsesWallMarker;
+    public float WallWidth        => ResolveTemplate(out _, out _) is IWallTargetAbility w ? w.WallWidth : 1f;
+    public float WallDepth        => ResolveTemplate(out _, out _) is IWallTargetAbility w ? w.WallDepth : 1f;
+    public int   WallSegments     => ResolveTemplate(out _, out _) is IWallTargetAbility w ? w.WallSegments : 1;
+    public float WallRotationStep => ResolveTemplate(out _, out _) is IWallTargetAbility w ? w.WallRotationStep : 0f;
 
     // Una variante: qué tag la activa y qué habilidad se ejecuta en su lugar.
     [System.Serializable]

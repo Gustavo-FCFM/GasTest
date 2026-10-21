@@ -9,10 +9,13 @@ del log son todos de packs importados).
 
 ## ★ Al retomar: lo abierto, en orden (21 de octubre)
 
-1. **Etapa 3 del Mago — la Q** (las etapas 1 y 2 están hechas y probadas ✅: el kit con los misiles, el libro y los 4 hechizos del clic; ver "★ El Mago"): **3a HECHA Y PROBADA ✅ (21 de octubre: recarga, tumba, levantamiento; falta probar que la Tumba cura y la Flecha helada más rápida)**; sigue la **3b** (muro y tormenta), y **etapa 4** (bots, y
-   pasar el Mago al documento de diseño de clases y a la guía).
+1. **Etapa 4 del Mago:** los bots (que usen la Q: recarga, tumba, levantamiento, muro y tormenta), y
+   pasar el Mago al documento de diseño de clases y a la guía. Las etapas 1, 2 y 3 están hechas y
+   probadas ✅ (21 de octubre: el kit entero; ver "★ El Mago"). Quedó por confirmar que la Tumba
+   cura y que la Flecha helada vuela más rápido.
 2. **Probar lo de antes:** el parry del Guardián en un cliente; los bots con el Explorador, el
-   Monje y el Guerrero; `GA_SpawnSummon` con una variante de las plantillas de invocación.
+   Monje y el Guerrero. (`GA_SpawnSummon` con variantes de las plantillas ya quedó probado: el Muro
+   y la Tormenta del Mago.)
 3. **Cuando alguien se atasque:** traer `Logs/Unstuck.log`.
 4. **Decisiones de Gustavo, sin prisa:** más prefabs (variantes de tótems y enemigos, la UI que
    todavía arma el código), acomodar los botiquines, la puntería si se siente mal.
@@ -62,7 +65,7 @@ rm -rf "Assets/FishNet" "Assets/FishNet.meta" "Assets/TextMesh Pro/Examples & Ex
 
 ---
 
-# ★ El Mago: kit base — ETAPAS 1 Y 2 HECHAS Y PROBADAS ✅ (21 de octubre); siguen las etapas 3 y 4
+# ★ El Mago: kit base — ETAPAS 1, 2 Y 3 HECHAS Y PROBADAS ✅ (21 de octubre); sigue la etapa 4
 
 Decidido con Gustavo el 20 de octubre. Cambia cosas del documento de diseño (la Tumba helada
 congela al MAGO, no a los demás; la Q no gasta maná; el Terremoto avanza por el piso; la
@@ -215,7 +218,7 @@ azul) los crea una herramienta de una vez, como prefabs.
         lanzado volando: corta el vuelo, cae en picada y sale al tocar el piso; la Descarga: el rayito
         en las dos pantallas (pegue o no), rebota según los puntos (A con 2 → B y C), no cruza paredes,
         cada enemigo una vez; mantener el clic repite los dos; sin maná, a los misiles.
-- [ ] **Etapa 3 — la Q**, en dos partes. Decidido con Gustavo el 21 de octubre: el **cooldown de la Q es
+- [x] **Etapa 3 — la Q: HECHA Y PROBADA ✅ (21 de octubre)**, en dos partes. Decidido con Gustavo el 21 de octubre: el **cooldown de la Q es
       COMPARTIDO** (cada hechizo pone el mismo GE con su duración: cambiar de hechizo no deja encadenar
       Q's); la recarga la cortan el aturdido, el silencio o usar otra habilidad (moverse y el daño no);
       la Tumba lanzada volando corta el vuelo y cae como bloque; la Descarga se FRENA en el tornado.
@@ -256,13 +259,48 @@ azul) los crea una herramienta de una vez, como prefabs.
         3 m, soltar lo lanza: daño y los levanta, también a los NPCs y a los bots (⚙ ajustar el impulso en `GE_UpliftDamage`). **El
         cooldown compartido**: usar una y cambiar de hechizo no deja usar otra. En la otra pantalla el
         Mago anima al lanzar los misiles y el levantamiento.
-  - [ ] **3b — muro y tormenta.** El Muro de fuego: una zona CUADRADA (5 casillas de 2 m en fila, 2 m de
-        alto) que se pone al soltar la Q (alcance 15 m), atravesada a la mira, y el marcador que gira
-        con la rueda del mouse (15° por paso; con control, la cruceta izquierda/derecha: hay que sumar
-        la acción al input). El marcador del piso pasa a prefab de paso. Quema y no frena el paso ni
-        los proyectiles. La Tormenta: una invocación (variante de `SummonZone_Base`) con el tornado
-        azul, daño cada 1 s en 4 m, 6 s; la Descarga que le pega se frena ahí y el tornado tira un
-        rayo a cada enemigo a 8 m que vea, y cada uno rebota (`ChainFrom`).
+  - [x] **3b — muro y tormenta: HECHA Y PROBADA ✅ (21 de octubre).**
+        Código nuevo:
+        · `Summon_Zone` tiene **Forma**: Círculo (el radio, lo de siempre) o **Caja** (ancho de lado a
+          lado × alto × largo, apoyada en el piso y girada con la invocación; el que salta más alto no
+          la toca). Con caja, las llamas van como hijos del prefab.
+        · `GA_SpawnSummon`: si la zona del prefab es una caja, el marcador es el **muro** (atravesado a
+          la mira, en "Casillas") y con **Giro con la rueda (°)** se gira mientras se apunta. Interfaz
+          nueva `IWallTargetAbility` (el switch la pasa a su variante).
+        · **El giro viaja al servidor** con el pedido (`ServerRequestActivateAbility` tiene un
+          parámetro más, `placementYaw`; lo lee `PlayerController.NetworkPlacementYaw`).
+        · **Input**: acciones nuevas `RotatePlacementLeft`/`Right` en `InputSystem_Actions` (rueda abajo /
+          arriba; con control, cruceta izquierda / derecha). Si faltaran, `PlayerInputProvider` lee la
+          rueda y la cruceta directo.
+        · **El marcador del piso pasó al prefab de la cámara** (`UI_GroundTargetIndicator`): ya no arma
+          nada por código. Sus piezas (zona, franja, el MOLDE de la casilla del muro, el material del
+          contorno) se editan en `Player Camera ▸ GroundTargetIndicator`; colores y grosores en cada
+          pieza. Al jugar se suelta de la cámara (si no, temblaba al girarla).
+        · `Summon_LightningRod` (**pararrayos**, `Scripts/GAS/Entities`): un cilindro sin collider (radio
+          × alto) que solo ven los rayos. La Descarga (`GA_ChainLightning`) que cruza el de su dueño o un
+          aliado se frena ahí y el tornado tira un rayo a cada enemigo a "Alcance de sus rayos" que vea,
+          del más cercano al más lejano; cada uno rebota con `ChainFrom`. Tirada desde adentro del
+          tornado no cuenta. `GA_HitscanShot` tiene el gancho `StopDistance`.
+  - [x] (Corrida y borrada el 21 de octubre.) Correr `Mercenarios ▸ Una vez ▸ Crear el Mago (etapa 3b: muro de fuego y tormenta)` y borrar
+        `Assets/Scripts/Editor/MercWizardStage3b.cs`. Pone el marcador del piso en el prefab de la
+        cámara (mallas y materiales en `Art/UI/GroundTarget`), crea `GA_FireWall` + `Summon_FireWall`
+        (caja de 10 × 2 × 2 m, `GE_DragonBurn` cada 1 s, 5 s, una llama `VFX_FireZone` por casilla),
+        `GA_LightningStorm` + `Summon_LightningStorm` (el tornado `VFX_LightningTornado` en azul, ⚙
+        `GE_StormDamage` 0.5 × daño mágico cada 1 s en 4 m, 6 s, pararrayos de 1.5 × 6 m y rayos a 8 m),
+        las suma a la Q y actualiza los registros. Cooldowns 8 s (compartido). Íconos PROVISIONALES.
+        Si no aparece en el menú (como pasó con la 3a), clic derecho en
+        `Assets/Scripts/GAS/Entities/Summon_LightningRod.cs` ▸ Reimport.
+  - [x] **PROBADO ✅ (21 de octubre).** Probar, en el host y en un cliente: **las otras zonas apuntadas siguen viéndose** (el círculo
+        del Levantamiento, Marcado para morir, la franja del Corte final con su contorno) y no tiemblan
+        al girar la cámara. **Con fuego**: mantener Q muestra las 5 casillas atravesadas a la mira,
+        apoyadas en el piso; la rueda (y la cruceta) las gira de a 15°; soltar pone el muro con ese
+        giro (en las dos pantallas); quema a los enemigos que lo pisan cada 1 s (la quemadura del
+        dragón), no al que salta alto, y dura 5 s. **Con rayo**: el tornado azul donde apunta (⚙ su
+        tamaño: `VfxScale` de su zona; lo que recibe el rayo: el pararrayos), daño cada 1 s en 4 m;
+        con la Descarga pegándole al tornado, el rayo termina en él y salen rayos a cada enemigo a
+        8 m (no a través de paredes), cada uno rebota según sus puntos; cada Descarga lo dispara otra
+        vez. Si una invocación no aparece en el cliente, revisar que FishNet la haya sumado a
+        `DefaultPrefabObjects`.
 - [ ] **Etapa 4:** los bots, y pasarlo al documento de diseño de clases y a la guía.
 
 ---
