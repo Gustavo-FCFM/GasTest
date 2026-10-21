@@ -18,10 +18,28 @@ using System.Collections.Generic;
 [CreateAssetMenu(fileName = "GA_SelfBuff", menuName = "GAS/Generics/Self Buff")]
 public class GA_SelfBuff : GameplayAbility
 {
+    [Section(AbilitySection.General)]
+    [Tooltip("OPCIONAL: si el dueño tiene este tag, apretar el botón NO la lanza: le saca los efectos " +
+             "que dan el tag y termina (salir antes de la Tumba helada del Mago). Pasa aunque esté en " +
+             "cooldown. None = apretar otra vez no hace nada distinto.")]
+    [Label("Apretar otra vez la termina (tag)")]
+    public EGameplayTag EndTag = EGameplayTag.None;
+
+    // ¿Apretarla ahora termina el buff en vez de lanzarlo? Corre en el dueño y en el servidor: el
+    // tag viaja.
+    private bool EndsNow => EndTag != EGameplayTag.None && OwnerASC != null && OwnerASC.HasTag(EndTag);
+
     // Un buff propio no busca a nadie ni golpea: el Inspector esconde TargetLayer y marca
     // cualquier entrada que no sea "al activarse".
     public override bool UsesTargetLayer => false;
     public override bool UsesHitEffects  => false;
+
+    // Terminar el buff pasa por encima del cooldown (recién se lanzó) y de lo que la bloquea.
+    public override bool CanActivate()
+    {
+        if (EndsNow) return !OwnerASC.HasTag(EGameplayTag.State_Dead);
+        return base.CanActivate();
+    }
 
     // Valida, cobra costo/cooldown (con eso se aplican los efectos "al activarse" y los VFX
     // "al lanzar") y anima.
@@ -29,6 +47,14 @@ public class GA_SelfBuff : GameplayAbility
     {
         if (!IsServer) return;
         if (!CanActivate()) return;
+
+        // Apretada otra vez: sale del buff, sin cobrar ni animar.
+        if (EndsNow)
+        {
+            OwnerASC.RemoveEffectsWithTag(EndTag);
+            EndAbility();
+            return;
+        }
 
         if (!HasEffects(EEffectWhen.OnActivate))
             Debug.LogWarning($"[{AbilityName}] es un buff propio sin ningún efecto 'Al activarse': no hace nada.");

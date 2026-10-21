@@ -152,4 +152,5 @@ public enum EGameplayTag
     Status_SpellIce,           // Hechizo elegido: hielo (GE_Spell_Ice)
     Status_SpellEarth,         // Hechizo elegido: tierra (GE_Spell_Earth)
     Status_SpellLightning,     // Hechizo elegido: rayo (GE_Spell_Lightning)
+    Status_IceTomb,            // Encerrado en la Tumba helada (GE_IceTomb, junto con la inmunidad y el enraizado): sus otras habilidades lo llevan en ActivationBlockedTags, y apretar la Q otra vez lo saca (GA_SelfBuff "Apretar otra vez la termina")
 }

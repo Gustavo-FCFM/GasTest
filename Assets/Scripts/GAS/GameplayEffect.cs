@@ -161,6 +161,10 @@ public class GameplayEffect : ScriptableObject
             if (IsCrowdControl) return true;
             if (GrantedTags == null) return false;
 
+            // Un BUFF que da un tag de control se lo pone uno mismo (la Tumba helada del Mago:
+            // quieto y a salvo): no es un control que le hacen, la resistencia no lo recorta.
+            if (EffectType == EEffectType.Buff) return false;
+
             foreach (EGameplayTag granted in GrantedTags)
                 foreach (EGameplayTag control in CoreControlTags)
                     if (granted == control) return true;

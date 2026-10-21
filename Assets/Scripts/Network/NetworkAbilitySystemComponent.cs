@@ -1823,13 +1823,63 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         }
 
         BotController brain = GetComponent<BotController>();
-        if (brain != null)
+        if (brain != null) brain.ServerDash(displacement / duration, duration, false);
+        else               StartCoroutine(ServerPushRoutine(displacement, duration));
+
+        // El impulso hacia arriba (el Levantamiento del Mago): hasta el 21 de octubre solo lo
+        // sentían los jugadores; a un bot o a un NPC se lo empujaba de lado y nada más.
+        if (upVelocity > 0f) ServerLaunch(upVelocity);
+    }
+
+    // =========================================================
+    // LEVANTAR A UN BOT O A UN NPC (el impulso hacia arriba del empuje)
+    //
+    // Un tiro vertical con la gravedad del jugador, que el servidor mueve. Con NavMeshAgent sube
+    // el CUERPO por su baseOffset: el agente sigue en su lugar del NavMesh (no se sale del mapa
+    // ni queda arriba de una pared) y el collider sube con él (se le puede pegar en el aire).
+    // Sin agente, el transform. Otro golpe en el aire lo vuelve a lanzar desde donde está.
+    // =========================================================
+
+    private const float LaunchGravity = 9.8f;   // la de PlayerController.gravity
+
+    private Coroutine _launch;
+    private float     _launchHeight;       // cuánto está levantado ahora
+    private float     _launchRestOffset;   // el baseOffset del agente en el piso
+
+    [Server]
+    private void ServerLaunch(float upVelocity)
+    {
+        UnityEngine.AI.NavMeshAgent agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
+        if (_launch != null) StopCoroutine(_launch);
+        else if (agent != null) _launchRestOffset = agent.baseOffset;
+        _launch = StartCoroutine(ServerLaunchRoutine(agent, upVelocity));
+    }
+
+    private IEnumerator ServerLaunchRoutine(UnityEngine.AI.NavMeshAgent agent, float upVelocity)
+    {
+        float start = _launchHeight;
+        float t     = 0f;
+
+        while (true)
         {
-            brain.ServerDash(displacement / duration, duration, false);
-            return;
+            t += Time.deltaTime;
+            float y = start + upVelocity * t - 0.5f * LaunchGravity * t * t;
+            if (y <= 0f) break;
+            SetLaunchHeight(agent, y);
+            yield return null;
         }
 
-        StartCoroutine(ServerPushRoutine(displacement, duration));
+        SetLaunchHeight(agent, 0f);
+        _launch = null;
+    }
+
+    // Con agente, siempre por el baseOffset (aunque lo apaguen en el aire: al terminar vuelve al
+    // del piso y no queda flotando al reaparecer).
+    private void SetLaunchHeight(UnityEngine.AI.NavMeshAgent agent, float y)
+    {
+        if (agent != null) agent.baseOffset = _launchRestOffset + y;
+        else               transform.position += Vector3.up * (y - _launchHeight);
+        _launchHeight = y;
     }
 
     [TargetRpc]

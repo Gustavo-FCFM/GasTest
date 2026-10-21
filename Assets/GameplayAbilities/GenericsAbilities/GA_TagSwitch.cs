@@ -160,9 +160,15 @@ public class GA_TagSwitch : GameplayAbility, IGroundTargetAbility
             return;
         }
 
+        // Una repetición de su continuo: sale con la variante que empezó la canalización, y gratis
+        // después de la primera (ver ActivateAsCastTick). Se mira ANTES de cobrar el switch.
+        bool tick     = IsCastTick;
+        bool tickPaid = tick && CastTickPaid;
+        if (tick && CastSource != null && CastSource != this) template = CastSource;
+
         CommitAbility();
 
-        if (consumeTag) ConsumeTagFromOwner(usedTag);
+        if (consumeTag && !tickPaid) ConsumeTagFromOwner(usedTag);
 
         GameplayAbility instance = GetOrCreateInstance(template);
         _lastResolved = instance;
@@ -180,7 +186,8 @@ public class GA_TagSwitch : GameplayAbility, IGroundTargetAbility
         // devuelve: cancelar tiene ese costo, como en cualquier otro básico.
         instance.IsInterruptible = IsInterruptible;
 
-        instance.Activate();
+        if (tick) instance.ActivateAsCastTick(tickPaid);
+        else      instance.Activate();
 
         // Ya cobró: si no le alcanza para otra, vuelve ya a la de por defecto (el botón cambia).
         DropUnpayableVariants();

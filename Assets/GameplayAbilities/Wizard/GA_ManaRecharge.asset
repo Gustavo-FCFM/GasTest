@@ -1,0 +1,83 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c883fe6eb270f64e8367b89db9052bc, type: 3}
+  m_Name: GA_ManaRecharge
+  m_EditorClassIdentifier: 
+  AbilityName: Mana Recharge
+  AbilityNameEs: "Recargar man\xE1"
+  AbilityIcon: {fileID: 21300000, guid: 6f54a64b8a44af442b334ab3da59e7f8, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: edc8f7b5f2c7d684d8f67cdabbccd4df, type: 2}
+  CooldownDuration: 10
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 0
+  ActivationBlockedTags: 0100000003000000
+  ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  UsableWhileHolding: 0
+  AnimationClip: {fileID: 0}
+  AnimationTriggerName: 
+  AnimationID: 1
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  StacksTag: 0
+  ConsumeStacks: 0
+  Effects:
+  - When: 2
+    ApplyTo: 2
+    Effect: {fileID: 11400000, guid: aaca9fe0ec2d53f40921a20bba3bf0af, type: 2}
+    OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
+    PerTargetCooldown: 0
+    TargetStacksTag: 0
+    TargetScaling: 0
+    TargetPerStack: 0
+    ConsumeTargetStacks: 0
+  Visuals:
+  - When: 0
+    VFXPrefab: {fileID: 952961124639765284, guid: 1095a5c9f65bfbe4383f63d5d1886c65, type: 3}
+    Delay: 0
+    Offset: {x: 0, y: 1, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    Attach: 1
+    MatchAreaSize: 0
+    AreaSizeMultiplier: 0
+    DestroyTime: 1.5
+    EndWithTag: 0
+    EndWhenAttributeDepleted: 0
+    DepletedAttribute: 0
+  IsInterruptible: 1
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  CastMode: 2
+  CastSeconds: 3
+  CastTickSeconds: 0.5
+  CastBlocksOthers: 0
+  CastBreaksOnDamage: 0
+  CastStartAnimation: {fileID: 3094330708855449807, guid: 2f6016e9e7e6ff247b2c268a733fe053, type: 3}
+  CastLoopAnimation: {fileID: 3094330708855449807, guid: e3e6bf58062e7b142a3ac6cda8eda124, type: 3}
+  CastReleaseAnimation: {fileID: 3094330708855449807, guid: db4aa50da8cea2546983359c3799bb26, type: 3}
+  MaxCharges: 1
+  EndTag: 0
+  BuffEffect: {fileID: 0}
+  AdditionalEffects: []

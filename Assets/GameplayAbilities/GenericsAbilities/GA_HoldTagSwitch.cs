@@ -51,6 +51,7 @@ public class GA_HoldTagSwitch : GA_TagSwitch, IHoldAbility
     public override bool CanActivate()
     {
         if (!base.CanActivate()) return false;
+        if (IsCastTick) return true;   // una repetición de su continuo: la variante ya pagó su cooldown
         GameplayAbility instance = CurrentInstance();
         return instance != null && instance.CanActivate();
     }
@@ -59,6 +60,18 @@ public class GA_HoldTagSwitch : GA_TagSwitch, IHoldAbility
     {
         if (!IsServer) return;
         if (!CanActivate()) return;
+
+        // Una repetición de su continuo (la Recarga de maná de la Q del Mago): la variante con la
+        // que empezó, como repetición; la primera cobra su costo y su cooldown, las demás gratis.
+        if (IsCastTick && CastSource != null && CastSource != this)
+        {
+            GameplayAbility tick = GetOrCreateInstance(CastSource);
+            _lastResolved      = tick;
+            _lastResolvedFrame = Time.frameCount;
+            tick.ActivateAsCastTick(paid: CastTickPaid);
+            MarkCastPaid();
+            return;
+        }
 
         DropUnpayableVariants();   // sin maná para el hechizo elegido: vuelve a la de por defecto
 
@@ -76,7 +89,16 @@ public class GA_HoldTagSwitch : GA_TagSwitch, IHoldAbility
         // Los hechizos del Mago: los corta lo que corta al switch, como en el GA_TagSwitch. (El
         // escudo y el bloqueo de las demás clases siguen con lo suyo.)
         if (VariantsPayOwnCost) instance.IsInterruptible = IsInterruptible;
+        instance.CommittedThisActivation = false;
+        instance.StartedThisActivation   = false;
         instance.Activate();   // la variante cobra lo suyo y arranca el mantenido
+
+        // Lo que la variante arrancó o cobró cuenta como del switch: con eso el servidor les manda
+        // su animación a los demás (ServerActivateAbility mira estas marcas en lo que se apretó).
+        // Sin esto, una variante que no es de mantener (los misiles del Mago, el Levantamiento, la
+        // Defensa paciente del Monje) no se animaba en las otras pantallas.
+        CommittedThisActivation = instance.CommittedThisActivation;
+        StartedThisActivation   = instance.StartedThisActivation;
 
         // La de un solo uso (el Ki) se gasta al usarla.
         if (consumeTag) ConsumeTagFromOwner(usedTag);

@@ -638,9 +638,11 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         CommittedThisActivation = true;
 
         // Canalizado CONTINUO ya cobrado: cada repetición sale gratis (el costo y el cooldown
-        // se cobran una vez, al empezar). Solo los VFX "al lanzar", que marcan cada pulso.
+        // se cobran una vez, al empezar). Sus efectos "al activarse" sí se repiten (la Recarga de
+        // maná del Mago suma maná en cada pulso), y los VFX "al lanzar" marcan cada pulso.
         if (_castPaid)
         {
+            if (ApplyActivationEffectsOnCommit) ApplyActivationEffects();
             PlayCastVisuals();
             return;
         }
@@ -823,9 +825,36 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // variante que iba a salir cuando le cortan la canalización (ver GA_TagSwitch.PayCutCast).
     public void PayAsCast() => PayCostAndCooldown();
 
-    // Mientras canaliza un CONTINUO, sus repeticiones no animan (la pose en bucle sigue).
-    // Lo mira PlayerController.PlayAnimation.
-    public bool SuppressesOwnAnimation => _castRunning && (_castSource ?? this).CastMode == ECastMode.Continuous;
+    // Mientras canaliza un CONTINUO, sus repeticiones no animan (la pose en bucle sigue). También
+    // la variante que un switch corre como repetición (ActivateAsCastTick). Lo mira
+    // PlayerController.PlayAnimation.
+    public bool SuppressesOwnAnimation
+        => _castTicking || (_castRunning && (_castSource ?? this).CastMode == ECastMode.Continuous);
+
+    // Para un ENVOLTORIO que canaliza con los datos de su variante (GA_TagSwitch): si esta
+    // activación es una repetición de su continuo, si ya cobró, y con qué variante empezó.
+    protected bool IsCastTick   => _castTicking;
+    protected bool CastTickPaid => _castPaid;
+    protected GameplayAbility CastSource => _castSource;
+
+    // El envoltorio cobró a través de su variante (en la primera repetición): al terminar o
+    // cortarse la canalización no se cobra otra vez.
+    protected void MarkCastPaid()
+    {
+        if (_castRunning) _castPaid = true;
+    }
+
+    // Corre Activate como una repetición del continuo de OTRA habilidad: el switch que canaliza
+    // con los datos de esta variante (la Recarga de maná en la Q del Mago). Sin mirar el cooldown
+    // ni la canalización, sin animar, y gratis si 'paid' (la primera cobra). Servidor.
+    public void ActivateAsCastTick(bool paid)
+    {
+        bool wasTicking = _castTicking, wasPaid = _castPaid;
+        _castTicking = true;
+        _castPaid    = paid;
+        try     { Activate(); }
+        finally { _castTicking = wasTicking; _castPaid = wasPaid; }
+    }
 
     // Servidor: canalizando ahora / ya cobrado en esta canalización (ver CommitAbility).
     [System.NonSerialized] private bool _castRunning;
@@ -1129,7 +1158,8 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
 
         // Una repetición de un canalizado continuo: el fin de verdad lo avisa la
         // canalización al terminar (ver CastRoutine). Si no, el dueño quedaría libre a mitad.
-        if (_castRunning) return;
+        // También la variante que un switch corre como repetición (ActivateAsCastTick).
+        if (_castRunning || _castTicking) return;
 
         // Esto corre en el servidor (Activate() ya lo garantiza). Si el dueño
         // es un cliente remoto (no el host), pc.FinishAttack() de acá solo

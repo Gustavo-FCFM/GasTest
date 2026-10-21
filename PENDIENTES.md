@@ -9,7 +9,7 @@ del log son todos de packs importados).
 
 ## ★ Al retomar: lo abierto, en orden (21 de octubre)
 
-1. **Etapa 3 del Mago — la Q** (las etapas 1 y 2 están hechas y probadas ✅: el kit con los misiles, el libro y los 4 hechizos del clic; ver "★ El Mago"): recarga, muro, tumba, levantamiento, tormenta, y **etapa 4** (bots, y
+1. **Etapa 3 del Mago — la Q** (las etapas 1 y 2 están hechas y probadas ✅: el kit con los misiles, el libro y los 4 hechizos del clic; ver "★ El Mago"): **3a HECHA Y PROBADA ✅ (21 de octubre: recarga, tumba, levantamiento; falta probar que la Tumba cura y la Flecha helada más rápida)**; sigue la **3b** (muro y tormenta), y **etapa 4** (bots, y
    pasar el Mago al documento de diseño de clases y a la guía).
 2. **Probar lo de antes:** el parry del Guardián en un cliente; los bots con el Explorador, el
    Monje y el Guerrero; `GA_SpawnSummon` con una variante de las plantillas de invocación.
@@ -86,12 +86,12 @@ estrellitas azules (una bola por punto).
 | Clic izq. — Misiles arcanos | Bolita azul; vuela hasta chocar; daño mágico; da 1 punto. Se repite al mantener | 0 | +2 por punto |
 | Clic der. — Libro de hechizos | Rueda: ARRIBA los misiles (lo normal) y los 4 hechizos. El elegido se queda hasta cambiarlo o hasta que no alcance el maná. Cambia el clic izquierdo y la Q | — | — |
 | Clic izq. con Fuego — Bola de fuego | Canaliza 0.5 s. Explota en 3 m: daño + quemadura, y deja la zona del dragón del Monje tal cual (2.5 m, 5 s, `GE_DragonBurn` cada 1 s). No se repite al mantener | 25 | La quemadura dura +1 s por punto |
-| Clic izq. con Hielo — Flecha helada | Canaliza 1 s y sale al terminar. Proyectil que ralentiza. No se repite al mantener | 50 | La ralentización dura +0.5 s por punto |
+| Clic izq. con Hielo — Flecha helada | Canaliza 1 s; se mantiene y sale al soltar. Proyectil rápido como la flecha cargada del Explorador (70) que ralentiza. No se repite al mantener | 50 | La ralentización dura +0.5 s por punto |
 | Clic izq. con Tierra — Terremoto | Una grieta que AVANZA por el piso desde el Mago (se ve venir y se esquiva) siguiendo el terreno: si está arriba de algo, baja por el borde. Pega solo a lo pegado al piso (caja de 0.5 m de alto, ajustable): el que salta alto la esquiva. Solo daño. Lanzado VOLANDO: se corta el vuelo, cae en picada y la grieta sale al tocar el piso (como el terremoto de Spellbreak). Se repite al mantener | 20 | Aturde 0.5 s por punto y GASTA los puntos de ese enemigo (si no, manteniendo el botón quedaba aturdido sin parar) |
 | Clic izq. con Rayo — Descarga eléctrica | Hitscan, con un rayito azul que dibuja la trayectoria al instante. Se repite al mantener | 10 | Rebota (ver abajo) |
 | Q sin hechizo — Recargar maná | Canaliza 3 s y recarga el 100 % de a poco (+33 por segundo, como el Segundo aliento del Guerrero pero con maná); cortada, se queda con lo ganado. Cooldown 10 s, completa o cortada | — | — |
 | Q con Fuego — Muro de fuego | Mantener Q muestra el muro en el piso y la RUEDA DEL MOUSE lo gira (15° por paso; con control, la cruceta izquierda y derecha). 5 zonas CUADRADAS de 2 m en fila de lado a lado (10 m), con daño hasta 2 m de alto; quema como la zona del dragón. Dura 5 s. Cooldown 8 s | 0 | (los +2 de la pasiva) |
-| Q con Hielo — Tumba helada | Se congela a SÍ MISMO (el bloque de hielo de WoW / la crio-congelación de Mei): 3 s inmune a daño y a control, sin moverse ni atacar; apretar Q otra vez sale antes; no cura. Un cubo de hielo traslúcido lo encierra. Cooldown 20 s | 0 | — |
+| Q con Hielo — Tumba helada | Se congela a SÍ MISMO (el bloque de hielo de WoW / la crio-congelación de Mei): 3 s inmune a daño y a control, sin moverse ni atacar; apretar Q otra vez sale antes; CURA el 40 % de la vida máxima de a poco (8 % cada 0.5 s; pedido de Gustavo tras probarla, como Mei; si sale antes, se queda con lo que llevaba). Un cubo de hielo traslúcido lo encierra. Cooldown 20 s | 0 | — |
 | Q con Tierra — Levantamiento | Área de 3 m donde apunta: daño y los lanza hacia arriba. Cooldown 8 s | 0 | (los +2 de la pasiva) |
 | Q con Rayo — Tormenta eléctrica | Un tornado AZUL (copia de `Art/VFX/Tornado.prefab`) fijo donde apunta: 6 s, daño cada 1 s en 4 m. Si una Descarga eléctrica LE PEGA, tira un rayo a CADA enemigo a 8 m (ajustable) y cada uno arranca su rebote. Cada Descarga que le pegue lo dispara otra vez. Cooldown 8 s | 0 | Los rebotes |
 | Shift — Vuelo | `GA_Flight` + `GE_Fly` (hecho y probado el 6 de octubre) | — | — |
@@ -215,8 +215,54 @@ azul) los crea una herramienta de una vez, como prefabs.
         lanzado volando: corta el vuelo, cae en picada y sale al tocar el piso; la Descarga: el rayito
         en las dos pantallas (pegue o no), rebota según los puntos (A con 2 → B y C), no cruza paredes,
         cada enemigo una vez; mantener el clic repite los dos; sin maná, a los misiles.
-- [ ] **Etapa 3 — la Q:** recarga, muro, tumba, levantamiento y tormenta (con la descarga contra el
-      tornado).
+- [ ] **Etapa 3 — la Q**, en dos partes. Decidido con Gustavo el 21 de octubre: el **cooldown de la Q es
+      COMPARTIDO** (cada hechizo pone el mismo GE con su duración: cambiar de hechizo no deja encadenar
+      Q's); la recarga la cortan el aturdido, el silencio o usar otra habilidad (moverse y el daño no);
+      la Tumba lanzada volando corta el vuelo y cae como bloque; la Descarga se FRENA en el tornado.
+  - [x] **3a — recarga, tumba y levantamiento: HECHA Y PROBADA ✅ (21 de octubre).** Después de probarla, pedido de Gustavo: la Tumba CURA el 40 % de la vida máxima (`GE_IceTomb`: 8 % cada 0.5 s) y la Flecha helada vuela a 70 (antes 25; como la flecha cargada del Explorador). Falta probar esos dos.
+        Código nuevo:
+        · Canalizar **continuo** a través de un switch: la variante se repite como repetición
+          (`GameplayAbility.ActivateAsCastTick`; la primera cobra, las demás gratis, sin animar ni
+          avisar el fin). Y en un continuo, los efectos "al activarse" se repiten en cada pulso
+          (antes solo en el primero; ningún asset usaba el continuo todavía).
+        · `GA_SelfBuff` **Apretar otra vez la termina (tag)**: con ese tag puesto, apretar no la lanza,
+          le saca los efectos que lo dan (aunque esté en cooldown). Salir antes de la Tumba.
+        · Un **BUFF** que da un tag de control (enraizado, aturdido) ya no cuenta como control: la
+          resistencia al control no lo recorta (se lo pone uno mismo).
+        · `GA_HoldTagSwitch`: lo que la variante arrancó o cobró cuenta como del switch. Antes una
+          variante que NO es de mantener no se animaba en las otras pantallas (los misiles del Mago,
+          la Defensa paciente del Monje): ahora sí. Probarlo.
+        · Tag nuevo `Status_IceTomb` (al final de la lista) e `IceTombVisual` (congela la pose y el
+          cubo no gira con el personaje).
+        · El impulso hacia arriba de un empuje (`KnockbackUpVelocity`) ahora levanta también a los
+          NPCs y a los bots (antes solo a los jugadores: a ellos se los empujaba de lado y nada más).
+          Con NavMeshAgent sube el cuerpo por su `baseOffset` (`NetworkASC.ServerLaunch`). Vale
+          también para la trampa de empuje y la Patada de viento, que ya traían impulso.
+  - [x] (Corrida y borrada el 21 de octubre.) Correr `Mercenarios ▸ Una vez ▸ Crear el Mago (etapa 3a: la Q — recarga, tumba y levantamiento)` y
+        borrar `Assets/Scripts/Editor/MercWizardStage3a.cs`. Crea `GA_WizardQ` (la Q: un
+        `GA_HoldTagSwitch`), `GA_ManaRecharge` (+ `GE_ManaRecharge`: 1/6 del maná máximo cada 0.5 s),
+        `GA_IceTomb` (+ `GE_IceTomb`: 3 s inmune, imparable, enraizado y `Status_IceTomb`, y cura; `VFX_IceTomb`
+        y `M_IceTomb` en Art/VFX/Wizard), `GA_Uplift` (+ ⚙ `GE_UpliftDamage`: 1 × daño mágico e impulso
+        hacia arriba de 8 m/s); pone `Status_IceTomb` en lo que bloquea al clic izquierdo, al libro y al
+        vuelo; pone la Q en `Class_Wizard` y actualiza los registros. Cooldowns: recarga 10 s, tumba
+        20 s, levantamiento 8 s (todos con `GE_Cooldown_Special`). Íconos PROVISIONALES. Hasta la 3b,
+        con fuego o rayo la Q también recarga.
+  - [x] **PROBADO ✅ (21 de octubre).** Probar, en el host y en un cliente: **sin hechizo**, la Q canaliza 3 s (barra y pose) y el maná
+        sube de a poco hasta llenarse; moverse no la corta; un clic izquierdo, el vuelo o un aturdido
+        sí (se queda con lo ganado y la Q va a cooldown 10 s). **Con hielo**: el cubo de hielo lo
+        encierra con la pose congelada (en las dos pantallas), no se mueve, no ataca, no abre el libro,
+        no vuela, no recibe daño ni control (y se le van los debuffs); a los 3 s sale solo; apretar la
+        Q adentro sale antes; volando, cae con el cubo. **Con tierra**: mantener Q muestra el círculo de
+        3 m, soltar lo lanza: daño y los levanta, también a los NPCs y a los bots (⚙ ajustar el impulso en `GE_UpliftDamage`). **El
+        cooldown compartido**: usar una y cambiar de hechizo no deja usar otra. En la otra pantalla el
+        Mago anima al lanzar los misiles y el levantamiento.
+  - [ ] **3b — muro y tormenta.** El Muro de fuego: una zona CUADRADA (5 casillas de 2 m en fila, 2 m de
+        alto) que se pone al soltar la Q (alcance 15 m), atravesada a la mira, y el marcador que gira
+        con la rueda del mouse (15° por paso; con control, la cruceta izquierda/derecha: hay que sumar
+        la acción al input). El marcador del piso pasa a prefab de paso. Quema y no frena el paso ni
+        los proyectiles. La Tormenta: una invocación (variante de `SummonZone_Base`) con el tornado
+        azul, daño cada 1 s en 4 m, 6 s; la Descarga que le pega se frena ahí y el tornado tira un
+        rayo a cada enemigo a 8 m que vea, y cada uno rebota (`ChainFrom`).
 - [ ] **Etapa 4:** los bots, y pasarlo al documento de diseño de clases y a la guía.
 
 ---

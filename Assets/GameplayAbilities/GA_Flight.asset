@@ -20,7 +20,7 @@ MonoBehaviour:
   CooldownDuration: 0
   UseAttackSpeedAsCooldown: 0
   UltimateChargeAmount: 1
-  ActivationBlockedTags: 0200000003000000
+  ActivationBlockedTags: 020000000300000059000000
   ActivationRequiredTags: 
   UsableWhileChanneling: 0
   UsableWhileHolding: 0
@@ -46,12 +46,26 @@ MonoBehaviour:
     OnlyIfTargetHas: 0
     StackScaling: 0
     PerStack: 0
+    PerTargetCooldown: 0
+    TargetStacksTag: 0
+    TargetScaling: 0
+    TargetPerStack: 0
+    ConsumeTargetStacks: 0
   Visuals: []
   IsInterruptible: 0
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
+  CastMode: 0
+  CastSeconds: 1
+  CastTickSeconds: 0.5
+  CastBlocksOthers: 1
+  CastBreaksOnDamage: 0
+  CastStartAnimation: {fileID: 0}
+  CastLoopAnimation: {fileID: 0}
+  CastReleaseAnimation: {fileID: 0}
   MaxCharges: 1
+  EndTag: 0
   BuffEffect: {fileID: 0}
   AdditionalEffects: []
   LaunchDirection: 1
