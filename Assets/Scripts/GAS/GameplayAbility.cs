@@ -1861,6 +1861,24 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         else                PlayImpactVFX(point);
     }
 
+    // RAYOS: tramos de un punto a otro (from[i] → to[i]) que se dibujan en todas las pantallas
+    // (la Descarga eléctrica del Mago y sus rebotes). Cada peer los dibuja con su copia de la
+    // habilidad (PlayBeams), como los VFX de impacto.
+    public void BroadcastBeams(Vector3[] from, Vector3[] to)
+    {
+        if (from == null || to == null || from.Length == 0 || from.Length != to.Length) return;
+
+        NetworkAbilitySystemComponent netAsc = OwnerASC != null
+            ? OwnerASC.GetComponent<NetworkAbilitySystemComponent>() : null;
+
+        if (netAsc != null) netAsc.ServerPlayBeams(this, from, to);
+        else                PlayBeams(from, to);
+    }
+
+    // Dibuja los tramos en ESTA pantalla. Por defecto nada: la habilidad que tiene rayos lo
+    // sobreescribe (GA_ChainLightning).
+    public virtual void PlayBeams(Vector3[] from, Vector3[] to) { }
+
     // Los VFX "en el impacto" en un punto. Lo corre CADA peer con su propia copia de la
     // habilidad (NetworkAbilitySystemComponent.ServerPlayAbilityVFX resuelve esta MISMA
     // habilidad en cada cliente), así no hace falta sincronizar el GameObject del VFX.

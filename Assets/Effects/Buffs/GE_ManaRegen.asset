@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: GE_ManaRegen
   m_EditorClassIdentifier: 
   Duration: 99999
-  Period: 0.5
+  Period: 1
   StackingPolicy: 0
   MaxStacks: 0
   OnMaxStacksEffect: {fileID: 0}

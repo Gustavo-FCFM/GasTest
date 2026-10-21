@@ -191,7 +191,14 @@ public class GA_HitscanShot : GameplayAbility
 
         // VFX del impacto (en la pared o en el enemigo) para todos los peers.
         BroadcastImpactVFX(impactPoint);
+
+        OnShotResolved(origin, impactPoint, victim);
     }
+
+    // Después de resolver el tiro: de dónde salió, dónde terminó (la pared, el enemigo o el
+    // alcance máximo) y a quién le pegó (null = a nadie). La Descarga eléctrica del Mago dibuja
+    // ahí su rayo y rebota.
+    protected virtual void OnShotResolved(Vector3 origin, Vector3 impactPoint, AbilitySystemComponent victim) { }
 
     // Vista previa del disparo en el Editor.
     public override void DrawGizmos(Transform origin)

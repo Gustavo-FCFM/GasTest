@@ -7,23 +7,18 @@ siguen abiertas, más el plan.
 El proyecto compila limpio: 0 errores y 0 warnings en código propio (los 312 warnings
 del log son todos de packs importados).
 
-## ★ Al retomar: lo abierto, en orden (20 de octubre)
+## ★ Al retomar: lo abierto, en orden (21 de octubre)
 
-1. **Etapa 2 del Mago — el libro** (la 2a, el libro, el fuego y el hielo, HECHA Y PROBADA ✅ el 21 de octubre; sigue la 2b, el Terremoto y la Descarga): la rueda (ARRIBA los misiles); que la variante cobre su maná
-   y canalice (la pieza delicada: toca la red); la vuelta sola a los misiles sin maná; y los 4
-   hechizos del clic: Bola de fuego (canaliza 0.5 s, explota y deja la zona del dragón), Flecha
-   helada (canaliza 1 s), Terremoto (la grieta que avanza por el piso) y Descarga eléctrica (el
-   grafo de rebotes). Todo decidido: ver la tabla del Mago.
-2. **Etapa 3 — la Q** (recarga, muro, tumba, levantamiento, tormenta) y **etapa 4** (bots, y
+1. **Etapa 3 del Mago — la Q** (las etapas 1 y 2 están hechas y probadas ✅: el kit con los misiles, el libro y los 4 hechizos del clic; ver "★ El Mago"): recarga, muro, tumba, levantamiento, tormenta, y **etapa 4** (bots, y
    pasar el Mago al documento de diseño de clases y a la guía).
-3. **Probar lo de antes:** el parry del Guardián en un cliente; los bots con el Explorador, el
+2. **Probar lo de antes:** el parry del Guardián en un cliente; los bots con el Explorador, el
    Monje y el Guerrero; `GA_SpawnSummon` con una variante de las plantillas de invocación.
-4. **Cuando alguien se atasque:** traer `Logs/Unstuck.log`.
-5. **Decisiones de Gustavo, sin prisa:** más prefabs (variantes de tótems y enemigos, la UI que
+3. **Cuando alguien se atasque:** traer `Logs/Unstuck.log`.
+4. **Decisiones de Gustavo, sin prisa:** más prefabs (variantes de tótems y enemigos, la UI que
    todavía arma el código), acomodar los botiquines, la puntería si se siente mal.
-6. **Después del Mago:** las animaciones raras (sección 5, con la pose del bloqueo del Monje) y
+5. **Después del Mago:** las animaciones raras (sección 5, con la pose del bloqueo del Monje) y
    el sonido (faltan los clips).
-7. **Íconos del Mago:** provisionales (el de la Flecha mágica del Clérigo). Pedirle al artista
+6. **Íconos del Mago:** provisionales (el de la Flecha mágica del Clérigo). Pedirle al artista
    los de la clase, los misiles y el punto arcano.
 
 ## Cómo retomar en la otra máquina
@@ -67,7 +62,7 @@ rm -rf "Assets/FishNet" "Assets/FishNet.meta" "Assets/TextMesh Pro/Examples & Ex
 
 ---
 
-# ★ El Mago: kit base — ETAPA 1 HECHA Y PROBADA ✅ (21 de octubre); siguen las etapas 2, 3 y 4
+# ★ El Mago: kit base — ETAPAS 1 Y 2 HECHAS Y PROBADAS ✅ (21 de octubre); siguen las etapas 3 y 4
 
 Decidido con Gustavo el 20 de octubre. Cambia cosas del documento de diseño (la Tumba helada
 congela al MAGO, no a los demás; la Q no gasta maná; el Terremoto avanza por el piso; la
@@ -165,7 +160,7 @@ azul) los crea una herramienta de una vez, como prefabs.
         pantallas; con puntos, el número de daño sube 2 por punto; a los 6 s sin misiles se van
         todos; el vuelo; subir de nivel (vida y maná). Ajustar la "Espera al lanzar" de
         `GA_ArcaneMissiles` si la bolita no sale de la mano.
-- [ ] **Etapa 2 — el libro**, en dos partes:
+- [x] **Etapa 2 — el libro: HECHA Y PROBADA ✅ (21 de octubre)**, en dos partes:
   - [x] **2a — el libro, fuego y hielo: HECHA Y PROBADA ✅ (21 de octubre).**
         Código nuevo, todo genérico:
         · `GA_RadialChoice` (Create ▸ GAS ▸ Generics ▸ Radial Choice): una rueda donde cada opción deja
@@ -195,8 +190,31 @@ azul) los crea una herramienta de una vez, como prefabs.
         fuego; la Flecha helada: mantener canaliza 1 s, se puede seguir manteniendo y apuntando, sale al soltar (soltar antes, sale apenas se llena), cobra 50 al soltar y ralentiza más con puntos; cortarlas a mitad
         (aturdido) cobra igual y no sale; mantener el clic no las repite (los misiles sí); sin maná
         vuelve solo a los misiles (con la Flecha: 60 de maná, se lanza una y vuelve).
-  - [ ] **2b — el Terremoto y la Descarga eléctrica** (la grieta que avanza por el piso; el grafo de
-        rebotes): falta.
+  - [x] **2b — el Terremoto y la Descarga eléctrica: HECHA Y PROBADA ✅ (21 de octubre).**
+        Código nuevo:
+        · `GA_GroundFissure` (genérico, Create ▸ GAS ▸ Generics ▸ Ground Fissure): una grieta que AVANZA
+          por el piso (Largo, Ancho, Alto: pega solo hasta esa altura; Velocidad; sube escalones de
+          "Escalón que sube" y baja por bordes de hasta "Baja hasta"; una pared o el vacío la cortan),
+          con sus VFX "en el impacto" cada "VFX cada" metros. Volando: corta el vuelo, el dueño cae en
+          PICADA (`PlayerController.StartDive`, por `NetworkASC.ServerStartDive`) y la grieta sale
+          cuando el servidor lo ve en el piso (o a los "Espera máxima" s).
+        · `GA_ChainLightning` (sobre `GA_HitscanShot`, que ahora avisa dónde pegó: `OnShotResolved`):
+          el grafo de rebotes (Ramas o Cadena; más puntos primero, después el más cercano; Salto 4 m;
+          visible desde el anterior; un rayo por enemigo por ataque). `ChainFrom` es público: lo va a
+          usar la Tormenta.
+        · Rayos en red: `GameplayAbility.BroadcastBeams` / `PlayBeams` y `NetworkASC.ServerPlayBeams`
+          (viajan solo los puntos de cada tramo); `VFX_LightningBeam` dibuja la línea quebrada.
+  - [x] (Corrida y borrada el 21 de octubre.) Correr `Mercenarios ▸ Una vez ▸ Crear el Mago (etapa 2b: terremoto y descarga)` y borrar
+        `Assets/Scripts/Editor/MercWizardStage2b.cs`. Crea `GA_Earthquake` (20 de maná; daño ⚙ 1.2 × daño
+        mágico y `GE_Stun` 0.5 s por punto que los GASTA) y `GA_ChainLightning` (10 de maná; daño ⚙
+        0.8 ×), `VFX_LightningBeam`, `GE_Spell_Earth`/`_Lightning` y sus costos, y los suma al clic
+        izquierdo y al libro. Actualiza los registros.
+  - [x] **PROBADO ✅ (21 de octubre).** Probar, en el host y en un cliente: el libro con los 5 (arriba los misiles); el Terremoto avanza
+        (se ve venir), pega a los que están en el piso y NO al que salta, sube escalones, baja de una
+        plataforma, se corta en una pared, aturde según los puntos y los gasta (las bolas se van);
+        lanzado volando: corta el vuelo, cae en picada y sale al tocar el piso; la Descarga: el rayito
+        en las dos pantallas (pegue o no), rebota según los puntos (A con 2 → B y C), no cruza paredes,
+        cada enemigo una vez; mantener el clic repite los dos; sin maná, a los misiles.
 - [ ] **Etapa 3 — la Q:** recarga, muro, tumba, levantamiento y tormenta (con la descarga contra el
       tornado).
 - [ ] **Etapa 4:** los bots, y pasarlo al documento de diseño de clases y a la guía.

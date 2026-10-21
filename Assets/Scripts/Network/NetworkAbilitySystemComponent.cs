@@ -1845,6 +1845,22 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // no vuela (GA_Flight.MovesThroughOwner).
     // =========================================================
 
+    // PICADA (el Terremoto del Mago lanzado volando): el servidor ya cortó el vuelo; el DUEÑO cae
+    // rápido hasta el piso (el transform es suyo). El servidor espera a verlo en el piso.
+    [Server]
+    public void ServerStartDive(float speed)
+    {
+        if (!HasOwnerConnection()) return;
+        TargetStartDive(Owner, speed);
+    }
+
+    [TargetRpc]
+    private void TargetStartDive(NetworkConnection conn, float speed)
+    {
+        PlayerController pc = GetComponent<PlayerController>();
+        if (pc != null) pc.StartDive(speed);
+    }
+
     // towardAim: el despegue sale hacia la mira del dueño (la resuelve él, que tiene la cámara).
     [Server]
     public void ServerStartFlight(float launchSpeed, float speedMultiplier, float forwardBoost, float verticalSpeed,
@@ -2075,6 +2091,31 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
             ObserversPlayAbilityVFX(abilityIndex, position);
         else
             Debug.LogWarning($"[NetworkASC] '{ability.AbilityName}' no está en GameplayAbilityRegistry — su VFX de impacto no se replicará a los clientes remotos.");
+    }
+
+    // RAYOS de una habilidad (la Descarga eléctrica del Mago y sus rebotes): tramos de un punto
+    // a otro que cada pantalla dibuja con su copia de la habilidad (GameplayAbility.PlayBeams).
+    [Server]
+    public void ServerPlayBeams(GameplayAbility ability, Vector3[] from, Vector3[] to)
+    {
+        if (ability == null || from == null || to == null) return;
+
+        ability.PlayBeams(from, to);   // el servidor ya mismo (importa para el host)
+
+        int abilityIndex = GameplayAbilityRegistry.Instance != null
+            ? GameplayAbilityRegistry.Instance.GetIndex(ability) : -1;
+        if (abilityIndex >= 0)
+            ObserversPlayBeams(abilityIndex, from, to);
+        else
+            Debug.LogWarning($"[NetworkASC] '{ability.AbilityName}' no está en GameplayAbilityRegistry — sus rayos no se verán en los clientes remotos.");
+    }
+
+    [ObserversRpc]
+    private void ObserversPlayBeams(int abilityIndex, Vector3[] from, Vector3[] to)
+    {
+        if (IsServerInitialized) return;   // el servidor ya los dibujó
+        GameplayAbility ability = GameplayAbilityRegistry.Instance?.GetAbility(abilityIndex);
+        if (ability != null) ability.PlayBeams(from, to);
     }
 
     [ObserversRpc]

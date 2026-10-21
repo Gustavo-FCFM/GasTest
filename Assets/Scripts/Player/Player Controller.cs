@@ -1044,8 +1044,10 @@ public class PlayerController : NetworkBehaviour
             }
         }
 
-        // Después de volar también cae lento (sin aleteos: eso es solo de la caída de pluma).
-        bool slowFall = feathered || _flightFalling;
+        // Después de volar también cae lento (sin aleteos: eso es solo de la caída de pluma). En
+        // PICADA no: cae rápido hasta el piso (ver StartDive).
+        bool slowFall = !_diving && (feathered || _flightFalling);
+        if (_diving) verticalVelocity = Mathf.Min(verticalVelocity, -_diveSpeed);
         verticalVelocity += gravity * (slowFall ? featherFallGravityScale : 1f) * Time.deltaTime;
 
         if (slowFall && featherFallMaxSpeed > 0f && verticalVelocity < -featherFallMaxSpeed)
@@ -1743,13 +1745,30 @@ public class PlayerController : NetworkBehaviour
         bool flying = IsFlying;
         if (_wasFlying && !flying)
         {
-            _flightFalling = true;
+            // En picada no cae lento: la picada sigue (el aviso de la picada y el fin del vuelo
+            // pueden llegar en cualquier orden).
+            _flightFalling = !_diving;
             _flightLaunch  = Vector3.zero;
-            verticalVelocity = 0f;
+            verticalVelocity = _diving ? -_diveSpeed : 0f;
         }
         _wasFlying = flying;
 
         if (_flightFalling && !flying && characterController.isGrounded) _flightFalling = false;
+        if (_diving && !flying && characterController.isGrounded) _diving = false;
+    }
+
+    // PICADA (el Terremoto del Mago lanzado volando): el servidor cortó el vuelo y le pide al
+    // DUEÑO que caiga rápido hasta el piso, sin la caída lenta del fin del vuelo; al tocarlo, el
+    // servidor larga la grieta. Lo llama NetworkAbilitySystemComponent.TargetStartDive.
+    private bool  _diving;
+    private float _diveSpeed;
+    public void StartDive(float speed)
+    {
+        _diving          = true;
+        _diveSpeed       = Mathf.Max(1f, Mathf.Abs(speed));
+        _flightFalling   = false;
+        _flightLaunch    = Vector3.zero;
+        verticalVelocity = -_diveSpeed;
     }
 
     // Aturdido en pleno vuelo (o cayendo después de volar): no se queda colgado en el
@@ -1784,6 +1803,7 @@ public class PlayerController : NetworkBehaviour
         verticalVelocity            = 0f;
         _knockbackActive            = false;
         _flightFalling              = false;
+        _diving                     = false;
         if (_rushActive) StopRush(false);
 
         faceDir.y = 0;

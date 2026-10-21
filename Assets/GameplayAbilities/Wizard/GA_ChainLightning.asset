@@ -1,0 +1,103 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9989bd182a4ab9746b4e4f9e10df62d2, type: 3}
+  m_Name: GA_ChainLightning
+  m_EditorClassIdentifier: 
+  AbilityName: Lightning Bolt
+  AbilityNameEs: "Descarga el\xE9ctrica"
+  AbilityIcon: {fileID: 21300000, guid: 8aacedc79fe3198408fa82c77ec1b3a5, type: 3}
+  CostEffect: {fileID: 11400000, guid: bb15d1167b91b3e4ba5db66739990f05, type: 2}
+  CooldownEffect: {fileID: 11400000, guid: 45327044be4f41c4d8f5289bc6f9b3be, type: 2}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 1
+  UltimateChargeAmount: 1
+  ActivationBlockedTags: 0100000003000000
+  ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  UsableWhileHolding: 0
+  AnimationClip: {fileID: 3094330708855449807, guid: c2160d1a58a158543817a3f1c504dc91, type: 3}
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  StacksTag: 0
+  ConsumeStacks: 0
+  Effects:
+  - When: 0
+    ApplyTo: 0
+    Effect: {fileID: 11400000, guid: f6777a1966cb6fd44817d2937abfbbd1, type: 2}
+    OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
+    PerTargetCooldown: 0
+    TargetStacksTag: 0
+    TargetScaling: 0
+    TargetPerStack: 0
+    ConsumeTargetStacks: 0
+  Visuals:
+  - When: 1
+    VFXPrefab: {fileID: 2965222256817593503, guid: a164e676dbbd6e54587237e619372c98, type: 3}
+    Delay: 0
+    Offset: {x: 0, y: 0, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    Attach: 0
+    MatchAreaSize: 0
+    AreaSizeMultiplier: 0
+    DestroyTime: 1
+    EndWithTag: 0
+    EndWhenAttributeDepleted: 0
+    DepletedAttribute: 0
+  IsInterruptible: 1
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  CastMode: 0
+  CastSeconds: 1
+  CastTickSeconds: 0.5
+  CastBlocksOthers: 1
+  CastBreaksOnDamage: 0
+  CastStartAnimation: {fileID: 0}
+  CastLoopAnimation: {fileID: 0}
+  CastReleaseAnimation: {fileID: 0}
+  MaxCharges: 1
+  MaxRange: 40
+  BulletRadius: 0.2
+  MuzzleHeight: 1.4
+  MinConvergeDistance: 4
+  WallLayer:
+    serializedVersion: 2
+    m_Bits: 4294967131
+  RecoilSpeed: 0
+  RecoilDuration: 0.25
+  RecoilExitSpeedPercent: 0.35
+  RecoilExitDamping: 3
+  ExcludePlayerLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  DamageEffect: {fileID: 0}
+  AdditionalEffects: []
+  HitVFX: {fileID: 0}
+  PointTag: 83
+  Shape: 0
+  JumpRange: 4
+  MaxTargets: 12
+  ChestHeight: 1.1
+  BeamPrefab: {fileID: 7993184928851973513, guid: 2958a230a4c616945a783b5363750755, type: 3}

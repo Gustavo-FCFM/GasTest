@@ -77,4 +77,22 @@ MonoBehaviour:
     Icon: {fileID: 21300000, guid: 10b6bf9e4f8d3e241b3acab09d461d56, type: 3}
     Effect: {fileID: 11400000, guid: 40848ef5aa8028e459274f1844444b84, type: 2}
     RequiresAffordable: {fileID: 11400000, guid: 9f2bd53d1612b264c9e4a018da8809e5, type: 2}
+  - Name: Earthquake
+    NameEs: Terremoto
+    Description: A fissure runs along the ground. With arcane points it stuns 0.5
+      s per point and spends them. 20 mana.
+    DescriptionEs: "Una grieta avanza por el piso. Con puntos arcanos aturde 0.5
+      s por punto y los gasta. 20 de man\xE1."
+    Icon: {fileID: 21300000, guid: d04fb6a6eb3903243b98d5ef08e89617, type: 3}
+    Effect: {fileID: 11400000, guid: f6ae36be3682a334083d8af3179929a6, type: 2}
+    RequiresAffordable: {fileID: 11400000, guid: ca30b73875fd4b04cb4594ea2a05f1f8, type: 2}
+  - Name: Lightning Bolt
+    NameEs: "Descarga el\xE9ctrica"
+    Description: Instant bolt. It bounces to as many nearby enemies as arcane points
+      the target has. 10 mana.
+    DescriptionEs: "Rayo instant\xE1neo. Rebota a tantos enemigos cercanos como puntos
+      arcanos tenga el golpeado. 10 de man\xE1."
+    Icon: {fileID: 21300000, guid: 8aacedc79fe3198408fa82c77ec1b3a5, type: 3}
+    Effect: {fileID: 11400000, guid: 20383a443659a0e4786da097fd73b096, type: 2}
+    RequiresAffordable: {fileID: 11400000, guid: bb15d1167b91b3e4ba5db66739990f05, type: 2}
   ChoiceTag: 84
