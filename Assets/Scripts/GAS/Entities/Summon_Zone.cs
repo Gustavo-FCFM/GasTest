@@ -120,7 +120,12 @@ public class Summon_Zone : MonoBehaviour
 
     private Entity_Summon _summon;
     private GameObject    _vfx;
+    private float _vfxGrowth;   // con cuánto crecimiento se escaló el VFX
     private float _endsAt = float.MaxValue, _nextTick;
+
+    // El radio de ahora: el del prefab más lo que creció (Entity_Summon.GrowZone: la Tormenta de la
+    // Evocación crece con cada Descarga que le pega). En todas las pantallas.
+    public float CurrentRadius => Radius + (_summon != null ? _summon.ZoneGrowth : 0f);
 
     private static readonly Collider[] s_hits = new Collider[64];
     private readonly HashSet<AbilitySystemComponent> _seen = new HashSet<AbilitySystemComponent>();
@@ -146,12 +151,21 @@ public class Summon_Zone : MonoBehaviour
         if (on && _vfx == null && VFX != null)
         {
             _vfx = Instantiate(VFX, transform.position, transform.rotation, transform);
-            VFX_AreaVisual.Configure(_vfx, Radius, VfxScale, 0f);
+            _vfxGrowth = _summon.ZoneGrowth;
+            VFX_AreaVisual.Configure(_vfx, CurrentRadius, VfxScale, 0f);
         }
         else if (!on && _vfx != null)
         {
             Destroy(_vfx);
             _vfx = null;
+        }
+        else if (_vfx != null && !Mathf.Approximately(_vfxGrowth, _summon.ZoneGrowth))
+        {
+            // La zona creció: el VFX crece con ella (solo el tamaño; sigue vivo).
+            _vfxGrowth = _summon.ZoneGrowth;
+            VFX_AreaVisual area = _vfx.GetComponent<VFX_AreaVisual>();
+            if (area != null) area.SetRadius(CurrentRadius);
+            else              _vfx.transform.localScale = Vector3.one * (CurrentRadius * VfxScale);
         }
 
         // Servidor: los efectos.
@@ -178,7 +192,7 @@ public class Summon_Zone : MonoBehaviour
         int count = Shape == EShape.Box
             ? Physics.OverlapBoxNonAlloc(BoxCenter, BoxHalfExtents, s_hits, transform.rotation, CharacterLayer,
                                          QueryTriggerInteraction.Collide)
-            : Physics.OverlapSphereNonAlloc(transform.position, Radius, s_hits, CharacterLayer,
+            : Physics.OverlapSphereNonAlloc(transform.position, CurrentRadius, s_hits, CharacterLayer,
                                             QueryTriggerInteraction.Collide);
         for (int i = 0; i < count; i++)
         {

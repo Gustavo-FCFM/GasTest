@@ -122,13 +122,17 @@ public class GA_SpawnSummon : GameplayAbility, IGroundTargetAbility, IWallTarget
                 spot = Entity_Summon.GroundNear(owner.position + forward * FrontDistance, owner.position.y);
                 break;
             default:
-                // Donde apunta, recortado al alcance (en el plano), y apoyado en el piso.
+            {
+                // Donde apunta, recortado al alcance (en el plano), y apoyado en el piso. Medido desde
+                // donde estaba al pedirla: si canaliza antes de salir, cae donde soltó aunque se mueva.
+                Vector3 from = pc != null ? pc.AimFromPosition : owner.position;
                 Vector3 aim  = pc != null ? pc.GetAimPoint(MaxRange) : owner.position + forward * MaxRange;
-                Vector3 flat = aim - owner.position; flat.y = 0f;
+                Vector3 flat = aim - from; flat.y = 0f;
                 if (flat.magnitude > MaxRange)
-                    aim = owner.position + flat.normalized * MaxRange + Vector3.up * (aim.y - owner.position.y);
-                spot = Entity_Summon.GroundUnderAim(aim, owner.position + Vector3.up * 1.6f);
+                    aim = from + flat.normalized * MaxRange + Vector3.up * (aim.y - from.y);
+                spot = Entity_Summon.GroundUnderAim(aim, from + Vector3.up * 1.6f);
                 break;
+            }
         }
 
         // El muro sale atravesado a la línea del lanzador al punto (lo mismo que dibujó el marcador)
@@ -136,7 +140,7 @@ public class GA_SpawnSummon : GameplayAbility, IGroundTargetAbility, IWallTarget
         Quaternion rotation = Quaternion.LookRotation(forward);
         if (UsesWallMarker)
         {
-            Vector3 toSpot = spot - owner.position; toSpot.y = 0f;
+            Vector3 toSpot = spot - (pc != null ? pc.AimFromPosition : owner.position); toSpot.y = 0f;
             if (toSpot.sqrMagnitude > 0.01f) rotation = Quaternion.LookRotation(toSpot.normalized);
             if (RotationStep > 0f && pc != null) rotation *= Quaternion.Euler(0f, pc.NetworkPlacementYaw, 0f);
         }

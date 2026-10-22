@@ -1497,7 +1497,10 @@ public class BotController : MonoBehaviour
         // Un buff de pelea se usa cuando HAY pelea: con un enemigo cerca, no despues de
         // aguantar un rato trabado. El Castigo del Paladin es justo eso — carga el proximo
         // ataque, asi que llega tarde si espera a estar peleando hace segundo y medio.
-        if (_target != null && Vector3.Distance(transform.position, _target.transform.position) <= MeleeRange * 3f)
+        // "Cerca" depende de cómo pelea: el que pega de lejos (el Mago: la Memoria perfecta) lo usa
+        // a su distancia de tiro.
+        float near = ResolveRole() == EBotRole.Ranged ? RangedDistance * 1.5f : MeleeRange * 3f;
+        if (_target != null && Vector3.Distance(transform.position, _target.transform.position) <= near)
             return true;
 
         return engaged && Time.time - _engagedSince >= BuffAfterSeconds;

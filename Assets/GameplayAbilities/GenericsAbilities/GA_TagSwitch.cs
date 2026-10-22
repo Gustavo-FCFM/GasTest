@@ -114,6 +114,22 @@ public class GA_TagSwitch : GameplayAbility, IGroundTargetAbility, IWallTargetAb
     [Label("Sin para pagarla: vuelve a la de por defecto")]
     public bool FallBackWhenUnaffordable = true;
 
+    [Tooltip("OPCIONAL: con este tag puesto, lo que sale sale AL INSTANTE (sin canalizar), sin costo y " +
+             "sin poner cooldown, y gasta UNA acumulación del tag (la Memoria perfecta de la Evocación: " +
+             "la próxima Q del Mago; la Sobrecarga da 3). Con la habilidad en cooldown no sale. None = nunca.")]
+    [Label("Al instante y sin cooldown con tag")]
+    public EGameplayTag InstantTag = EGameplayTag.None;
+
+    [ShowIf(nameof(InstantTag), EGameplayTag.None, true)]
+    [Tooltip("La habilidad por defecto no sale al instante ni gasta el tag (la Recarga de maná de la Q).")]
+    [Label("La de por defecto no lo usa")]
+    public bool InstantSkipsDefault = true;
+
+    // ¿Esta (la que va a salir) sale al instante? Corre en el dueño y en el servidor: el tag viaja.
+    protected bool InstantNow(GameplayAbility template)
+        => InstantTag != EGameplayTag.None && template != null && OwnerASC != null && OwnerASC.HasTag(InstantTag) &&
+           !(InstantSkipsDefault && template == DefaultAbility);
+
     // ¿Alcanza para pagar esta variante? Solo cuenta si cada una cobra lo suyo y se vuelve a la
     // de por defecto sin con qué pagarla. Corre en el dueño y en el servidor (el maná viaja).
     private bool CanPay(GameplayAbility template)
@@ -173,7 +189,12 @@ public class GA_TagSwitch : GameplayAbility, IGroundTargetAbility, IWallTargetAb
         bool tickPaid = tick && CastTickPaid;
         if (tick && CastSource != null && CastSource != this) template = CastSource;
 
+        // Con el tag de "al instante" (ver InstantTag), sale gratis: tampoco cobra el switch.
+        bool instant = !tick && InstantNow(template);
+
+        if (instant) SetFreeActivation(true);
         CommitAbility();
+        if (instant) SetFreeActivation(false);
 
         if (consumeTag && !tickPaid) ConsumeTagFromOwner(usedTag);
 
@@ -193,8 +214,9 @@ public class GA_TagSwitch : GameplayAbility, IGroundTargetAbility, IWallTargetAb
         // devuelve: cancelar tiene ese costo, como en cualquier otro básico.
         instance.IsInterruptible = IsInterruptible;
 
-        if (tick) instance.ActivateAsCastTick(tickPaid);
-        else      instance.Activate();
+        if (tick)         instance.ActivateAsCastTick(tickPaid);
+        else if (instant) ActivateInstant(instance);
+        else              instance.Activate();
 
         // Ya cobró: si no le alcanza para otra, vuelve ya a la de por defecto (el botón cambia).
         DropUnpayableVariants();
@@ -202,6 +224,15 @@ public class GA_TagSwitch : GameplayAbility, IGroundTargetAbility, IWallTargetAb
         // El fin de la habilidad lo maneja la VARIANTE (su propio EndAbility, que
         // llega cuando termina su secuencia). Llamarlo también acá liberaría
         // isAttacking antes de tiempo y dejaría al jugador atacar encima del swing.
+    }
+
+    // La variante gratis y sin canalizar; si de verdad salió, gasta una acumulación del tag.
+    protected void ActivateInstant(GameplayAbility instance)
+    {
+        instance.CommittedThisActivation = false;
+        instance.StartedThisActivation   = false;
+        instance.ActivateFree();
+        if (instance.CommittedThisActivation || instance.StartedThisActivation) ConsumeTagFromOwner(InstantTag);
     }
 
     // Si alguna de sus habilidades se mueve por el dueño (la Patada voladora del Monje), el
@@ -339,8 +370,17 @@ public class GA_TagSwitch : GameplayAbility, IGroundTargetAbility, IWallTargetAb
     // Canaliza con los datos de la que va a salir: la Bola de fuego 0.5 s, la Flecha helada 1 s,
     // los misiles nada. Corre en el dueño y en el servidor: los dos ven los mismos tags y el
     // mismo maná.
+    // Con el tag de "al instante" no canaliza: los datos son los del propio switch (que no canaliza).
     public override GameplayAbility CastSettingsSource
-        => VariantsPayOwnCost && OwnerASC != null ? (ResolveTemplate(out _, out _) ?? this) : this;
+    {
+        get
+        {
+            if (OwnerASC == null) return this;
+            GameplayAbility template = ResolveTemplate(out _, out _);
+            if (InstantNow(template)) return this;
+            return VariantsPayOwnCost ? (template ?? this) : this;
+        }
+    }
 
     // Cortada a mitad de canalizar cuenta como lanzada: cobra también lo de la variante que iba
     // a salir (el maná del hechizo y, en un switch de mantener, su ritmo).

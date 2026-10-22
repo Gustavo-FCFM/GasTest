@@ -1174,8 +1174,9 @@ public class AbilitySystemComponent : MonoBehaviour
         {
             if (damageEndured > 0f) OnDamageEndured?.Invoke(damageEndured);
 
-            // Vuelo libre: cualquier daño de otro lo baja (cae lento, ver PlayerController).
-            if (damageEndured > 0f && HasTag(EGameplayTag.Status_Flying))
+            // Vuelo libre: cualquier daño de otro lo baja (cae lento, ver PlayerController). Con
+            // vuelo firme (la Sobrecarga de la Evocación) no.
+            if (damageEndured > 0f && HasTag(EGameplayTag.Status_Flying) && !HasTag(EGameplayTag.Status_SteadyFlight))
                 RemoveEffectsWithTag(EGameplayTag.Status_Flying);
             if (healthHealed > 0f && !sourceASC.IsEnemyOf(this)) sourceASC.NotifyHealedAlly(this, healthHealed);
         }

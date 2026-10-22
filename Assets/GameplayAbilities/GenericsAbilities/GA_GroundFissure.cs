@@ -54,6 +54,17 @@ public class GA_GroundFissure : GameplayAbility
     [Label("VFX cada (m)")]
     public float VfxSpacing = 1.5f;
 
+    [Tooltip("Grietas EXTRA a cada lado de la principal, abiertas en abanico (Parte montañas de la " +
+             "Evocación: 1 = tres grietas). Cada enemigo recibe un solo golpe por lanzamiento aunque lo " +
+             "crucen varias. 0 = una sola grieta.")]
+    [Label("Grietas extra por lado")]
+    public int ExtraFissuresPerSide = 0;
+
+    [ShowIf(nameof(ExtraFissuresPerSide), ShowIfAttribute.Positive)]
+    [Tooltip("Ángulo entre una grieta y la siguiente.")]
+    [Label("Ángulo entre grietas (°)")]
+    public float ExtraFissureAngle = 30f;
+
     [Section("Desde el aire")]
     [Tooltip("Lanzada volando: se corta el vuelo, cae en picada a esta velocidad y la grieta sale " +
              "al tocar el piso.")]
@@ -94,7 +105,7 @@ public class GA_GroundFissure : GameplayAbility
         }
         else
         {
-            OwnerASC.StartAbilityCoroutine(FissureRoutine(GroundBelow(OwnerASC.transform.position), dir));
+            StartFissures(GroundBelow(OwnerASC.transform.position), dir);
         }
 
         // La grieta sigue sola: el lanzador queda libre.
@@ -132,12 +143,26 @@ public class GA_GroundFissure : GameplayAbility
         }
 
         if (OwnerASC == null) yield break;
-        yield return FissureRoutine(GroundBelow(OwnerASC.transform.position), dir);
+        StartFissures(GroundBelow(OwnerASC.transform.position), dir);
     }
 
-    private IEnumerator FissureRoutine(Vector3 start, Vector3 dir)
+    // La principal y las extra en abanico, con UNA lista de golpeados para todas: cada enemigo
+    // recibe un solo golpe por lanzamiento.
+    private void StartFissures(Vector3 start, Vector3 dir)
     {
         var struck = new HashSet<AbilitySystemComponent>();
+        OwnerASC.StartAbilityCoroutine(FissureRoutine(start, dir, struck));
+
+        for (int i = 1; i <= Mathf.Max(0, ExtraFissuresPerSide); i++)
+            foreach (float side in new[] { -1f, 1f })
+            {
+                Vector3 extra = Quaternion.AngleAxis(side * ExtraFissureAngle * i, Vector3.up) * dir;
+                OwnerASC.StartAbilityCoroutine(FissureRoutine(start, extra, struck));
+            }
+    }
+
+    private IEnumerator FissureRoutine(Vector3 start, Vector3 dir, HashSet<AbilitySystemComponent> struck)
+    {
         Quaternion rotation = Quaternion.LookRotation(dir);
         Vector3 current = start;
         float traveled = 0f;
@@ -193,14 +218,18 @@ public class GA_GroundFissure : GameplayAbility
         }
     }
 
-    // Vista previa: el camino de la grieta, derecho hacia adelante.
+    // Vista previa: el camino de cada grieta, derecho (la principal hacia adelante).
     public override void DrawGizmos(Transform origin)
     {
         if (origin == null) return;
         Gizmos.color = new Color(0.65f, 0.45f, 0.2f, 0.5f);
-        Gizmos.matrix = Matrix4x4.TRS(origin.position + origin.forward * (Length * 0.5f) + Vector3.up * (Height * 0.5f),
-                                      origin.rotation, Vector3.one);
-        Gizmos.DrawCube(Vector3.zero, new Vector3(Width, Height, Length));
+        for (int i = -Mathf.Max(0, ExtraFissuresPerSide); i <= Mathf.Max(0, ExtraFissuresPerSide); i++)
+        {
+            Quaternion rot = origin.rotation * Quaternion.AngleAxis(i * ExtraFissureAngle, Vector3.up);
+            Vector3    fwd = rot * Vector3.forward;
+            Gizmos.matrix = Matrix4x4.TRS(origin.position + fwd * (Length * 0.5f) + Vector3.up * (Height * 0.5f), rot, Vector3.one);
+            Gizmos.DrawCube(Vector3.zero, new Vector3(Width, Height, Length));
+        }
         Gizmos.matrix = Matrix4x4.identity;
     }
 }

@@ -153,4 +153,6 @@ public enum EGameplayTag
     Status_SpellEarth,         // Hechizo elegido: tierra (GE_Spell_Earth)
     Status_SpellLightning,     // Hechizo elegido: rayo (GE_Spell_Lightning)
     Status_IceTomb,            // Encerrado en la Tumba helada (GE_IceTomb, junto con la inmunidad y el enraizado): sus otras habilidades lo llevan en ActivationBlockedTags, y apretar la Q otra vez lo saca (GA_SelfBuff "Apretar otra vez la termina")
+    Status_PerfectMemory,      // La próxima Q del Mago (no la recarga) sale al instante y sin cooldown, y gasta una (la Memoria perfecta de la Evocación; la Sobrecarga da 3). Ver GA_TagSwitch.InstantTag
+    Status_SteadyFlight,       // Vuelo firme: el daño no corta el vuelo libre (la Sobrecarga de hechizos de la Evocación levita a voluntad). Ver ASC: "Vuelo libre"
 }

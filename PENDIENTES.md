@@ -7,20 +7,22 @@ siguen abiertas, más el plan.
 El proyecto compila limpio: 0 errores y 0 warnings en código propio (los 312 warnings
 del log son todos de packs importados).
 
-## ★ Al retomar: lo abierto, en orden (21 de octubre)
+## ★ Al retomar: lo abierto, en orden (22 de octubre)
 
-1. **Probar los bots del Mago (etapa 4: código y documentos HECHOS, 21 de octubre):** ver "★ El
+1. **Subclases del Mago: PLAN en curso (22 de octubre)** — ver "★ Subclases del Mago"; plan CERRADO;
+   **etapa 1 (Escuela de evocación + cambios al kit base): HECHA Y PROBADA ✅**; sigue la **etapa 2 (Abjuración)**. Orden: Evocación, Abjuración, Filo danzante.
+2. **Probar los bots del Mago (etapa 4: código y documentos HECHOS, 21 de octubre):** ver "★ El
    Mago" ▸ Etapa 4. Las etapas 1, 2 y 3 están hechas y probadas ✅ (el kit entero). Quedó por
    confirmar que la Tumba cura y que la Flecha helada vuela más rápido.
-2. **Probar lo de antes:** el parry del Guardián en un cliente; los bots con el Explorador, el
+3. **Probar lo de antes:** el parry del Guardián en un cliente; los bots con el Explorador, el
    Monje y el Guerrero. (`GA_SpawnSummon` con variantes de las plantillas ya quedó probado: el Muro
    y la Tormenta del Mago.)
-3. **Cuando alguien se atasque:** traer `Logs/Unstuck.log`.
-4. **Decisiones de Gustavo, sin prisa:** más prefabs (variantes de tótems y enemigos, la UI que
+4. **Cuando alguien se atasque:** traer `Logs/Unstuck.log`.
+5. **Decisiones de Gustavo, sin prisa:** más prefabs (variantes de tótems y enemigos, la UI que
    todavía arma el código), acomodar los botiquines, la puntería si se siente mal.
-5. **Después del Mago:** las animaciones raras (sección 5, con la pose del bloqueo del Monje) y
+6. **Después del Mago:** las animaciones raras (sección 5, con la pose del bloqueo del Monje) y
    el sonido (faltan los clips).
-6. **Íconos del Mago:** provisionales (el de la Flecha mágica del Clérigo). Pedirle al artista
+7. **Íconos del Mago:** provisionales (el de la Flecha mágica del Clérigo). Pedirle al artista
    los de la clase, los misiles y el punto arcano.
 
 ## Cómo retomar en la otra máquina
@@ -64,7 +66,133 @@ rm -rf "Assets/FishNet" "Assets/FishNet.meta" "Assets/TextMesh Pro/Examples & Ex
 
 ---
 
+# ★ Subclases del Mago — PLAN (22 de octubre; aún no se arman)
+
+Decidido con Gustavo el 22 de octubre. Orden: **Evocación → Abjuración → Filo danzante**. Cada una
+es su `Class_*` colgada de `Class_Wizard` (como los juramentos del Paladín), con E, R y pasiva extra,
+y conserva la Vulnerabilidad arcana. Stats de nivel 3 (lo mismo que da la progresión del base:
++40 vida, +50 maná, +1 ataque y +1 daño mágico por nivel): 140 de vida, 200 de maná, 10 de ataque,
+12 de daño mágico, 2 de defensa, velocidad 6 y el tiempo entre ataques del base (hoy 0.6 s). El
+Filo danzante NO tiene más resistencia. Los visuales de cada subclase ("el libro brilla") son del
+artista.
+
+**Cambios al KIT BASE que salieron de esta charla (van en la etapa 1):**
+- Muro de fuego, Levantamiento y Tormenta eléctrica **canalizan 2 s** (la Tumba no; la recarga sigue
+  con sus 3 s). Ver pregunta abierta C.
+- La Tormenta base **no tira rayos**: eso es de la Evocación (ver la corrección en "★ El Mago").
+- La Vulnerabilidad arcana dura **15 s** (antes 6), para todos los Magos.
+- El muro daña hasta 2 m de alto pero sus llamas son las de la zona del dragón (bajas): una copia
+  más alta de las llamas para el muro.
+
+## Evocación
+| Ranura | Qué hace |
+|---|---|
+| E — Memoria perfecta | Tu PRÓXIMA Q (menos la recarga de maná) sale al instante (sin los 2 s de canalizar) y sin poner cooldown. La marca dura 10 s o hasta usarla; cooldown 15 s |
+| Pasiva — Hechizos empoderados | Gran bola de fuego: la que cruza TU Muro de fuego crece: explosión ×1.5 de tamaño y de daño, quemadura +2 s (y se ve más grande). Mordedura de hielo: la Flecha helada se carga más (3 s en total) y la cargada aturde 1 s +0.5 s por punto arcano. Parte montañas: el Terremoto suelta 2 grietas más a ±30°; cada enemigo recibe un solo golpe por lanzamiento. Cadena de relámpagos: la Descarga que le pega a la Tormenta se frena ahí y el tornado tira un rayo a cada enemigo a su alcance (lo que hoy está en la base), y cada golpe la AGRANDA: +1 m de radio de daño y de alcance de los rayos, hasta +4 m |
+| R — Sobrecarga de hechizos | 8 s: levita (un vuelo que el daño no corta), +30 % de resistencia, 3 Q al instante y sin cooldown (la marca de la Memoria con 3 usos), y maná ilimitado (el maná se llena cada 0.5 s, la idea de Gustavo) |
+
+## Abjuración
+| Ranura | Qué hace |
+|---|---|
+| E — Proyección arcana | Sobre un aliado (25 m). Dura PARA SIEMPRE hasta que muere el Mago, muere el aliado o se acaba su escudo (arranca con el 20 % de la vida máxima del Mago). Mientras dura, cada clic izquierdo del Mago sale además como copia desde el aliado, hacia donde apunta el Mago: sin costo y con el 50 % del daño |
+| Pasiva — Protección arcana | Al hacer daño, el Mago y su aliado proyectado ganan escudo: el 25 % del daño hecho, con tope en la mitad de la vida máxima del Mago. El escudo se guarda y, si el Mago deja de hacer daño, a los 3 s empieza a bajar de a poco; cada vez que vuelve a cargar, la cuenta de 3 s vuelve a empezar |
+| R — Protección máxima | 8 s: la proyección sobre TODOS los aliados a 25 m o menos, y las copias salen de todos |
+
+## Filo danzante
+| Ranura | Qué hace |
+|---|---|
+| Clic izquierdo | Cortes en arco corto con espada corta (la del Explorador), daño FÍSICO (los +2 por punto arcano también valen). Con un hechizo elegido en el libro (el clic derecho sigue siendo el libro), el golpe sale como CORTE AVANZANDO (con dash) y cuesta el 50 % del maná MÁXIMO; el corte GASTA el hechizo y vuelve a los cortes normales |
+| El corte avanzando | Según el hechizo: fuego (quema / +daño propio), hielo (ralentiza / +velocidad), tierra (aturde / +resistencia al aturdido), rayo (−velocidad de ataque enemiga / +la propia). Escala con los puntos arcanos (ver F abajo); el beneficio propio tiene tope del 20 % aunque pegue a varios. Solo el corte avanzando aplica el elemento |
+| E — Espada mágica | 8 s, cooldown 15 s: los cortes hacen daño MÁGICO |
+| Pasiva — Danza defensiva | +3 % de resistencia por punto arcano en enemigos a 8 m o menos, tope 30 % |
+| R — Baile final | Zona amplia apuntada (6 m): daño mágico, aplica los CUATRO perjuicios a los enemigos y se da los CUATRO beneficios, contando los puntos de los golpeados |
+
+## Decidido después (22 de octubre, respuestas de Gustavo)
+- A. Mordedura de hielo: **3 s en total** para cargarla del todo (1 s la flecha normal + 2 s más la que aturde).
+- B. La Vulnerabilidad arcana pasa a durar **15 s para TODOS los Magos** (`GE_ArcanePoint`, va en la etapa 1).
+- C. Los 2 s de canalizar de las Q: el punto queda fijo donde soltó, el marcador sigue a la vista mientras
+  canaliza, se puede mover, y cortada cuenta como lanzada.
+- D. Proyección: arranca con un escudo del **20 % de la vida máxima del Mago**; cooldown de la E desde que se
+  lanza; relanzarla sobre otro aliado la mueve; las copias salen solo si el aliado está a 25 m o menos.
+- E. Filo: el corte avanzando **GASTA el hechizo** y vuelve a los cortes normales (para que no salga el mismo
+  corte dos veces seguidas).
+- F. Fórmula de los elementos, como la propuesta: al enemigo 1 s por punto suyo (mínimo 1 s, 5 s con 5); la
+  tierra aturde 0.5 s por punto (máximo 2.5 s); a uno mismo 4 % por punto sumando los de todos los golpeados
+  (mínimo 5 %, tope 20 %), 5 s; fijos: el hielo ralentiza 30 % y el rayo quita 20 % de velocidad de ataque.
+- G. Baile final: **cuenta los puntos de los enemigos golpeados**, igual que el corte avanzando.
+- H. Gustavo le quitó el pararrayos a `Summon_LightningStorm` (verificado el 22 de octubre).
+
+- E2. Los cortes normales del Filo **dejan puntos arcanos** (1 por golpe).
+- E3. El corte avanzando gasta el hechizo y la Q del Filo vuelve a la recarga hasta elegir otro (opción A).
+
+## Etapas
+- [x] **Etapa 1 — Escuela de evocación + los cambios al kit base: HECHA Y PROBADA ✅ (22 de octubre).**
+      Código nuevo (todo genérico):
+      · `GA_TagSwitch` **Al instante y sin cooldown con tag** (`InstantTag`; "La de por defecto no lo usa"):
+        con el tag, lo que sale sale sin canalizar, sin costo y sin cooldown, y gasta una acumulación
+        (`GameplayAbility.ActivateFree`). Con la habilidad en cooldown NO sale (se lee literal: "sin
+        PONER cooldown"); si se quiere que también se salte uno que ya corría, es un cambio chico.
+      · Lo apuntado que canaliza (las Q del Mago): cae donde soltó aunque mire a otro lado o se mueva
+        (`PlayerController.NetworkRequestPosition`, y la mira se guarda al empezar), y el marcador se
+        queda quieto a la vista hasta que sale (o la cortan).
+      · `GA_ChargedAttack` **Soltar antes: sale al llegar a la primera** (la Mordedura de hielo).
+      · `GA_GroundFissure` **Grietas extra por lado** + ángulo (Parte montañas), una sola lista de golpeados.
+      · `Summon_ProjectileBooster` (nuevo, `Scripts/GAS/Entities`) + `GA_ProjectileShoot` **Explosión
+        potenciada** y **Tamaño potenciado**: el proyectil del MISMO dueño que cruza el muro crece (en
+        todas las pantallas) y suelta la otra explosión (la Gran bola de fuego).
+      · La zona de una invocación puede CRECER (`Entity_Summon.GrowZone`, viaja en un SyncVar; el VFX
+        crece con ella) y el pararrayos tiene **Crece por rayo / Crece hasta** (la Cadena de relámpagos).
+      · Tags nuevos al final: `Status_PerfectMemory`, `Status_SteadyFlight` (el daño no corta el vuelo).
+      · Bots: el que pega de lejos usa los buffs de pelea a su distancia (la Memoria perfecta).
+  - [x] (Corrida y borrada el 22 de octubre, por Claude con Unity en batch: Gustavo tenía el editor cerrado.)
+        **Arreglado el 22 de octubre:** la herramienta agarró el `GA_Fireball` de los fantasmas (`48toPlay`) en vez
+        del del Mago y `GA_FireballEvocation` salió sin canalizar; se rehízo a mano desde el del Mago (con su
+        explosión potenciada). La Mordedura de hielo canaliza con la BARRA DE CARGA por etapas (1 s y 3 s), no
+        con la barra de canalizar.
+        **Arreglado el 22 de octubre (2):** en el HOST lo apuntado que canaliza salía hacia donde miraba al
+        terminar (el host lee su cámara en vivo): ahora la mira queda FIJA mientras canaliza
+        (`PlayerController.LockAim`). Y la Mordedura de hielo pasa a la cámara de apuntar mientras carga
+        (`GA_ChargedAttack` "Cámara de apuntar al cargar"), como la flecha base.
+        **Arreglado el 22 de octubre (3):** el Muro y la Tormenta ya no se limitan a uno: "Máximo a la vez" en 0
+        (sin límite) en `GA_FireWall`, `GA_LightningStorm` y `GA_LightningStormEvocation` (pedido de Gustavo).
+        La subclase se llama **School of Evocation / Escuela de evocación** (`Class_Evocation`). Íconos: los
+        pone Gustavo. Hizo:
+        · **Kit base:** el Muro, el Levantamiento y la Tormenta canalizan 2 s; `GE_ArcanePoint` dura
+          15 s; `VFX_FireWallFlames` (⚙ la copia estirada de las llamas: el alto, en la escala Y de su
+          hijo) en `Summon_FireWall`, que además lleva el `Summon_ProjectileBooster`.
+        · **Evocación** (`GameplayAbilities/Wizard/Evocation`, `Class_Evocation` + `ASDef_Evocation`
+          en `Attributes/Wizard`, colgada de `Class_Wizard`): `GA_PerfectMemory` (+ `GE_PerfectMemory`),
+          `GA_SpellOverload` (un `GA_Flight` + `GE_SpellOverload`, `_Mana`, `_Memory`),
+          `GA_WizardSpellsEvocation` con `GA_FireballEvocation` (+ `GA_FireballExplosionBoosted`,
+          `GE_FireballDamageBoosted`, `GE_DragonBurnBoosted`), `GA_FrostBite` (`GA_ChargedAttack` con
+          `GA_FrostBoltShot` y `GA_FrostBoltStun`) y `GA_EarthquakeEvocation`; `GA_WizardQEvocation` con
+          `GA_LightningStormEvocation` y `Summon_LightningStormEvocation` (el pararrayos que crece).
+          Íconos PROVISIONALES.
+  - [x] **PROBADO ✅ (22 de octubre, en el host).** Probar, en el host y en un cliente:
+        · **Kit base (cualquier Mago):** el Muro, el Levantamiento y la Tormenta canalizan 2 s (barra y
+          pose), caen donde soltaste aunque mires a otro lado o te muevas, y el marcador se queda a la
+          vista mientras; un aturdido lo corta (y va a cooldown). La Tumba sigue instantánea. Los
+          puntos duran 15 s. Las llamas del muro se ven más altas (ajustar a ojo). La Tormenta base no
+          tira rayos.
+        · **Evocación** (subir al nivel 3 y elegirla): la E y después una Q de hechizo → sale al
+          instante y sin cooldown (la recarga no la gasta). La Bola de fuego que cruza TU muro crece y
+          explota más grande. La Flecha: 1 s la normal, 3 s la que aturde (barra de carga por etapas);
+          soltada antes de 1 s, sale al llegar. El Terremoto saca 3 grietas. La Descarga contra la
+          Tormenta de la Evocación tira rayos y la agranda (hasta +4 m). La R: levita 8 s, el daño no
+          lo baja, +30 % de resistencia, maná siempre lleno y 3 Q instantáneas.
+- [ ] **Etapa 2 — Abjuración.**
+- [ ] **Etapa 3 — Filo danzante.**
+- [ ] Después: pasar las subclases y los cambios al kit base (Q de 2 s, puntos de 15 s) a los documentos.
+
+---
+
 # ★ El Mago: kit base — ETAPAS 1, 2 Y 3 HECHAS Y PROBADAS ✅ (21 de octubre); la 4 (bots y documentos) hecha, falta probar los bots
+
+**Corrección del 22 de octubre (Gustavo):** los rayos de la Tormenta (la Descarga que le pega se frena
+ahí y el tornado tira un rayo a cada enemigo) son EXCLUSIVOS de la Evocación, no del kit base. El
+código queda (el pararrayos `Summon_LightningRod` y lo de `GA_ChainLightning`): pasa a la tormenta de
+la Evocación. Falta quitar el `Summon_LightningRod` de `Summon_LightningStorm` (el de la base). Los
+documentos ya están corregidos.
 
 Decidido con Gustavo el 20 de octubre. Cambia cosas del documento de diseño (la Tumba helada
 congela al MAGO, no a los demás; la Q no gasta maná; el Terremoto avanza por el piso; la
@@ -95,7 +223,7 @@ estrellitas azules (una bola por punto).
 | Q con Fuego — Muro de fuego | Mantener Q muestra el muro en el piso y la RUEDA DEL MOUSE lo gira (15° por paso; con control, la cruceta izquierda y derecha). 5 zonas CUADRADAS de 2 m en fila de lado a lado (10 m), con daño hasta 2 m de alto; quema como la zona del dragón. Dura 5 s. Cooldown 8 s | 0 | (los +2 de la pasiva) |
 | Q con Hielo — Tumba helada | Se congela a SÍ MISMO (el bloque de hielo de WoW / la crio-congelación de Mei): 3 s inmune a daño y a control, sin moverse ni atacar; apretar Q otra vez sale antes; CURA el 40 % de la vida máxima de a poco (8 % cada 0.5 s; pedido de Gustavo tras probarla, como Mei; si sale antes, se queda con lo que llevaba). Un cubo de hielo traslúcido lo encierra. Cooldown 20 s | 0 | — |
 | Q con Tierra — Levantamiento | Área de 3 m donde apunta: daño y los lanza hacia arriba. Cooldown 8 s | 0 | (los +2 de la pasiva) |
-| Q con Rayo — Tormenta eléctrica | Un tornado AZUL (copia de `Art/VFX/Tornado.prefab`) fijo donde apunta: 6 s, daño cada 1 s en 4 m. Si una Descarga eléctrica LE PEGA, tira un rayo a CADA enemigo a 8 m (ajustable) y cada uno arranca su rebote. Cada Descarga que le pegue lo dispara otra vez. Cooldown 8 s | 0 | Los rebotes |
+| Q con Rayo — Tormenta eléctrica | Un tornado AZUL (copia de `Art/VFX/Tornado.prefab`) fijo donde apunta: 6 s, daño cada 1 s en 4 m. Cooldown 8 s. **Corrección del 22 de octubre (Gustavo): que la Descarga le pegue y el tornado tire rayos es EXCLUSIVO de la Evocación** (Cadena de relámpagos); la base solo daña | 0 | — |
 | Shift — Vuelo | `GA_Flight` + `GE_Fly` (hecho y probado el 6 de octubre) | — | — |
 
 **El rebote de la Descarga es un grafo:** el golpeado salta a tantos enemigos como puntos tenga, y

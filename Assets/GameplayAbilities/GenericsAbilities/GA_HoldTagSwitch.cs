@@ -91,7 +91,8 @@ public class GA_HoldTagSwitch : GA_TagSwitch, IHoldAbility
         if (VariantsPayOwnCost) instance.IsInterruptible = IsInterruptible;
         instance.CommittedThisActivation = false;
         instance.StartedThisActivation   = false;
-        instance.Activate();   // la variante cobra lo suyo y arranca el mantenido
+        if (InstantNow(template)) ActivateInstant(instance);   // la Memoria perfecta: al instante, gratis
+        else                      instance.Activate();          // la variante cobra lo suyo y arranca el mantenido
 
         // Lo que la variante arrancó o cobró cuenta como del switch: con eso el servidor les manda
         // su animación a los demás (ServerActivateAbility mira estas marcas en lo que se apretó).

@@ -82,13 +82,13 @@ MonoBehaviour:
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
-  CastMode: 0
-  CastSeconds: 1
+  CastMode: 1
+  CastSeconds: 2
   CastTickSeconds: 0.5
   CastBlocksOthers: 1
   CastBreaksOnDamage: 0
   CastStartAnimation: {fileID: 0}
-  CastLoopAnimation: {fileID: 0}
+  CastLoopAnimation: {fileID: 3094330708855449807, guid: 48740288977d86d4b8adad7dd6194798, type: 3}
   CastReleaseAnimation: {fileID: 0}
   MaxCharges: 1
   Radius: 5

@@ -538,6 +538,14 @@ public class PlayerController : NetworkBehaviour
     // pone: el Muro de fuego del Mago (IWallTargetAbility). Viaja con el pedido, igual que la mira.
     [HideInInspector] public float NetworkPlacementYaw;
 
+    // Dónde estaba el dueño al pedir la habilidad (en el servidor). Lo que se apunta en el piso y
+    // canaliza antes de salir (el Muro, el Levantamiento, la Tormenta del Mago: 2 s) cae donde soltó
+    // aunque se haya movido: el alcance y el giro se miden desde acá. Cero = no vino ningún pedido.
+    [HideInInspector] public Vector3 NetworkRequestPosition;
+
+    // Desde dónde medir lo apuntado: donde estaba al pedirla (o donde está, si no hubo pedido).
+    public Vector3 AimFromPosition => NetworkRequestPosition != Vector3.zero ? NetworkRequestPosition : transform.position;
+
     // Índice de clase sincronizado a los observadores remotos (ver
     // EquipCharacterClass/ServerSetClass) — mandamos el índice y no el
     // asset porque FishNet no serializa referencias a ScriptableObjects.
@@ -573,6 +581,10 @@ public class PlayerController : NetworkBehaviour
     // El giro del muro que se está apuntando (IWallTargetAbility): la rueda lo cambia de a pasos
     // y arranca en 0 (atravesado a la mira) cada vez que se aprieta. Va con el pedido.
     private float _placementYaw;
+
+    // Lo apuntado que canaliza antes de salir: hasta cuándo se deja el marcador a la vista (lo
+    // esconde antes el fin de la habilidad, FinishAttack). 0 = no hay.
+    private float _castMarkerUntil;
 
     // El marcador del piso: vive en el prefab de la cámara (solo el dueño la tiene) y al arrancar
     // se suelta de ella, así que se lo pide por su Instance.
@@ -2065,6 +2077,7 @@ public class PlayerController : NetworkBehaviour
             _groundTargetAbility = ability;
             _groundTargetSlot    = slot;
             _placementYaw        = 0f;   // el muro arranca atravesado a la mira
+            _castMarkerUntil     = 0f;
 
             // Una franja (el Corte final) o un muro (el Muro de fuego) en vez de la zona en el
             // piso. El marcador vive en el prefab de la cámara.
@@ -2153,12 +2166,16 @@ public class PlayerController : NetworkBehaviour
             // Zona confirmada: escondemos el marcador y la lanzamos por el camino
             // NORMAL — RequestAbility ya le manda el punto de mira al servidor
             // (NetworkAimPoint), que es justo la zona que el jugador venía viendo, y el
-            // giro del muro si lo es.
-            if (GroundIndicator != null) GroundIndicator.Hide();
+            // giro del muro si lo es. Si canaliza antes de salir (el Muro, el Levantamiento y
+            // la Tormenta del Mago: 2 s), el marcador se queda quieto donde soltó hasta que sale.
+            bool castsFirst = _groundTargetAbility.UsesCast;
+            if (castsFirst)                  _castMarkerUntil = Time.time + _groundTargetAbility.CastDuration + 0.5f;
+            else if (GroundIndicator != null) GroundIndicator.Hide();
 
             // Predicción local de la animación, mismo criterio que arriba: solo en
-            // cliente remoto (en el host la dispara el propio Activate del servidor).
-            if (!IsServerInitialized)
+            // cliente remoto (en el host la dispara el propio Activate del servidor). Si
+            // canaliza, no: el bucle lo manda el servidor y la de soltar llega al terminar.
+            if (!IsServerInitialized && !castsFirst)
                 PlayAnimation(_groundTargetAbility);
 
             RequestAbility(_groundTargetSlot);
@@ -2241,6 +2258,9 @@ public class PlayerController : NetworkBehaviour
     // servidor va a hacer de verdad). Solo corre en el dueño (ver Update).
     private void UpdateGroundTargetIndicator()
     {
+        // El marcador de lo que está canalizando se va solo si el fin no llegó (red de seguridad).
+        if (_castMarkerUntil > 0f && _groundTargetAbility == null && Time.time >= _castMarkerUntil) HideCastMarker();
+
         if (_groundTargetAbility is not IGroundTargetAbility ground) return;
         UI_GroundTargetIndicator indicator = GroundIndicator;
         if (indicator == null) return;
@@ -2395,12 +2415,20 @@ public class PlayerController : NetworkBehaviour
 
     // Fin de TODO: libera el ataque y baja cualquier mantenido. Para los que cortan desde
     // afuera (el watchdog, la muerte, los menús, el desatascarse).
+    // Esconde el marcador que se dejó a la vista mientras canalizaba lo apuntado.
+    private void HideCastMarker()
+    {
+        _castMarkerUntil = 0f;
+        if (_groundTargetAbility == null && GroundIndicator != null) GroundIndicator.Hide();
+    }
+
     public void FinishAttack()
     {
         isAttacking = false;
         _attackInterruptible = false;
         _runningSlot         = EAbilityInput.None;
         _holdReleaseQueued   = false;
+        if (_castMarkerUntil > 0f) HideCastMarker();   // salió (o la cortaron): el marcador se va
 
         if (_holdAbility == null) return;
         _holdAbility = null;
@@ -4758,8 +4786,24 @@ public class PlayerController : NetworkBehaviour
     // dueño (ej: esta copia corre en el servidor o es un observador
     // remoto), no hay Camera.main válida para este proceso — se usa el
     // último punto que el dueño calculó y envió (NetworkAimPoint).
+    // La mira FIJA de lo apuntado que canaliza antes de salir (el Muro, el Levantamiento y la
+    // Tormenta del Mago: 2 s): mientras dura, la mira es el punto donde soltó, TAMBIÉN en el host
+    // (que si no lee su cámara en vivo y lo apuntado salía hacia donde miraba al terminar). La
+    // pone y la saca GameplayAbility.CastRoutine; vence sola por las dudas.
+    private Vector3 _lockedAimPoint;
+    private float   _aimLockedUntil;
+
+    public void LockAim(Vector3 point, float seconds)
+    {
+        _lockedAimPoint = point;
+        _aimLockedUntil = Time.time + Mathf.Max(0.1f, seconds);
+    }
+
+    public void UnlockAim() => _aimLockedUntil = 0f;
+
     public Vector3 GetAimPoint(float maxRange = 100f)
     {
+        if (Time.time < _aimLockedUntil) return _lockedAimPoint;
         if (!IsOwner) return NetworkAimPoint;
 
         Camera cam = MainCamera;

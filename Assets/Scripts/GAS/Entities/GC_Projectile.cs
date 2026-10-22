@@ -223,6 +223,10 @@ public class GC_Projectile : NetworkBehaviour
 
         _shooterNob.OnChange += OnShooterChanged;
         if (_shooterNob.Value != null) TryApplyShooterWeaponVisuals(_shooterNob.Value);
+
+        // Potenciado (la Gran bola de fuego): crece en todas las pantallas.
+        _boostScale.OnChange += OnBoostScaleChanged;
+        if (!IsServerInitialized && _boostScale.Value != 1f) ApplyBoostScale(_boostScale.Value);
     }
 
     // La llama GA_ProjectileShoot (siempre en el servidor) justo después
@@ -325,6 +329,11 @@ public class GC_Projectile : NetworkBehaviour
         Vector3 from = _lastCenter;
         Vector3 to   = ShapeCenter();
         _lastCenter  = to;
+
+        // Cruzó algo que lo potencia (el Muro de fuego de su mismo Mago): la Gran bola de fuego.
+        if (!_boosted && !_reflected && sourceAbility is GA_ProjectileShoot boostable && boostable.CanBeBoosted &&
+            Summon_ProjectileBooster.Crosses(from, to, sourceASC))
+            Boost(boostable.BoostedScale);
 
         Vector3 delta = to - from;
         float   dist  = delta.magnitude;
@@ -530,7 +539,37 @@ public class GC_Projectile : NetworkBehaviour
     {
         if (_impacted || _gone || _reflected) return;
         _impacted = true;
-        if (sourceAbility is GA_ProjectileShoot shot) shot.OnProjectileImpact(point);
+        if (sourceAbility is GA_ProjectileShoot shot) shot.OnProjectileImpact(point, _boosted);
+    }
+
+    // =========================================================
+    // POTENCIADO (al cruzar un Summon_ProjectileBooster: la Gran bola de fuego de la Evocación)
+    // =========================================================
+
+    // Servidor: ya se potenció (una sola vez). El tamaño viaja a todas las pantallas.
+    private bool _boosted;
+    private readonly SyncVar<float> _boostScale = new SyncVar<float>(1f);
+    private Vector3 _baseScale;
+    private bool    _baseScaleKnown;
+
+    [Server]
+    private void Boost(float scale)
+    {
+        _boosted          = true;
+        _boostScale.Value = Mathf.Max(0.1f, scale);
+        ApplyBoostScale(_boostScale.Value);
+    }
+
+    // Crece desde el tamaño con que salió (en el servidor al potenciarse; en los demás, al llegar el SyncVar).
+    private void ApplyBoostScale(float scale)
+    {
+        if (!_baseScaleKnown) { _baseScale = transform.localScale; _baseScaleKnown = true; }
+        transform.localScale = _baseScale * scale;
+    }
+
+    private void OnBoostScaleChanged(float previous, float next, bool asServer)
+    {
+        if (!asServer) ApplyBoostScale(next);
     }
 
     // =========================================================

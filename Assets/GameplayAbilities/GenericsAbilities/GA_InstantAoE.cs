@@ -105,6 +105,10 @@ public class GA_InstantAoE : GameplayAbility, IGroundTargetAbility
         Vector3 origin = OwnerASC.transform.position;
         if (DeployMode == GA_ContinuousAoE.EAoEDeploy.AtOwner) return origin;
 
+        // Apuntada: el alcance se mide desde donde estaba al pedirla (si canalizó antes de salir,
+        // cae donde soltó aunque se haya movido).
+        if (pc != null) origin = pc.AimFromPosition;
+
         Vector3 center = pc != null ? pc.GetAimPoint(MaxRange)
                                     : origin + OwnerASC.transform.forward * MaxRange;
 

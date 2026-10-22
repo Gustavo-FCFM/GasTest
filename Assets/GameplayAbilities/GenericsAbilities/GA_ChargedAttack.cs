@@ -56,6 +56,20 @@ public class GA_ChargedAttack : GameplayAbility, IHoldAbility
     [Label("Carga máxima (s)")]
     public float MaxChargeTime = 2f;
 
+    [Tooltip("Mientras carga, la cámara pasa a la de apuntar (la de los lanzamientos apuntados: cerca, " +
+             "sobre el hombro), para apuntar con calma mientras se mantiene (la Mordedura de hielo de la " +
+             "Evocación). Apagado = solo el zoom de cada etapa (el arco del Explorador).")]
+    [Label("Cámara de apuntar al cargar")]
+    public bool AimCameraWhileCharging = false;
+
+    public override bool AimsCameraWhileHeld => AimCameraWhileCharging;
+
+    [Tooltip("Soltar antes de llegar a la PRIMERA etapa no la pierde: sigue cargando y sale apenas " +
+             "llega (la Mordedura de hielo de la Evocación: la flecha normal necesita 1 s). Apagado = " +
+             "soltar antes no saca nada (lo de siempre).")]
+    [Label("Soltar antes: sale al llegar a la primera")]
+    public bool ReleaseWaitsForFirstStage = false;
+
     [Tooltip("Lo que se aplica al empezar a cargar y se saca al soltar (una ralentización, " +
              "por ejemplo). Opcional.")]
     [Label("Efectos al cargar")]
@@ -89,6 +103,7 @@ public class GA_ChargedAttack : GameplayAbility, IHoldAbility
 
     [System.NonSerialized] private bool  _holding;
     [System.NonSerialized] private float _chargeStartedAt;
+    [System.NonSerialized] private bool  _releaseQueued;   // soltó antes de la primera etapa (ReleaseWaitsForFirstStage)
     // Con la carga completa al instante (Ataque rápido) NO es de mantener: apretar dispara ya.
     // Lo mira también el dueño (los tags le llegan), así no arranca la pose ni la barra de carga.
     public bool UsesHoldInput => !FiresInstantly;
@@ -145,6 +160,7 @@ public class GA_ChargedAttack : GameplayAbility, IHoldAbility
 
         _holding         = true;
         _chargeStartedAt = Time.time;
+        _releaseQueued   = false;
 
         if (CostEffect != null) OwnerASC.ApplyGameplayEffect(CostEffect, this);
         ApplyEffectsTo(WhileChargingEffects, OwnerASC);
@@ -178,6 +194,7 @@ public class GA_ChargedAttack : GameplayAbility, IHoldAbility
             }
 
             float charged = Time.time - _chargeStartedAt;
+            if (_releaseQueued && charged >= FirstStageTime()) break;   // soltó antes: sale al llegar
             if (MaxChargeTime > 0f && charged >= MaxChargeTime) break;
             if (MaxChargeTime <= 0f && HoldSafetyTimeout > 0f && charged >= HoldSafetyTimeout) break;
 
@@ -200,6 +217,14 @@ public class GA_ChargedAttack : GameplayAbility, IHoldAbility
         if (!_holding || OwnerASC == null) return;
 
         float charged = Time.time - _chargeStartedAt;
+
+        // Soltó antes de la primera etapa: se anota y la carga sigue hasta llegar (ChargeRoutine).
+        if (ReleaseWaitsForFirstStage && charged < FirstStageTime())
+        {
+            _releaseQueued = true;
+            return;
+        }
+
         StopCharging();
 
         if (CooldownEffect != null)
@@ -240,6 +265,14 @@ public class GA_ChargedAttack : GameplayAbility, IHoldAbility
         NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
         if (netAsc != null)
             netAsc.ServerBroadcastHoldAnimation(this, NetworkAbilitySystemComponent.EHoldAnimationPhase.Stop);
+    }
+
+    // Cuándo se llega a la primera etapa que tiene habilidad.
+    private float FirstStageTime()
+    {
+        foreach (ChargeStage stage in Stages)
+            if (stage.Ability != null) return stage.MinChargeTime;
+        return 0f;
     }
 
     // La última etapa cuyo tiempo mínimo se alcanzó.

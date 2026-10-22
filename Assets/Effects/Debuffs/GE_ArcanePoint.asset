@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 923ea9fbcde13614b8da2b7689d349ea, type: 3}
   m_Name: GE_ArcanePoint
   m_EditorClassIdentifier: 
-  Duration: 6
+  Duration: 15
   Period: 0
   StackingPolicy: 1
   MaxStacks: 5

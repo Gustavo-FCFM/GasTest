@@ -16,8 +16,8 @@ using UnityEngine;
 // apuntara y disparara. Cada enemigo recibe un solo rayo por ataque, con el daño completo (la
 // lista de efectos). Con 0 puntos no rebota. Los rebotes no gastan los puntos.
 //
-// LA TORMENTA ELÉCTRICA (etapa 3b): si el rayo cruza un pararrayos (Summon_LightningRod: el tornado
-// azul de una Tormenta del Mago o de un aliado), se FRENA ahí y el tornado tira un rayo a cada
+// LA TORMENTA ELÉCTRICA DE LA EVOCACIÓN: si el rayo cruza un pararrayos (Summon_LightningRod: el tornado
+// azul de la Tormenta de un Evocador, propio o aliado; la del kit base no lo lleva), se FRENA ahí y el tornado tira un rayo a cada
 // enemigo a su alcance que vea (sin pared en medio), del más cercano al más lejano, con el daño
 // completo; y cada uno de esos arranca su rebote. Igual: un solo rayo por enemigo por ataque.
 // ============================================================
@@ -89,8 +89,10 @@ public class GA_ChainLightning : GA_HitscanShot
     private void RodStrike(Summon_LightningRod rod, Vector3 at, List<AbilitySystemComponent> struck,
                            List<Vector3> from, List<Vector3> to)
     {
+        rod.OnStruck();   // la Cadena de relámpagos: cada golpe la agranda (si crece)
+
         var found = new List<AbilitySystemComponent>();
-        foreach (Collider col in Physics.OverlapSphere(at, rod.StrikeRange, TargetLayer, QueryTriggerInteraction.Collide))
+        foreach (Collider col in Physics.OverlapSphere(at, rod.CurrentStrikeRange, TargetLayer, QueryTriggerInteraction.Collide))
         {
             AbilitySystemComponent asc = col.GetComponentInParent<AbilitySystemComponent>();
             if (asc == null || asc == OwnerASC || found.Contains(asc)) continue;

@@ -962,8 +962,10 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
             // que un punto en el origen del mundo.
             if (aimOrigin != Vector3.zero) pc.NetworkAimOrigin = aimOrigin;
 
-            // El giro de lo que pone (la rueda, mientras apuntaba el muro).
-            pc.NetworkPlacementYaw = placementYaw;
+            // El giro de lo que pone (la rueda, mientras apuntaba el muro), y desde dónde lo pidió (lo
+            // que canaliza antes de salir cae donde soltó aunque se mueva).
+            pc.NetworkPlacementYaw    = placementYaw;
+            pc.NetworkRequestPosition = pc.transform.position;
         }
 
         if (!ability.CanActivate())

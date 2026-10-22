@@ -86,6 +86,7 @@ public class Entity_Summon : NetworkBehaviour
     private readonly SyncVar<bool> _revealed   = new SyncVar<bool>();   // la ven todos (el aviso de la trampa)
     private readonly SyncVar<bool> _hidden     = new SyncVar<bool>();   // no la ve nadie (ya explotó)
     private readonly SyncVar<bool> _zoneActive = new SyncVar<bool>();   // su Summon_Zone está prendida
+    private readonly SyncVar<float> _zoneGrowth = new SyncVar<float>(); // metros que creció su zona (la Tormenta de la Evocación)
     private readonly SyncVar<NetworkObject> _summonerNob = new SyncVar<NetworkObject>();   // el dueño, en todas las pantallas
 
     // El dueño (su NetworkObject), en TODAS las pantallas: el HUD del dueño encuentra así a su
@@ -98,6 +99,13 @@ public class Entity_Summon : NetworkBehaviour
     // El equipo del dueño (0 = neutral). En todas las pantallas.
     public int  Team       => _team.Value;
     public bool ZoneActive => _zoneActive.Value;
+
+    // Cuántos metros creció su zona (se suman al radio; el VFX crece con ella en todas las pantallas).
+    public float ZoneGrowth => _zoneGrowth.Value;
+
+    // Agranda la zona 'meters', sin pasarse de 'max' en total. Servidor (la Tormenta de la
+    // Evocación, en cada Descarga que le pega).
+    [Server] public void GrowZone(float meters, float max) => _zoneGrowth.Value = Mathf.Clamp(_zoneGrowth.Value + meters, 0f, max);
 
     // Su propio ASC, si lo tiene (vida, autor de efectos). En todas las pantallas.
     public AbilitySystemComponent OwnASC { get; private set; }

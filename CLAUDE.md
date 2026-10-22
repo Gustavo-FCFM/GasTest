@@ -42,7 +42,10 @@ Cuando el pedido es concreto ("armame la arena", "generá el prefab"), se hace.
 **No cablear prefabs por ruta fija** en herramientas de editor: él renombra los assets y
 la referencia queda en null sin avisar. Buscarlos por COMPONENTE
 (`AssetDatabase.FindAssets("t:Prefab")` + `GetComponent<T>()`), con la ruta solo como
-atajo.
+atajo. **Ojo con los nombres repetidos al buscar por nombre:** hay dos `GA_Fireball` (el de
+`48toPlay` es el del fantasma); el 22 de octubre de 2026 una herramienta agarró ese y la Bola de
+fuego de la Evocación salió sin canalizar. Si un nombre puede repetirse, filtrar también por la
+carpeta (o avisar si hay más de uno).
 
 **Para verificar que compila, SIN cerrar el editor.** Unity trae su propio Roslyn, y deja
 en `Library/Bee` el archivo con los argumentos exactos que usa para compilar. Se lo puede

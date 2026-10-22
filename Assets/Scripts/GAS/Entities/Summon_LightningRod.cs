@@ -5,7 +5,8 @@ using UnityEngine;
 // Summon_LightningRod  (el pararrayos de una invocación — 21 de octubre de 2026)
 //
 // "Los rayos de mi equipo que me crucen, se frenan en mí y yo los reparto." Va al lado de un
-// Entity_Summon en el prefab: la Tormenta eléctrica del Mago (el tornado azul). Cuando una
+// Entity_Summon en el prefab: la Tormenta eléctrica de la Evocación (el tornado azul; la del kit
+// base no lo lleva). Con "Crece por rayo", cada uno la agranda (la Cadena de relámpagos). Cuando una
 // Descarga eléctrica (GA_ChainLightning) del dueño o de un aliado cruza este cilindro, el rayo
 // se FRENA acá y el tornado tira un rayo a cada enemigo a "Alcance de sus rayos" que vea, y cada
 // uno arranca su rebote. Cada Descarga que lo cruce lo dispara otra vez.
@@ -29,11 +30,43 @@ public class Summon_LightningRod : MonoBehaviour
     [Label("Alcance de sus rayos (m)")]
     public float StrikeRange = 8f;
 
+    [Tooltip("Cada rayo que lo cruza lo AGRANDA esto: el radio de su zona y el alcance de sus rayos " +
+             "(y lo que recibe el rayo crece en proporción). La Cadena de relámpagos de la Evocación. " +
+             "0 = no crece.")]
+    [Label("Crece por rayo (m)")]
+    public float GrowthPerStrike = 0f;
+
+    [Tooltip("Lo más que puede crecer en total.")]
+    [Label("Crece hasta (m)")]
+    public float MaxGrowth = 4f;
+
     private Entity_Summon _summon;
+    private Summon_Zone   _zone;
+
+    // Lo que creció (lo guarda la invocación: viaja a todas las pantallas).
+    private float Growth => _summon != null ? _summon.ZoneGrowth : 0f;
+
+    // Hasta dónde llegan sus rayos ahora.
+    public float CurrentStrikeRange => StrikeRange + Growth;
+
+    // Lo que recibe el rayo crece en proporción con su zona (el tornado se ve más grande).
+    private float SizeFactor => _zone != null && _zone.Radius > 0.01f ? (_zone.Radius + Growth) / _zone.Radius : 1f;
+
+    // Un rayo lo cruzó: crece (si crece). Servidor; lo llama GA_ChainLightning.
+    public void OnStruck()
+    {
+        if (GrowthPerStrike > 0f && _summon != null && _summon.IsServerInitialized)
+            _summon.GrowZone(GrowthPerStrike, MaxGrowth);
+    }
 
     private static readonly List<Summon_LightningRod> s_active = new List<Summon_LightningRod>();
 
-    private void Awake()     => _summon = GetComponent<Entity_Summon>();
+    private void Awake()
+    {
+        _summon = GetComponent<Entity_Summon>();
+        _zone   = GetComponent<Summon_Zone>();
+    }
+
     private void OnEnable()  => s_active.Add(this);
     private void OnDisable() => s_active.Remove(this);
 
@@ -66,7 +99,7 @@ public class Summon_LightningRod : MonoBehaviour
     {
         t = 0f;
         Vector3 basePos = transform.position;
-        float   r       = Radius + Mathf.Max(0f, thickness);
+        float   r       = Radius * SizeFactor + Mathf.Max(0f, thickness);
 
         // En el plano: cuándo está a menos de r del eje.
         float ox = origin.x - basePos.x, oz = origin.z - basePos.z;
@@ -89,7 +122,7 @@ public class Summon_LightningRod : MonoBehaviour
         }
 
         // En la altura: entre el piso y el tope.
-        float bottom = basePos.y, top = basePos.y + Height;
+        float bottom = basePos.y, top = basePos.y + Height * SizeFactor;
         if (Mathf.Abs(dir.y) < 1e-6f)
         {
             if (origin.y < bottom || origin.y > top) return false;

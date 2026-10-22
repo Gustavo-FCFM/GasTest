@@ -660,10 +660,28 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         PlayCastVisuals();
     }
 
+    // Una activación GRATIS: sin costo, sin cooldown y sin gastar carga (la Memoria perfecta de la
+    // Evocación: la próxima Q). Solo vale para lo que cobra DENTRO de Activate (el muro, el
+    // levantamiento, la tumba); un lanzamiento que cobra al soltar cobraría igual. Servidor.
+    [System.NonSerialized] private bool _freeActivation;
+
+    public void ActivateFree()
+    {
+        bool was = _freeActivation;
+        _freeActivation = true;
+        try     { Activate(); }
+        finally { _freeActivation = was; }
+    }
+
+    // Para un envoltorio que cobra él mismo (GA_TagSwitch): su propio CommitAbility, gratis.
+    protected void SetFreeActivation(bool on) => _freeActivation = on;
+
     // Gasta una carga, cobra el costo y pone el cooldown. Es lo de CommitAbility que también
     // se cobra cuando una canalización se corta (cuenta como lanzada).
     protected void PayCostAndCooldown()
     {
+        if (_freeActivation) return;   // la activación gratis (ver ActivateFree)
+
         // Gasta una carga y arranca la recarga. Con MaxCharges <= 1 no hace nada:
         // la habilidad se comporta como siempre (cooldown en cada uso).
         bool spentLastCharge = ConsumeCharge();
@@ -888,11 +906,21 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         bool  breaks     = src.CastBreaksOnDamage;
         bool  loops      = src.CastLoopAnimation != null;
 
+        // Lo que se apunta en el piso (el Muro, el Levantamiento, la Tormenta del Mago) cae donde
+        // el dueño SOLTÓ, aunque mire a otro lado mientras canaliza: la mira no se actualiza en vivo.
+        bool lockAim = this is IGroundTargetAbility ground && ground.UsesGroundTarget;
+        // Y se guarda la mira del pedido: un botón apretado mientras canaliza (que el servidor rechaza)
+        // igual escribe su mira encima; al salir se vuelve a la de cuando soltó.
+        Vector3 lockedAim  = pc != null ? pc.NetworkAimPoint : Vector3.zero;
+        Vector3 lockedFrom = pc != null ? pc.NetworkRequestPosition : Vector3.zero;
+        float   lockedYaw  = pc != null ? pc.NetworkPlacementYaw : 0f;
+
         _castRunning = true;
         if (blocks) asc.AddTag(EGameplayTag.Status_Channeling);
         if (loops && net != null) net.ServerPlayChannelAnimation(src, true);
         ShowCastBar(seconds, channel: continuous, shown: src);
-        if (pc != null) pc.ServerStreamAimFor(seconds + 0.5f);
+        if (pc != null && !lockAim) pc.ServerStreamAimFor(seconds + 0.5f);
+        if (pc != null && lockAim)  pc.LockAim(lockedAim, seconds + 0.5f);   // también el host lee el punto donde soltó
 
         bool damaged = false;
         System.Action<AbilitySystemComponent> onDamaged = _ => damaged = true;
@@ -929,6 +957,7 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         // Cortada (o un continuo que terminó): no sale nada más. Cortada cuenta como lanzada.
         if (interrupted || continuous)
         {
+            if (lockAim && pc != null) pc.UnlockAim();
             if (!_castPaid)
             {
                 PayCostAndCooldown();
@@ -940,9 +969,16 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         }
 
         // Se lanza al terminar: la habilidad de siempre, ahora.
+        if (lockAim && pc != null)
+        {
+            pc.NetworkAimPoint        = lockedAim;
+            pc.NetworkRequestPosition = lockedFrom;
+            pc.NetworkPlacementYaw    = lockedYaw;
+        }
         CommittedThisActivation = false;
         StartedThisActivation   = false;
         Activate();
+        if (lockAim && pc != null) pc.UnlockAim();
 
         // Se plantó sola (la de objetivo único sin nadie a tiro): igual se canalizó, cuenta
         // como lanzada.

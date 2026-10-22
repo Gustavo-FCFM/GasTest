@@ -89,16 +89,38 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
     [Label("Zona que deja (GA_ContinuousAoE)")]
     public GA_ContinuousAoE ImpactZone;
 
+    [Section("Potenciado (al cruzar un muro)")]
+    [Tooltip("La explosión que suelta si en el camino CRUZÓ algo que potencia proyectiles (un " +
+             "Summon_ProjectileBooster: el Muro de fuego del mismo Mago). La Gran bola de fuego de la " +
+             "Evocación: más grande, más daño, más quemadura. Vacío = no se potencia.")]
+    [Label("Explosión potenciada (GA_InstantAoE)")]
+    public GA_InstantAoE BoostedExplosion;
+
+    [ShowIf(nameof(BoostedExplosion))]
+    [Tooltip("Cuánto crece el proyectil a la vista (y su choque) al potenciarse.")]
+    [Label("Tamaño potenciado (×)")]
+    public float BoostedScale = 1.5f;
+
+    // ¿Se potencia al cruzar un muro? Lo pregunta el proyectil (GC_Projectile) en el servidor.
+    public bool CanBeBoosted => BoostedExplosion != null;
+
     // Las copias con este dueño de la explosión y la zona, guardadas entre lanzamientos.
     [System.NonSerialized] private GA_InstantAoE    _impactExplosion;
+    [System.NonSerialized] private GA_InstantAoE    _boostedExplosion;
     [System.NonSerialized] private GA_ContinuousAoE _impactZone;
 
-    // Lo llama el proyectil (GC_Projectile, en el servidor) donde choca y se deshace.
-    public void OnProjectileImpact(Vector3 point)
+    // Lo llama el proyectil (GC_Projectile, en el servidor) donde choca y se deshace. 'boosted': si
+    // en el camino cruzó algo que potencia proyectiles (sale la explosión potenciada).
+    public void OnProjectileImpact(Vector3 point, bool boosted = false)
     {
         if (!IsServer || OwnerASC == null) return;
 
-        if (ImpactExplosion != null)
+        if (boosted && BoostedExplosion != null)
+        {
+            _boostedExplosion = GA_InstantAoE.Deployable(BoostedExplosion, OwnerASC, _boostedExplosion);
+            _boostedExplosion.DetonateAt(point);
+        }
+        else if (ImpactExplosion != null)
         {
             _impactExplosion = GA_InstantAoE.Deployable(ImpactExplosion, OwnerASC, _impactExplosion);
             _impactExplosion.DetonateAt(point);

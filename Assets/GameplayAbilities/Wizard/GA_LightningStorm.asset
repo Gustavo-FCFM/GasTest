@@ -45,13 +45,13 @@ MonoBehaviour:
   TargetLayer:
     serializedVersion: 2
     m_Bits: 0
-  CastMode: 0
-  CastSeconds: 1
+  CastMode: 1
+  CastSeconds: 2
   CastTickSeconds: 0.5
   CastBlocksOthers: 1
   CastBreaksOnDamage: 0
   CastStartAnimation: {fileID: 0}
-  CastLoopAnimation: {fileID: 0}
+  CastLoopAnimation: {fileID: 3094330708855449807, guid: 19a82902d584cfc48b743bdde1f4fe59, type: 3}
   CastReleaseAnimation: {fileID: 0}
   MaxCharges: 1
   SummonPrefab: {fileID: 5302879255178205404, guid: bfc8b99535db2a740ab3774058bf934d, type: 3}
@@ -59,6 +59,6 @@ MonoBehaviour:
   MaxRange: 15
   MarkerRadius: 0
   FrontDistance: 2
-  MaxAlive: 1
+  MaxAlive: 0
   MarkerSegments: 1
   RotationStep: 0
