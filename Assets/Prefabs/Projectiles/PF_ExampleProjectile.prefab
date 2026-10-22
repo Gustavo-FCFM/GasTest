@@ -154,7 +154,7 @@ MonoBehaviour:
   _componentIndexCache: 0
   _addedNetworkObject: {fileID: 994776573448183946}
   _networkObjectCache: {fileID: 994776573448183946}
-  SpinBlurMaterial: {fileID: 2100000, guid: 22c1ed1b274ae4f43b3fce9c8067dedc, type: 2}
+  SpinBlurMaterial: {fileID: 0}
   SpinBlurShutterSpeed: 4
   SpinBlurSamples: 8
   SpinBlurAlpha: 0

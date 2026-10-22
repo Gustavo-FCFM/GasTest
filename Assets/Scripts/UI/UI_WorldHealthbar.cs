@@ -76,6 +76,9 @@ public class UI_WorldHealthbar : MonoBehaviour
     private AbilitySystemComponent        _cachedLocalASC;
     private NetworkAbilitySystemComponent _cachedLocalNet;
 
+    // El tramo del escudo (una pieza del prefab Nameplate; null = sin escudo a la vista).
+    private Image _shieldFill;
+
     // El ícono de la clase (una pieza del prefab Nameplate) y el sprite que muestra ahora.
     private Image  _classIcon;
     private Sprite _shownClassSprite;
@@ -100,6 +103,7 @@ public class UI_WorldHealthbar : MonoBehaviour
             AllyColor         = Nameplate.AllyColor;
             EnemyColor        = Nameplate.EnemyColor;
             ObstacleLayer     = Nameplate.ObstacleLayer;
+            _shieldFill       = Nameplate.ShieldFill;
             _classIcon        = Nameplate.ShowClassIcon ? Nameplate.ClassIcon : null;
             if (Nameplate.ClassIcon != null) Nameplate.ClassIcon.enabled = false;   // hasta que haya clase
         }
@@ -213,17 +217,23 @@ public class UI_WorldHealthbar : MonoBehaviour
         UpdateFirstStrikeMarker(localASC, isEnemy);
     }
 
-    // Actualiza el relleno de vida (de los datos sincronizados) y el color por equipo.
+    // Actualiza el relleno de vida y el del escudo (de los datos sincronizados) y el color por equipo.
+    //
+    // EL ESCUDO (22 de octubre de 2026, pedido de Gustavo) es VIDA EXTRA: un tramo justo después de
+    // la vida, que la vida no achica. Si vida + escudo pasa de la máxima, el tramo sale por la
+    // derecha de la barra (hasta el doble de largo).
     private void UpdateHealth(bool isEnemy)
     {
         float health = _netAsc != null ? _netAsc.NetHealth    : _asc.GetAttributeValue(EAttributeType.Health);
         float max    = _netAsc != null ? _netAsc.NetMaxHealth : _asc.GetAttributeValue(EAttributeType.MaxHealth);
+        float shield = _netAsc != null ? _netAsc.NetShield    : _asc.GetAttributeValue(EAttributeType.Shield);
         float fill   = max > 0f ? Mathf.Clamp01(health / max) : 0f;
 
         Color color = isEnemy ? EnemyColor : AllyColor;
 
         if (HealthFill != null)   { HealthFill.fillAmount = fill; HealthFill.color = color; }
         if (HealthSlider != null) HealthSlider.value = fill;
+        UpdateShield(shield, max > 0f ? Mathf.Clamp((health + shield) / max, 0f, MaxShieldReach) : 0f);
 
         // Nombre del jugador, del mismo color que su barra (verde aliado / rojo
         // enemigo). Solo se reescribe si cambió: setear text en TMP fuerza un
@@ -234,6 +244,45 @@ public class UI_WorldHealthbar : MonoBehaviour
             if (NameText.text != playerName) NameText.text = playerName;
             NameText.color = color;
         }
+    }
+
+    // Hasta dónde puede llegar el tramo del escudo, en largos de barra (2 = el doble).
+    private const float MaxShieldReach = 2f;
+
+    // El tramo del escudo: de 0 hasta 'end' (vida + escudo, en largos de barra: más de 1 sale por la
+    // derecha), detrás de la vida, que lo tapa hasta donde llega. Apagado sin escudo.
+    private void UpdateShield(float shield, float end)
+    {
+        if (_shieldFill == null) return;
+
+        bool show = shield > 0.5f;
+        if (_shieldFill.enabled != show) _shieldFill.enabled = show;
+        if (!show) return;
+
+        // Un relleno Filled no pasa de la barra: ahí el escudo solo cubre lo que falta de vida.
+        if (_shieldFill.type == Image.Type.Filled)
+        {
+            _shieldFill.fillAmount = Mathf.Clamp01(end);
+            return;
+        }
+
+        // Con la misma forma que el relleno de vida (sus anclas de alto y sus bordes), leída EN VIVO:
+        // el de un Slider lo maneja el Slider, y en el prefab sus anclas quedan guardadas en 0 (una
+        // copia hecha de ahí sale sin alto).
+        RectTransform rt     = _shieldFill.rectTransform;
+        RectTransform health = HealthSlider != null && HealthSlider.fillRect != null ? HealthSlider.fillRect
+                             : HealthFill != null ? HealthFill.rectTransform : null;
+        float bottom = health != null ? health.anchorMin.y : 0f;
+        float top    = health != null ? health.anchorMax.y : 1f;
+
+        var anchorMin = new Vector2(0f, bottom);
+        var anchorMax = new Vector2(end, top);
+        if (rt.anchorMin != anchorMin) rt.anchorMin = anchorMin;
+        if (rt.anchorMax != anchorMax) rt.anchorMax = anchorMax;
+        if (health == null) return;
+        if (rt.pivot     != health.pivot)     rt.pivot     = health.pivot;
+        if (rt.offsetMin != health.offsetMin) rt.offsetMin = health.offsetMin;
+        if (rt.offsetMax != health.offsetMax) rt.offsetMax = health.offsetMax;
     }
 
     // El marcador solo aplica a ENEMIGOS: se prende si el jugador local puede

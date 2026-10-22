@@ -16,6 +16,17 @@ del log son todos de packs importados).
    Vulnerabilidad arcana bajó a +1 por punto (cada misil suma el suyo). Probado: salen los 3 siguiendo la mira; con 5 puntos, cada misil pega 1/4 + 5; un aturdido, morir
    u otra habilidad cortan los que faltan; el ritmo de ataque al mantener no cambia; la definitiva
    carga lo mismo que antes por ataque.
+   **El escudo a la vista (22 de octubre, pedido de Gustavo): falta probar.** La barra de arriba de la
+   cabeza (Nameplate, pieza "ShieldFill", ya puesta por la herramienta y borrada) muestra el escudo como
+   VIDA EXTRA: un tramo celeste justo después de la vida, que no la achica; si vida + escudo pasa de la
+   máxima, sale por la derecha de la barra (hasta el doble). La burbuja NO es un componente (Gustavo no
+   lo quiso: los VFX nacen de los GE): la pasiva de la Abjuración le pone `GE_ArcaneShield` (Buffs: ícono
+   + "Magic shield blue" ×0.8 en su TargetVFX, provisional) a quien tenga escudo suyo, y se lo quita
+   cuando se le acaba. Probar: el Mago al pegar y el aliado proyectado, con su tramo y su burbuja.
+   Arreglado el 22 de octubre: el tramo no se veía (la copia del relleno de un Slider sale con las anclas
+   en 0, sin alto); ahora copia en vivo la forma del relleno de vida. Y se apagó el "blur de giro" de las
+   armas lanzadas (hacha, dagas, kunais, lanza: `PF_ExampleProjectile` → "Blur: material" vacío), que
+   tenía el material de trail de Vefects y tiraba "doesn't have a color property _Color".
 2. **Probar los bots del Mago (etapa 4: código y documentos HECHOS, 21 de octubre):** ver "★ El
    Mago" ▸ Etapa 4. Las etapas 1, 2 y 3 están hechas y probadas ✅ (el kit entero). Quedó por
    confirmar que la Tumba cura y que la Flecha helada vuela más rápido.

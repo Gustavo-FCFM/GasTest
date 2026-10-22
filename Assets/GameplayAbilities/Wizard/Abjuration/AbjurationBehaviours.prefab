@@ -65,6 +65,7 @@ MonoBehaviour:
   DecayPerSecond: 0.1
   ProjectionShield: 0.2
   ProjectionEffect: {fileID: 11400000, guid: 00764cfb480b1be4dbb6368f54b58a75, type: 2}
+  ShieldEffect: {fileID: 11400000, guid: 4e92e43c15e54a95b352b6f4bc5ac1c1, type: 2}
   RefreshInterval: 0.5
   EchoRange: 25
   EchoDamage: 0.5

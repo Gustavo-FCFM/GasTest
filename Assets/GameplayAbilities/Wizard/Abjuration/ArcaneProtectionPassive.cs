@@ -19,6 +19,9 @@ using UnityEngine;
 //     hecho, hasta la mitad de la vida máxima del Mago. Si deja de hacer daño, a los 3 s ese extra
 //     empieza a bajar (10 % del tope por segundo) hasta 0; cada golpe reinicia la cuenta. El escudo
 //     inicial de la proyección NO baja solo.
+//   · LO QUE SE VE. Quien tiene escudo nuestro (el Mago y sus proyectados) lleva el efecto del escudo
+//     (GE_ArcaneShield: su ícono y la burbuja en su TargetVFX), y el proyectado además el de la
+//     proyección. Los VFX nacen de esos GE, no de un componente aparte.
 //
 // EL ESCUDO es el de siempre (el atributo Shield, un solo pozo): acá se lleva la cuenta de cuánto
 // puso cada parte. Si el escudo real baja (golpes), se descuenta primero lo extra y después lo de
@@ -61,8 +64,14 @@ public class ArcaneProtectionPassive : MonoBehaviour, IAbilityEchoSource
     [Label("Efecto de la proyección (en el aliado)")]
     public GameplayEffect ProjectionEffect;
 
-    [Tooltip("Cada cuánto se le refresca ese efecto a los proyectados.")]
-    [Label("Refrescar el efecto cada (s)")]
+    [Tooltip("El efecto que lleva quien tiene escudo de la Abjuración (el Mago y sus proyectados): " +
+             "su ícono y su VFX (la burbuja) dicen que tiene escudo. Se refresca mientras le quede " +
+             "(Refresh, ~1 s de duración) y se quita cuando se le acaba.")]
+    [Label("Efecto del escudo (la burbuja)")]
+    public GameplayEffect ShieldEffect;
+
+    [Tooltip("Cada cuánto se les refrescan esos efectos.")]
+    [Label("Refrescar los efectos cada (s)")]
     public float RefreshInterval = 0.5f;
 
     [Tooltip("Las copias del clic izquierdo salen solo de los proyectados a esta distancia del Mago o menos.")]
@@ -109,6 +118,13 @@ public class ArcaneProtectionPassive : MonoBehaviour, IAbilityEchoSource
     private readonly HashSet<AbilitySystemComponent> _ultTouched = new HashSet<AbilitySystemComponent>();
     private readonly List<AbilitySystemComponent>    _ending     = new List<AbilitySystemComponent>();
 
+    // Quiénes llevan ahora el efecto del escudo (para quitárselo apenas se les acaba).
+    private readonly HashSet<AbilitySystemComponent> _shielded = new HashSet<AbilitySystemComponent>();
+    private readonly List<AbilitySystemComponent>    _unshield = new List<AbilitySystemComponent>();
+
+    // Menos que esto de escudo nuestro no se muestra (un resto de 0.2 no prende la burbuja).
+    private const float VisibleShield = 0.5f;
+
     private float _selfExtra;            // el escudo de la pasiva sobre el propio Mago
     private float _lastGainAt = -999f;   // el último golpe (la cuenta del desgaste)
     private float _scanTimer;
@@ -136,7 +152,9 @@ public class ArcaneProtectionPassive : MonoBehaviour, IAbilityEchoSource
         if (_asc == null) return;
         _asc.UnregisterEchoSource(this);
         _asc.OnDealtDamage -= HandleDealtDamage;
-        if (IsServer) EndAll();
+        if (!IsServer) return;
+        EndAll();
+        HideShield(_asc);
     }
 
     // =========================================================
@@ -185,6 +203,7 @@ public class ArcaneProtectionPassive : MonoBehaviour, IAbilityEchoSource
         if (ally == null) return;
 
         if (ProjectionEffect != null) ally.RemoveEffectsByDefinition(ProjectionEffect);
+        HideShield(ally);
         TakeShield(ally, p.Total);
     }
 
@@ -213,21 +232,54 @@ public class ArcaneProtectionPassive : MonoBehaviour, IAbilityEchoSource
         {
             if (_projections.Count > 0) EndAll();
             _selfExtra = 0f;
+            if (_shielded.Contains(_asc)) HideShield(_asc);
             return;
         }
 
         Reconcile();
         UpdateMaximumProtection();
         if (Time.time - _lastGainAt >= DecayDelay) Decay(DecayPerSecond * Cap * Time.deltaTime);
+        UpdateVisibleEffects();
+    }
 
-        // El efecto visible: refrescado mientras dure (si esto deja de correr, se cae solo).
+    // Los efectos visibles (ícono y VFX): el de la proyección en los proyectados y el del escudo en
+    // quien tenga escudo nuestro. Se refrescan cada tanto (si esto deja de correr, se caen solos) y
+    // el del escudo se quita apenas se acaba.
+    private void UpdateVisibleEffects()
+    {
+        foreach (AbilitySystemComponent who in _shielded)
+            if (who == null || OurShieldOn(who) <= VisibleShield) _unshield.Add(who);
+        foreach (AbilitySystemComponent who in _unshield) HideShield(who);
+        _unshield.Clear();
+
         _refreshTimer -= Time.deltaTime;
-        if (_refreshTimer <= 0f && ProjectionEffect != null)
+        if (_refreshTimer > 0f) return;
+        _refreshTimer = Mathf.Max(0.1f, RefreshInterval);
+
+        foreach (var pair in _projections)
         {
-            _refreshTimer = Mathf.Max(0.1f, RefreshInterval);
-            foreach (AbilitySystemComponent ally in _projections.Keys)
-                if (ally != null) ally.ApplyGameplayEffect(ProjectionEffect, _asc);
+            if (pair.Key == null) continue;
+            if (ProjectionEffect != null) pair.Key.ApplyGameplayEffect(ProjectionEffect, _asc);
+            if (pair.Value.Total > VisibleShield) ShowShield(pair.Key);
         }
+        if (_selfExtra > VisibleShield) ShowShield(_asc);
+    }
+
+    // Cuánto escudo nuestro tiene (el Mago: el de la pasiva; un proyectado: el inicial + el extra).
+    private float OurShieldOn(AbilitySystemComponent who)
+        => who == _asc ? _selfExtra : _projections.TryGetValue(who, out Projection p) ? p.Total : 0f;
+
+    private void ShowShield(AbilitySystemComponent who)
+    {
+        if (ShieldEffect == null || who == null) return;
+        who.ApplyGameplayEffect(ShieldEffect, _asc);
+        _shielded.Add(who);
+    }
+
+    private void HideShield(AbilitySystemComponent who)
+    {
+        _shielded.Remove(who);
+        if (ShieldEffect != null && who != null) who.RemoveEffectsByDefinition(ShieldEffect);
     }
 
     // Lo que se gastó con golpes: el escudo real quedó por debajo de lo anotado. Primero se va lo
@@ -371,6 +423,9 @@ public class ArcaneProtectionPassive : MonoBehaviour, IAbilityEchoSource
         to.SetCurrentAttributeValue(EAttributeType.Shield, to.GetAttributeValue(EAttributeType.Shield) + amount);
         tracked += amount;
         if (to != _asc) _asc.NotifyHealedAlly(to, amount);
+
+        // La burbuja aparece en el acto (después la mantiene el refresco).
+        if (!_shielded.Contains(to) && tracked > VisibleShield) ShowShield(to);
     }
 
     // Saca hasta 'amount' de escudo (lo que tenga, si es menos).

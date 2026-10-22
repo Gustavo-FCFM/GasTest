@@ -229,6 +229,8 @@ MonoBehaviour:
   NetworkAimPoint: {x: 0, y: 0, z: 0}
   NetworkAimOrigin: {x: 0, y: 0, z: 0}
   NetworkMoveDirection: {x: 0, y: 0, z: 0}
+  NetworkPlacementYaw: 0
+  NetworkRequestPosition: {x: 0, y: 0, z: 0}
   isRadialMenuOpen: 0
   AutoRepeatPrimaryAttack: 1
   StartSubclassWithFullUltimate: 1
@@ -297,7 +299,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584108174126336829
+  _initializedTimestamp: -8584088996241924533
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
@@ -316,7 +318,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 7
+  <PrefabId>k__BackingField: 15
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 5306845881338098766
   SceneId: 0
