@@ -130,14 +130,19 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
     {
         if (!IsServer || OwnerASC == null) return;
 
+        // La copia de un eco pasa lo suyo (la mitad del daño, sin cargar la definitiva).
         if (boosted && BoostedExplosion != null)
         {
             _boostedExplosion = GA_InstantAoE.Deployable(BoostedExplosion, OwnerASC, _boostedExplosion);
+            _boostedExplosion.DamageScale = DamageScale;
+            _boostedExplosion.IsEcho      = IsEcho;
             _boostedExplosion.DetonateAt(point);
         }
         else if (ImpactExplosion != null)
         {
             _impactExplosion = GA_InstantAoE.Deployable(ImpactExplosion, OwnerASC, _impactExplosion);
+            _impactExplosion.DamageScale = DamageScale;
+            _impactExplosion.IsEcho      = IsEcho;
             _impactExplosion.DetonateAt(point);
         }
 
@@ -145,6 +150,8 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
         if (ImpactZone != null && GA_ContinuousAoE.TryGroundPoint(point, point.y, out Vector3 ground))
         {
             _impactZone = GA_ContinuousAoE.Deployable(ImpactZone, OwnerASC, _impactZone);
+            _impactZone.DamageScale = DamageScale;
+            _impactZone.IsEcho      = IsEcho;
             _impactZone.DeployZoneAt(ground);
         }
     }
@@ -631,9 +638,7 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
             backswing = Mathf.Max(backswing, (AnimationClip.length / animSpeed) - releaseDelay);
     }
 
-    // Instancia el proyectil, lo spawnea en red, lo inicializa con los
-    // datos de esta habilidad, y le da su velocidad inicial hacia el
-    // punto de mira del dueño.
+    // Dispara el proyectil desde la mano del dueño hacia su punto de mira (y sus ecos, si tiene).
     private void SpawnProjectile()
     {
         // Sin prefab no hay nada que disparar. Sin este guard, Instantiate(null) tira
@@ -645,25 +650,42 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
             return;
         }
 
-        Vector3    spawnPos       = OwnerASC.transform.TransformPoint(SpawnOffset);
-        Quaternion spawnRot       = Quaternion.identity;
-        Vector3    launchDirection = Vector3.forward;
+        Vector3 spawnPos = OwnerASC.transform.TransformPoint(SpawnOffset);
+
+        // La dirección la resuelve el PlayerController: no es (mira - mano) a secas,
+        // porque de cerca eso sale torcido (ver GetLaunchDirection).
+        PlayerController pc = OwnerASC.GetComponent<PlayerController>();
+        Vector3 launchDirection = pc != null ? pc.GetLaunchDirection(spawnPos, MinConvergeDistance)
+                                             : OwnerASC.transform.forward;
+
+        // En ráfaga, la carga de la definitiva se reparte: el ataque entero carga lo mismo.
+        LaunchProjectile(spawnPos, launchDirection, UltimateChargeAmount / Mathf.Max(1, BurstCount));
+
+        // Los ecos (la Proyección arcana): el mismo proyectil desde cada aliado proyectado.
+        FireEchoes<GA_ProjectileShoot>((echo, from) => echo.SpawnEchoProjectile(from));
+    }
+
+    // La copia de un eco: sale del pecho de 'from' hacia donde apunta el dueño, sin cargar la
+    // definitiva. Corre en la instancia del eco (IsEcho, con su DamageScale).
+    private void SpawnEchoProjectile(AbilitySystemComponent from)
+    {
+        if (ProjectilePrefab == null || from == null) return;
 
         PlayerController pc = OwnerASC.GetComponent<PlayerController>();
+        Vector3 origin = from.transform.position + Vector3.up * SpawnOffset.y;
+        Vector3 aim    = pc != null ? pc.GetAimPoint() : OwnerASC.transform.position + OwnerASC.transform.forward * 30f;
+        Vector3 dir    = aim - origin;
+        if (dir.sqrMagnitude < 0.01f) dir = OwnerASC.transform.forward;
+        dir.Normalize();
 
-        if (pc != null)
-        {
-            // La dirección la resuelve el PlayerController: no es (mira - mano) a secas,
-            // porque de cerca eso sale torcido (ver GetLaunchDirection).
-            launchDirection = pc.GetLaunchDirection(spawnPos, MinConvergeDistance);
-            spawnRot        = Quaternion.LookRotation(launchDirection);
-        }
-        else
-        {
-            launchDirection = OwnerASC.transform.forward;
-            spawnRot        = OwnerASC.transform.rotation;
-        }
+        LaunchProjectile(origin + dir * Mathf.Max(0.3f, SpawnOffset.z), dir, 0f);
+    }
 
+    // Instancia el proyectil en 'spawnPos', lo spawnea en red, lo inicializa con esta habilidad y
+    // lo lanza en 'launchDirection'.
+    private void LaunchProjectile(Vector3 spawnPos, Vector3 launchDirection, float ultCharge)
+    {
+        Quaternion spawnRot = Quaternion.LookRotation(launchDirection);
         GameObject newProjectile = Instantiate(ProjectilePrefab, spawnPos, spawnRot);
 
         // Esto corre en el servidor. Un Instantiate() normal solo crea el
@@ -690,8 +712,7 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
             // peers. Si la lista no tiene nada para los aliados, el proyectil los sigue
             // ignorando como siempre; si tiene, se lo aplica a los que atraviese (la
             // estela del Castigo divino, que cura al pasar).
-            // En ráfaga, la carga de la definitiva se reparte: el ataque entero carga lo mismo.
-            projectileScript.Initialize(OwnerASC, UltimateChargeAmount / Mathf.Max(1, BurstCount), this, LifeTime);
+            projectileScript.Initialize(OwnerASC, ultCharge, this, LifeTime);
         }
 
         Rigidbody rb = newProjectile.GetComponent<Rigidbody>();

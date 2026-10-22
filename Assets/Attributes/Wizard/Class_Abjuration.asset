@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 749805704a6088741af34d91f0891ced, type: 3}
+  m_Name: Class_Abjuration
+  m_EditorClassIdentifier: 
+  ClassName: School of Abjuration
+  ClassNameEs: "Escuela de abjuraci\xF3n"
+  ClassIcon: {fileID: 21300000, guid: 470366c5e6d519644b428e75cb49945e, type: 3}
+  Description: 'Protective magic. Arcane Projection links him to an ally: the ally
+    gets a shield and copies his left click at half damage. Arcane Protection turns
+    a quarter of his damage into shield for both. Maximum Protection projects him
+    onto every nearby ally.'
+  DescriptionEs: "Magia protectora. La Proyecci\xF3n arcana lo une a un aliado: le
+    da escudo y copia su clic izquierdo con la mitad del da\xF1o. La Protecci\xF3n
+    arcana vuelve escudo un cuarto de su da\xF1o, para los dos. La Protecci\xF3n
+    m\xE1xima lo proyecta sobre todos los aliados cerca."
+  Role: 3
+  MenuRole: 0
+  BaseAttributes: {fileID: 11400000, guid: f2366ca969bd22946b8f6edc231217c3, type: 2}
+  Abilities:
+  - InputSlot: 1
+    Ability: {fileID: 11400000, guid: 7207a3e8df6eed34b8833d380a1237b5, type: 2}
+  - InputSlot: 2
+    Ability: {fileID: 11400000, guid: 9baf6f64a3a084248bc59e2f00169872, type: 2}
+  - InputSlot: 3
+    Ability: {fileID: 11400000, guid: 4fdbf54bc96ca8e47adbad16859de35d, type: 2}
+  - InputSlot: 4
+    Ability: {fileID: 11400000, guid: 4f3850ee63f0927439e3269a987c5a7c, type: 2}
+  - InputSlot: 5
+    Ability: {fileID: 11400000, guid: 9e20a7a9c0c0f4843a7bf6c7de8ea5d4, type: 2}
+  - InputSlot: 6
+    Ability: {fileID: 11400000, guid: c945ef84d1489e0409a4d20848828ea7, type: 2}
+  PassiveBehaviorsPrefab: {fileID: 4234804819320066127, guid: ae5db2de65db8cf4f93500969afee227, type: 3}
+  PassiveEffects:
+  - {fileID: 11400000, guid: 59684d57ff7904743a4035e2f82e1f3b, type: 2}
+  WallMovement: {fileID: 0}
+  StatGrowthPerLevel:
+  - Attribute: 2
+    AmountPerLevel: 40
+  - Attribute: 4
+    AmountPerLevel: 50
+  - Attribute: 8
+    AmountPerLevel: 1
+  - Attribute: 17
+    AmountPerLevel: 1
+  - Attribute: 14
+    AmountPerLevel: 100
+  AvailableSubclasses: []
+  ClassAnimatorOverride: {fileID: 22100000, guid: 10ff7d10ad175064191737e78213b5f5, type: 2}
+  StanceAnimatorOverride: {fileID: 0}
+  StanceAnimatorTag: 0
+  MainHandWeaponPrefab: {fileID: 0}
+  OffHandWeaponPrefab: {fileID: 0}
+  MainHandRotationOffset: {x: 0, y: 0, z: 0}
+  MainHandPositionOffset: {x: 0, y: 0, z: 0}
+  MainHandScale: 1
+  OffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandPose: {fileID: 0}
+  OffHandPoseRequiredTag: 0
+  DrawMainHandTag: 0
+  StowedMainHandPositionOffset: {x: 0, y: 0, z: -0.2}
+  StowedMainHandRotationOffset: {x: 0, y: 180, z: 45}
+  StowOffHandTag: 0
+  StowedOffHandPositionOffset: {x: 0, y: 0, z: 0}
+  StowedOffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandScale: 1
+  GrowTag: 0
+  GrowScale: 1.5

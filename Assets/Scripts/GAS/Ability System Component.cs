@@ -1759,6 +1759,28 @@ public class AbilitySystemComponent : MonoBehaviour
         _healModifiers.Remove(modifier);
     }
 
+    // Los que hacen que las habilidades de este personaje salgan ADEMÁS desde otro (los ecos: la
+    // Proyección arcana de la Abjuración). Ver IAbilityEchoSource y GameplayAbility.FireEchoes.
+    private readonly List<IAbilityEchoSource> _echoSources = new List<IAbilityEchoSource>();
+
+    public void RegisterEchoSource(IAbilityEchoSource source)
+    {
+        if (source != null && !_echoSources.Contains(source))
+            _echoSources.Add(source);
+    }
+
+    public void UnregisterEchoSource(IAbilityEchoSource source)
+    {
+        _echoSources.Remove(source);
+    }
+
+    // Desde quiénes sale además 'ability', que acaba de disparar. Servidor.
+    public void CollectEchoes(GameplayAbility ability, List<AbilityEcho> echoes)
+    {
+        for (int i = 0; i < _echoSources.Count; i++)
+            _echoSources[i]?.CollectEchoes(ability, echoes);
+    }
+
     // Corre los modificadores de curación de ESTE personaje (el que cura) sobre una
     // curación a 'target'. La llama ExecuteInstantEffect sobre el ASC del autor.
     public float ResolveOutgoingHeal(AbilitySystemComponent target, float magnitude, bool isPeriodicTick)

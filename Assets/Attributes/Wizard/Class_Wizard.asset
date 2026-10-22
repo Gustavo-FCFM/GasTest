@@ -49,6 +49,7 @@ MonoBehaviour:
     AmountPerLevel: 100
   AvailableSubclasses:
   - {fileID: 11400000, guid: 42c5f95f97d843e4f81e92803b6b6dd1, type: 2}
+  - {fileID: 11400000, guid: 4f7e45a9439f6af48a9bf68292ef9346, type: 2}
   ClassAnimatorOverride: {fileID: 22100000, guid: 10ff7d10ad175064191737e78213b5f5, type: 2}
   StanceAnimatorOverride: {fileID: 0}
   StanceAnimatorTag: 0

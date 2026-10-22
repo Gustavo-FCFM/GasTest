@@ -10,7 +10,7 @@ del log son todos de packs importados).
 ## ★ Al retomar: lo abierto, en orden (22 de octubre)
 
 1. **Subclases del Mago: PLAN en curso (22 de octubre)** — ver "★ Subclases del Mago"; plan CERRADO;
-   **etapa 1 (Escuela de evocación + cambios al kit base): HECHA Y PROBADA ✅**; sigue la **etapa 2 (Abjuración)**. Orden: Evocación, Abjuración, Filo danzante.
+   **etapa 1 (Escuela de evocación + cambios al kit base): HECHA Y PROBADA ✅**; **etapa 2 (Escuela de abjuración): HECHA Y PROBADA ✅**; sigue la **etapa 3 (Filo danzante)**. Orden: Evocación, Abjuración, Filo danzante.
    **Misiles de a 3 (22 de octubre): HECHO Y PROBADO ✅** (se quedó en ráfaga y no en combo: un solo gesto, 0.2 s fijos). Cada ataque es una RÁFAGA de 3 misiles, 0.2 s entre
    cada uno, de 1/4 del daño mágico cada uno (`GE_ArcaneMissileDamage`), y cada uno deja su punto; la
    Vulnerabilidad arcana bajó a +1 por punto (cada misil suma el suyo). Probado: salen los 3 siguiendo la mira; con 5 puntos, cada misil pega 1/4 + 5; un aturdido, morir
@@ -185,7 +185,47 @@ artista.
           soltada antes de 1 s, sale al llegar. El Terremoto saca 3 grietas. La Descarga contra la
           Tormenta de la Evocación tira rayos y la agranda (hasta +4 m). La R: levita 8 s, el daño no
           lo baja, +30 % de resistencia, maná siempre lleno y 3 Q instantáneas.
-- [ ] **Etapa 2 — Abjuración.**
+- [ ] **Etapa 2 — Escuela de abjuración: HECHA Y PROBADA ✅ (22 de octubre).**
+      Decidido con Gustavo el 22 de octubre: el escudo que BAJA es solo lo extra de la pasiva (hasta 0);
+      el inicial de la proyección no baja solo, así que la proyección dura hasta que se gasta a golpes.
+      Baja el 10 % del tope por segundo. La R proyecta a todo aliado que esté a 25 m en algún momento de
+      sus 8 s, cada uno con su escudo inicial (una vez por R). Las copias son copias: dejan puntos y
+      todo lo del clic (daño y quemadura al 50 %), y no cargan la definitiva.
+      Elegido por Claude (⚙, se cambia en un campo): la E con cooldown de 15 s (como la Memoria
+      perfecta); la clase con rol **Soporte**, y el escudo que les da a los aliados cuenta como "curar
+      a un aliado" para la carga de la definitiva del rol. La R solo proyecta a jugadores y bots (no a
+      tótems ni invocaciones).
+      Código nuevo:
+      · **Ecos** (genérico, `Scripts/GAS/AbilityEcho.cs`): un `IAbilityEchoSource` registrado en el ASC
+        dice desde quiénes sale además lo que dispara el dueño; `GameplayAbility.FireEchoes` tira la
+        copia (otra instancia: `IsEcho`, `DamageScale`, sin costo, cooldown ni carga de definitiva).
+        Lo saben hacer `GA_ProjectileShoot` (también la ráfaga, la explosión y la zona que deja),
+        `GA_HitscanShot` (y la Descarga, con sus rebotes) y `GA_GroundFissure`.
+        `GameplayEffect.CreateDamageScaledCopy`: los efectos que bajan vida salen escalados.
+        `GameplayAbility.CountsAsBasicAttack`: ella o el switch que la lanzó es el clic izquierdo.
+      · `GA_Target`: gancho `OnTargetChosen` (+ `NeedsHitEffects`).
+      · `Wizard/Abjuration`: `GA_ArcaneProjection` (la E, un `GA_Target`) y `ArcaneProtectionPassive`
+        (las proyecciones, el escudo de la pasiva con su desgaste, la R y las copias).
+      · Tags nuevos al final: `Status_ArcaneProjection`, `Status_MaximumProtection`.
+  - [x] (Corrida por Gustavo y borrada el 22 de octubre.) Correr **Mercenarios ▸ Una vez ▸ Crear la Escuela de abjuración** (y después borrar
+        `MercWizardAbjuration.cs`). Arma `GE_ArcaneProjection` y `GE_MaximumProtection` (Buffs, VFX
+        provisionales), `GA_ArcaneProjection` y `GA_MaximumProtection` (`Wizard/Abjuration`),
+        `AbjurationBehaviours` (copia de `WizardBehaviours` + la pasiva), `ASDef_Abjuration` y
+        `Class_Abjuration` ("School of Abjuration" / "Escuela de abjuración"), colgada de `Class_Wizard`.
+        Íconos PROVISIONALES (los de la Evocación).
+  - [x] **PROBADO ✅ (22 de octubre).** Probar, en el host y en un cliente (subir al nivel 3 y elegirla; hace falta un aliado: un bot
+        del equipo sirve):
+        · **E:** apuntando a un aliado a 25 m o menos → le aparece el ícono y el VFX y 28 de escudo
+          (con 140 de vida). Sin aliado en la mira no sale ni gasta. Relanzarla sobre otro la mueve
+          (al primero se le va lo nuestro). Se acaba si el aliado se queda sin ese escudo, si muere él
+          o si muere el Mago.
+        · **Copias:** con el aliado a 25 m o menos, cada clic izquierdo sale además desde él hacia
+          donde apuntás: los 3 misiles, la bola (con su explosión y quemadura), la flecha, las grietas
+          del terremoto y la descarga (con sus rebotes), todo con la mitad del daño. Lejos (+25 m) no copia.
+        · **Pasiva:** al pegar, el Mago y el proyectado ganan el 25 % del daño en escudo, hasta 70; a
+          los 3 s sin pegar lo extra baja (7 por segundo) y el inicial del aliado se queda.
+        · **R:** 8 s; todo aliado que pase a 25 m queda proyectado (ícono, escudo inicial, copias); al
+          terminar se les va, menos al de la E.
 - [ ] **Etapa 3 — Filo danzante.**
 - [ ] Después: pasar las subclases y los cambios al kit base (Q de 2 s, puntos de 15 s, misiles de a 3 con +1 por punto) a los documentos.
 

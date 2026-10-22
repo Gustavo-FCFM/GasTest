@@ -146,7 +146,7 @@ public enum EGameplayTag
     Status_TacticsReady,       // Tácticas defensivas al máximo: la próxima Retirada lo vuelve invisible y las gasta (DefensiveTacticsPassive)
 
     // --- MAGO ---
-    Status_ArcanePoint,        // UNA por punto arcano (GE_ArcanePoint, tope 5, 6 s): los dejan los Misiles arcanos y cada golpe del Mago le hace +1 por punto (ArcaneVulnerabilityPassive)
+    Status_ArcanePoint,        // UNA por punto arcano (GE_ArcanePoint, tope 5, 15 s): los dejan los Misiles arcanos y cada golpe del Mago le hace +1 por punto (ArcaneVulnerabilityPassive)
     Status_SpellSelected,      // Tiene un hechizo elegido en el libro (lo dan los GE_Spell_*; sin él, el clic izquierdo son los misiles y la Q recarga maná)
     Status_SpellFire,          // Hechizo elegido: fuego (GE_Spell_Fire)
     Status_SpellIce,           // Hechizo elegido: hielo (GE_Spell_Ice)
@@ -155,4 +155,6 @@ public enum EGameplayTag
     Status_IceTomb,            // Encerrado en la Tumba helada (GE_IceTomb, junto con la inmunidad y el enraizado): sus otras habilidades lo llevan en ActivationBlockedTags, y apretar la Q otra vez lo saca (GA_SelfBuff "Apretar otra vez la termina")
     Status_PerfectMemory,      // La próxima Q del Mago (no la recarga) sale al instante y sin cooldown, y gasta una (la Memoria perfecta de la Evocación; la Sobrecarga da 3). Ver GA_TagSwitch.InstantTag
     Status_SteadyFlight,       // Vuelo firme: el daño no corta el vuelo libre (la Sobrecarga de hechizos de la Evocación levita a voluntad). Ver ASC: "Vuelo libre"
+    Status_ArcaneProjection,   // Proyectado por un Abjurador (GE_ArcaneProjection, lo refresca ArcaneProtectionPassive): sus clics izquierdos salen además desde acá. Solo para el ícono y el VFX
+    Status_MaximumProtection,  // La Protección máxima del Abjurador está activa (GE_MaximumProtection, 8 s): proyecta a todos los aliados a 25 m. Ver ArcaneProtectionPassive
 }

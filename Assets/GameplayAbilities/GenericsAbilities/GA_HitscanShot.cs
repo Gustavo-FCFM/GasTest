@@ -115,6 +115,9 @@ public class GA_HitscanShot : GameplayAbility
 
         ResolveShot(origin, dir, pc, netAsc);
 
+        // Los ecos (la Proyección arcana): el mismo tiro desde cada aliado proyectado.
+        FireEchoes<GA_HitscanShot>((echo, from) => echo.ResolveEchoShot(from, pc, netAsc));
+
         if (pc != null) pc.PlayAnimation(this);
 
         // Retroceso: impulso en la dirección OPUESTA al disparo. faceVelocity=false
@@ -139,6 +142,21 @@ public class GA_HitscanShot : GameplayAbility
         // colisión y liberar "atacando") lo maneja el dueño en DashRoutine, igual que
         // en GA_Dash. Sin retroceso, cerramos acá.
         if (!recoiled) EndAbility();
+    }
+
+    // La copia de un eco: el mismo tiro desde el pecho de 'from' hacia donde apunta el dueño.
+    // Corre en la instancia del eco (IsEcho, con su DamageScale).
+    private void ResolveEchoShot(AbilitySystemComponent from, PlayerController pc,
+                                 NetworkAbilitySystemComponent netAsc)
+    {
+        if (from == null) return;
+
+        Vector3 origin = from.transform.position + Vector3.up * MuzzleHeight;
+        Vector3 aim    = pc != null ? pc.GetAimPoint() : origin + OwnerASC.transform.forward * MaxRange;
+        Vector3 dir    = aim - origin;
+        if (dir.sqrMagnitude < 0.01f) dir = OwnerASC.transform.forward;
+
+        ResolveShot(origin, dir.normalized, pc, netAsc);
     }
 
     // Traza el rayo: lo corta en la primera pared y le aplica los efectos al primer

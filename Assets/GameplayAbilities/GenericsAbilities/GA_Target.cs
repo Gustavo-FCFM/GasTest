@@ -105,11 +105,12 @@ public class GA_Target : TargetImpactAbility
 
         CommitAbility();
 
-        if (!HasEffects(EEffectWhen.OnHit))
+        if (NeedsHitEffects && !HasEffects(EEffectWhen.OnHit))
             Debug.LogWarning($"[{AbilityName}] no tiene ningún efecto 'Al golpear': " +
                              $"selecciona objetivo pero no le aplica nada.");
 
         ApplyHitEffects(target, firstHit: true);
+        OnTargetChosen(target);
 
         PlayerController pc = OwnerASC.GetComponent<PlayerController>();
         if (pc != null)
@@ -122,6 +123,14 @@ public class GA_Target : TargetImpactAbility
 
         EndAbility();
     }
+
+    // Para las que hacen algo PROPIO con el elegido, además de su lista de efectos (la Proyección
+    // arcana de la Abjuración). Servidor, ya cobrada.
+    protected virtual void OnTargetChosen(AbilitySystemComponent target) { }
+
+    // Si sin efectos "Al golpear" no hace nada (avisa en la consola). Las que hacen lo suyo en
+    // OnTargetChosen lo apagan.
+    protected virtual bool NeedsHitEffects => true;
 
     // El aliado apuntado, o uno mismo si no hay ninguno y el autocasteo está activo.
     //

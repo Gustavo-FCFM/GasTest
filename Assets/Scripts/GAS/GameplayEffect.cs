@@ -324,6 +324,51 @@ public class GameplayEffect : ScriptableObject
         return copy;
     }
 
+    // Con qué escala de daño se hizo esta copia (CreateDamageScaledCopy); 1 en los assets.
+    [System.NonSerialized] public float CreatedWithDamageScale = 1f;
+
+    // Una copia que hace 'scale' del DAÑO: los modificadores sumados que le BAJAN la vida (fijos,
+    // escalados por stat o por la vida del objetivo) se multiplican; todo lo demás queda igual
+    // (duración, ticks, tags, lentitud, VFX). Si no baja vida, devuelve el mismo efecto. La usan
+    // las copias de los ecos (la Proyección arcana: la mitad del daño, también en la quemadura).
+    public GameplayEffect CreateDamageScaledCopy(float scale)
+    {
+        if (Mathf.Approximately(scale, 1f) || !DamagesHealth) return this;
+
+        GameplayEffect copy = Instantiate(this);
+        copy.name                   = name + $"(×{scale:0.##})";
+        copy.SourceTemplate         = Template;
+        copy.CreatedWithDamageScale = scale;
+
+        foreach (Modifier m in copy.Modifiers)
+        {
+            if (!IsDamage(m)) continue;
+            m.Magnitude               *= scale;
+            m.AttributeCoefficient    *= scale;
+            m.TargetHealthCoefficient *= scale;
+            m.MinMagnitude            *= scale;
+        }
+        return copy;
+    }
+
+    // ¿Le baja la vida a alguien? (un modificador sumado sobre Health con algo negativo)
+    public bool DamagesHealth
+    {
+        get
+        {
+            if (Modifiers == null) return false;
+            foreach (Modifier m in Modifiers)
+                if (IsDamage(m)) return true;
+            return false;
+        }
+    }
+
+    private static bool IsDamage(Modifier m)
+        => m.Attribute == EAttributeType.Health && m.Type == Modifier.EModificationType.Add &&
+           (m.Magnitude < 0f ||
+            (m.UseAttributeScaling && m.AttributeCoefficient < 0f) ||
+            (m.UseTargetHealthScaling && m.TargetHealthCoefficient < 0f));
+
     // ¿Algún modificador depende de los stats del autor? Si no, congelarlo no cambia nada.
     public bool ScalesWithSource
     {

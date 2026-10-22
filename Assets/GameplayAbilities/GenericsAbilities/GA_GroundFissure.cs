@@ -147,7 +147,7 @@ public class GA_GroundFissure : GameplayAbility
     }
 
     // La principal y las extra en abanico, con UNA lista de golpeados para todas: cada enemigo
-    // recibe un solo golpe por lanzamiento.
+    // recibe un solo golpe por lanzamiento. Después, las de los ecos (la Proyección arcana).
     private void StartFissures(Vector3 start, Vector3 dir)
     {
         var struck = new HashSet<AbilitySystemComponent>();
@@ -159,6 +159,24 @@ public class GA_GroundFissure : GameplayAbility
                 Vector3 extra = Quaternion.AngleAxis(side * ExtraFissureAngle * i, Vector3.up) * dir;
                 OwnerASC.StartAbilityCoroutine(FissureRoutine(start, extra, struck));
             }
+
+        FireEchoes<GA_GroundFissure>((echo, from) => echo.StartEchoFissures(from));
+    }
+
+    // La copia de un eco: las mismas grietas desde los pies de 'from' hacia donde apunta el dueño
+    // (en el plano). Corre en la instancia del eco (IsEcho, con su DamageScale).
+    private void StartEchoFissures(AbilitySystemComponent from)
+    {
+        if (from == null) return;
+
+        PlayerController pc = OwnerASC.GetComponent<PlayerController>();
+        Vector3 start = GroundBelow(from.transform.position);
+        Vector3 dir   = (pc != null ? pc.GetAimPoint() : start + OwnerASC.transform.forward) - start;
+        dir.y = 0f;
+        if (dir.sqrMagnitude < 0.001f) { dir = OwnerASC.transform.forward; dir.y = 0f; }
+        if (dir.sqrMagnitude < 0.001f) dir = Vector3.forward;
+
+        StartFissures(start, dir.normalized);
     }
 
     private IEnumerator FissureRoutine(Vector3 start, Vector3 dir, HashSet<AbilitySystemComponent> struck)

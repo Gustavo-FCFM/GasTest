@@ -97,7 +97,7 @@ MonoBehaviour:
   HitVFX: {fileID: 0}
   PointTag: 83
   Shape: 0
-  JumpRange: 4
+  JumpRange: 5
   MaxTargets: 12
   ChestHeight: 1.1
   BeamPrefab: {fileID: 7993184928851973513, guid: 2958a230a4c616945a783b5363750755, type: 3}
