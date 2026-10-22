@@ -11,6 +11,11 @@ del log son todos de packs importados).
 
 1. **Subclases del Mago: PLAN en curso (22 de octubre)** — ver "★ Subclases del Mago"; plan CERRADO;
    **etapa 1 (Escuela de evocación + cambios al kit base): HECHA Y PROBADA ✅**; sigue la **etapa 2 (Abjuración)**. Orden: Evocación, Abjuración, Filo danzante.
+   **Misiles de a 3 (22 de octubre): HECHO Y PROBADO ✅** (se quedó en ráfaga y no en combo: un solo gesto, 0.2 s fijos). Cada ataque es una RÁFAGA de 3 misiles, 0.2 s entre
+   cada uno, de 1/4 del daño mágico cada uno (`GE_ArcaneMissileDamage`), y cada uno deja su punto; la
+   Vulnerabilidad arcana bajó a +1 por punto (cada misil suma el suyo). Probado: salen los 3 siguiendo la mira; con 5 puntos, cada misil pega 1/4 + 5; un aturdido, morir
+   u otra habilidad cortan los que faltan; el ritmo de ataque al mantener no cambia; la definitiva
+   carga lo mismo que antes por ataque.
 2. **Probar los bots del Mago (etapa 4: código y documentos HECHOS, 21 de octubre):** ver "★ El
    Mago" ▸ Etapa 4. Las etapas 1, 2 y 3 están hechas y probadas ✅ (el kit entero). Quedó por
    confirmar que la Tumba cura y que la Flecha helada vuela más rápido.
@@ -101,7 +106,7 @@ artista.
 ## Filo danzante
 | Ranura | Qué hace |
 |---|---|
-| Clic izquierdo | Cortes en arco corto con espada corta (la del Explorador), daño FÍSICO (los +2 por punto arcano también valen). Con un hechizo elegido en el libro (el clic derecho sigue siendo el libro), el golpe sale como CORTE AVANZANDO (con dash) y cuesta el 50 % del maná MÁXIMO; el corte GASTA el hechizo y vuelve a los cortes normales |
+| Clic izquierdo | Cortes en arco corto con espada corta (la del Explorador), daño FÍSICO (los +1 por punto arcano también valen). Con un hechizo elegido en el libro (el clic derecho sigue siendo el libro), el golpe sale como CORTE AVANZANDO (con dash) y cuesta el 50 % del maná MÁXIMO; el corte GASTA el hechizo y vuelve a los cortes normales |
 | El corte avanzando | Según el hechizo: fuego (quema / +daño propio), hielo (ralentiza / +velocidad), tierra (aturde / +resistencia al aturdido), rayo (−velocidad de ataque enemiga / +la propia). Escala con los puntos arcanos (ver F abajo); el beneficio propio tiene tope del 20 % aunque pegue a varios. Solo el corte avanzando aplica el elemento |
 | E — Espada mágica | 8 s, cooldown 15 s: los cortes hacen daño MÁGICO |
 | Pasiva — Danza defensiva | +3 % de resistencia por punto arcano en enemigos a 8 m o menos, tope 30 % |
@@ -182,7 +187,7 @@ artista.
           lo baja, +30 % de resistencia, maná siempre lleno y 3 Q instantáneas.
 - [ ] **Etapa 2 — Abjuración.**
 - [ ] **Etapa 3 — Filo danzante.**
-- [ ] Después: pasar las subclases y los cambios al kit base (Q de 2 s, puntos de 15 s) a los documentos.
+- [ ] Después: pasar las subclases y los cambios al kit base (Q de 2 s, puntos de 15 s, misiles de a 3 con +1 por punto) a los documentos.
 
 ---
 
@@ -206,23 +211,23 @@ misiles (aunque tengas el botón apretado). La Q no gasta maná. La barra del HU
 es azul (aparece sola en las clases con maná: el Mago es la primera).
 
 **Puntos arcanos (pasiva — Vulnerabilidad arcana):** solo los dan los Misiles arcanos, 1 por
-golpe; tope 5; duran 6 s y se refrescan. Cada punto suma **+2 de daño FIJO** a cada golpe del
-Mago contra ese objetivo (con 5, +10), no a los ticks de la quemadura. Se ven como debuff en la
+golpe (cada misil de la ráfaga es un golpe); tope 5; duran 15 s y se refrescan. Cada punto suma **+1 de daño FIJO** a cada golpe del
+Mago contra ese objetivo (con 5, +5), no a los ticks de la quemadura (era +2 hasta el 22 de octubre: bajó al pasar los misiles a 3). Se ven como debuff en la
 barra (con su número) y como **bolas azules que giran alrededor** del marcado soltando
 estrellitas azules (una bola por punto).
 
 | Ranura | Qué hace | Maná | Con los puntos del objetivo |
 |---|---|---|---|
-| Clic izq. — Misiles arcanos | Bolita azul; vuela hasta chocar; daño mágico; da 1 punto. Se repite al mantener | 0 | +2 por punto |
+| Clic izq. — Misiles arcanos | RÁFAGA de 3 bolitas azules, 0.2 s entre cada una (esquivables), cada una hacia donde mires en ese momento; vuela hasta chocar; cada una 1/4 del daño mágico (`GE_ArcaneMissileDamage`) y 1 punto. El cooldown se cobra una vez y la carga de la definitiva se reparte entre las 3. Se repite al mantener | 0 | +1 por punto, en CADA misil |
 | Clic der. — Libro de hechizos | Rueda: ARRIBA los misiles (lo normal) y los 4 hechizos. El elegido se queda hasta cambiarlo o hasta que no alcance el maná. Cambia el clic izquierdo y la Q | — | — |
 | Clic izq. con Fuego — Bola de fuego | Canaliza 0.5 s. Explota en 3 m: daño + quemadura, y deja la zona del dragón del Monje tal cual (2.5 m, 5 s, `GE_DragonBurn` cada 1 s). No se repite al mantener | 25 | La quemadura dura +1 s por punto |
 | Clic izq. con Hielo — Flecha helada | Canaliza 1 s; se mantiene y sale al soltar. Proyectil rápido como la flecha cargada del Explorador (70) que ralentiza. No se repite al mantener | 50 | La ralentización dura +0.5 s por punto |
 | Clic izq. con Tierra — Terremoto | Una grieta que AVANZA por el piso desde el Mago (se ve venir y se esquiva) siguiendo el terreno: si está arriba de algo, baja por el borde. Pega solo a lo pegado al piso (caja de 0.5 m de alto, ajustable): el que salta alto la esquiva. Solo daño. Lanzado VOLANDO: se corta el vuelo, cae en picada y la grieta sale al tocar el piso (como el terremoto de Spellbreak). Se repite al mantener | 20 | Aturde 0.5 s por punto y GASTA los puntos de ese enemigo (si no, manteniendo el botón quedaba aturdido sin parar) |
 | Clic izq. con Rayo — Descarga eléctrica | Hitscan, con un rayito azul que dibuja la trayectoria al instante. Se repite al mantener | 10 | Rebota (ver abajo) |
 | Q sin hechizo — Recargar maná | Canaliza 3 s y recarga el 100 % de a poco (+33 por segundo, como el Segundo aliento del Guerrero pero con maná); cortada, se queda con lo ganado. Cooldown 10 s, completa o cortada | — | — |
-| Q con Fuego — Muro de fuego | Mantener Q muestra el muro en el piso y la RUEDA DEL MOUSE lo gira (15° por paso; con control, la cruceta izquierda y derecha). 5 zonas CUADRADAS de 2 m en fila de lado a lado (10 m), con daño hasta 2 m de alto; quema como la zona del dragón. Dura 5 s. Cooldown 8 s | 0 | (los +2 de la pasiva) |
+| Q con Fuego — Muro de fuego | Mantener Q muestra el muro en el piso y la RUEDA DEL MOUSE lo gira (15° por paso; con control, la cruceta izquierda y derecha). 5 zonas CUADRADAS de 2 m en fila de lado a lado (10 m), con daño hasta 2 m de alto; quema como la zona del dragón. Dura 5 s. Cooldown 8 s | 0 | (los +1 de la pasiva) |
 | Q con Hielo — Tumba helada | Se congela a SÍ MISMO (el bloque de hielo de WoW / la crio-congelación de Mei): 3 s inmune a daño y a control, sin moverse ni atacar; apretar Q otra vez sale antes; CURA el 40 % de la vida máxima de a poco (8 % cada 0.5 s; pedido de Gustavo tras probarla, como Mei; si sale antes, se queda con lo que llevaba). Un cubo de hielo traslúcido lo encierra. Cooldown 20 s | 0 | — |
-| Q con Tierra — Levantamiento | Área de 3 m donde apunta: daño y los lanza hacia arriba. Cooldown 8 s | 0 | (los +2 de la pasiva) |
+| Q con Tierra — Levantamiento | Área de 3 m donde apunta: daño y los lanza hacia arriba. Cooldown 8 s | 0 | (los +1 de la pasiva) |
 | Q con Rayo — Tormenta eléctrica | Un tornado AZUL (copia de `Art/VFX/Tornado.prefab`) fijo donde apunta: 6 s, daño cada 1 s en 4 m. Cooldown 8 s. **Corrección del 22 de octubre (Gustavo): que la Descarga le pegue y el tornado tire rayos es EXCLUSIVO de la Evocación** (Cadena de relámpagos); la base solo daña | 0 | — |
 | Shift — Vuelo | `GA_Flight` + `GE_Fly` (hecho y probado el 6 de octubre) | — | — |
 

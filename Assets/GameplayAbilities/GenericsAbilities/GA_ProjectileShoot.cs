@@ -76,6 +76,21 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
     [Label("Se deshace en el primer enemigo")]
     public bool StopAtFirstEnemy = false;
 
+    [Tooltip("Cuántos proyectiles salen por ataque, uno tras otro, cada uno hacia donde se esté " +
+             "mirando en ese momento (los Misiles arcanos del Mago: 3). Cada uno pega con la lista de " +
+             "efectos completa; el cooldown se cobra una vez (con el primero) y la carga de la " +
+             "definitiva se reparte entre todos. Los corta otra habilidad, un aturdido o morir. " +
+             "1 = uno solo, lo de siempre.")]
+    [Label("Ráfaga (proyectiles)")]
+    [Min(1)]
+    public int BurstCount = 1;
+
+    [ShowIf(nameof(BurstCount), 1, true)]
+    [Tooltip("Segundos entre un proyectil de la ráfaga y el siguiente (no cambia con el ritmo de " +
+             "ataque). Más alto = más fácil de esquivar.")]
+    [Label("Entre proyectiles (s)")]
+    public float BurstInterval = 0.2f;
+
     [Section("Al chocar")]
     [Tooltip("Una explosión donde choca (contra un enemigo, una pared o un escudo): un GA_InstantAoE " +
              "que se reusa tal cual —su radio, sus efectos y su VFX—, sin su costo, su cooldown ni su " +
@@ -495,10 +510,30 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
         // el proyectil (ver HideWeaponWhileFlying).
         if (HideWeaponWhileFlying) SetOwnerWeaponVisible(false);
 
+        // RÁFAGA (BurstCount): los demás, de a uno. El remate corre desde el primero, así que
+        // la ráfaga no alarga el ataque si entra en él.
+        float waited = 0f;
+        for (int shot = 1; shot < BurstCount; shot++)
+        {
+            float next = shot * BurstInterval;
+            while (waited < next)
+            {
+                yield return null;
+                waited += Time.deltaTime;
+
+                if (!Cancelled(cancelSerial) && !OwnerASC.HasTag(EGameplayTag.State_Dead) &&
+                    !OwnerASC.HasTag(EGameplayTag.State_Stunned)) continue;
+
+                if (HideWeaponWhileFlying) SetOwnerWeaponVisible(true);
+                if (!Cancelled(cancelSerial)) EndAbility();
+                yield break;
+            }
+            SpawnProjectile();
+        }
+
         // El remate se espera de a pedacitos para poder mirar la cancelación en el
         // medio. Con un solo WaitForSeconds habría que aguantar el remate entero aunque
         // el jugador ya hubiera apretado otra cosa, que es justo lo que queremos evitar.
-        float waited = 0f;
         while (waited < backswing)
         {
             yield return null;
@@ -655,7 +690,8 @@ public class GA_ProjectileShoot : GameplayAbility, IHoldAbility
             // peers. Si la lista no tiene nada para los aliados, el proyectil los sigue
             // ignorando como siempre; si tiene, se lo aplica a los que atraviese (la
             // estela del Castigo divino, que cura al pasar).
-            projectileScript.Initialize(OwnerASC, UltimateChargeAmount, this, LifeTime);
+            // En ráfaga, la carga de la definitiva se reparte: el ataque entero carga lo mismo.
+            projectileScript.Initialize(OwnerASC, UltimateChargeAmount / Mathf.Max(1, BurstCount), this, LifeTime);
         }
 
         Rigidbody rb = newProjectile.GetComponent<Rigidbody>();

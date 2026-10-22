@@ -42,7 +42,7 @@ MonoBehaviour:
   Effects:
   - When: 0
     ApplyTo: 0
-    Effect: {fileID: 11400000, guid: 90d13d9d2cb765648a0d7e4619caa0bb, type: 2}
+    Effect: {fileID: 11400000, guid: ac30caa2546848048c467fe8730f4adc, type: 2}
     OnlyIfTargetHas: 0
     StackScaling: 0
     PerStack: 0
@@ -90,6 +90,8 @@ MonoBehaviour:
   StraightFlightTime: 0
   MinConvergeDistance: 4
   StopAtFirstEnemy: 1
+  BurstCount: 3
+  BurstInterval: 0.2
   SpawnDelay: 0.25
   FirstHitCooldownPerTarget: 3
   AimBeforeThrow: 0
