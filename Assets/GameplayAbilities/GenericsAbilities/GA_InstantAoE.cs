@@ -182,7 +182,13 @@ public class GA_InstantAoE : GameplayAbility, IGroundTargetAbility
             OnTargetHit(targetASC);
             if (OwnerASC.CompareTag("Player")) ChargeUltimate();
         }
+
+        // Las entradas "al terminar de golpear" (el Baile final del Filo danzante: sus beneficios
+        // con los puntos de todos los golpeados).
+        ApplyAfterHitsEffects();
     }
+
+    protected override bool SupportsAfterHits => true;
 
     // =========================================================
     // ESTALLIDO QUE PIDE OTRA HABILIDAD (la Bola de fuego del Mago, al chocar)

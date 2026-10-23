@@ -157,4 +157,6 @@ public enum EGameplayTag
     Status_SteadyFlight,       // Vuelo firme: el daño no corta el vuelo libre (la Sobrecarga de hechizos de la Evocación levita a voluntad). Ver ASC: "Vuelo libre"
     Status_ArcaneProjection,   // Proyectado por un Abjurador (GE_ArcaneProjection, lo refresca ArcaneProtectionPassive): sus clics izquierdos salen además desde acá. Solo para el ícono y el VFX
     Status_MaximumProtection,  // La Protección máxima del Abjurador está activa (GE_MaximumProtection, 8 s): proyecta a todos los aliados a 25 m. Ver ArcaneProtectionPassive
+    Status_MagicBlade,         // La Espada mágica del Filo danzante (GE_MagicBlade, 8 s): sus cortes hacen daño mágico (el "Daño mágico con el tag" de GA_ConeAttack / GA_Dash)
+    Status_DefensiveDance,     // UNA por cada 3 % de la Danza defensiva del Filo danzante (GE_DefensiveDance; las pone y saca DefensiveDancePassive)
 }

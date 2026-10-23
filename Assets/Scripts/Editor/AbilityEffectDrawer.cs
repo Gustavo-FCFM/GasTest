@@ -23,7 +23,17 @@ public class AbilityEffectDrawer : PropertyDrawer
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
     {
         float line = EditorGUIUtility.singleLineHeight;
-        return ShowDetails(property) ? line * 5f + 10f : line + 2f;
+        if (!ShowDetails(property)) return line + 2f;
+        return HasMinMaxRow(property) ? line * 6f + 12f : line * 5f + 10f;
+    }
+
+    // Con duración o veces por punto del objetivo, una fila más: el mínimo y el máximo.
+    private static bool HasMinMaxRow(SerializedProperty property)
+    {
+        int mode = property.FindPropertyRelative("TargetScaling").intValue;
+        return mode == (int)ETargetStackScaling.DurationPerStack ||
+               mode == (int)ETargetStackScaling.ExtraDurationPerStack ||
+               mode == (int)ETargetStackScaling.TimesPerStack;
     }
 
     // La condición, el escalado, la espera por enemigo y los puntos del objetivo se ven
@@ -131,11 +141,31 @@ public class AbilityEffectDrawer : PropertyDrawer
                 tx += rest * 0.34f;
                 EditorGUI.PropertyField(new Rect(tx, tp.y, rest * 0.12f - 2f, line), tPer, new GUIContent("", tPer.tooltip));
                 tx += rest * 0.12f;
-                EditorGUI.LabelField(new Rect(tx, tp.y, rest * 0.08f, line), "s c/u", EditorStyles.miniLabel);
+                bool perTimes = tMode.intValue == (int)ETargetStackScaling.TimesPerStack;
+                EditorGUI.LabelField(new Rect(tx, tp.y, rest * 0.08f, line), perTimes ? "× c/u" : "s c/u", EditorStyles.miniLabel);
                 tx += rest * 0.08f;
                 tSpend.boolValue = EditorGUI.ToggleLeft(new Rect(tx, tp.y, tp.xMax - tx, line),
                                                         new GUIContent("Los gasta", tSpend.tooltip), tSpend.boolValue,
                                                         EditorStyles.miniLabel);
+            }
+
+            // El mínimo (que la aplica aunque no tenga puntos) y el máximo.
+            if (HasMinMaxRow(property))
+            {
+                SerializedProperty tMin = property.FindPropertyRelative("TargetMinimum");
+                SerializedProperty tMax = property.FindPropertyRelative("TargetMaximum");
+                bool perTimes = tMode.intValue == (int)ETargetStackScaling.TimesPerStack;
+                string unit = perTimes ? "veces" : "s";
+                Rect mm = new Rect(x, tp.y + line + 2f, w, line);
+                float half = (mm.width - labelW) * 0.5f;
+                EditorGUI.LabelField(new Rect(mm.x, mm.y, labelW, line),
+                                     new GUIContent("Mínimo / máximo (0 = sin)", tMin.tooltip), EditorStyles.miniLabel);
+                float mx = mm.x + labelW;
+                EditorGUI.PropertyField(new Rect(mx, mm.y, half - 46f, line), tMin, new GUIContent("", tMin.tooltip));
+                EditorGUI.LabelField(new Rect(mx + half - 44f, mm.y, 42f, line), unit + " mín.", EditorStyles.miniLabel);
+                mx += half;
+                EditorGUI.PropertyField(new Rect(mx, mm.y, half - 46f, line), tMax, new GUIContent("", tMax.tooltip));
+                EditorGUI.LabelField(new Rect(mx + half - 44f, mm.y, 44f, line), unit + " máx.", EditorStyles.miniLabel);
             }
         }
 
@@ -165,6 +195,9 @@ public class AbilityEffectDrawer : PropertyDrawer
         if (e.When == EEffectWhen.OnKill && e.ApplyTo != EEffectTarget.Self)
             return "'Al matar' solo se le aplica al lanzador (el objetivo ya está muerto). Poné 'El lanzador'.";
 
+        if (e.When == EEffectWhen.AfterHits && e.ApplyTo != EEffectTarget.Self)
+            return "'Al terminar de golpear' solo se le aplica al lanzador. Poné 'El lanzador'.";
+
         return null;
     }
 
@@ -175,6 +208,7 @@ public class AbilityEffectDrawer : PropertyDrawer
             case EEffectWhen.OnHit:      return "Al golpear";
             case EEffectWhen.OnFirstHit: return "Al primer golpe";
             case EEffectWhen.OnActivate: return "Al activarse";
+            case EEffectWhen.AfterHits:  return "Al terminar de golpear";
             default:                     return "Al matar";
         }
     }

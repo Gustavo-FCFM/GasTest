@@ -351,6 +351,38 @@ public class GameplayEffect : ScriptableObject
         return copy;
     }
 
+    // Una copia cuyo DAÑO es mágico: los modificadores que bajan vida escalando del Ataque pasan a
+    // escalar del Daño mágico (con el mismo coeficiente), así ignora la armadura y le rompe el doble
+    // al escudo. Sin esos, devuelve el mismo efecto. La usa la Espada mágica del Filo danzante (el
+    // "Daño mágico con el tag" de sus cortes).
+    public GameplayEffect CreateMagicCopy()
+    {
+        if (!HasPhysicalScaledDamage) return this;
+
+        GameplayEffect copy = Instantiate(this);
+        copy.name                   = name + "(mágico)";
+        copy.SourceTemplate         = Template;
+        copy.CreatedWithDamageScale = CreatedWithDamageScale;
+
+        foreach (Modifier m in copy.Modifiers)
+            if (IsPhysicalScaledDamage(m)) m.SourceAttribute = EAttributeType.MagicDamage;
+        return copy;
+    }
+
+    private bool HasPhysicalScaledDamage
+    {
+        get
+        {
+            if (Modifiers == null) return false;
+            foreach (Modifier m in Modifiers)
+                if (IsPhysicalScaledDamage(m)) return true;
+            return false;
+        }
+    }
+
+    private static bool IsPhysicalScaledDamage(Modifier m)
+        => IsDamage(m) && m.UseAttributeScaling && m.SourceAttribute == EAttributeType.Attack;
+
     // ¿Le baja la vida a alguien? (un modificador sumado sobre Health con algo negativo)
     public bool DamagesHealth
     {

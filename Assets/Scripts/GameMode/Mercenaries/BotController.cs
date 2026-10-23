@@ -1562,7 +1562,7 @@ public class BotController : MonoBehaviour
 
         var candidates = new List<int>();
         for (int i = 0; i < choice.Options.Count; i++)
-            if (i != current && choice.IsRadialOptionAvailable(i)) candidates.Add(i);
+            if (i != current && choice.IsRadialOptionSelectable(i)) candidates.Add(i);
         return candidates.Count > 0 ? candidates[Random.Range(0, candidates.Count)] : current;
     }
 
@@ -1584,7 +1584,7 @@ public class BotController : MonoBehaviour
                 if (!sw.CanActivate()) continue;   // la Q en cooldown: elegir el hielo no salva a nadie
 
                 for (int i = 0; i < choice.Options.Count; i++)
-                    if (GrantsTag(choice.Options[i].Effect, variant.RequiredTag) && choice.IsRadialOptionAvailable(i))
+                    if (GrantsTag(choice.Options[i].Effect, variant.RequiredTag) && choice.IsRadialOptionSelectable(i))
                         return i;
             }
         }
@@ -1769,7 +1769,7 @@ public class BotController : MonoBehaviour
         {
             int pick = _pendingChoice;
             _pendingChoice = -1;
-            if (pick < 0 || pick == choice.CurrentIndex || !choice.IsRadialOptionAvailable(pick)) return false;
+            if (pick < 0 || pick == choice.CurrentIndex || !choice.IsRadialOptionSelectable(pick)) return false;
 
             choice.ActivateWithSelection(pick, transform.position);
             _netASC.ServerBroadcastAbilityAnimation(ability);

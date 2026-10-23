@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 749805704a6088741af34d91f0891ced, type: 3}
+  m_Name: Class_Blade
+  m_EditorClassIdentifier: 
+  ClassName: School of Bladesinging
+  ClassNameEs: Escuela del Filo danzante
+  ClassIcon: {fileID: 21300000, guid: 470366c5e6d519644b428e75cb49945e, type: 3}
+  Description: A mage with a short sword. His cuts leave arcane points; with a spell
+    chosen, the next cut dashes forward with that element, scaling with the points.
+    Magic Blade turns his cuts magical; Final Dance hits a wide area with all four
+    elements.
+  DescriptionEs: "Un mago con espada corta. Sus cortes dejan puntos arcanos; con
+    un hechizo elegido, el pr\xF3ximo corte avanza con ese elemento y escala con
+    los puntos. La Espada m\xE1gica vuelve m\xE1gicos sus cortes; el Baile final
+    golpea una zona amplia con los cuatro elementos."
+  Role: 2
+  MenuRole: 0
+  BaseAttributes: {fileID: 11400000, guid: 8b52acdafbcd2f648adc637e067a8b2f, type: 2}
+  Abilities:
+  - InputSlot: 1
+    Ability: {fileID: 11400000, guid: 2cb41b2e3379396428870ceabe20e09c, type: 2}
+  - InputSlot: 2
+    Ability: {fileID: 11400000, guid: 6d38893ba9cb473db4b09e9c71735b9b, type: 2}
+  - InputSlot: 3
+    Ability: {fileID: 11400000, guid: 4fdbf54bc96ca8e47adbad16859de35d, type: 2}
+  - InputSlot: 4
+    Ability: {fileID: 11400000, guid: 3755897a44e636d4bad54e8c04f29829, type: 2}
+  - InputSlot: 5
+    Ability: {fileID: 11400000, guid: dd9b8c36eda551d4393f3ace1dad1460, type: 2}
+  - InputSlot: 6
+    Ability: {fileID: 11400000, guid: c945ef84d1489e0409a4d20848828ea7, type: 2}
+  PassiveBehaviorsPrefab: {fileID: 4234804819320066127, guid: dc6084e5fb34c4c43a84824b8670e668, type: 3}
+  PassiveEffects:
+  - {fileID: 11400000, guid: 59684d57ff7904743a4035e2f82e1f3b, type: 2}
+  WallMovement: {fileID: 0}
+  StatGrowthPerLevel:
+  - Attribute: 2
+    AmountPerLevel: 40
+  - Attribute: 4
+    AmountPerLevel: 50
+  - Attribute: 8
+    AmountPerLevel: 1
+  - Attribute: 17
+    AmountPerLevel: 1
+  - Attribute: 14
+    AmountPerLevel: 100
+  AvailableSubclasses: []
+  ClassAnimatorOverride: {fileID: 22100000, guid: 10ff7d10ad175064191737e78213b5f5, type: 2}
+  StanceAnimatorOverride: {fileID: 0}
+  StanceAnimatorTag: 0
+  MainHandWeaponPrefab: {fileID: 2940968421794840072, guid: d6566bb9ade75594b8068db0bf39da23, type: 3}
+  OffHandWeaponPrefab: {fileID: 0}
+  MainHandRotationOffset: {x: 0, y: 0, z: 0}
+  MainHandPositionOffset: {x: 0, y: 0, z: 0}
+  MainHandScale: 1
+  OffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandPositionOffset: {x: 0, y: 0, z: 0}
+  OffHandPose: {fileID: 0}
+  OffHandPoseRequiredTag: 0
+  DrawMainHandTag: 0
+  StowedMainHandPositionOffset: {x: 0, y: 0, z: -0.2}
+  StowedMainHandRotationOffset: {x: 0, y: 180, z: 45}
+  StowOffHandTag: 0
+  StowedOffHandPositionOffset: {x: 0, y: 0, z: 0}
+  StowedOffHandRotationOffset: {x: 0, y: 0, z: 0}
+  OffHandScale: 1
+  GrowTag: 0
+  GrowScale: 1.5

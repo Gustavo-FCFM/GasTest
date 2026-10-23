@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a6917f9ef2d7fb4483e2428f15f790a, type: 3}
+  m_Name: GA_BladeSpells
+  m_EditorClassIdentifier: 
+  AbilityName: Blade Dance
+  AbilityNameEs: Danza de filos
+  AbilityIcon: {fileID: 21300000, guid: dc6bca1cf5cf71b4090d7c61bb9ee6e5, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 0}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 0
+  ActivationBlockedTags: 010000000300000059000000
+  ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  UsableWhileHolding: 0
+  AnimationClip: {fileID: 0}
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  StacksTag: 0
+  ConsumeStacks: 0
+  Effects: []
+  Visuals: []
+  IsInterruptible: 1
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  CastMode: 0
+  CastSeconds: 1
+  CastTickSeconds: 0.5
+  CastBlocksOthers: 1
+  CastBreaksOnDamage: 0
+  CastStartAnimation: {fileID: 0}
+  CastLoopAnimation: {fileID: 0}
+  CastReleaseAnimation: {fileID: 0}
+  MaxCharges: 1
+  ShowVariantIcon: 1
+  DefaultIcon: {fileID: 21300000, guid: dc6bca1cf5cf71b4090d7c61bb9ee6e5, type: 3}
+  DefaultAbility: {fileID: 11400000, guid: 22837cc0fe3013c419bbae8fb0b772bf, type: 2}
+  Variants:
+  - RequiredTag: 85
+    Ability: {fileID: 11400000, guid: cb3550fc677a1204a9c1f6700b802f5f, type: 2}
+    ConsumeTag: 1
+    Icon: {fileID: 21300000, guid: af48409391ce22d4db8476e2573491b6, type: 3}
+    AlsoActiveWithTag: 0
+  - RequiredTag: 86
+    Ability: {fileID: 11400000, guid: 8375f9dc88dc3bc4494c4f0a4c36dfc7, type: 2}
+    ConsumeTag: 1
+    Icon: {fileID: 21300000, guid: 10b6bf9e4f8d3e241b3acab09d461d56, type: 3}
+    AlsoActiveWithTag: 0
+  - RequiredTag: 87
+    Ability: {fileID: 11400000, guid: cb86c27082526ef47b6b8d370a62c443, type: 2}
+    ConsumeTag: 1
+    Icon: {fileID: 21300000, guid: d04fb6a6eb3903243b98d5ef08e89617, type: 3}
+    AlsoActiveWithTag: 0
+  - RequiredTag: 88
+    Ability: {fileID: 11400000, guid: 5c2f333fa3c38834fa10350d4299eb4e, type: 2}
+    ConsumeTag: 1
+    Icon: {fileID: 21300000, guid: 8aacedc79fe3198408fa82c77ec1b3a5, type: 3}
+    AlsoActiveWithTag: 0
+  VariantsPayOwnCost: 1
+  FallBackWhenUnaffordable: 1
+  DropTagWhenUnaffordable: 0
+  InstantTag: 0
+  InstantSkipsDefault: 1

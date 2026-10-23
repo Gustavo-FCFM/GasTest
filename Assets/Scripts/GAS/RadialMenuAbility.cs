@@ -29,6 +29,10 @@ public interface IRadialMenuAbility
     // el dueño, con los tags sincronizados. La que no, se ve apagada y soltarla ahí cancela.
     bool IsRadialOptionAvailable(int index) => true;
 
+    // OPCIONAL: si se puede ELEGIR aunque se vea apagada (el libro del Filo danzante: sin maná para el
+    // corte avanzando se ve apagado, pero el hechizo de la Q es gratis). Por defecto, lo mismo.
+    bool IsRadialOptionSelectable(int index) => IsRadialOptionAvailable(index);
+
     // Se llama al confirmar una opción del menú. selectedIndex es -1 si el
     // jugador canceló.
     void ActivateWithSelection(int selectedIndex, Vector3 targetPosition);

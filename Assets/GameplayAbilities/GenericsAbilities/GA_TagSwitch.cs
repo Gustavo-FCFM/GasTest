@@ -114,6 +114,14 @@ public class GA_TagSwitch : GameplayAbility, IGroundTargetAbility, IWallTargetAb
     [Label("Sin para pagarla: vuelve a la de por defecto")]
     public bool FallBackWhenUnaffordable = true;
 
+    [ShowIf(nameof(FallBackWhenUnaffordable))]
+    [Tooltip("Al volver a la de por defecto por no alcanzar, le QUITA al dueño el tag de esa variante " +
+             "(el Mago base pierde el hechizo y la Q vuelve a recargar). Apagado = el tag se queda: sale " +
+             "la de por defecto y, cuando alcance, vuelve a salir la variante (el Filo danzante: corte " +
+             "normal hasta juntar el maná del corte avanzando).")]
+    [Label("Sin para pagarla: le quita el tag")]
+    public bool DropTagWhenUnaffordable = true;
+
     [Tooltip("OPCIONAL: con este tag puesto, lo que sale sale AL INSTANTE (sin canalizar), sin costo y " +
              "sin poner cooldown, y gasta UNA acumulación del tag (la Memoria perfecta de la Evocación: " +
              "la próxima Q del Mago; la Sobrecarga da 3). Con la habilidad en cooldown no sale. None = nunca.")]
@@ -140,7 +148,8 @@ public class GA_TagSwitch : GameplayAbility, IGroundTargetAbility, IWallTargetAb
     // misiles, y la Q a recargar maná). Servidor.
     protected void DropUnpayableVariants()
     {
-        if (!VariantsPayOwnCost || !FallBackWhenUnaffordable || OwnerASC == null || Variants == null) return;
+        if (!VariantsPayOwnCost || !FallBackWhenUnaffordable || !DropTagWhenUnaffordable ||
+            OwnerASC == null || Variants == null) return;
         foreach (var variant in Variants)
             if (variant.Ability != null && variant.RequiredTag != EGameplayTag.None &&
                 OwnerASC.HasTag(variant.RequiredTag) && !CanPay(variant.Ability))

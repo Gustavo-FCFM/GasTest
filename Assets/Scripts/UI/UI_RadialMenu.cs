@@ -170,6 +170,7 @@ public class UI_RadialMenu : MonoBehaviour
         public float Angle;       // grados, antihorario desde la derecha
         public float Hover;       // 0..1, sigue suave al resaltado
         public bool  Available;
+        public bool  Selectable;  // se puede elegir aunque se vea apagada (el libro del Filo danzante)
     }
 
     private readonly List<Slice> _slices = new List<Slice>();
@@ -268,7 +269,7 @@ public class UI_RadialMenu : MonoBehaviour
     {
         if (!_open) return -1;
 
-        int pick = _selected >= 0 && _selected < _slices.Count && _slices[_selected].Available ? _selected : -1;
+        int pick = _selected >= 0 && _selected < _slices.Count && _slices[_selected].Selectable ? _selected : -1;
 
         _open      = false;
         _closing   = true;
@@ -340,7 +341,7 @@ public class UI_RadialMenu : MonoBehaviour
         {
             Center.color = _centerColor;
             Slice s = _slices[_selected];
-            string desc = s.Available ? Description(_selected) : Loc.T("radial.on_cooldown");
+            string desc = s.Available || s.Selectable ? Description(_selected) : Loc.T("radial.on_cooldown");
             SetText(Label(_selected), desc, s.Available ? _nameColor : UnavailableNameColor);
         }
 
@@ -489,6 +490,7 @@ public class UI_RadialMenu : MonoBehaviour
                 Root      = (RectTransform)view.transform,
                 Angle     = angle,
                 Available = _ability == null || _ability.IsRadialOptionAvailable(i),
+                Selectable = _ability == null || _ability.IsRadialOptionSelectable(i),
             };
             _slices.Add(s);
             ApplySlice(s, 0f, 0f);

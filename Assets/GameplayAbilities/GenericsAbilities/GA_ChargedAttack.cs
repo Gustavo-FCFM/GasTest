@@ -162,7 +162,7 @@ public class GA_ChargedAttack : GameplayAbility, IHoldAbility
         _chargeStartedAt = Time.time;
         _releaseQueued   = false;
 
-        if (CostEffect != null) OwnerASC.ApplyGameplayEffect(CostEffect, this);
+        if (CostEffect != null) OwnerASC.ApplyGameplayEffect(CostEffect, CostSource);
         ApplyEffectsTo(WhileChargingEffects, OwnerASC);
 
         // No pasa por CommitAbility (el cooldown se cobra al soltar): los efectos "al
@@ -343,7 +343,7 @@ public class GA_ChargedAttack : GameplayAbility, IHoldAbility
     {
         OwnerASC.RemoveOneEffectWithTag(FullChargeTag);
 
-        if (CostEffect != null) OwnerASC.ApplyGameplayEffect(CostEffect, this);
+        if (CostEffect != null) OwnerASC.ApplyGameplayEffect(CostEffect, CostSource);
         ApplyActivationEffects();
         PlayCastVisuals();
 

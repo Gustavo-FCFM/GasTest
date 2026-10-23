@@ -143,7 +143,7 @@ public class GA_ShieldBlock : GameplayAbility, IHoldAbility
 
         // Costo de entrada y visuales. NO usamos CommitAbility porque ese aplica
         // también el cooldown, y acá el cooldown va a la SALIDA (ver cabecera).
-        if (CostEffect != null) OwnerASC.ApplyGameplayEffect(CostEffect, this);
+        if (CostEffect != null) OwnerASC.ApplyGameplayEffect(CostEffect, CostSource);
 
         NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
 

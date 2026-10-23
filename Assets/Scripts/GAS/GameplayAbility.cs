@@ -40,6 +40,11 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     [Label("Efecto de costo")]
     public GameplayEffect CostEffect;
 
+    // Con qué "fuente" se cobra el costo. Un costo que escala con un stat (el 50 % del maná MÁXIMO
+    // del corte avanzando del Filo danzante) necesita al dueño, que es de quien se leen los stats:
+    // con la habilidad de fuente el escalado daba 0 y no cobraba nada. Los demás, como siempre.
+    protected object CostSource => CostEffect != null && CostEffect.ScalesWithSource ? (object)OwnerASC : this;
+
     // Efecto CON duración que bloquea reactivar la habilidad mientras esté
     // activo (ver CanActivate). Lo IMPORTANTE del GE acá es su primer GrantedTag:
     // es la "identidad" del cooldown para la UI, la carga de ultimate y el
@@ -636,6 +641,7 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         if (OwnerASC == null) return;
 
         CommittedThisActivation = true;
+        ResetAfterHitsTally();   // una activación nueva cuenta sus golpeados desde cero
 
         // Canalizado CONTINUO ya cobrado: cada repetición sale gratis (el costo y el cooldown
         // se cobran una vez, al empezar). Sus efectos "al activarse" sí se repiten (la Recarga de
@@ -687,7 +693,7 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         bool spentLastCharge = ConsumeCharge();
 
         if (CostEffect != null)
-            OwnerASC.ApplyGameplayEffect(CostEffect, this);
+            OwnerASC.ApplyGameplayEffect(CostEffect, CostSource);
 
         // Con cargas, el cooldown se aplica SOLO al gastar la última: mientras queden
         // cargas no debe haber tag, o el jugador no podría encadenarlas.
@@ -1497,6 +1503,145 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
 
     // ¿Se cumple la condición de la entrada? 'subject' es el objetivo alcanzado (o el
     // lanzador, en los efectos al activarse).
+    // Escala una entrada con los puntos del objetivo ('points'): cuánto dura o cuántas veces va, con
+    // su mínimo (que la aplica aunque no tenga puntos) y su máximo. false = no se aplica.
+    private static bool ScaleByTargetPoints(AbilityEffect e, int points, ref int times, ref float duration)
+    {
+        switch (e.TargetScaling)
+        {
+            case ETargetStackScaling.DurationPerStack:
+            {
+                float d = Mathf.Max(0f, e.TargetPerStack) * points;
+                if (e.TargetMinimum > 0f) d = Mathf.Max(d, e.TargetMinimum);
+                if (e.TargetMaximum > 0f) d = Mathf.Min(d, e.TargetMaximum);
+                if (d <= 0f) return false;
+                duration = d;
+                return true;
+            }
+            case ETargetStackScaling.ExtraDurationPerStack:
+            {
+                float baseDuration = duration >= 0f ? duration : e.Effect.Duration;
+                float d = baseDuration + Mathf.Max(0f, e.TargetPerStack) * points;
+                if (e.TargetMaximum > 0f) d = Mathf.Min(d, e.TargetMaximum);
+                duration = d;
+                return true;
+            }
+            case ETargetStackScaling.TimesPerStack:
+            {
+                float n = Mathf.Max(0f, e.TargetPerStack) * points;
+                if (e.TargetMinimum > 0f) n = Mathf.Max(n, e.TargetMinimum);
+                if (e.TargetMaximum > 0f) n = Mathf.Min(n, e.TargetMaximum);
+                int k = Mathf.RoundToInt(n);
+                if (k <= 0) return false;
+                times *= k;
+                return true;
+            }
+            default:
+                return true;
+        }
+    }
+
+    // =========================================================
+    // "AL TERMINAR DE GOLPEAR" (el beneficio propio del corte avanzando del Filo danzante, 23 de
+    // octubre de 2026)
+    // =========================================================
+
+    // Los enemigos golpeados en esta activación y la suma de sus puntos, por tag (servidor).
+    [System.NonSerialized] private int _afterHitsEnemies;
+    [System.NonSerialized] private Dictionary<EGameplayTag, int> _afterHitsPoints;
+    private static readonly List<EGameplayTag> s_tallyTags = new List<EGameplayTag>();
+
+    // ¿Esta habilidad aplica las entradas "al terminar de golpear"? Las que lo hacen llaman a
+    // ApplyAfterHitsEffects cuando terminaron (el dash, la explosión).
+    protected virtual bool SupportsAfterHits => false;
+
+    private void ResetAfterHitsTally()
+    {
+        _afterHitsEnemies = 0;
+        _afterHitsPoints?.Clear();
+    }
+
+    private void TallyForAfterHits(AbilitySystemComponent target)
+    {
+        if (Effects == null || target == null) return;
+
+        s_tallyTags.Clear();
+        bool any = false;
+        foreach (AbilityEffect e in Effects)
+        {
+            if (e.When != EEffectWhen.AfterHits) continue;
+            any = true;
+            if (e.TargetStacksTag != EGameplayTag.None && !s_tallyTags.Contains(e.TargetStacksTag))
+                s_tallyTags.Add(e.TargetStacksTag);
+        }
+        if (!any) return;
+
+        _afterHitsEnemies++;
+        _afterHitsPoints ??= new Dictionary<EGameplayTag, int>();
+        foreach (EGameplayTag tag in s_tallyTags)
+        {
+            _afterHitsPoints.TryGetValue(tag, out int sum);
+            _afterHitsPoints[tag] = sum + target.GetTagCount(tag);
+        }
+    }
+
+    // Las entradas "al terminar de golpear": UNA vez, al lanzador, si golpeó a algún enemigo, con los
+    // puntos de TODOS los golpeados sumados. La llama cada habilidad que lo soporta cuando terminó
+    // de golpear (servidor). Deja la cuenta en cero.
+    protected void ApplyAfterHitsEffects()
+    {
+        int enemies = _afterHitsEnemies;
+        _afterHitsEnemies = 0;
+
+        if (enemies > 0 && OwnerASC != null && Effects != null)
+        {
+            foreach (AbilityEffect e in Effects)
+            {
+                if (e.Effect == null || e.When != EEffectWhen.AfterHits) continue;
+                if (!PassesCondition(e, OwnerASC)) continue;
+
+                int times = StackApplications(e, out float duration);
+                if (times <= 0) continue;
+
+                if (e.TargetScaling != ETargetStackScaling.None && e.TargetStacksTag != EGameplayTag.None)
+                {
+                    int sum = 0;
+                    if (_afterHitsPoints != null) _afterHitsPoints.TryGetValue(e.TargetStacksTag, out sum);
+                    if (!ScaleByTargetPoints(e, sum, ref times, ref duration)) continue;
+                }
+
+                ApplyScaled(OwnerASC, e.Effect, OwnerASC, times, duration);
+            }
+        }
+
+        _afterHitsPoints?.Clear();
+    }
+
+    // =========================================================
+    // DAÑO MÁGICO CON UN TAG (la Espada mágica del Filo danzante, 23 de octubre de 2026)
+    // =========================================================
+
+    // Con este tag en el lanzador, el daño de la habilidad es MÁGICO (escala del daño mágico en vez
+    // del ataque). None = como está. Lo declaran como campo las que lo usan (el corte, el dash), para
+    // no ponerlo en el Inspector de todas.
+    protected virtual EGameplayTag MagicDamageTag => EGameplayTag.None;
+
+    [System.NonSerialized] private Dictionary<GameplayEffect, GameplayEffect> _magicEffects;
+
+    private GameplayEffect AsMagicWhileTagged(GameplayEffect effect)
+    {
+        EGameplayTag tag = MagicDamageTag;
+        if (effect == null || tag == EGameplayTag.None || OwnerASC == null || !OwnerASC.HasTag(tag)) return effect;
+
+        _magicEffects ??= new Dictionary<GameplayEffect, GameplayEffect>();
+        if (!_magicEffects.TryGetValue(effect, out GameplayEffect magic) || magic == null)
+        {
+            magic = effect.CreateMagicCopy();
+            _magicEffects[effect] = magic;
+        }
+        return magic;
+    }
+
     private static bool PassesCondition(AbilityEffect e, AbilitySystemComponent subject)
         => e.OnlyIfTargetHas == EGameplayTag.None || (subject != null && subject.HasTag(e.OnlyIfTargetHas));
 
@@ -1557,6 +1702,10 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         bool wasAlive = !target.HasTag(EGameplayTag.State_Dead);
         bool healed = false;   // para los VFX "al curar"
 
+        // Para las entradas "al terminar de golpear": un enemigo más y sus puntos, ANTES de que las
+        // de abajo los gasten.
+        if (enemy && !onlyHostile) TallyForAfterHits(target);
+
         foreach (AbilityEffect e in Effects)
         {
             if (e.Effect == null) continue;
@@ -1580,22 +1729,13 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
             int times = StackApplications(e, out float duration);
             if (times <= 0) continue;
 
-            // Con los puntos del OBJETIVO (los puntos arcanos del Mago): más duración por cada uno.
+            // Con los puntos del OBJETIVO (los puntos arcanos del Mago): la duración o las veces.
             int targetStacks = 0;
             if (e.TargetScaling != ETargetStackScaling.None && e.TargetStacksTag != EGameplayTag.None &&
                 e.ApplyTo != EEffectTarget.Self)
             {
                 targetStacks = target.GetTagCount(e.TargetStacksTag);
-                if (e.TargetScaling == ETargetStackScaling.DurationPerStack)
-                {
-                    if (targetStacks <= 0 || e.TargetPerStack <= 0f) continue;
-                    duration = e.TargetPerStack * targetStacks;
-                }
-                else
-                {
-                    float baseDuration = duration >= 0f ? duration : e.Effect.Duration;
-                    duration = baseDuration + Mathf.Max(0f, e.TargetPerStack) * targetStacks;
-                }
+                if (!ScaleByTargetPoints(e, targetStacks, ref times, ref duration)) continue;
             }
 
             // El filtro del primer golpe va al final: puede ANOTAR algo (el proyectil anota
@@ -1611,7 +1751,8 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
             if (replacements != null && replacements.TryGetValue(effect, out GameplayEffect replacement) &&
                 replacement != null)
                 effect = replacement;
-            effect = ScaledForDamage(effect);   // las copias de los ecos: la parte de su daño
+            effect = AsMagicWhileTagged(effect);   // la Espada mágica del Filo: el daño pasa a mágico
+            effect = ScaledForDamage(effect);      // las copias de los ecos: la parte de su daño
 
             if (e.ApplyTo == EEffectTarget.Self) ApplyScaled(source, effect, source, times, duration);
             else                                 ApplyScaled(target, effect, source, times, duration);
@@ -1653,7 +1794,8 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // ¿Qué momentos acepta esta habilidad? Para que el Inspector marque las entradas que
     // nunca se van a aplicar. "Al activarse" lo aceptan todas (lo hace CommitAbility).
     public virtual bool SupportsEffectTiming(EEffectWhen when)
-        => when == EEffectWhen.OnActivate || UsesHitEffects;
+        => when == EEffectWhen.OnActivate ||
+           (when == EEffectWhen.AfterHits ? SupportsAfterHits && UsesHitEffects : UsesHitEffects);
 
     // ¿Qué VFX acepta? "Al lanzar" todas; "al golpear" las que golpean; "en el impacto" las
     // que tienen un punto donde caen.

@@ -1,0 +1,210 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac50c65172ac2b54d9127395b05455b7, type: 3}
+  m_Name: GA_FinalDance
+  m_EditorClassIdentifier: 
+  AbilityName: Final Dance
+  AbilityNameEs: Baile final
+  AbilityIcon: {fileID: 21300000, guid: ad2691c3cc774704dbeb80c8a5fce95b, type: 3}
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: 4165da9d9de274a4aa511261df047340, type: 2}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 0
+  ActivationBlockedTags: 010000000300000059000000
+  ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  UsableWhileHolding: 0
+  AnimationClip: {fileID: 3094330708855449807, guid: 39e2b573902399d4fbd58117e24ea1d2, type: 3}
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  StacksTag: 0
+  ConsumeStacks: 0
+  Effects:
+  - When: 0
+    ApplyTo: 0
+    Effect: {fileID: 11400000, guid: 28649514ecc886945a1e3f7a603fc205, type: 2}
+    OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
+    PerTargetCooldown: 0
+    TargetStacksTag: 0
+    TargetScaling: 0
+    TargetPerStack: 0
+    TargetMinimum: 0
+    TargetMaximum: 0
+    ConsumeTargetStacks: 0
+  - When: 0
+    ApplyTo: 0
+    Effect: {fileID: 11400000, guid: d15c7612e7ffe914a918fbd2b9bdf30b, type: 2}
+    OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
+    PerTargetCooldown: 0
+    TargetStacksTag: 83
+    TargetScaling: 1
+    TargetPerStack: 1
+    TargetMinimum: 1
+    TargetMaximum: 0
+    ConsumeTargetStacks: 0
+  - When: 0
+    ApplyTo: 0
+    Effect: {fileID: 11400000, guid: b6b7cc60329b82941a574c7ab21cbe8c, type: 2}
+    OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
+    PerTargetCooldown: 0
+    TargetStacksTag: 83
+    TargetScaling: 1
+    TargetPerStack: 1
+    TargetMinimum: 1
+    TargetMaximum: 0
+    ConsumeTargetStacks: 0
+  - When: 0
+    ApplyTo: 0
+    Effect: {fileID: 11400000, guid: 599bef532c08eae4a8e05af2dc063cf9, type: 2}
+    OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
+    PerTargetCooldown: 0
+    TargetStacksTag: 83
+    TargetScaling: 1
+    TargetPerStack: 0.5
+    TargetMinimum: 0.5
+    TargetMaximum: 2.5
+    ConsumeTargetStacks: 0
+  - When: 0
+    ApplyTo: 0
+    Effect: {fileID: 11400000, guid: c95650ebf7107144cb91a75afabc5162, type: 2}
+    OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
+    PerTargetCooldown: 0
+    TargetStacksTag: 83
+    TargetScaling: 1
+    TargetPerStack: 1
+    TargetMinimum: 1
+    TargetMaximum: 0
+    ConsumeTargetStacks: 0
+  - When: 4
+    ApplyTo: 2
+    Effect: {fileID: 11400000, guid: 1ba38ad4d95ef15479c017f9ef562c40, type: 2}
+    OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
+    PerTargetCooldown: 0
+    TargetStacksTag: 83
+    TargetScaling: 3
+    TargetPerStack: 4
+    TargetMinimum: 5
+    TargetMaximum: 20
+    ConsumeTargetStacks: 0
+  - When: 4
+    ApplyTo: 2
+    Effect: {fileID: 11400000, guid: f8cb74e45d74c634aae97dbc2104c5b6, type: 2}
+    OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
+    PerTargetCooldown: 0
+    TargetStacksTag: 83
+    TargetScaling: 3
+    TargetPerStack: 4
+    TargetMinimum: 5
+    TargetMaximum: 20
+    ConsumeTargetStacks: 0
+  - When: 4
+    ApplyTo: 2
+    Effect: {fileID: 11400000, guid: 3913ba1bca3bb2d448b62ad27f4e2d85, type: 2}
+    OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
+    PerTargetCooldown: 0
+    TargetStacksTag: 83
+    TargetScaling: 3
+    TargetPerStack: 4
+    TargetMinimum: 5
+    TargetMaximum: 20
+    ConsumeTargetStacks: 0
+  - When: 4
+    ApplyTo: 2
+    Effect: {fileID: 11400000, guid: b55cc23b3eab36b4d952189758660873, type: 2}
+    OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
+    PerTargetCooldown: 0
+    TargetStacksTag: 83
+    TargetScaling: 3
+    TargetPerStack: 4
+    TargetMinimum: 5
+    TargetMaximum: 20
+    ConsumeTargetStacks: 0
+  Visuals:
+  - When: 2
+    VFXPrefab: {fileID: 1051704587376508, guid: fffb77091d2311b4bb70c69cbd77ef57, type: 3}
+    Delay: 0
+    Offset: {x: 0, y: 0, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    Attach: 0
+    MatchAreaSize: 0
+    AreaSizeMultiplier: 0
+    DestroyTime: 2
+    EndWithTag: 0
+    EndWhenAttributeDepleted: 0
+    DepletedAttribute: 0
+  - When: 2
+    VFXPrefab: {fileID: 1758473627833946668, guid: 9b21333b068a5084ba09535839bee3c8, type: 3}
+    Delay: 0
+    Offset: {x: 0, y: 0, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    Attach: 0
+    MatchAreaSize: 0
+    AreaSizeMultiplier: 0
+    DestroyTime: 1.5
+    EndWithTag: 0
+    EndWhenAttributeDepleted: 0
+    DepletedAttribute: 0
+  IsInterruptible: 1
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  CastMode: 0
+  CastSeconds: 2
+  CastTickSeconds: 0.5
+  CastBlocksOthers: 1
+  CastBreaksOnDamage: 0
+  CastStartAnimation: {fileID: 0}
+  CastLoopAnimation: {fileID: 3094330708855449807, guid: 48740288977d86d4b8adad7dd6194798, type: 3}
+  CastReleaseAnimation: {fileID: 0}
+  MaxCharges: 1
+  Radius: 6
+  DeployMode: 1
+  MaxRange: 20
+  StartDelay: 0
+  ExtraHitsPerStack: 0
+  RepeatInterval: 0.3
+  Targets: 0
+  EffectsToApply: []
+  VisualPrefab: {fileID: 0}
+  VisualScaleMultiplier: 2
+  VisualLifetime: 2

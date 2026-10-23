@@ -47,6 +47,14 @@ public class GA_ConeAttack : GameplayAbility
     [Label("Punto de salida (m)")]
     public Vector3 OriginOffset = Vector3.zero;
 
+    [Section(AbilitySection.Effects)]
+    [Tooltip("Con este tag en el lanzador, el daño del golpe es MÁGICO (escala del daño mágico en vez " +
+             "del ataque): la Espada mágica del Filo danzante. None = siempre como está.")]
+    [Label("Daño mágico con el tag (en el lanzador)")]
+    public EGameplayTag MagicDamageWhileTag = EGameplayTag.None;
+
+    protected override EGameplayTag MagicDamageTag => MagicDamageWhileTag;
+
     [Section("Zonas donde apunta")]
     [Tooltip("OPCIONAL: al golpear, deja esta zona en el piso (la Quemadura santa del Clérigo deja " +
              "fuego sagrado). Se usa esa habilidad tal cual —radio, duración, ticks, efectos y VFX— " +

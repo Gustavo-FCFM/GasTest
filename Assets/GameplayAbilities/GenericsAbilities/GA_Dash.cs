@@ -104,6 +104,12 @@ public class GA_Dash : GameplayAbility
     [Label("Ventana de reinicio al matar (s)")]
     public float KillResetWindow = 2f;
 
+    [Section(AbilitySection.Effects)]
+    [Tooltip("Con este tag en el lanzador, el daño del dash es MÁGICO (escala del daño mágico en vez " +
+             "del ataque): la Espada mágica del Filo danzante. None = siempre como está.")]
+    [Label("Daño mágico con el tag (en el lanzador)")]
+    public EGameplayTag MagicDamageWhileTag = EGameplayTag.None;
+
     // Valida (con el cooldown estándar, que se sincroniza al dueño), consume una
     // carga, resuelve el daño del trayecto y le pide al dueño que se impulse.
     public override void Activate()
@@ -257,8 +263,15 @@ public class GA_Dash : GameplayAbility
 
             hitList.Add(asc);
         }
+
+        // Las entradas "al terminar de golpear" (el corte avanzando del Filo danzante: su beneficio
+        // propio con los puntos de todos los que cruzó).
+        ApplyAfterHitsEffects();
         return hitList;
     }
+
+    protected override bool SupportsAfterHits => true;
+    protected override EGameplayTag MagicDamageTag => MagicDamageWhileTag;
 
     // Vigila a los enemigos golpeados por este dash: si alguno muere dentro de
     // KillResetWindow, reembolsa una carga (RefundCharge, en la clase base, ya limpia

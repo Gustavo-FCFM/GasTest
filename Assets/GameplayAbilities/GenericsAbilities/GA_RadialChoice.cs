@@ -54,6 +54,12 @@ public class GA_RadialChoice : GameplayAbility, IRadialMenuAbility
                  "costo (el maná del hechizo). NO se cobra al elegirla. Vacío = siempre disponible.")]
         [Label("Disponible si alcanza para (GE)")]
         public GameplayEffect RequiresAffordable;
+
+        [Tooltip("Sin con qué pagar 'Disponible si alcanza para', la opción se VE apagada pero se " +
+                 "puede elegir igual (el libro del Filo danzante: sin maná para el corte avanzando, el " +
+                 "hechizo de la Q sigue sirviendo, que es gratis).")]
+        [Label("Se puede elegir aunque no alcance")]
+        public bool SelectableWhenUnaffordable;
     }
 
     [Section("Opciones")]
@@ -86,6 +92,11 @@ public class GA_RadialChoice : GameplayAbility, IRadialMenuAbility
         GameplayEffect cost = Options[index].RequiresAffordable;
         return cost == null || OwnerASC.CanAffordGameplayEffect(cost);
     }
+
+    public bool IsRadialOptionSelectable(int index)
+        => IsRadialOptionAvailable(index) ||
+           (Options != null && index >= 0 && index < Options.Count && OwnerASC != null &&
+            Options[index].SelectableWhenUnaffordable);
 
     // La opción puesta ahora: la primera cuyo estado (sus tags, menos el común) tenga el dueño;
     // si no tiene ninguno, la primera sin efecto (lo normal). -1 si no hay. Corre en el dueño
@@ -135,7 +146,7 @@ public class GA_RadialChoice : GameplayAbility, IRadialMenuAbility
     {
         if (!IsServer) return;
         if (Options == null || index < 0 || index >= Options.Count || !CanActivate() ||
-            !IsRadialOptionAvailable(index) || index == CurrentIndex)
+            !IsRadialOptionSelectable(index) || index == CurrentIndex)
         {
             EndAbility();
             return;

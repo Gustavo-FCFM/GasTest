@@ -1515,9 +1515,17 @@ public class AbilitySystemComponent : MonoBehaviour
     {
         if (costEffect == null) return true;
         foreach (var mod in costEffect.Modifiers)
-            if (mod.Type == Modifier.EModificationType.Add && mod.Magnitude < 0)
-                if (Attributes.ContainsKey(mod.Attribute) && Attributes[mod.Attribute].CurrentValue < Mathf.Abs(mod.Magnitude))
-                    return false;
+        {
+            if (mod.Type != Modifier.EModificationType.Add) continue;
+
+            // Un costo que escala (el 50 % del maná MÁXIMO del corte avanzando del Filo danzante) se
+            // cobra con los stats de uno mismo: se mide igual.
+            float amount = mod.UseAttributeScaling || mod.UseTargetHealthScaling
+                ? CalculateBaseMagnitude(mod, this) : mod.Magnitude;
+            if (amount < 0 && Attributes.ContainsKey(mod.Attribute) &&
+                Attributes[mod.Attribute].CurrentValue < Mathf.Abs(amount))
+                return false;
+        }
         return true;
     }
 

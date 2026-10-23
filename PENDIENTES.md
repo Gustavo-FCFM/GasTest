@@ -10,7 +10,7 @@ del log son todos de packs importados).
 ## ★ Al retomar: lo abierto, en orden (22 de octubre)
 
 1. **Subclases del Mago: PLAN en curso (22 de octubre)** — ver "★ Subclases del Mago"; plan CERRADO;
-   **etapa 1 (Escuela de evocación + cambios al kit base): HECHA Y PROBADA ✅**; **etapa 2 (Escuela de abjuración): HECHA Y PROBADA ✅**; sigue la **etapa 3 (Filo danzante)**. Orden: Evocación, Abjuración, Filo danzante.
+   **etapa 1 (Escuela de evocación + cambios al kit base): HECHA Y PROBADA ✅**; **etapa 2 (Escuela de abjuración): HECHA Y PROBADA ✅**; **etapa 3 (Filo danzante): HECHA Y PROBADA ✅**. Faltan los documentos de las tres subclases. Orden: Evocación, Abjuración, Filo danzante.
    **Misiles de a 3 (22 de octubre): HECHO Y PROBADO ✅** (se quedó en ráfaga y no en combo: un solo gesto, 0.2 s fijos). Cada ataque es una RÁFAGA de 3 misiles, 0.2 s entre
    cada uno, de 1/4 del daño mágico cada uno (`GE_ArcaneMissileDamage`), y cada uno deja su punto; la
    Vulnerabilidad arcana bajó a +1 por punto (cada misil suma el suyo). Probado: salen los 3 siguiendo la mira; con 5 puntos, cada misil pega 1/4 + 5; un aturdido, morir
@@ -237,7 +237,59 @@ artista.
           los 3 s sin pegar lo extra baja (7 por segundo) y el inicial del aliado se queda.
         · **R:** 8 s; todo aliado que pase a 25 m queda proyectado (ícono, escudo inicial, copias); al
           terminar se les va, menos al de la E.
-- [ ] **Etapa 3 — Filo danzante.**
+- [x] **Etapa 3 — Filo danzante: HECHA Y PROBADA ✅ (23 de octubre).**
+      Decidido con Gustavo el 23 de octubre: el corte avanzando es el dash del Pícaro (6 m hacia la mira)
+      con 1 × el ataque físico a cada uno que cruza; NO gasta ni deja puntos; los mínimos valen si le
+      pega a alguien (1 s al enemigo, la tierra 0.5 s; 5 % propio) y sin golpear a nadie no hay
+      beneficio; sin el 50 % del maná sale el corte normal y el hechizo se QUEDA elegido. La R: zona
+      de 6 m de radio donde apuntás (hasta 20 m), 2 × daño mágico.
+      Elegido por Claude (⚙): la clase se llama "Bladesinging" / "Filo danzante", rol Daño (los bots la
+      juegan cuerpo a cuerpo); los cortes alternan derecha/izquierda (el combo del Guerrero, 1 × ataque,
+      2 m, 180°); la E con cooldown 15 s; el beneficio propio va de a 1 % (se acumula hasta 20, 5 s
+      desde el último); los perjuicios son la quemadura de la Bola de fuego (GE_DragonBurn), −30 % de
+      velocidad, el aturdido de siempre y −20 % de velocidad de ataque.
+      Código nuevo (genérico):
+      · Entradas de efectos: "Con los puntos del objetivo" tiene **Mínimo / máximo** (con mínimo se aplica
+        aunque no tenga puntos) y un modo nuevo **"Veces: por punto"**; momento nuevo **"Al terminar de
+        golpear"** (una vez, al lanzador, si golpeó a alguien, con los puntos de TODOS los golpeados
+        sumados; lo soportan GA_Dash y GA_InstantAoE).
+      · `GA_ConeAttack` y `GA_Dash`: **"Daño mágico con el tag (en el lanzador)"**: con ese tag, su daño
+        escala del daño mágico (`GameplayEffect.CreateMagicCopy`).
+      · `GA_TagSwitch`: **"Sin para pagarla: le quita el tag"** (apagado = el tag se queda).
+      · Un costo que escala (el 50 % del maná MÁXIMO) ya se mide bien al ver si alcanza
+        (`ASC.CanAffordGameplayEffect`).
+      · `Wizard/Blade/DefensiveDancePassive` (la Danza defensiva). Tags nuevos al final:
+        `Status_MagicBlade`, `Status_DefensiveDance`.
+        **Arreglado el 23 de octubre:** los cortes avanzando no cobraban maná: el costo se cobraba con la
+        HABILIDAD de fuente y un costo que escala (el 50 % del maná máximo) leía los stats de nadie (daba 0).
+        Ahora los costos que escalan se cobran con el dueño de fuente (`GameplayAbility.CostSource`).
+        **Arreglado el 23 de octubre (2):** la rueda del Filo usaba el libro del Mago (que mide el maná de la
+        bola, la flecha...): con 45 de maná se veía disponible aunque el corte avanzando pide 100. Ahora el
+        Filo tiene su libro, `GA_SpellBookBlade` (textos del Filo): cada elemento mide el maná del corte
+        avanzando y, sin alcanzar, se VE apagado pero se puede elegir igual (para la Q). Opción nueva de
+        `GA_RadialChoice`: "Se puede elegir aunque no alcance".
+  - [x] (Corrida por Gustavo y borrada el 23 de octubre.) Correr **Mercenarios ▸ Una vez ▸ Crear el Filo danzante** (y después borrar `MercWizardBlade.cs`).
+        Arma en `Wizard/Blade`: `GA_BladeSlash` + `GA_BladeCuts` (los cortes), `GA_BladeDashFire/Ice/Earth/
+        Lightning` (el corte avanzando), `GA_BladeSpells` (el clic izquierdo), `GA_MagicBlade` (E),
+        `GA_FinalDance` (R) y `BladeBehaviours`; los GE (`GE_Cost_BladeDash`, `GE_BladeChill`,
+        `GE_BladeShock`, `GE_Blade*Boon`, `GE_MagicBlade`, `GE_DefensiveDance`, `GE_FinalDanceDamage`);
+        `ASDef_Blade` y `Class_Blade`, colgada de `Class_Wizard`, con la espada corta del Explorador en la
+        mano. Íconos y VFX PROVISIONALES.
+  - [x] **PROBADO ✅ (23 de octubre).** Probar, en el host y en un cliente (subir al nivel 3 y elegirla):
+        · **Cortes:** alternan derecha/izquierda al ritmo de ataque, dejan un punto arcano por golpe.
+        · **Corte avanzando:** con un hechizo elegido y 100 de maná (de 200), el clic sale como dash de 6 m
+          hacia la mira, le pega a todos los que cruza, cobra 100 y gasta el hechizo (la Q vuelve a la
+          recarga). Con menos de 100 sale el corte normal y el hechizo sigue elegido. Al enemigo: fuego
+          quema, hielo −30 % de velocidad, tierra aturde, rayo −20 % de velocidad de ataque, 1 s por punto
+          (mínimo 1 s; tierra 0.5 s por punto, hasta 2.5 s). A uno mismo, si golpeó a alguien: el
+          beneficio del elemento, 4 % por punto de todos los golpeados (de 5 % a 20 %), 5 s, con su número
+          en la barra.
+        · **E:** 8 s con el brillo; los cortes y el corte avanzando hacen daño mágico (se nota contra uno
+          con armadura y contra un escudo).
+        · **Pasiva:** con enemigos marcados a 8 m o menos, el buff de la Danza defensiva sube 3 % por punto
+          (hasta 30 %) y baja al alejarse o al vencerse los puntos.
+        · **R:** el marcador en el piso (6 m, hasta 20 m), 2 × daño mágico, los cuatro perjuicios por los
+          puntos de cada uno y los cuatro beneficios por los puntos de todos.
 - [ ] Después: pasar las subclases y los cambios al kit base (Q de 2 s, puntos de 15 s, misiles de a 3 con +1 por punto) a los documentos.
 
 ---

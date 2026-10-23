@@ -138,6 +138,7 @@ public enum ETargetStackScaling
     [InspectorName("No escala")]                               None                  = 0,
     [InspectorName("Duración: segundos por punto (sin, nada)")] DurationPerStack      = 1,   // el aturdido del Terremoto
     [InspectorName("Duración: + segundos por punto")]           ExtraDurationPerStack = 2,   // la quemadura de la Bola de fuego
+    [InspectorName("Veces: por punto")]                         TimesPerStack         = 3,   // el beneficio propio del corte del Filo danzante
 }
 
 // Las secciones de un GameplayEffect, en el orden en que se muestran.
@@ -194,6 +195,7 @@ public enum EEffectWhen
     [InspectorName("Al primer golpe")] OnFirstHit = 1,   // solo al primero (embestidas, proyectiles)
     [InspectorName("Al activarse")]    OnActivate = 2,   // al lanzarla (cuando se cobra el costo)
     [InspectorName("Al matar")]        OnKill     = 3,   // cuando un golpe de esta habilidad mata
+    [InspectorName("Al terminar de golpear")] AfterHits = 4,   // una vez, al lanzador, si golpeó a alguien (con los puntos de TODOS los golpeados)
 }
 
 // A QUIÉN se le aplica.
@@ -214,7 +216,11 @@ public struct AbilityEffect
              "· Al golpear: a cada objetivo que alcanza la habilidad.\n" +
              "· Al primer golpe: solo al primero que alcanza (el aturdido de una embestida).\n" +
              "· Al activarse: al lanzar la habilidad, cuando se cobra el costo. Va al lanzador.\n" +
-             "· Al matar: cuando un golpe de esta habilidad mata. Va al lanzador.")]
+             "· Al matar: cuando un golpe de esta habilidad mata. Va al lanzador.\n" +
+             "· Al terminar de golpear: UNA vez, después de golpear a todos, si golpeó a algún enemigo. " +
+             "Va al lanzador. 'Con los puntos del objetivo' suma los de TODOS los golpeados (el " +
+             "beneficio propio del corte avanzando del Filo danzante). Solo en las que lo soportan " +
+             "(el dash, la explosión).")]
     public EEffectWhen When;
 
     [Tooltip("A QUIÉN se le aplica.\n\n" +
@@ -255,11 +261,22 @@ public struct AbilityEffect
              "· Duración: segundos por punto: dura 'Por punto' segundos por cada uno; sin puntos, no se " +
              "aplica (el Terremoto aturde 0.5 s por punto).\n" +
              "· Duración: + segundos por punto: la duración del efecto y, además, 'Por punto' segundos " +
-             "por cada uno (la quemadura de la Bola de fuego, +1 s por punto).")]
+             "por cada uno (la quemadura de la Bola de fuego, +1 s por punto).\n" +
+             "· Veces: por punto: se aplica 'Por punto' veces por cada uno, redondeado (un buff de 1 % " +
+             "con 4 por punto: 3 puntos = 12 veces = 12 %). Para un efecto que se ACUMULA.\n\n" +
+             "Con 'Mínimo' (> 0) se aplica aunque no tenga puntos, con ese mínimo (de segundos o de " +
+             "veces); con 'Máximo' (> 0), hasta ahí.")]
     public ETargetStackScaling TargetScaling;
 
-    [Tooltip("Segundos por cada punto del objetivo.")]
+    [Tooltip("Segundos (o veces) por cada punto del objetivo.")]
     public float TargetPerStack;
+
+    [Tooltip("Mínimo de segundos (o de veces) con los puntos del objetivo: con > 0 se aplica aunque " +
+             "no tenga ninguno (el corte avanzando del Filo: 1 s al enemigo como mínimo). 0 = sin puntos, nada.")]
+    public float TargetMinimum;
+
+    [Tooltip("Máximo de segundos (o de veces) con los puntos del objetivo. 0 = sin tope.")]
+    public float TargetMaximum;
 
     [Tooltip("Al aplicarse, le saca al objetivo esos puntos (el Terremoto: aturdir los gasta). Las " +
              "entradas de arriba en la lista ya los usaron; las de abajo los ven en 0.")]
@@ -278,6 +295,8 @@ public struct AbilityEffect
         TargetStacksTag     = EGameplayTag.None;
         TargetScaling       = ETargetStackScaling.None;
         TargetPerStack      = 0f;
+        TargetMinimum       = 0f;
+        TargetMaximum       = 0f;
         ConsumeTargetStacks = false;
     }
 }
