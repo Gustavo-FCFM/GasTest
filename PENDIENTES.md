@@ -16,7 +16,7 @@ del log son todos de packs importados).
    Vulnerabilidad arcana bajó a +1 por punto (cada misil suma el suyo). Probado: salen los 3 siguiendo la mira; con 5 puntos, cada misil pega 1/4 + 5; un aturdido, morir
    u otra habilidad cortan los que faltan; el ritmo de ataque al mantener no cambia; la definitiva
    carga lo mismo que antes por ataque.
-   **El escudo a la vista (22 de octubre, pedido de Gustavo): falta probar.** La barra de arriba de la
+   **El escudo a la vista (22 de octubre, pedido de Gustavo): HECHO Y PROBADO ✅ (23 de octubre).** La barra de arriba de la
    cabeza (Nameplate, pieza "ShieldFill", ya puesta por la herramienta y borrada) muestra el escudo como
    VIDA EXTRA: un tramo celeste justo después de la vida, que no la achica; si vida + escudo pasa de la
    máxima, sale por la derecha de la barra (hasta el doble). La burbuja NO es un componente (Gustavo no
