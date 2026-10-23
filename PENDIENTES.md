@@ -10,7 +10,7 @@ del log son todos de packs importados).
 ## ★ Al retomar: lo abierto, en orden (22 de octubre)
 
 1. **Subclases del Mago: PLAN en curso (22 de octubre)** — ver "★ Subclases del Mago"; plan CERRADO;
-   **etapa 1 (Escuela de evocación + cambios al kit base): HECHA Y PROBADA ✅**; **etapa 2 (Escuela de abjuración): HECHA Y PROBADA ✅**; **etapa 3 (Filo danzante): HECHA Y PROBADA ✅**. Faltan los documentos de las tres subclases. Orden: Evocación, Abjuración, Filo danzante.
+   **etapa 1 (Escuela de evocación + cambios al kit base): HECHA Y PROBADA ✅**; **etapa 2 (Escuela de abjuración): HECHA Y PROBADA ✅**; **etapa 3 (Filo danzante): HECHA Y PROBADA ✅**. Documentos al día (23 de octubre). Orden: Evocación, Abjuración, Filo danzante.
    **Misiles de a 3 (22 de octubre): HECHO Y PROBADO ✅** (se quedó en ráfaga y no en combo: un solo gesto, 0.2 s fijos). Cada ataque es una RÁFAGA de 3 misiles, 0.2 s entre
    cada uno, de 1/4 del daño mágico cada uno (`GE_ArcaneMissileDamage`), y cada uno deja su punto; la
    Vulnerabilidad arcana bajó a +1 por punto (cada misil suma el suyo). Probado: salen los 3 siguiendo la mira; con 5 puntos, cada misil pega 1/4 + 5; un aturdido, morir
@@ -290,7 +290,7 @@ artista.
           (hasta 30 %) y baja al alejarse o al vencerse los puntos.
         · **R:** el marcador en el piso (6 m, hasta 20 m), 2 × daño mágico, los cuatro perjuicios por los
           puntos de cada uno y los cuatro beneficios por los puntos de todos.
-- [ ] Después: pasar las subclases y los cambios al kit base (Q de 2 s, puntos de 15 s, misiles de a 3 con +1 por punto) a los documentos.
+- [x] **Documentos al día (23 de octubre):** las tres subclases y los cambios al kit base (Q de 2 s, puntos de 15 s, misiles de a 3 con +1 por punto) en Diseño de clases, la Guía (catálogo de genéricos y la 3.3 nueva), la Arquitectura del GAS (los ecos en la 4.7 nueva, "al terminar de golpear", las copias de efectos, el escudo a la vista, los tags) y la Red (el rol de los bots).
 
 ---
 
