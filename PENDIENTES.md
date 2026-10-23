@@ -67,6 +67,20 @@ del log son todos de packs importados).
    corte avanzando derecho; Pícaros con el dash derecho; un Asesino o un Shinobi invisible al que el bot NO
    persigue; un Monje que entra con la Patada voladora; un Samurái y un Shinobi que usan su definitiva; un
    Clérigo que se escapa con el Destello cuando está en apuros.
+   **Tercera vuelta (23 de octubre, pedido de Gustavo): HECHA Y PROBADA ✅ (23 de octubre).**
+   · **Los inmunes** (la Tumba helada, la Protección divina, Muerte silenciosa, el que está en su sala): los bots
+     les gastaban habilidades. Ahora prefieren a cualquier otro enemigo a la vista (un inmune pesa como si
+     estuviera 60 m más lejos) y no lo cuentan para un área; si es el único, no gastan nada CONTRA él
+     (`UsefulAgainstImmune`): solo el básico y lo que no va contra él (protegerse o curarse, escapar, curar a un
+     aliado, la definitiva de un soporte, elegir hechizo o compañero).
+   · **El compañero del Maestro de bestias** (`DesiredCompanion`): antes lo cambiaba al azar cada tanto. Ahora,
+     según la pelea: el Búho si se le hizo invisible un enemigo hace poco (8 s), el Oso en apuros o peleando
+     contra un NPC, y si no el inicial (el Lobo). Lo lee de cada prefab (`Entity_Companion`: caza invisibles, se
+     pone delante, atrae fantasmas), no de los nombres. Se queda con cada uno 10 s (⚙ "Mantener el compañero");
+     si se le muere, cambia enseguida por otro que no esté esperando para volver.
+   Probado con bots: un Mago en la Tumba o un Paladín con la Protección divina al que el bot deja de tirarle
+   habilidades (y se va con otro si hay); un Maestro de bestias que pelea con el Lobo, saca al Oso contra los
+   fantasmas o con poca vida, al Búho si un Asesino o Shinobi se le hace invisible, y otro si se le muere el que tiene.
 3. **Probar lo de antes:** el parry del Guardián en un cliente; los bots con el Explorador, el
    Monje y el Guerrero. (`GA_SpawnSummon` con variantes de las plantillas ya quedó probado: el Muro
    y la Tormenta del Mago.)

@@ -173,6 +173,11 @@ public class BotController : MonoBehaviour
     [Label("Entre invocaciones (s)")]
     public float SummonInterval = 10f;
 
+    [Tooltip("El Maestro de bestias se queda por lo menos esto con un compañero antes de cambiarlo " +
+             "por otro que convenga más (ver DesiredCompanion). Si se le muere, cambia enseguida.")]
+    [Label("Mantener el compañero (s)")]
+    public float CompanionKeepSeconds = 10f;
+
     [Header("Criterio")]
     [Tooltip("Radio con el que se cuenta si hay VARIOS enemigos juntos. Decide si vale la " +
              "pena un área, un salto encima del grupo, o la definitiva del Bárbaro.")]
@@ -244,6 +249,20 @@ public class BotController : MonoBehaviour
     private float _castingUntil;     // canalizando algo propio (la Bola de fuego, la recarga): no se corta solo
     private float _nextChoiceAt;     // cuándo puede cambiar de opción en su rueda de estados
     private int   _pendingChoice = -1;   // la opción que eligió ShouldUse para la rueda
+
+    // El Maestro de bestias: qué compañero eligió ShouldUse, cuándo cambió por última vez, y cuándo se
+    // le hizo invisible un enemigo delante (es lo que pide al Búho).
+    private int   _pendingCompanion  = -1;
+    private float _companionChosenAt = -99f;
+    private float _lostToInvisibleAt = -99f;
+    private CompanionManager _companions;
+
+    // Cuánto pesa que el objetivo sea INMUNE: como si estuviera esto más lejos (m). Gana cualquier otro
+    // a la vista; si es el único, sigue siendo él (ver UsefulAgainstImmune).
+    private const float ImmuneTargetPenalty = 60f;
+
+    // Cuánto se acuerda de un enemigo que se le hizo invisible (s): mientras, el Búho es el que conviene.
+    private const float InvisibleMemorySeconds = 8f;
 
 
     // Se reusa entre búsquedas para no generar basura: la percepción corre 4 veces por
@@ -1106,6 +1125,10 @@ public class BotController : MonoBehaviour
             // descuento es grande para que gane a cualquier otro a la vista.
             if (other.HasTag(EGameplayTag.Status_Gambled)) score -= 40f;
 
+            // Un INMUNE (la Tumba helada, la Protección divina, el que está en su sala) no recibe nada:
+            // cualquier otro a la vista va antes (23 de octubre de 2026).
+            if (IsImmune(other)) score += ImmuneTargetPenalty;
+
             if (score >= bestScore) continue;
             bestScore = score;
             best      = other;
@@ -1133,6 +1156,7 @@ public class BotController : MonoBehaviour
             if (!CanPerceive(other)) continue;   // invisible y sin revelar: no lo veo
 
             float dist = Vector3.Distance(center, other.transform.position);
+            if (IsImmune(other)) dist += ImmuneTargetPenalty;   // un inmune, solo si no hay otro
             if (dist >= bestDist) continue;
             bestDist = dist;
             best     = other;
@@ -1261,7 +1285,12 @@ public class BotController : MonoBehaviour
 
         if (_target == null) return;
         if (_target.HasTag(EGameplayTag.State_Dead)) { _target = null; return; }
-        if (!CanPerceive(_target)) { _target = null; return; }   // se volvió invisible: lo pierdo
+        if (!CanPerceive(_target))   // se volvió invisible: lo pierdo (y el Maestro de bestias saca al Búho)
+        {
+            _lostToInvisibleAt = Time.time;
+            _target = null;
+            return;
+        }
 
         float dist = Vector3.Distance(transform.position, _target.transform.position);
 
@@ -1363,11 +1392,14 @@ public class BotController : MonoBehaviour
     // de dos cosas: qué es (Classify) y qué rol juega este bot.
     private bool TryAbilities(EBotRole role, float dist, Vector3 aim, Vector3 moveDir)
     {
+        bool immune = IsImmune(_target);
+
         foreach (EAbilityInput slot in CombatSlots)
         {
             GameplayAbility ability = FindAbility(slot);
             if (ability == null) continue;
 
+            if (immune && !UsefulAgainstImmune(ability, slot, role, dist)) continue;
             if (!ShouldUse(ability, slot, role, dist)) continue;
             if (Activate(slot, aim, moveDir)) return true;
         }
@@ -1401,6 +1433,12 @@ public class BotController : MonoBehaviour
                 _pendingChoice = DesiredChoice(choice, dist);
                 return _pendingChoice >= 0 && _pendingChoice != choice.CurrentIndex;
             }
+
+            // El compañero del Maestro de bestias (la rueda del Lobo, el Oso y el Búho): se cambia
+            // según la pelea (ver DesiredCompanion). Activate usa el que eligió.
+            case GA_SwitchCompanion _:
+                _pendingCompanion = DesiredCompanion(dist);
+                return _pendingCompanion >= 0;
 
             // Un buff que se termina apretándolo otra vez (la Tumba helada): ya puesto, apretarlo
             // lo sacaría antes. Se deja correr.
@@ -1814,6 +1852,7 @@ public class BotController : MonoBehaviour
             if (other.HasTag(EGameplayTag.State_Dead)) continue;
             if (_asc.IsAllyOf(other, includeSelf: false)) continue;
             if (!CanPerceive(other)) continue;   // invisible y sin revelar: no lo veo
+            if (IsImmune(other)) continue;       // inmune: un área no le hace nada
 
             enemies++;
         }
@@ -1881,6 +1920,23 @@ public class BotController : MonoBehaviour
             if (pick < 0 || pick == choice.CurrentIndex || !choice.IsRadialOptionSelectable(pick)) return false;
 
             choice.ActivateWithSelection(pick, transform.position);
+            _netASC.ServerBroadcastAbilityAnimation(ability);
+            return true;
+        }
+
+        // El compañero (el Maestro de bestias): el que eligió ShouldUse (DesiredCompanion). Hasta el 23
+        // de octubre de 2026 caía en la rueda de abajo y lo cambiaba al azar cada tanto.
+        if (ability is GA_SwitchCompanion companion)
+        {
+            int pick = _pendingCompanion;
+            _pendingCompanion = -1;
+            CompanionManager m = FindCompanions();
+            if (m == null || pick < 0 || !companion.IsRadialOptionAvailable(pick)) return false;
+
+            companion.ActivateWithSelection(pick, transform.position);
+            if (m.ActiveIndex != pick) return false;   // no cambió (la Ira primal, el que ya estaba)
+
+            _companionChosenAt = Time.time;
             _netASC.ServerBroadcastAbilityAnimation(ability);
             return true;
         }
@@ -2011,6 +2067,124 @@ public class BotController : MonoBehaviour
 
         NetworkAbilitySystemComponent net = other.GetComponent<NetworkAbilitySystemComponent>();
         return net != null && net.IsRevealedToTeam(_asc.TeamID);
+    }
+
+    // ¿Es INMUNE? (Status_Immunity: la Tumba helada, la Protección divina, Muerte silenciosa, el que
+    // está en su sala segura). El golpe no le entra.
+    private static bool IsImmune(AbilitySystemComponent other)
+        => other != null && other.HasTag(EGameplayTag.Status_Immunity);
+
+    // Contra un INMUNE no se gasta nada CONTRA él: no le hace nada, y la habilidad queda en cooldown para
+    // cuando ya no lo es. Sí lo que no va contra él: protegerse o curarse, escapar, sostener a un aliado,
+    // elegir hechizo o compañero. El básico sigue (Fight). Pedido de Gustavo, 23 de octubre de 2026.
+    private bool UsefulAgainstImmune(GameplayAbility ability, EAbilityInput slot, EBotRole role, float dist)
+    {
+        // Un switch de habilidades enteras (la Q del Mago) se juzga por la que saldría.
+        if (ability is GA_TagSwitch sw && sw.VariantsPayOwnCost)
+            return sw.CurrentVariant != null && sw.CurrentVariant != ability &&
+                   UsefulAgainstImmune(sw.CurrentVariant, slot, role, dist);
+
+        switch (ability)
+        {
+            case GA_RadialChoice _:
+            case GA_SwitchCompanion _:
+            case GA_ShieldBlock _:
+            case GA_ExactCopy _:
+                return true;
+            case GA_Target t:
+                return t.Targets == GA_Target.ETargetSide.Allies;
+        }
+
+        // La definitiva: solo la de un soporte, que es para salvar a los suyos.
+        if (slot == EAbilityInput.Action3) return role == EBotRole.Support;
+
+        switch (Classify(ability))
+        {
+            case EAbilityKind.Buff:
+                return IsDefensiveBuff(ability);
+
+            case EAbilityKind.Movement:
+            {
+                // Para irse o para socorrer a un aliado, no para entrarle.
+                GameplayAbility moving = ability is GA_TagSwitch msw && msw.CurrentVariant != null ? msw.CurrentVariant : ability;
+                return _retreating || role == EBotRole.Support || (moving is GA_Teleport && InTrouble(dist));
+            }
+
+            default:
+                return false;
+        }
+    }
+
+    // Un buff que protege o recupera (la Tumba helada, una curación, la recarga de maná), no uno de pelea.
+    private bool IsDefensiveBuff(GameplayAbility ability)
+    {
+        if (!(ability is GA_SelfBuff)) return false;
+
+        _selfBuffEffects.Clear();
+        ability.GetEffects(EEffectWhen.OnActivate, EEffectTarget.Self, _selfBuffEffects);
+        if (AnyGrants(_selfBuffEffects, EGameplayTag.Status_Immunity)) return true;
+
+        foreach (GameplayEffect effect in _selfBuffEffects)
+            if (HealsHealth(effect) || RestoresMana(effect)) return true;
+
+        return false;
+    }
+
+    // =========================================================
+    // EL COMPAÑERO DEL MAESTRO DE BESTIAS
+    //
+    // Cuál conviene, según la pelea (pedido de Gustavo, 23 de octubre de 2026; antes lo cambiaba al
+    // azar cada tanto), de más urgente a menos:
+    //   1. Se le hizo invisible un enemigo hace poco → el que caza invisibles (el Búho).
+    //   2. En apuros → el que se pone delante (el Oso).
+    //   3. Peleando contra un NPC → el que atrae a los fantasmas (el Oso).
+    //   4. Si no, el inicial: el de pelear (el Lobo).
+    // Se queda con cada uno CompanionKeepSeconds; si el que tiene se muere, cambia enseguida por el que
+    // convenga de los que no están esperando para volver. No sabe nombres: mira lo que hace cada uno en
+    // su prefab (Entity_Companion).
+    // =========================================================
+
+    // El índice del compañero que conviene sacar ahora, o -1 si se queda con el que tiene.
+    private int DesiredCompanion(float dist)
+    {
+        CompanionManager m = FindCompanions();
+        if (m == null || m.Companions.Count == 0 || m.FuryActive) return -1;
+
+        int active = m.ActiveIndex;
+        bool activeDown = active < 0 || m.IsOnCooldown(active);   // se le murió: espera para volver
+        if (!activeDown && Time.time - _companionChosenAt < CompanionKeepSeconds) return -1;
+
+        int start = Mathf.Clamp(m.StartIndex, 0, m.Companions.Count - 1);
+        bool vsNpc = _target != null && _target.GetComponent<PlayerController>() == null;
+
+        int want = -1;
+        if (Time.time - _lostToInvisibleAt <= InvisibleMemorySeconds) want = CompanionWith(m, c => c.HuntsInvisible);
+        if (want < 0 && InTrouble(dist))                               want = CompanionWith(m, c => c.GuardOwner);
+        if (want < 0 && vsNpc)                                         want = CompanionWith(m, c => c.TauntsNpcs);
+        if (want < 0 && !m.IsOnCooldown(start))                        want = start;
+        if (want < 0 && activeDown)                                    want = CompanionWith(m, c => true);
+
+        return want >= 0 && want != active ? want : -1;
+    }
+
+    // El primero de la rueda que hace eso y no está esperando para volver. -1 si no hay.
+    private static int CompanionWith(CompanionManager m, System.Func<Entity_Companion, bool> does)
+    {
+        for (int i = 0; i < m.Companions.Count; i++)
+        {
+            GameObject prefab = m.Companions[i].Prefab;
+            Entity_Companion companion = prefab != null ? prefab.GetComponent<Entity_Companion>() : null;
+            if (companion != null && does(companion) && !m.IsOnCooldown(i)) return i;
+        }
+        return -1;
+    }
+
+    // El CompanionManager del Maestro de bestias (en su PassiveBehaviorsPrefab). Al cambiar de clase se
+    // destruye y se vuelve a buscar.
+    private CompanionManager FindCompanions()
+    {
+        if (_companions == null) _companions = GetComponentInChildren<CompanionManager>();
+        return _companions;
     }
 
     // ¿Ya tengo a alguien proyectado con la E (la Abjuración)? La proyección dura: no se relanza.
