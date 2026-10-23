@@ -81,8 +81,8 @@ del log son todos de packs importados).
    Probado con bots: un Mago en la Tumba o un Paladín con la Protección divina al que el bot deja de tirarle
    habilidades (y se va con otro si hay); un Maestro de bestias que pelea con el Lobo, saca al Oso contra los
    fantasmas o con poca vida, al Búho si un Asesino o Shinobi se le hace invisible, y otro si se le muere el que tiene.
-3. **Probar lo de antes:** el parry del Guardián en un cliente; los bots con el Explorador, el
-   Monje y el Guerrero. (`GA_SpawnSummon` con variantes de las plantillas ya quedó probado: el Muro
+3. **Probar lo de antes:** el parry del Guardián en un cliente; los bots con el Guerrero (los del
+   Explorador y el Monje, probados ✅ el 23 de octubre en las vueltas de bots). (`GA_SpawnSummon` con variantes de las plantillas ya quedó probado: el Muro
    y la Tormenta del Mago.)
 4. **Cuando alguien se atasque:** traer `Logs/Unstuck.log`.
 5. **Decisiones de Gustavo, sin prisa:** más prefabs (variantes de tótems y enemigos, la UI que
@@ -345,7 +345,7 @@ artista.
 
 ---
 
-# ★ El Mago: kit base — ETAPAS 1, 2 Y 3 HECHAS Y PROBADAS ✅ (21 de octubre); la 4 (bots y documentos) hecha, falta probar los bots
+# ★ El Mago: kit base — ETAPAS 1, 2 Y 3 HECHAS Y PROBADAS ✅ (21 de octubre); la 4 (bots y documentos) TAMBIÉN, PROBADA ✅ (23 de octubre)
 
 **Corrección del 22 de octubre (Gustavo):** los rayos de la Tormenta (la Descarga que le pega se frena
 ahí y el tornado tira un rayo a cada enemigo) son EXCLUSIVOS de la Evocación, no del kit base. El
@@ -1155,7 +1155,7 @@ Tags nuevos al final: `Status_Prey`, `Status_ApexPredator`, `Status_DefensiveTac
 
 ---
 
-# ★ Explorador (Ranger): kit base — HECHO Y PROBADO ✅ (13-14 de octubre; faltan los bots); las 3 subclases, también: EL EXPLORADOR QUEDA COMPLETO
+# ★ Explorador (Ranger): kit base — HECHO Y PROBADO ✅ (13-14 de octubre; los bots, probados el 23); las 3 subclases, también: EL EXPLORADOR QUEDA COMPLETO
 
 Pedido de Gustavo: primero el kit base, después la mascota del Maestro de bestias (el Lobo,
 con una figura de primitivas mientras no haya modelo). Sin modelos ni animaciones nuevas: las
@@ -1226,7 +1226,7 @@ Lo nuevo de código, que sirve para más cosas:
 - [x] La Retirada: salta hacia atrás y daña y ralentiza a los que estaban pegados.
 - [x] La marca: el enemigo golpeado se ve en rojo a través de las paredes para el Explorador y
       sus aliados (dos ventanas), y NO para su propio equipo ni para el tercero.
-- [ ] Los bots: probar que jueguen el Explorador (que carguen y suelten el arco), el Monje y el Guerrero; ninguno de los tres se probó con bots todavía.
+- [ ] Los bots: probar que jueguen el Explorador (que carguen y suelten el arco), el Monje y el Guerrero. **El Explorador (el arco a distancia y el Maestro de bestias con sus compañeros) y el Monje (las patadas, el Samurái y el Shinobi): PROBADOS ✅ (23 de octubre).** Falta el Guerrero.
 - [x] Después: el Maestro de bestias y su Lobo (la mascota con IA en red). Hecho el 14 de octubre, con los tres compañeros (ver arriba).
 
 ---
