@@ -27,9 +27,46 @@ del log son todos de packs importados).
    en 0, sin alto); ahora copia en vivo la forma del relleno de vida. Y se apagó el "blur de giro" de las
    armas lanzadas (hacha, dagas, kunais, lanza: `PF_ExampleProjectile` → "Blur: material" vacío), que
    tenía el material de trail de Vefects y tiraba "doesn't have a color property _Color".
-2. **Probar los bots del Mago (etapa 4: código y documentos HECHOS, 21 de octubre):** ver "★ El
+2. **Los bots del Mago (etapa 4): HECHOS Y PROBADOS ✅ (23 de octubre).** Ver "★ El
    Mago" ▸ Etapa 4. Las etapas 1, 2 y 3 están hechas y probadas ✅ (el kit entero). Quedó por
    confirmar que la Tumba cura y que la Flecha helada vuela más rápido.
+   **Bots revisados el 23 de octubre (pedido de Gustavo): HECHO Y PROBADO ✅ (23 de octubre).** El rol de la
+   Abjuración lo pasó Gustavo a **Daño** (el rol lo fija la clase): sus bots pelean de lejos como el Mago.
+   Arreglado en `BotController`:
+   · **El hacha apuntada para siempre:** un lanzamiento cobra al soltar, así que mientras apuntaba seguía
+     "disponible" y el bot lo reactivaba, reiniciándole la cuenta para soltar (hasta el corte de 30 s). Ya
+     no se aprieta un mantenido mientras haya otro abierto. Y cuánto se sostiene depende de qué es
+     (`HoldSecondsFor`): un lanzamiento apuntado, lo que canaliza + 0.6 s (⚙ "Apuntar un lanzamiento");
+     un ataque cargado, hasta su última etapa (el arco, la Mordedura de hielo que aturde); el resto, 1.6 s.
+   · **Habilidades sobre un aliado** (la Proyección arcana, la curación apuntada del Clérigo): se apuntaban
+     al ENEMIGO y no encontraban al aliado. Ahora se apuntan al aliado (`ChooseAllyFor`: el más herido; la
+     Proyección, el más cercano sin proyectar), y la mira se escribe antes de preguntar si se puede.
+   · **La Proyección** se pone una vez y no se relanza mientras dure (`ArcaneProtectionPassive.HasProjectionFromE`).
+   · **La Sobrecarga de hechizos** (la R de la Evocación, un vuelo): los bots no usaban nada que vuele.
+     Ahora la usan en plena pelea SIN volar: `GA_Flight` le cambia a un bot el efecto del vuelo por una copia
+     sin `Status_Flying` (`GameplayEffect.CreateCopyWithoutTags`) y se queda con la resistencia, el maná y las Q.
+   · **Dashes derechos:** apuntaban al pecho desde los pies y salían en diagonal hacia arriba (el corte
+     avanzando del Filo, el del Pícaro).
+   · **Definitivas:** un buff del que pega de lejos (la Protección máxima, la Ira primal) va en plena pelea a
+     su distancia; una de área de un asesino (el Baile final), con 2 o más juntos o para rematar.
+   · Un Soporte cuyo básico pega de lejos se quedaría a distancia de tiro (`FightsFromAfar`), para el futuro.
+   · **Los invisibles** (23 de octubre, segunda vuelta): los bots los perseguían como si nada. Ahora no ven a un
+     invisible salvo que lo revelen a su equipo (`CanPerceive`: la Marca del cazador, el Faro), como los NPCs;
+     si su objetivo se vuelve invisible, lo pierden.
+   · **La Patada voladora del Monje y el Corte final del Samurái** (`GA_RushAttack`) y **Muerte silenciosa** del
+     Shinobi (`GA_ChainStrike`): los bots no los usaban (MovesThroughOwner). Ahora la embestida de un bot es un
+     dash derecho de su cerebro (`NetworkASC.ServerStartRush` / `ServerStopRush` → `BotController.ServerDash` /
+     `ServerStopDash`) y la cadena usa su teletransporte. El Shift del Monje (un switch de patadas) cuenta como
+     movimiento: para acercarse, solo si llega.
+   · **El Destello del Clérigo** (`GA_Teleport`) caía en "cuerpo a cuerpo" y lo teletransportaba encima del que
+     le pegaba. Ahora es movimiento y va a donde conviene (`TeleportAim`): lejos del enemigo en apuros, al aliado
+     herido para socorrerlo.
+   Probado con bots: Bárbaros que tiren el hacha al rato de apuntar (no quietos con el arma atrás); un Clérigo
+   que cure al aliado herido; una Abjuración que proyecte una vez a un aliado y pelee de lejos; una Evocación
+   que use la R (resistencia y maná, sin volar) y la Mordedura cargada; un Filo que corte de cerca y use el
+   corte avanzando derecho; Pícaros con el dash derecho; un Asesino o un Shinobi invisible al que el bot NO
+   persigue; un Monje que entra con la Patada voladora; un Samurái y un Shinobi que usan su definitiva; un
+   Clérigo que se escapa con el Destello cuando está en apuros.
 3. **Probar lo de antes:** el parry del Guardián en un cliente; los bots con el Explorador, el
    Monje y el Guerrero. (`GA_SpawnSummon` con variantes de las plantillas ya quedó probado: el Muro
    y la Tormenta del Mago.)
@@ -196,7 +233,7 @@ artista.
           soltada antes de 1 s, sale al llegar. El Terremoto saca 3 grietas. La Descarga contra la
           Tormenta de la Evocación tira rayos y la agranda (hasta +4 m). La R: levita 8 s, el daño no
           lo baja, +30 % de resistencia, maná siempre lleno y 3 Q instantáneas.
-- [ ] **Etapa 2 — Escuela de abjuración: HECHA Y PROBADA ✅ (22 de octubre).**
+- [x] **Etapa 2 — Escuela de abjuración: HECHA Y PROBADA ✅ (22 de octubre).**
       Decidido con Gustavo el 22 de octubre: el escudo que BAJA es solo lo extra de la pasiva (hasta 0);
       el inicial de la proyección no baja solo, así que la proyección dura hasta que se gasta a golpes.
       Baja el 10 % del tope por segundo. La R proyecta a todo aliado que esté a 25 m en algún momento de
@@ -391,7 +428,7 @@ azul) los crea una herramienta de una vez, como prefabs.
         (la pose de lanzar hechizos). Agrega el Mago al FINAL de las clases del jugador y de la
         sala, y actualiza los registros de red. El Shift es el `GA_Flight` de siempre. Íconos
         PROVISIONALES (el de la Flecha mágica del Clérigo).
-  - [ ] Probar, en el host y en un cliente: elegir el Mago en la sala; la barra de maná aparece
+  - [x] **PROBADO ✅ (20 de octubre; el kit entero quedó probado el 21).** Probar, en el host y en un cliente: elegir el Mago en la sala; la barra de maná aparece
         (azul) y llena (todavía nada gasta maná); los misiles salen al ritmo de 0.8 s (y al mantener), vuelan
         derecho hasta lejos y se deshacen en el primer enemigo; cada misil deja un punto (el
         debuff con su número, hasta 5) y una bola más girando alrededor del enemigo, en las dos
@@ -536,7 +573,7 @@ azul) los crea una herramienta de una vez, como prefabs.
         8 m (no a través de paredes), cada uno rebota según sus puntos; cada Descarga lo dispara otra
         vez. Si una invocación no aparece en el cliente, revisar que FishNet la haya sumado a
         `DefaultPrefabObjects`.
-- [ ] **Etapa 4 — bots y documentos: HECHA (21 de octubre), falta probar los bots.**
+- [x] **Etapa 4 — bots y documentos: HECHA (21 de octubre) Y PROBADA ✅ (23 de octubre).**
       Bots (`BotController`):
       · Rol nuevo **A distancia** (`EBotRole.Ranged`, al final del enum): un Daño cuyo básico pega de
         lejos —el Mago (el default de su clic izquierdo son los misiles) y TAMBIÉN EL EXPLORADOR (su arco)—
@@ -560,7 +597,7 @@ azul) los crea una herramienta de una vez, como prefabs.
       la arquitectura del GAS y la de red, lo técnico (canalizar por un switch, buffs que no son control,
       la caja de la zona y el pararrayos, los tags del Mago, `IWallTargetAbility`, `placementYaw`,
       `ServerLaunch`, la picada y los rayos en red).
-  - [ ] Probar: un bot Mago se queda a distancia y tira misiles; cambia de hechizo en el libro cada
+  - [x] Probado (23 de octubre): un bot Mago se queda a distancia y tira misiles; cambia de hechizo en el libro cada
         tanto (y usa la Bola de fuego, la Flecha, el Terremoto y la Descarga); usa la Q de cada hechizo
         (muro y tormenta sobre el enemigo, levantamiento, recarga con poco maná); con poca vida y alguien
         cerca elige el hielo y se encierra en la Tumba (y espera adentro); sin maná vuelve a los misiles.

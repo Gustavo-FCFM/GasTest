@@ -15,7 +15,8 @@ using System.Collections.Generic;
 // Modifier que escala con el ataque y con la vida faltante del objetivo.
 //
 // RED: cada salto es un teletransporte del DUEÑO (ServerTeleportOwnerTo, el transform es
-// suyo) y la animación de cada golpe va a todas las pantallas. Los bots no la usan.
+// suyo) y la animación de cada golpe va a todas las pantallas. Un bot también la usa (desde el 23 de
+// octubre de 2026): su teletransporte lo hace su cerebro (ServerTeleportOwnerTo → ServerTeleportBot).
 // ============================================================
 [CreateAssetMenu(fileName = "GA_ChainStrike", menuName = "GAS/Generics/Chain Strike")]
 public class GA_ChainStrike : GameplayAbility
@@ -55,8 +56,6 @@ public class GA_ChainStrike : GameplayAbility
     [Tooltip("A qué distancia detrás de cada enemigo aparece.")]
     [Label("Distancia detrás (m)")]
     public float BehindDistance = 1.2f;
-
-    public override bool MovesThroughOwner => true;
 
     public override void Activate()
     {

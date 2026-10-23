@@ -1950,7 +1950,17 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     public void ServerStartRush(Vector3 velocity, float duration, float strafeSpeed, int excludeMask, bool cancelable)
     {
         _rushStopRequested = false;
-        if (!HasOwnerConnection()) return;
+
+        // Sin dueño (un bot): la corre su cerebro como un dash, derecho (sin corrimiento de costado ni
+        // corte por botón: no tiene). Así los bots usan la Patada voladora y el Corte final (23 de
+        // octubre de 2026).
+        if (!HasOwnerConnection())
+        {
+            BotController brain = GetComponent<BotController>();
+            if (brain != null) brain.ServerDash(velocity, duration, true);
+            return;
+        }
+
         TargetStartRush(Owner, velocity, duration, strafeSpeed, excludeMask, cancelable);
     }
 
@@ -1965,7 +1975,12 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     [Server]
     public void ServerStopRush()
     {
-        if (!HasOwnerConnection()) return;
+        if (!HasOwnerConnection())
+        {
+            BotController brain = GetComponent<BotController>();
+            if (brain != null) brain.ServerStopDash();
+            return;
+        }
         TargetStopRush(Owner);
     }
 

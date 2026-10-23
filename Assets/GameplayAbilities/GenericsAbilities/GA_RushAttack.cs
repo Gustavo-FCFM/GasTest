@@ -22,7 +22,8 @@ using System.Collections.Generic;
 // RED: el movimiento lo hace el dueño (el transform es suyo): NetworkASC.ServerStartRush
 // le manda la velocidad, la duración y el corrimiento lateral; él avisa si la cortó o chocó con una
 // pared (ServerRequestStopRush), y el servidor le avisa si frenó en un enemigo.
-// Los bots no la usan (MovesThroughOwner).
+// Un bot la corre como un dash derecho de su cerebro (BotController.ServerDash, desde el 23 de
+// octubre de 2026: antes no la usaban): sin corrimiento de costado ni corte por botón.
 //
 // ANIMACIÓN: AnimationClip suelto al salir, como cualquier habilidad. Si además tiene
 // RushLoopClip, esa pose se sostiene mientras dura (ranuras del canalizado: no hay
@@ -99,8 +100,6 @@ public class GA_RushAttack : GameplayAbility, IChanneledAbility, IGroundTargetAb
     public AnimationClip ChannelLoopClip  => RushLoopClip;
     public AnimationClip ChannelEndClip   => null;
     public float         SpinSpeed        => 0f;
-
-    public override bool MovesThroughOwner => true;
 
     // Lo que el servidor sigue mirando después de la duración: la posición del dueño le
     // llega con un poco de atraso, y sin esto el último tramo nunca golpearía.

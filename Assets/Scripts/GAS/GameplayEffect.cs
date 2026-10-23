@@ -383,6 +383,21 @@ public class GameplayEffect : ScriptableObject
     private static bool IsPhysicalScaledDamage(Modifier m)
         => IsDamage(m) && m.UseAttributeScaling && m.SourceAttribute == EAttributeType.Attack;
 
+    // Una copia SIN estos tags (todo lo demás igual): la Sobrecarga de hechizos de un bot, sin el
+    // vuelo. null si no le queda nada (ni modificadores ni tags).
+    public GameplayEffect CreateCopyWithoutTags(params EGameplayTag[] tags)
+    {
+        var granted = new List<EGameplayTag>(GrantedTags ?? new List<EGameplayTag>());
+        granted.RemoveAll(t => System.Array.IndexOf(tags, t) >= 0);
+        if (granted.Count == 0 && (Modifiers == null || Modifiers.Count == 0)) return null;
+
+        GameplayEffect copy = Instantiate(this);
+        copy.name           = name + "(sin tags)";
+        copy.SourceTemplate = Template;
+        copy.GrantedTags    = granted;
+        return copy;
+    }
+
     // ¿Le baja la vida a alguien? (un modificador sumado sobre Health con algo negativo)
     public bool DamagesHealth
     {

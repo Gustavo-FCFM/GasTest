@@ -15,7 +15,7 @@ using UnityEngine;
 //
 // Un efecto "Al activarse → El lanzador" TIENE que otorgar Status_Flying, y su duración es la del vuelo. El movimiento
 // lo hace el cliente dueño (PlayerController → VUELO LIBRE): el transform es suyo.
-// Los bots no la usan (MovesThroughOwner).
+// Un bot no vuela (MovesThroughOwner): la usa solo como definitiva, sin el vuelo (GroundForBot).
 // ============================================================
 [CreateAssetMenu(fileName = "GA_Flight", menuName = "GAS/Generics/Flight")]
 public class GA_Flight : GA_SelfBuff
@@ -75,8 +75,43 @@ public class GA_Flight : GA_SelfBuff
 
         base.Activate();
 
+        PlayerController pc = OwnerASC.GetComponent<PlayerController>();
+        if (pc != null && pc.IsBot)
+        {
+            if (CommittedThisActivation) GroundForBot();
+            return;
+        }
+
         NetworkAbilitySystemComponent netAsc = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
         if (netAsc != null) netAsc.ServerStartFlight(LaunchSpeed, SpeedMultiplier, ForwardBoost, VerticalSpeed, IdleSinkSpeed,
                                                      LaunchDirection == ELaunchDirection.TowardAim, MinLaunchUpAngle);
+    }
+
+    // UN BOT NO VUELA (23 de octubre de 2026): no tiene dueño que mueva su cuerpo (ServerStartFlight no le
+    // llega) y camina por NavMesh. Lo que la habilidad da ADEMÁS del vuelo se lo queda (la Sobrecarga de
+    // hechizos de la Evocación: la resistencia, el maná y las Q al instante): cada efecto que daba el
+    // vuelo se cambia por una copia sin Status_Flying ni Status_SteadyFlight, si le queda algo. Por eso
+    // un bot la puede usar como definitiva (BotController); el vuelo del Shift sigue sin usarla.
+    [System.NonSerialized] private System.Collections.Generic.Dictionary<GameplayEffect, GameplayEffect> _grounded;
+
+    private void GroundForBot()
+    {
+        if (Effects == null) return;
+
+        foreach (AbilityEffect e in Effects)
+        {
+            if (e.Effect == null || e.When != EEffectWhen.OnActivate || e.ApplyTo != EEffectTarget.Self) continue;
+            if (e.Effect.GrantedTags == null || !e.Effect.GrantedTags.Contains(EGameplayTag.Status_Flying)) continue;
+
+            OwnerASC.RemoveEffectsByDefinition(e.Effect);
+
+            _grounded ??= new System.Collections.Generic.Dictionary<GameplayEffect, GameplayEffect>();
+            if (!_grounded.TryGetValue(e.Effect, out GameplayEffect grounded))
+            {
+                grounded = e.Effect.CreateCopyWithoutTags(EGameplayTag.Status_Flying, EGameplayTag.Status_SteadyFlight);
+                _grounded[e.Effect] = grounded;
+            }
+            if (grounded != null) OwnerASC.ApplyGameplayEffect(grounded, OwnerASC);
+        }
     }
 }

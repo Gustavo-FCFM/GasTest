@@ -161,6 +161,18 @@ public class ArcaneProtectionPassive : MonoBehaviour, IAbilityEchoSource
     // PROYECTAR
     // =========================================================
 
+    // ¿Ya tiene a alguien proyectado con la E? (lo pregunta el bot: la proyección dura, no se
+    // relanza mientras siga). Servidor.
+    public bool HasProjectionFromE
+    {
+        get
+        {
+            foreach (Projection p in _projections.Values)
+                if (p.FromE) return true;
+            return false;
+        }
+    }
+
     // La E (GA_ArcaneProjection) eligió a este aliado. La de la E anterior se mueve acá.
     public void ProjectOnto(AbilitySystemComponent ally)
     {

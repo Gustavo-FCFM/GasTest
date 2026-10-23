@@ -23,7 +23,7 @@ MonoBehaviour:
     da escudo y copia su clic izquierdo con la mitad del da\xF1o. La Protecci\xF3n
     arcana vuelve escudo un cuarto de su da\xF1o, para los dos. La Protecci\xF3n
     m\xE1xima lo proyecta sobre todos los aliados cerca."
-  Role: 3
+  Role: 2
   MenuRole: 0
   BaseAttributes: {fileID: 11400000, guid: f2366ca969bd22946b8f6edc231217c3, type: 2}
   Abilities:

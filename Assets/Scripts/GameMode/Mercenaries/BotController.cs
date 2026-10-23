@@ -113,6 +113,13 @@ public class BotController : MonoBehaviour
     [Label("Tiempo manteniendo (s)")]
     public float HoldSeconds = 1.6f;
 
+    [Tooltip("Cuánto apunta un lanzamiento apuntado (el hacha, las dagas, la lanza) antes de soltarlo, " +
+             "además de lo que canalice (la Flecha helada del Mago). Un bot no necesita la cámara de " +
+             "apuntar: con más, solo se queda quieto con el arma atrás. Un ataque cargado (el arco, la " +
+             "Mordedura de hielo) se sostiene hasta su última etapa.")]
+    [Label("Apuntar un lanzamiento (s)")]
+    public float ThrowAimSeconds = 0.6f;
+
     [Header("Colisión del salto y el dash")]
     [Tooltip("Contra qué choca un bot mientras salta o dashea. Todo MENOS la capa 7 " +
              "(Character): los personajes no se frenan entre ellos, igual que en un dash normal.")]
@@ -475,6 +482,18 @@ public class BotController : MonoBehaviour
 
         CancelMovementRoutines();
         _dashRoutine = StartCoroutine(DashRoutine(velocity, duration, faceVelocity));
+    }
+
+    // Corta el dash en curso (la embestida que frenó en un enemigo: NetworkASC.ServerStopRush).
+    public void ServerStopDash()
+    {
+        if (_dashRoutine == null) return;
+
+        StopCoroutine(_dashRoutine);
+        _dashRoutine = null;
+        _dashing     = false;
+        RestoreAgent();
+        WarpToNavMesh();
     }
 
     private IEnumerator DashRoutine(Vector3 velocity, float duration, bool faceVelocity)
@@ -900,14 +919,21 @@ public class BotController : MonoBehaviour
                 // cuerpo (y el escudo) le tapan el camino, y como sus ataques son los que
                 // curan, queda igual a distancia de pegar. Este no rodea: su posición es
                 // el punto, no un adorno.
+                //
+                // El Soporte que pega DE LEJOS (la Abjuración) se pone del mismo lado, pero a distancia
+                // de tiro: detrás de su compañero, que es a quien proyecta y protege. Sin verlo, se acerca.
+                bool fromAfar = PrimaryIsRanged();
+                float keep    = fromAfar ? RangedDistance : MeleeRange * 0.85f;
+                if (fromAfar && !CanSee(target)) return PositionNear(targetPos, RangedDistance * 0.5f);
+
                 AbilitySystemComponent ally = FindNearestAlly();
-                if (ally == null) return OrbitPoint(targetPos, MeleeRange * 0.85f);
+                if (ally == null) return OrbitPoint(targetPos, keep);
 
                 Vector3 toAlly = ally.transform.position - targetPos;
                 toAlly.y = 0f;
-                if (toAlly.sqrMagnitude < 0.01f) return OrbitPoint(targetPos, MeleeRange * 0.85f);
+                if (toAlly.sqrMagnitude < 0.01f) return OrbitPoint(targetPos, keep);
 
-                return targetPos + toAlly.normalized * (MeleeRange * 0.85f);
+                return targetPos + toAlly.normalized * keep;
             }
 
             case EBotRole.Ranged:
@@ -1066,6 +1092,7 @@ public class BotController : MonoBehaviour
             if (other == null || other == _asc) continue;
             if (other.HasTag(EGameplayTag.State_Dead)) continue;
             if (_asc.IsAllyOf(other, includeSelf: false)) continue;
+            if (!CanPerceive(other)) continue;   // invisible y sin revelar: no lo veo
 
             float dist = Vector3.Distance(transform.position, other.transform.position);
 
@@ -1103,6 +1130,7 @@ public class BotController : MonoBehaviour
             if (other == null || other == _asc) continue;
             if (other.HasTag(EGameplayTag.State_Dead)) continue;
             if (_asc.IsAllyOf(other, includeSelf: false)) continue;
+            if (!CanPerceive(other)) continue;   // invisible y sin revelar: no lo veo
 
             float dist = Vector3.Distance(center, other.transform.position);
             if (dist >= bestDist) continue;
@@ -1233,6 +1261,7 @@ public class BotController : MonoBehaviour
 
         if (_target == null) return;
         if (_target.HasTag(EGameplayTag.State_Dead)) { _target = null; return; }
+        if (!CanPerceive(_target)) { _target = null; return; }   // se volvió invisible: lo pierdo
 
         float dist = Vector3.Distance(transform.position, _target.transform.position);
 
@@ -1257,7 +1286,7 @@ public class BotController : MonoBehaviour
         // El básico: cuerpo a cuerpo, en contacto; el que pega de lejos (el Mago), a distancia de
         // tiro y solo si lo ve (tirar contra una pared es regalar el ritmo).
         if (Time.time >= _nextPrimaryAt &&
-            (role == EBotRole.Ranged ? dist <= RangedAttackRange && CanSee(_target) : dist <= MeleeRange * 1.3f))
+            (FightsFromAfar(role) ? dist <= RangedAttackRange && CanSee(_target) : dist <= MeleeRange * 1.3f))
         {
             if (Activate(EAbilityInput.PrimaryAttack, aim, moveDir))
                 _nextPrimaryAt = Time.time + PrimaryInterval;
@@ -1288,6 +1317,12 @@ public class BotController : MonoBehaviour
             if (last != null) return Classify(last);
         }
 
+        // Un switch cuya habilidad normal es de MOVIMIENTO (el Shift del Monje: la Patada voladora, o
+        // la del dragón con Ki) es un movimiento; los demás switches (las posturas, el Ki), un buff.
+        if (a is GA_TagSwitch sw && sw.DefaultAbility != null && sw.DefaultAbility != a &&
+            Classify(sw.DefaultAbility) == EAbilityKind.Movement)
+            return EAbilityKind.Movement;
+
         if (a is GA_SelfBuff || a is GA_TagSwitch || a is GA_ShieldBlock) return EAbilityKind.Buff;
 
         // El Golpe final del Inmortal no hereda de ninguna genérica —es su propia clase—
@@ -1295,7 +1330,11 @@ public class BotController : MonoBehaviour
         // juntos. El Molinete sí hereda de GA_ContinuousAoE y entra solo más abajo.
         if (a is GA_FinalBlow) return EAbilityKind.Aoe;
 
-        if (a is GA_Dash || a is GA_LeapAttack || a is GA_Blink || a is GA_HeroicInterception)
+        // La embestida (la Patada voladora del Monje) y el teletransporte (el Destello del Clérigo)
+        // también: hasta el 23 de octubre de 2026 el Destello caía en "cuerpo a cuerpo" y el Clérigo se
+        // teletransportaba encima del que le pegaba.
+        if (a is GA_Dash || a is GA_LeapAttack || a is GA_Blink || a is GA_HeroicInterception ||
+            a is GA_RushAttack || a is GA_Teleport)
             return EAbilityKind.Movement;
 
         if (a is GA_ProjectileShoot || a is GA_HitscanShot) return EAbilityKind.Ranged;
@@ -1403,6 +1442,18 @@ public class BotController : MonoBehaviour
             case GA_ShieldBlock _:
                 return SomeoneInDanger() && dist <= MeleeRange * 1.8f;
 
+            // La Proyección arcana (la E de la Abjuración) DURA: se pone una vez, sobre el aliado más
+            // cercano, y no se relanza mientras siga (moverla a cada rato le tiraba el escudo).
+            case GA_ArcaneProjection projection:
+                return !HasOwnProjection() && ChooseAllyFor(projection) != null;
+
+            // Una definitiva de vuelo (la Sobrecarga de hechizos de la Evocación): el bot no vuela,
+            // pero se queda con la resistencia, el maná y las Q al instante (ver GA_Flight). Va en
+            // plena pelea, a su distancia.
+            case GA_Flight _ when slot == EAbilityInput.Action3:
+                return _target != null && CanSee(_target) &&
+                       dist <= (FightsFromAfar(role) ? RangedAttackRange : MeleeRange * 3f);
+
             // Las de OBJETIVO dicen a quién apuntan, así que la regla sale del asset:
             // a un ALIADO son curaciones, escudos y protecciones —van cuando alguien está
             // herido—; a un ENEMIGO son marcas, y van sobre el que estoy peleando.
@@ -1429,7 +1480,16 @@ public class BotController : MonoBehaviour
             switch (role)
             {
                 case EBotRole.Support:  return SomeoneInDanger();
-                case EBotRole.Assassin: return HealthFraction(_target) <= ExecuteBelowHealth;
+                // Una definitiva que es un BUFF del que pega de lejos (la Protección máxima de la
+                // Abjuración, la Ira primal del Explorador) va en plena pelea, a su distancia; las de
+                // área, contra varios juntos (abajo).
+                case EBotRole.Ranged when Classify(ability) == EAbilityKind.Buff:
+                    return CanSee(_target) && dist <= RangedAttackRange;
+                // Una definitiva de ÁREA de un asesino (el Baile final del Filo danzante) vale contra
+                // varios juntos, o para rematar; las demás, solo para rematar.
+                case EBotRole.Assassin:
+                    return HealthFraction(_target) <= ExecuteBelowHealth ||
+                           (Classify(ability) == EAbilityKind.Aoe && EnemiesNear(_target.transform.position, AoeRadius) >= 2);
                 default:                return EnemiesNear(_target.transform.position, AoeRadius) >= 2;
             }
         }
@@ -1448,7 +1508,7 @@ public class BotController : MonoBehaviour
             case EAbilityKind.Aoe:
                 // El que pega de lejos (el Mago) apunta sus áreas al piso donde está el que
                 // pelea, aunque esté solo: el Levantamiento, el Muro, la Tormenta son su daño.
-                if (role == EBotRole.Ranged && ability is IGroundTargetAbility ground && ground.UsesGroundTarget)
+                if (FightsFromAfar(role) && ability is IGroundTargetAbility ground && ground.UsesGroundTarget)
                     return _target != null && dist <= ground.MaxTargetRange && CanSee(_target);
 
                 // Vale la pena con dos o más juntos; con uno solo, el básico alcanza.
@@ -1499,7 +1559,7 @@ public class BotController : MonoBehaviour
         // ataque, asi que llega tarde si espera a estar peleando hace segundo y medio.
         // "Cerca" depende de cómo pelea: el que pega de lejos (el Mago: la Memoria perfecta) lo usa
         // a su distancia de tiro.
-        float near = ResolveRole() == EBotRole.Ranged ? RangedDistance * 1.5f : MeleeRange * 3f;
+        float near = FightsFromAfar(ResolveRole()) ? RangedDistance * 1.5f : MeleeRange * 3f;
         if (_target != null && Vector3.Distance(transform.position, _target.transform.position) <= near)
             return true;
 
@@ -1679,6 +1739,14 @@ public class BotController : MonoBehaviour
         // cualquiera (lo de la carga lo dispara Fight aparte).
         if (_retreating) return true;
 
+        // Una embestida (la Patada voladora) solo si llega: con el otro más lejos que su recorrido,
+        // se gastaba corriendo hacia la nada.
+        GameplayAbility moving = ability is GA_TagSwitch msw && msw.CurrentVariant != null ? msw.CurrentVariant : ability;
+        if (moving is GA_RushAttack rush && dist > rush.Distance * 1.2f) return false;
+
+        // Un teletransporte en apuros sirve para escapar (lo apunta TeleportAim lejos del enemigo).
+        if (moving is GA_Teleport && InTrouble(dist)) return true;
+
         switch (role)
         {
             case EBotRole.Support:
@@ -1745,6 +1813,7 @@ public class BotController : MonoBehaviour
             if (other == null || other == _asc) continue;
             if (other.HasTag(EGameplayTag.State_Dead)) continue;
             if (_asc.IsAllyOf(other, includeSelf: false)) continue;
+            if (!CanPerceive(other)) continue;   // invisible y sin revelar: no lo veo
 
             enemies++;
         }
@@ -1758,10 +1827,50 @@ public class BotController : MonoBehaviour
     private bool Activate(EAbilityInput slot, Vector3 aim, Vector3 moveDir)
     {
         GameplayAbility ability = FindAbility(slot);
-        if (ability == null || !ability.CanActivate()) return false;
+        if (ability == null) return false;
 
-        // Lo único que un bot todavía no puede ejecutar. Ver GameplayAbility.MovesThroughOwner.
-        if (ability.MovesThroughOwner) return false;
+        // Con algo MANTENIDO abierto (el hacha apuntada, el escudo) no se aprieta otro mantenido, ni el
+        // mismo otra vez. Un lanzamiento cobra recién al soltar, así que mientras se apunta sigue
+        // "disponible": reactivarlo le reiniciaba la cuenta para soltar, y el bot se quedaba apuntando
+        // el hacha sin tirarla hasta el corte de seguridad (23 de octubre de 2026).
+        if (_held != null && _held.IsHolding && (ReferenceEquals(_held, ability) || HoldInput.IsHold(ability)))
+            return false;
+
+        // La que va a salir ahora: la variante de un switch (el clic izquierdo del Mago), o ella misma.
+        GameplayAbility effective = ability is GA_TagSwitch sw && sw.CurrentVariant != null ? sw.CurrentVariant : ability;
+
+        // Lo único que un bot todavía no puede ejecutar. Ver GameplayAbility.MovesThroughOwner. La
+        // excepción: una definitiva de vuelo (la Sobrecarga de la Evocación), que un bot usa sin volar
+        // (GA_Flight se lo saca y le deja lo demás).
+        if (ability.MovesThroughOwner && !(ability is GA_Flight && slot == EAbilityInput.Action3)) return false;
+
+        // Una de ALIADO (la Proyección arcana, la curación apuntada del Clérigo) se apunta al aliado,
+        // no al enemigo: si no, no lo encuentra en la mira. Sin aliado y sin autocasteo, no sale.
+        if (effective is GA_Target ally && ally.Targets == GA_Target.ETargetSide.Allies)
+        {
+            AbilitySystemComponent friend = ChooseAllyFor(ally);
+            if (friend != null) aim = friend.transform.position + Vector3.up * 1.2f;
+            else if (!ally.SelfIfNoTarget) return false;
+            else aim = transform.position;   // a mis pies: sin nadie en la mira, sale sobre mí
+        }
+
+        // Un dash (el corte avanzando del Filo danzante, el del Pícaro) va derecho, no hacia el pecho:
+        // desde los pies, apuntar al pecho lo tiraba en diagonal hacia arriba.
+        if (effective is GA_Dash) aim.y = transform.position.y + 0.3f;
+
+        // Un teletransporte de movimiento (el Destello del Clérigo) va a donde convenga, no encima del
+        // enemigo (ver TeleportAim).
+        if (effective is GA_Teleport teleport && slot == EAbilityInput.Movement) aim = TeleportAim(teleport, aim);
+
+        // La mira de ESTE pedido, ya antes de preguntar si se puede: las de objetivo (GA_Target)
+        // validan que haya alguien a tiro con ella.
+        if (_pc != null)
+        {
+            _pc.NetworkAimPoint  = aim;
+            _pc.NetworkAimOrigin = transform.position + Vector3.up * 1.6f;
+        }
+
+        if (!ability.CanActivate()) return false;
 
         // Una rueda que deja un estado (el libro del Mago): la opción que eligió ShouldUse
         // (DesiredChoice), no una al azar.
@@ -1808,7 +1917,7 @@ public class BotController : MonoBehaviour
         // Lo que va a canalizar se mira ANTES de activar (después, un switch ya resolvió otra cosa).
         float castSeconds = ability.UsesCast ? ability.CastDuration : 0f;
 
-        _netASC.ServerActivateAbility(slot, aim, moveDir);
+        _netASC.ServerActivateAbility(slot, aim, moveDir, transform.position + Vector3.up * 1.6f);
 
         // Si canaliza (la Bola de fuego, la Recarga de maná), no pide otra cosa hasta que
         // termine: la cortaría (ver Fight).
@@ -1819,11 +1928,102 @@ public class BotController : MonoBehaviour
         if (HoldInput.IsHold(ability) && ability is IHoldAbility hold)
         {
             _held      = hold;
-            _heldUntil = Time.time + HoldSeconds;
+            _heldUntil = Time.time + HoldSecondsFor(effective);
         }
 
         return true;
     }
+
+    // Cuánto sostiene un mantenido antes de soltarlo: un lanzamiento apuntado, lo que canalice más un
+    // momento; un ataque cargado, hasta su última etapa (el arco cargado del todo, la Mordedura de hielo
+    // que aturde); lo demás (el escudo), HoldSeconds.
+    private float HoldSecondsFor(GameplayAbility ability)
+    {
+        if (ability is GA_ChargedAttack charged && charged.Stages != null && charged.Stages.Count > 0)
+            return Mathf.Clamp(charged.Stages[charged.Stages.Count - 1].MinChargeTime + 0.15f, 0.2f, 4f);
+
+        if (ability is GA_ProjectileShoot shot && shot.AimBeforeThrow)
+            return shot.HoldCastSeconds + ThrowAimSeconds;
+
+        return HoldSeconds;
+    }
+
+    // A qué aliado va una habilidad de aliado (GA_Target), a su alcance: el más herido; o nadie si el
+    // más herido soy yo y se cura sola (sale sobre mí). La Proyección arcana: el más cercano que no
+    // esté proyectado. null = no hay a quién.
+    private AbilitySystemComponent ChooseAllyFor(GA_Target ability)
+    {
+        bool projection = ability is GA_ArcaneProjection;
+        int count = Physics.OverlapSphereNonAlloc(
+            transform.position, ability.MaxRange, _hits, CharacterLayer, QueryTriggerInteraction.Ignore);
+
+        AbilitySystemComponent best = null;
+        float bestScore = float.MaxValue;
+
+        for (int i = 0; i < count; i++)
+        {
+            AbilitySystemComponent other = _hits[i].GetComponentInParent<AbilitySystemComponent>();
+            if (other == null || other == _asc || other.HasTag(EGameplayTag.State_Dead)) continue;
+            if (!_asc.IsAllyOf(other, includeSelf: false) || other.GetComponent<PlayerController>() == null) continue;
+            if (projection && other.HasTag(EGameplayTag.Status_ArcaneProjection)) continue;
+
+            float score = projection ? Vector3.Distance(transform.position, other.transform.position)
+                                     : HealthFraction(other);
+            if (score >= bestScore) continue;
+            bestScore = score;
+            best      = other;
+        }
+
+        if (!projection && best != null && ability.SelfIfNoTarget && HealthFraction(_asc) <= HealthFraction(best))
+            return null;
+        return best;
+    }
+
+    // A dónde va un teletransporte de movimiento: en apuros (o volviendo a curarme), LEJOS del que
+    // peleo, a todo su alcance; un Soporte que va a socorrer, al aliado herido; si no, a donde
+    // apuntaba (hacia el enemigo, o el punto de entrega con la carga).
+    private Vector3 TeleportAim(GA_Teleport teleport, Vector3 aim)
+    {
+        if (_target != null &&
+            (_retreating || InTrouble(Vector3.Distance(transform.position, _target.transform.position))))
+        {
+            Vector3 away = transform.position - _target.transform.position;
+            away.y = 0f;
+            if (away.sqrMagnitude < 0.01f) away = -transform.forward;
+            return transform.position + away.normalized * teleport.MaxRange;
+        }
+
+        if (ResolveRole() == EBotRole.Support)
+        {
+            AbilitySystemComponent ally = FindNearestAlly();
+            if (ally != null && HealthFraction(ally) < 0.6f) return ally.transform.position;
+        }
+
+        return aim;
+    }
+
+    // ¿Puedo ver a este enemigo? Un invisible no, salvo que lo hayan revelado a mi equipo (la Marca
+    // del cazador, el Faro de esperanza): lo mismo que hacen los NPCs. Hasta el 23 de octubre de 2026
+    // los bots perseguían a los invisibles como si nada, y el sigilo no servía contra ellos.
+    private bool CanPerceive(AbilitySystemComponent other)
+    {
+        if (other == null || !other.IsHiddenFromEnemies) return other != null;
+
+        NetworkAbilitySystemComponent net = other.GetComponent<NetworkAbilitySystemComponent>();
+        return net != null && net.IsRevealedToTeam(_asc.TeamID);
+    }
+
+    // ¿Ya tengo a alguien proyectado con la E (la Abjuración)? La proyección dura: no se relanza.
+    private bool HasOwnProjection()
+    {
+        ArcaneProtectionPassive passive = GetComponentInChildren<ArcaneProtectionPassive>();
+        return passive != null && passive.HasProjectionFromE;
+    }
+
+    // ¿Pelea de lejos? El que pega de lejos (el Mago, el Explorador) y el Soporte cuyo básico es a
+    // distancia (la Abjuración): se queda a distancia de tiro en vez de meterse cuerpo a cuerpo.
+    private bool FightsFromAfar(EBotRole role)
+        => role == EBotRole.Ranged || (role == EBotRole.Support && PrimaryIsRanged());
 
     // Un punto EN EL SUELO hacia donde apunto, recortado al alcance de la habilidad. Es lo
     // que espera cualquier habilidad apuntada al piso: zonas, tótems, muros.
