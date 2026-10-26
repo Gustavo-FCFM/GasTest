@@ -100,7 +100,7 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
 | `Assets/Effects/` | Los `GE_*`, por tipo (Damage, Buffs, CC, Debuffs, Cooldowns). |
 | `Assets/GameplayAbilities/` | Los `GA_*` por clase, **con sus scripts `GA_*.cs` al lado** — son contenido. `Enemies/` para las de los NPCs. |
 | `Assets/Scripts/GAS/` | El motor de habilidades: ASC, efectos, habilidades base, atributos, tags, registros. `Entities/` son los objetos que las habilidades crean (proyectiles, tótems, barreras). |
-| `Assets/Scripts/Network/` | Conexión y red: `NetworkAbilitySystemComponent`, `NetworkGameManager`, `ConnectionHUD` y `LobbyManager` (la sala de espera). |
+| `Assets/Scripts/Network/` | Conexión y red: `NetworkAbilitySystemComponent`, `NetworkGameManager`, `LobbyManager` (la sala de espera), `NetAddress` (las direcciones) y `ConnectionHUD` (el recuadro viejo, solo para `Test_Network`). |
 | `Assets/Scripts/Player/` | El jugador y sus cámaras: `PlayerController`, input, animación, `RagdollController`, `UpperBodyAim`, `ThirdPersonOrbitCam`, `SpectatorCamera`, `MenuOrbitCamera`. |
 | `Assets/Scripts/UI/` | Toda la UI que no es de un modo: HUD de clase, menú de clases, sala (`UI_LobbyPanel`), menú principal, ajustes, `MercUIFactory`, `InputGlyphs` (la ÚNICA tabla de qué botón se dibuja: Q / RB / R1) y `UICursor` — el único dueño del cursor y del modo de input. |
 | `Assets/Scripts/Settings/` | `GameSettings` (PlayerPrefs), incluido qué control eligió el jugador y el idioma. |
@@ -285,8 +285,8 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   después se edita a mano. Lo que es de la PARTIDA y no del personaje (registro de bajas,
   pantalla de muerte, números flotantes, marcador) va al **prefab de partida `Prefabs/UI/Match_UI`**
   (uno por escena; desde el 14 de octubre de 2026: registro de bajas, pantalla de muerte, números,
-  marcador, avisos de partida, marcadores del Objetivo y el espectador). Los menús (inicio, Ajustes
-  y la sala) están en el **prefab de menús `Prefabs/UI/Menus_UI`**: cada fila de Ajustes lleva un
+  marcador, avisos de partida, marcadores del Objetivo y el espectador). Los menús (inicio, conexión,
+  Ajustes, la sala y la pausa, más `MenuInput`) están en el **prefab de menús `Prefabs/UI/Menus_UI`**: cada fila de Ajustes lleva un
   `UI_SettingRow` y cada lugar de la sala un `UI_LobbySlot`. Los canvas de los dos prefabs son de
   1920×1080 y escalan con la pantalla. Están en la capa UI: si tapan la vista de escena, se apaga esa capa en el
   desplegable Layers del editor (no cambia el juego). Un `Graphic` propio necesita `[RequireComponent(typeof(CanvasRenderer))]`:
@@ -303,9 +303,17 @@ combo) están en `DesignDocuments/GAS_Arquitectura.docx`.
 ## Conexión para jugar con amigos
 
 Túnel UDP de **playit.gg** al puerto **7770** — sin VPN y sin abrir puertos en el router.
-El botón de Host solo aparece dentro del editor (ver `ConnectionHUD.HostOnlyInEditor`)
-**o en una build abierta con el argumento `-host`** — así una sola build sirve para
-repartir (solo-cliente) y para hostear una prueba grande sin el editor encima.
+En la misma red (el showcase, 3 PCs con un router propio) no hace falta: se conectan a la IP
+local del host, que la sala y la pausa muestran.
+
+**La conexión es una pantalla del prefab de menús** (`UI_ConnectPanel`, desde el 26 de octubre
+de 2026, para el showcase): Jugar → Crear partida, o la dirección (IP, o dirección:puerto la de
+playit) y Conectar. **Cualquier build puede crear la partida** (se fue el candado de "solo el
+editor o `-host`"). Lo que se abría con ESC es el **menú de pausa** (`UI_PauseMenu`, ESC o
+Start): Continuar, Ajustes, Desatascarse, Salir. Los menús van por el Input System nuevo y
+responden al control: quién recibe "volver" y Start y dónde está la selección lo decide
+`MenuInput` (cada pantalla es un `IMenuScreen`). El recuadro viejo (`ConnectionHUD`, IMGUI)
+queda solo en `Test_Network`, que no tiene el prefab de menús.
 
 ---
 

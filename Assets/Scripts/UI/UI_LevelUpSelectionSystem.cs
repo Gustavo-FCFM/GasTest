@@ -77,6 +77,9 @@ public class LevelUpSelectionSystem : MonoBehaviour
     {
         if (!isSelectionActive || player == null) return;
 
+        // Con la pausa (o los ajustes) encima, el control es de ellos.
+        if (MenuInput.HasOverlay) return;
+
         PlayerInputProvider input = PlayerInputProvider.Local;
 
         // Teclas 1/2/3 solo en instancias de teclado (no cruzar el teclado

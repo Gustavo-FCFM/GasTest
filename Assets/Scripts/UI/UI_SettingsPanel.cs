@@ -7,8 +7,8 @@ using UnityEngine.UI;
 // ============================================================
 // UI_SettingsPanel
 //
-// El panel de Ajustes. Sirve igual en el menú principal y dentro de la partida (ESC ▸
-// Ajustes en el recuadro de red).
+// El panel de Ajustes. Sirve igual en el menú principal y dentro de la partida (ESC o Start ▸
+// Ajustes en la pausa).
 //
 // VIVE EN EL PREFAB DE MENÚS (Menus_UI ▸ Settings), desde el 14 de octubre de 2026: el velo,
 // el panel, el título, las secciones, las filas (cada una con su UI_SettingRow, que dice
@@ -21,15 +21,16 @@ using UnityEngine.UI;
 // Los valores viven en GameSettings (estático, PlayerPrefs): el panel solo los muestra
 // y los escribe. Cada cambio se aplica al instante y se guarda al cerrar.
 //
-// Mientras está abierto pide el cursor a UICursor y bloquea el input de juego. ESC lo
-// cierra; ConnectionHUD sabe no reaccionar a ese mismo ESC (ver LastCloseFrame).
+// Mientras está abierto pide el cursor a UICursor y bloquea el input de juego. B, ESC o Start
+// lo cierran: es una pantalla de MenuInput (desde el 26 de octubre de 2026). El recuadro de
+// red de la escena de pruebas sabe no reaccionar a ese mismo ESC (ver LastCloseFrame).
 //
 // IDIOMA: es la primera fila (cualquiera tiene que poder encontrarla sin entender el
 // idioma de ahora: dice "Idioma · Language" en los dos). Los textos fijos del panel están
 // atados con LocalizedText y se reescriben solos; los valores de las filas se recalculan
 // con RefreshAll, que corre con cada cambio de GameSettings.
 // ============================================================
-public class UI_SettingsPanel : MonoBehaviour
+public class UI_SettingsPanel : MonoBehaviour, IMenuScreen
 {
     [Header("Piezas")]
     [Tooltip("El canvas del panel: se prende al abrir y se apaga al cerrar.")]
@@ -95,8 +96,7 @@ public class UI_SettingsPanel : MonoBehaviour
 
         UICursor.Request(this);
         GameSettings.OnChanged += RefreshAll;
-
-        if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(_firstControl);
+        MenuInput.Push(this);   // elige el primer control
     }
 
     public void Close()
@@ -111,6 +111,7 @@ public class UI_SettingsPanel : MonoBehaviour
         GameSettings.Save();
 
         if (PanelCanvas != null) PanelCanvas.SetActive(false);
+        MenuInput.Pop(this);
         UICursor.Release(this);
     }
 
@@ -124,9 +125,10 @@ public class UI_SettingsPanel : MonoBehaviour
         if (_open) Close();
     }
 
+    // Con el prefab de menús lo cierra MenuInput (OnBack). Esto queda para una escena sin él.
     private void Update()
     {
-        if (_open && Input.GetKeyDown(KeyCode.Escape)) Close();
+        if (_open && MenuInput.Instance == null && Input.GetKeyDown(KeyCode.Escape)) Close();
     }
 
     // =========================================================
@@ -294,6 +296,16 @@ public class UI_SettingsPanel : MonoBehaviour
 
         GameObject go = new GameObject("EventSystem");
         go.AddComponent<EventSystem>();
-        go.AddComponent<StandaloneInputModule>();
+        go.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
     }
+
+    // =========================================================
+    // IMenuScreen
+    // =========================================================
+
+    public int MenuLayer => 1;
+    public GameObject DefaultSelection => _firstControl;
+    public Transform SelectionRoot => PanelCanvas != null ? PanelCanvas.transform : transform;
+    public void OnBack()  => Close();
+    public void OnPause() => Close();
 }

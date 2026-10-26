@@ -5,6 +5,11 @@ using FishNet.Managing;
 // ============================================================
 // ConnectionHUD
 //
+// SOLO PARA LA ESCENA DE PRUEBAS (Test_Network), desde el 26 de octubre de 2026. En las
+// escenas del modo, la conexión es una pantalla del prefab de menús (UI_ConnectPanel) y lo
+// que se abría con ESC es el menú de pausa (UI_PauseMenu): si la escena tiene esa pantalla,
+// este recuadro no se dibuja ni pide el cursor.
+//
 // HUD mínimo de conexión para pruebas con amigos. Dibuja botones en
 // pantalla (IMGUI / OnGUI) para no depender de ningún Canvas — así
 // funciona en la build sin configurar nada.
@@ -102,7 +107,7 @@ public class ConnectionHUD : MonoBehaviour
     {
         // Con el menú principal a la vista este recuadro no existe: ni se dibuja ni pide
         // el cursor (lo tiene el menú). Vuelve al apretar Jugar.
-        if (UI_MainMenu.IsShowing)
+        if (UI_MainMenu.IsShowing || UI_ConnectPanel.Instance != null)
         {
             UICursor.Release(this);
             return;
@@ -190,7 +195,7 @@ public class ConnectionHUD : MonoBehaviour
 
     private void OnGUI()
     {
-        if (UI_MainMenu.IsShowing) return;
+        if (UI_MainMenu.IsShowing || UI_ConnectPanel.Instance != null) return;
 
         // Escala la UI para que se vea bien en resoluciones altas.
         float scale = Mathf.Max(1f, Screen.height / 720f);

@@ -156,7 +156,7 @@ public class HealthPackVisual : MonoBehaviour
         label.color                = color;
         label.fontStyle            = FontStyles.Bold;
         label.raycastTarget        = false;
-        label.enableWordWrapping   = false;
+        label.textWrappingMode     = TextWrappingModes.NoWrap;
 
         return canvasGo;
     }

@@ -175,8 +175,13 @@ public class HealthPack : NetworkBehaviour
         Destroy(vfx, PickupVFXLifetime);
     }
 
-    private void OnValidate()
+    // override y base: el de NetworkBehaviour registra este componente en su NetworkObject en el
+    // editor. Con un OnValidate propio "tapándolo" (como estaba hasta el 26 de octubre de 2026,
+    // warning CS0114), el de FishNet no corría nunca para los botiquines.
+    protected override void OnValidate()
     {
+        base.OnValidate();
+
         SphereCollider col = GetComponent<SphereCollider>();
         if (col != null) { col.isTrigger = true; col.radius = PickupRadius; }
     }

@@ -573,6 +573,15 @@ public class PlayerController : NetworkBehaviour
     // activas, asi que una vez apagada no hay como volver a encontrarla.
     private GameObject _lobbyCamera;
 
+    // La cámara de la sala (la que gira en el menú). Solo las activas: una ya apagada es de
+    // otro personaje tuyo que todavía no se fue, y ese la vuelve a prender al irse.
+    private static GameObject FindLobbyCamera()
+    {
+        MenuOrbitCamera orbit = FindFirstObjectByType<MenuOrbitCamera>();
+        if (orbit != null) return orbit.gameObject;
+        return Camera.main != null ? Camera.main.gameObject : null;
+    }
+
     // Habilidad de zona (IGroundTargetAbility) que se está apuntando ahora mismo,
     // mientras se mantiene su botón. Ver UI_GroundTargetIndicator.
     private GameplayAbility _groundTargetAbility;
@@ -714,9 +723,15 @@ public class PlayerController : NetworkBehaviour
             // Habilitar el input del Input System nuevo solo para el dueño local.
             if (_input != null) _input.InitializeForOwner();
 
-            if (Camera.main != null)
+            // La cámara de la sala se apaga mientras juegas: la tuya la reemplaza. Se busca por su
+            // componente (MenuOrbitCamera) y, si no hay, por la etiqueta. Camara_Lobby perdió la
+            // etiqueta MainCamera el 2 de septiembre de 2026 y desde entonces Camera.main daba null
+            // acá: la de la sala quedaba prendida debajo de la tuya toda la partida (el mapa se
+            // dibujaba dos veces) y, desde que tiene su AudioListener, habría dos oídos.
+            GameObject lobbyCam = FindLobbyCamera();
+            if (lobbyCam != null)
             {
-                _lobbyCamera = Camera.main.gameObject;
+                _lobbyCamera = lobbyCam;
                 _lobbyCamera.SetActive(false);
             }
 
@@ -3619,11 +3634,11 @@ public class PlayerController : NetworkBehaviour
     // DESATASCARSE
     //
     // Arreglo de emergencia para el jugador que quedó sin control: no se mueve, no
-    // ataca, o quedó atrapado en la geometría. Lo dispara el botón "Unstuck" del
-    // recuadro de red, que se abre con ESC — y ese ESC se lee con el input VIEJO
-    // (Input.GetKeyDown en ConnectionHUD), así que llega aunque el mapa de input del
-    // jugador esté apagado. Que es, justamente, uno de los estados de los que hay que
-    // poder salir.
+    // ataca, o quedó atrapado en la geometría. Lo dispara el botón Desatascarse del menú
+    // de pausa (UI_PauseMenu), que abren ESC o Start — y se leen de la copia del input de
+    // los MENÚS (MenuInput), no de la del jugador, así que llegan aunque el mapa de input
+    // del jugador esté apagado. Que es, justamente, uno de los estados de los que hay que
+    // poder salir. (En la escena de pruebas, el botón Unstuck del recuadro de red.)
     //
     // QUÉ HACE: no intenta arreglar el personaje trabado — le da uno NUEVO, recién
     // salido del prefab, en su base, con la misma clase. Mientras no sepamos qué es lo

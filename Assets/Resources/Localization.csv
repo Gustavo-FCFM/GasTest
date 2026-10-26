@@ -60,9 +60,35 @@ net.host_started;Host iniciado. Esperando a tus amigos...;Host started. Waiting 
 net.connecting;Conectando a {address}...;Connecting to {address}...
 net.disconnected;Desconectado.;Disconnected.
 #
+# ---- Pantalla de conexión (Jugar) ----
+connect.title;Jugar;Play
+connect.host;Crear partida;Create game
+connect.or_join;O únete a una partida;Or join a game
+connect.address;Dirección del host (IP, o IP:puerto);Host address (IP, or IP:port)
+connect.join;Conectar;Connect
+connect.back;Volver;Back
+connect.creating;Creando la partida...;Creating the game...
+connect.need_address;Escribe la dirección del host.;Type the host's address.
+connect.failed;No se pudo conectar a {address}.;Couldn't connect to {address}.
+connect.lost;Se cortó la conexión con la partida.;The connection to the game was lost.
+connect.host_failed;No se pudo crear la partida (¿ya hay una abierta en esta PC?).;Couldn't create the game (is one already open on this PC?).
+#
+# ---- Menú de pausa (ESC o Start) ----
+pause.title;Menú;Menu
+pause.resume;Continuar;Resume
+pause.leave;Salir al menú principal;Leave to main menu
+pause.leave_host;Cerrar la partida y salir;Close the game and leave
+pause.leave_confirm;¿Seguro? Se cierra para todos;Sure? It closes for everyone
+pause.status_host;Eres el host · tu IP en la red: {ip};You're the host · your network IP: {ip}
+pause.status_client;Conectado a {address};Connected to {address}
+pause.hint;ESC o Start: volver al juego;ESC or Start: back to the game
+#
 # ---- Sala de espera ----
 lobby.host_ip;IP del host: {ip};Host IP: {ip}
 lobby.start;Empezar;Start
+lobby.leave;Salir;Leave
+lobby.leave_host;Cerrar sala;Close room
+lobby.leave_confirm;¿Cerrar para todos?;Close for everyone?
 lobby.username;Nombre:;Username:
 lobby.default_name;Jugador;Player
 lobby.team;Equipo {team};Team {team}

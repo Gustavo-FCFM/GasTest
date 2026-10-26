@@ -71,8 +71,8 @@ public class MenuOrbitCamera : MonoBehaviour
 
     private void LateUpdate()
     {
-        // El menú sobre la arena pide el blur; la sala, no.
-        SetBlur(UI_MainMenu.IsShowing);
+        // El menú sobre la arena (y la pantalla de conexión) piden el blur; la sala, no.
+        SetBlur(UI_MainMenu.IsShowing || UI_ConnectPanel.IsShowing);
 
         if (!ShouldOrbit()) return;
 

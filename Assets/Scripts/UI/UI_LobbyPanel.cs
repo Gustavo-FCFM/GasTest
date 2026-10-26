@@ -28,16 +28,22 @@ using UnityEngine.UI;
 //   3. Elegís clase tocando tu propio ícono → se despliega la grilla de clases.
 //   4. Confirmar te marca LISTO (tu nombre se pone verde). Volver a tocarlo lo apaga.
 //   5. El HOST aprieta Start y arranca la partida para todos.
+//   Salir (arriba a la izquierda) vuelve al menú principal; siendo host, cierra la sala.
 //
 // EL PERSONAJE NO APARECE AL CONFIRMAR, sino cuando la partida arranca. Si no, el que
 // confirma primero se queda dando vueltas por el mapa mientras los demás todavía
 // eligen — que es justo lo que pasaba antes.
 //
+// CON CONTROL (26 de octubre de 2026): es una pantalla de MenuInput. Arranca con algo elegido
+// (ver DefaultSelection: unirte a un equipo, elegir tu clase, Confirmar, Start) y, cuando el
+// botón elegido desaparece (al unirte, el "Unirte" se apaga), el control pasa al siguiente
+// paso. B cierra el selector de clase; Start o ESC abren la pausa.
+//
 // AUTORIDAD: este panel solo PIDE (ServerSubmit / ServerSetReady / ServerRequestStart).
 // Quién está en qué equipo, si un nombre se repite y si un equipo está lleno lo decide
 // el servidor en LobbyManager; acá solo se dibuja lo que la sala sincronizada dice.
 // ============================================================
-public class UI_LobbyPanel : MonoBehaviour
+public class UI_LobbyPanel : MonoBehaviour, IMenuScreen
 {
     [Header("Clases elegibles")]
     [Tooltip("Las mismas que MainBaseClasses del Player. El ícono de cada una sale de su " +
@@ -72,6 +78,17 @@ public class UI_LobbyPanel : MonoBehaviour
 
     [Label("Texto de Confirmar")]
     public TMP_Text ConfirmLabel;
+
+    [Tooltip("Salir de la sala al menú principal. Siendo host, cierra la sala para todos (el botón lo dice).")]
+    [Label("Botón Salir")]
+    public Button LeaveButton;
+
+    [Label("Texto de Salir")]
+    public TMP_Text LeaveLabel;
+
+    [Tooltip("Siendo host, Salir se aprieta dos veces: la primera pregunta \"¿Cerrar para todos?\". Lo que espera la segunda antes de volver a decir \"Cerrar sala\".")]
+    [Label("Tiempo para confirmar Salir (s)")]
+    public float LeaveConfirmSeconds = 4f;
 
     [Tooltip("La línea sobre Confirmar: qué falta para arrancar, o qué te falta a vos.")]
     [Label("Línea de estado")]
@@ -168,9 +185,7 @@ public class UI_LobbyPanel : MonoBehaviour
     private bool  _registered;      // ya me anoté en la sala (aunque sea de espectador)
     private bool  _visible;         // el estado que el panel CREE tener; ver Update
     private float _redrawIn;        // segundos hasta el próximo redibujado de reloj
-
-    // Se cachea: se lee para mostrar la IP y buscarlo cada frame es caro y no cambia.
-    private ConnectionHUD _hud;
+    private readonly LeaveConfirm _leaveConfirm = new LeaveConfirm();
 
     private void Start()
     {
@@ -190,6 +205,7 @@ public class UI_LobbyPanel : MonoBehaviour
     {
         LobbyManager.OnLobbyChanged -= Refresh;
         Loc.OnLanguageChanged      -= Refresh;
+        MenuInput.Pop(this);
         UICursor.Release(this);
     }
 
@@ -225,6 +241,8 @@ public class UI_LobbyPanel : MonoBehaviour
         {
             _visible = show;
             LobbyCanvas.SetActive(show);
+            if (show) MenuInput.Push(this); else MenuInput.Pop(this);
+            _leaveConfirm.Cancel();
         }
 
         // El cursor tiene que estar libre para escribir y clickear en la sala. Se pide
@@ -262,6 +280,7 @@ public class UI_LobbyPanel : MonoBehaviour
         // repaso lento para lo que NO viaja por la lista: la IP y quién es host.
         if (!show) return;
         _redrawIn -= Time.unscaledDeltaTime;
+        if (_leaveConfirm.Changed(LeaveButton != null ? LeaveButton.gameObject : null)) _redrawIn = 0f;
         if (_redrawIn <= 0f)
         {
             _redrawIn = 0.5f;
@@ -395,6 +414,13 @@ public class UI_LobbyPanel : MonoBehaviour
         if (lobby != null && lobby.IsLobbyReady) lobby.ServerRequestStart();
     }
 
+    // Salir al menú principal. Siendo host cierra la sala para todos: pregunta antes (LeaveConfirm).
+    private void Leave()
+    {
+        if (!_leaveConfirm.Press(LobbyManager.LocalIsHost, LeaveConfirmSeconds)) { Refresh(); return; }
+        UI_MainMenu.ReturnToMenu();
+    }
+
     private void OnNameChanged(string _)
     {
         LobbyManager lobby = LobbyManager.Instance;
@@ -424,8 +450,10 @@ public class UI_LobbyPanel : MonoBehaviour
         // --- IP ---
         if (IpText != null)
         {
-            if (_hud == null) _hud = FindFirstObjectByType<ConnectionHUD>();
-            IpText.text = Loc.T("lobby.host_ip", ("ip", _hud != null ? _hud.HostAddress : "—"));
+            // El host ve SU IP en la red (la que les da a los demás); un cliente, a dónde se conectó.
+            string ip = LobbyManager.LocalIsHost ? NetAddress.LanAddress()
+                      : string.IsNullOrEmpty(NetAddress.Joined) ? "—" : NetAddress.Joined;
+            IpText.text = Loc.T("lobby.host_ip", ("ip", ip));
         }
 
         // --- equipos ---
@@ -474,6 +502,11 @@ public class UI_LobbyPanel : MonoBehaviour
             if (ConfirmLabel != null)
                 ConfirmLabel.text = Loc.T(me.Ready ? "lobby.ready" : "lobby.confirm");
         }
+
+        // Salir: siendo host, eso cierra la sala para todos; el botón lo dice y pregunta antes.
+        if (LeaveLabel != null)
+            LeaveLabel.text = Loc.T(!LobbyManager.LocalIsHost ? "lobby.leave"
+                                  : _leaveConfirm.Asking ? "lobby.leave_confirm" : "lobby.leave_host");
 
         if (StartButton != null)
         {
@@ -539,6 +572,8 @@ public class UI_LobbyPanel : MonoBehaviour
             StatusText.text  = text;
             StatusText.color = color;
         }
+
+        FollowStep();
     }
 
     // Pinta un lugar. Ocupado: ícono de clase + nombre. Libre: "Unirte" en un equipo,
@@ -639,6 +674,7 @@ public class UI_LobbyPanel : MonoBehaviour
 
         if (StartButton != null)   { StartButton.onClick.AddListener(AudioManager.Click);   StartButton.onClick.AddListener(RequestStart); }
         if (ConfirmButton != null) { ConfirmButton.onClick.AddListener(AudioManager.Click); ConfirmButton.onClick.AddListener(ToggleReady); }
+        if (LeaveButton != null)   { LeaveButton.onClick.AddListener(AudioManager.Click);   LeaveButton.onClick.AddListener(Leave); }
 
         if (NameInput != null)
         {
@@ -820,6 +856,10 @@ public class UI_LobbyPanel : MonoBehaviour
                 if (trigger == null) trigger = b.gameObject.AddComponent<EventTrigger>();
                 AddTriggerEntry(trigger, EventTriggerType.PointerEnter, () => ShowClassName(captured));
                 AddTriggerEntry(trigger, EventTriggerType.PointerExit,  () => ShowClassName(_pickerSelection));
+
+                // Con control, lo mismo al pasar por encima con el stick.
+                AddTriggerEntry(trigger, EventTriggerType.Select,   () => ShowClassName(captured));
+                AddTriggerEntry(trigger, EventTriggerType.Deselect, () => ShowClassName(_pickerSelection));
             }
         }
 
@@ -923,5 +963,107 @@ public class UI_LobbyPanel : MonoBehaviour
         }
 
         ClassPicker.gameObject.SetActive(show);
+
+        // Con control: al abrirlo, el ícono de la clase que tenías (o el primero); al cerrarlo,
+        // lo que toque en la sala (tu ícono, Confirmar). Con el mouse no hace falta.
+        if (MenuInput.UsingPad) MenuInput.Select(DefaultSelection);
+    }
+
+    // =========================================================
+    // IMenuScreen
+    // =========================================================
+
+    public int MenuLayer => 0;
+
+    private bool PickerOpen => ClassPicker != null && ClassPicker.gameObject.activeInHierarchy;
+
+    // Con control, a dónde va la selección según lo que te falta: unirte a un equipo, elegir
+    // tu clase, Confirmar y, siendo host y ya listo, Start. Con el selector abierto, la clase
+    // que estás mirando (o la primera de la pestaña).
+    public GameObject DefaultSelection
+    {
+        get
+        {
+            if (PickerOpen)
+            {
+                if (_classIcons != null)
+                {
+                    if (_pickerSelection >= 0 && _pickerSelection < _classIcons.Length && Usable(_classIcons[_pickerSelection]))
+                        return _classIcons[_pickerSelection].gameObject;
+                    foreach (Image icon in _classIcons)
+                        if (Usable(icon)) return icon.gameObject;
+                }
+                return PickerConfirm != null ? PickerConfirm.gameObject : null;
+            }
+
+            LobbyManager lobby = LobbyManager.Instance;
+            if (lobby != null && lobby.TryGetLocalEntry(out LobbyEntry me) && !me.Spectator && me.Team > 0)
+            {
+                if (me.ClassIndex < 0)
+                {
+                    UI_LobbySlot mine = SlotOf(me.ClientId);
+                    if (mine != null && Usable(mine.IconButton)) return mine.IconButton.gameObject;
+                }
+                if (me.Ready && LobbyManager.LocalIsHost && Usable(StartButton)) return StartButton.gameObject;
+                if (Usable(ConfirmButton)) return ConfirmButton.gameObject;
+            }
+
+            // De espectador: el primer "Unirte" libre.
+            foreach (List<UI_LobbySlot> team in _teamSlots)
+            {
+                if (team == null) continue;
+                foreach (UI_LobbySlot slot in team)
+                    if (slot != null && Usable(slot.JoinButton)) return slot.JoinButton.gameObject;
+            }
+
+            return ConfirmButton != null ? ConfirmButton.gameObject : null;
+        }
+    }
+
+    public Transform SelectionRoot =>
+        PickerOpen ? ClassPicker : LobbyCanvas != null ? LobbyCanvas.transform : transform;
+
+    // B cierra el selector de clase; en la sala no hay a dónde volver (se sale por la pausa).
+    public void OnBack()
+    {
+        if (PickerOpen) ShowClassPicker(false);
+    }
+
+    public void OnPause() => UI_PauseMenu.Get()?.Open();
+
+    private UI_LobbySlot SlotOf(int entryId)
+    {
+        foreach (List<UI_LobbySlot> team in _teamSlots)
+        {
+            if (team == null) continue;
+            foreach (UI_LobbySlot slot in team)
+                if (slot != null && slot.EntryId == entryId) return slot;
+        }
+        return null;
+    }
+
+    // Con control, la selección sigue al paso que toca: si estaba en el paso anterior (Unirte,
+    // tu ícono, Confirmar) o se apagó, pasa al siguiente. Si la llevaste a otro lado (el "+" de
+    // un bot), se queda ahí.
+    private GameObject _lastStep;
+
+    private void FollowStep()
+    {
+        if (!MenuInput.UsingPad || PickerOpen || !ReferenceEquals(MenuInput.Top, this)) { _lastStep = null; return; }
+
+        GameObject next = DefaultSelection;
+        GameObject current = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+        bool onLastStep = current == null || !current.activeInHierarchy || current == _lastStep;
+        if (next != _lastStep && onLastStep) MenuInput.Select(next);
+        _lastStep = next;
+    }
+
+    // Prendido y se puede apretar.
+    private static bool Usable(Component c)
+    {
+        if (c == null || !c.gameObject.activeInHierarchy) return false;
+        Selectable s = c as Selectable;
+        if (s == null) s = c.GetComponent<Selectable>();
+        return s == null || s.IsInteractable();
     }
 }

@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 20 de octubre de 2026
+# Pendientes — actualizado el 26 de octubre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -9,6 +9,9 @@ del log son todos de packs importados).
 
 ## ★ Al retomar: lo abierto, en orden (22 de octubre)
 
+0. **El showcase se adelantó al 15 de noviembre: PLAN en curso (26 de octubre)** — ver "★ Showcase del 15 de
+   noviembre". Etapa 1 (los menús con control, la conexión en el menú y la pausa): HECHA, falta correr
+   la herramienta y probar.
 1. **Subclases del Mago: PLAN en curso (22 de octubre)** — ver "★ Subclases del Mago"; plan CERRADO;
    **etapa 1 (Escuela de evocación + cambios al kit base): HECHA Y PROBADA ✅**; **etapa 2 (Escuela de abjuración): HECHA Y PROBADA ✅**; **etapa 3 (Filo danzante): HECHA Y PROBADA ✅**. Documentos al día (23 de octubre). Orden: Evocación, Abjuración, Filo danzante.
    **Misiles de a 3 (22 de octubre): HECHO Y PROBADO ✅** (se quedó en ráfaga y no en combo: un solo gesto, 0.2 s fijos). Cada ataque es una RÁFAGA de 3 misiles, 0.2 s entre
@@ -101,6 +104,107 @@ git fetch origin && git checkout main && git reset --hard origin/main
 
 Con **fetch + reset**, no con `pull` — la máquina de casa tuvo historia divergente en
 julio y un pull normal recrea ese merge conflictivo. Ver `CLAUDE.md`.
+
+---
+
+# ★ Showcase del 15 de noviembre — PLAN (26 de octubre)
+
+El showcase se adelantó al **15 de noviembre** (antes era en diciembre). Pedido de Gustavo: todos los menús
+funcionando completos con control; la conexión dentro de los menús y con su mismo estilo (hoy es el recuadro
+gris de la esquina, dibujado aparte y sin control); y poder jugar con 3 instancias en una misma PC o en 3 PCs.
+
+**Decidido con Gustavo (26 de octubre):**
+- En la PC del showcase juegan **varias personas a la vez**: cada ventana con su control (o una con teclado y
+  mouse), cada una en su monitor.
+- Con control se entra eligiendo de una **lista de partidas** que el juego busca solo (en la misma PC o en la
+  red). Para una IP de playit o para el nombre, un **teclado en pantalla**. Recuerda la última dirección.
+- **Cualquiera puede hostear** desde una build: se va el candado de "solo el editor o `-host`".
+
+**Lo de la red, respondido (no hace falta código):**
+- 3 instancias en una PC sin el editor: una crea la partida y las otras se conectan a `127.0.0.1`.
+- 3 PCs en la misma red: a la IP local del host (192.168.x.x), puerto 7770, sin playit. El Wi-Fi de los
+  eventos suele aislar los equipos entre sí: llevar un router propio (mejor con cable). La primera vez que el
+  host abre una partida, el firewall de Windows pregunta: darle **Permitir** (si se cancela, nadie entra).
+  Por internet, playit.gg como siempre.
+
+## Etapas
+
+1. **Los menús con control y la conexión en el menú — HECHA, falta probar (26 de octubre).**
+   - Los menús pasan al Input System nuevo (`InputSystemUIInputModule`: stick, cruceta, A y B) y una sola
+     pieza decide quién responde a "volver" (B / ESC) y a Start (`MenuInput`, en `Menus_UI`).
+   - Jugar → una pantalla de conexión en `Menus_UI` (`UI_ConnectPanel`): Crear partida, la dirección (IP o
+     IP:puerto, la recuerda), Conectar, Volver y el estado ("Conectando…", "No se pudo conectar").
+   - El recuadro de ESC pasa a un **menú de pausa** (`UI_PauseMenu`) que abren ESC o Start: Continuar,
+     Ajustes, Desatascarse y Menú principal. La partida no se detiene.
+   - La sala, navegable con control: arranca con algo elegido y no lo pierde cuando los botones cambian.
+   - La sala muestra la IP del host en la red (la que hay que darles a los demás).
+   - `ConnectionHUD` queda solo para la escena de pruebas (`Test_Network`, que no tiene `Menus_UI`).
+   **Antes de probar:** correr `Mercenarios ▸ Una vez ▸ Menús con control: conexión y pausa (showcase 1)` en
+   `Mercenaries_Gamemode` y guardar; después en `Mercenaries_Graveyard` y guardar. Arma en `Menus_UI` la
+   pantalla de conexión, la pausa y `MenuInput`; pasa el EventSystem de la escena al Input System nuevo; y saca
+   el recuadro de red (antes copia su dirección de playit a la "Dirección por defecto" de la conexión).
+   **Corrida en las dos escenas y borrada (26 de octubre).**
+   **Botón Salir en la sala (26 de octubre, Gustavo: "el jugador no tiene manera de salirse del lobby"):** ESC o
+   Start abren la pausa, pero en la sala no había nada a la vista. Ahora hay un botón Salir arriba a la izquierda
+   (enfrente de Empezar) que vuelve al menú principal; siendo host dice "Cerrar sala". Se pone con
+   `Mercenarios ▸ Una vez ▸ Botón Salir en la sala (showcase 1b)` (solo el prefab: una vez alcanza). **Corrida y borrada (26 de octubre).**
+   Las piezas nuevas se acomodan a mano como las demás.
+   **Salir siendo host pregunta antes (26 de octubre, Gustavo dijo que sí):** siendo host, Salir cierra la partida
+   para todos, y en el showcase lo puede apretar sin querer alguien que no conoce el juego. Ahora el host lo aprieta
+   dos veces: la primera cambia el texto a "¿Seguro? Se cierra para todos" (pausa) o "¿Cerrar para todos?"
+   (sala) y la segunda sale. La pregunta se retira sola a los 4 s ("Tiempo para confirmar", en el inspector de
+   cada uno) o si la selección se va a otro botón. Los demás salen de una. Es `LeaveConfirm`, que usan los dos.
+   **Avisos de la consola, revisados con Unity cerrado (26 de octubre, pedido de Gustavo).** Compilación completa
+   en batch: 0 errores y 0 warnings (incluido el codegen de FishNet). Lo que había:
+   · `HealthPack.OnValidate` tapaba al de `NetworkBehaviour` (CS0114): el de FishNet, que en el editor registra
+     el componente en su NetworkObject, no corría nunca para los botiquines. Ahora es `override` y llama al base.
+   · `HealthPackVisual`: `enableWordWrapping` (obsoleto) → `textWrappingMode`.
+   · El menú "Upgrade from Mirror" de FishNet usaba la API vieja de defines (2 × CS0618): cambiado a
+     `NamedBuildTarget` (código del paquete, marcado con un comentario).
+   · "There are no audio listeners in the scene": la cámara de la sala no tenía oído. Se le puso un
+     `AudioListener` (en las dos escenas). Y `PlayerController` ahora la encuentra por su `MenuOrbitCamera`: perdió
+     la etiqueta MainCamera el 2 de septiembre y desde entonces `Camera.main` daba null al aparecer el personaje,
+     así que NO se apagaba: quedaba prendida debajo de la tuya toda la partida (el mapa se dibujaba dos veces).
+   · **`Mercenaries_Gamemode` no había quedado guardada con la herramienta** (seguía con el EventSystem viejo y
+     el recuadro de red). Se le hizo a mano lo mismo que la herramienta hizo en Graveyard; Unity abre las dos
+     escenas bien (verificado en batch).
+   - [ ] Al jugar, la consola sin avisos: ni "no audio listeners" en el menú, ni "2 audio listeners" en partida.
+   - [ ] Al aparecer tu personaje, `Camara_Lobby` se apaga en la jerarquía; al terminar la partida o salir, vuelve.
+   **Probar, con un control conectado:**
+   - [ ] Menú principal: el stick y la cruceta recorren Jugar, Ajustes y Salir; A entra; Start o ESC abren los
+         Ajustes y B (o ESC) los cierra.
+   - [ ] Jugar → la pantalla de conexión. Crear partida → aparece la sala.
+   - [ ] La sala con control: arranca en un "Unirte"; A te une y la selección pasa a tu ícono; A abre el
+         selector de clase, el stick recorre las clases (sale el nombre), A elige una y abajo está Confirmar; B
+         cierra el selector. Con la clase puesta, la selección pasa a Confirmar; siendo host y ya listo, a Start.
+   - [ ] Start o ESC en la sala abren la pausa. Ajustes desde la pausa, y B vuelve a la pausa.
+   - [ ] Salir en la sala vuelve al menú principal (con control se llega con el stick). Siendo host dice "Cerrar
+         sala", y los clientes vuelven a la pantalla de conexión con "Se cortó la conexión".
+   - [ ] Siendo host, Salir (en la sala y en la pausa) pregunta primero: el texto cambia a la pregunta y recién la
+         segunda vez sale. Esperar 4 s, o moverse a otro botón con el stick, vuelve al texto normal. Un cliente sale
+         con un solo apretón. En la sala, que "¿Cerrar para todos?" quepa en el botón (si no, agrandarlo a mano).
+   - [ ] Jugando: Start o ESC abren la pausa (la partida sigue). Desatascarse funciona. Salir vuelve al menú
+         principal (siendo host, el botón dice "Cerrar la partida y salir").
+   - [ ] Otra ventana (una build) → Jugar → escribir `127.0.0.1` → Conectar → entra a la sala. Con una dirección
+         mala dice "No se pudo conectar a …" (tarda unos segundos), y Volver mientras conecta lo cancela.
+   - [ ] Con el cliente en la sala, cerrar la partida en el host: el cliente vuelve a la pantalla de conexión con
+         "Se cortó la conexión".
+   - [ ] Dos ventanas en la misma PC que crean partida: la segunda dice "No se pudo crear la partida (¿ya hay
+         una abierta en esta PC?)" y no se mete en la de la otra.
+   - [ ] Conectar a una dirección que no responde (la de playit con el túnel apagado), Volver mientras dice
+         "Conectando…" (o esperar el error) y Crear partida: se crea bien. Antes decía "¿ya hay una abierta en
+         esta PC?": el intento a medias seguía vivo (Volver no lo cortaba) y al cerrarse tiraba abajo la partida
+         nueva. Arreglado el 26 de octubre (`UI_MainMenu.StopNetworking` corta también lo que se está conectando).
+   - [ ] La sala y la pausa muestran, en el host, su IP de la red (192.168.x.x); en un cliente, a dónde se
+         conectó.
+   - [ ] Con mouse y teclado todo sigue como antes (escribir la dirección, Enter conecta).
+   Ojo: con dos ventanas en la misma PC, hoy un mismo control mueve las dos. Eso es la etapa 3.
+2. **Buscar partidas y el teclado en pantalla.** La lista de partidas abiertas (en la misma PC o en la red),
+   y el teclado para la dirección y el nombre.
+3. **Tres ventanas en una PC.** Cada ventana con su control: se abre con `-pad` y toma el control que aprieta
+   A mientras ella tiene el foco (o `-kbm`, teclado y mouse); sigue leyendo su control aunque no tenga el
+   foco. El espectador con control. `-mute` para callar las ventanas que sobran.
+4. **Documentos** (arquitectura de red, guía, CLAUDE.md, el LEEME del modo).
 
 ---
 

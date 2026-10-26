@@ -334,6 +334,9 @@ public class UI_ClassMenu : MonoBehaviour
     {
         if (!_open) return;
 
+        // Con la pausa (o los ajustes) encima, el control es de ellos.
+        if (MenuInput.HasOverlay) return;
+
         PlayerInputProvider input = PlayerInputProvider.Local;
 
         // Teclas 1..9 — solo si esta instancia usa teclado, para no cruzar el
