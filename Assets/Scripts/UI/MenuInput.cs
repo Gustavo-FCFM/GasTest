@@ -79,6 +79,10 @@ public class MenuInput : MonoBehaviour
     public static InputAction Cancel   { get; private set; }
     public static InputAction Pause    { get; private set; }
 
+    // X y Y del control: borrar y espacio en el teclado en pantalla (UI_OnScreenKeyboard).
+    public static InputAction Backspace { get; private set; }
+    public static InputAction Space     { get; private set; }
+
     // True mientras se maneja el menú con el control (o con las flechas): ahí la selección
     // tiene que estar siempre en algo. Se apaga al mover o tocar el mouse.
     public static bool UsingPad { get; private set; }
@@ -216,6 +220,8 @@ public class MenuInput : MonoBehaviour
         Submit   = ui.FindAction("Submit", true);
         Cancel   = ui.FindAction("Cancel", true);
         Pause    = ui.FindAction("Pause", false);
+        Backspace = ui.FindAction("Backspace", false);
+        Space     = ui.FindAction("Space", false);
         _point   = ui.FindAction("Point", false);
         _click   = ui.FindAction("Click", false);
         if (Pause == null)
@@ -228,7 +234,7 @@ public class MenuInput : MonoBehaviour
     {
         if (Instance != this) return;
         Instance = null;
-        Navigate = Submit = Cancel = Pause = null;
+        Navigate = Submit = Cancel = Pause = Backspace = Space = null;
         if (_actions != null) { _actions.Disable(); Destroy(_actions); }
     }
 

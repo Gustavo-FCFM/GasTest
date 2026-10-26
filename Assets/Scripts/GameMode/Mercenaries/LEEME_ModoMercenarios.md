@@ -25,15 +25,15 @@ pruebas rápidas de clases.
   a la altura del pecho (rojo, amarillo el crítico, verde la curación, chico el daño con
   el tiempo) y la X de la mira amarilla en los críticos. Detalle en `PENDIENTES.md`,
   sección 8.
-- **Todo lo que ve el jugador está en inglés**: avisos, marcadores, menús, ajustes, recuadro
-  de red y sala. La sección de sonido de Ajustes está oculta hasta que haya clips
+- **Todo lo que ve el jugador está en inglés**: avisos, marcadores, menús, ajustes, conexión,
+  pausa y sala. La sección de sonido de Ajustes está oculta hasta que haya clips
   (`UI_SettingsPanel.ShowSoundSection`).
 - **Entre partidas se barre todo lo spawneado** que no sea de escena (jugadores, bots,
   monstruos, tótems, proyectiles, Objetivo): los jefes y tótems de la partida anterior ya
   no sobreviven.
 - **Seguro de la preparación**: quien sale de la planta de su sala durante la preparación
   vuelve a su punto de aparición (`MercenariesGameMode.WarmupEscapeMargin`).
-- **Botón Unstuck** en el recuadro de red (ESC): con 5 s quieto, sin daño en 5 s, sin
+- **Botón Desatascarse** en el menú de pausa (ESC o Start): con 5 s quieto, sin daño en 5 s, sin
   control legítimo encima y 60 s de cooldown, te da un personaje NUEVO del prefab en tu
   base con tu clase y tu carga de definitiva, y deja en consola qué encontró trabado.
 - **Tótems del Chamán** con collider y barra de vida (100 de vida, se pueden romper); los
@@ -157,7 +157,7 @@ segundo después el servidor te devuelve el nivel del equipo.
 
 `Assets/Scenes/Mercenaries_Gamemode.unity` está hecha, editada a mano y guardada: la arena
 entera, las tres bases en simetría con techo, 9 campamentos, 3 rejas, los límites
-invisibles, el NavMesh horneado, el HUD, el `NetworkManager`, el `ConnectionHUD` y la sala.
+invisibles, el NavMesh horneado, el HUD, el `NetworkManager` y los menús (el prefab `Menus_UI`).
 **No hay nada que generar.**
 
 Las herramientas que la crearon (los ocho pasos del menú `Mercenarios`) se borraron una vez
@@ -204,19 +204,28 @@ Para volver a ser espectador, **Espectador** en la última fila de la columna de
 **Dos cosas que no son obvias:**
 
 - El panel aparece **solo con conexión** (`LobbyManager.IsLobbyReady`, que se prende en
-  `OnStartClient`). Antes de hostear o conectarte lo único en pantalla es el recuadro de
-  red.
+  `OnStartClient`). Antes de hostear o conectarte, lo que se ve es el menú principal o la
+  pantalla de conexión.
 - El `NetworkGameManager` mete cada conexión a la escena apenas carga
   (`SceneManager.AddConnectionToScene`). Sin eso el `NetworkObject` DE ESCENA de la sala no
   se spawnea del lado del cliente y el panel se queda mudo. Es el candado que costó
   encontrar.
 
-## ESC, el cursor y el recuadro de red
+## ESC / Start, el cursor y la pausa
 
-El `ConnectionHUD` se **minimiza solo** al conectarse, y **ESC lo abre y lo cierra en
-cualquier momento** —también en plena partida— porque ahí está el botón de Desconectar.
-Mientras está abierto suelta el mouse y apaga el mapa de input de juego, así la cámara no
-gira mientras buscás el botón.
+**ESC o Start abren el menú de pausa** (`UI_PauseMenu`, en la sala o jugando): Continuar,
+Ajustes, Desatascarse y Salir. La partida no se detiene (es en red). Siendo host, Salir dice
+"Cerrar la partida y salir" y pregunta antes (`LeaveConfirm`): cierra la partida para
+todos. Mientras está abierto suelta el mouse y apaga el mapa de input de juego, así la
+cámara no gira mientras buscás el botón. (El recuadro de red viejo, `ConnectionHUD`,
+quedó solo en la escena `Test_Network`.)
+
+**Todos los menús se usan con control** (26 de octubre de 2026, para el showcase): van por el
+Input System nuevo, y `MenuInput` (en `Menus_UI`) decide qué pantalla recibe "volver" (B
+o ESC) y Start, y dónde queda la selección del stick. Cada pantalla es un `IMenuScreen`.
+Con control, A sobre un campo de texto abre el teclado en pantalla
+(`UI_OnScreenKeyboard`). El botón elegido se ve del mismo color, más oscuro
+(`ButtonTint`: el color de un botón va en su "Normal Color", con la imagen blanca).
 
 Eso lo arbitra **`UICursor`** (`Scripts/UI/`): el único dueño del cursor y del modo de
 input. Cada menú los pide mientras los necesita y los suelta al cerrarse. Antes cada uno
@@ -234,21 +243,22 @@ La rueda de habilidades es la excepción declarada: pide el cursor con
 
 El juego arranca mostrando el **menú principal** (Jugar · Ajustes · Salir) **sobre la
 arena misma**: no es otra escena. De fondo se ve el mapa desde la cámara de la sala,
-girando despacio encima de la meseta y con blur. *Jugar* esconde el panel y queda lo de
-siempre: el recuadro de red para hostear o conectarse. Desde ese recuadro (ESC) hay dos
-botones nuevos: **Ajustes** y **Menú principal** — el segundo corta la conexión y vuelve
-a mostrar el panel, sin cargar nada.
+girando despacio encima de la meseta y con blur. *Jugar* lleva a la **pantalla de conexión**
+(`UI_ConnectPanel`): Crear partida (cualquier build puede), una partida de la lista de
+partidas abiertas en esta PC o en la red (`LanDiscovery`, se buscan solas), o la dirección
+escrita a mano (la de playit, para jugar por internet). Desde la pausa, **Salir** corta la
+conexión y vuelve a mostrar el menú, sin cargar nada.
 
 **Por qué no es una escena aparte:** el fondo que se quería es la arena de verdad, y
 cargarla dos veces obligaba a pasar el `NetworkManager` de una escena a otra, un camino
 de FishNet sin probar. Así, "volver al menú" es Desconectar + mostrar el panel: el mismo
-camino que Desconectar → Iniciar Host, que ya está probado.
+camino que Salir → Crear partida, que ya está probado.
 
 Todo vive en `Scripts/Settings/`:
 
-- **`UI_MainMenu`**: el panel, dibujado por código. `ShowOnStart` apagado si querés
-  probar la arena directo sin pasar por el menú. `IsShowing` lo miran el recuadro de red
-  (para no dibujarse encima) y la cámara (para el blur).
+- **`UI_MainMenu`** (en `Scripts/UI/`): conecta el panel del prefab de menús. `ShowOnStart`
+  apagado si querés probar la arena directo sin pasar por el menú. `IsShowing` lo mira la
+  cámara (para el blur), igual que el de la pantalla de conexión.
 - **`MenuOrbitCamera`**: va en `Camara_Lobby`. Órbita (`Height`, `Radius`,
   `DegreesPerSecond`) mientras no hay partida; al arrancar la partida se queda quieta,
   porque esa cámara la apaga el jugador o la vuela el espectador. El blur es un Depth of
@@ -268,7 +278,7 @@ Todo vive en `Scripts/Settings/`:
   `InputSystem_Actions`, ese archivo es el único que hay que tocar.
 - **`UI_SettingsPanel`**: el panel de ajustes, dibujado por código.
   `UI_SettingsPanel.GetOrCreate().Open()` desde cualquier lado; si hay uno en la escena
-  (para tocarle colores en el Inspector) lo usa, si no lo crea. ESC lo cierra y guarda.
+  (para tocarle colores en el Inspector) lo usa, si no lo crea. ESC o B lo cierra y guarda.
 
 Ya está instalado en las dos escenas: `UI_MainMenu`, `MenuOrbitCamera` en la cámara de
 la sala y un `UI_SettingsPanel`. (La herramienta que lo instalaba se borró el 29 de
@@ -277,7 +287,7 @@ septiembre; para una escena nueva, copiar una de las dos.)
 Las dos cámaras (`ThirdPersonOrbitCam` y `SpectatorCamera`) multiplican su sensibilidad
 por la de los ajustes y respetan la inversión del eje Y.
 
-**Hostear dos veces en el mismo Play.** Menú principal → Jugar → Iniciar Host, después
+**Hostear dos veces en el mismo Play.** Menú principal → Jugar → Crear partida, después
 de haber jugado, es un camino normal. Al parar el servidor FishNet destruye lo spawneado
 (personajes, Objetivo, monstruos) pero no toca el estado de los managers de escena, así
 que `LobbyManager`, `NetworkGameManager` y `MercenariesGameMode` **reinician su sesión en
@@ -389,10 +399,10 @@ Para probar sin esperar el reloj: con el juego corriendo, clic derecho en el com
 
 ## Para probarlo vos solo
 
-Play en el editor → `Iniciar Host` → nombre, equipo, clase, Confirmar, **Start**. Con
+Play en el editor → Jugar → **Crear partida** → nombre, equipo, clase, Confirmar, **Start**. Con
 `MinPlayersToStart: 1` la partida corre entera con un solo jugador (preparación, Objetivo,
 entrega, victoria). Para probar de verdad los tres equipos hacen falta build + editor, como
-venías haciendo.
+venías haciendo: en la build, Jugar, y la partida del editor aparece sola en la lista.
 
 ---
 
@@ -912,7 +922,8 @@ los índices de los assets ya guardados):
 - **Sin pantalla de fin de partida**: hoy el resultado sale en el reloj del marcador y en
   el cartel del centro, y a los 15 s arranca otra.
 - **Quedarse sin control al spawnear**: pasó en la prueba de 9 y todavía no se reproduce.
-  El botón Unstuck lo resuelve y deja en consola qué encontró trabado: juntar esos logs.
+  El botón Desatascarse (en la pausa) lo resuelve y deja en consola qué encontró trabado:
+  juntar esos logs.
 
 Ya resueltos, que estaban acá: **encerrar a los equipos en la preparación** (`MercGate` +
 el seguro de la sección 4 ter), **los enemigos a distancia** (el mago y el jefe usan

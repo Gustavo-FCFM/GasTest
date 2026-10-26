@@ -100,7 +100,7 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
 | `Assets/Effects/` | Los `GE_*`, por tipo (Damage, Buffs, CC, Debuffs, Cooldowns). |
 | `Assets/GameplayAbilities/` | Los `GA_*` por clase, **con sus scripts `GA_*.cs` al lado** — son contenido. `Enemies/` para las de los NPCs. |
 | `Assets/Scripts/GAS/` | El motor de habilidades: ASC, efectos, habilidades base, atributos, tags, registros. `Entities/` son los objetos que las habilidades crean (proyectiles, tótems, barreras). |
-| `Assets/Scripts/Network/` | Conexión y red: `NetworkAbilitySystemComponent`, `NetworkGameManager`, `LobbyManager` (la sala de espera), `NetAddress` (las direcciones) y `ConnectionHUD` (el recuadro viejo, solo para `Test_Network`). |
+| `Assets/Scripts/Network/` | Conexión y red: `NetworkAbilitySystemComponent`, `NetworkGameManager`, `LobbyManager` (la sala de espera), `NetAddress` (las direcciones), `LanDiscovery` (la lista de partidas en la red) y `ConnectionHUD` (el recuadro viejo, solo para `Test_Network`). |
 | `Assets/Scripts/Player/` | El jugador y sus cámaras: `PlayerController`, input, animación, `RagdollController`, `UpperBodyAim`, `ThirdPersonOrbitCam`, `SpectatorCamera`, `MenuOrbitCamera`. |
 | `Assets/Scripts/UI/` | Toda la UI que no es de un modo: HUD de clase, menú de clases, sala (`UI_LobbyPanel`), menú principal, ajustes, `MercUIFactory`, `InputGlyphs` (la ÚNICA tabla de qué botón se dibuja: Q / RB / R1) y `UICursor` — el único dueño del cursor y del modo de input. |
 | `Assets/Scripts/Settings/` | `GameSettings` (PlayerPrefs), incluido qué control eligió el jugador y el idioma. |
@@ -287,7 +287,10 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   (uno por escena; desde el 14 de octubre de 2026: registro de bajas, pantalla de muerte, números,
   marcador, avisos de partida, marcadores del Objetivo y el espectador). Los menús (inicio, conexión,
   Ajustes, la sala y la pausa, más `MenuInput`) están en el **prefab de menús `Prefabs/UI/Menus_UI`**: cada fila de Ajustes lleva un
-  `UI_SettingRow` y cada lugar de la sala un `UI_LobbySlot`. Los canvas de los dos prefabs son de
+  `UI_SettingRow` y cada lugar de la sala un `UI_LobbySlot`. **El color de un botón de los menús va en el
+  Button ("Normal Color" y los demás estados), con su imagen BLANCA** (`ButtonTint`, desde el 26 de octubre de 2026):
+  así el elegido con el control se ve del mismo color, más oscuro (nunca más pálido: Gustavo no quiere colores deslavados). Pintar la imagen rompe los estados; desde código, `ButtonTint.Paint`.
+  Los canvas de los dos prefabs son de
   1920×1080 y escalan con la pantalla. Están en la capa UI: si tapan la vista de escena, se apaga esa capa en el
   desplegable Layers del editor (no cambia el juego). Un `Graphic` propio necesita `[RequireComponent(typeof(CanvasRenderer))]`:
   sin él no se dibuja y no avisa. La **barra de vida de arriba de la cabeza** es UN prefab para todos,
@@ -314,6 +317,13 @@ Start): Continuar, Ajustes, Desatascarse, Salir. Los menús van por el Input Sys
 responden al control: quién recibe "volver" y Start y dónde está la selección lo decide
 `MenuInput` (cada pantalla es un `IMenuScreen`). El recuadro viejo (`ConnectionHUD`, IMGUI)
 queda solo en `Test_Network`, que no tiene el prefab de menús.
+
+**La lista de partidas** (etapa 2 del showcase): la pantalla de conexión busca sola las partidas
+abiertas en esa PC y en la red (`LanDiscovery`, UDP en el puerto **7771**, aparte del de la
+partida) y las muestra como botones; la PC con la partida la anuncia. Por internet sigue la
+dirección de playit escrita a mano. **Con control, A sobre un campo de texto abre el teclado en
+pantalla** (`UI_OnScreenKeyboard`: X borra, Y espacio, Start acepta, B cancela); por eso los
+campos ya no se ponen a escribir solos al elegirlos (`shouldActivateOnSelect` apagado).
 
 ---
 

@@ -72,6 +72,20 @@ connect.need_address;Escribe la dirección del host.;Type the host's address.
 connect.failed;No se pudo conectar a {address}.;Couldn't connect to {address}.
 connect.lost;Se cortó la conexión con la partida.;The connection to the game was lost.
 connect.host_failed;No se pudo crear la partida (¿ya hay una abierta en esta PC?).;Couldn't create the game (is one already open on this PC?).
+connect.lan_title;Partidas en la red;Games on the network
+connect.lan_searching;Buscando partidas en esta PC y en la red…;Looking for games on this PC and the network…
+connect.lan_room;Sala de {name};{name}'s room
+connect.lan_info;Jugadores: {players} · {state} · {where};Players: {players} · {state} · {where}
+connect.lan_lobby;En la sala;In the lobby
+connect.lan_playing;Jugando;Playing
+connect.lan_this_pc;esta PC;this PC
+connect.lan_version;Otra versión ({version});Different version ({version})
+keyboard.name;Tu nombre;Your name
+keyboard.shift;Mayús;Shift
+keyboard.space;Espacio;Space
+keyboard.backspace;Borrar;Delete
+keyboard.done;Listo;Done
+keyboard.hint;A: escribir · X: borrar · Y: espacio · Start: listo · B: cancelar;A: type · X: delete · Y: space · Start: done · B: cancel
 #
 # ---- Menú de pausa (ESC o Start) ----
 pause.title;Menú;Menu

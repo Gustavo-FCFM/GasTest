@@ -10,8 +10,10 @@ del log son todos de packs importados).
 ## ★ Al retomar: lo abierto, en orden (22 de octubre)
 
 0. **El showcase se adelantó al 15 de noviembre: PLAN en curso (26 de octubre)** — ver "★ Showcase del 15 de
-   noviembre". Etapa 1 (los menús con control, la conexión en el menú y la pausa): HECHA, falta correr
-   la herramienta y probar.
+   noviembre". **Etapa 1** (los menús con control, la conexión en el menú y la pausa) y **etapa 2** (la lista
+   de partidas en la red, el teclado en pantalla y los botones con el elegido más oscuro): HECHAS, falta
+   probar (las herramientas ya se corrieron y se borraron). Documentos al día (26 de octubre:
+   `Red_Arquitectura.docx`, el LEEME del modo y CLAUDE.md). Sigue la etapa 3: tres ventanas en una PC.
 1. **Subclases del Mago: PLAN en curso (22 de octubre)** — ver "★ Subclases del Mago"; plan CERRADO;
    **etapa 1 (Escuela de evocación + cambios al kit base): HECHA Y PROBADA ✅**; **etapa 2 (Escuela de abjuración): HECHA Y PROBADA ✅**; **etapa 3 (Filo danzante): HECHA Y PROBADA ✅**. Documentos al día (23 de octubre). Orden: Evocación, Abjuración, Filo danzante.
    **Misiles de a 3 (22 de octubre): HECHO Y PROBADO ✅** (se quedó en ráfaga y no en combo: un solo gesto, 0.2 s fijos). Cada ataque es una RÁFAGA de 3 misiles, 0.2 s entre
@@ -199,12 +201,63 @@ gris de la esquina, dibujado aparte y sin control); y poder jugar con 3 instanci
          conectó.
    - [ ] Con mouse y teclado todo sigue como antes (escribir la dirección, Enter conecta).
    Ojo: con dos ventanas en la misma PC, hoy un mismo control mueve las dos. Eso es la etapa 3.
-2. **Buscar partidas y el teclado en pantalla.** La lista de partidas abiertas (en la misma PC o en la red),
-   y el teclado para la dirección y el nombre.
+2. **Buscar partidas y el teclado en pantalla — HECHA, falta probar (26 de octubre).**
+   - La pantalla de conexión busca sola las partidas abiertas en esta PC y en la red, y las muestra debajo de
+     la línea de estado ("Partidas en la red"). Cada una es un botón: "Sala de <host>", los jugadores, si
+     están en la sala o jugando, y dónde está (esta PC o su IP). Apretarla conecta, sin escribir nada.
+     Va por UDP en su propio puerto, el **7771** (`LanDiscovery`; "Puerto para buscar partidas" en
+     `UI_ConnectPanel`), aparte del de la partida. La PC con la partida abierta la anuncia sola.
+     · Si el host no cambió su nombre ("Jugador"), sale el nombre de su PC.
+     · Una partida de otra versión del juego aparece, pero no se puede elegir.
+     · Entrar desde la lista NO cambia la dirección guardada (no pisa la de playit).
+     · Solo en la misma red: por internet sigue la dirección de playit, escrita a mano.
+   - **El teclado en pantalla** (`UI_OnScreenKeyboard`, en `Menus_UI ▸ Keyboard`): con el control, A sobre la
+     dirección o sobre tu nombre en la sala lo abre con lo que ya tenía. El stick recorre las teclas y A
+     aprieta; X borra, Y pone un espacio, Start (o Listo) acepta y B cancela. Mayús vale para una letra (vacío
+     arranca prendida, para la inicial). Cada tecla es un `UI_KeyboardKey`: para agregar una, se duplica otra
+     y se le cambia la "Letra".
+   - Los campos de texto ya no se ponen a escribir solos cuando el stick pasa por encima (antes, además, A
+     sobre la dirección conectaba). Con el mouse, igual que siempre: clic y se escribe.
+   - **Todos los botones de los menús: el elegido, el MISMO color más oscuro (26 de octubre, con Gustavo).**
+     Antes el tinte de "elegido" multiplicaba al color de la imagen y el resultado dependía del color
+     ("Ajustes" elegido, casi negro). Ahora el color de cada botón va en el Button ("Normal Color" y los demás
+     estados) y su imagen queda blanca (`ButtonTint`). **Para cambiarle el color a un botón a mano: "Normal
+     Color" del Button, no la imagen.** Desde código: `ButtonTint.Paint` (la sala ya lo usa para Confirmar,
+     Empezar, las pestañas y los íconos de clase).
+     · Primera versión: el elegido iba hacia el blanco. A Gustavo no le gustó ("no me gustan los colores
+       pálidos": el naranja quedaba durazno). Ahora solo baja el BRILLO, con el mismo tono y la misma
+       intensidad: el naranja pasa a un ámbar más hondo, el gris oscuro a casi negro. Cuánto: `SelectedDarken`
+       y `PressedDarken` en `ButtonTint` (0.12 y 0.22 del brillo); un botón suelto se ajusta a mano en sus
+       "Highlighted/Selected Color".
+     **Antes de probar:** correr `Mercenarios ▸ Una vez ▸ Botones: el elegido más oscuro (showcase)` (solo los
+     prefabs: el de menús y la tarjeta de clase). Recalcula los colores de todos desde su "Normal Color". (La
+     primera, "el elegido más claro", ya se corrió y se borró.) **Corrida y borrada (26 de octubre).**
+     - [ ] Los botones se ven igual que antes sin elegir; con el stick, el elegido se ve del mismo color pero
+           más oscuro, nada pálido (en el menú, la conexión, la sala, los ajustes, la pausa, el teclado). Pasar
+           el mouse hace lo mismo.
+     - [ ] En la sala: Confirmar y Empezar cambian a verde al estar listos, las pestañas de rol se ven de su
+           color (la abierta más fuerte) y los íconos de clase se apagan/encienden como antes.
+     - [ ] Las tarjetas del menú de clases y de subir de nivel se ven como antes.
+     - [ ] Un botón apagado (Confirmar sin clase) se ve oscuro y medio transparente, como antes.
+   **Antes de probar:** correr `Mercenarios ▸ Una vez ▸ Lista de partidas y teclado en pantalla (showcase 2)`
+   (solo el prefab: una vez alcanza). Arma la lista en `Connect` y el teclado (`Keyboard`). **Corrida y borrada (26 de octubre).**
+   **Probar:**
+   - [ ] Una ventana crea la partida; otra en la misma PC (una build) → Jugar: la partida aparece sola en la
+         lista, con "esta PC". Apretarla entra a la sala.
+   - [ ] Desde otra PC de la misma red aparece con la IP del host. Si no aparece: el firewall del host (si
+         pregunta, "Permitir") o un Wi-Fi que aísla los equipos (ahí tampoco se podría jugar).
+   - [ ] Al arrancar la partida dice "Jugando"; al cerrarla, desaparece de la lista en unos 4 segundos.
+   - [ ] La dirección escrita a mano sigue andando y se recuerda; entrar desde la lista no la cambia.
+   - [ ] Con control: A sobre la dirección abre el teclado con lo escrito. El A que lo abre no escribe nada.
+         Escribir una IP con ":" y puerto; X borra, Y espacio; Start acepta (queda en el campo) y B cancela
+         (queda como estaba). Al cerrarse, la selección vuelve al campo.
+   - [ ] En la sala, A sobre tu nombre abre el teclado ("Tu nombre"); al aceptar, el nombre cambia para todos.
+   - [ ] Con mouse y teclado: clic en el campo y se escribe como antes; Enter conecta.
 3. **Tres ventanas en una PC.** Cada ventana con su control: se abre con `-pad` y toma el control que aprieta
    A mientras ella tiene el foco (o `-kbm`, teclado y mouse); sigue leyendo su control aunque no tenga el
    foco. El espectador con control. `-mute` para callar las ventanas que sobran.
-4. **Documentos** (arquitectura de red, guía, CLAUDE.md, el LEEME del modo).
+4. **Documentos** (arquitectura de red, guía, CLAUDE.md, el LEEME del modo). Lo de las etapas 1 y 2 ya está en
+   `Red_Arquitectura.docx`, el LEEME y CLAUDE.md (26 de octubre); falta lo de la etapa 3.
 
 ---
 

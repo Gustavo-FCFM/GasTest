@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using FishNet;
 using FishNet.Managing;
 using FishNet.Transporting;
@@ -29,6 +30,15 @@ using UnityEngine.UI;
 //
 // SI SE CORTA LA CONEXIÓN (el host cerró, se cayó la red), esta pantalla vuelve sola con el
 // aviso. Si el corte fue por "Salir" (que muestra el menú principal), no.
+//
+// LA LISTA DE PARTIDAS (etapa 2 del showcase, 26 de octubre): mientras esta pantalla está a la
+// vista, busca sola las partidas abiertas en esta PC y en la red (LanDiscovery) y las muestra
+// como botones: apretar una conecta, sin escribir nada. La dirección escrita queda para
+// playit. Y la PC que tiene una partida abierta la anuncia, la haya creado como la haya creado.
+// La dirección elegida de la lista NO se guarda como "la última" (no pisa la de playit).
+//
+// CON CONTROL, A sobre el campo de la dirección abre el teclado en pantalla
+// (UI_OnScreenKeyboard).
 //
 // VIVE EN EL PREFAB DE MENÚS (Menus_UI ▸ Connect): el velo, la franja, el título y los
 // botones están armados ahí y se acomodan a mano. Este script los conecta.
@@ -66,6 +76,27 @@ public class UI_ConnectPanel : MonoBehaviour, IMenuScreen
     [Label("Puerto al crear la partida")]
     public ushort HostPort = NetAddress.DefaultPort;
 
+    [Header("Partidas en la red")]
+    [Tooltip("Donde van las partidas encontradas, una debajo de la otra (tiene su VerticalLayoutGroup).")]
+    [Label("Lista de partidas")]
+    public RectTransform GamesList;
+
+    [Tooltip("El molde de cada fila. Queda apagado; se copia una vez por partida.")]
+    [Label("Molde de fila")]
+    public UI_LanGameRow GameRowTemplate;
+
+    [Tooltip("\"Buscando partidas…\": se ve mientras no se encontró ninguna.")]
+    [Label("Texto de búsqueda")]
+    public TMP_Text SearchingText;
+
+    [Tooltip("Cuántas partidas entran en la lista. Las que sobran no se muestran.")]
+    [Label("Máximo de filas")]
+    public int MaxRows = 4;
+
+    [Tooltip("El puerto UDP por el que se buscan y se anuncian las partidas. Tiene que ser el mismo en todas las PCs, y distinto del de la partida.")]
+    [Label("Puerto para buscar partidas")]
+    public ushort DiscoveryPort = 7771;
+
     public static UI_ConnectPanel Instance { get; private set; }
 
     // True mientras está a la vista. Lo mira la cámara del menú (para el blur).
@@ -88,6 +119,12 @@ public class UI_ConnectPanel : MonoBehaviour, IMenuScreen
     private bool _subscribed;
     private bool _checkLost;   // se cortó: al frame siguiente se mira si alguien mostró el menú
 
+    // La lista de partidas: lo que se encontró, lo que se está mostrando (en orden) y las filas.
+    private readonly LanDiscovery _lan = new LanDiscovery();
+    private readonly List<LanDiscovery.Game> _shown = new List<LanDiscovery.Game>();
+    private readonly List<UI_LanGameRow> _rows = new List<UI_LanGameRow>();
+    private int _lanVersion = -1;
+
     private static NetworkManager Nm => InstanceFinder.NetworkManager;
     private static bool Connected => Nm != null && (Nm.IsClientStarted || Nm.IsServerStarted);
 
@@ -106,13 +143,17 @@ public class UI_ConnectPanel : MonoBehaviour, IMenuScreen
 
         // Enter en el campo = Conectar.
         if (AddressInput != null) AddressInput.onSubmit.AddListener(_ => Join());
+        UI_OnScreenKeyboard.SetTitle(AddressInput, "connect.address");
+
+        if (GameRowTemplate != null) GameRowTemplate.gameObject.SetActive(false);
+        if (SearchingText != null) SearchingText.gameObject.SetActive(true);
     }
 
-    private void OnEnable()  => Loc.OnLanguageChanged += RedrawStatus;
+    private void OnEnable()  => Loc.OnLanguageChanged += Redraw;
 
     private void OnDisable()
     {
-        Loc.OnLanguageChanged -= RedrawStatus;
+        Loc.OnLanguageChanged -= Redraw;
         if (IsShowing) Hide();
     }
 
@@ -120,11 +161,17 @@ public class UI_ConnectPanel : MonoBehaviour, IMenuScreen
     {
         if (Instance == this) Instance = null;
         Unsubscribe();
+        _lan.Dispose();
     }
 
     private void Update()
     {
         if (!_subscribed) Subscribe();
+
+        // Esta PC anuncia su partida mientras la tenga abierta, y busca las demás mientras esta
+        // pantalla esté a la vista.
+        _lan.Tick(DiscoveryPort, advertise: Nm != null && Nm.IsServerStarted, search: IsShowing);
+        if (_lan.Version != _lanVersion) RedrawGames();
 
         // El corte se mira un frame después: si fue por "Salir", en ese frame ya se mostró el
         // menú principal y no hay que tapar nada.
@@ -217,7 +264,6 @@ public class UI_ConnectPanel : MonoBehaviour, IMenuScreen
     private void Join()
     {
         if (_state != EState.Idle) return;
-        if (Nm == null) { SetStatus(() => Loc.T("net.no_manager")); return; }
 
         string text = AddressInput != null ? AddressInput.text : "";
         if (!NetAddress.TryParse(text, out string host, out ushort port))
@@ -226,12 +272,33 @@ public class UI_ConnectPanel : MonoBehaviour, IMenuScreen
             return;
         }
 
+        StartJoin(host, port, remember: true);
+    }
+
+    // Una partida de la lista: conecta directo, sin tocar la dirección escrita.
+    private void JoinListed(int index)
+    {
+        if (index < 0 || index >= _shown.Count || !SameVersion(_shown[index])) return;
+        LanDiscovery.Game g = _shown[index];
+        StartJoin(g.Address, g.Port, remember: false);
+    }
+
+    // remember: guardarla como la última dirección (la escrita a mano sí; la de la lista no,
+    // para no pisar la de playit).
+    private void StartJoin(string host, ushort port, bool remember)
+    {
+        if (_state != EState.Idle) return;
+        if (Nm == null) { SetStatus(() => Loc.T("net.no_manager")); return; }
+
         UI_MainMenu.StopNetworking();   // un intento anterior a medias (ver Host)
 
         string target = NetAddress.Format(host, port);
         NetAddress.Joined = target;
-        PlayerPrefs.SetString(LastAddressKey, target);
-        PlayerPrefs.Save();
+        if (remember)
+        {
+            PlayerPrefs.SetString(LastAddressKey, target);
+            PlayerPrefs.Save();
+        }
 
         _state = EState.Joining;
         _clientRequested = false;
@@ -336,14 +403,89 @@ public class UI_ConnectPanel : MonoBehaviour, IMenuScreen
         if (StatusText != null) StatusText.text = _status != null ? _status() : "";
     }
 
-    // Mientras se conecta, Crear y Conectar no se pueden apretar (Volver lo cancela).
+    private void Redraw()
+    {
+        RedrawStatus();
+        RedrawGames();
+    }
+
+    // Mientras se conecta, Crear, Conectar y la lista no se pueden apretar (Volver lo cancela).
     private void RefreshButtons()
     {
         bool idle = _state == EState.Idle;
         if (HostButton != null)   HostButton.interactable   = idle;
         if (JoinButton != null)   JoinButton.interactable   = idle;
         if (AddressInput != null) AddressInput.interactable = idle;
+
+        for (int i = 0; i < _rows.Count; i++)
+            if (_rows[i].Button != null)
+                _rows[i].Button.interactable = idle && i < _shown.Count && SameVersion(_shown[i]);
     }
+
+    // =========================================================
+    // LA LISTA DE PARTIDAS
+    // =========================================================
+
+    // Las filas se reusan (no se destruyen y se vuelven a crear): así la que tiene elegida el
+    // control no se pierde cada vez que una partida contesta.
+    private void RedrawGames()
+    {
+        _lanVersion = _lan.Version;
+
+        _shown.Clear();
+        _shown.AddRange(_lan.Games);
+        // Las de esta PC primero; después por nombre. Un orden fijo: las filas no saltan de lugar.
+        _shown.Sort((a, b) => a.SamePc != b.SamePc ? (a.SamePc ? -1 : 1)
+                            : a.Name != b.Name ? string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase)
+                            : string.CompareOrdinal(a.Id, b.Id));
+
+        int count = 0;
+        if (GamesList != null && GameRowTemplate != null)
+        {
+            count = Mathf.Min(_shown.Count, Mathf.Max(0, MaxRows));
+            for (int i = 0; i < count; i++)
+            {
+                if (i >= _rows.Count) _rows.Add(NewRow(i));
+                DrawRow(_rows[i], _shown[i]);
+            }
+            for (int i = 0; i < _rows.Count; i++)
+                if (_rows[i].gameObject.activeSelf != i < count) _rows[i].gameObject.SetActive(i < count);
+        }
+
+        if (SearchingText != null)
+        {
+            SearchingText.gameObject.SetActive(count == 0);
+            SearchingText.text = Loc.T("connect.lan_searching");
+        }
+        RefreshButtons();
+    }
+
+    private UI_LanGameRow NewRow(int index)
+    {
+        UI_LanGameRow row = Instantiate(GameRowTemplate, GamesList);
+        row.name = "Game " + (index + 1);
+        if (row.Button != null)
+        {
+            row.Button.onClick.AddListener(AudioManager.Click);
+            row.Button.onClick.AddListener(() => JoinListed(index));
+        }
+        return row;
+    }
+
+    private static void DrawRow(UI_LanGameRow row, LanDiscovery.Game g)
+    {
+        if (row.NameText != null) row.NameText.text = Loc.T("connect.lan_room", ("name", g.Name));
+        if (row.InfoText == null) return;
+
+        string state = !SameVersion(g) ? Loc.T("connect.lan_version", ("version", g.Version))
+                     : Loc.T(g.Playing ? "connect.lan_playing" : "connect.lan_lobby");
+        string where = g.SamePc ? Loc.T("connect.lan_this_pc") : NetAddress.Format(g.Address, g.Port);
+        row.InfoText.text = Loc.T("connect.lan_info", ("players", g.Players), ("state", state), ("where", where));
+    }
+
+    // Una versión distinta del juego no se puede conectar (la red no es la misma): se ve, pero
+    // no se puede apretar.
+    private static bool SameVersion(LanDiscovery.Game g) => g.Version == Application.version;
 
     // =========================================================
     // IMenuScreen

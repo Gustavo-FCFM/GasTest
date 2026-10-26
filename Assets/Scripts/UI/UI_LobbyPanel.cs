@@ -498,7 +498,7 @@ public class UI_LobbyPanel : MonoBehaviour, IMenuScreen
         {
             ConfirmButton.interactable = canReady;
             Image bg = ConfirmButton.GetComponent<Image>();
-            if (bg != null) bg.color = me.Ready ? ReadyColor : IdleColor;
+            ButtonTint.Paint(bg, me.Ready ? ReadyColor : IdleColor);
             if (ConfirmLabel != null)
                 ConfirmLabel.text = Loc.T(me.Ready ? "lobby.ready" : "lobby.confirm");
         }
@@ -516,7 +516,7 @@ public class UI_LobbyPanel : MonoBehaviour, IMenuScreen
                 StartButton.gameObject.SetActive(isHost);
 
             Image bg = StartButton.GetComponent<Image>();
-            if (bg != null) bg.color = allReady ? ReadyColor : IdleColor;
+            ButtonTint.Paint(bg, allReady ? ReadyColor : IdleColor);
             if (StartLabel != null) StartLabel.color = allReady ? Color.black : Color.white;
         }
 
@@ -614,7 +614,7 @@ public class UI_LobbyPanel : MonoBehaviour, IMenuScreen
             // el Confirmar quedaba muerto.
             slot.Icon.enabled = true;
             slot.Icon.sprite  = cls != null ? cls.ClassIcon : null;
-            slot.Icon.color   = cls != null && cls.ClassIcon != null ? Color.white : SlotColor;
+            ButtonTint.Paint(slot.Icon, cls != null && cls.ClassIcon != null ? Color.white : SlotColor);
 
             // Tu ícono lo tocás vos; el de un bot, el host. Nadie toca el de otro jugador.
             slot.IconButton.interactable = inTeam && (isMine || (isBot && isHost));
@@ -682,6 +682,7 @@ public class UI_LobbyPanel : MonoBehaviour, IMenuScreen
             // Al TERMINAR de escribir, no en cada tecla: si no, cada letra sería un pedido
             // al servidor y un rebote por "nombre repetido" a mitad de palabra.
             NameInput.onEndEdit.AddListener(OnNameChanged);
+            UI_OnScreenKeyboard.SetTitle(NameInput, "keyboard.name");   // con control se escribe con el teclado en pantalla
         }
 
         // Los lugares, por columna y en el orden de la jerarquía.
@@ -810,7 +811,7 @@ public class UI_LobbyPanel : MonoBehaviour, IMenuScreen
                 rt.anchoredPosition = new Vector2(-tabsWidth * 0.5f + tabW * 0.5f + g * (tabW + TabGap), tabRt.anchoredPosition.y);
 
                 Image bg = tab.targetGraphic as Image;
-                if (bg != null) bg.color = ClassRoleStyle.Color(role);
+                ButtonTint.Paint(bg, ClassRoleStyle.Color(role));
 
                 TMP_Text label = tab.GetComponentInChildren<TMP_Text>(true);
                 if (label != null) LocalizedText.Bind(label, () => $"{ClassRoleStyle.GroupName(role)} ({memberCount})");
@@ -895,7 +896,7 @@ public class UI_LobbyPanel : MonoBehaviour, IMenuScreen
         {
             if (_roleTabs[g] == null) continue;
             Color c = ClassRoleStyle.Color(_roleGroups[g]);
-            _roleTabs[g].color = g == group ? c : Color.Lerp(c, PanelColor, 0.7f);
+            ButtonTint.Paint(_roleTabs[g], g == group ? c : Color.Lerp(c, PanelColor, 0.7f));
         }
     }
 
@@ -920,7 +921,7 @@ public class UI_LobbyPanel : MonoBehaviour, IMenuScreen
         if (_classIcons != null)
             for (int i = 0; i < _classIcons.Length; i++)
                 if (_classIcons[i] != null)
-                    _classIcons[i].color = i == index ? Color.white : new Color(0.5f, 0.5f, 0.5f, 1f);
+                    ButtonTint.Paint(_classIcons[i], i == index ? Color.white : new Color(0.5f, 0.5f, 0.5f, 1f));
 
         if (PickerConfirm != null) PickerConfirm.interactable = cls != null;
     }
@@ -958,7 +959,7 @@ public class UI_LobbyPanel : MonoBehaviour, IMenuScreen
                 if (PickerConfirm != null) PickerConfirm.interactable = false;
                 if (_classIcons != null)
                     foreach (Image icon in _classIcons)
-                        if (icon != null) icon.color = Color.white;
+                        ButtonTint.Paint(icon, Color.white);
             }
         }
 
