@@ -73,6 +73,9 @@ public class MenuInput : MonoBehaviour
 
     public static MenuInput Instance { get; private set; }
 
+    // El asset original (el del jugador), para quien necesite su propia copia: el espectador.
+    public static InputActionAsset ActionsTemplate => Instance != null ? Instance.InputActions : null;
+
     // Las acciones de los menús (de la copia propia). Null si no hay MenuInput en la escena.
     public static InputAction Navigate { get; private set; }
     public static InputAction Submit   { get; private set; }
@@ -227,6 +230,9 @@ public class MenuInput : MonoBehaviour
         if (Pause == null)
             Debug.LogWarning("[MenuInput] El asset de input no tiene la acción UI/Pause: Start no abre la pausa.");
 
+        // Solo los dispositivos de esta ventana (LocalSeat): con varias ventanas en una PC,
+        // los menús de una no los mueve el control de otra.
+        LocalSeat.Register(_actions);
         ui.Enable();
     }
 
@@ -235,7 +241,7 @@ public class MenuInput : MonoBehaviour
         if (Instance != this) return;
         Instance = null;
         Navigate = Submit = Cancel = Pause = Backspace = Space = null;
-        if (_actions != null) { _actions.Disable(); Destroy(_actions); }
+        if (_actions != null) { LocalSeat.Unregister(_actions); _actions.Disable(); Destroy(_actions); }
     }
 
     private void Update()

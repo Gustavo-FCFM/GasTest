@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -12,7 +11,7 @@ using UnityEngine.InputSystem;
 //
 // Vive en el mismo prefab del jugador. Solo el DUEÑO local lo inicializa
 // (InitializeForOwner), que clona el asset —para que cada jugador tenga sus
-// propias acciones y, más adelante, su propio dispositivo emparejado— y
+// propias acciones y solo los dispositivos de SU ventana (ver LocalSeat)— y
 // habilita el mapa "Player". Las copias remotas/servidor no leen input, así
 // que no lo tocan.
 //
@@ -59,7 +58,7 @@ public class PlayerInputProvider : MonoBehaviour
     public InputAction Descend         { get; private set; }
     public bool DescendHeld => Descend != null
         ? Descend.IsPressed()
-        : Keyboard.current != null && Keyboard.current.leftCtrlKey.isPressed;
+        : Keyboard.current != null && LocalSeat.AllowsKeyboardMouse && Keyboard.current.leftCtrlKey.isPressed;
 
     // Girar lo que se pone (el Muro de fuego del Mago) mientras se apunta: la rueda del mouse y,
     // con control, la cruceta izquierda/derecha. Pueden faltar si el asset todavía no tiene las
@@ -78,16 +77,17 @@ public class PlayerInputProvider : MonoBehaviour
                 return (RotatePlacementRight.WasPressedThisFrame() ? 1 : 0) - (RotatePlacementLeft.WasPressedThisFrame() ? 1 : 0);
 
             int step = 0;
-            if (Mouse.current != null)
+            if (Mouse.current != null && LocalSeat.AllowsKeyboardMouse)
             {
                 float scroll = Mouse.current.scroll.ReadValue().y;
                 if (scroll > 0.01f) step++;
                 else if (scroll < -0.01f) step--;
             }
-            if (Gamepad.current != null)
+            Gamepad pad = LocalSeat.Pad;   // el de esta ventana (ver LocalSeat)
+            if (pad != null)
             {
-                if (Gamepad.current.dpad.right.wasPressedThisFrame) step++;
-                if (Gamepad.current.dpad.left.wasPressedThisFrame)  step--;
+                if (pad.dpad.right.wasPressedThisFrame) step++;
+                if (pad.dpad.left.wasPressedThisFrame)  step--;
             }
             return Mathf.Clamp(step, -1, 1);
         }
@@ -107,11 +107,11 @@ public class PlayerInputProvider : MonoBehaviour
     // consultan para no leer acciones a medio armar.
     public bool IsReady => _initialized;
 
-    // True si esta instancia juega con teclado/mouse (o sin restricción). Los
-    // menús lo usan para no procesar las teclas numéricas 1/2/3 en una instancia
-    // que en realidad es de mando (evita que el teclado compartido cruce menús
-    // entre instancias en multijugador local).
-    public bool UsesKeyboardMouse { get; private set; } = true;
+    // True si esta ventana juega con teclado/mouse (o sin restricción). Los
+    // menús lo usan para no procesar las teclas numéricas 1/2/3 en una ventana
+    // que en realidad es de control (evita que el teclado compartido cruce menús
+    // entre ventanas en multijugador local). Lo decide el puesto (LocalSeat).
+    public bool UsesKeyboardMouse => LocalSeat.AllowsKeyboardMouse;
 
     // Lecturas cómodas (con default seguro si todavía no se inicializó).
     public Vector2 MoveValue => _initialized ? Move.ReadValue<Vector2>() : Vector2.zero;
@@ -170,10 +170,10 @@ public class PlayerInputProvider : MonoBehaviour
         // necesario para jugar en varias instancias a la vez (multijugador local).
         Application.runInBackground = true;
 
-        // Multijugador local: restringir este jugador a un solo dispositivo
-        // (teclado+mouse o UN mando concreto), para que el mando no controle a
-        // todas las instancias a la vez. Solo aplica en el editor (MPPM).
-        ApplyLocalDeviceProfile();
+        // Varias ventanas en una PC: este jugador escucha solo los dispositivos de SU
+        // ventana (teclado y mouse, o su control), para que un control no mueva a todas.
+        // Lo decide el puesto de la ventana (LocalSeat: -pad / -kbm, o los tags de MPPM).
+        LocalSeat.Register(_assetInstance);
 
         _initialized = true;
         Local = this;
@@ -225,113 +225,6 @@ public class PlayerInputProvider : MonoBehaviour
         return v > 0 ? 1 : -1;
     }
 
-    // ============================================================
-    // SEPARACIÓN DE DISPOSITIVOS (multijugador local con MPPM)
-    //
-    // Cada instancia del editor (editor principal + "virtual players" de
-    // Multiplayer Play Mode) corre en su propio proceso, pero todas ven los
-    // mismos dispositivos físicos. Sin restringir, un mando manda su input a
-    // TODAS las instancias a la vez. Acá le decimos a ESTA instancia con qué
-    // dispositivo jugar, restringiendo el asset de acciones a esos dispositivos.
-    //
-    // Reglas (por tags de MPPM, que se configuran en la ventana Multiplayer Play
-    // Mode → Players; se le puede poner tag TAMBIÉN al editor principal):
-    //   - Tag "kbm"                    → teclado + mouse.
-    //   - Tag "pad0" / "pad1" / "pad2" → ese mando por índice (para varios mandos).
-    //   - Tag "pad"                    → primer mando.
-    //   - SIN tag                      → sin restricción (usa todos los dispositivos).
-    //
-    // Para jugar local sin cruce: al editor principal ponele el tag "kbm" y a
-    // cada virtual player "pad0", "pad1", etc. Si no ponés tags (ej. probando con
-    // una sola instancia), no se restringe nada y podés usar teclado o mando.
-    //
-    // En una BUILD no se compila nada de esto (#if UNITY_EDITOR): cada amigo usa
-    // sus propios dispositivos sin restricción.
-    // ============================================================
-    private void ApplyLocalDeviceProfile()
-    {
-#if UNITY_EDITOR
-        InputDevice[] profile = ResolveEditorDeviceProfile();
-        if (profile != null && profile.Length > 0)
-        {
-            _assetInstance.devices = profile;
-            UsesKeyboardMouse = System.Array.Exists(profile, d => d is Keyboard || d is Mouse);
-            Debug.Log($"[PlayerInputProvider] Instancia restringida a: " +
-                      $"{string.Join(", ", System.Array.ConvertAll(profile, d => d.displayName))}");
-        }
-#endif
-    }
-
-#if UNITY_EDITOR
-    // Decide con qué dispositivo(s) juega esta instancia, según los tags de MPPM.
-    // null = sin restricción (usa todos los dispositivos).
-    private InputDevice[] ResolveEditorDeviceProfile()
-    {
-        string[] tags = Unity.Multiplayer.Playmode.CurrentPlayer.ReadOnlyTags();
-
-        bool HasTag(string t)
-        {
-            if (tags == null) return false;
-            foreach (var tag in tags)
-                if (string.Equals(tag, t, System.StringComparison.OrdinalIgnoreCase)) return true;
-            return false;
-        }
-
-        if (HasTag("kbm"))  return KeyboardMouseDevices();
-        if (HasTag("pad0")) return OneGamepad(0);
-        if (HasTag("pad1")) return OneGamepad(1);
-        if (HasTag("pad2")) return OneGamepad(2);
-        if (HasTag("pad"))  return OneGamepad(0);
-
-        // Sin tag: no restringir. Sirve para probar con una sola instancia
-        // (teclado o mando indistinto). Para multijugador local, poné tags.
-        return null;
-    }
-
-    private InputDevice[] KeyboardMouseDevices()
-    {
-        var list = new List<InputDevice>();
-        if (Keyboard.current != null) list.Add(Keyboard.current);
-        if (Mouse.current != null)    list.Add(Mouse.current);
-        return list.ToArray();
-    }
-
-    private InputDevice[] OneGamepad(int index)
-    {
-        var pads = Gamepad.all;
-        if (index >= 0 && index < pads.Count) return new InputDevice[] { pads[index] };
-        Debug.LogWarning($"[PlayerInputProvider] No hay gamepad #{index} conectado — " +
-                         $"esta instancia no se restringió a ningún dispositivo.");
-        return null;
-    }
-
-    // Hace que, en el editor, el input llegue a la Game view aunque la ventana no
-    // tenga el foco. Se necesitan DOS ajustes juntos para jugar en varias
-    // instancias a la vez:
-    //
-    //   1) Play Mode Input Behavior = AllDeviceInputAlwaysGoesToGameView:
-    //      el input no se desvía al editor cuando la ventana pierde el foco.
-    //   2) Background Behavior = IgnoreFocus:
-    //      SIN esto, el #1 respeta el "background behavior" por defecto, que
-    //      DESACTIVA el mando al perder el foco (justo lo que NO queremos). Con
-    //      IgnoreFocus, los dispositivos siguen vivos aunque la ventana no esté
-    //      enfocada, así el 2º jugador puede usar el mando en su ventana de fondo.
-    //
-    // La separación por dispositivo (arriba) evita que un mismo mando controle
-    // todas las instancias.
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    private static void ConfigureEditorMultiInstanceInput()
-    {
-        var playMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
-        if (InputSystem.settings.editorInputBehaviorInPlayMode != playMode)
-            InputSystem.settings.editorInputBehaviorInPlayMode = playMode;
-
-        var background = InputSettings.BackgroundBehavior.IgnoreFocus;
-        if (InputSystem.settings.backgroundBehavior != background)
-            InputSystem.settings.backgroundBehavior = background;
-    }
-#endif
-
     // Libera el input al despawnear al dueño (lo llama PlayerController.OnStopClient).
     public void ShutdownOwner()
     {
@@ -344,6 +237,7 @@ public class PlayerInputProvider : MonoBehaviour
 
         if (_assetInstance != null)
         {
+            LocalSeat.Unregister(_assetInstance);
             Destroy(_assetInstance);
             _assetInstance = null;
         }

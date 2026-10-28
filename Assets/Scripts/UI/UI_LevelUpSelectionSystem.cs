@@ -82,9 +82,9 @@ public class LevelUpSelectionSystem : MonoBehaviour
 
         PlayerInputProvider input = PlayerInputProvider.Local;
 
-        // Teclas 1/2/3 solo en instancias de teclado (no cruzar el teclado
-        // compartido con la instancia de mando).
-        if (input == null || input.UsesKeyboardMouse)
+        // Teclas 1/2/3 solo en ventanas de teclado (no cruzar el teclado
+        // compartido con la ventana de control; ver LocalSeat).
+        if (LocalSeat.AllowsKeyboardMouse)
         {
             if      (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1)) { TrySelectSubclass(0); return; }
             else if (Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2)) { TrySelectSubclass(1); return; }

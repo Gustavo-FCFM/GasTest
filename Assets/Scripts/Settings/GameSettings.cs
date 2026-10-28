@@ -170,7 +170,9 @@ public static class GameSettings
     // y parpadea, no es gratis).
     public static void Apply()
     {
-        AudioListener.volume = _masterVolume;
+        // Una ventana abierta con -mute (LocalSeat) no suena, diga lo que diga Ajustes: en la PC
+        // del showcase suena una sola.
+        AudioListener.volume = LocalSeat.Muted ? 0f : _masterVolume;
 
         if (_qualityLevel >= 0 && _qualityLevel < QualitySettings.names.Length &&
             _qualityLevel != QualitySettings.GetQualityLevel())

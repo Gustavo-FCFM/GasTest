@@ -148,6 +148,13 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
 - **El cursor tiene un solo dueño: `UICursor`.** Ningún menú toca `Cursor.lockState` ni
   `PlayerInputProvider.SetUIMode` por su cuenta — los pide con `UICursor.Request(this)` y
   los suelta con `Release`. Si no, gana el último en cerrarse.
+- **Cada ventana tiene su PUESTO: `LocalSeat`** (desde el 28 de octubre de 2026, para el showcase: varias
+  ventanas en una PC, cada una con su jugador). Con `-pad` / `-kbm` / `-mute` en la build (o los tags de MPPM en
+  el editor) decide con qué dispositivos juega la ventana. **Toda copia del asset de input se anota con
+  `LocalSeat.Register(copia)`** (hoy: la del jugador, la de los menús y la del espectador), y lo que lee un
+  dispositivo por fuera del asset pregunta `LocalSeat.AllowsKeyboardMouse` o usa `LocalSeat.Pad`. **Nada de
+  `Gamepad.current`, `Keyboard.current`, `Mouse.current` ni `Input.GetKey` sueltos**: en la PC del showcase un
+  control movería las tres ventanas.
 - **La animación NO viaja por un `NetworkAnimator`: el jugador no tiene uno.** El que
   tenía estaba inerte (su campo Animator vacío y el Animator en un hijo, así que FishNet
   no lo encontraba y se apagaba solo, sin warning) y se quitó el 25 de septiembre de
@@ -324,6 +331,12 @@ partida) y las muestra como botones; la PC con la partida la anuncia. Por intern
 dirección de playit escrita a mano. **Con control, A sobre un campo de texto abre el teclado en
 pantalla** (`UI_OnScreenKeyboard`: X borra, Y espacio, Start acepta, B cancela); por eso los
 campos ya no se ponen a escribir solos al elegirlos (`shouldActivateOnSelect` apagado).
+
+**Tres ventanas en una PC** (etapa 3 del showcase): cada build de Windows sale con un `Showcase.bat` al lado
+(`MercShowcaseBuildBat`) que abre tres ventanas, una por monitor: la 1 con teclado y mouse (`-kbm`), la 2 y
+la 3 con `-pad -mute`. Una ventana `-pad` pide "Aprieta A en tu control" (`UI_PadClaim`) y se queda con el
+control que aprieta A mientras ella tiene el foco; desde ahí lo lee aunque no tenga el foco (el Input System
+está en Ignore Focus). Ver `LocalSeat`.
 
 ---
 

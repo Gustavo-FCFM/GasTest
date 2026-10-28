@@ -86,6 +86,12 @@ keyboard.space;Espacio;Space
 keyboard.backspace;Borrar;Delete
 keyboard.done;Listo;Done
 keyboard.hint;A: escribir · X: borrar · Y: espacio · Start: listo · B: cancelar;A: type · X: delete · Y: space · Start: done · B: cancel
+seat.press_a;Aprieta A en tu control;Press A on your controller
+seat.focused;Esta ventana va a jugar con el control que apriete A (en uno de PlayStation, X).;This window will play with the controller that presses A (X on a PlayStation one).
+seat.click;Haz clic en esta ventana y después aprieta A en tu control.;Click this window, then press A on your controller.
+seat.lost;Se desconectó el control. Conéctalo de nuevo, o aprieta A en otro con esta ventana al frente.;The controller was disconnected. Plug it back in, or press A on another one with this window in front.
+seat.ready;¡Listo!;Ready!
+seat.ready_hint;Este control juega en esta ventana.;This controller plays in this window.
 #
 # ---- Menú de pausa (ESC o Start) ----
 pause.title;Menú;Menu
@@ -197,10 +203,11 @@ glyph.rmb;Clic D;RMB
 glyph.space;Espacio;Space
 glyph.click;Clic;Click
 glyph.dpad_up;CRUCETA ARRIBA;D-PAD UP
+glyph.left_stick;Stick izq.;Left stick
 #
 # ---- Espectador ----
-spectator.hint_following;Clic: cambiar de jugador · {free}: cámara libre · {info}: info · {scoreboard}: marcador;Click: switch player · {free}: free camera · {info}: info · {scoreboard}: scoreboard
-spectator.hint_free;WASD + Espacio/Ctrl · Shift: rápido · Clic: seguir a un jugador · {scoreboard}: marcador;WASD + Space/Ctrl · Shift: fast · Click: follow a player · {scoreboard}: scoreboard
+spectator.hint_following;{next}/{prev}: cambiar de jugador · {free}: cámara libre · {info}: info · {scoreboard}: marcador;{next}/{prev}: switch player · {free}: free camera · {info}: info · {scoreboard}: scoreboard
+spectator.hint_free;{move}: moverse · {up}/{down}: subir/bajar · {fast}: rápido · {next}: seguir a un jugador · {scoreboard}: marcador;{move}: move · {up}/{down}: up/down · {fast}: fast · {next}: follow a player · {scoreboard}: scoreboard
 # ---- Compañeros (Maestro de bestias) ----
 companion.active_suffix; (activo); (active)
 companion.respawning;Vuelve en {seconds} s;Back in {seconds}s

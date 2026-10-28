@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 // ============================================================
@@ -15,12 +16,21 @@ using UnityEngine.UI;
 // que elegir en un menú, y funciona igual para el host y para cualquier cliente — cada
 // uno mira su propia copia.
 //
-// CÓMO SE USA:
-//   WASD           moverse · Espacio sube · Ctrl baja · Shift para ir rápido
-//   Clic izq/der   pasar al siguiente/anterior jugador (lo sigue por detrás)
-//   F              volver a la cámara libre
-//   H              mostrar u ocultar el nombre y la vida de quien mirás
-//   M              mostrar u ocultar el marcador
+// CÓMO SE USA (teclado y mouse · control):
+//   WASD · stick izquierdo             moverse
+//   Espacio / Ctrl · RT / LT           subir / bajar
+//   Shift · L3 (apretar el stick)      rápido
+//   Mouse · stick derecho              mirar
+//   Clic izq / der · RB / LB           pasar al siguiente / anterior jugador (lo sigue por detrás)
+//   F · Y                              volver a la cámara libre
+//   H · X                              mostrar u ocultar el nombre y la vida de quien mirás
+//   M · View (Select)                  mostrar u ocultar el marcador
+//
+// LAS TECLAS están en el asset de input (InputSystem_Actions ▸ mapa "Spectator"), no acá: se
+// cambian ahí, y lo que dice la ayuda de abajo sale de InputGlyphs (si se cambia un botón, va
+// en los dos). Con control desde el 28 de octubre de 2026 (etapa 3 del showcase): antes era
+// solo mouse y teclado del input viejo. Lee su PROPIA copia del asset, restringida a los
+// dispositivos de la ventana (LocalSeat), así en la PC del showcase cada ventana mira con lo suyo.
 //
 // POR QUÉ NO ES UN NetworkBehaviour: no manda ni recibe nada. Un espectador no existe
 // para el servidor más allá de su fila en la sala — todo lo que hace es mirar objetos
@@ -62,8 +72,12 @@ public class SpectatorCamera : MonoBehaviour
     [Tooltip("Cuánto multiplica la velocidad el Shift.")]
     [Label("Rápido (×)")]
     public float FastMultiplier  = 3f;
+    [Tooltip("Mirar con el mouse.")]
     [Label("Sensibilidad (×)")]
     public float LookSensitivity = 2.4f;
+    [Tooltip("Mirar con el stick derecho: grados por segundo con el stick hasta el fondo (lo mismo que la cámara del jugador).")]
+    [Label("Giro con control (°/s)")]
+    public float GamepadLookSpeed = 120f;
 
     [Header("Dónde arranca")]
     [Tooltip("Altura sobre el centro de la arena. Pensada para ver el centro entero de " +
@@ -83,13 +97,11 @@ public class SpectatorCamera : MonoBehaviour
     [Label("Rapidez al seguir (más = más rápido)")]
     public float FollowLerp = 8f;
 
-    [Header("Teclas")]
-    [Label("Tecla: cámara libre")]
-    public KeyCode FreeCamKey        = KeyCode.F;
-    [Label("Tecla: UI del jugador")]
-    public KeyCode TogglePlayerUIKey = KeyCode.H;
-    [Label("Tecla: marcador")]
-    public KeyCode ScoreboardKey     = KeyCode.M;
+    // --- input (copia propia del asset, mapa "Spectator") ---
+    private InputActionAsset _actions;
+    private InputActionMap   _map;
+    private InputAction _move, _look, _up, _down, _fast, _next, _previous, _freeCam, _toggleInfo, _scoreboard;
+    private bool _warnedInput;
 
     // --- estado ---
     private Camera        _camera;
@@ -155,18 +167,19 @@ public class SpectatorCamera : MonoBehaviour
 
         MoveToOverview();
         BuildUI();
+        if (EnsureInput()) _map.Enable();
 
         // El cursor va TRABADO: esto se mira con el mouse, como jugando. Se pide por
-        // UICursor y no a mano — con ESC abrís el recuadro de red y ahí sí lo necesitás
-        // suelto, y quien manda sobre eso es UICursor.
+        // UICursor y no a mano — con ESC abrís la pausa y ahí sí lo necesitás suelto, y
+        // quien manda sobre eso es UICursor (que en una ventana de control no lo traba nunca).
         UICursor.Apply();
 
-        Debug.Log("[Espectador] Cámara libre. WASD para moverte, clic para seguir a un jugador, " +
-                  $"{FreeCamKey} para volver a libre.");
+        Debug.Log("[Espectador] Cámara libre: la ayuda de abajo a la derecha dice cómo moverte y seguir a un jugador.");
     }
 
     private void Exit()
     {
+        _map?.Disable();
         _following = null;
         if (UiCanvas != null) UiCanvas.gameObject.SetActive(false);
 
@@ -217,36 +230,89 @@ public class SpectatorCamera : MonoBehaviour
     // INPUT
     // =========================================================
 
-    private void ReadInput()
+    // La copia propia del asset de input, solo con el mapa "Spectator" y los dispositivos de
+    // esta ventana. El asset es el mismo que usan el jugador y los menús (MenuInput lo tiene).
+    private bool EnsureInput()
     {
-        // Con un menú abierto (el recuadro de red con ESC) el mouse es del menú: mover la
-        // cámara mientras intentás apretar Desconectar es exactamente lo que molesta.
-        bool menuOpen = UICursor.Free;
+        if (_actions != null) return true;
 
-        if (!menuOpen)
+        InputActionAsset template = MenuInput.ActionsTemplate;
+        InputActionMap map = template != null ? template.FindActionMap("Spectator", false) : null;
+        if (map == null)
         {
-            if (Input.GetMouseButtonDown(0)) CycleTarget(+1);
-            if (Input.GetMouseButtonDown(1)) CycleTarget(-1);
+            if (!_warnedInput)
+            {
+                _warnedInput = true;
+                Debug.LogWarning("[Espectador] No encontré el asset de input con el mapa \"Spectator\" (lo trae MenuInput, " +
+                                 "en el prefab de menús): la cámara no se va a poder mover.");
+            }
+            return false;
         }
 
-        if (Input.GetKeyDown(FreeCamKey)) _following = null;
+        _actions    = Instantiate(template);
+        _map        = _actions.FindActionMap("Spectator", true);
+        _move       = _map.FindAction("Move", true);
+        _look       = _map.FindAction("Look", true);
+        _up         = _map.FindAction("Up", true);
+        _down       = _map.FindAction("Down", true);
+        _fast       = _map.FindAction("Fast", true);
+        _next       = _map.FindAction("Next", true);
+        _previous   = _map.FindAction("Previous", true);
+        _freeCam    = _map.FindAction("FreeCam", true);
+        _toggleInfo = _map.FindAction("ToggleInfo", true);
+        _scoreboard = _map.FindAction("Scoreboard", true);
 
-        if (Input.GetKeyDown(TogglePlayerUIKey)) _showPlayerUI = !_showPlayerUI;
+        LocalSeat.Register(_actions);
+        return true;
+    }
 
-        if (Input.GetKeyDown(ScoreboardKey))
+    private void OnDestroy()
+    {
+        if (_actions == null) return;
+        LocalSeat.Unregister(_actions);
+        _actions.Disable();
+        Destroy(_actions);
+    }
+
+    private void ReadInput()
+    {
+        // Con un menú abierto (la pausa) el input es del menú: mover la cámara mientras
+        // intentás apretar Salir es exactamente lo que molesta.
+        if (UICursor.Free || _map == null) return;
+
+        if (_next.WasPressedThisFrame())     CycleTarget(+1);
+        if (_previous.WasPressedThisFrame()) CycleTarget(-1);
+        if (_freeCam.WasPressedThisFrame())  _following = null;
+
+        if (_toggleInfo.WasPressedThisFrame()) _showPlayerUI = !_showPlayerUI;
+
+        if (_scoreboard.WasPressedThisFrame())
         {
             _showScoreboard = !_showScoreboard;
             UI_MercenariesHUD.ScoreboardHiddenByViewer = !_showScoreboard;
         }
 
-        if (menuOpen || _following != null) return;
+        if (_following != null) return;
 
-        // Misma sensibilidad e inversión que la cámara del jugador (panel de Ajustes).
-        float sens  = LookSensitivity * GameSettings.MouseSensitivity;
-        float ySign = GameSettings.InvertY ? -1f : 1f;
-        _yaw   += Input.GetAxisRaw("Mouse X") * sens;
-        _pitch -= Input.GetAxisRaw("Mouse Y") * sens * ySign;
-        _pitch  = Mathf.Clamp(_pitch, -89f, 89f);
+        // Misma sensibilidad e inversión que la cámara del jugador (panel de Ajustes). El mouse
+        // manda cuánto se movió en el frame (se suma directo; × 0.1 es la escala del viejo eje
+        // "Mouse X"); el stick, cuánto está inclinado (grados por segundo).
+        Vector2 look  = _look.ReadValue<Vector2>();
+        float   mult  = GameSettings.MouseSensitivity;
+        float   ySign = GameSettings.InvertY ? -1f : 1f;
+        bool fromPad = _look.activeControl != null && _look.activeControl.device is Gamepad;
+
+        if (fromPad)
+        {
+            _yaw   += look.x * GamepadLookSpeed * mult * Time.deltaTime;
+            _pitch -= look.y * GamepadLookSpeed * mult * ySign * Time.deltaTime;
+        }
+        else
+        {
+            _yaw   += look.x * 0.1f * LookSensitivity * mult;
+            _pitch -= look.y * 0.1f * LookSensitivity * mult * ySign;
+        }
+        _pitch = Mathf.Clamp(_pitch, -89f, 89f);
     }
 
     // Pasa al siguiente (o anterior) jugador vivo. La lista se rearma en cada salto: los
@@ -297,22 +363,21 @@ public class SpectatorCamera : MonoBehaviour
 
         Transform t = _camera.transform;
         t.rotation = Quaternion.Euler(_pitch, _yaw, 0f);
+        if (UICursor.Free || _map == null) return;   // con la pausa abierta, quieta
 
-        Vector3 dir = Vector3.zero;
-        if (Input.GetKey(KeyCode.W)) dir += t.forward;
-        if (Input.GetKey(KeyCode.S)) dir -= t.forward;
-        if (Input.GetKey(KeyCode.D)) dir += t.right;
-        if (Input.GetKey(KeyCode.A)) dir -= t.right;
+        Vector2 move = _move.ReadValue<Vector2>();
+        Vector3 dir  = t.forward * move.y + t.right * move.x;
 
         // Subir y bajar en el eje del MUNDO, no en el de la cámara: mirando al piso,
         // "arriba" tiene que seguir siendo arriba.
-        if (Input.GetKey(KeyCode.Space))       dir += Vector3.up;
-        if (Input.GetKey(KeyCode.LeftControl)) dir -= Vector3.up;
+        if (_up.IsPressed())   dir += Vector3.up;
+        if (_down.IsPressed()) dir -= Vector3.up;
 
         if (dir.sqrMagnitude < 0.001f) return;
 
-        float speed = MoveSpeed * (Input.GetKey(KeyCode.LeftShift) ? FastMultiplier : 1f);
-        t.position += dir.normalized * speed * Time.deltaTime;
+        // Hasta 1, sin normalizar: el stick a medias va a media velocidad.
+        float speed = MoveSpeed * (_fast.IsPressed() ? FastMultiplier : 1f);
+        t.position += Vector3.ClampMagnitude(dir, 1f) * speed * Time.deltaTime;
     }
 
     // Cámara de hombro sobre el jugador seguido. Va suavizada porque el objetivo puede
@@ -352,9 +417,21 @@ public class SpectatorCamera : MonoBehaviour
     {
         if (HintText != null)
         {
+            // Los botones, del dispositivo de esta ventana (InputGlyphs).
             HintText.text = _following != null
-                ? Loc.T("spectator.hint_following", ("free", FreeCamKey), ("info", TogglePlayerUIKey), ("scoreboard", ScoreboardKey))
-                : Loc.T("spectator.hint_free", ("scoreboard", ScoreboardKey));
+                ? Loc.T("spectator.hint_following",
+                        ("next", InputGlyphs.Spectator(ESpectatorInput.Next)),
+                        ("prev", InputGlyphs.Spectator(ESpectatorInput.Previous)),
+                        ("free", InputGlyphs.Spectator(ESpectatorInput.FreeCam)),
+                        ("info", InputGlyphs.Spectator(ESpectatorInput.Info)),
+                        ("scoreboard", InputGlyphs.Spectator(ESpectatorInput.Scoreboard)))
+                : Loc.T("spectator.hint_free",
+                        ("move", InputGlyphs.Spectator(ESpectatorInput.Move)),
+                        ("up", InputGlyphs.Spectator(ESpectatorInput.Up)),
+                        ("down", InputGlyphs.Spectator(ESpectatorInput.Down)),
+                        ("fast", InputGlyphs.Spectator(ESpectatorInput.Fast)),
+                        ("next", InputGlyphs.Spectator(ESpectatorInput.Next)),
+                        ("scoreboard", InputGlyphs.Spectator(ESpectatorInput.Scoreboard)));
         }
 
         bool showPanel = _showPlayerUI && _following != null;

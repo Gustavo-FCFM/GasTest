@@ -52,7 +52,8 @@ pruebas rápidas de clases.
   clases, el `+` para bots y el Start del host. Ver la sección 2.
 - **Bots** (`BotController`): jugadores de verdad con rol por clase base, que usan el kit
   completo, van por el Objetivo y respetan las salas seguras. **Cámara de espectador**
-  (`Player/SpectatorCamera`) para mirar la partida sin jugar.
+  (`Player/SpectatorCamera`) para mirar la partida sin jugar, con mouse y teclado o con control
+  (mapa "Spectator" del asset de input).
 - **Menú principal y Ajustes**: un panel sobre la arena con la cámara de la sala girando
   con blur; sensibilidad, volúmenes, pantalla. Volver al menú y volver a hostear en el
   mismo Play anda (los managers reinician su sesión en `OnStartServer`).

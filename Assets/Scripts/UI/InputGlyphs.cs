@@ -31,7 +31,10 @@ public enum EInputScheme
 
 public static class InputGlyphs
 {
-    public static EInputScheme Scheme => GameSettings.InputScheme;
+    // Lo elegido en Ajustes, salvo que la ventana tenga un puesto (LocalSeat): con varias
+    // ventanas en una PC los Ajustes son los mismos para todas, y la de control tiene que
+    // dibujar RB aunque la de teclado dibuje Q.
+    public static EInputScheme Scheme => LocalSeat.Scheme ?? GameSettings.InputScheme;
 
     // True si hay que mostrar cosas que solo existen en teclado, como el número que
     // elige una tarjeta de clase (1/2/3). Con control esas teclas siguen funcionando,
@@ -154,4 +157,70 @@ public static class InputGlyphs
             }
         }
     }
+
+    // La cámara de espectador (mapa "Spectator" del asset de input).
+    public static string Spectator(ESpectatorInput input)
+    {
+        switch (Scheme)
+        {
+            case EInputScheme.Xbox:
+                switch (input)
+                {
+                    case ESpectatorInput.Move:       return Loc.T("glyph.left_stick");
+                    case ESpectatorInput.Up:         return "RT";
+                    case ESpectatorInput.Down:       return "LT";
+                    case ESpectatorInput.Fast:       return "L3";     // leftStickPress
+                    case ESpectatorInput.Next:       return "RB";
+                    case ESpectatorInput.Previous:   return "LB";
+                    case ESpectatorInput.FreeCam:    return "Y";      // buttonNorth
+                    case ESpectatorInput.Info:       return "X";      // buttonWest
+                    case ESpectatorInput.Scoreboard: return "VIEW";   // select
+                    default:                         return "";
+                }
+
+            case EInputScheme.PlayStation:
+                switch (input)
+                {
+                    case ESpectatorInput.Move:       return Loc.T("glyph.left_stick");
+                    case ESpectatorInput.Up:         return "R2";
+                    case ESpectatorInput.Down:       return "L2";
+                    case ESpectatorInput.Fast:       return "L3";
+                    case ESpectatorInput.Next:       return "R1";
+                    case ESpectatorInput.Previous:   return "L1";
+                    case ESpectatorInput.FreeCam:    return "TRI";    // Triángulo
+                    case ESpectatorInput.Info:       return "CUA";    // Cuadrado
+                    case ESpectatorInput.Scoreboard: return "CREATE";
+                    default:                         return "";
+                }
+
+            default:
+                switch (input)
+                {
+                    case ESpectatorInput.Move:       return "WASD";
+                    case ESpectatorInput.Up:         return Loc.T("glyph.space");
+                    case ESpectatorInput.Down:       return "Ctrl";
+                    case ESpectatorInput.Fast:       return "Shift";
+                    case ESpectatorInput.Next:       return Loc.T("glyph.lmb");
+                    case ESpectatorInput.Previous:   return Loc.T("glyph.rmb");
+                    case ESpectatorInput.FreeCam:    return "F";
+                    case ESpectatorInput.Info:       return "H";
+                    case ESpectatorInput.Scoreboard: return "M";
+                    default:                         return "";
+                }
+        }
+    }
+}
+
+// Las acciones de la cámara de espectador que se muestran en su ayuda.
+public enum ESpectatorInput
+{
+    Move,
+    Up,
+    Down,
+    Fast,
+    Next,
+    Previous,
+    FreeCam,
+    Info,
+    Scoreboard,
 }

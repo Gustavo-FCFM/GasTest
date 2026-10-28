@@ -339,9 +339,9 @@ public class UI_ClassMenu : MonoBehaviour
 
         PlayerInputProvider input = PlayerInputProvider.Local;
 
-        // Teclas 1..9 — solo si esta instancia usa teclado, para no cruzar el
-        // teclado compartido con la instancia de mando (MPPM).
-        if (input == null || input.UsesKeyboardMouse)
+        // Teclas 1..9 — solo si esta ventana usa teclado, para no cruzar el
+        // teclado compartido con la ventana de control (LocalSeat).
+        if (LocalSeat.AllowsKeyboardMouse)
         {
             for (int i = 0; i < _classes.Count && i < 9; i++)
             {

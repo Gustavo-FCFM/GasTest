@@ -308,7 +308,9 @@ public class UI_RadialMenu : MonoBehaviour
         float scale = _canvas != null && _canvas.rootCanvas.scaleFactor > 0f ? _canvas.rootCanvas.scaleFactor : 1f;
         Vector2 dir;
         PlayerInputProvider input = PlayerInputProvider.Local;
-        if (input != null && input.MoveIsGamepad)
+        // Una ventana de control (LocalSeat) apunta SIEMPRE con el stick: el mouse que anda
+        // por ahí es el de la ventana de teclado.
+        if (input != null && (input.MoveIsGamepad || !LocalSeat.AllowsKeyboardMouse))
             dir = input.MoveValue * (_outer * scale);
         else
         {

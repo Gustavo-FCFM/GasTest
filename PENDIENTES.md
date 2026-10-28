@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 26 de octubre de 2026
+# Pendientes — actualizado el 28 de octubre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -13,8 +13,8 @@ del log son todos de packs importados).
    noviembre". **Etapa 1** (los menús con control, la conexión en el menú y la pausa) y **etapa 2** (la lista
    de partidas en la red, el teclado en pantalla y los botones con el elegido más oscuro): HECHAS, falta
    probar (las herramientas ya se corrieron y se borraron). Documentos al día (26 de octubre:
-   `Red_Arquitectura.docx`, el LEEME del modo y CLAUDE.md). **Sigue la etapa 3 (tres ventanas en una PC, cada una con su control): se hace en la PC de Gustavo,
-   con sus controles. El plan y lo que hay que decidir con él antes de armarla, en "Etapas" ▸ 3.**
+   `Red_Arquitectura.docx`, el LEEME del modo y CLAUDE.md). **Etapa 3 (tres ventanas en una PC, cada una con su control): HECHA (28 de octubre), falta correr
+   la herramienta del cartel "Aprieta A", hacer una build y probar con los controles: ver "Etapas" ▸ 3.**
 1. **Subclases del Mago: PLAN en curso (22 de octubre)** — ver "★ Subclases del Mago"; plan CERRADO;
    **etapa 1 (Escuela de evocación + cambios al kit base): HECHA Y PROBADA ✅**; **etapa 2 (Escuela de abjuración): HECHA Y PROBADA ✅**; **etapa 3 (Filo danzante): HECHA Y PROBADA ✅**. Documentos al día (23 de octubre). Orden: Evocación, Abjuración, Filo danzante.
    **Misiles de a 3 (22 de octubre): HECHO Y PROBADO ✅** (se quedó en ráfaga y no en combo: un solo gesto, 0.2 s fijos). Cada ataque es una RÁFAGA de 3 misiles, 0.2 s entre
@@ -254,64 +254,65 @@ gris de la esquina, dibujado aparte y sin control); y poder jugar con 3 instanci
          (queda como estaba). Al cerrarse, la selección vuelve al campo.
    - [ ] En la sala, A sobre tu nombre abre el teclado ("Tu nombre"); al aceptar, el nombre cambia para todos.
    - [ ] Con mouse y teclado: clic en el campo y se escribe como antes; Enter conecta.
-3. **Tres ventanas en una PC — PLAN, para hacerla en la PC de Gustavo (26 de octubre; aún no se arma).**
-   Se hace allá porque hacen falta los controles (2 o 3) y los monitores para probarla. **Antes de armar
-   nada, confirmar con Gustavo lo de "Por decidir" (abajo).**
-   Lo que se quiere: en la PC del showcase juegan varias personas a la vez, cada una en su monitor con su
-   ventana del juego (una build), cada ventana con SU control, o una con teclado y mouse. Hoy, con dos
-   ventanas en la misma PC, un mismo control mueve las dos.
-   **Lo que ya existe y sirve de base:**
-   - `PlayerInputProvider.ApplyLocalDeviceProfile` ya restringe el input de una ventana a un dispositivo
-     (`_assetInstance.devices = …`), pero SOLO en el editor: lee los tags de MPPM (`kbm`, `pad0`/`pad1`/`pad2`)
-     y está entre `#if UNITY_EDITOR`. En una build no se restringe nada.
-   - `Assets/InputSystem.inputsettings.asset` ya tiene Background Behavior = IgnoreFocus (`m_BackgroundBehavior:
-     2`) y el proyecto tiene Run In Background prendido: una ventana sin foco sigue corriendo y leyendo.
-     Confirmar en la build que los controles siguen llegando a la ventana de fondo.
-   - Los menús leen de su PROPIA copia del asset (`MenuInput`, y de ahí el EventSystem), aparte de la del
-     jugador: hay que restringir las dos.
-   **Cómo se haría (propuesta):**
-   - Argumentos al abrir la build: `-pad` (esta ventana juega con un control) o `-kbm` (teclado y mouse). Sin
-     nada, como hoy: todos los dispositivos.
-   - Con `-pad`, al arrancar un cartel dice "Aprieta A en tu control" y la ventana se queda con el control
-     que apriete A mientras ELLA tiene el foco (clic en la ventana y A). Desde ahí ignora todos los demás
-     dispositivos (también teclado y mouse), aunque pierda el foco. Si el control se desconecta, vuelve a
-     pedir "Aprieta A".
-   - Una pieza nueva (por ejemplo `LocalDeviceClaim`) guarda el dispositivo de esta ventana y lo aplica al
-     asset del jugador (`PlayerInputProvider`) y al de los menús (`MenuInput`). En el editor siguen mandando
-     los tags de MPPM de hoy.
-   - Las lecturas que se saltean el asset también tienen que respetar el dispositivo de la ventana. Hoy leen
-     el input viejo (`Input.GetKey`, `GetMouseButton`, `GetAxis`) o `Mouse.current` / `Keyboard.current`:
-     `SpectatorCamera` (WASD, mouse, Tab y teclas), `UI_ClassMenu`, `UI_LevelUpSelectionSystem`,
-     `UI_RadialMenu`, `UI_SettingsPanel`, `UI_MainMenu` (solo sin `MenuInput`) y los fallbacks de
-     `PlayerInputProvider`. Buscarlas de nuevo con `grep -rn "Input\.Get\|\.current" Assets/Scripts`.
-   - **El espectador con control:** hoy `SpectatorCamera` se maneja solo con mouse y teclado. Pasarlo a
-     acciones del asset: mirar con el stick derecho, moverse con el izquierdo, cambiar de jugador con RB/LB,
-     cámara libre y marcador con otros botones.
-   - **El cursor:** una ventana `-pad` no captura ni esconde el cursor (`UICursor`, `ThirdPersonOrbitCam`): si
-     no, le roba el mouse a la de teclado y mouse.
-   - **`-mute`:** esa ventana sin sonido (`AudioListener.volume = 0`, por encima del volumen de Ajustes), para
-     que suene una sola.
-   - **Cada ventana en su monitor:** Unity ya trae `-monitor N` (1, 2, 3) y `-screen-fullscreen 1`. Un
-     `Showcase.bat` junto a la build que abra las tres, por ejemplo:
-         start "" Mercenaries.exe -kbm -monitor 1
-         start "" Mercenaries.exe -pad -monitor 2 -mute
-         start "" Mercenaries.exe -pad -monitor 3 -mute
-   **Por decidir con Gustavo antes de armarla:**
-   - ¿El control se elige con "A mientras la ventana tiene el foco" (propuesta), o por número (`-pad 1`,
-     `-pad 2`)? El número depende del orden en que Windows conectó los controles y cambia al desenchufarlos;
-     la A no.
-   - ¿Hace falta la ventana de teclado y mouse en el showcase, o las tres van con control?
-   - ¿El espectador con control entra en esta etapa, o alcanza con que cada jugador tenga su control?
-   **Probar (en la PC de Gustavo, con 2 o 3 controles):**
-   - [ ] Las tres ventanas con el `.bat`: cada una en su monitor; las `-pad` piden "Aprieta A".
-   - [ ] Cada control mueve solo su ventana (menús, sala y partida), aunque la ventana no tenga el foco. El
-         teclado y el mouse, solo la suya.
-   - [ ] Una crea la partida; las otras la eligen de la lista con su control y entran. Una partida entera.
-   - [ ] Desconectar y reconectar un control: la ventana vuelve a pedir "Aprieta A" y lo retoma.
-   - [ ] Morir y quedar de espectador: se maneja con el control.
-   - [ ] Suena una sola ventana, y el cursor no se lo pelean las ventanas.
+3. **Tres ventanas en una PC — HECHA, falta correr la herramienta y probar (28 de octubre).**
+   Lo que se quería: en la PC del showcase juegan varias personas a la vez, cada una en su monitor con su
+   ventana del juego (una build), cada ventana con SU control, o una con teclado y mouse. Antes, con dos
+   ventanas en la misma PC, un mismo control movía las dos.
+   **Decidido con Gustavo (28 de octubre):** el control se toma apretando A (no por número: el número cambia
+   al desenchufar); en el showcase va una ventana de teclado y mouse y las demás con control; el espectador
+   con control entra en esta etapa.
+   **Cómo quedó:**
+   - **`LocalSeat` (el puesto de la ventana)** lee los argumentos de la build: `-pad` (un control), `-kbm`
+     (teclado y mouse), `-mute` (sin sonido); sin nada, todos los dispositivos, como antes. En el editor
+     lee los tags de MPPM: `kbm`, `pad` (pide A), `pad0`/`pad1`/`pad2` (ese control por número) y `mute`
+     (lo que antes hacía `PlayerInputProvider`, solo en el editor, pasó acá).
+   - Con `-pad`, la ventana muestra **"Aprieta A en tu control"** (`UI_PadClaim`, en `Menus_UI ▸ PadClaim`)
+     y se queda con el control que aprieta A mientras ELLA tiene el foco; las de atrás también ven esa A,
+     pero no la toman. Después dice "¡Listo!" un momento. Si el control se desconecta, vuelve el cartel;
+     si reconectan el mismo, lo retoma solo.
+   - Las tres copias del asset de input (jugador, menús, espectador) se anotan en `LocalSeat` y escuchan
+     solo los dispositivos de su ventana. Esperando la A, ninguno: la ventana no responde a nada.
+   - Lo que leía dispositivos por fuera del asset ahora pregunta al puesto: las teclas 1/2/3 de los menús
+     de clase y subclase, la rueda (en una ventana de control apunta siempre con el stick) y los atajos del
+     giro y del bajar.
+   - **El cursor:** una ventana de control nunca lo atrapa (`UICursor`); si no, al hacerle clic para tomar
+     el control le robaba el mouse a la de teclado.
+   - **Los botones que se dibujan** (`InputGlyphs`) siguen al puesto: la ventana de control muestra RB y la
+     de teclado Q, aunque las tres compartan los Ajustes (son los mismos PlayerPrefs). La opción de control
+     de Ajustes no cambia nada en una ventana con puesto.
+   - **`-mute`:** `GameSettings` pone el volumen en 0 en esa ventana, diga lo que diga Ajustes.
+   - **El espectador con control** (`SpectatorCamera`): ya no usa el input viejo, usa el mapa nuevo
+     "Spectator" del asset (InputSystem_Actions): stick izquierdo para moverse, el derecho para mirar,
+     RT/LT subir y bajar, L3 rápido, RB/LB siguiente y anterior jugador, Y cámara libre, X la info, View el
+     marcador (con teclado, lo de siempre: WASD, Espacio/Ctrl, Shift, clics, F, H, M). Las teclas están en
+     el asset, no en el inspector (se fueron los campos "Tecla: …"); la ayuda de abajo sale de
+     `InputGlyphs`. Nuevo campo "Giro con control (°/s)", 120 como la cámara del jugador.
+   - **`Showcase.bat`:** cada build de Windows lo deja al lado del .exe (`MercShowcaseBuildBat`, corre solo).
+     Abre tres ventanas, una por monitor (`-monitor 1/2/3`): la 1 con `-kbm` (es la que suena) y la 2 y la 3
+     con `-pad -mute`. Cada una deja su log al lado (`Showcase_1.log`, …).
+   **Antes de probar:** correr `Mercenarios ▸ Una vez ▸ Cartel Aprieta A (showcase 3)` (solo el prefab de
+   menús: una vez alcanza). **Corrida y borrada (28 de octubre).** Y hacer una build nueva (para el .bat y lo demás).
+   **En el showcase, el orden:** abrir `Showcase.bat`; clic en la ventana 2 y A en su control; clic en la 3 y
+   A en el otro; **al final, clic en la ventana 1** (la de teclado: el teclado solo le llega a la ventana que
+   tiene el foco). La pantalla completa la ponen los Ajustes (son los mismos para las tres).
+   **Probar (con 2 controles):**
+   - [ ] En el editor, sin tags: todo como antes (teclado y control a la vez).
+   - [ ] Las tres ventanas con el `.bat`: cada una en su monitor; la 2 y la 3 muestran "Aprieta A en tu
+         control" (sin el foco, "Haz clic en esta ventana…"). Al apretar A: "¡Listo!" y se va.
+   - [ ] Cada control mueve solo su ventana (menús, sala, teclado en pantalla y partida), aunque la ventana
+         no tenga el foco. El teclado y el mouse, solo la 1. Ninguna ventana de control atrapa el mouse.
+   - [ ] La ventana 1 crea la partida; la 2 y la 3 la eligen de la lista con su control y entran. Una
+         partida entera.
+   - [ ] El HUD de las ventanas de control muestra RB/LB/RT…; el de la 1, Q/E/R.
+   - [ ] Solo suena la ventana 1.
+   - [ ] Desconectar un control: su ventana vuelve a pedir A ("Se desconectó el control…"); al reconectarlo,
+         lo retoma sola.
+   - [ ] Entrar de espectador en una ventana de control: se mueve, mira, sube/baja y sigue jugadores con
+         el control, y la ayuda muestra los botones del control. En la de teclado, lo de siempre.
+   - [ ] En la rueda de una ventana de control, se apunta con el stick aunque el mouse ande por ahí.
 4. **Documentos** (arquitectura de red, guía, CLAUDE.md, el LEEME del modo). Lo de las etapas 1 y 2 ya está en
-   `Red_Arquitectura.docx`, el LEEME y CLAUDE.md (26 de octubre); falta lo de la etapa 3.
+   `Red_Arquitectura.docx`, el LEEME y CLAUDE.md (26 de octubre). La etapa 3 también (28 de octubre: CLAUDE.md, el LEEME
+   y "Cómo probar" de `Red_Arquitectura.docx`).
 
 ---
 

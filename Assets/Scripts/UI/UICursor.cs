@@ -80,8 +80,12 @@ public static class UICursor
         _inputBlockers.RemoveWhere(o => o == null);
 
         Free = _cursorHolders.Count > 0;
-        Cursor.lockState = Free ? CursorLockMode.None : CursorLockMode.Locked;
-        Cursor.visible   = Free;
+
+        // Una ventana de CONTROL (LocalSeat, -pad) nunca atrapa el mouse: es de la ventana
+        // de teclado y mouse. Si no, al hacerle clic para tomar el control se lo robaba.
+        bool trap = !Free && LocalSeat.AllowsKeyboardMouse;
+        Cursor.lockState = trap ? CursorLockMode.Locked : CursorLockMode.None;
+        Cursor.visible   = !trap;
 
         // Local es null en la sala (todavía no hay personaje): no pasa nada, el jugador
         // llama a Apply() al spawnear y ahí se acomoda.
