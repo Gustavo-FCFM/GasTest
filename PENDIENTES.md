@@ -310,6 +310,14 @@ gris de la esquina, dibujado aparte y sin control); y poder jugar con 3 instanci
    - [ ] Entrar de espectador en una ventana de control: se mueve, mira, sube/baja y sigue jugadores con
          el control, y la ayuda muestra los botones del control. En la de teclado, lo de siempre.
    - [ ] En la rueda de una ventana de control, se apunta con el stick aunque el mouse ande por ahí.
+   **Probar las habilidades con control (28 de octubre, pedido de Gustavo).** En el código ya andan (ninguna lee
+   teclado o mouse directo: todo va por las acciones del asset), pero nadie lo jugó entero con control:
+   - [ ] La rueda de cada clase que la tenga: se abre con su botón, el stick elige, el centro cancela, al soltar
+         sale lo elegido; mientras está abierta el personaje no camina.
+   - [ ] Una habilidad de mantener (canalizar o apuntar un lanzamiento) con su gatillo o botón.
+   - [ ] Una que se pone en el piso (el Muro de fuego), girándola con la cruceta izquierda/derecha.
+   - [ ] Cambiar de clase (cruceta arriba) y elegir subclase (View): el stick recorre las tarjetas y A confirma.
+   - [ ] El HUD muestra los botones del control (RT, LT, RB, LB, Y, B).
 4. **Documentos** (arquitectura de red, guía, CLAUDE.md, el LEEME del modo). Lo de las etapas 1 y 2 ya está en
    `Red_Arquitectura.docx`, el LEEME y CLAUDE.md (26 de octubre). La etapa 3 también (28 de octubre: CLAUDE.md, el LEEME
    y "Cómo probar" de `Red_Arquitectura.docx`).
