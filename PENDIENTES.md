@@ -115,8 +115,16 @@ del log son todos de packs importados).
 6. **Después del Mago:** las animaciones raras (sección 5, con la pose del bloqueo del Monje) y
    el sonido (faltan los clips).
 7. **Íconos del Mago: PUESTOS (28 de octubre).** Gustavo los dejó en `Art/Icons/Abilities/Wizard` y `Classes`; ya están
-   en sus GA, GE, opciones de los libros y las cuatro clases. Siguen con uno prestado: los Cortes, el Corte y la
-   Danza de filos ("Slash attack"), el Poder del hechizo (la Q) y la opción "Cortes" del libro del Filo.
+   en sus GA, GE, opciones de los libros y las cuatro clases. La Q (Poder del hechizo) ya tiene el suyo. Siguen
+   con uno prestado: los Cortes, el Corte y la Danza de filos ("Slash attack") y la opción "Cortes" del libro del Filo.
+   **Encargo de íconos ACTUALIZADO (28 de octubre):** `DesignDocuments/Encargo_de_Iconos` (solo local, excluido de git)
+   suma el Monje, el Mago y el Explorador con sus subclases (293 íconos; las 5 clases viejas no cambiaron, revisado
+   píxel a píxel); el zip del 7 de octubre quedó como `Encargo_de_Iconos_7_de_octubre.zip`. Dudas para Gustavo:
+   - [ ] La Tormenta eléctrica: el botón de la Q con rayo y la de la Evocación usan `Barbarian/Tornado_Icon`; la
+         del kit base, `Wizard/Storm.png`. ¿Cuál va?
+   - [ ] El fuego de la rueda del libro usa `48toPlay/Fire.png` (fuera de `Art/Icons`).
+   - Prestados de otra clase: Trampas (la Presa), Manto del Shinobi (Ocultarse del Pícaro), Ráfaga de kunais,
+     katana del Samurái y lanza del Trampero (del Guerrero), Danza defensiva (Paladín), Imparable (dash del Pícaro).
 8. **Las demos de FishNet, BORRADAS (28 de octubre).** El `NetworkManager` de las tres escenas era el prefab de
    `FishNet/Demos/Prefabs`: pasó a `Assets/Prefabs/Network/` (con su `NetworkHudCanvas`, el script
    `NetworkHudCanvases.cs` y la textura `1x1 Pixel`), con los mismos `.meta`, así que las escenas siguen igual.
