@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Wall of Fire
   AbilityNameEs: Muro de fuego
-  AbilityIcon: {fileID: 21300000, guid: 7201ce93f2ad9bb499f5ac43bf49bf1c, type: 3}
+  AbilityIcon: {fileID: 21300000, guid: a631d0cef4f1f9f4895ee1a0968d2ef2, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: edc8f7b5f2c7d684d8f67cdabbccd4df, type: 2}
   CooldownDuration: 8

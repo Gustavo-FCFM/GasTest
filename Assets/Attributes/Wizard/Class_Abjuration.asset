@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ClassName: School of Abjuration
   ClassNameEs: "Escuela de abjuraci\xF3n"
-  ClassIcon: {fileID: 21300000, guid: 470366c5e6d519644b428e75cb49945e, type: 3}
+  ClassIcon: {fileID: 21300000, guid: a69457d24345fa74389450482da30bad, type: 3}
   Description: 'Protective magic. Arcane Projection links him to an ally: the ally
     gets a shield and copies his left click at half damage. Arcane Protection turns
     a quarter of his damage into shield for both. Maximum Protection projects him

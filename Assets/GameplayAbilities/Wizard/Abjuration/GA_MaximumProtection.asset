@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Maximum Protection
   AbilityNameEs: "Protecci\xF3n m\xE1xima"
-  AbilityIcon: {fileID: 21300000, guid: ad2691c3cc774704dbeb80c8a5fce95b, type: 3}
+  AbilityIcon: {fileID: 21300000, guid: a80181a58ba0ab347a9eb4085bc6cb93, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 4165da9d9de274a4aa511261df047340, type: 2}
   CooldownDuration: 0

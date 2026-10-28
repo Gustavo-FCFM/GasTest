@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ClassName: School of Bladesinging
   ClassNameEs: Escuela del Filo danzante
-  ClassIcon: {fileID: 21300000, guid: 470366c5e6d519644b428e75cb49945e, type: 3}
+  ClassIcon: {fileID: 21300000, guid: a95e64c06bd7ce146ac2723b6c1a9795, type: 3}
   Description: A mage with a short sword. His cuts leave arcane points; with a spell
     chosen, the next cut dashes forward with that element, scaling with the points.
     Magic Blade turns his cuts magical; Final Dance hits a wide area with all four

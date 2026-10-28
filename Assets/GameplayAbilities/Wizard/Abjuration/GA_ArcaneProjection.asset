@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Arcane Projection
   AbilityNameEs: "Proyecci\xF3n arcana"
-  AbilityIcon: {fileID: 21300000, guid: f696e7386d0b95741905340ea306c976, type: 3}
+  AbilityIcon: {fileID: 21300000, guid: 9e56242cec0b88441958c4046caa06ed, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: bd07a782525833e47889b22896900f13, type: 2}
   CooldownDuration: 15

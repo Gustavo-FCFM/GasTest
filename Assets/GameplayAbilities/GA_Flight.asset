@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Flight
   AbilityNameEs: Vuelo
-  AbilityIcon: {fileID: 21300000, guid: 4aafd235e8c08024288eae113ffcfde2, type: 3}
+  AbilityIcon: {fileID: 21300000, guid: fd3efe0679693d045ab78f5e1baab07c, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 10f0981bf286ed844b33e0f4b4b974e3, type: 2}
   CooldownDuration: 0

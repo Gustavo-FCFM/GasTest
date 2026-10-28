@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Uplift
   AbilityNameEs: Levantamiento
-  AbilityIcon: {fileID: 21300000, guid: f4f9181881f0f3b4c9c341d9316e2cd6, type: 3}
+  AbilityIcon: {fileID: 21300000, guid: c103f21b60dfdd740935397158dc1505, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: edc8f7b5f2c7d684d8f67cdabbccd4df, type: 2}
   CooldownDuration: 8

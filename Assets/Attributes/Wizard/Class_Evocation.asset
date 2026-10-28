@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ClassName: School of Evocation
   ClassNameEs: "Escuela de evocaci\xF3n"
-  ClassIcon: {fileID: 21300000, guid: 470366c5e6d519644b428e75cb49945e, type: 3}
+  ClassIcon: {fileID: 21300000, guid: 659bbd1daec8b934a917fbfc20bd1ce0, type: 3}
   Description: 'Empowered spells: the Greater Fireball, the Frost Bite, the Mountain
     Splitter and the Chain Lightning. Perfect Memory makes the next Q instant and
     free of cooldown; Spell Overload levitates with unlimited mana.'

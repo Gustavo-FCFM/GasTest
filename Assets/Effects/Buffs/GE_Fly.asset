@@ -20,7 +20,7 @@ MonoBehaviour:
   EffectGroup: 0
   Priority: 0
   ReplacesGroup: 0
-  Icon: {fileID: 21300000, guid: 4aafd235e8c08024288eae113ffcfde2, type: 3}
+  Icon: {fileID: 21300000, guid: fd3efe0679693d045ab78f5e1baab07c, type: 3}
   EffectType: 0
   Modifiers: []
   IsCrowdControl: 0

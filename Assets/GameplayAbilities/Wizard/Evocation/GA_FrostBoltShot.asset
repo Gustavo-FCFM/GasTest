@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Frost Arrow
   AbilityNameEs: Flecha helada
-  AbilityIcon: {fileID: 21300000, guid: 10b6bf9e4f8d3e241b3acab09d461d56, type: 3}
+  AbilityIcon: {fileID: 21300000, guid: 903a04d04e664fc49b7f18d5c3316b87, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 0}
   CooldownDuration: 0

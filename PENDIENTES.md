@@ -114,8 +114,9 @@ del log son todos de packs importados).
    todavía arma el código), acomodar los botiquines, la puntería si se siente mal.
 6. **Después del Mago:** las animaciones raras (sección 5, con la pose del bloqueo del Monje) y
    el sonido (faltan los clips).
-7. **Íconos del Mago:** provisionales (el de la Flecha mágica del Clérigo). Pedirle al artista
-   los de la clase, los misiles y el punto arcano.
+7. **Íconos del Mago: PUESTOS (28 de octubre).** Gustavo los dejó en `Art/Icons/Abilities/Wizard` y `Classes`; ya están
+   en sus GA, GE, opciones de los libros y las cuatro clases. Siguen con uno prestado: los Cortes, el Corte y la
+   Danza de filos ("Slash attack"), el Poder del hechizo (la Q) y la opción "Cortes" del libro del Filo.
 
 ## Cómo retomar en la otra máquina
 

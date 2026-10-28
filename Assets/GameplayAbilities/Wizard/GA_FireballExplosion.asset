@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Fireball Explosion
   AbilityNameEs: "Explosi\xF3n de la Bola de fuego"
-  AbilityIcon: {fileID: 21300000, guid: af48409391ce22d4db8476e2573491b6, type: 3}
+  AbilityIcon: {fileID: 21300000, guid: 123278ecbc95e1f45911fa8eaacf068f, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 0}
   CooldownDuration: 0

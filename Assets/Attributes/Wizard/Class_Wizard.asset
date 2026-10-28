@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ClassName: Wizard
   ClassNameEs: Mago
-  ClassIcon: {fileID: 21300000, guid: 470366c5e6d519644b428e75cb49945e, type: 3}
+  ClassIcon: {fileID: 21300000, guid: c494eb538bc191d4ea38d2d8941b5165, type: 3}
   Description: Ranged magic damage. His arcane missiles leave arcane points on enemies,
     and every point makes all his attacks hit that enemy harder. He can fly.
   DescriptionEs: "Da\xF1o m\xE1gico a distancia. Sus misiles arcanos dejan puntos
