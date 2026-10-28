@@ -140,7 +140,9 @@ del log son todos de packs importados).
    · **El ícono bajo el stick se agranda** (⚙ "Ícono bajo el stick (×)", 1.15): antes solo cambiaba el nombre.
    · **Después de un "+" la selección pasa al "+" siguiente** del equipo (o al "x" si se llenó); antes caía en Confirmar.
    · **"Aprieta A en tu lugar para elegir clase"** con control, en vez de "Haz clic".
-   Abierto: View/Select (y la V) abre las subclases en CUALQUIER nivel, no solo al máximo. ¿Se deja así?
+   **Decidido (28 de octubre):** la V / View abre las subclases SOLO con el nivel máximo (antes, en cualquier nivel;
+   avisa "Llega al nivel 3"; ⚙ "PRUEBAS: subclase en cualquier nivel" en `UI_ClassMenu`), y la definitiva de la
+   subclase arranca en 0: el Player tenía prendido "PRUEBAS: definitiva llena al evolucionar" y se apagó. Probado ✅.
    - [ ] En una build, con un control de verdad: la misma pasada.
 
 ## Cómo retomar en la otra máquina

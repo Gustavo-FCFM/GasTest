@@ -124,6 +124,7 @@ lobby.status.all_ready_wait;Los {players} están listos: esperando al host.;All 
 lobby.status.one_missing;Falta que confirme 1 de {players}.;1 of {players} still has to confirm.
 lobby.status.missing;Faltan {missing} de {players} por confirmar.;{missing} of {players} still have to confirm.
 lobby.status.choose_class;Haz clic en tu lugar para elegir clase.;Click your slot to choose a class.
+classmenu.max_level_first;Llega al nivel {level} para elegir subclase.;Reach level {level} to choose a subclass.
 lobby.status.choose_class_pad;Aprieta {button} en tu lugar para elegir clase.;Press {button} on your slot to choose a class.
 lobby.status.spectating;(estás mirando: dale a Unirse para jugar);(you are spectating — click Join to play)
 #

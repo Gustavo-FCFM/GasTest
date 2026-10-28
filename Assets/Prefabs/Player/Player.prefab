@@ -233,7 +233,7 @@ MonoBehaviour:
   NetworkRequestPosition: {x: 0, y: 0, z: 0}
   isRadialMenuOpen: 0
   AutoRepeatPrimaryAttack: 1
-  StartSubclassWithFullUltimate: 1
+  StartSubclassWithFullUltimate: 0
   UltimateKeptOnClassChange: 0.5
   TankChargePerDamage: 0.15
   DamageChargePerKill: 30

@@ -52,6 +52,11 @@ public class UI_ClassMenu : MonoBehaviour
     [Label("Abrir subclases al nivel máximo")]
     public bool OpenSubclassesOnMaxLevel = false;
 
+    [Tooltip("PRUEBAS: la tecla V (View en el control) abre las subclases en CUALQUIER nivel. " +
+             "Apagado (lo normal): solo con el nivel máximo; antes avisa cuánto falta.")]
+    [Label("PRUEBAS: subclase en cualquier nivel")]
+    public bool SubclassesAtAnyLevel = false;
+
     [Tooltip("Recibir daño con el menú abierto lo cierra sin elegir. Elegir subclase no " +
              "es un momento de invulnerabilidad: el que lo abre en medio de una pelea se " +
              "lleva los golpes igual, así que lo sano es que vuelva a su base y lo abra ahí.")]
@@ -158,9 +163,25 @@ public class UI_ClassMenu : MonoBehaviour
     // Tecla C: elegir entre las clases base. Reinicia el progreso a nivel 1.
     public void OpenBaseClasses() => Open(EMode.BaseClasses);
 
-    // Tecla V: evolucionar a una subclase de la clase actual, conservando progreso.
-    public void OpenSubclasses() => Open(EMode.Subclasses);
+    // Tecla V: evolucionar a una subclase de la clase actual, conservando progreso. Solo
+    // con el nivel máximo (28 de octubre de 2026, pedido de Gustavo: antes se abría en
+    // cualquier nivel, resto de cuando era un atajo de pruebas).
+    public void OpenSubclasses()
+    {
+        if (!SubclassesAtAnyLevel && _playerASC != null &&
+            _playerASC.GetAttributeValue(EAttributeType.Level) < _playerASC.MaxLevel)
+        {
+            if (_player != null && _player.CurrentClassDef != null &&
+                _player.CurrentClassDef.AvailableSubclasses != null &&
+                _player.CurrentClassDef.AvailableSubclasses.Count > 0)
+                Announce(Loc.T("classmenu.max_level_first", ("level", _playerASC.MaxLevel)), new Color(1f, 0.75f, 0.3f), 24f);
+            return;
+        }
+        Open(EMode.Subclasses);
+    }
 
+    // El aviso de nivel máximo ya es la prueba de que llegó: no se vuelve a preguntar (en un
+    // cliente el nivel sincronizado puede llegar un instante después del aviso).
     private void OpenSubclassesFromLevelUp() => Open(EMode.Subclasses);
 
     private void Open(EMode mode)
