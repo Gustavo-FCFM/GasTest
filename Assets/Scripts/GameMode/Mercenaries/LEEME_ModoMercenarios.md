@@ -162,7 +162,7 @@ segundo después el servidor te devuelve el nivel del equipo.
 
 `Assets/Scenes/Mercenaries_Gamemode.unity` está hecha, editada a mano y guardada: la arena
 entera, las tres bases en simetría con techo, 9 campamentos, 3 rejas, los límites
-invisibles, el NavMesh horneado, el HUD, el `NetworkManager` y los menús (el prefab `Menus_UI`).
+invisibles, el NavMesh horneado, el HUD, el `NetworkManager` (el prefab `Prefabs/Network/NetworkManager`) y los menús (el prefab `Menus_UI`).
 **No hay nada que generar.**
 
 Las herramientas que la crearon (los ocho pasos del menú `Mercenarios`) se borraron una vez

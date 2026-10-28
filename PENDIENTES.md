@@ -117,6 +117,11 @@ del log son todos de packs importados).
 7. **Íconos del Mago: PUESTOS (28 de octubre).** Gustavo los dejó en `Art/Icons/Abilities/Wizard` y `Classes`; ya están
    en sus GA, GE, opciones de los libros y las cuatro clases. Siguen con uno prestado: los Cortes, el Corte y la
    Danza de filos ("Slash attack"), el Poder del hechizo (la Q) y la opción "Cortes" del libro del Filo.
+8. **Las demos de FishNet, BORRADAS (28 de octubre).** El `NetworkManager` de las tres escenas era el prefab de
+   `FishNet/Demos/Prefabs`: pasó a `Assets/Prefabs/Network/` (con su `NetworkHudCanvas`, el script
+   `NetworkHudCanvases.cs` y la textura `1x1 Pixel`), con los mismos `.meta`, así que las escenas siguen igual.
+   El resto se borró (4 avisos menos; quedan ~150, todos de FishNet). Compila sin errores en el editor.
+   - [ ] Entrar a Play en `Mercenaries_Gamemode` y `Test_Network`: la partida arranca y conecta como siempre.
 
 ## Cómo retomar en la otra máquina
 

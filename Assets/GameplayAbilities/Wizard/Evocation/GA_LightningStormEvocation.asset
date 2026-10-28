@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Lightning Storm
   AbilityNameEs: "Tormenta el\xE9ctrica"
-  AbilityIcon: {fileID: 21300000, guid: 4b89eff35db00934892bc5cc7370968d, type: 3}
+  AbilityIcon: {fileID: 21300000, guid: c5904e95133d68742b85788536aeb3f5, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: edc8f7b5f2c7d684d8f67cdabbccd4df, type: 2}
   CooldownDuration: 8

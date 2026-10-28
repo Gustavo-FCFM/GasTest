@@ -59,38 +59,49 @@ MonoBehaviour:
     NameEs: Cortes
     Description: 'The normal attack: short-sword cuts that leave arcane points.'
     DescriptionEs: 'El ataque normal: cortes con espada corta que dejan puntos arcanos.'
-    Icon: {fileID: 21300000, guid: 470366c5e6d519644b428e75cb49945e, type: 3}
+    Icon: {fileID: 21300000, guid: 9cdb634b0806bae4da91d3f93b89b2a8, type: 3}
     Effect: {fileID: 0}
     RequiresAffordable: {fileID: 0}
     SelectableWhenUnaffordable: 0
   - Name: Fire
     NameEs: Fuego
-    Description: The next cut dashes 6 m and burns (1 s per point); you gain damage. Q is the Fire Wall. Costs 50 % of max mana.
-    DescriptionEs: "El pr\xF3ximo corte avanza 6 m y quema (1 s por punto); te da m\xE1s da\xF1o. La Q es el Muro de fuego. Cuesta el 50 % del man\xE1 m\xE1ximo."
+    Description: The next cut dashes 6 m and burns (1 s per point); you gain damage.
+      Q is the Fire Wall. Costs 50 % of max mana.
+    DescriptionEs: "El pr\xF3ximo corte avanza 6 m y quema (1 s por punto); te da
+      m\xE1s da\xF1o. La Q es el Muro de fuego. Cuesta el 50 % del man\xE1 m\xE1ximo."
     Icon: {fileID: 21300000, guid: 5162ff7a4f809944f868b2639b100109, type: 3}
     Effect: {fileID: 11400000, guid: 011a2b591eb953046becf5bb157b35a4, type: 2}
     RequiresAffordable: {fileID: 11400000, guid: 27ce6269c6e58864cb05198d0eea93d8, type: 2}
     SelectableWhenUnaffordable: 1
   - Name: Ice
     NameEs: Hielo
-    Description: The next cut dashes 6 m and slows 30 % (1 s per point); you gain speed. Q is the Ice Tomb. Costs 50 % of max mana.
-    DescriptionEs: "El pr\xF3ximo corte avanza 6 m y ralentiza 30 % (1 s por punto); te da m\xE1s velocidad. La Q es la Tumba de hielo. Cuesta el 50 % del man\xE1 m\xE1ximo."
+    Description: The next cut dashes 6 m and slows 30 % (1 s per point); you gain
+      speed. Q is the Ice Tomb. Costs 50 % of max mana.
+    DescriptionEs: "El pr\xF3ximo corte avanza 6 m y ralentiza 30 % (1 s por punto);
+      te da m\xE1s velocidad. La Q es la Tumba de hielo. Cuesta el 50 % del man\xE1
+      m\xE1ximo."
     Icon: {fileID: 21300000, guid: 0bcedbec255730747803f8c2dc6c71e9, type: 3}
     Effect: {fileID: 11400000, guid: 40848ef5aa8028e459274f1844444b84, type: 2}
     RequiresAffordable: {fileID: 11400000, guid: 27ce6269c6e58864cb05198d0eea93d8, type: 2}
     SelectableWhenUnaffordable: 1
   - Name: Earth
     NameEs: Tierra
-    Description: The next cut dashes 6 m and stuns 0.5 s per point; you gain stun resistance. Q is the Uplift. Costs 50 % of max mana.
-    DescriptionEs: "El pr\xF3ximo corte avanza 6 m y aturde 0.5 s por punto; te da resistencia al aturdido. La Q es el Levantamiento. Cuesta el 50 % del man\xE1 m\xE1ximo."
+    Description: The next cut dashes 6 m and stuns 0.5 s per point; you gain stun
+      resistance. Q is the Uplift. Costs 50 % of max mana.
+    DescriptionEs: "El pr\xF3ximo corte avanza 6 m y aturde 0.5 s por punto; te da
+      resistencia al aturdido. La Q es el Levantamiento. Cuesta el 50 % del man\xE1
+      m\xE1ximo."
     Icon: {fileID: 21300000, guid: 38efed999d8b38444be9807baa04a945, type: 3}
     Effect: {fileID: 11400000, guid: f6ae36be3682a334083d8af3179929a6, type: 2}
     RequiresAffordable: {fileID: 11400000, guid: 27ce6269c6e58864cb05198d0eea93d8, type: 2}
     SelectableWhenUnaffordable: 1
   - Name: Lightning
     NameEs: Rayo
-    Description: The next cut dashes 6 m and cuts attack speed 20 % (1 s per point); you gain attack speed. Q is the Lightning Storm. Costs 50 % of max mana.
-    DescriptionEs: "El pr\xF3ximo corte avanza 6 m y quita 20 % de velocidad de ataque (1 s por punto); te da m\xE1s velocidad de ataque. La Q es la Tormenta el\xE9ctrica. Cuesta el 50 % del man\xE1 m\xE1ximo."
+    Description: The next cut dashes 6 m and cuts attack speed 20 % (1 s per point);
+      you gain attack speed. Q is the Lightning Storm. Costs 50 % of max mana.
+    DescriptionEs: "El pr\xF3ximo corte avanza 6 m y quita 20 % de velocidad de ataque
+      (1 s por punto); te da m\xE1s velocidad de ataque. La Q es la Tormenta el\xE9ctrica.
+      Cuesta el 50 % del man\xE1 m\xE1ximo."
     Icon: {fileID: 21300000, guid: bcca73d2a94a7254c87269a92d9ec6c0, type: 3}
     Effect: {fileID: 11400000, guid: 20383a443659a0e4786da097fd73b096, type: 2}
     RequiresAffordable: {fileID: 11400000, guid: 27ce6269c6e58864cb05198d0eea93d8, type: 2}

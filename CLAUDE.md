@@ -84,6 +84,14 @@ editor CERRADO (no entran dos instancias sobre el mismo proyecto):
 "C:/Program Files/Unity/Hub/Editor/6000.0.59f2/Editor/Unity.exe" -batchmode -quit -nographics -projectPath "C:/Users/MDyR/Desktop/Proyectos Gustavo/GasTest/GasTest" -logFile compile.log
 ```
 
+
+**Con el editor ABIERTO, el CLI `unity`** (plugin oficial de Unity + paquete `com.unity.pipeline`,
+desde el 28 de octubre de 2026): `unity recompile` compila de verdad (con el codegen de
+FishNet), `unity command console status / get --level warning --result-only` lee la consola,
+`unity command asset find --name X` dice dónde ve Unity un asset. Se usa para VERIFICAR sin
+preguntar; correr herramientas, entrar a Play o hacer builds, preguntando antes. La consola
+tiene ~150 avisos, todos de FishNet (`Runtime/`): no tocarlos (se pierden al actualizar). Un
+aviso de `Assets/Scripts` o `Assets/Prefabs` sí es nuestro.
 ---
 
 ## Mapa del proyecto
@@ -95,7 +103,7 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
 |---|---|
 | `Assets/Art/` | Modelos, materiales (`Materials/Arena` es la arena), animaciones (los AOC por clase), VFX, e `Icons/` (`Classes/` y `Abilities/` por clase). |
 | `Assets/Audio/` | Los clips: `Sfx/` y `Music/`. La biblioteca que los referencia está en `Resources/AudioLibrary`. |
-| `Assets/Prefabs/` | Todos los prefabs: `Player/` (jugador y su cámara), `Enemies/`, `Objective/`, `Projectiles/`, `Summons/`, `UI/`, `Map/` (el sector del cementerio). |
+| `Assets/Prefabs/` | Todos los prefabs: `Player/` (jugador y su cámara), `Enemies/`, `Objective/`, `Projectiles/`, `Summons/`, `UI/`, `Map/` (el sector del cementerio), `Network/` (el `NetworkManager` de las tres escenas y su `NetworkHudCanvas`: venían de las demos de FishNet, borradas el 28 de octubre de 2026). |
 | `Assets/Attributes/` | Clases jugables (`Class_*.asset`) y stats (`ASDef_*`), por clase; `Enemies/` y `Summons/` para los NPCs. |
 | `Assets/Effects/` | Los `GE_*`, por tipo (Damage, Buffs, CC, Debuffs, Cooldowns). |
 | `Assets/GameplayAbilities/` | Los `GA_*` por clase, **con sus scripts `GA_*.cs` al lado** — son contenido. `Enemies/` para las de los NPCs. |

@@ -61,7 +61,7 @@ MonoBehaviour:
   - RequiredTag: 85
     Ability: {fileID: 11400000, guid: cb3550fc677a1204a9c1f6700b802f5f, type: 2}
     ConsumeTag: 1
-    Icon: {fileID: 21300000, guid: af48409391ce22d4db8476e2573491b6, type: 3}
+    Icon: {fileID: 21300000, guid: 5162ff7a4f809944f868b2639b100109, type: 3}
     AlsoActiveWithTag: 0
   - RequiredTag: 86
     Ability: {fileID: 11400000, guid: 8375f9dc88dc3bc4494c4f0a4c36dfc7, type: 2}
@@ -71,12 +71,12 @@ MonoBehaviour:
   - RequiredTag: 87
     Ability: {fileID: 11400000, guid: cb86c27082526ef47b6b8d370a62c443, type: 2}
     ConsumeTag: 1
-    Icon: {fileID: 21300000, guid: d04fb6a6eb3903243b98d5ef08e89617, type: 3}
+    Icon: {fileID: 21300000, guid: 38efed999d8b38444be9807baa04a945, type: 3}
     AlsoActiveWithTag: 0
   - RequiredTag: 88
     Ability: {fileID: 11400000, guid: 5c2f333fa3c38834fa10350d4299eb4e, type: 2}
     ConsumeTag: 1
-    Icon: {fileID: 21300000, guid: 8aacedc79fe3198408fa82c77ec1b3a5, type: 3}
+    Icon: {fileID: 21300000, guid: bcca73d2a94a7254c87269a92d9ec6c0, type: 3}
     AlsoActiveWithTag: 0
   VariantsPayOwnCost: 1
   FallBackWhenUnaffordable: 1

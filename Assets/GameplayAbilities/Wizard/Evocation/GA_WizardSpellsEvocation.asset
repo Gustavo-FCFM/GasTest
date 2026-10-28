@@ -55,30 +55,31 @@ MonoBehaviour:
   CastReleaseAnimation: {fileID: 0}
   MaxCharges: 1
   ShowVariantIcon: 1
-  DefaultIcon: {fileID: 21300000, guid: 470366c5e6d519644b428e75cb49945e, type: 3}
+  DefaultIcon: {fileID: 21300000, guid: 9cdb634b0806bae4da91d3f93b89b2a8, type: 3}
   DefaultAbility: {fileID: 11400000, guid: 551384981b13ba742bc1df84bc297ba2, type: 2}
   Variants:
   - RequiredTag: 85
     Ability: {fileID: 11400000, guid: 56df4fa706f18d442b0f926eaa796ba7, type: 2}
     ConsumeTag: 0
-    Icon: {fileID: 21300000, guid: af48409391ce22d4db8476e2573491b6, type: 3}
+    Icon: {fileID: 21300000, guid: 123278ecbc95e1f45911fa8eaacf068f, type: 3}
     AlsoActiveWithTag: 0
   - RequiredTag: 86
     Ability: {fileID: 11400000, guid: 941c6c7df79c8504eab0bead8a3a12dc, type: 2}
     ConsumeTag: 0
-    Icon: {fileID: 21300000, guid: 10b6bf9e4f8d3e241b3acab09d461d56, type: 3}
+    Icon: {fileID: 21300000, guid: 903a04d04e664fc49b7f18d5c3316b87, type: 3}
     AlsoActiveWithTag: 0
   - RequiredTag: 87
     Ability: {fileID: 11400000, guid: 66b5602f1d6c12e4d83b7f328cc641bd, type: 2}
     ConsumeTag: 0
-    Icon: {fileID: 21300000, guid: d04fb6a6eb3903243b98d5ef08e89617, type: 3}
+    Icon: {fileID: 21300000, guid: be2905573b07b844fbb3e5e790578e58, type: 3}
     AlsoActiveWithTag: 0
   - RequiredTag: 88
     Ability: {fileID: 11400000, guid: e8c5f168cb2759c4b8d4d71e8bb974c2, type: 2}
     ConsumeTag: 0
-    Icon: {fileID: 21300000, guid: 8aacedc79fe3198408fa82c77ec1b3a5, type: 3}
+    Icon: {fileID: 21300000, guid: e139b9aa4a51c764c93cba8e94e4840b, type: 3}
     AlsoActiveWithTag: 0
   VariantsPayOwnCost: 1
   FallBackWhenUnaffordable: 1
+  DropTagWhenUnaffordable: 1
   InstantTag: 0
   InstantSkipsDefault: 1
