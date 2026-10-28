@@ -132,6 +132,9 @@ public class UI_LobbyPanel : MonoBehaviour, IMenuScreen
     [Label("Entre íconos (px)")]
     public float IconGap = 12f;
 
+    [Label("Ícono bajo el stick (×)")]
+    public float PickerHoverScale = 1.15f;
+
     [Tooltip("Margen a los costados de la grilla: el selector se ensancha si las clases de un rol no entran.")]
     [Label("Margen de la grilla (px)")]
     public float PickerMargin = 32f;
@@ -177,6 +180,7 @@ public class UI_LobbyPanel : MonoBehaviour, IMenuScreen
     private readonly List<EClassRole> _roleGroups = new List<EClassRole>();
     private readonly Dictionary<EClassRole, List<int>> _roleMembers = new Dictionary<EClassRole, List<int>>();
     private readonly List<Image> _roleTabs = new List<Image>();
+    private int _openGroup;
 
     private readonly List<UI_LobbySlot>[] _teamSlots = new List<UI_LobbySlot>[LobbyManager.TeamCount];
     private readonly List<UI_LobbySlot>   _spectatorSlots = new List<UI_LobbySlot>();
@@ -561,7 +565,10 @@ public class UI_LobbyPanel : MonoBehaviour, IMenuScreen
             // texto del panel, y sirve mas como instruccion que como marcador.
             if (inTeam && !canReady)
             {
-                text  = Loc.T("lobby.status.choose_class");
+                // Con control no se hace clic: se aprieta A (o X en PlayStation) sobre tu lugar.
+                text  = MenuInput.UsingPad
+                      ? Loc.T("lobby.status.choose_class_pad", ("button", InputGlyphs.ShowKeyboardHints ? "A" : InputGlyphs.Confirm))
+                      : Loc.T("lobby.status.choose_class");
                 color = PendingColor;
             }
             else if (me.Spectator || me.Team <= 0)
@@ -708,7 +715,11 @@ public class UI_LobbyPanel : MonoBehaviour, IMenuScreen
             slot.JoinButton.onClick.AddListener(() => JoinTeam(team));
         }
         if (slot.IconButton != null)   slot.IconButton.onClick.AddListener(() => ShowClassPickerFor(slot.EntryId));
-        if (slot.AddBotButton != null) { slot.AddBotButton.onClick.AddListener(AudioManager.Click); slot.AddBotButton.onClick.AddListener(() => AddBot(team)); }
+        if (slot.AddBotButton != null)
+        {
+            slot.AddBotButton.onClick.AddListener(AudioManager.Click);
+            slot.AddBotButton.onClick.AddListener(() => { _pressedAddBot = slot.AddBotButton.gameObject; AddBot(team); });
+        }
         if (slot.RemoveButton != null) { slot.RemoveButton.onClick.AddListener(AudioManager.Click); slot.RemoveButton.onClick.AddListener(() => RemoveBot(slot.EntryId)); }
     }
 
@@ -858,9 +869,10 @@ public class UI_LobbyPanel : MonoBehaviour, IMenuScreen
                 AddTriggerEntry(trigger, EventTriggerType.PointerEnter, () => ShowClassName(captured));
                 AddTriggerEntry(trigger, EventTriggerType.PointerExit,  () => ShowClassName(_pickerSelection));
 
-                // Con control, lo mismo al pasar por encima con el stick.
-                AddTriggerEntry(trigger, EventTriggerType.Select,   () => ShowClassName(captured));
-                AddTriggerEntry(trigger, EventTriggerType.Deselect, () => ShowClassName(_pickerSelection));
+                // Con control, lo mismo al pasar por encima con el stick, y el ícono se agranda
+                // para que se vea dónde estás parado (el mouse ya lo muestra con el puntero).
+                AddTriggerEntry(trigger, EventTriggerType.Select,   () => { ShowClassName(captured); rt.localScale = Vector3.one * PickerHoverScale; });
+                AddTriggerEntry(trigger, EventTriggerType.Deselect, () => { ShowClassName(_pickerSelection); rt.localScale = Vector3.one; });
             }
         }
 
@@ -887,6 +899,7 @@ public class UI_LobbyPanel : MonoBehaviour, IMenuScreen
     {
         if (group < 0 || group >= _roleGroups.Count) return;
         EClassRole open = _roleGroups[group];
+        _openGroup = group;
 
         if (_classIcons != null)
             for (int i = 0; i < _classIcons.Length; i++)
@@ -898,6 +911,58 @@ public class UI_LobbyPanel : MonoBehaviour, IMenuScreen
             Color c = ClassRoleStyle.Color(_roleGroups[g]);
             ButtonTint.Paint(_roleTabs[g], g == group ? c : Color.Lerp(c, PanelColor, 0.7f));
         }
+
+        WirePickerNavigation();
+    }
+
+    // Con control, el selector se recorre SOLO por dentro: las pestañas arriba, los íconos del
+    // grupo abierto en el medio y Confirmar abajo. Con la navegación automática el stick bajaba
+    // del ícono a los "Unirse" de la sala que quedan detrás, MenuInput lo devolvía al ícono y
+    // nunca se llegaba a Confirmar (28 de octubre de 2026, prueba con control).
+    private void WirePickerNavigation()
+    {
+        if (_roleGroups.Count == 0) return;
+
+        var icons = new List<Button>();
+        foreach (int i in _roleMembers[_roleGroups[_openGroup]])
+        {
+            Button b = _classIcons != null && _classIcons[i] != null ? _classIcons[i].GetComponent<Button>() : null;
+            if (b != null) icons.Add(b);
+        }
+
+        var tabs = new List<Button>();
+        foreach (Image tab in _roleTabs)
+        {
+            Button b = tab != null ? tab.GetComponent<Button>() : null;
+            if (b != null) tabs.Add(b);
+        }
+
+        Button selectedIcon = _pickerSelection >= 0 && _classIcons != null && _classIcons[_pickerSelection] != null &&
+                              _classIcons[_pickerSelection].gameObject.activeSelf
+            ? _classIcons[_pickerSelection].GetComponent<Button>() : null;
+        Button firstIcon = selectedIcon != null ? selectedIcon : icons.Count > 0 ? icons[0] : null;
+        Button openTab   = _openGroup < tabs.Count ? tabs[_openGroup] : null;
+
+        for (int t = 0; t < tabs.Count; t++)
+            SetNavigation(tabs[t], up: null, down: firstIcon,
+                          left: t > 0 ? tabs[t - 1] : null, right: t < tabs.Count - 1 ? tabs[t + 1] : null);
+
+        for (int i = 0; i < icons.Count; i++)
+            SetNavigation(icons[i], up: openTab, down: PickerConfirm,
+                          left: i > 0 ? icons[i - 1] : null, right: i < icons.Count - 1 ? icons[i + 1] : null);
+
+        if (PickerConfirm != null)
+            SetNavigation(PickerConfirm, up: firstIcon, down: null, left: null, right: null);
+    }
+
+    private static void SetNavigation(Selectable s, Selectable up, Selectable down, Selectable left, Selectable right)
+    {
+        if (s == null) return;
+        s.navigation = new Navigation
+        {
+            mode = Navigation.Mode.Explicit,
+            selectOnUp = up, selectOnDown = down, selectOnLeft = left, selectOnRight = right,
+        };
     }
 
     // Solo mira: escribe el nombre de esa clase (o lo limpia con índice inválido).
@@ -924,6 +989,7 @@ public class UI_LobbyPanel : MonoBehaviour, IMenuScreen
                     ButtonTint.Paint(_classIcons[i], i == index ? Color.white : new Color(0.5f, 0.5f, 0.5f, 1f));
 
         if (PickerConfirm != null) PickerConfirm.interactable = cls != null;
+        WirePickerNavigation();   // Confirmar sube a la clase elegida
     }
 
     // Recién acá se aplica de verdad.
@@ -1048,15 +1114,63 @@ public class UI_LobbyPanel : MonoBehaviour, IMenuScreen
     // un bot), se queda ahí.
     private GameObject _lastStep;
 
+    // El "+" que se acaba de apretar. Al entrar el bot ese "+" se apaga (el lugar ya está
+    // ocupado) y la selección se perdía y caía en Confirmar: para meter varios bots había que
+    // volver hasta los "+" cada vez. Ahora pasa al "+" siguiente del mismo equipo, o al "x" del
+    // bot si el equipo se llenó (28 de octubre de 2026, prueba con control).
+    private GameObject _pressedAddBot;
+
     private void FollowStep()
     {
-        if (!MenuInput.UsingPad || PickerOpen || !ReferenceEquals(MenuInput.Top, this)) { _lastStep = null; return; }
+        if (!MenuInput.UsingPad || PickerOpen || !ReferenceEquals(MenuInput.Top, this))
+        {
+            _lastStep = null;
+            _pressedAddBot = null;
+            return;
+        }
 
         GameObject next = DefaultSelection;
         GameObject current = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+
+        if (_pressedAddBot != null)
+        {
+            if (!_pressedAddBot.activeInHierarchy)
+            {
+                GameObject near = NearAfterBot(_pressedAddBot);
+                _pressedAddBot = null;
+                if (near != null)
+                {
+                    MenuInput.Select(near);
+                    _lastStep = next;
+                    return;
+                }
+            }
+            else if (current != _pressedAddBot) _pressedAddBot = null;   // se fue a otro lado
+        }
+
         bool onLastStep = current == null || !current.activeInHierarchy || current == _lastStep;
         if (next != _lastStep && onLastStep) MenuInput.Select(next);
         _lastStep = next;
+    }
+
+    // Después de meter un bot con ese "+": el próximo "+" libre de su equipo, o si se llenó,
+    // el "x" del último bot del equipo.
+    private GameObject NearAfterBot(GameObject pressed)
+    {
+        foreach (List<UI_LobbySlot> team in _teamSlots)
+        {
+            if (team == null) continue;
+            bool mine = false;
+            foreach (UI_LobbySlot slot in team)
+                if (slot != null && slot.AddBotButton != null && slot.AddBotButton.gameObject == pressed) mine = true;
+            if (!mine) continue;
+
+            foreach (UI_LobbySlot slot in team)
+                if (slot != null && Usable(slot.AddBotButton)) return slot.AddBotButton.gameObject;
+            for (int s = team.Count - 1; s >= 0; s--)
+                if (team[s] != null && Usable(team[s].RemoveButton)) return team[s].RemoveButton.gameObject;
+        }
+        return null;
     }
 
     // Prendido y se puede apretar.

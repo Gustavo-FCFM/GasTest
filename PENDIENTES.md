@@ -130,6 +130,18 @@ del log son todos de packs importados).
    `NetworkHudCanvases.cs` y la textura `1x1 Pixel`), con los mismos `.meta`, así que las escenas siguen igual.
    El resto se borró (4 avisos menos; quedan ~150, todos de FishNet). Compila sin errores en el editor.
    - [ ] Entrar a Play en `Mercenaries_Gamemode` y `Test_Network`: la partida arranca y conecta como siempre.
+     (`Mercenaries_Graveyard` ya arrancó y conectó bien el 28 de octubre, en la pasada con control.)
+9. **Pasada completa SOLO con control, en el editor (28 de octubre, pedido de Gustavo para jugar contra bots el
+   viernes): HECHA ✅.** Con un control virtual (el CLI `unity`): menú → Crear partida → unirse → elegir clase →
+   3 bots con "+" → Confirmar → Empezar → cambiar de clase (cruceta arriba) → la rueda del libro (LT + stick) →
+   subclase (View) → pausa (Start, B cierra). Todo anduvo. Arreglado en la sala (`UI_LobbyPanel`):
+   · **El selector de clase no llegaba a Confirmar:** el stick bajaba a los "Unirse" de la sala de atrás y
+     `MenuInput` lo devolvía al ícono. Ahora tiene navegación propia (pestañas, íconos, Confirmar).
+   · **El ícono bajo el stick se agranda** (⚙ "Ícono bajo el stick (×)", 1.15): antes solo cambiaba el nombre.
+   · **Después de un "+" la selección pasa al "+" siguiente** del equipo (o al "x" si se llenó); antes caía en Confirmar.
+   · **"Aprieta A en tu lugar para elegir clase"** con control, en vez de "Haz clic".
+   Abierto: View/Select (y la V) abre las subclases en CUALQUIER nivel, no solo al máximo. ¿Se deja así?
+   - [ ] En una build, con un control de verdad: la misma pasada.
 
 ## Cómo retomar en la otra máquina
 
