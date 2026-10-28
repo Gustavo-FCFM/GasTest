@@ -13,8 +13,8 @@ del log son todos de packs importados).
    noviembre". **Etapa 1** (los menús con control, la conexión en el menú y la pausa) y **etapa 2** (la lista
    de partidas en la red, el teclado en pantalla y los botones con el elegido más oscuro): HECHAS, falta
    probar (las herramientas ya se corrieron y se borraron). Documentos al día (26 de octubre:
-   `Red_Arquitectura.docx`, el LEEME del modo y CLAUDE.md). **Etapa 3 (tres ventanas en una PC, cada una con su control): HECHA (28 de octubre), falta correr
-   la herramienta del cartel "Aprieta A", hacer una build y probar con los controles: ver "Etapas" ▸ 3.**
+   `Red_Arquitectura.docx`, el LEEME del modo y CLAUDE.md). **Etapa 3 (tres ventanas en una PC, cada una con su control): HECHA (28 de octubre; la herramienta del
+   cartel ya se corrió y se borró), falta hacer una build y probar con los controles: ver "Etapas" ▸ 3.**
 1. **Subclases del Mago: PLAN en curso (22 de octubre)** — ver "★ Subclases del Mago"; plan CERRADO;
    **etapa 1 (Escuela de evocación + cambios al kit base): HECHA Y PROBADA ✅**; **etapa 2 (Escuela de abjuración): HECHA Y PROBADA ✅**; **etapa 3 (Filo danzante): HECHA Y PROBADA ✅**. Documentos al día (23 de octubre). Orden: Evocación, Abjuración, Filo danzante.
    **Misiles de a 3 (22 de octubre): HECHO Y PROBADO ✅** (se quedó en ráfaga y no en combo: un solo gesto, 0.2 s fijos). Cada ataque es una RÁFAGA de 3 misiles, 0.2 s entre
@@ -90,6 +90,25 @@ del log son todos de packs importados).
 3. **Probar lo de antes:** el parry del Guardián en un cliente; los bots con el Guerrero (los del
    Explorador y el Monje, probados ✅ el 23 de octubre en las vueltas de bots). (`GA_SpawnSummon` con variantes de las plantillas ya quedó probado: el Muro
    y la Tormenta del Mago.)
+   **Bots con las clases nuevas, revisados el 28 de octubre (pedido de Gustavo): HECHO, falta probar.** Se cruzaron
+   las 32 clases con `BotController`; seis habilidades no se usaban bien. Arreglado:
+   · **Resurrección** (Clérigo de la vida, R): nunca revivía (apuntaba al enemigo). Ahora, con la R lista y un
+     aliado muerto a 25 m o menos ("Buscar cuerpos hasta"), camina hasta el cuerpo y lo revive.
+   · **Presa** (Cazador, E): solo cuerpo a cuerpo, y el Cazador pelea de lejos. Ahora sobre el jugador que
+     pelea, apenas lo ve y está a tiro (30 m).
+   · **Trampas** (Trampero, E): casi nunca, y a los pies del enemigo. Ahora entre él y el enemigo que se le
+     acerca (a mitad de camino), y una detrás al retirarse a curarse.
+   · **Ejecución** (Guardián, E): esperaba dos enemigos juntos. Ahora cuerpo a cuerpo contra uno con poca
+     vida (el mismo umbral del Asesino para rematar).
+   · **Aturdir** (Clérigo del orden, E) y **Enemigo jurado** (Paladín de la venganza, E): solo trabados cuerpo
+     a cuerpo. Ahora sobre el enemigo que le pega a un aliado (o a él), hasta 10 m.
+   · **Furia elemental** (Chamán, R): salía con el Chamán lejos de la pelea. Ahora además metido en ella.
+   - [ ] Un Clérigo de la vida bot revive a un compañero caído cerca (va hasta el cuerpo).
+   - [ ] Un Cazador bot marca su Presa de lejos; un Trampero bot pone trampas entre él y quien se acerca, y
+         una detrás al huir.
+   - [ ] Un Guardián bot usa la Ejecución sobre uno con poca vida.
+   - [ ] Un Clérigo del orden y un Paladín de la venganza bots marcan al que le pega a un compañero.
+   - [ ] Un Chamán bot suelta la Furia elemental dentro de la pelea, no de lejos.
 4. **Cuando alguien se atasque:** traer `Logs/Unstuck.log`.
 5. **Decisiones de Gustavo, sin prisa:** más prefabs (variantes de tótems y enemigos, la UI que
    todavía arma el código), acomodar los botiquines, la puntería si se siente mal.

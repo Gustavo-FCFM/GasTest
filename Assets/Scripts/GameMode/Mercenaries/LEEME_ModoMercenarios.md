@@ -51,7 +51,11 @@ pruebas rápidas de clases.
   host, el nombre, las tres columnas de equipo, la franja de espectadores, la grilla de
   clases, el `+` para bots y el Start del host. Ver la sección 2.
 - **Bots** (`BotController`): jugadores de verdad con rol por clase base, que usan el kit
-  completo, van por el Objetivo y respetan las salas seguras. **Cámara de espectador**
+  completo, van por el Objetivo y respetan las salas seguras. Cada habilidad se juzga por su
+  TIPO (`Classify`); las que tienen una jugada propia llevan su caso en `ShouldUse` (la
+  Resurrección va hasta el cuerpo, las marcas al que le pega a un aliado, las trampas entre él y
+  el enemigo; revisadas las 32 clases el 28 de octubre de 2026). **Una habilidad nueva con una
+  jugada particular necesita su caso ahí: si no, cae en "cuerpo a cuerpo".** **Cámara de espectador**
   (`Player/SpectatorCamera`) para mirar la partida sin jugar, con mouse y teclado o con control
   (mapa "Spectator" del asset de input).
 - **Menú principal y Ajustes**: un panel sobre la arena con la cámara de la sala girando

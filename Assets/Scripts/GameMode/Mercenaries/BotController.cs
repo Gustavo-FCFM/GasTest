@@ -207,6 +207,11 @@ public class BotController : MonoBehaviour
     [Label("Buff tras combate de (s)")]
     public float BuffAfterSeconds = 1.5f;
 
+    [Tooltip("La Resurrección (Clérigo de la vida): hasta dónde va a buscar el cuerpo de un aliado muerto " +
+             "para revivirlo. Más lejos, lo deja.")]
+    [Label("Buscar cuerpos hasta (m)")]
+    public float ReviveSearchRadius = 25f;
+
     // --- referencias, resueltas en el servidor ---
     private PlayerController              _pc;
     private AbilitySystemComponent        _asc;
@@ -231,7 +236,11 @@ public class BotController : MonoBehaviour
 
     private float _engagedSince = -99f;   // desde cuándo estoy trabado en combate
     private bool  _targetFleeing;         // el objetivo se está alejando
+    private bool  _targetApproaching;     // el objetivo se me está acercando (para la trampa)
     private float _lastTargetDistance;
+    private AbilitySystemComponent _markTarget;   // a quién va la marca (Aturdir, Enemigo jurado)
+    private AbilitySystemComponent _trapThreat;   // de quién huyo al dejar una trampa (sin _target)
+    private readonly List<AbilitySystemComponent> _allyScratch = new List<AbilitySystemComponent>();
     private float _lastHealth = -1f;      // para saber si me están curando
     private int   _lostChecks;            // decisiones seguidas fuera de lugar
 
@@ -851,6 +860,14 @@ public class BotController : MonoBehaviour
 
         _delivering = false;
 
+        // 2b · El Clérigo de la vida con la Resurrección lista y un aliado muerto cerca: va
+        //      hasta el cuerpo (Fight lo revive al llegar). Un compañero vale más que un golpe.
+        if (FindBodyToRevive(out Vector3 body, out _))
+        {
+            _destination = body;
+            return;
+        }
+
         // 3 · Sin carga en juego: pelear con lo que haya.
         if (_target != null)
         {
@@ -912,6 +929,7 @@ public class BotController : MonoBehaviour
         // Se compara contra la medición anterior: si se está alejando, es momento de lo
         // que llega de lejos.
         _targetFleeing      = _lastTargetDistance >= 0f && dist > _lastTargetDistance + 0.25f;
+        _targetApproaching  = _lastTargetDistance >= 0f && dist < _lastTargetDistance - 0.25f;
         _lastTargetDistance = dist;
     }
 
@@ -1283,6 +1301,14 @@ public class BotController : MonoBehaviour
             return;
         }
 
+        // Revivir va antes que pelear (ver FindBodyToRevive). Y volviendo a curarse sin objetivo, el
+        // Trampero deja una trampa detrás para el que lo persigue.
+        if (Time.time >= _nextAbilityAt && (TryRevive() || TryTrapWhileRetreating()))
+        {
+            _nextAbilityAt = Time.time + AbilityInterval;
+            return;
+        }
+
         if (_target == null) return;
         if (_target.HasTag(EGameplayTag.State_Dead)) { _target = null; return; }
         if (!CanPerceive(_target))   // se volvió invisible: lo pierdo (y el Maestro de bestias saca al Búho)
@@ -1465,6 +1491,46 @@ public class BotController : MonoBehaviour
             // El cañoneo del Pirata es daño en área: contra dos o más.
             case GA_CannonBarrage _:
                 return EnemiesNear(_target.transform.position, AoeRadius) >= 2;
+
+            // La Resurrección (Clérigo de la vida) va aparte, antes de pelear (TryRevive): apunta al
+            // cuerpo de un aliado muerto, no al enemigo. Por acá nunca encontraría cuerpo.
+            case GA_Resurrection _:
+                return false;
+
+            // La Presa del Cazador marca a un JUGADOR (no a un NPC) a distancia: va sobre el que
+            // pelea apenas lo ve y está a tiro. Hasta el 28 de octubre de 2026 caía en "cuerpo a
+            // cuerpo" y el Cazador, que pelea de lejos, casi nunca la usaba.
+            case GA_Prey prey:
+                return _target != null && _target.GetComponent<PlayerController>() != null &&
+                       dist <= prey.MaxRange && CanSee(_target);
+
+            // Las trampas del Trampero: entre él y el enemigo que se le viene encima (TrapPoint). Al
+            // retirarse, una detrás para el que lo persigue (TryTrapWhileRetreating).
+            case GA_PlaceTrap trap:
+                return _target != null && _targetApproaching &&
+                       dist > MeleeRange * 2f && dist <= trap.MaxPlaceRange;
+
+            // La Ejecución del Guardián REMATA (su daño crece con la vida que le falta al otro, y si
+            // mata se reinicia): cuerpo a cuerpo, contra uno con poca vida. Antes se juzgaba como un
+            // área y esperaba a tener dos enemigos juntos.
+            case GA_Execute _:
+                return _target != null && dist <= MeleeRange * 1.4f && HealthFraction(_target) <= ExecuteBelowHealth;
+
+            // Las MARCAS que protegen al equipo (Aturdir del Clérigo del orden, Enemigo jurado del
+            // Paladín de la venganza): sobre el enemigo que le está pegando a un aliado (o a mí), a su
+            // alcance. Antes solo salían trabado cuerpo a cuerpo, y un soporte casi nunca lo está.
+            case GA_CommandHalt halt:
+                _markTarget = FindEnemyOnAlly(halt.MaxRange);
+                return _markTarget != null;
+
+            case GA_SwornEnemy sworn:
+                _markTarget = FindEnemyOnAlly(sworn.MaxRange);
+                return _markTarget != null;
+
+            // La Furia elemental del Chamán pone los tótems y el tornado ALREDEDOR SUYO: con varios
+            // juntos, y él metido en la pelea (antes salía aunque estuviera lejos).
+            case GA_ElementalFury _:
+                return _target != null && engaged && EnemiesNear(_target.transform.position, AoeRadius) >= 2;
 
             // La marca del Asesino es para REMATAR: un jugador con poca vida en el punto.
             case GA_MarkedForDeath _:
@@ -1893,6 +1959,10 @@ public class BotController : MonoBehaviour
             else aim = transform.position;   // a mis pies: sin nadie en la mira, sale sobre mí
         }
 
+        // Una marca que protege al equipo va al enemigo que le pega a un aliado (lo eligió ShouldUse).
+        if ((effective is GA_CommandHalt || effective is GA_SwornEnemy) && _markTarget != null)
+            aim = _markTarget.transform.position + Vector3.up * 1.2f;
+
         // Un dash (el corte avanzando del Filo danzante, el del Pícaro) va derecho, no hacia el pecho:
         // desde los pies, apuntar al pecho lo tiraba en diagonal hacia arriba.
         if (effective is GA_Dash) aim.y = transform.position.y + 0.3f;
@@ -1957,7 +2027,9 @@ public class BotController : MonoBehaviour
 
             _nextSummonAt = Time.time + SummonInterval;
 
-            radial.ActivateWithSelection(Random.Range(0, options), GroundAimPoint(aim, radial.MaxRadialRange));
+            // Una trampa va entre el enemigo y yo (ver TrapPoint); un tótem, donde apunto.
+            Vector3 point = ability is GA_PlaceTrap ? TrapPoint() : aim;
+            radial.ActivateWithSelection(Random.Range(0, options), GroundAimPoint(point, radial.MaxRadialRange));
 
             // La animación no viaja sola por este camino (el del jugador la manda aparte).
             _netASC.ServerBroadcastAbilityAnimation(ability);
@@ -2032,6 +2104,107 @@ public class BotController : MonoBehaviour
 
         if (!projection && best != null && ability.SelfIfNoTarget && HealthFraction(_asc) <= HealthFraction(best))
             return null;
+        return best;
+    }
+
+    // =========================================================
+    // REVIVIR, TRAMPAS Y MARCAS (28 de octubre de 2026, revisión de los bots con las clases nuevas)
+    // =========================================================
+
+    // La Resurrección (definitiva del Clérigo de la vida) lista, y un aliado muerto a buscar: el
+    // cuerpo más cercano dentro de ReviveSearchRadius. Mientras haya uno, Think lo lleva hasta ahí.
+    private bool FindBodyToRevive(out Vector3 body, out GA_Resurrection resurrection)
+    {
+        body = Vector3.zero;
+        resurrection = FindAbility(EAbilityInput.Action3) as GA_Resurrection;
+        if (resurrection == null || !resurrection.IsReady) return false;
+
+        float best = ReviveSearchRadius * ReviveSearchRadius;
+        bool found = false;
+        foreach (PlayerController pc in FindObjectsByType<PlayerController>(FindObjectsSortMode.None))
+        {
+            AbilitySystemComponent asc = pc.GetComponent<AbilitySystemComponent>();
+            if (asc == null || asc == _asc || !asc.HasTag(EGameplayTag.State_Dead)) continue;
+            if (!_asc.IsAllyOf(asc, includeSelf: false)) continue;
+
+            Vector3 p = GA_Resurrection.BodyPosition(pc);
+            float d = (p - transform.position).sqrMagnitude;
+            if (d >= best) continue;
+            best  = d;
+            body  = p;
+            found = true;
+        }
+        return found;
+    }
+
+    // Ya al lado del cuerpo (a su alcance, con margen): lo revive, apuntándole al cuerpo.
+    private bool TryRevive()
+    {
+        if (!FindBodyToRevive(out Vector3 body, out GA_Resurrection resurrection)) return false;
+        if (Vector3.Distance(transform.position, body) > resurrection.MaxRange * 0.85f) return false;
+        return Activate(EAbilityInput.Action3, body, DirectionTo(body));
+    }
+
+    // Volviendo a curarse (sin objetivo: Think se lo saca), el Trampero deja una trampa detrás
+    // para el que lo viene persiguiendo.
+    private bool TryTrapWhileRetreating()
+    {
+        if (!_retreating || !(FindAbility(EAbilityInput.Action2) is GA_PlaceTrap)) return false;
+
+        AbilitySystemComponent chaser = FindEnemyNear(transform.position, RangedDistance * 1.5f);
+        if (chaser == null) return false;
+
+        _trapThreat = chaser;
+        bool placed = Activate(EAbilityInput.Action2, chaser.transform.position, DirectionTo(chaser.transform.position));
+        _trapThreat = null;
+        return placed;
+    }
+
+    // Dónde va la trampa: en la línea entre el enemigo y yo. Si me retiro, cerca mío (que la pise
+    // persiguiéndome); si se me viene encima, a mitad de camino.
+    private Vector3 TrapPoint()
+    {
+        AbilitySystemComponent threat = _trapThreat != null ? _trapThreat : _target;
+        if (threat == null) return transform.position;
+
+        Vector3 to = threat.transform.position - transform.position;
+        to.y = 0f;
+        float dist = to.magnitude;
+        if (dist < 0.01f) return transform.position;
+
+        float along = _retreating ? 2.5f : Mathf.Max(2.5f, dist * 0.5f);
+        return transform.position + to / dist * Mathf.Min(along, dist);
+    }
+
+    // El enemigo que le está pegando a un aliado (o a mí): el que está pegado a uno de los míos,
+    // dentro de mi alcance y a la vista. null si nadie está en esa.
+    private AbilitySystemComponent FindEnemyOnAlly(float maxRange)
+    {
+        // Primero los aliados (yo incluido), copiados: FindEnemyNear usa el mismo buffer _hits.
+        _allyScratch.Clear();
+        _allyScratch.Add(_asc);
+        int count = Physics.OverlapSphereNonAlloc(
+            transform.position, maxRange + MeleeRange * 2f, _hits, CharacterLayer, QueryTriggerInteraction.Ignore);
+        for (int i = 0; i < count; i++)
+        {
+            AbilitySystemComponent other = _hits[i].GetComponentInParent<AbilitySystemComponent>();
+            if (other == null || other == _asc || other.HasTag(EGameplayTag.State_Dead)) continue;
+            if (!_asc.IsAllyOf(other, includeSelf: false) || other.GetComponent<PlayerController>() == null) continue;
+            if (!_allyScratch.Contains(other)) _allyScratch.Add(other);
+        }
+
+        AbilitySystemComponent best = null;
+        float bestDist = float.MaxValue;
+        foreach (AbilitySystemComponent ally in _allyScratch)
+        {
+            AbilitySystemComponent enemy = FindEnemyNear(ally.transform.position, MeleeRange * 2f);
+            if (enemy == null || IsImmune(enemy)) continue;
+
+            float d = Vector3.Distance(transform.position, enemy.transform.position);
+            if (d > maxRange || d >= bestDist || !CanSee(enemy)) continue;
+            bestDist = d;
+            best     = enemy;
+        }
         return best;
     }
 
