@@ -16,7 +16,8 @@ using UnityEngine.UI;
 // teclado de verdad).
 //
 // CON EL CONTROL:
-//   · El stick recorre las teclas y A aprieta.
+//   · El stick recorre las teclas y A aprieta. Solo entre las teclas, y de una punta de la
+//     fila pasa a la otra (ver NAVEGACIÓN ENTRE TECLAS).
 //   · X borra, Y pone un espacio.
 //   · Start (o la tecla Listo) acepta: lo escrito pasa al campo.
 //   · B cancela: el campo queda como estaba.
@@ -172,6 +173,7 @@ public class UI_OnScreenKeyboard : MonoBehaviour, IMenuScreen
         if (KeyboardCanvas != null) KeyboardCanvas.SetActive(true);
         IsOpen = true;
         Redraw();
+        LinkKeys();   // con el canvas prendido: recién ahí las filas tienen su lugar
 
         UICursor.Request(this);
         MenuInput.Push(this);
@@ -249,6 +251,17 @@ public class UI_OnScreenKeyboard : MonoBehaviour, IMenuScreen
                 ButtonTint.Paint(key.Button.targetGraphic, _shift ? ShiftOnColor : off);
         }
     }
+
+    // =========================================================
+    // NAVEGACIÓN ENTRE TECLAS
+    //
+    // Al abrir, cada tecla se enlaza con sus vecinas (MenuNavigation): izquierda y derecha
+    // recorren la fila y de una punta pasan a la otra; arriba y abajo, la tecla más cercana de la
+    // fila de al lado. Con la navegación automática de Unity el stick a veces saltaba a un botón
+    // de la pantalla de atrás y se trababa (28 de octubre de 2026).
+    // =========================================================
+
+    private void LinkKeys() => MenuNavigation.LinkRows(KeysRoot != null ? KeysRoot : transform, wrapRows: true);
 
     // =========================================================
     // IMenuScreen (capa 2: encima de todo, también de la pausa)

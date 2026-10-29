@@ -305,6 +305,10 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   `UI_SettingRow` y cada lugar de la sala un `UI_LobbySlot`. **El color de un botón de los menús va en el
   Button ("Normal Color" y los demás estados), con su imagen BLANCA** (`ButtonTint`, desde el 26 de octubre de 2026):
   así el elegido con el control se ve del mismo color, más oscuro (nunca más pálido: Gustavo no quiere colores deslavados). Pintar la imagen rompe los estados; desde código, `ButtonTint.Paint`.
+  Además, con el control, lo elegido lo rodea un marco blanco, UNO para todos los menús (`Menus_UI ▸ SelectionFrame`, desde el 28 de octubre de 2026).
+  **Una pantalla de menú que no cambia mientras está abierta se enlaza por filas al abrirse** (`MenuNavigation.LinkRows`, como el teclado y
+  los Ajustes): la navegación automática de Unity elige entre TODOS los botones de la escena, también los de la pantalla de atrás, y el
+  stick se trababa. Para las que cambian solas (la sala), `MenuInput` no deja que el stick salga de la pantalla de arriba.
   Los canvas de los dos prefabs son de
   1920×1080 y escalan con la pantalla. Están en la capa UI: si tapan la vista de escena, se apaga esa capa en el
   desplegable Layers del editor (no cambia el juego). Un `Graphic` propio necesita `[RequireComponent(typeof(CanvasRenderer))]`:

@@ -24,7 +24,7 @@ public interface IMenuScreen
     GameObject DefaultSelection { get; }
 
     // La selección tiene que quedar dentro de esto. Si el stick la saca afuera (a otra
-    // pantalla que está detrás), vuelve a donde estaba.
+    // pantalla que está detrás), pasa al control de adentro que queda en esa dirección.
     Transform SelectionRoot { get; }
 
     // B o ESC con esta pantalla arriba de todo.
@@ -61,8 +61,11 @@ public interface IMenuScreen
 //   · Si la selección se pierde (el botón elegido se apagó: en la sala aparecen y
 //     desaparecen) y se está usando el control, vuelve a la DefaultSelection de la de arriba.
 //     Con el mouse no se toca nada.
-//   · El stick no saca la selección de la pantalla de arriba: si la navegación automática
-//     salta a un botón de otra pantalla (la que está detrás), vuelve a donde estaba.
+//   · El stick no saca la selección de la pantalla de arriba. La navegación automática de
+//     Unity elige entre TODOS los botones de la escena: si salta a uno de otra pantalla (la que
+//     está detrás), la selección pasa al de ESTA pantalla que mejor queda en esa dirección, con
+//     la misma cuenta que la automática (28 de octubre de 2026; antes volvía a donde estaba y
+//     el stick se trababa). Las pantallas fijas además se enlazan por filas (MenuNavigation).
 // ============================================================
 public class MenuInput : MonoBehaviour
 {
@@ -252,6 +255,13 @@ public class MenuInput : MonoBehaviour
         Prune();
         TrackDevice();
         HandleBackAndPause();
+    }
+
+    // Después de que el EventSystem movió la selección en este frame: así se sabe hacia dónde
+    // empujaba el stick cuando la sacó de la pantalla.
+    private void LateUpdate()
+    {
+        if (_actions == null) return;
         KeepSelection();
     }
 
@@ -354,12 +364,14 @@ public class MenuInput : MonoBehaviour
         GameObject sel = es.currentSelectedGameObject;
         if (IsValidSelection(sel, top)) { _lastValid = sel; return; }
 
-        // El stick la sacó a otra pantalla: vuelve a donde estaba (el movimiento no hace nada).
+        // El stick la sacó a otra pantalla: al de esta que queda en esa dirección; si no hay
+        // ninguno, vuelve a donde estaba (el movimiento no hace nada).
         bool leftTheScreen = sel != null && sel.activeInHierarchy && top.SelectionRoot != null &&
                              !sel.transform.IsChildOf(top.SelectionRoot);
         if (leftTheScreen && IsValidSelection(_lastValid, top))
         {
-            Select(_lastValid);
+            GameObject inside = FindInside(_lastValid, top.SelectionRoot, Navigate.ReadValue<Vector2>());
+            Select(inside != null ? inside : _lastValid);
             return;
         }
 
@@ -368,5 +380,37 @@ public class MenuInput : MonoBehaviour
         if (!UsingPad) return;
         GameObject fallback = IsValidSelection(_lastValid, top) ? _lastValid : top.DefaultSelection;
         if (IsValidSelection(fallback, top)) Select(fallback);
+    }
+
+    // La misma cuenta que la navegación automática de Unity (Selectable.FindSelectable: desde el
+    // borde del control de donde sale, gana el que está más de frente y más cerca), pero solo
+    // entre los controles de root. Null si el stick está suelto o no hay ninguno para ese lado.
+    private static GameObject FindInside(GameObject from, Transform root, Vector2 stick)
+    {
+        if (from == null || root == null || stick.sqrMagnitude < 0.01f) return null;
+        if (!(from.transform is RectTransform fromRect)) return null;
+
+        // Unity mueve por el eje que más se empuja: arriba, abajo, izquierda o derecha.
+        Vector2 axis = Mathf.Abs(stick.x) > Mathf.Abs(stick.y) ? new Vector2(Mathf.Sign(stick.x), 0f)
+                                                               : new Vector2(0f, Mathf.Sign(stick.y));
+        Vector3 dir  = from.transform.rotation * axis;
+        Vector3 edge = fromRect.TransformPoint(fromRect.rect.center + Vector2.Scale(fromRect.rect.size, axis * 0.5f));
+
+        GameObject best = null;
+        float bestScore = float.NegativeInfinity;
+        foreach (Selectable s in root.GetComponentsInChildren<Selectable>())
+        {
+            if (s.gameObject == from || !s.IsActive() || !s.IsInteractable() ||
+                s.navigation.mode == Navigation.Mode.None) continue;
+
+            Vector3 center = s.transform is RectTransform rt ? rt.TransformPoint(rt.rect.center) : s.transform.position;
+            Vector3 toward = center - edge;
+            float dot = Vector3.Dot(dir, toward);
+            if (dot <= 0f) continue;
+
+            float score = dot / toward.sqrMagnitude;
+            if (score > bestScore) { bestScore = score; best = s.gameObject; }
+        }
+        return best;
     }
 }

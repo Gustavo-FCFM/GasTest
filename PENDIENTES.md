@@ -144,6 +144,10 @@ del log son todos de packs importados).
    avisa "Llega al nivel 3"; ⚙ "PRUEBAS: subclase en cualquier nivel" en `UI_ClassMenu`), y la definitiva de la
    subclase arranca en 0: el Player tenía prendido "PRUEBAS: definitiva llena al evolucionar" y se apagó. Probado ✅.
    - [ ] En una build, con un control de verdad: la misma pasada.
+   **Después de probar con control (28 de octubre, noche):** la rueda probada ✅ y pasada al stick DERECHO (el
+   izquierdo camina); el teclado en pantalla y los Ajustes ya no se traban (se enlazan por filas, y `MenuInput` no
+   deja que el stick salga de la pantalla de arriba); un marco blanco muestra lo elegido en todos los menús, y el
+   teclado quedó más separado (la herramienta ya se corrió y se borró). Falta probarlo. Ver "★ Showcase" ▸ etapas 2 y 3.
 
 ## Cómo retomar en la otra máquina
 
@@ -301,6 +305,43 @@ gris de la esquina, dibujado aparte y sin control); y poder jugar con 3 instanci
          (queda como estaba). Al cerrarse, la selección vuelve al campo.
    - [ ] En la sala, A sobre tu nombre abre el teclado ("Tu nombre"); al aceptar, el nombre cambia para todos.
    - [ ] Con mouse y teclado: clic en el campo y se escribe como antes; Enter conecta.
+   **Lo que encontró Gustavo al probar el teclado (28 de octubre):** "a veces no puedo pasarme de unas letras a otras"
+   y "está muy pegado".
+   · **Trabado: ARREGLADO.** La navegación automática de Unity elige entre TODOS los botones de la escena: desde
+     algunas teclas saltaba a uno de la pantalla de atrás (la conexión, la sala), `MenuInput` devolvía la selección a
+     la tecla y el movimiento se perdía. Ahora, al abrirse, cada tecla se enlaza con sus vecinas
+     (`UI_OnScreenKeyboard.LinkKeys`, navegación Explicit): izquierda y derecha recorren la fila y de una punta pasan
+     a la otra; arriba y abajo, la tecla más cercana de la fila de al lado. Sale de dónde están las teclas, así que
+     se pueden seguir moviendo a mano.
+   **Segunda vuelta (28 de octubre, noche, con captura):** "muy pegado a donde escribes", "la selección no es muy
+   clara" y "en Ajustes no puedo bajar más allá de la sensibilidad con control".
+   · **Muy pegado:** había 8 px entre teclas y la fila de los números se montaba 10 px sobre el recuadro de lo
+     escrito (`Keys` arrancaba en −146 y el recuadro termina en −156). Lo arregla la herramienta de abajo: 16 px
+     entre teclas y entre filas, la primera fila 24 px debajo del recuadro (Y −180), las filas de 880 de ancho y el
+     panel de 940 × 590 (la ayuda baja sola). Después se ajusta a mano.
+   · **Lo elegido, más claro: un MARCO** (`UI_SelectionFrame` + `UI_RectFrame`, en `Menus_UI ▸ SelectionFrame`): uno
+     para TODOS los menús, blanco de 4 px a 4 px de lo elegido, que se desliza de un control al siguiente y late
+     suave. Solo con el control (con el mouse no se ve). El color y el grosor, en el marco (`Frame`); el margen,
+     los tiempos y el latido, en `SelectionFrame`. El "mismo color más oscuro" de los botones (ButtonTint) sigue.
+   · **Ajustes: ARREGLADO, la misma causa del teclado.** Desde la barra de sensibilidad, el "abajo" de la
+     automática era un botón del menú de atrás (el principal o la pausa) y `MenuInput` lo devolvía. Además, aun
+     sin eso, se salteaba Invertir Y (su casilla está a la derecha). Ahora el panel se enlaza por filas al abrirse
+     (`MenuNavigation.LinkRows`, lo mismo que el teclado, que pasó a usarla): Idioma → Control → Sensibilidad →
+     Invertir Y → Pantalla → Resolución → VSync → Restablecer/Cerrar; en la barra, izquierda/derecha cambian el valor.
+   · **Para las demás pantallas** (la sala, la pausa, la conexión), `MenuInput`: si la automática salta a un botón
+     de la pantalla de atrás, la selección pasa al de la pantalla de arriba que mejor queda en esa dirección (la
+     misma cuenta de Unity, solo entre los suyos); antes volvía a donde estaba y el stick se trababa.
+   **Antes de probar:** correr `Mercenarios ▸ Una vez ▸ Teclado más separado y marco de lo elegido (control)` (solo
+   el prefab de menús: una vez alcanza). **Corrida y borrada (28 de octubre).** Quedó: las teclas de 880 × 344 en Y −180,
+   16 px entre teclas y filas, el panel de 940 × 590, y `SelectionFrame` (canvas en 500) con su marco blanco de 4 px.
+   - [ ] El teclado se ve separado y la fila de los números ya no toca el recuadro de lo escrito.
+   - [ ] El stick pasa por todas las teclas sin trabarse, abierto desde la conexión y desde la sala; en la punta
+         de una fila pasa a la otra punta.
+   - [ ] Con el control, el marco blanco rodea lo elegido en todos los menús (inicio, conexión, sala, Ajustes, pausa,
+         teclado) y se desliza al moverse; con el mouse no aparece. Que no tape nada importante.
+   - [ ] Ajustes con el control, abierto desde el inicio y desde la pausa: baja por todas las filas hasta Cerrar,
+         pasando por Invertir Y; en la barra, izquierda/derecha cambian la sensibilidad.
+   - [ ] La sala y la pausa con el control: el stick no se traba en ningún botón.
 3. **Tres ventanas en una PC — HECHA, falta correr la herramienta y probar (28 de octubre).**
    Lo que se quería: en la PC del showcase juegan varias personas a la vez, cada una en su monitor con su
    ventana del juego (una build), cada ventana con SU control, o una con teclado y mouse. Antes, con dos
@@ -359,8 +400,18 @@ gris de la esquina, dibujado aparte y sin control); y poder jugar con 3 instanci
    - [ ] En la rueda de una ventana de control, se apunta con el stick aunque el mouse ande por ahí.
    **Probar las habilidades con control (28 de octubre, pedido de Gustavo).** En el código ya andan (ninguna lee
    teclado o mouse directo: todo va por las acciones del asset), pero nadie lo jugó entero con control:
-   - [ ] La rueda de cada clase que la tenga: se abre con su botón, el stick elige, el centro cancela, al soltar
-         sale lo elegido; mientras está abierta el personaje no camina.
+   - [x] La rueda de cada clase que la tenga: se abre con su botón, el stick elige, el centro cancela, al soltar
+         sale lo elegido; mientras está abierta el personaje no camina. **Probado ✅ (28 de octubre).**
+   **La rueda con el stick DERECHO (28 de octubre, pedido de Gustavo al probarla).** Antes se elegía con el
+   izquierdo y el personaje no caminaba. Ahora se elige con el derecho (la acción Look; la cámara no gira mientras
+   la rueda está abierta) y el izquierdo sigue moviendo al personaje, como el WASD mientras se elige con el mouse.
+   Soltar el stick (el centro) sigue siendo cancelar. En una ventana con teclado y control (el editor sin tags) se
+   apunta con el último que se movió. Y al cerrar la rueda con el stick todavía inclinado, la cámara no gira hasta
+   que vuelve al centro (antes giraba de golpe hacia la opción elegida). `UI_RadialMenu.TrackAimDevice`,
+   `ThirdPersonOrbitCam` (`_waitStickCenter`); se fue `PlayerInputProvider.MoveIsGamepad`.
+   - [ ] Con control: la rueda se elige con el stick derecho mientras el izquierdo camina; al soltar el botón
+         sale la opción, y con el stick suelto, nada. Al cerrarla, la cámara no pega un giro.
+   - [ ] Con mouse y teclado: la rueda como siempre (el mouse elige, WASD camina).
    - [ ] Una habilidad de mantener (canalizar o apuntar un lanzamiento) con su gatillo o botón.
    - [ ] Una que se pone en el piso (el Muro de fuego), girándola con la cruceta izquierda/derecha.
    - [ ] Cambiar de clase (cruceta arriba) y elegir subclase (View): el stick recorre las tarjetas y A confirma.

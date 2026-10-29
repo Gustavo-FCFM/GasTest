@@ -23,7 +23,8 @@ using UnityEngine.UI;
 //
 // Mientras está abierto pide el cursor a UICursor y bloquea el input de juego. B, ESC o Start
 // lo cierran: es una pantalla de MenuInput (desde el 26 de octubre de 2026). El recuadro de
-// red de la escena de pruebas sabe no reaccionar a ese mismo ESC (ver LastCloseFrame).
+// red de la escena de pruebas sabe no reaccionar a ese mismo ESC (ver LastCloseFrame). Con el
+// control, el stick va de fila en fila en el orden en que están (MenuNavigation, al abrir).
 //
 // IDIOMA: es la primera fila (cualquiera tiene que poder encontrarla sin entender el
 // idioma de ahora: dice "Idioma · Language" en los dos). Los textos fijos del panel están
@@ -93,6 +94,10 @@ public class UI_SettingsPanel : MonoBehaviour, IMenuScreen
         if (PanelCanvas != null) PanelCanvas.SetActive(true);
         _open = true;
         IsAnyOpen = true;
+
+        // Con el control, fila por fila y sin salirse del panel (ver MenuNavigation): con la
+        // navegación automática no se podía bajar de la barra de sensibilidad.
+        MenuNavigation.LinkRows(PanelCanvas != null ? PanelCanvas.transform : transform, wrapRows: false);
 
         UICursor.Request(this);
         GameSettings.OnChanged += RefreshAll;
