@@ -51,6 +51,7 @@ del log son todos de packs importados).
    · **La Sobrecarga de hechizos** (la R de la Evocación, un vuelo): los bots no usaban nada que vuele.
      Ahora la usan en plena pelea SIN volar: `GA_Flight` le cambia a un bot el efecto del vuelo por una copia
      sin `Status_Flying` (`GameplayEffect.CreateCopyWithoutTags`) y se queda con la resistencia, el maná y las Q.
+     **Desde el 29 de octubre los bots SÍ vuelan** (ver punto 3, "El Mago bot vuela"): la copia sin vuelo se fue.
    · **Dashes derechos:** apuntaban al pecho desde los pies y salían en diagonal hacia arriba (el corte
      avanzando del Filo, el del Pícaro).
    · **Definitivas:** un buff del que pega de lejos (la Protección máxima, la Ira primal) va en plena pelea a
@@ -114,6 +115,33 @@ del log son todos de packs importados).
    espalda y solo tiraba a 3 m. Ahora un combo con TODOS sus pasos a distancia cuenta como a distancia (hoy solo el
    del Shinobi): pelea como el Mago, a ~11 m rodeando, tira hasta 25 m si lo ve y se retira a curarse con poca vida.
    - [ ] Un Shinobi bot tira las kunais de lejos, rodeando, y no se pega al enemigo.
+   **El Mago bot vuela (29 de octubre, pedido de Gustavo): HECHO, falta probar.** Antes no volaba nunca (el vuelo lo
+   mueve el dueño, y un bot no tiene). Ahora lo mueve su cerebro (`BotController` ▸ VUELO, `ServerStartFlight`) con
+   los mismos números del `GA_Flight`, a **8 m** sobre donde va (⚙ "Altura de vuelo (m)"), sin pasar el techo de
+   la arena. Despega (si no tiene techo encima):
+   · **para escapar:** volviendo a curarse; cerca de su base aterriza AFUERA (10 m) y entra caminando;
+   · **para pelear desde arriba:** con el enemigo a tiro y a la vista, y le sigue tirando hechizos desde el aire;
+   · **para cruzar el mapa:** sin nadie a quien pegarle y con el destino a más de 20 m (⚙ "Vuela para ir a más de
+     (m)"), o persiguiendo al que lleva el Objetivo. Al llegar sin nadie cerca, aterriza.
+   Al terminar el vuelo (o si le pegan) cae lento como un jugador; el Terremoto lanzado volando lo baja en picada.
+   La Sobrecarga de la Evocación ahora también levita de verdad. En el aire se ve en la pose de salto/caída.
+   - [ ] Un Mago bot despega al ver a un enemigo, se queda arriba rodeándolo y le tira hechizos; al acabarse el
+         vuelo baja y sigue peleando.
+   - [ ] Con poca vida vuela hacia su base, baja afuera y entra caminando a la sala segura.
+   - [ ] Sin enemigos, cruza el mapa volando hacia el centro o el Objetivo y aterriza al llegar.
+   - [ ] Nunca se queda trabado arriba de un techo ni fuera del mapa (si pasa: dónde y haciendo qué).
+   - [ ] Una Evocación bot con la Sobrecarga levita y pelea desde arriba.
+   **Aterrizar a propósito (29 de octubre, pedido de Gustavo: "si siempre está volando se le complica cambiar de
+   clase"): HECHO, falta probar.**
+   · **Shift volando = aterrizar:** corta el vuelo del Shift aunque esté en cooldown (el cooldown sigue) y cae lento.
+     La levitación de la Sobrecarga no la corta el Shift. (`PlayerController.HandleAbilityInput` →
+     `NetworkASC.ServerRequestLand` → `GA_Flight.EndFlight`.)
+   · **Cambiar de clase (C / cruceta arriba) o subclase (V / View) en el aire:** corta TODO vuelo (también la
+     Sobrecarga), avisa "Bajando: el menú se abre al tocar el piso" y lo abre solo al aterrizar (8 s de espera como
+     mucho). Lo mismo en un salto. Las reglas siguen: base solo en la sala segura, subclase solo al nivel máximo.
+   - [ ] Volando, Shift: cae lento; el Vuelo queda en cooldown. Con la Sobrecarga, Shift no la corta.
+   - [ ] Volando sobre la sala segura, C: baja y el menú de clases se abre solo al tocar el piso.
+   - [ ] Al nivel máximo y volando, V: baja y se abre el de subclases.
 4. **Cuando alguien se atasque:** traer `Logs/Unstuck.log`.
 5. **Decisiones de Gustavo, sin prisa:** más prefabs (variantes de tótems y enemigos, la UI que
    todavía arma el código), acomodar los botiquines, la puntería si se siente mal.

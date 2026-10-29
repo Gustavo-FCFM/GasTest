@@ -212,6 +212,18 @@ public class BotController : MonoBehaviour
     [Label("Buscar cuerpos hasta (m)")]
     public float ReviveSearchRadius = 25f;
 
+    [Header("Vuelo (el Mago)")]
+    [Tooltip("A qué altura sobre el piso vuela un bot (el Vuelo del Mago y la Sobrecarga de la Evocación): " +
+             "fuera del alcance cuerpo a cuerpo, a tiro de lo que pega de lejos. Al llegar a donde iba sin " +
+             "nadie a quien pegarle, baja.")]
+    [Label("Altura de vuelo (m)")]
+    public float FlightHeight = 8f;
+
+    [Tooltip("Sin nadie a quien pegarle (o volviendo a curarse), vuela para ir a un lugar que esté más lejos " +
+             "que esto. Más cerca, camina.")]
+    [Label("Vuela para ir a más de (m)")]
+    public float FlyTravelDistance = 20f;
+
     // --- referencias, resueltas en el servidor ---
     private PlayerController              _pc;
     private AbilitySystemComponent        _asc;
@@ -254,6 +266,12 @@ public class BotController : MonoBehaviour
     private bool      _dashing;      // corriendo un dash: el agente no manda mientras dure
     private Coroutine _dashRoutine;
     private Coroutine _leapRoutine;
+    private Coroutine _flightRoutine;
+
+    private bool    _flying;          // volando (o cayendo después de volar): ver VUELO
+    private Vector3 _airVelocity;     // la velocidad del vuelo, para el Animator
+    private bool    _diveRequested;   // el Terremoto lanzado volando: cae en picada
+    private float   _diveSpeed;
 
     private float _castingUntil;     // canalizando algo propio (la Bola de fuego, la recarga): no se corta solo
     private float _nextChoiceAt;     // cuándo puede cambiar de opción en su rueda de estados
@@ -372,8 +390,12 @@ public class BotController : MonoBehaviour
     {
         if (_dashRoutine != null) { StopCoroutine(_dashRoutine); _dashRoutine = null; }
         if (_leapRoutine != null) { StopCoroutine(_leapRoutine); _leapRoutine = null; }
+        if (_flightRoutine != null) { StopCoroutine(_flightRoutine); _flightRoutine = null; }
 
         _dashing = false;
+        _flying  = false;
+        _airVelocity = Vector3.zero;
+        _diveRequested = false;
         RestoreAgent();
     }
 
@@ -670,6 +692,210 @@ public class BotController : MonoBehaviour
     }
 
     // =========================================================
+    // VUELO (el Mago, desde el 29 de octubre de 2026)
+    //
+    // Un jugador vuela con su CharacterController (PlayerController → VUELO LIBRE): WASD hacia la
+    // cámara, Espacio sube, Ctrl baja. Un bot no tiene cámara ni dueño, así que lo mueve esta
+    // rutina, con los MISMOS números del GA_Flight: va hacia donde decidió Think (la pelea, la
+    // base, el Objetivo) a FlightHeight metros sobre ese punto. Mientras, Fight sigue tirando
+    // hechizos desde el aire. El vuelo dura lo que Status_Flying (recibir daño lo corta, salvo la
+    // Sobrecarga); al terminar cae lento, igual que un jugador, y vuelve a caminar.
+    //
+    // Cuándo despega lo decide ShouldUse (GA_Flight): para escapar, para pelear desde arriba y
+    // para cruzar el mapa (TryFlyToDestination).
+    // =========================================================
+
+    // La llama GA_Flight.Activate cuando el que vuela es un bot.
+    public void ServerStartFlight(float launchSpeed, float speedMultiplier, float forwardBoost, float verticalSpeed,
+                                  float idleSink, bool towardAim, float minUpAngle)
+    {
+        if (!_ready) return;
+
+        CancelMovementRoutines();
+        _flightRoutine = StartCoroutine(FlightRoutine(launchSpeed, speedMultiplier, forwardBoost, verticalSpeed,
+                                                      idleSink, towardAim, minUpAngle));
+    }
+
+    // El Terremoto lanzado volando: el servidor ya cortó el vuelo; cae en picada hasta el piso
+    // (GA_GroundFissure espera a verlo ahí para largar la grieta).
+    public void ServerDive(float speed)
+    {
+        if (!_flying) return;
+        _diveRequested = true;
+        _diveSpeed     = Mathf.Max(1f, Mathf.Abs(speed));
+    }
+
+    private IEnumerator FlightRoutine(float launchSpeed, float speedMultiplier, float forwardBoost, float verticalSpeed,
+                                      float idleSink, bool towardAim, float minUpAngle)
+    {
+        _dashing       = true;   // el agente no manda y la red de contención no corre (está en el aire a propósito)
+        _flying        = true;
+        _diveRequested = false;
+
+        // Apagado, no pausado: encendido pega el transform al piso (ver LeapRoutine).
+        if (_agent != null) _agent.enabled = false;
+
+        // El despegue: hacia arriba, o hacia donde va con un mínimo hacia arriba (como un jugador
+        // que despega mirando al frente desde el piso).
+        Vector3 launchDir = Vector3.up;
+        if (towardAim)
+        {
+            Vector3 flat = _destination - transform.position;
+            flat.y = 0f;
+            if (flat.sqrMagnitude < 0.01f) flat = transform.forward;
+            float up = Mathf.Clamp(minUpAngle, 0f, 89f) * Mathf.Deg2Rad;
+            launchDir = flat.normalized * Mathf.Cos(up) + Vector3.up * Mathf.Sin(up);
+        }
+        Vector3 launch = launchDir.normalized * Mathf.Max(0f, launchSpeed);
+
+        float sink = 0f;    // lo que cae por quedarse quieto
+        float vy   = 0f;    // la caída, terminado el vuelo (o aturdido)
+        float giveUpAt = Time.time + 90f;   // tope de seguridad: ningún vuelo dura tanto
+
+        while (Time.time < giveUpAt && !_asc.HasTag(EGameplayTag.State_Dead))
+        {
+            float dt = Time.deltaTime;
+            bool flying = _asc.HasTag(EGameplayTag.Status_Flying) && !_diveRequested;
+            Vector3 velocity;
+
+            if (flying && !_asc.HasTag(EGameplayTag.State_Stunned))
+            {
+                launch *= Mathf.Exp(-3f * dt);
+                if (launch.sqrMagnitude < 0.0025f) launch = Vector3.zero;
+
+                Vector3 to   = FlightGoal(out bool landing) - transform.position;
+                Vector3 flat = new Vector3(to.x, 0f, to.z);
+                float   far  = flat.magnitude;
+
+                // Llegó a donde iba sin nadie a quien pegarle y ya está en el piso: aterriza (se
+                // termina el vuelo) y sigue caminando. Un jugador puede seguir volando al ras;
+                // un bot que se queda flotando ahí solo pierde el tiempo.
+                if (landing && far < 1.5f && Physics.Raycast(transform.position + Vector3.up * 0.4f, Vector3.down, 0.9f,
+                                                              CollisionMask, QueryTriggerInteraction.Ignore))
+                {
+                    _asc.RemoveEffectsWithTag(EGameplayTag.Status_Flying);
+                    break;
+                }
+
+                // Como un jugador: más rápido si solo va derecho hacia adelante (lejos del punto).
+                float speed = ResolveMoveSpeed() * Mathf.Max(0.1f, speedMultiplier);
+                if (far > 5f) speed *= Mathf.Max(1f, forwardBoost);
+
+                Vector3 horizontal = far > 0.5f ? flat / far * Mathf.Min(speed, far * 2f) : Vector3.zero;
+                float   climb      = Mathf.Clamp(to.y * 1.5f, -verticalSpeed, verticalSpeed);
+
+                // Quieto en el aire va cayendo despacio, igual que un jugador (ver GA_Flight).
+                bool idle = horizontal.sqrMagnitude < 0.25f && Mathf.Abs(climb) < 0.3f;
+                sink = idle ? Mathf.MoveTowards(sink, idleSink, idleSink * dt) : 0f;
+
+                velocity = horizontal + launch + Vector3.up * (climb - sink);
+                vy = 0f;
+            }
+            else
+            {
+                // Terminó el vuelo (o lo aturdieron volando): cae lento, como un jugador; en picada
+                // si fue el Terremoto. Al tocar el piso vuelve a caminar.
+                launch = Vector3.zero;
+                if (_diveRequested) vy = -_diveSpeed;
+                else
+                {
+                    vy += _pc.gravity * _pc.featherFallGravityScale * dt;
+                    if (_pc.featherFallMaxSpeed > 0f && vy < -_pc.featherFallMaxSpeed) vy = -_pc.featherFallMaxSpeed;
+                }
+                velocity = Vector3.up * vy;
+
+                if (vy < 0f && Physics.Raycast(transform.position + Vector3.up * 0.4f, Vector3.down, 0.7f,
+                                               CollisionMask, QueryTriggerInteraction.Ignore))
+                    break;
+            }
+
+            MoveWithCollision(velocity * dt);
+            _airVelocity = velocity;
+            FaceWhileFlying(velocity);
+            yield return null;
+        }
+
+        _flying        = false;
+        _airVelocity   = Vector3.zero;
+        _diveRequested = false;
+        _dashing       = false;
+        _flightRoutine = null;
+
+        RestoreAgent();
+        WarpToNavMesh();
+    }
+
+    // A dónde vuela: arriba del punto que decidió Think, a FlightHeight. Sin nadie a quien pegarle
+    // y ya cerca (el Objetivo, la entrega), baja a ese punto y aterriza. Si el punto está bajo
+    // techo (su sala segura, adonde vuelve a curarse), aterriza AFUERA, a unos metros, y el resto
+    // lo camina: volando se quedaba pegado arriba del techo. Nunca sube más que el techo invisible
+    // de la arena.
+    private Vector3 FlightGoal(out bool landing)
+    {
+        Vector3 goal = _destination;
+
+        Vector3 flat = goal - transform.position;
+        flat.y = 0f;
+        landing = false;
+
+        if (_target == null)
+        {
+            bool roofed = Physics.Raycast(_destination + Vector3.up * 0.5f, Vector3.up, FlightHeight + 2f,
+                                          CollisionMask, QueryTriggerInteraction.Ignore);
+            if (roofed && flat.magnitude < RoofedLandingDistance + 6f)
+            {
+                Vector3 away = -flat;
+                if (away.sqrMagnitude < 0.01f) away = -transform.forward;
+                Vector3 outside = _destination + away.normalized * RoofedLandingDistance;
+                if (NavMesh.SamplePosition(outside, out NavMeshHit hit, 4f, NavMesh.AllAreas)) outside = hit.position;
+                landing = true;
+                return outside;
+            }
+            if (!roofed && flat.magnitude < 6f) { landing = true; return goal; }
+        }
+
+        goal.y = _destination.y + FlightHeight;
+
+        MercArenaBounds bounds = ResolveBounds();
+        if (bounds != null) goal.y = Mathf.Min(goal.y, bounds.CeilingHeight - 1.5f);
+        return goal;
+    }
+
+    // Aterrizando cerca de un lugar con techo (la sala segura): a cuántos metros de él baja.
+    private const float RoofedLandingDistance = 10f;
+
+    // Volando mira al que pelea (los hechizos salen hacia donde mira el cuerpo); si no hay nadie,
+    // hacia donde va.
+    private void FaceWhileFlying(Vector3 velocity)
+    {
+        Vector3 look = _target != null ? _target.transform.position - transform.position : velocity;
+        look.y = 0f;
+        if (look.sqrMagnitude < 0.01f) return;
+
+        transform.rotation = Quaternion.RotateTowards(
+            transform.rotation, Quaternion.LookRotation(look.normalized), 720f * Time.deltaTime);
+    }
+
+    // ¿Hay lugar arriba para despegar? Bajo un techo (su base, un panteón) el vuelo lo dejaría
+    // pegado contra él.
+    private bool HasHeadroom(float height)
+        => !Physics.Raycast(transform.position + Vector3.up * 0.5f, Vector3.up, height,
+                            CollisionMask, QueryTriggerInteraction.Ignore);
+
+    // Sin nadie a quien pegarle (yendo a la pelea, al Objetivo, o volviendo a curarse): si lo que
+    // tiene en el Shift es un vuelo y el lugar queda lejos, vuela hasta allá.
+    private bool TryFlyToDestination()
+    {
+        if (_flying || !(FindAbility(EAbilityInput.Movement) is GA_Flight)) return false;
+
+        Vector3 flat = _destination - transform.position;
+        flat.y = 0f;
+        if (flat.magnitude <= FlyTravelDistance || !HasHeadroom(FlightHeight)) return false;
+
+        return Activate(EAbilityInput.Movement, _destination + Vector3.up, DirectionTo(_destination));
+    }
+
+    // =========================================================
     // CICLO
     // =========================================================
 
@@ -720,7 +946,7 @@ public class BotController : MonoBehaviour
 
         if (!_dashing) Steer();   // durante el dash manda el impulso, no el agente
         Fight();
-        DriveAnimator(_agent != null && _agent.enabled ? _agent.velocity : Vector3.zero);
+        DriveAnimator(_flying ? _airVelocity : _agent != null && _agent.enabled ? _agent.velocity : Vector3.zero, _flying);
     }
 
     // Suelta la habilidad de MANTENER que esté abierta. Un jugador la suelta al soltar el
@@ -1261,7 +1487,7 @@ public class BotController : MonoBehaviour
     // arranca con IsOwner). Un bot no tiene dueño, así que sus parámetros los escribe
     // acá el servidor — y de acá viajan a los clientes por BroadcastLocomotion, igual
     // que los de un jugador (ver "LOCOMOCIÓN EN RED" en PlayerController).
-    private void DriveAnimator(Vector3 velocity)
+    private void DriveAnimator(Vector3 velocity, bool airborne = false)
     {
         if (_anim == null) return;
 
@@ -1274,8 +1500,12 @@ public class BotController : MonoBehaviour
         _anim.SetFloat("MoveX", local.x, 0.1f, Time.deltaTime);
         _anim.SetFloat("MoveY", local.z, 0.1f, Time.deltaTime);
 
-        // Un bot camina por NavMesh: nunca salta ni cae, así que esos dos van en cero.
-        if (_pc != null) _pc.BroadcastLocomotion(speed, local.x, local.z, false, 0f);
+        // Caminando por NavMesh nunca salta ni cae. Volando (el Mago) va en la pose del aire, con
+        // su velocidad vertical, igual que un jugador que vuela.
+        float vertical = airborne ? velocity.y : 0f;
+        _anim.SetBool("IsJumping", airborne);
+        if (_pc != null && !string.IsNullOrEmpty(_pc.VerticalSpeedParam)) _anim.SetFloat(_pc.VerticalSpeedParam, vertical);
+        if (_pc != null) _pc.BroadcastLocomotion(speed, local.x, local.z, airborne, vertical);
     }
 
     // =========================================================
@@ -1304,6 +1534,14 @@ public class BotController : MonoBehaviour
         // Revivir va antes que pelear (ver FindBodyToRevive). Y volviendo a curarse sin objetivo, el
         // Trampero deja una trampa detrás para el que lo persigue.
         if (Time.time >= _nextAbilityAt && (TryRevive() || TryTrapWhileRetreating()))
+        {
+            _nextAbilityAt = Time.time + AbilityInterval;
+            return;
+        }
+
+        // Sin nadie a quien pegarle y lejos de donde va (la pelea, el Objetivo, su base para
+        // curarse): el Mago vuela hasta allá.
+        if (_target == null && Time.time >= _nextAbilityAt && TryFlyToDestination())
         {
             _nextAbilityAt = Time.time + AbilityInterval;
             return;
@@ -1564,12 +1802,22 @@ public class BotController : MonoBehaviour
             case GA_ArcaneProjection projection:
                 return !HasOwnProjection() && ChooseAllyFor(projection) != null;
 
-            // Una definitiva de vuelo (la Sobrecarga de hechizos de la Evocación): el bot no vuela,
-            // pero se queda con la resistencia, el maná y las Q al instante (ver GA_Flight). Va en
-            // plena pelea, a su distancia.
+            // Una definitiva de vuelo (la Sobrecarga de hechizos de la Evocación): levita a FlightHeight
+            // con la resistencia, el maná y las Q al instante (ver VUELO). Va en plena pelea, a su
+            // distancia.
             case GA_Flight _ when slot == EAbilityInput.Action3:
                 return _target != null && CanSee(_target) &&
                        dist <= (FightsFromAfar(role) ? RangedAttackRange : MeleeRange * 3f);
+
+            // EL VUELO del Shift (el Mago, 29 de octubre de 2026): despega para escapar (volviendo a
+            // curarse), para pelear desde arriba (con el enemigo a tiro y a la vista) y para alcanzar
+            // al que está lejos (persiguiendo al que lleva el Objetivo). Volando, no se reactiva; bajo
+            // un techo, no despega. Sin nadie a quien pegarle lo decide TryFlyToDestination.
+            case GA_Flight _:
+                if (_flying || !HasHeadroom(FlightHeight)) return false;
+                if (_retreating) return true;
+                return _target != null &&
+                       ((CanSee(_target) && dist <= RangedAttackRange) || dist > FlyTravelDistance);
 
             // Las de OBJETIVO dicen a quién apuntan, así que la regla sale del asset:
             // a un ALIADO son curaciones, escudos y protecciones —van cuando alguien está
@@ -1958,9 +2206,8 @@ public class BotController : MonoBehaviour
         GameplayAbility effective = ability is GA_TagSwitch sw && sw.CurrentVariant != null ? sw.CurrentVariant : ability;
 
         // Lo único que un bot todavía no puede ejecutar. Ver GameplayAbility.MovesThroughOwner. La
-        // excepción: una definitiva de vuelo (la Sobrecarga de la Evocación), que un bot usa sin volar
-        // (GA_Flight se lo saca y le deja lo demás).
-        if (ability.MovesThroughOwner && !(ability is GA_Flight && slot == EAbilityInput.Action3)) return false;
+        // excepción: el vuelo (GA_Flight), que lo mueve este cerebro (ver VUELO).
+        if (ability.MovesThroughOwner && !(ability is GA_Flight)) return false;
 
         // Una de ALIADO (la Proyección arcana, la curación apuntada del Clérigo) se apunta al aliado,
         // no al enemigo: si no, no lo encuentra en la mira. Sin aliado y sin autocasteo, no sale.

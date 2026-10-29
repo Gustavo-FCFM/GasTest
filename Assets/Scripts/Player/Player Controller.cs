@@ -437,6 +437,14 @@ public class PlayerController : NetworkBehaviour
 
     private bool IsFlying => ASC != null && ASC.HasTag(EGameplayTag.Status_Flying);
 
+    // Para los menús de clase (UI_ClassMenu): ¿vuela?, y aterrizar. anyFlight = también la
+    // levitación de la Sobrecarga; sin eso, solo el vuelo del Shift (ver ServerRequestLand).
+    public bool IsFlyingNow => IsFlying;
+    public void RequestLand(bool anyFlight)
+    {
+        if (NetASC != null && IsFlying) NetASC.ServerRequestLand(anyFlight);
+    }
+
     // Embestida (GA_RushAttack, la Patada voladora del Monje): avanza sola a velocidad
     // constante; izquierda/derecha la tuercen y volver a apretar su botón la corta. Ver
     // StartRush / TickRush.
@@ -1903,6 +1911,17 @@ public class PlayerController : NetworkBehaviour
     private void HandleAbilityInput()
     {
         TickQueuedHoldRelease();
+
+        // VOLANDO, el Shift ATERRIZA (29 de octubre de 2026, pedido de Gustavo): corta el vuelo
+        // aunque la habilidad esté en cooldown, y cae lento. Antes para cambiar de clase había que
+        // esperar a que se acabara solo. La levitación de la Sobrecarga (Status_SteadyFlight) no:
+        // es la definitiva, y ahí el Shift sigue siendo el Shift.
+        if (MovementAbility is GA_Flight && IsFlying && !ASC.HasTag(EGameplayTag.Status_SteadyFlight) &&
+            _input.MovementAbility != null && _input.MovementAbility.WasPressedThisFrame())
+        {
+            RequestLand(false);
+            return;
+        }
 
         if (ASC.HasTag(EGameplayTag.State_Silenced)) return;
 

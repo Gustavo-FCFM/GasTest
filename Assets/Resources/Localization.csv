@@ -188,6 +188,7 @@ unstuck.stand_still;Primero quédate quieto {total} s (faltan {seconds} s).;Stan
 # ---- Partida: menú de clases, subclases, rueda, barras ----
 classmenu.only_in_base;Solo puedes cambiar de clase dentro de tu base;You can only change class inside your base
 classmenu.land_first;Primero aterriza;Land first
+classmenu.opens_on_landing;Bajando: el menú se abre al tocar el piso;Landing: the menu opens when you touch the ground
 classmenu.outside_base;Estás fuera de tu base: si te golpean, el menú se cierra;You're outside your base: if you get hit, the menu closes
 classmenu.hit_cancelled;Te golpearon: se canceló la elección. Vuelve a tu base y presiona {key};You got hit: the choice was cancelled. Go back to your base and press {key}
 levelup.max_level;¡NIVEL MÁXIMO!;MAX LEVEL!

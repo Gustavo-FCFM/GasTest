@@ -204,12 +204,20 @@ public class UI_ClassMenu : MonoBehaviour
 
         // Solo con los pies en el piso. Elegir en el aire cambiaba el Animator a mitad de
         // un salto y la animación quedaba trabada; dejarlo caer con el menú abierto
-        // también se veía feo. Así que el menú directamente no se abre hasta aterrizar.
-        if (!_player.IsGrounded)
+        // también se veía feo. Así que el menú no se abre hasta aterrizar.
+        //
+        // VOLANDO (el Mago, 29 de octubre de 2026): pedirlo corta el vuelo (también la levitación
+        // de la Sobrecarga) y, como en un salto, el menú se abre SOLO al tocar el piso (ver
+        // TickOpenOnLanding). Antes había que esperar a que el vuelo se acabara y volver a apretar.
+        if (_player.IsFlyingNow) _player.RequestLand(true);
+        if (!_player.IsGrounded || _player.IsFlyingNow)
         {
-            Announce(Loc.T("classmenu.land_first"), new Color(1f, 0.75f, 0.3f), 24f);
+            _openOnLanding      = mode;
+            _openOnLandingUntil = Time.time + OpenOnLandingSeconds;
+            Announce(Loc.T("classmenu.opens_on_landing"), new Color(1f, 0.75f, 0.3f), 24f);
             return;
         }
+        _openOnLanding = null;
 
         _mode = mode;
         if (!BuildMenu()) return; // sin clases que mostrar, no bloqueamos al jugador
@@ -351,8 +359,26 @@ public class UI_ClassMenu : MonoBehaviour
     // SELECCIÓN
     // =========================================================
 
+    // Pedido en el aire: qué menú abrir al tocar el piso, y hasta cuándo esperar (una caída larga
+    // desde el vuelo tarda; si pasa más que esto, se olvida y hay que volver a pedirlo).
+    private EMode? _openOnLanding;
+    private float  _openOnLandingUntil;
+    private const float OpenOnLandingSeconds = 8f;
+
+    private void TickOpenOnLanding()
+    {
+        if (!_openOnLanding.HasValue || _open || _player == null) return;
+        if (Time.time > _openOnLandingUntil) { _openOnLanding = null; return; }
+        if (!_player.IsGrounded || _player.IsFlyingNow) return;
+
+        EMode mode = _openOnLanding.Value;
+        _openOnLanding = null;
+        Open(mode);
+    }
+
     private void Update()
     {
+        TickOpenOnLanding();
         if (!_open) return;
 
         // Con la pausa (o los ajustes) encima, el control es de ellos.

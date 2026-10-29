@@ -1899,15 +1899,40 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     // =========================================================
     // VUELO LIBRE (GA_Flight) — el vuelo dura lo que Status_Flying; esto solo le manda al
     // DUEÑO los números del vuelo y el impulso de despegue (el transform es suyo). Un bot
-    // no vuela (GA_Flight.MovesThroughOwner).
+    // vuela con su cerebro (BotController.ServerStartFlight, desde el 29 de octubre de 2026).
     // =========================================================
 
+    // ATERRIZAR (29 de octubre de 2026, pedido de Gustavo): el dueño corta su vuelo y cae lento.
+    // Shift volando corta SOLO el vuelo del Shift (lo que su GA_Flight le dio; el cooldown sigue).
+    // Pedir cambiar de clase o subclase en el aire corta TODO vuelo, también la levitación de la
+    // Sobrecarga: el menú pide estar en el piso (UI_ClassMenu lo abre al aterrizar).
+    [ServerRpc]
+    public void ServerRequestLand(bool anyFlight)
+    {
+        if (_asc == null || !_asc.HasTag(EGameplayTag.Status_Flying)) return;
+
+        if (anyFlight)
+        {
+            _asc.RemoveEffectsWithTag(EGameplayTag.Status_Flying);
+            return;
+        }
+
+        PlayerController pc = GetComponent<PlayerController>();
+        if (pc != null && pc.MovementAbility is GA_Flight flight) flight.EndFlight();
+    }
+
     // PICADA (el Terremoto del Mago lanzado volando): el servidor ya cortó el vuelo; el DUEÑO cae
-    // rápido hasta el piso (el transform es suyo). El servidor espera a verlo en el piso.
+    // rápido hasta el piso (el transform es suyo). El servidor espera a verlo en el piso. Un bot
+    // la cae con su cerebro, como el dash.
     [Server]
     public void ServerStartDive(float speed)
     {
-        if (!HasOwnerConnection()) return;
+        if (!HasOwnerConnection())
+        {
+            BotController brain = GetComponent<BotController>();
+            if (brain != null) brain.ServerDive(speed);
+            return;
+        }
         TargetStartDive(Owner, speed);
     }
 
