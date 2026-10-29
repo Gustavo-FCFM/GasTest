@@ -147,7 +147,9 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
 - **`ASC.ActiveEffects` solo existe poblado en el servidor.** La UI remota lee de los
   diccionarios sincronizados del `NetworkAbilitySystemComponent`, no del ASC local.
 - **El transform del jugador es client-authoritative**: teletransportes, saltos y dashes
-  los ejecuta el DUEÑO por TargetRpc, nunca el servidor escribiendo el transform.
+  los ejecuta el DUEÑO por TargetRpc, nunca el servidor escribiendo el transform. Un bot no
+  tiene dueño: cada uno de esos movimientos tiene su ruta en `BotController` (`ServerDash`,
+  `ServerLeap`, `ServerStartFlight`, `ServerDive`), y lo que no la tiene se marca `MovesThroughOwner`.
 - **Los registros de red se actualizan a mano.** Cada `GA_*` o `GE_*` nuevo tiene que
   entrar en `GameplayAbilityRegistry` / `GameplayEffectRegistry` (los dos assets de
   `Assets/Resources/`), porque FishNet manda el ÍNDICE dentro de esas listas y no la

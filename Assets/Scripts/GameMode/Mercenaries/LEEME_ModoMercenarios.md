@@ -55,7 +55,10 @@ pruebas rápidas de clases.
   TIPO (`Classify`); las que tienen una jugada propia llevan su caso en `ShouldUse` (la
   Resurrección va hasta el cuerpo, las marcas al que le pega a un aliado, las trampas entre él y
   el enemigo; revisadas las 32 clases el 28 de octubre de 2026). **Una habilidad nueva con una
-  jugada particular necesita su caso ahí: si no, cae en "cuerpo a cuerpo".** **Cámara de espectador**
+  jugada particular necesita su caso ahí: si no, cae en "cuerpo a cuerpo".** Un combo con todos sus
+  pasos a distancia (las kunais del Shinobi) cuenta como a distancia. **El Mago bot vuela** (29 de
+  octubre de 2026): a 8 m sobre donde va, para escapar, pelear desde arriba y cruzar el mapa (sección
+  VUELO de `BotController`). **Cámara de espectador**
   (`Player/SpectatorCamera`) para mirar la partida sin jugar, con mouse y teclado o con control
   (mapa "Spectator" del asset de input).
 - **Menú principal y Ajustes**: un panel sobre la arena con la cámara de la sala girando
