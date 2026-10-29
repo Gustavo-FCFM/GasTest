@@ -182,14 +182,6 @@ del log son todos de packs importados).
    deja que el stick salga de la pantalla de arriba); un marco blanco muestra lo elegido en todos los menús, y el
    teclado quedó más separado (la herramienta ya se corrió y se borró). **Todo probado ✅ (28 de octubre).** Ver
    "★ Showcase" ▸ etapas 2 y 3.
-10. **Instalador de Windows (29 de octubre): HECHO, falta probar.** `Installer/Mercenaries.iss` (Inno Setup 6), sobre el
-   `ISCC.iss` de vampireduke (su pull request #3, que no está en `main`: se puede cerrar). Corregido: se instala en
-   "Mercenaries" (sin pedir administrador), acceso directo en el escritorio (casilla marcada) y en el menú Inicio
-   (también uno del showcase si la build trae `Showcase.bat`), sin la carpeta `DoNotShip`, y el setup sale como
-   `Builds\Instaladores\Mercenaries_Setup_0.1.0.exe`. Toma `Builds\B9`; otra build: `ISCC.exe /DBuild=B10 /DAppVersion=…`.
-   En esta PC no hay Inno Setup todavía: compilarlo una vez para verlo.
-   - [ ] Desinstalar el de la primera prueba (quedó en `C:\Users\Default\Desktop\My Program`: correr su `unins000.exe`).
-   - [ ] Instalar Inno Setup 6, compilar `Mercenaries.iss`, instalar el setup: aparece en el escritorio y abre el juego.
 
 ## Cómo retomar en la otra máquina
 
