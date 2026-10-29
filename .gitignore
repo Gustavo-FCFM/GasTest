@@ -8,6 +8,15 @@
 [Oo]bj/
 [Bb]uild/
 [Bb]uilds/
+# La carpeta Builds de la RAÍZ (al lado de DesignDocuments) sí se sube: ahí van las builds para
+# compartirlas (29 de octubre de 2026, pedido de Gustavo). Ver Builds/LEEME.md. Lo que no va: la
+# carpeta que Unity pide no distribuir, los zips (pasan los 100 MB que acepta GitHub) y lo que
+# arma el instalador.
+!/Builds/
+/Builds/**/*_BurstDebugInformation_DoNotShip/
+/Builds/**/*.zip
+/Builds/**/exebuild/
+/Builds/Instaladores/
 [Ll]ogs/
 [Uu]ser[Ss]ettings/
 *.log
