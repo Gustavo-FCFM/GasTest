@@ -125,12 +125,12 @@ del log son todos de packs importados).
    - [ ] El fuego de la rueda del libro usa `48toPlay/Fire.png` (fuera de `Art/Icons`).
    - Prestados de otra clase: Trampas (la Presa), Manto del Shinobi (Ocultarse del Pícaro), Ráfaga de kunais,
      katana del Samurái y lanza del Trampero (del Guerrero), Danza defensiva (Paladín), Imparable (dash del Pícaro).
-8. **Las demos de FishNet, BORRADAS (28 de octubre).** El `NetworkManager` de las tres escenas era el prefab de
+8. **Las demos de FishNet, BORRADAS Y PROBADAS ✅ (28 de octubre).** El `NetworkManager` de las tres escenas era el prefab de
    `FishNet/Demos/Prefabs`: pasó a `Assets/Prefabs/Network/` (con su `NetworkHudCanvas`, el script
    `NetworkHudCanvases.cs` y la textura `1x1 Pixel`), con los mismos `.meta`, así que las escenas siguen igual.
    El resto se borró (4 avisos menos; quedan ~150, todos de FishNet). Compila sin errores en el editor.
-   - [ ] Entrar a Play en `Mercenaries_Gamemode` y `Test_Network`: la partida arranca y conecta como siempre.
-     (`Mercenaries_Graveyard` ya arrancó y conectó bien el 28 de octubre, en la pasada con control.)
+   - [x] Entrar a Play en `Mercenaries_Gamemode` y `Test_Network`: la partida arranca y conecta como siempre.
+     (`Mercenaries_Graveyard` ya arrancó y conectó bien el 28 de octubre, en la pasada con control.) **Probado ✅ (28 de octubre).**
 9. **Pasada completa SOLO con control, en el editor (28 de octubre, pedido de Gustavo para jugar contra bots el
    viernes): HECHA ✅.** Con un control virtual (el CLI `unity`): menú → Crear partida → unirse → elegir clase →
    3 bots con "+" → Confirmar → Empezar → cambiar de clase (cruceta arriba) → la rueda del libro (LT + stick) →
