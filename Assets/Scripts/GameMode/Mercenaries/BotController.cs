@@ -1372,6 +1372,19 @@ public class BotController : MonoBehaviour
             if (last != null) return Classify(last);
         }
 
+        // Un combo cuyos pasos son TODOS a distancia (las kunais del Shinobi) es un ataque a
+        // distancia. Hasta el 29 de octubre de 2026 caía en "cuerpo a cuerpo": el Shinobi bot
+        // peleaba por la espalda y solo tiraba las kunais a 3 m. Un combo mixto sigue siendo
+        // cuerpo a cuerpo.
+        if (a is GA_ComboSequence combo && combo.Sequence != null && combo.Sequence.Count > 0)
+        {
+            bool allRanged = true;
+            foreach (GA_ComboSequence.ComboStep step in combo.Sequence)
+                if (step.AbilityToCast == null || step.AbilityToCast == a ||
+                    Classify(step.AbilityToCast) != EAbilityKind.Ranged) { allRanged = false; break; }
+            if (allRanged) return EAbilityKind.Ranged;
+        }
+
         // Un switch cuya habilidad normal es de MOVIMIENTO (el Shift del Monje: la Patada voladora, o
         // la del dragón con Ki) es un movimiento; los demás switches (las posturas, el Ki), un buff.
         if (a is GA_TagSwitch sw && sw.DefaultAbility != null && sw.DefaultAbility != a &&

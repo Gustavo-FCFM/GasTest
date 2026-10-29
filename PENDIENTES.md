@@ -109,6 +109,11 @@ del log son todos de packs importados).
    - [ ] Un Guardián bot usa la Ejecución sobre uno con poca vida.
    - [ ] Un Clérigo del orden y un Paladín de la venganza bots marcan al que le pega a un compañero.
    - [ ] Un Chamán bot suelta la Furia elemental dentro de la pelea, no de lejos.
+   **El Shinobi bot pelea a distancia (29 de octubre, pedido de Gustavo): HECHO, falta probar.** Su básico es un combo de
+   kunais (`GA_ShinobiStrikes`), y `BotController.Classify` tomaba todo combo como cuerpo a cuerpo: lo ponía por la
+   espalda y solo tiraba a 3 m. Ahora un combo con TODOS sus pasos a distancia cuenta como a distancia (hoy solo el
+   del Shinobi): pelea como el Mago, a ~11 m rodeando, tira hasta 25 m si lo ve y se retira a curarse con poca vida.
+   - [ ] Un Shinobi bot tira las kunais de lejos, rodeando, y no se pega al enemigo.
 4. **Cuando alguien se atasque:** traer `Logs/Unstuck.log`.
 5. **Decisiones de Gustavo, sin prisa:** más prefabs (variantes de tótems y enemigos, la UI que
    todavía arma el código), acomodar los botiquines, la puntería si se siente mal.
@@ -413,9 +418,9 @@ gris de la esquina, dibujado aparte y sin control); y poder jugar con 3 instanci
    - [x] Con control: la rueda se elige con el stick derecho mientras el izquierdo camina; al soltar el botón
          sale la opción, y con el stick suelto, nada. Al cerrarla, la cámara no pega un giro. **Probado ✅ (28 de octubre).**
    - [x] Con mouse y teclado: la rueda como siempre (el mouse elige, WASD camina). **Probado ✅ (28 de octubre).**
-   - [ ] Una habilidad de mantener (canalizar o apuntar un lanzamiento) con su gatillo o botón.
-   - [ ] Una que se pone en el piso (el Muro de fuego), girándola con la cruceta izquierda/derecha.
-   - [ ] Cambiar de clase (cruceta arriba) y elegir subclase (View): el stick recorre las tarjetas y A confirma.
+   - [x] Una habilidad de mantener (canalizar o apuntar un lanzamiento) con su gatillo o botón. **Probado ✅ (29 de octubre, Gustavo: "se mueven bien").**
+   - [x] Una que se pone en el piso (el Muro de fuego), girándola con la cruceta izquierda/derecha. **Probado ✅ (29 de octubre).**
+   - [x] Cambiar de clase (cruceta arriba) y elegir subclase (View): el stick recorre las tarjetas y A confirma. **Probado ✅ (28 de octubre, en el editor).**
    - [ ] El HUD muestra los botones del control (RT, LT, RB, LB, Y, B).
 4. **Documentos** (arquitectura de red, guía, CLAUDE.md, el LEEME del modo). Lo de las etapas 1 y 2 ya está en
    `Red_Arquitectura.docx`, el LEEME y CLAUDE.md (26 de octubre). La etapa 3 también (28 de octubre: CLAUDE.md, el LEEME
