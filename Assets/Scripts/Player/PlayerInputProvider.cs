@@ -117,13 +117,6 @@ public class PlayerInputProvider : MonoBehaviour
     public Vector2 MoveValue => _initialized ? Move.ReadValue<Vector2>() : Vector2.zero;
     public Vector2 LookValue => _initialized ? Look.ReadValue<Vector2>() : Vector2.zero;
 
-    // True si el movimiento lo está manejando un mando (stick izquierdo) y no el
-    // teclado. Lo usa el menú radial para decidir si apunta con el stick o con el
-    // mouse, y PlayerController para no mover al personaje mientras se apunta el
-    // radial con el stick.
-    public bool MoveIsGamepad =>
-        _initialized && Move.activeControl != null && Move.activeControl.device is Gamepad;
-
     // Inicializa el input para el jugador DUEÑO local. La llama
     // PlayerController.OnStartClient cuando IsOwner. Clona el asset, resuelve
     // las acciones del mapa "Player", lo habilita y se registra como Local.

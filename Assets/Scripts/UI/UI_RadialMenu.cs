@@ -8,9 +8,10 @@ using UnityEngine.UI;
 // UI_RadialMenu
 //
 // La rueda para elegir una opción de una habilidad IRadialMenuAbility (el tótem del Chamán,
-// el compañero del Maestro de bestias, y más adelante los hechizos del Mago). Mantener el
-// botón la abre alrededor de la mira; se apunta con el mouse (o el stick) y al SOLTAR sale la
-// opción resaltada. El centro es cancelar.
+// el compañero del Maestro de bestias, los libros del Mago). Mantener el botón la abre
+// alrededor de la mira; se apunta con el mouse o, con control, con el stick DERECHO (desde el
+// 28 de octubre de 2026; antes era el izquierdo, que ahora sigue moviendo al personaje), y al
+// SOLTAR sale la opción resaltada. El centro es cancelar (con el stick: soltarlo).
 //
 // CUÁNTAS OPCIONES: las que dé la habilidad (RadialIcons.Length). Cada una es una porción
 // del anillo; con más de 6 el anillo crece y los íconos se achican para que entren.
@@ -189,6 +190,7 @@ public class UI_RadialMenu : MonoBehaviour
 
     private bool  _open;
     private bool  _closing;
+    private bool  _aimWithStick;   // se apunta con el stick (si no, con el mouse): ver TrackAimDevice
     private float _stateTime;
     private int   _selected = -1;
     private int   _confirmed = -1;
@@ -260,6 +262,7 @@ public class UI_RadialMenu : MonoBehaviour
         _stateTime = 0f;
         _selected  = -1;
         _confirmed = -1;
+        _aimWithStick = !LocalSeat.AllowsKeyboardMouse;
 
         UICursor.Request(this, blockGameplayInput: false);   // la rueda usa el mapa de juego
     }
@@ -303,15 +306,15 @@ public class UI_RadialMenu : MonoBehaviour
         Group.alpha = k;
         Ring.localScale = Vector3.one * Mathf.Lerp(OpenFromScalePercent / 100f, 1f, k);
 
-        // Dirección de la mira desde el centro de la rueda en pantalla: el stick con control,
-        // el mouse si no.
+        // Dirección de la mira desde el centro de la rueda en pantalla: el stick derecho con
+        // control, el mouse si no.
         float scale = _canvas != null && _canvas.rootCanvas.scaleFactor > 0f ? _canvas.rootCanvas.scaleFactor : 1f;
-        Vector2 dir;
         PlayerInputProvider input = PlayerInputProvider.Local;
-        // Una ventana de control (LocalSeat) apunta SIEMPRE con el stick: el mouse que anda
-        // por ahí es el de la ventana de teclado.
-        if (input != null && (input.MoveIsGamepad || !LocalSeat.AllowsKeyboardMouse))
-            dir = input.MoveValue * (_outer * scale);
+        TrackAimDevice(input);
+
+        Vector2 dir;
+        if (_aimWithStick)
+            dir = (input != null ? input.LookValue : Vector2.zero) * (_outer * scale);
         else
         {
             Vector2 mouse = Mouse.current != null ? Mouse.current.position.ReadValue() : (Vector2)Input.mousePosition;
@@ -373,6 +376,21 @@ public class UI_RadialMenu : MonoBehaviour
             _closing = false;
             Group.alpha = 0f;
         }
+    }
+
+    // Con qué se apunta. Una ventana de control (LocalSeat) SIEMPRE con el stick: el mouse que
+    // anda por ahí es el de la ventana de teclado. Si no, con el último que se movió, y se
+    // recuerda: el stick que vuelve al centro es cancelar, no le pasa la mira al mouse (que quedó
+    // quieto en cualquier lado). El stick es el DERECHO, la acción Look: mientras la rueda está
+    // abierta la cámara no gira (UICursor.Free) y el izquierdo sigue moviendo al personaje.
+    private void TrackAimDevice(PlayerInputProvider input)
+    {
+        if (!LocalSeat.AllowsKeyboardMouse) { _aimWithStick = true; return; }
+        if (input == null || !input.IsReady) return;
+
+        InputDevice device = input.Look.activeControl?.device;
+        if (device is Gamepad)    _aimWithStick = true;
+        else if (device is Mouse) _aimWithStick = false;
     }
 
     // El centro de la rueda en la pantalla (en píxeles), para medir hacia dónde va el mouse.

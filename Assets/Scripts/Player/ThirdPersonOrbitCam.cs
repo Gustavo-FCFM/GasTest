@@ -183,6 +183,10 @@ public class ThirdPersonOrbitCam : MonoBehaviour
     private float rotX = 0f;
     private float rotY = 0f;
 
+    // Después de un menú (la rueda se elige con el stick derecho), el stick no gira la cámara
+    // hasta que vuelva al centro. Ver LateUpdate.
+    private bool _waitStickCenter;
+
     // Distancia actual del brazo. Empieza en la distancia natural del hombro.
     private float _currentDistance;
 
@@ -217,6 +221,7 @@ public class ThirdPersonOrbitCam : MonoBehaviour
         // con el stick) la cámara NO gira: el mouse mueve el cursor para elegir, y la mira se queda
         // donde estaba. Así lo que se lanza al soltar (una trampa, un tótem) cae donde apuntabas al
         // abrirla (pedido de Gustavo, 15 de octubre). Los demás menús ya apagan el input entero.
+        if (UICursor.Free) _waitStickCenter = true;
         if (Time.timeScale > 0 && input != null && input.IsReady && !UICursor.Free)
         {
             Vector2 look = input.LookValue;
@@ -228,6 +233,15 @@ public class ThirdPersonOrbitCam : MonoBehaviour
             // por el dispositivo de su control activo.
             bool fromGamepad = input.Look.activeControl != null &&
                                input.Look.activeControl.device is Gamepad;
+
+            // Con control, la rueda se elige con el stick derecho y se suelta con el stick todavía
+            // inclinado hacia la opción: sin esto la cámara giraba de golpe para ese lado. Al cerrarse
+            // un menú, el stick no cuenta hasta que vuelve al centro (el mouse, en cuanto se mueve).
+            if (_waitStickCenter)
+            {
+                if (fromGamepad && look.sqrMagnitude > 0.04f) look = Vector2.zero;
+                else _waitStickCenter = false;
+            }
 
             // Los ajustes del jugador (panel de Ajustes): multiplican la sensibilidad de
             // arriba —que es la base del prefab— y dan vuelta el eje Y si lo pidió.

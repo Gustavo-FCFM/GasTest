@@ -983,12 +983,9 @@ public class PlayerController : NetworkBehaviour
         float baseSpeed = ASC.GetAttributeValue(EAttributeType.MovSpeed);
         if (baseSpeed <= 0) baseSpeed = 5f;
 
+        // Con la rueda abierta se sigue caminando: con control se elige con el stick DERECHO
+        // (ver UI_RadialMenu), como con el mouse mientras el WASD mueve.
         Vector2 moveInput = _input.MoveValue;
-
-        // Con el menú radial abierto y apuntando con el stick, el stick sirve para
-        // ELEGIR en la rueda (ver UI_RadialMenu), no para mover al personaje.
-        if (isRadialMenuOpen && _input.MoveIsGamepad) moveInput = Vector2.zero;
-
         Vector3 inputVec  = GetWASDInputVector(moveInput.x, moveInput.y);
 
         // Third-person shooter: el cuerpo SIEMPRE mira hacia donde apunta la
