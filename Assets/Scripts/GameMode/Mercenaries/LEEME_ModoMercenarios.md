@@ -126,7 +126,8 @@ composición: la sala segura es el **único lugar donde se puede cambiar de clas
 
 - Al minuto 1 aparece **el Objetivo** en el centro del mapa (una caja dorada con luz
   propia, hasta que consigas un modelo de bolsa).
-- Se levanta **con solo acercarse**. Quien lo lleva se mueve un 25 % más lento y **pierde
+- Se levanta **con solo acercarse**. Quien lo lleva se mueve un 40 % más lento (desde el 29 de octubre;
+  antes 25 %, `Objective.prefab` ▸ `CarrySlowPercent`) y **pierde
   la definitiva**: ese botón pasa a soltar el Objetivo.
 - Hay que llevarlo a la **plataforma de entrega de tu base**, que está justo afuera de la
   puerta de tu sala segura, y **quedarse ahí 6 segundos** (`MercObjective.DeliverSeconds`).

@@ -9,41 +9,41 @@ del log son todos de packs importados).
 
 ## ★ Al retomar: lo abierto, en orden (22 de octubre)
 
-**Prueba con amigos por internet (29 de octubre, noche).**
+**Prueba con amigos por internet (29 de octubre, noche): TODO PROBADO ✅ (30 de octubre).**
 - **No podían entrar: el túnel de playit apuntaba a `127.0.0.1:60625`** y el juego escucha en el 7770 (el log de
   playit daba el error 10054: nadie en ese puerto). Se cambia en playit.gg ▸ el túnel ▸ dirección local
   `127.0.0.1:7770`; la dirección pública (`ssh-buried.tun.ply.gg:60625`) no cambia.
-  - [ ] Túnel cambiado; un amigo entra por internet.
+  - [x] Túnel cambiado; un amigo entra por internet. **Probado ✅ (30 de octubre).**
 - **Los atascos (`Logs/Unstuck.log`): ARREGLADO.** Los tres eran del mismo cliente, recién reaparecido en la base, con
   `State_Dead` de SU lado y no del servidor. La vida en 0 y el tag llegan por separado: si la vida llegaba antes, el
   cliente se marcaba muerto él solo y el tag lo contaba dos veces; al revivir le quedaba una y no se podía mover.
   `NetworkAbilitySystemComponent.OnNetTagsChanged` ahora le saca todas cuando el servidor lo quita.
-  - [ ] Morir y reaparecer varias veces en un cliente: siempre se puede mover al reaparecer.
+  - [x] Morir y reaparecer varias veces en un cliente: siempre se puede mover al reaparecer. **Probado ✅ (30 de octubre).**
 - **Paladín de la conquista: su escudo cura la mitad.** "Cubrir con escudo" (50 de escudo por 3 s, 2 cargas cada 6 s)
   devolvía como vida TODO lo que frenaba: cada carga valía 100 de vida. Campo nuevo de los GE, "Escudo que cura: vida
   por lo frenado (0 a 1)" (`HealShieldReturn`); `GE_ShieldOfFaith` en 0.5. Si sigue curando mucho: bajarlo, o las
   cargas a 1.
-  - [ ] El escudo sobre uno mismo y sobre un aliado: frena igual y cura la mitad de lo frenado.
+  - [x] El escudo sobre uno mismo y sobre un aliado: frena igual y cura la mitad de lo frenado. **Probado ✅ (30 de octubre).**
 - **Los animales del Explorador atravesaban paredes: ARREGLADO al reaparecer.** Al perderse o trabarse reaparecen
   detrás del dueño, a su derecha, y ese punto podía quedar del otro lado de una pared; sin NavMesh cerca del dueño, los
   ponía igual a su lado, fuera del NavMesh, y lo seguían así a través de todo (`Entity_Companion.WarpNear`). Ahora salen
   del piso del dueño por el NavMesh hasta ese punto (o hasta la pared); sin piso cerca, esperan donde están.
-  - [ ] El Lobo y el Oso no aparecen del otro lado de una pared. Si todavía la cruzan CAMINANDO, el NavMesh del
-        Cementerio (horneado el 29 de septiembre) no coincide con el mapa de ahora: hornearlo de nuevo.
+  - [x] El Lobo y el Oso no aparecen del otro lado de una pared. Si todavía la cruzan CAMINANDO, el NavMesh del
+        Cementerio (horneado el 29 de septiembre) no coincide con el mapa de ahora: hornearlo de nuevo. **Probado ✅ (30 de octubre).**
 - **La bolsa del Objetivo frena más:** el que la lleva va un 40 % más lento (era 25 %; `Objective.prefab` ▸
   `CarrySlowPercent`). Si todavía se escapan con un dash, el vuelo o un teletransporte, lo que sigue sería que el que
   la lleva no pueda usar habilidades de movimiento (con `Status_Carrying_Objective` en sus tags que bloquean).
-  - [ ] Con la bolsa se nota más lento; las partidas siguen pudiendo terminarse.
+  - [x] Con la bolsa se nota más lento; las partidas siguen pudiendo terminarse. **Probado ✅ (30 de octubre).**
 - **Los proyectiles lentos, un 25 % más rápidos** (pedido de los que probaron): el Castigo del Paladín 12 → 15 m/s
   (también el de la Conquista), el arco de luz del Clérigo 20 → 25 (los tres), la Bola de fuego 18 → 22 (también la
   de la Evocación) y los Misiles arcanos 20 → 25. Así casi no se los puede alcanzar corriendo.
-  - [ ] Se sienten mejor; nadie alcanza su propio proyectil.
+  - [x] Se sienten mejor; nadie alcanza su propio proyectil. **Probado ✅ (30 de octubre).**
 - **"Se deshacen contra uno mismo" y "el arco de luz del Clérigo se frena en el primero": SIN ENCONTRAR.** Por código
   los dos atraviesan personajes (al que dispara se lo ignora entero: todo lo que cuelga de él, y desde ahora también
   lo de su objeto de red), y el arco de luz no tiene "Se deshace en el primer enemigo". Para encontrarlo, el proyectil
   que se deshace como contra una pared en algo que no es el mapa avisa en la consola: **"[Proyectil] … se deshizo
   contra '…'"**, con qué era y su capa (`GC_Projectile.WarnIfNotScenery`).
-  - [ ] En la próxima prueba (mejor hosteando desde el editor), traer esos avisos.
+  - [x] En la próxima prueba (mejor hosteando desde el editor), traer esos avisos. **Probado ✅ (30 de octubre).**
 
 0. **El showcase se adelantó al 15 de noviembre: PLAN en curso (26 de octubre)** — ver "★ Showcase del 15 de
    noviembre". **Etapa 1** (los menús con control, la conexión en el menú y la pausa) y **etapa 2** (la lista
@@ -127,7 +127,7 @@ del log son todos de packs importados).
 3. **Probar lo de antes:** el parry del Guardián en un cliente; los bots con el Guerrero (los del
    Explorador y el Monje, probados ✅ el 23 de octubre en las vueltas de bots). (`GA_SpawnSummon` con variantes de las plantillas ya quedó probado: el Muro
    y la Tormenta del Mago.)
-   **Bots con las clases nuevas, revisados el 28 de octubre (pedido de Gustavo): HECHO, falta probar.** Se cruzaron
+   **Bots con las clases nuevas, revisados el 28 de octubre (pedido de Gustavo): HECHO Y PROBADO ✅ (30 de octubre).** Se cruzaron
    las 32 clases con `BotController`; seis habilidades no se usaban bien. Arreglado:
    · **Resurrección** (Clérigo de la vida, R): nunca revivía (apuntaba al enemigo). Ahora, con la R lista y un
      aliado muerto a 25 m o menos ("Buscar cuerpos hasta"), camina hasta el cuerpo y lo revive.
@@ -140,12 +140,12 @@ del log son todos de packs importados).
    · **Aturdir** (Clérigo del orden, E) y **Enemigo jurado** (Paladín de la venganza, E): solo trabados cuerpo
      a cuerpo. Ahora sobre el enemigo que le pega a un aliado (o a él), hasta 10 m.
    · **Furia elemental** (Chamán, R): salía con el Chamán lejos de la pelea. Ahora además metido en ella.
-   - [ ] Un Clérigo de la vida bot revive a un compañero caído cerca (va hasta el cuerpo).
-   - [ ] Un Cazador bot marca su Presa de lejos; un Trampero bot pone trampas entre él y quien se acerca, y
-         una detrás al huir.
-   - [ ] Un Guardián bot usa la Ejecución sobre uno con poca vida.
-   - [ ] Un Clérigo del orden y un Paladín de la venganza bots marcan al que le pega a un compañero.
-   - [ ] Un Chamán bot suelta la Furia elemental dentro de la pelea, no de lejos.
+   - [x] Un Clérigo de la vida bot revive a un compañero caído cerca (va hasta el cuerpo). **Probado ✅ (30 de octubre).**
+   - [x] Un Cazador bot marca su Presa de lejos; un Trampero bot pone trampas entre él y quien se acerca, y
+         una detrás al huir. **Probado ✅ (30 de octubre).**
+   - [x] Un Guardián bot usa la Ejecución sobre uno con poca vida. **Probado ✅ (30 de octubre).**
+   - [x] Un Clérigo del orden y un Paladín de la venganza bots marcan al que le pega a un compañero. **Probado ✅ (30 de octubre).**
+   - [x] Un Chamán bot suelta la Furia elemental dentro de la pelea, no de lejos. **Probado ✅ (30 de octubre).**
    **El Shinobi bot pelea a distancia (29 de octubre, pedido de Gustavo): HECHO, falta probar.** Su básico es un combo de
    kunais (`GA_ShinobiStrikes`), y `BotController.Classify` tomaba todo combo como cuerpo a cuerpo: lo ponía por la
    espalda y solo tiraba a 3 m. Ahora un combo con TODOS sus pasos a distancia cuenta como a distancia (hoy solo el
@@ -168,16 +168,16 @@ del log son todos de packs importados).
    - [ ] Nunca se queda trabado arriba de un techo ni fuera del mapa (si pasa: dónde y haciendo qué).
    - [ ] Una Evocación bot con la Sobrecarga levita y pelea desde arriba.
    **Aterrizar a propósito (29 de octubre, pedido de Gustavo: "si siempre está volando se le complica cambiar de
-   clase"): HECHO, falta probar.**
+   clase"): HECHO Y PROBADO ✅ (30 de octubre).**
    · **Shift volando = aterrizar:** corta el vuelo del Shift aunque esté en cooldown (el cooldown sigue) y cae lento.
      La levitación de la Sobrecarga no la corta el Shift. (`PlayerController.HandleAbilityInput` →
      `NetworkASC.ServerRequestLand` → `GA_Flight.EndFlight`.)
    · **Cambiar de clase (C / cruceta arriba) o subclase (V / View) en el aire:** corta TODO vuelo (también la
      Sobrecarga), avisa "Bajando: el menú se abre al tocar el piso" y lo abre solo al aterrizar (8 s de espera como
      mucho). Lo mismo en un salto. Las reglas siguen: base solo en la sala segura, subclase solo al nivel máximo.
-   - [ ] Volando, Shift: cae lento; el Vuelo queda en cooldown. Con la Sobrecarga, Shift no la corta.
-   - [ ] Volando sobre la sala segura, C: baja y el menú de clases se abre solo al tocar el piso.
-   - [ ] Al nivel máximo y volando, V: baja y se abre el de subclases.
+   - [x] Volando, Shift: cae lento; el Vuelo queda en cooldown. Con la Sobrecarga, Shift no la corta. **Probado ✅ (30 de octubre).**
+   - [x] Volando sobre la sala segura, C: baja y el menú de clases se abre solo al tocar el piso. **Probado ✅ (30 de octubre).**
+   - [x] Al nivel máximo y volando, V: baja y se abre el de subclases. **Probado ✅ (30 de octubre).**
 4. **Cuando alguien se atasque:** traer `Logs/Unstuck.log`.
 5. **Decisiones de Gustavo, sin prisa:** más prefabs (variantes de tótems y enemigos, la UI que
    todavía arma el código), acomodar los botiquines, la puntería si se siente mal.

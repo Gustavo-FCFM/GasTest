@@ -250,6 +250,16 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
 - **El choque de los proyectiles es un barrido del servidor** (`GC_Projectile.Sweep`, desde el 19
   de octubre de 2026), no `OnTriggerEnter`: el tramo recorrido en cada paso, con la forma del
   proyectil (la caja toma el tamaño del arma) y un radio aparte contra personajes.
+  Al que lo tiró se lo ignora entero (lo que cuelga de él y de su `NetworkObject`). Si un
+  proyectil se deshace como contra una pared en algo que no es el mapa, avisa en la consola
+  ("[Proyectil] … se deshizo contra '…'", `GC_Projectile.WarnIfNotScenery`): es diagnóstico
+  del "choca con uno mismo" (29 de octubre de 2026), no lo quites sin encontrarlo.
+
+- **Un tag con dos fuentes en el cliente** (el espejo de `NetTags` y algo local) cuenta
+  dos veces. `State_Dead` es así: la vida en 0 llega por su SyncVar y el cliente se muere
+  solo, y además llega el tag. Por eso `OnNetTagsChanged` le saca TODAS las cuentas cuando
+  el servidor lo quita (desde el 29 de octubre de 2026: el cliente reaparecía "muerto" y no
+  se movía). Si agregas otro tag que el cliente también ponga solo, haz lo mismo.
 
 - **Dónde va cada VFX.** Lo que dura lo que dura un buff o un debuff va en el
   `TargetVFX` del **GE** (aparece pegado a quien lo recibe, en todas las pantallas, y se
