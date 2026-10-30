@@ -8,6 +8,7 @@
 
 [Setup]
 AppName=GasTest
+OutputBaseFilename=GasTest
 AppVersion=0.0
 WizardStyle=modern dynamic
 DefaultDirName={autopf}\My Program
@@ -15,7 +16,8 @@ DefaultGroupName=My Program
 UninstallDisplayIcon={app}\MyProg.exe
 Compression=lzma2
 SolidCompression=yes
-OutputDir="exebuild/GasTest.exe"
+SourceDir="./../../B8"
+OutputDir="./../B8/exebuild/GasTest.exe"
 ; "ArchitecturesAllowed=x64compatible" specifies that Setup cannot run
 ; on anything but x64 and Windows 11 on Arm.
 ArchitecturesAllowed=x64compatible
@@ -26,7 +28,7 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 
 [Files]
-Source: "GasTest.exe"; DestDir: "{app}"; DestName: "GasTest.exe"
+Source: "GasTest.exe"; DestDir: "ExeOut"; DestName: "GasTest.exe"
 Source: "FishNet.SDK.Id"; DestDir: "{app}"
 Source: "UnityCrashHandler64.exe"; DestDir: "{app}";
 Source: "UnityPlayer.dll"; DestDir: "{app}";
