@@ -85,7 +85,7 @@ MonoBehaviour:
     m_Bits: 128
   MaxCharges: 1
   ProjectilePrefab: {fileID: 406129108226925510, guid: 29b7325ea45914c4bb7592ed1cdc376b, type: 3}
-  LaunchForce: 20
+  LaunchForce: 25
   SpawnOffset: {x: 0.3, y: 1.3, z: 0.6}
   AddSpin: 1
   HideWeaponWhileFlying: 0

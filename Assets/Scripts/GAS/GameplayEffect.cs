@@ -276,6 +276,11 @@ public class GameplayEffect : ScriptableObject
     [Label("Tags que da")]
     public List<EGameplayTag> GrantedTags = new List<EGameplayTag>();
 
+    [Tooltip("Solo si da Status_HealShield (el escudo que cura: Cubrir con escudo de la Conquista): qué " +
+             "parte de lo que el escudo frena vuelve como vida. 1 = todo, 0.5 = la mitad.")]
+    [Label("Escudo que cura: vida por lo frenado (0 a 1)")]
+    [Range(0f, 1f)] public float HealShieldReturn = 1f;
+
     // =========================================================
     // COPIAS CONGELADAS (el proyectil devuelto por un parry)
     // =========================================================

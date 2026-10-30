@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 28 de octubre de 2026
+# Pendientes — actualizado el 29 de octubre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -8,6 +8,42 @@ El proyecto compila limpio: 0 errores y 0 warnings en código propio (los 312 wa
 del log son todos de packs importados).
 
 ## ★ Al retomar: lo abierto, en orden (22 de octubre)
+
+**Prueba con amigos por internet (29 de octubre, noche).**
+- **No podían entrar: el túnel de playit apuntaba a `127.0.0.1:60625`** y el juego escucha en el 7770 (el log de
+  playit daba el error 10054: nadie en ese puerto). Se cambia en playit.gg ▸ el túnel ▸ dirección local
+  `127.0.0.1:7770`; la dirección pública (`ssh-buried.tun.ply.gg:60625`) no cambia.
+  - [ ] Túnel cambiado; un amigo entra por internet.
+- **Los atascos (`Logs/Unstuck.log`): ARREGLADO.** Los tres eran del mismo cliente, recién reaparecido en la base, con
+  `State_Dead` de SU lado y no del servidor. La vida en 0 y el tag llegan por separado: si la vida llegaba antes, el
+  cliente se marcaba muerto él solo y el tag lo contaba dos veces; al revivir le quedaba una y no se podía mover.
+  `NetworkAbilitySystemComponent.OnNetTagsChanged` ahora le saca todas cuando el servidor lo quita.
+  - [ ] Morir y reaparecer varias veces en un cliente: siempre se puede mover al reaparecer.
+- **Paladín de la conquista: su escudo cura la mitad.** "Cubrir con escudo" (50 de escudo por 3 s, 2 cargas cada 6 s)
+  devolvía como vida TODO lo que frenaba: cada carga valía 100 de vida. Campo nuevo de los GE, "Escudo que cura: vida
+  por lo frenado (0 a 1)" (`HealShieldReturn`); `GE_ShieldOfFaith` en 0.5. Si sigue curando mucho: bajarlo, o las
+  cargas a 1.
+  - [ ] El escudo sobre uno mismo y sobre un aliado: frena igual y cura la mitad de lo frenado.
+- **Los animales del Explorador atravesaban paredes: ARREGLADO al reaparecer.** Al perderse o trabarse reaparecen
+  detrás del dueño, a su derecha, y ese punto podía quedar del otro lado de una pared; sin NavMesh cerca del dueño, los
+  ponía igual a su lado, fuera del NavMesh, y lo seguían así a través de todo (`Entity_Companion.WarpNear`). Ahora salen
+  del piso del dueño por el NavMesh hasta ese punto (o hasta la pared); sin piso cerca, esperan donde están.
+  - [ ] El Lobo y el Oso no aparecen del otro lado de una pared. Si todavía la cruzan CAMINANDO, el NavMesh del
+        Cementerio (horneado el 29 de septiembre) no coincide con el mapa de ahora: hornearlo de nuevo.
+- **La bolsa del Objetivo frena más:** el que la lleva va un 40 % más lento (era 25 %; `Objective.prefab` ▸
+  `CarrySlowPercent`). Si todavía se escapan con un dash, el vuelo o un teletransporte, lo que sigue sería que el que
+  la lleva no pueda usar habilidades de movimiento (con `Status_Carrying_Objective` en sus tags que bloquean).
+  - [ ] Con la bolsa se nota más lento; las partidas siguen pudiendo terminarse.
+- **Los proyectiles lentos, un 25 % más rápidos** (pedido de los que probaron): el Castigo del Paladín 12 → 15 m/s
+  (también el de la Conquista), el arco de luz del Clérigo 20 → 25 (los tres), la Bola de fuego 18 → 22 (también la
+  de la Evocación) y los Misiles arcanos 20 → 25. Así casi no se los puede alcanzar corriendo.
+  - [ ] Se sienten mejor; nadie alcanza su propio proyectil.
+- **"Se deshacen contra uno mismo" y "el arco de luz del Clérigo se frena en el primero": SIN ENCONTRAR.** Por código
+  los dos atraviesan personajes (al que dispara se lo ignora entero: todo lo que cuelga de él, y desde ahora también
+  lo de su objeto de red), y el arco de luz no tiene "Se deshace en el primer enemigo". Para encontrarlo, el proyectil
+  que se deshace como contra una pared en algo que no es el mapa avisa en la consola: **"[Proyectil] … se deshizo
+  contra '…'"**, con qué era y su capa (`GC_Projectile.WarnIfNotScenery`).
+  - [ ] En la próxima prueba (mejor hosteando desde el editor), traer esos avisos.
 
 0. **El showcase se adelantó al 15 de noviembre: PLAN en curso (26 de octubre)** — ver "★ Showcase del 15 de
    noviembre". **Etapa 1** (los menús con control, la conexión en el menú y la pausa) y **etapa 2** (la lista
@@ -259,20 +295,20 @@ gris de la esquina, dibujado aparte y sin control); y poder jugar con 3 instanci
    - [ ] Al jugar, la consola sin avisos: ni "no audio listeners" en el menú, ni "2 audio listeners" en partida.
    - [ ] Al aparecer tu personaje, `Camara_Lobby` se apaga en la jerarquía; al terminar la partida o salir, vuelve.
    **Probar, con un control conectado:**
-   - [ ] Menú principal: el stick y la cruceta recorren Jugar, Ajustes y Salir; A entra; Start o ESC abren los
-         Ajustes y B (o ESC) los cierra.
-   - [ ] Jugar → la pantalla de conexión. Crear partida → aparece la sala.
-   - [ ] La sala con control: arranca en un "Unirte"; A te une y la selección pasa a tu ícono; A abre el
+   - [x] Menú principal: el stick y la cruceta recorren Jugar, Ajustes y Salir; A entra; Start o ESC abren los
+         Ajustes y B (o ESC) los cierra. **Probado ✅ (29 de octubre).**
+   - [x] Jugar → la pantalla de conexión. Crear partida → aparece la sala. **Probado ✅ (29 de octubre).**
+   - [x] La sala con control: arranca en un "Unirte"; A te une y la selección pasa a tu ícono; A abre el
          selector de clase, el stick recorre las clases (sale el nombre), A elige una y abajo está Confirmar; B
-         cierra el selector. Con la clase puesta, la selección pasa a Confirmar; siendo host y ya listo, a Start.
-   - [ ] Start o ESC en la sala abren la pausa. Ajustes desde la pausa, y B vuelve a la pausa.
-   - [ ] Salir en la sala vuelve al menú principal (con control se llega con el stick). Siendo host dice "Cerrar
-         sala", y los clientes vuelven a la pantalla de conexión con "Se cortó la conexión".
-   - [ ] Siendo host, Salir (en la sala y en la pausa) pregunta primero: el texto cambia a la pregunta y recién la
+         cierra el selector. Con la clase puesta, la selección pasa a Confirmar; siendo host y ya listo, a Start. **Probado ✅ (29 de octubre).**
+   - [x] Start o ESC en la sala abren la pausa. Ajustes desde la pausa, y B vuelve a la pausa. **Probado ✅ (29 de octubre).**
+   - [x] Salir en la sala vuelve al menú principal (con control se llega con el stick). Siendo host dice "Cerrar
+         sala", y los clientes vuelven a la pantalla de conexión con "Se cortó la conexión". **Probado ✅ (29 de octubre).**
+   - [x] Siendo host, Salir (en la sala y en la pausa) pregunta primero: el texto cambia a la pregunta y recién la
          segunda vez sale. Esperar 4 s, o moverse a otro botón con el stick, vuelve al texto normal. Un cliente sale
-         con un solo apretón. En la sala, que "¿Cerrar para todos?" quepa en el botón (si no, agrandarlo a mano).
-   - [ ] Jugando: Start o ESC abren la pausa (la partida sigue). Desatascarse funciona. Salir vuelve al menú
-         principal (siendo host, el botón dice "Cerrar la partida y salir").
+         con un solo apretón. En la sala, que "¿Cerrar para todos?" quepa en el botón (si no, agrandarlo a mano). **Probado ✅ (29 de octubre).**
+   - [x] Jugando: Start o ESC abren la pausa (la partida sigue). Desatascarse funciona. Salir vuelve al menú
+         principal (siendo host, el botón dice "Cerrar la partida y salir"). **Probado ✅ (29 de octubre).**
    - [ ] Otra ventana (una build) → Jugar → escribir `127.0.0.1` → Conectar → entra a la sala. Con una dirección
          mala dice "No se pudo conectar a …" (tarda unos segundos), y Volver mientras conecta lo cancela.
    - [ ] Con el cliente en la sala, cerrar la partida en el host: el cliente vuelve a la pantalla de conexión con
@@ -318,13 +354,13 @@ gris de la esquina, dibujado aparte y sin control); y poder jugar con 3 instanci
      **Antes de probar:** correr `Mercenarios ▸ Una vez ▸ Botones: el elegido más oscuro (showcase)` (solo los
      prefabs: el de menús y la tarjeta de clase). Recalcula los colores de todos desde su "Normal Color". (La
      primera, "el elegido más claro", ya se corrió y se borró.) **Corrida y borrada (26 de octubre).**
-     - [ ] Los botones se ven igual que antes sin elegir; con el stick, el elegido se ve del mismo color pero
+     - [x] Los botones se ven igual que antes sin elegir; con el stick, el elegido se ve del mismo color pero
            más oscuro, nada pálido (en el menú, la conexión, la sala, los ajustes, la pausa, el teclado). Pasar
-           el mouse hace lo mismo.
-     - [ ] En la sala: Confirmar y Empezar cambian a verde al estar listos, las pestañas de rol se ven de su
-           color (la abierta más fuerte) y los íconos de clase se apagan/encienden como antes.
-     - [ ] Las tarjetas del menú de clases y de subir de nivel se ven como antes.
-     - [ ] Un botón apagado (Confirmar sin clase) se ve oscuro y medio transparente, como antes.
+           el mouse hace lo mismo. **Probado ✅ (29 de octubre).**
+     - [x] En la sala: Confirmar y Empezar cambian a verde al estar listos, las pestañas de rol se ven de su
+           color (la abierta más fuerte) y los íconos de clase se apagan/encienden como antes. **Probado ✅ (29 de octubre).**
+     - [x] Las tarjetas del menú de clases y de subir de nivel se ven como antes. **Probado ✅ (29 de octubre).**
+     - [x] Un botón apagado (Confirmar sin clase) se ve oscuro y medio transparente, como antes. **Probado ✅ (29 de octubre).**
    **Antes de probar:** correr `Mercenarios ▸ Una vez ▸ Lista de partidas y teclado en pantalla (showcase 2)`
    (solo el prefab: una vez alcanza). Arma la lista en `Connect` y el teclado (`Keyboard`). **Corrida y borrada (26 de octubre).**
    **Probar:**

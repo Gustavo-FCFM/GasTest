@@ -884,6 +884,18 @@ public class AbilitySystemComponent : MonoBehaviour
                 RemoveActiveEffect(ActiveEffects[i]);
     }
 
+    // Qué parte de lo que frena el escudo vuelve como vida (Status_HealShield): la del GE
+    // que da el tag ("Escudo que cura: vida por lo frenado"); con dos, la mayor. Sin
+    // ninguno a la vista (un tag puesto a mano), todo.
+    private float HealShieldReturn()
+    {
+        float best = -1f;
+        foreach (var active in ActiveEffects)
+            if (active.Definition.GrantedTags.Contains(EGameplayTag.Status_HealShield))
+                best = Mathf.Max(best, active.Definition.HealShieldReturn);
+        return best < 0f ? 1f : Mathf.Clamp01(best);
+    }
+
     // Quita UNA SOLA acumulación de las que otorgan un tag: la que está por vencer.
     // Devuelve true si encontró alguna.
     //
@@ -1142,11 +1154,15 @@ public class AbilitySystemComponent : MonoBehaviour
                 // El tag lo trae el mismo GE que otorga el escudo, así que cuando el
                 // escudo se agota la curación deja de sumar sola (absorbed queda en 0)
                 // aunque al tag le quede duración.
+                //
+                // Cuánto de lo frenado vuelve lo dice ese GE ("Escudo que cura: vida por lo
+                // frenado", desde el 29 de octubre de 2026: con todo, el escudo de la Conquista
+                // valía el doble de vida y curaba de más).
                 float absorbedByShield = damageBeforeShield - (physicalDamage + magicDamage);
                 if (absorbedByShield > 0f && HasTag(EGameplayTag.Status_HealShield))
                 {
                     float before = GetAttributeValue(EAttributeType.Health);
-                    SetCurrentAttributeValue(EAttributeType.Health, before + absorbedByShield);
+                    SetCurrentAttributeValue(EAttributeType.Health, before + absorbedByShield * HealShieldReturn());
                     healthHealed += Mathf.Max(0f, GetAttributeValue(EAttributeType.Health) - before);
                 }
 

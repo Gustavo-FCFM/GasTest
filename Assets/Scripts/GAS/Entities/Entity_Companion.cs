@@ -775,19 +775,30 @@ public class Entity_Companion : Entity_Summon
         }
     }
 
+    // Detrás del dueño, a su derecha, SIN cruzar paredes (29 de octubre de 2026, Gustavo: "los
+    // animales terrestres pueden atravesar paredes"). Antes buscaba el NavMesh más cercano a
+    // ese punto, que con el dueño pegado a una pared podía quedar del otro lado; y sin NavMesh
+    // cerca lo ponía igual a su lado, fuera del NavMesh, y lo seguía así a través de todo. Ahora
+    // sale del piso del dueño y avanza por el NavMesh hasta ese punto (o hasta la pared); sin
+    // piso horneado cerca del dueño (está en el aire), espera donde está.
     private void WarpNear(Vector3 ownerPos)
     {
-        Vector3 spot = ownerPos + (Quaternion.Euler(0f, OwnerASC.transform.eulerAngles.y, 0f) * new Vector3(1.5f, 0f, -1.5f));
-        if (_agent != null && _agent.enabled)
+        Vector3 offset = Quaternion.Euler(0f, OwnerASC.transform.eulerAngles.y, 0f) * new Vector3(1.5f, 0f, -1.5f);
+        if (_agent == null || !_agent.enabled)
         {
-            if (NavMesh.SamplePosition(spot, out NavMeshHit hit, 5f, NavMesh.AllAreas) ||
-                NavMesh.SamplePosition(ownerPos, out hit, 5f, NavMesh.AllAreas))
-            {
-                _agent.Warp(hit.position);
-                return;
-            }
+            transform.position = ownerPos + offset;
+            return;
         }
-        transform.position = spot;
+
+        if (!NavMesh.SamplePosition(ownerPos, out NavMeshHit ownerFloor, 5f, NavMesh.AllAreas)) return;
+
+        Vector3 spot = ownerFloor.position + offset;
+        Vector3 to;
+        if (NavMesh.Raycast(ownerFloor.position, spot, out NavMeshHit wall, NavMesh.AllAreas)) to = wall.position;
+        else to = NavMesh.SamplePosition(spot, out NavMeshHit snapped, 1.5f, NavMesh.AllAreas) ? snapped.position : ownerFloor.position;
+
+        if (Mathf.Abs(to.y - ownerFloor.position.y) > 2f) to = ownerFloor.position;
+        _agent.Warp(to);
     }
 
     // =========================================================

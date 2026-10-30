@@ -418,6 +418,10 @@ public class GC_Projectile : NetworkBehaviour
         // propia arma y se despawneaba al instante, sin llegar a volar.
         if (sourceASC != null && other.transform.root == sourceASC.transform.root) return;
 
+        // Y lo que cuelgue de su objeto de red, por si su raíz no es la de siempre (un personaje
+        // emparentado a otra cosa).
+        if (_shooterNob.Value != null && other.GetComponentInParent<NetworkObject>() == _shooterNob.Value) return;
+
         // BARRERA (escudo del Paladín y compañía). Va ANTES del descarte de triggers
         // de abajo a propósito: la barrera ES un trigger (para no empujar a nadie ni
         // pelearse con el CharacterController de su dueño), así que si la dejáramos
@@ -526,9 +530,29 @@ public class GC_Projectile : NetworkBehaviour
         {
             // 3. ¿Es una pared / entorno sólido?
             // Si llegamos aquí, no tiene ASC y no es trigger.
+            WarnIfNotScenery(other, targetASC);
             Impact(point);
             DespawnSelf();
         }
+    }
+
+    // DIAGNÓSTICO (29 de octubre de 2026). En la prueba por internet los proyectiles "se deshacían
+    // contra uno mismo" (al alcanzarlos corriendo) y el arco de luz del Clérigo "se frenaba en el
+    // primero", y en el código no aparece por qué: los dos atraviesan personajes. Si un proyectil se
+    // deshace como contra una pared en algo que NO es el mapa (un personaje, o algo que se mueve: con
+    // Rigidbody o colgado de un objeto de red), queda escrito en la consola qué era.
+    private void WarnIfNotScenery(Collider other, AbilitySystemComponent targetASC)
+    {
+        bool moves = other.attachedRigidbody != null || other.GetComponentInParent<NetworkObject>() != null;
+        if (targetASC == null && !moves) return;
+
+        string path = other.name;
+        for (Transform t = other.transform.parent; t != null; t = t.parent) path = t.name + "/" + path;
+
+        Debug.LogWarning($"[Proyectil] {(sourceAbility != null ? sourceAbility.name : "(sin habilidad)")} de " +
+                         $"{(sourceASC != null ? sourceASC.name : "(sin dueño)")} se deshizo contra '{path}' " +
+                         $"(capa {LayerMask.LayerToName(other.gameObject.layer)}, " +
+                         $"{(targetASC != null ? "ES un personaje: " + targetASC.name : "sin ASC")}). Si no es una pared, es el choque raro.");
     }
 
     // Donde choca y se deshace: la explosión y la zona de su habilidad, si tiene (la Bola de

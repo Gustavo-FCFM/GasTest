@@ -512,6 +512,16 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
                 break;
             case SyncHashSetOperation.Remove:
                 _asc.RemoveTag(item);
+
+                // State_Dead tiene DOS fuentes en un cliente: este espejo y la muerte local
+                // (la vida en 0 llega por su SyncVar y SetCurrentAttributeValue llama a Die).
+                // Si la vida llegaba antes que el tag, el conteo quedaba en 2 y al revivir
+                // bajaba a 1: el cliente seguía "muerto" en la base, sin poder moverse, aunque
+                // el servidor ya lo había revivido (los desatascos del 29 de octubre de 2026:
+                // State_Dead en su lado y no en el del servidor). Si el servidor dice que no
+                // está muerto, no lo está.
+                if (item == EGameplayTag.State_Dead)
+                    while (_asc.HasTag(item)) _asc.RemoveTag(item);
                 break;
         }
     }

@@ -43,3 +43,4 @@ MonoBehaviour:
     PitchVariance: 0.08
     MaxDistance: 35
   GrantedTags: 2f000000
+  HealShieldReturn: 0.5
