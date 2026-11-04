@@ -8302,14 +8302,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!81 &1315441502
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1315441496}
-  m_Enabled: 1
 --- !u!20 &1315441498
 Camera:
   m_ObjectHideFlags: 0
@@ -8440,6 +8432,14 @@ MonoBehaviour:
   BlurFocusDistance: 0.5
   BlurFocalLength: 120
   BlurAperture: 1.4
+--- !u!81 &1315441502
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1315441496}
+  m_Enabled: 1
 --- !u!1 &1318353535
 GameObject:
   m_ObjectHideFlags: 0
