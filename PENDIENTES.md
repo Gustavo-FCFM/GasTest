@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 29 de octubre de 2026
+# Pendientes — actualizado el 4 de noviembre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -8,6 +8,18 @@ El proyecto compila limpio: 0 errores y 0 warnings en código propio (los 312 wa
 del log son todos de packs importados).
 
 ## ★ Al retomar: lo abierto, en orden (22 de octubre)
+
+**La entrega del Objetivo, pegada al piso (4 de noviembre, pedido de Gustavo): HECHO, falta probar.** La zona solo miraba
+la planta y no la altura: el Mago entregaba volando sobre la plataforma, donde nadie lo alcanzaba. Ahora es un cilindro
+bajo: el radio de siempre (3.5 m) y hasta 2 m sobre el punto de entrega (`MercTeamBase` ▸ ⚙ "Altura de entrega (m)",
+`DeliveryMaxHeight`). Salirse por arriba reinicia la cuenta, como salirse caminando: un salto normal (unos 3.3 m) también
+la reinicia; si se siente duro, subirlo a 4 m (los saltos ya no la reinician y volando sigue sin contar). Un bot con la
+bolsa ya no usa su habilidad de movimiento estando sobre la plataforma (un vuelo o un salto lo sacaría de la zona).
+Verificado en el editor en las tres bases del Cementerio (piso, 1.9 m y la orilla cuentan; 2.1 m, 8 m y afuera, no).
+  - [ ] El Mago volando sobre la plataforma no avanza la entrega; al bajar, empieza la cuenta.
+  - [ ] Un Mago bot con la bolsa aterriza y entrega.
+  - [ ] ¿Saltar en la plataforma se siente muy duro? Si sí, la altura a 4 m.
+  - Por decidir: un aviso "Baja para entregar" para el que está arriba (hoy no pasa nada a la vista).
 
 **Prueba con amigos por internet (29 de octubre, noche): TODO PROBADO ✅ (30 de octubre).**
 - **No podían entrar: el túnel de playit apuntaba a `127.0.0.1:60625`** y el juego escucha en el 7770 (el log de

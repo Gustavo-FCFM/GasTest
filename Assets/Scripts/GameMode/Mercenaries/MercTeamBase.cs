@@ -55,6 +55,11 @@ public class MercTeamBase : MonoBehaviour
     [Label("Radio de entrega (m)")]
     public float DeliveryRadius = 4f;
 
+    [Tooltip("Hasta qué altura sobre el punto de entrega cuenta. Más arriba no se entrega: volando sobre la " +
+             "plataforma nadie te alcanza, así que hay que bajar. Un salto alto también se sale y reinicia la cuenta.")]
+    [Label("Altura de entrega (m)")]
+    public float DeliveryMaxHeight = 2f;
+
     [Header("Aparición de jugadores")]
     [Tooltip("Puntos donde aparecen y reaparecen los jugadores de este equipo. Se reparten en orden.")]
     [Label("Puntos de aparición")]
@@ -258,9 +263,13 @@ public class MercTeamBase : MonoBehaviour
     // CONSULTAS
     // =========================================================
 
-    // ¿Está este punto dentro de la zona de entrega de esta base?
+    // ¿Está este punto dentro de la zona de entrega de esta base? Un cilindro bajo sobre la
+    // plataforma: toda su planta, pero pegado al piso (antes la altura no contaba, y el Mago
+    // entregaba volando donde nadie lo alcanzaba; 4 de noviembre de 2026).
     public bool IsInDeliveryZone(Vector3 worldPos)
     {
+        if (worldPos.y - DeliveryWorldPoint.y > DeliveryMaxHeight) return false;
+
         Vector3 a = worldPos;      a.y = 0f;
         Vector3 b = DeliveryWorldPoint; b.y = 0f;
         return Vector3.Distance(a, b) <= DeliveryRadius;
@@ -323,7 +332,8 @@ public class MercTeamBase : MonoBehaviour
 
         // Zona de entrega.
         Gizmos.color = c;
-        Gizmos.DrawWireSphere(DeliveryWorldPoint, DeliveryRadius);
+        Gizmos.DrawWireCube(DeliveryWorldPoint + Vector3.up * (DeliveryMaxHeight * 0.5f),
+                            new Vector3(DeliveryRadius * 2f, DeliveryMaxHeight, DeliveryRadius * 2f));
 
         // Puntos de aparición.
         if (SpawnPoints == null) return;

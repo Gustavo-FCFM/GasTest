@@ -1522,10 +1522,15 @@ public class BotController : MonoBehaviour
 
         // LLEVANDO LA CARGA no hay a quién pegarle, pero SÍ hay algo que hacer: gastar la
         // habilidad de movimiento para llegar antes al punto de entrega. Es lo que haría
-        // cualquiera con la carga en la mano.
+        // cualquiera con la carga en la mano. Ya sobre la plataforma, no: un vuelo o un salto lo
+        // sacarían de la zona de entrega, que es pegada al piso.
         if (_delivering)
         {
-            if (Time.time >= _nextAbilityAt &&
+            MercenariesGameMode gm = MercenariesGameMode.Instance;
+            MercTeamBase home = gm != null ? gm.GetBase(_teamId) : null;
+            bool onPad = home != null && home.IsInDeliveryZone(transform.position);
+
+            if (!onPad && Time.time >= _nextAbilityAt &&
                 Activate(EAbilityInput.Movement, _destination + Vector3.up, DirectionTo(_destination)))
                 _nextAbilityAt = Time.time + AbilityInterval;
             return;

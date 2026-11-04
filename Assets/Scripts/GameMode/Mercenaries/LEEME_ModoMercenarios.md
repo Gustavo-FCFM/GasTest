@@ -131,6 +131,8 @@ composición: la sala segura es el **único lugar donde se puede cambiar de clas
   la definitiva**: ese botón pasa a soltar el Objetivo.
 - Hay que llevarlo a la **plataforma de entrega de tu base**, que está justo afuera de la
   puerta de tu sala segura, y **quedarse ahí 6 segundos** (`MercObjective.DeliverSeconds`).
+  Pegado al piso: más de 2 m sobre la plataforma no cuenta y reinicia la cuenta (⚙ "Altura de
+  entrega (m)" en `MercTeamBase`; desde el 4 de noviembre, para que el Mago no entregue volando).
   Salir de la zona o recibir daño de otro reinicia la cuenta. Todos ven "ENTREGANDO" con
   una barra en el marcador del Objetivo: es la última oportunidad de los rivales.
 - Cada entrega = 1 punto. **Con 2 puntos se gana** y la partida termina (y se reinicia
