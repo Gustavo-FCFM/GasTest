@@ -9,17 +9,17 @@ del log son todos de packs importados).
 
 ## ★ Al retomar: lo abierto, en orden (22 de octubre)
 
-**La entrega del Objetivo, pegada al piso (4 de noviembre, pedido de Gustavo): HECHO, falta probar.** La zona solo miraba
+**La entrega del Objetivo, pegada al piso (4 de noviembre, pedido de Gustavo): HECHO Y PROBADO ✅ (4 de noviembre).** La zona solo miraba
 la planta y no la altura: el Mago entregaba volando sobre la plataforma, donde nadie lo alcanzaba. Ahora es un cilindro
 bajo: el radio de siempre (3.5 m) y hasta 2 m sobre el punto de entrega (`MercTeamBase` ▸ ⚙ "Altura de entrega (m)",
 `DeliveryMaxHeight`). Salirse por arriba reinicia la cuenta, como salirse caminando: un salto normal (unos 3.3 m) también
 la reinicia; si se siente duro, subirlo a 4 m (los saltos ya no la reinician y volando sigue sin contar). Un bot con la
 bolsa ya no usa su habilidad de movimiento estando sobre la plataforma (un vuelo o un salto lo sacaría de la zona).
 Verificado en el editor en las tres bases del Cementerio (piso, 1.9 m y la orilla cuentan; 2.1 m, 8 m y afuera, no).
-  - [ ] El Mago volando sobre la plataforma no avanza la entrega; al bajar, empieza la cuenta.
-  - [ ] Un Mago bot con la bolsa aterriza y entrega.
-  - [ ] ¿Saltar en la plataforma se siente muy duro? Si sí, la altura a 4 m.
-  - Por decidir: un aviso "Baja para entregar" para el que está arriba (hoy no pasa nada a la vista).
+  - [x] El Mago volando sobre la plataforma no avanza la entrega; al bajar, empieza la cuenta. **Probado ✅ (4 de noviembre).**
+  - [x] Un Mago bot con la bolsa aterriza y entrega. **Probado ✅ (4 de noviembre).**
+  - [x] ¿Saltar en la plataforma se siente muy duro? Si sí, la altura a 4 m. **Probado ✅ (4 de noviembre).**
+  - Cerrado por Gustavo (4 de noviembre): un aviso "Baja para entregar" para el que está arriba (hoy no pasa nada a la vista).
 
 **Prueba con amigos por internet (29 de octubre, noche): TODO PROBADO ✅ (30 de octubre).**
 - **No podían entrar: el túnel de playit apuntaba a `127.0.0.1:60625`** y el juego escucha en el 7770 (el log de
@@ -158,12 +158,12 @@ Verificado en el editor en las tres bases del Cementerio (piso, 1.9 m y la orill
    - [x] Un Guardián bot usa la Ejecución sobre uno con poca vida. **Probado ✅ (30 de octubre).**
    - [x] Un Clérigo del orden y un Paladín de la venganza bots marcan al que le pega a un compañero. **Probado ✅ (30 de octubre).**
    - [x] Un Chamán bot suelta la Furia elemental dentro de la pelea, no de lejos. **Probado ✅ (30 de octubre).**
-   **El Shinobi bot pelea a distancia (29 de octubre, pedido de Gustavo): HECHO, falta probar.** Su básico es un combo de
+   **El Shinobi bot pelea a distancia (29 de octubre, pedido de Gustavo): HECHO Y PROBADO ✅ (4 de noviembre).** Su básico es un combo de
    kunais (`GA_ShinobiStrikes`), y `BotController.Classify` tomaba todo combo como cuerpo a cuerpo: lo ponía por la
    espalda y solo tiraba a 3 m. Ahora un combo con TODOS sus pasos a distancia cuenta como a distancia (hoy solo el
    del Shinobi): pelea como el Mago, a ~11 m rodeando, tira hasta 25 m si lo ve y se retira a curarse con poca vida.
-   - [ ] Un Shinobi bot tira las kunais de lejos, rodeando, y no se pega al enemigo.
-   **El Mago bot vuela (29 de octubre, pedido de Gustavo): HECHO, falta probar.** Antes no volaba nunca (el vuelo lo
+   - [x] Un Shinobi bot tira las kunais de lejos, rodeando, y no se pega al enemigo. **Probado ✅ (4 de noviembre).**
+   **El Mago bot vuela (29 de octubre, pedido de Gustavo): HECHO Y PROBADO ✅ (4 de noviembre).** Antes no volaba nunca (el vuelo lo
    mueve el dueño, y un bot no tiene). Ahora lo mueve su cerebro (`BotController` ▸ VUELO, `ServerStartFlight`) con
    los mismos números del `GA_Flight`, a **8 m** sobre donde va (⚙ "Altura de vuelo (m)"), sin pasar el techo de
    la arena. Despega (si no tiene techo encima):
@@ -173,12 +173,12 @@ Verificado en el editor en las tres bases del Cementerio (piso, 1.9 m y la orill
      (m)"), o persiguiendo al que lleva el Objetivo. Al llegar sin nadie cerca, aterriza.
    Al terminar el vuelo (o si le pegan) cae lento como un jugador; el Terremoto lanzado volando lo baja en picada.
    La Sobrecarga de la Evocación ahora también levita de verdad. En el aire se ve en la pose de salto/caída.
-   - [ ] Un Mago bot despega al ver a un enemigo, se queda arriba rodeándolo y le tira hechizos; al acabarse el
-         vuelo baja y sigue peleando.
-   - [ ] Con poca vida vuela hacia su base, baja afuera y entra caminando a la sala segura.
-   - [ ] Sin enemigos, cruza el mapa volando hacia el centro o el Objetivo y aterriza al llegar.
-   - [ ] Nunca se queda trabado arriba de un techo ni fuera del mapa (si pasa: dónde y haciendo qué).
-   - [ ] Una Evocación bot con la Sobrecarga levita y pelea desde arriba.
+   - [x] Un Mago bot despega al ver a un enemigo, se queda arriba rodeándolo y le tira hechizos; al acabarse el
+         vuelo baja y sigue peleando. **Probado ✅ (4 de noviembre).**
+   - [x] Con poca vida vuela hacia su base, baja afuera y entra caminando a la sala segura. **Probado ✅ (4 de noviembre).**
+   - [x] Sin enemigos, cruza el mapa volando hacia el centro o el Objetivo y aterriza al llegar. **Probado ✅ (4 de noviembre).**
+   - [x] Nunca se queda trabado arriba de un techo ni fuera del mapa (si pasa: dónde y haciendo qué). **Probado ✅ (4 de noviembre).**
+   - [x] Una Evocación bot con la Sobrecarga levita y pelea desde arriba. **Probado ✅ (4 de noviembre).**
    **Aterrizar a propósito (29 de octubre, pedido de Gustavo: "si siempre está volando se le complica cambiar de
    clase"): HECHO Y PROBADO ✅ (30 de octubre).**
    · **Shift volando = aterrizar:** corta el vuelo del Shift aunque esté en cooldown (el cooldown sigue) y cae lento.
@@ -191,9 +191,9 @@ Verificado en el editor en las tres bases del Cementerio (piso, 1.9 m y la orill
    - [x] Volando sobre la sala segura, C: baja y el menú de clases se abre solo al tocar el piso. **Probado ✅ (30 de octubre).**
    - [x] Al nivel máximo y volando, V: baja y se abre el de subclases. **Probado ✅ (30 de octubre).**
 4. **Cuando alguien se atasque:** traer `Logs/Unstuck.log`.
-5. **Decisiones de Gustavo, sin prisa:** más prefabs (variantes de tótems y enemigos, la UI que
+5. **Decisiones de Gustavo, sin prisa (CERRADO por Gustavo, 4 de noviembre):** más prefabs (variantes de tótems y enemigos, la UI que
    todavía arma el código), acomodar los botiquines, la puntería si se siente mal.
-6. **Después del Mago:** las animaciones raras (sección 5, con la pose del bloqueo del Monje) y
+6. **Después del Mago (CERRADO por Gustavo, 4 de noviembre):** las animaciones raras (sección 5, con la pose del bloqueo del Monje) y
    el sonido (faltan los clips).
 7. **Íconos del Mago: PUESTOS (28 de octubre).** Gustavo los dejó en `Art/Icons/Abilities/Wizard` y `Classes`; ya están
    en sus GA, GE, opciones de los libros y las cuatro clases. La Q (Poder del hechizo) ya tiene el suyo. Siguen
@@ -201,10 +201,10 @@ Verificado en el editor en las tres bases del Cementerio (piso, 1.9 m y la orill
    **Encargo de íconos ACTUALIZADO (28 de octubre):** `DesignDocuments/Encargo_de_Iconos` (solo local, excluido de git)
    suma el Monje, el Mago y el Explorador con sus subclases (293 íconos; las 5 clases viejas no cambiaron, revisado
    píxel a píxel); el zip del 7 de octubre quedó como `Encargo_de_Iconos_7_de_octubre.zip`. Dudas para Gustavo:
-   - [ ] La Tormenta eléctrica: el botón de la Q con rayo y la de la Evocación usan `Barbarian/Tornado_Icon`; la
-         del kit base, `Wizard/Storm.png`. ¿Cuál va?
-   - [ ] El fuego de la rueda del libro usa `48toPlay/Fire.png` (fuera de `Art/Icons`).
-   - Prestados de otra clase: Trampas (la Presa), Manto del Shinobi (Ocultarse del Pícaro), Ráfaga de kunais,
+   - [x] La Tormenta eléctrica: el botón de la Q con rayo y la de la Evocación usan `Barbarian/Tornado_Icon`; la
+         del kit base, `Wizard/Storm.png`. ¿Cuál va? **Cerrado por Gustavo (4 de noviembre).**
+   - [x] El fuego de la rueda del libro usa `48toPlay/Fire.png` (fuera de `Art/Icons`). **Cerrado por Gustavo (4 de noviembre).**
+   - Prestados de otra clase (cerrado por Gustavo, 4 de noviembre): Trampas (la Presa), Manto del Shinobi (Ocultarse del Pícaro), Ráfaga de kunais,
      katana del Samurái y lanza del Trampero (del Guerrero), Danza defensiva (Paladín), Imparable (dash del Pícaro).
 8. **Las demos de FishNet, BORRADAS Y PROBADAS ✅ (28 de octubre).** El `NetworkManager` de las tres escenas era el prefab de
    `FishNet/Demos/Prefabs`: pasó a `Assets/Prefabs/Network/` (con su `NetworkHudCanvas`, el script
@@ -224,7 +224,7 @@ Verificado en el editor en las tres bases del Cementerio (piso, 1.9 m y la orill
    **Decidido (28 de octubre):** la V / View abre las subclases SOLO con el nivel máximo (antes, en cualquier nivel;
    avisa "Llega al nivel 3"; ⚙ "PRUEBAS: subclase en cualquier nivel" en `UI_ClassMenu`), y la definitiva de la
    subclase arranca en 0: el Player tenía prendido "PRUEBAS: definitiva llena al evolucionar" y se apagó. Probado ✅.
-   - [ ] En una build, con un control de verdad: la misma pasada.
+   - [x] En una build, con un control de verdad: la misma pasada. **Probado ✅ (4 de noviembre).**
    **Después de probar con control (28 de octubre, noche):** la rueda probada ✅ y pasada al stick DERECHO (el
    izquierdo camina); el teclado en pantalla y los Ajustes ya no se traban (se enlazan por filas, y `MenuInput` no
    deja que el stick salga de la pantalla de arriba); un marco blanco muestra lo elegido en todos los menús, y el
@@ -323,8 +323,8 @@ gris de la esquina, dibujado aparte y sin control); y poder jugar con 3 instanci
          principal (siendo host, el botón dice "Cerrar la partida y salir"). **Probado ✅ (29 de octubre).**
    - [ ] Otra ventana (una build) → Jugar → escribir `127.0.0.1` → Conectar → entra a la sala. Con una dirección
          mala dice "No se pudo conectar a …" (tarda unos segundos), y Volver mientras conecta lo cancela.
-   - [ ] Con el cliente en la sala, cerrar la partida en el host: el cliente vuelve a la pantalla de conexión con
-         "Se cortó la conexión".
+   - [x] Con el cliente en la sala, cerrar la partida en el host: el cliente vuelve a la pantalla de conexión con
+         "Se cortó la conexión". **Probado ✅ (4 de noviembre).**
    - [ ] Dos ventanas en la misma PC que crean partida: la segunda dice "No se pudo crear la partida (¿ya hay
          una abierta en esta PC?)" y no se mete en la de la otra.
    - [ ] Conectar a una dirección que no responde (la de playit con el túnel apagado), Volver mientras dice
@@ -382,10 +382,10 @@ gris de la esquina, dibujado aparte y sin control); y poder jugar con 3 instanci
          pregunta, "Permitir") o un Wi-Fi que aísla los equipos (ahí tampoco se podría jugar).
    - [ ] Al arrancar la partida dice "Jugando"; al cerrarla, desaparece de la lista en unos 4 segundos.
    - [ ] La dirección escrita a mano sigue andando y se recuerda; entrar desde la lista no la cambia.
-   - [ ] Con control: A sobre la dirección abre el teclado con lo escrito. El A que lo abre no escribe nada.
+   - [x] Con control: A sobre la dirección abre el teclado con lo escrito. El A que lo abre no escribe nada.
          Escribir una IP con ":" y puerto; X borra, Y espacio; Start acepta (queda en el campo) y B cancela
-         (queda como estaba). Al cerrarse, la selección vuelve al campo.
-   - [ ] En la sala, A sobre tu nombre abre el teclado ("Tu nombre"); al aceptar, el nombre cambia para todos.
+         (queda como estaba). Al cerrarse, la selección vuelve al campo. **Probado ✅ (4 de noviembre).**
+   - [x] En la sala, A sobre tu nombre abre el teclado ("Tu nombre"); al aceptar, el nombre cambia para todos. **Probado ✅ (4 de noviembre).**
    - [ ] Con mouse y teclado: clic en el campo y se escribe como antes; Enter conecta.
    **Lo que encontró Gustavo al probar el teclado (28 de octubre):** "a veces no puedo pasarme de unas letras a otras"
    y "está muy pegado".
@@ -1079,7 +1079,7 @@ los de la Furia).
       genérico nuevo **`GA_SpawnSummon`** (Create ▸ GAS ▸ Generics ▸ Spawn Summon: donde apunta con marcador, a
       los pies o delante; "Máximo a la vez"). Los pasos, en la guía de habilidades (7.1). El límite de una
       invocación genérica ahora se agrupa por su prefab (el muro de fuego no comparte límite con el elemental).
-- [ ] **Otros prefabs que valdrían la pena** (revisado el 19 de octubre, por decidir):
+- [x] **Otros prefabs que valdrían la pena** (revisado el 19 de octubre, por decidir): **Cerrado por Gustavo (4 de noviembre).**
   - **Variantes**: los 4 tótems, las 4 trampas y los enemigos (`Net_Enemy`, `Net_Mage`, `Net_Boss`) son casi
     iguales entre sí. Con un prefab base y variantes, agregarles algo a todos es tocar uno. Las trampas, al
     pasarlas a la base de invocaciones (lo siguiente).
@@ -1626,7 +1626,7 @@ Lo nuevo de código, que sirve para más cosas:
 - [x] La Retirada: salta hacia atrás y daña y ralentiza a los que estaban pegados.
 - [x] La marca: el enemigo golpeado se ve en rojo a través de las paredes para el Explorador y
       sus aliados (dos ventanas), y NO para su propio equipo ni para el tercero.
-- [ ] Los bots: probar que jueguen el Explorador (que carguen y suelten el arco), el Monje y el Guerrero. **El Explorador (el arco a distancia y el Maestro de bestias con sus compañeros) y el Monje (las patadas, el Samurái y el Shinobi): PROBADOS ✅ (23 de octubre).** Falta el Guerrero.
+- [x] Los bots: probar que jueguen el Explorador (que carguen y suelten el arco), el Monje y el Guerrero. **El Explorador (el arco a distancia y el Maestro de bestias con sus compañeros) y el Monje (las patadas, el Samurái y el Shinobi): PROBADOS ✅ (23 de octubre).** Falta el Guerrero. **Probado ✅ (4 de noviembre).**
 - [x] Después: el Maestro de bestias y su Lobo (la mascota con IA en red). Hecho el 14 de octubre, con los tres compañeros (ver arriba).
 
 ---
@@ -2736,9 +2736,9 @@ batalla y Comandante hechos y probados (falta el aturdido al apuntar, el jueves 
          con las 4 de una; Ki → clic der. prende la cápsula 6 s y se puede atacar dentro;
          la cápsula frena desde la espalda y gasta energía; Ki → Shift aturde; la Patada
          voladora se tuerce con A/D y se corta con Shift; choca con una pared y termina.
-   - [ ] Los clips: la pose del bloqueo es la del escudo del Guerrero (no hay una de guardia
+   - [x] Los clips: la pose del bloqueo es la del escudo del Guerrero (no hay una de guardia
          a puño limpio); la patada es `AttackKick01_R` suelta (si se quiere una pose
-         sostenida mientras vuela, va en `Rush Loop Clip` de la patada).
+         sostenida mientras vuela, va en `Rush Loop Clip` de la patada). **Cerrado por Gustavo (4 de noviembre).**
    - [x] **PROBADO ✅ (8 de octubre).** Revisar con dos jugadores: que los demás vean los puñetazos de la Ráfaga (un combo
          dentro de un `GA_TagSwitch` es nuevo: el switch ahora deja que el combo mande sus
          animaciones).
@@ -3927,9 +3927,9 @@ girar el cuerpo, las áreas en el piso, el dash, las de objetivo único.
 - [x] La pistola del Pirata (usa el mismo arreglo) y las dagas del Pícaro.
 - [x] Con un compañero parado justo detrás tuyo, apuntar y lanzar. Ese era el caso del
       tiro que salía para atrás.
-- [ ] Si de cerca ahora se siente que el tiro "no obedece" (pasa al lado del que tenías
+- [x] Si de cerca ahora se siente que el tiro "no obedece" (pasa al lado del que tenías
       pegado), bajá `MinConvergeDistance` en el asset. Más alto = más derecho; más bajo =
-      más literal.
+      más literal. **Cerrado por Gustavo (4 de noviembre).**
 
 ### Apuntar a un objetivo elegía al más cercano — ARREGLADO Y PROBADO ✅
 
@@ -3965,9 +3965,9 @@ bot, que no tiene cámara, usa los ojos de su propio personaje.
 - [x] Probado con el Golpe mortal: ahora agarra al de la retícula.
 - [x] Enemigo jurado e Intercepción heroica probados
       (el de 20 metros de alcance, el más largo, era el que más preocupaba).
-- [ ] Si ahora se siente DEMASIADO exacto —cuesta agarrar a alguien en movimiento—, el
+- [x] Si ahora se siente DEMASIADO exacto —cuesta agarrar a alguien en movimiento—, el
       `SelectionAngle` de cada asset es la perilla: 25° en el Golpe mortal, 30° en el
-      resto. Ese número ahora significa de verdad "grados desde la retícula".
+      resto. Ese número ahora significa de verdad "grados desde la retícula". **Cerrado por Gustavo (4 de noviembre).**
 
 **Lo que NO hace**: comprobar que haya línea de visión. Apuntando a un enemigo detrás de
 una pared, si entra en el cono, lo va a elegir igual — y el Golpe mortal te teletransporta
