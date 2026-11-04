@@ -141,6 +141,7 @@ public static class MercContentTranslation
         {
             string name = Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(guid));
             yield return new Entry { Guid = guid, Asset = name, EnglishPath = "AbilityName", SpanishPath = "AbilityNameEs" };
+            yield return new Entry { Guid = guid, Asset = name, EnglishPath = "Description", SpanishPath = "DescriptionEs" };
 
             // Las opciones de una rueda (los tótems del Chamán).
             Object asset = LoadByGuid(guid);

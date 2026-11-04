@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Guard / Charged Strike
   AbilityNameEs: Guardia / Golpe cargado
+  Description: "In offensive stance, throw your spear: it pierces and stuns each enemy for 1 s. In defensive stance, shield with parry."
+  DescriptionEs: "En ofensiva, lanzas la lanza: atraviesa y aturde 1 s a cada enemigo. En defensiva, escudo con parry."
   AbilityIcon: {fileID: 21300000, guid: cf20f2008440dec4bae7f5473afd3184, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 0}

@@ -195,6 +195,22 @@ public class AbilitySystemComponent : MonoBehaviour
     // daño); en los clientes queda en null, que es lo correcto.
     [HideInInspector] public AbilitySystemComponent LastAttacker;
 
+    // Quién le pegó y quién lo curó, y cuándo (solo en el servidor): de acá salen las
+    // asistencias del KDA (PlayerController.ServerCountKda). Se olvida al revivir.
+    private readonly Dictionary<AbilitySystemComponent, float> _lastHitBy    = new Dictionary<AbilitySystemComponent, float>();
+    private readonly Dictionary<AbilitySystemComponent, float> _lastHealedBy = new Dictionary<AbilitySystemComponent, float>();
+
+    // Los que le pegaron (o lo curaron) en los últimos segundos pedidos van a `into`.
+    public void CollectRecentHitters(float seconds, HashSet<AbilitySystemComponent> into) => CollectRecent(_lastHitBy, seconds, into);
+    public void CollectRecentHealers(float seconds, HashSet<AbilitySystemComponent> into) => CollectRecent(_lastHealedBy, seconds, into);
+
+    private static void CollectRecent(Dictionary<AbilitySystemComponent, float> from, float seconds,
+                                      HashSet<AbilitySystemComponent> into)
+    {
+        foreach (KeyValuePair<AbilitySystemComponent, float> entry in from)
+            if (entry.Key != null && Time.time - entry.Value <= seconds) into.Add(entry.Key);
+    }
+
     // =========================================================
     // UNITY
     // =========================================================
@@ -1087,7 +1103,10 @@ public class AbilitySystemComponent : MonoBehaviour
                 // guarda antes de resolver escudo/vida: aunque este golpe no sea el
                 // letal, deja anotado quién fue el último en pegar.
                 if (sourceASC != null && !ReferenceEquals(sourceASC, this))
+                {
                     LastAttacker = sourceASC;
+                    _lastHitBy[sourceASC] = Time.time;
+                }
 
                 // EL TIPO DE DANO SALE DEL ATRIBUTO DEL QUE ESCALA EL MODIFICADOR.
                 //
@@ -1194,7 +1213,11 @@ public class AbilitySystemComponent : MonoBehaviour
             // vuelo firme (la Sobrecarga de la Evocación) no.
             if (damageEndured > 0f && HasTag(EGameplayTag.Status_Flying) && !HasTag(EGameplayTag.Status_SteadyFlight))
                 RemoveEffectsWithTag(EGameplayTag.Status_Flying);
-            if (healthHealed > 0f && !sourceASC.IsEnemyOf(this)) sourceASC.NotifyHealedAlly(this, healthHealed);
+            if (healthHealed > 0f && !sourceASC.IsEnemyOf(this))
+            {
+                _lastHealedBy[sourceASC] = Time.time;
+                sourceASC.NotifyHealedAlly(this, healthHealed);
+            }
         }
         else if (ReferenceEquals(sourceASC, this) && healthHealed > 0f)
         {
@@ -1618,6 +1641,8 @@ public class AbilitySystemComponent : MonoBehaviour
         // DeathZone o morimos por otra vía, no queremos darle la baja a alguien
         // que nos pegó hace rato.
         LastAttacker = null;
+        _lastHitBy.Clear();
+        _lastHealedBy.Clear();
 
         // Por si algo se aplicó entre la muerte y el respawn (un veneno que llegó
         // tarde): la limpieza principal ya la hizo Die().

@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Spellbook
   AbilityNameEs: Libro de hechizos
+  Description: "Wheel to pick a spell. It changes your attack and your Spell Power. Spells cost mana."
+  DescriptionEs: "Rueda para elegir hechizo. Cambia tu ataque y tu Poder del hechizo. Los hechizos cuestan maná."
   AbilityIcon: {fileID: 21300000, guid: e0b9a2e49339fcb42a9e5e65e78e7ba3, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 0}

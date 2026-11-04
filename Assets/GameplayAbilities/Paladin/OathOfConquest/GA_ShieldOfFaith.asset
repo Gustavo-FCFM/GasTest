@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: ShieldOfFaith
   AbilityNameEs: Cubrir con escudo
+  Description: "Puts a point shield on you or the ally in your sights. Part of what it stops returns as health. 2 charges."
+  DescriptionEs: "Pone un escudo de puntos sobre ti o sobre el aliado de la mira. Parte de lo que frena vuelve como vida. 2 cargas."
   AbilityIcon: {fileID: 21300000, guid: cf20f2008440dec4bae7f5473afd3184, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: ecfe07a06c63704479a331a9bae55086, type: 2}

@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Limit Break
   AbilityNameEs: "Romper l\xEDmites"
+  Description: "ULTIMATE. For 8 s you are unstoppable, gain attack and your Weak Point gets stronger."
+  DescriptionEs: "DEFINITIVA. Por 8 s eres imparable, tienes más ataque y tu Punto débil se potencia."
   AbilityIcon: {fileID: 21300000, guid: cecc01e2fdb33b149b7efafe2a448972, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 4165da9d9de274a4aa511261df047340, type: 2}

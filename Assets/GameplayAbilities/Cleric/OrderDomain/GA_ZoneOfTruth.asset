@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Zone of Truth
   AbilityNameEs: Zona de verdad
+  Description: "ULTIMATE. A 5 s zone where nobody can attack: everyone is silenced and disarmed, and your allies inside heal."
+  DescriptionEs: "DEFINITIVA. Zona de 5 s donde nadie puede atacar: todos quedan silenciados y desarmados, y tus aliados dentro se curan."
   AbilityIcon: {fileID: 21300000, guid: 466752f5275f99e47971d046d71176bf, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 4165da9d9de274a4aa511261df047340, type: 2}

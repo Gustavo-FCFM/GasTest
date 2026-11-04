@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Final Dance
   AbilityNameEs: Baile final
+  Description: "ULTIMATE. Pick a wide zone: magic damage to enemies inside, applying all 4 debuffs and giving you all 4 buffs."
+  DescriptionEs: "DEFINITIVA. Eliges una zona amplia: daño mágico a los enemigos dentro, les aplicas los 4 perjuicios y te das los 4 beneficios."
   AbilityIcon: {fileID: 21300000, guid: d0b5b4b49f8e63c4fb2efda33ca41578, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 4165da9d9de274a4aa511261df047340, type: 2}

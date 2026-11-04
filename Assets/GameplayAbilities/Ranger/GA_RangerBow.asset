@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Short Bow
   AbilityNameEs: Arco corto
+  Description: "Hold to charge in 3 stages and release: more charge means more damage, speed and range."
+  DescriptionEs: "Mantén para cargar en 3 fases y suelta: cuanto más cargas, más daño, velocidad y alcance."
   AbilityIcon: {fileID: 21300000, guid: ed108fe1df16da744ad65e298044887f, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: ecfe07a06c63704479a331a9bae55086, type: 2}

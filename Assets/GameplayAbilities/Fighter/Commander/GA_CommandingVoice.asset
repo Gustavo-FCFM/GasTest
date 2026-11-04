@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Commanding Voice
   AbilityNameEs: Voz de mando
+  Description: "A shout: for 6 s you and nearby allies gain movement and attack speed."
+  DescriptionEs: "Grito: por 6 s tú y los aliados cercanos ganan velocidad de movimiento y de ataque."
   AbilityIcon: {fileID: 21300000, guid: 0169dab082389e74c951570df5bb2afb, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: bd07a782525833e47889b22896900f13, type: 2}

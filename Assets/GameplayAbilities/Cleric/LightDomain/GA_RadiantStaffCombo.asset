@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Staff and Radiance
   AbilityNameEs: "Bast\xF3n y resplandor"
+  Description: "Staff and fire arc combo: burns enemies and heals allies over time."
+  DescriptionEs: "Combo de bastón y arco de fuego: quema a los enemigos y cura a los aliados con el tiempo."
   AbilityIcon: {fileID: 21300000, guid: 099ce49f838495c4597cd1684135b082, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 45327044be4f41c4d8f5289bc6f9b3be, type: 2}

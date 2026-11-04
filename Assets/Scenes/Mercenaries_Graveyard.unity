@@ -536,6 +536,7 @@ MonoBehaviour:
     m_Bits: 128
   DeliveryPoint: {fileID: 232874070}
   DeliveryRadius: 3.5
+  DeliveryMaxHeight: 2
   SpawnPoints:
   - {fileID: 199343919}
   - {fileID: 485961453}
@@ -621,6 +622,7 @@ MonoBehaviour:
     m_Bits: 128
   DeliveryPoint: {fileID: 1148936805}
   DeliveryRadius: 3.5
+  DeliveryMaxHeight: 2
   SpawnPoints:
   - {fileID: 475029733}
   - {fileID: 137106114}
@@ -2458,6 +2460,7 @@ MonoBehaviour:
     m_Bits: 128
   DeliveryPoint: {fileID: 374878144}
   DeliveryRadius: 3.5
+  DeliveryMaxHeight: 2
   SpawnPoints:
   - {fileID: 192089725}
   - {fileID: 132681379}

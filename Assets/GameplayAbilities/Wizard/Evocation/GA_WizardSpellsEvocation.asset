@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Arcane Missiles
   AbilityNameEs: Misiles arcanos
+  Description: "A burst of 3 missiles that leave arcane points, or the spell picked in the book: Fireball, Frost Bolt, Earthquake or Lightning."
+  DescriptionEs: "Ráfaga de 3 misiles que dejan puntos arcanos, o el hechizo elegido en el libro: Bola de fuego, Flecha helada, Terremoto o Descarga."
   AbilityIcon: {fileID: 21300000, guid: 9cdb634b0806bae4da91d3f93b89b2a8, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 0}

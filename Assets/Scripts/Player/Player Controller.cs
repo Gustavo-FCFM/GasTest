@@ -563,6 +563,21 @@ public class PlayerController : NetworkBehaviour
     // (ver esa sección): el dueño la equipa al recibirla. -1 = nació normal, por la sala.
     private readonly SyncVar<int> _netRespawnClassIndex = new SyncVar<int>(-1);
 
+    // El KDA de la partida (lo cuenta el servidor, ServerCountKda). Vive en el personaje: al
+    // terminar la partida todos se despawnean, así que la siguiente arranca en 0 sola.
+    private readonly SyncVar<int> _netKills   = new SyncVar<int>(0);
+    private readonly SyncVar<int> _netDeaths  = new SyncVar<int>(0);
+    private readonly SyncVar<int> _netAssists = new SyncVar<int>(0);
+
+    public int Kills   => _netKills.Value;
+    public int Deaths  => _netDeaths.Value;
+    public int Assists => _netAssists.Value;
+
+    [Tooltip("Para la asistencia: hasta cuántos segundos antes de la baja cuenta haberle pegado a la " +
+             "víctima, o haber curado al que hizo la baja.")]
+    [Label("Asistencia: ventana (s)")]
+    public float AssistWindowSeconds = 10f;
+
     [HideInInspector] public bool isRadialMenuOpen = false;
     private GameplayAbility currentRadialAbility;
 
@@ -2488,6 +2503,7 @@ public class PlayerController : NetworkBehaviour
         // de Daño. LastAttacker todavía está: se borra recién al revivir.
         PlayerController killer = ASC.LastAttacker != null ? ASC.LastAttacker.GetComponent<PlayerController>() : null;
         if (killer != null && killer != this) killer.NotifyKilledCharacter();
+        ServerCountKda(killer);
 
         bool revivesNow = AbilityR is GA_ImmortalWrath && AbilityR.CanActivate();
         ServerAnnounceDeath(showDeathScreen: !revivesNow);
@@ -2528,6 +2544,35 @@ public class PlayerController : NetworkBehaviour
         Mage  = 2,
         Totem = 3,
         Ghost = 4,
+    }
+
+    // El KDA de esta muerte. Solo cuenta entre personajes (jugadores y bots) y con la partida
+    // en juego: morir por un NPC suma la muerte y a nadie la baja. La asistencia es de los
+    // compañeros del que hizo la baja: los que le pegaron a la víctima hace poco y los que
+    // curaron al que la hizo. En un 3c3c3 el de otro equipo que también le pegaba no asiste.
+    [Server]
+    private void ServerCountKda(PlayerController killer)
+    {
+        MercenariesGameMode gm = MercenariesGameMode.Instance;
+        if (gm != null && gm.State != EMatchState.Playing) return;
+
+        _netDeaths.Value++;
+        if (killer == null || killer == this) return;
+
+        killer._netKills.Value++;
+
+        var helpers = new HashSet<AbilitySystemComponent>();
+        ASC.CollectRecentHitters(AssistWindowSeconds, helpers);
+        killer.ASC.CollectRecentHealers(AssistWindowSeconds, helpers);
+
+        foreach (AbilitySystemComponent helper in helpers)
+        {
+            if (ReferenceEquals(helper, killer.ASC) || ReferenceEquals(helper, ASC)) continue;
+            if (helper.IsEnemyOf(killer.ASC)) continue;
+
+            PlayerController ally = helper.GetComponent<PlayerController>();
+            if (ally != null) ally._netAssists.Value++;
+        }
     }
 
     [Server]
@@ -3076,7 +3121,7 @@ public class PlayerController : NetworkBehaviour
     private int GetClassIndex(CharacterClassDefinition def) => AllClasses.IndexOf(def);
 
     // Inverso: resuelve un índice recibido por red de vuelta a la clase real.
-    private CharacterClassDefinition GetClassByIndex(int idx)
+    public CharacterClassDefinition GetClassByIndex(int idx)
     {
         if (idx < 0 || idx >= AllClasses.Count) return null;
         return AllClasses[idx];

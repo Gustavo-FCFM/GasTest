@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Radiant Guiding Bolt
   AbilityNameEs: "Luz gu\xEDa radiante"
+  Description: "Channel 1 s and fire a bolt of fire that pierces enemies and burns them."
+  DescriptionEs: "Canaliza 1 s y dispara una flecha de fuego que atraviesa enemigos y los quema."
   AbilityIcon: {fileID: 21300000, guid: 470366c5e6d519644b428e75cb49945e, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: edc8f7b5f2c7d684d8f67cdabbccd4df, type: 2}

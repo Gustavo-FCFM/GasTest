@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Ki
   AbilityNameEs: Ki
+  Description: "2 charges. Your NEXT action is empowered: the attack becomes a flurry, the block covers all sides and the kick is faster and stuns."
+  DescriptionEs: "2 cargas. Tu PRÓXIMA acción sale mejorada: el ataque es una ráfaga, el bloqueo te cubre por todos lados y la patada va más rápido y aturde."
   AbilityIcon: {fileID: 21300000, guid: e51e19b9d5c18d1499d544c6e4b05f8b, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: edc8f7b5f2c7d684d8f67cdabbccd4df, type: 2}

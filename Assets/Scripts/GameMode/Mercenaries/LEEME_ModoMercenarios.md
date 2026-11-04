@@ -124,8 +124,8 @@ composición: la sala segura es el **único lugar donde se puede cambiar de clas
 
 **Partida (hasta 15 min).**
 
-- Al minuto 1 aparece **el Objetivo** en el centro del mapa (una caja dorada con luz
-  propia, hasta que consigas un modelo de bolsa).
+- Al minuto 1 aparece **el Objetivo** en el centro del mapa: una bolsa de dinero con luz
+  propia (`Prefabs/Objective/MoneyBag`, adentro de `Objective.prefab`).
 - Se levanta **con solo acercarse**. Quien lo lleva se mueve un 40 % más lento (desde el 29 de octubre;
   antes 25 %, `Objective.prefab` ▸ `CarrySlowPercent`) y **pierde
   la definitiva**: ese botón pasa a soltar el Objetivo.
@@ -133,6 +133,13 @@ composición: la sala segura es el **único lugar donde se puede cambiar de clas
   puerta de tu sala segura, y **quedarse ahí 6 segundos** (`MercObjective.DeliverSeconds`).
   Pegado al piso: más de 2 m sobre la plataforma no cuenta y reinicia la cuenta (⚙ "Altura de
   entrega (m)" en `MercTeamBase`; desde el 4 de noviembre, para que el Mago no entregue volando).
+- **La tabla de la partida** (Tab o la cruceta abajo, y sola al terminar): cada equipo con el KDA
+  de sus integrantes (`UI_MatchStats`; lo cuenta `PlayerController.ServerCountKda`). Solo entre
+  personajes: un NPC no da bajas. La asistencia es de los compañeros del que hizo la baja que le
+  pegaron a la víctima o lo curaron a él en los últimos 10 s.
+- **La ventana de ayuda** (F1, el stick derecho apretado o la pausa): las 3 reglas del modo, la
+  clase y sus habilidades (`UI_HelpScreen`). Un modo nuevo necesita sus propias reglas: hoy son
+  las claves `help.rule1` a `help.rule3` de `Localization.csv`.
   Salir de la zona o recibir daño de otro reinicia la cuenta. Todos ven "ENTREGANDO" con
   una barra en el marcador del Objetivo: es la última oportunidad de los rivales.
 - Cada entrega = 1 punto. **Con 2 puntos se gana** y la partida termina (y se reinicia

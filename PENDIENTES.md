@@ -9,6 +9,39 @@ del log son todos de packs importados).
 
 ## ★ Al retomar: lo abierto, en orden (22 de octubre)
 
+**Tabla con KDA, ventana de ayuda y bolsa de dinero (4 de noviembre, pedido de Gustavo): HECHO, falta probar.** Las
+herramientas ya se corrieron y se borraron.
+- **Tabla de la partida** (`UI_MatchStats`, `Match_UI ▸ MatchStats`): cada equipo con su color, nivel y puntos, y cada
+  integrante con ícono, nombre y K/D/A, ordenados por bajas. Se ve mientras se mantiene **Tab o la cruceta abajo** (vivo,
+  muerto o de espectador) y sola al terminar la partida, con el ganador en el título. Cuenta el servidor
+  (`PlayerController.ServerCountKda`, tres SyncVars en el personaje), solo con la partida en juego y entre personajes:
+  morir por un NPC suma la muerte y a nadie la baja. Asistencia: compañeros del que hizo la baja que le pegaron a la
+  víctima o curaron al que la hizo, en los últimos 10 s (⚙ "Asistencia: ventana (s)" en el Player). El Inmortal que revive
+  cuenta como muerte y baja, como en el registro de bajas. Las bajas de los compañeros del Explorador son de su dueño;
+  el resto de las invocaciones no se revisó.
+  - [ ] Tab abre y cierra la tabla, con control también; los números suben bien en el host y en un cliente.
+  - [ ] Una asistencia por daño y una por curar al que hizo la baja. Morir por un NPC no le da baja a nadie.
+  - [ ] Una baja de un tótem o una trampa cuenta para su dueño (si no, resolver al dueño en `ServerCountKda`).
+  - [ ] Al terminar la partida la tabla sale sola, con el ganador, y no se tapa con el anuncio.
+- **Ventana de ayuda** (`UI_HelpScreen`, `Match_UI ▸ HelpScreen`): a pantalla completa, con **F1, el stick derecho apretado
+  o el botón Ayuda de la pausa**. Arriba las 3 reglas del modo (`help.rule*` en `Localization.csv`) y la clase con su rol y
+  estadísticas; abajo 6 tarjetas con qué hace cada habilidad y sus números. Desde la pausa, la pausa se va y volver la
+  reabre. Recibir daño la cierra y vuelve al juego (⚙ "Cerrar al recibir daño"); la pausa no se cierra con daño.
+  Las habilidades tienen campos nuevos `Description` / `DescriptionEs`: los 122 textos salieron de
+  `Mercenaries_Diseno_de_Clases.docx`, **Gustavo los tiene que revisar**. Los números los calcula `AbilityHelpNumbers`
+  recorriendo lo que la habilidad tiene cargado, con los stats del jugador; lo periódico va aparte y por segundo.
+  - [ ] Help desde la pausa: se va la pausa; ESC, B o F1 vuelven a ella; un golpe cierra todo y vuelve al juego.
+  - [ ] Las tarjetas: la descripción queda debajo de los números y los textos largos entran. Con control, el stick derecho.
+  - [ ] Revisar los 122 textos. Se ven nombres técnicos en inglés ("Paladin Smite Switch", "Rogue Primary Attack",
+        "LayOnHands"): corregirlos si el juego se va a mostrar en inglés.
+  - [ ] El botón Ayuda de la pausa se veía sin fondo en la captura: ver si era el mouse encima.
+  - Sin número: el Castigo divino y los compañeros dañan pero el recorrido no los encuentra; las pasivas no tienen
+    tarjeta (no son habilidades con botón). El Mago muestra hasta 4 números juntos, los más bajos, sin decir de qué hechizo.
+- **Bolsa de dinero** (`Prefabs/Objective/MoneyBag`, modelo `Art/Models/MoneyBag.obj`, generado por código): adentro de
+  `Objective.prefab ▸ Visual ▸ MoneyBag`, con el ancho de la caja (0.8), que quedó apagada. Usa los dos materiales de la
+  bolsa de Gustavo (`Bolsa de objetivo.prefab`).
+  - [ ] Se ve bien en el mapa, flotando y cargada; si se quiere más grande, la escala de `MoneyBag`.
+
 **La entrega del Objetivo, pegada al piso (4 de noviembre, pedido de Gustavo): HECHO Y PROBADO ✅ (4 de noviembre).** La zona solo miraba
 la planta y no la altura: el Mago entregaba volando sobre la plataforma, donde nadie lo alcanzaba. Ahora es un cilindro
 bajo: el radio de siempre (3.5 m) y hasta 2 m sobre el punto de entrega (`MercTeamBase` ▸ ⚙ "Altura de entrega (m)",

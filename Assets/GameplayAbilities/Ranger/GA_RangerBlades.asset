@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Short Blades
   AbilityNameEs: Espadas cortas
+  Description: "A quick short sword cut in a short arc."
+  DescriptionEs: "Corte rápido con la espada corta en un arco corto."
   AbilityIcon: {fileID: 21300000, guid: dc6bca1cf5cf71b4090d7c61bb9ee6e5, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 45327044be4f41c4d8f5289bc6f9b3be, type: 2}

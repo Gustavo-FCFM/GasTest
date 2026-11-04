@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Disarm
   AbilityNameEs: Desarme
+  Description: "Disarms the enemy in front of you for 2 s: no weapon actions."
+  DescriptionEs: "Desarma 2 s al enemigo de enfrente: no puede usar acciones de arma."
   AbilityIcon: {fileID: 21300000, guid: 86e60fa4d37cf7e4b97f45051e21c168, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: bd07a782525833e47889b22896900f13, type: 2}

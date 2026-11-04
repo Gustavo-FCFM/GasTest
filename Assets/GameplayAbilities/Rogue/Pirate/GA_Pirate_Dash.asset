@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Pirate Dash
   AbilityNameEs: Dash siniestro
+  Description: "A forward dash that damages everyone in your path. 2 charges. If one dies soon after, it resets."
+  DescriptionEs: "Dash hacia adelante que daña a todos a tu paso. 2 cargas. Si uno muere poco después, se restablece."
   AbilityIcon: {fileID: 21300000, guid: 4aafd235e8c08024288eae113ffcfde2, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 10f0981bf286ed844b33e0f4b4b974e3, type: 2}

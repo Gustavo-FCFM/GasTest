@@ -141,6 +141,31 @@ match.level_short;Nv. {level};Lv. {level}
 match.get_ready;PREPÁRATE  {time};GET READY  {time}
 match.wins;{team} GANA;{team} WINS
 match.draw;EMPATE;DRAW
+stats.title;PARTIDA;MATCH
+stats.team_info;Nv. {level} · {points} pts;Lv. {level} · {points} pts
+help.mode_title;MERCENARIOS: CÓMO SE JUEGA;MERCENARIES: HOW TO PLAY
+help.rule1;1. Toma la bolsa de oro que aparece en el centro del mapa: se levanta con solo acercarte, pero te frena y bloquea tu definitiva.;1. Grab the gold bag that appears in the center of the map: just walk up to it, but it slows you and locks your ultimate.
+help.rule2;2. Llévala a la plataforma de tu base y quédate ahí en el piso. Si te pegan o te sales, la cuenta vuelve a empezar.;2. Take it to the platform at your base and stay there on the ground. If you get hit or step off, the count restarts.
+help.rule3;3. El primer equipo con {points} puntos gana. Si se acaba el tiempo, gana el que va adelante.;3. The first team to reach {points} points wins. If time runs out, the team in the lead wins.
+help.role.tank;Tanque: aguanta daño y crea espacio;Tank: takes damage and creates space
+help.role.damage;Daño: elimina objetivos;Damage: takes out targets
+help.role.support;Soporte: mantiene vivo al equipo;Support: keeps the team alive
+help.damage;Daño: {value};Damage: {value}
+help.heal;Cura: {value};Heal: {value}
+help.target_health;+ según la vida del objetivo;+ based on target health
+help.damage_over_time;Con el tiempo: {value}/s;Over time: {value}/s
+help.heal_over_time;Cura con el tiempo: {value}/s;Heal over time: {value}/s
+help.locked_title;Bloqueada;Locked
+help.locked;Se desbloquea al elegir subclase, con tu equipo al nivel máximo.;Unlocks when you pick a subclass, with your team at max level.
+help.stat.health;Vida: {value};Health: {value}
+help.stat.attack;Ataque: {value};Attack: {value}
+help.stat.magic;Daño mágico: {value};Magic damage: {value}
+help.stat.armor;Defensa: {value};Armor: {value}
+help.stat.speed;Velocidad: {value};Speed: {value}
+help.stat.attack_speed;Tiempo entre ataques: {value} s;Time between attacks: {value} s
+help.stat.mana;Maná: {value};Mana: {value}
+help.stat.energy;Energía: {value};Energy: {value}
+pause.help;Ayuda;Help
 match.choose_class_in_base;Elige tu clase en tu base. Afuera no se puede cambiar.;Choose your class in your base. It can't be changed outside.
 match.objective_carried;OBJETIVO · lo lleva {team};OBJECTIVE · carried by {team}
 match.objective_on_map;OBJETIVO · en el mapa;OBJECTIVE · on the map

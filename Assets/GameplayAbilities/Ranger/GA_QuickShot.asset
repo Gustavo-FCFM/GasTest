@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Quick Shot
   AbilityNameEs: "Ataque r\xE1pido"
+  Description: "Your next 3 shots fire instantly at full charge, and for 6 s you attack faster."
+  DescriptionEs: "Tus 3 siguientes disparos salen al instante con carga completa, y por 6 s atacas más rápido."
   AbilityIcon: {fileID: 21300000, guid: 98205f23d414da343abed7f206c9ae55, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: edc8f7b5f2c7d684d8f67cdabbccd4df, type: 2}

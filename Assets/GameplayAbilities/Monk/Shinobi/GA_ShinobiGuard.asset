@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Block
   AbilityNameEs: Bloqueo
+  Description: "Blocks from the front. Projectiles pass through you harmlessly."
+  DescriptionEs: "Bloquea de frente. Los proyectiles te atraviesan sin dañarte."
   AbilityIcon: {fileID: 21300000, guid: 93439de347048124db42b8744001167a, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 0}

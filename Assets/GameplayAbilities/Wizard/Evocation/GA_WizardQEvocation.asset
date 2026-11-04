@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Spell Power
   AbilityNameEs: Poder del hechizo
+  Description: "Changes with the spell: recharge mana, Fire Wall, Ice Tomb, Uplift or Lightning Storm."
+  DescriptionEs: "Cambia con el hechizo: recargar maná, Muro de fuego, Tumba helada, Levantamiento o Tormenta eléctrica."
   AbilityIcon: {fileID: 21300000, guid: 05b868820c2e9f04cac8d0f22bd0db2c, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 0}

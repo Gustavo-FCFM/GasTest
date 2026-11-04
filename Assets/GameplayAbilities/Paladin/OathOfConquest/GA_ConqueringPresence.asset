@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Conquering Presence
   AbilityNameEs: Presencia conquistadora
+  Description: "Stuns the enemy in your sights, at long range."
+  DescriptionEs: "Aturde al enemigo de la mira, a gran distancia."
   AbilityIcon: {fileID: 21300000, guid: 21010f49c4bf45b49b169ae4edf5031f, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: bd07a782525833e47889b22896900f13, type: 2}

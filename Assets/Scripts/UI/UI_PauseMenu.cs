@@ -34,6 +34,10 @@ public class UI_PauseMenu : MonoBehaviour, IMenuScreen
     [Label("Botón Ajustes")]
     public Button SettingsButton;
 
+    [Tooltip("Abre la ventana de ayuda (la de la partida) encima de la pausa.")]
+    [Label("Botón de ayuda")]
+    public Button HelpButton;
+
     [Tooltip("Solo se ve con un personaje en juego.")]
     [Label("Botón Desatascarse")]
     public Button UnstuckButton;
@@ -76,6 +80,7 @@ public class UI_PauseMenu : MonoBehaviour, IMenuScreen
 
         if (ResumeButton != null)   { ResumeButton.onClick.AddListener(AudioManager.Click);   ResumeButton.onClick.AddListener(Close); }
         if (SettingsButton != null) { SettingsButton.onClick.AddListener(AudioManager.Click); SettingsButton.onClick.AddListener(() => UI_SettingsPanel.Get()?.Open()); }
+        if (HelpButton != null)     { HelpButton.onClick.AddListener(AudioManager.Click);     HelpButton.onClick.AddListener(OpenHelp); }
         if (UnstuckButton != null)  { UnstuckButton.onClick.AddListener(AudioManager.Click);  UnstuckButton.onClick.AddListener(Unstuck); }
         if (LeaveButton != null)    { LeaveButton.onClick.AddListener(AudioManager.Click);    LeaveButton.onClick.AddListener(Leave); }
     }
@@ -104,6 +109,16 @@ public class UI_PauseMenu : MonoBehaviour, IMenuScreen
 
         UICursor.Request(this);
         MenuInput.Push(this);
+    }
+
+    // La ayuda cubre la pantalla: la pausa se va y vuelve al salir de la ayuda con el botón.
+    private void OpenHelp()
+    {
+        UI_HelpScreen help = UI_HelpScreen.Get();
+        if (help == null) return;
+
+        Close();
+        help.Open(Open);
     }
 
     public void Close()

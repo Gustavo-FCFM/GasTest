@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Longbow
   AbilityNameEs: Arco largo
+  Description: "Longbow: slower to charge but hits harder. At full charge the arrow never drops."
+  DescriptionEs: "Arco largo: carga más lento pero pega más. Con la carga completa la flecha no cae nunca."
   AbilityIcon: {fileID: 21300000, guid: cc07f37c2e57f6d49893c3962aa929c6, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: ecfe07a06c63704479a331a9bae55086, type: 2}

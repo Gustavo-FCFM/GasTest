@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Throwing Axe
   AbilityNameEs: Lanzamiento de hacha
+  Description: "Hold to aim, release to throw your axe: it slows enemies. Reach the fallen axe to reset the cooldown."
+  DescriptionEs: "Mantén para apuntar y suelta para lanzar el hacha: ralentiza a los enemigos. Si vas por el hacha caída, se reinicia la espera."
   AbilityIcon: {fileID: 21300000, guid: 98b8289f453db6c4ba750d1ba21bb0c9, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: ecfe07a06c63704479a331a9bae55086, type: 2}

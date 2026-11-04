@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Alternating Berserker Primary Attack
   AbilityNameEs: Ataque del Berserker
+  Description: "Fast attacks with two hand axes: less damage per hit, many more hits."
+  DescriptionEs: "Ataques rápidos con dos hachas de mano: menos daño por golpe, muchos más golpes."
   AbilityIcon: {fileID: 21300000, guid: 936ec1fa27e394e47a0560a93b4bf933, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 45327044be4f41c4d8f5289bc6f9b3be, type: 2}

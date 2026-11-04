@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Silent Death
   AbilityNameEs: Muerte silenciosa
+  Description: "ULTIMATE. Appear behind an enemy and chain between targets, adding part of their missing health. You cannot be damaged meanwhile."
+  DescriptionEs: "DEFINITIVA. Apareces a la espalda del enemigo y saltas de uno a otro sumando parte de su vida faltante. Nadie te puede dañar mientras dura."
   AbilityIcon: {fileID: 21300000, guid: b00f07b8e9ae3794d8fd15a588bcf6f7, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 4165da9d9de274a4aa511261df047340, type: 2}

@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Illusionist Primary Attack
   AbilityNameEs: Ataque del Ilusionista
+  Description: "Sweeps that stack wounds. At 10 they explode for massive damage."
+  DescriptionEs: "Barridos que acumulan heridas. Con 10 explotan con mucho daño."
   AbilityIcon: {fileID: 21300000, guid: c024da923d4feae4b8a14883e3f4b4de, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 45327044be4f41c4d8f5289bc6f9b3be, type: 2}

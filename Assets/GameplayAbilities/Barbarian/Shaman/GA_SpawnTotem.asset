@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Spawn Totem
   AbilityNameEs: "Invocar t\xF3tem"
+  Description: "Summons a destructible totem that buffs nearby allies: Bear health, Eagle speed, Tiger attack speed, Wolf damage. Up to 2."
+  DescriptionEs: "Invoca un tótem destruible que da una ventaja a los aliados cercanos: Oso vida, Águila velocidad, Tigre ritmo de ataque, Lobo daño. Hasta 2."
   AbilityIcon: {fileID: 21300000, guid: 72087692fc8469047840263552e982ad, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 0}

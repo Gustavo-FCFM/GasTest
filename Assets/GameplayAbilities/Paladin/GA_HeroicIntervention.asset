@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Heroic Intervention
   AbilityNameEs: "Intercepci\xF3n heroica"
+  Description: "Leap to the ally in your sights and both gain damage resistance for a while. 2 charges."
+  DescriptionEs: "Saltas junto al aliado de la mira y ambos ganan resistencia al daño por un rato. 2 cargas."
   AbilityIcon: {fileID: 21300000, guid: 50a395c192ffc2e429da92eb03d77cd1, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 10f0981bf286ed844b33e0f4b4b974e3, type: 2}

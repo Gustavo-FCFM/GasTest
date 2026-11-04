@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Inmortal Rage
   AbilityNameEs: Enfurecer
+  Description: "For a while you gain damage, lifesteal, max health, movement speed and attack speed."
+  DescriptionEs: "Por un rato ganas daño, robo de vida, vida máxima, velocidad de movimiento y de ataque."
   AbilityIcon: {fileID: 21300000, guid: 60ac2909fbe6b8f49a5eaedccd5ac4ce, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: edc8f7b5f2c7d684d8f67cdabbccd4df, type: 2}

@@ -85,6 +85,10 @@ public class MenuInput : MonoBehaviour
     public static InputAction Cancel   { get; private set; }
     public static InputAction Pause    { get; private set; }
 
+    // Se leen en plena partida (la UI de partida), vivo, muerto o de espectador.
+    public static InputAction Scoreboard { get; private set; }
+    public static InputAction Help       { get; private set; }
+
     // X y Y del control: borrar y espacio en el teclado en pantalla (UI_OnScreenKeyboard).
     public static InputAction Backspace { get; private set; }
     public static InputAction Space     { get; private set; }
@@ -226,6 +230,8 @@ public class MenuInput : MonoBehaviour
         Submit   = ui.FindAction("Submit", true);
         Cancel   = ui.FindAction("Cancel", true);
         Pause    = ui.FindAction("Pause", false);
+        Scoreboard = ui.FindAction("Scoreboard", false);
+        Help       = ui.FindAction("Help", false);
         Backspace = ui.FindAction("Backspace", false);
         Space     = ui.FindAction("Space", false);
         _point   = ui.FindAction("Point", false);

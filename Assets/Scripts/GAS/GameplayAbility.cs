@@ -35,6 +35,16 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // El nombre que ve el jugador, en su idioma.
     public string DisplayName => Loc.Pick(AbilityName, AbilityNameEs);
 
+    [Tooltip("Qué hace, en inglés (la ventana de ayuda).")]
+    [Label("Descripción (inglés)")]
+    [TextArea] public string Description;
+
+    [Tooltip("Qué hace, en español. Vacío = sale la inglesa.")]
+    [Label("Descripción (español)")]
+    [TextArea] public string DescriptionEs;
+
+    public string DisplayDescription => Loc.Pick(Description, DescriptionEs);
+
     [Section(AbilitySection.CostCooldown)]
     [Tooltip("Efecto instantáneo que se descuenta al activar (ej: -20 de maná).")]
     [Label("Efecto de costo")]

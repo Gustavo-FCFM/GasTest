@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Flight
   AbilityNameEs: Vuelo
+  Description: "Take off and fly freely for a while: Space rises, Ctrl descends. Taking damage makes you fall slowly. Press again to land."
+  DescriptionEs: "Despegas y vuelas libre por un rato: Espacio sube, Ctrl baja. Recibir daño te hace caer lento. Vuelve a apretar para aterrizar."
   AbilityIcon: {fileID: 21300000, guid: fd3efe0679693d045ab78f5e1baab07c, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 10f0981bf286ed844b33e0f4b4b974e3, type: 2}

@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Divine Protection
   AbilityNameEs: "Protecci\xF3n divina"
+  Description: "ULTIMATE. Protects a nearby ally from all damage for a while. With no ally, protects you."
+  DescriptionEs: "DEFINITIVA. Protege contra todo daño por un rato al aliado cercano. Sin aliado, a ti."
   AbilityIcon: {fileID: 21300000, guid: 67c2e59bbae96d24ba7bb56a501bdd06, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 4165da9d9de274a4aa511261df047340, type: 2}

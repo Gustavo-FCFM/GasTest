@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Prey
   AbilityNameEs: Presa
+  Description: "Marks the player in your sights for 8 s and grants a bonus based on their role. If you take them down, it applies to everyone for 6 s."
+  DescriptionEs: "Marca 8 s al jugador de la mira y ganas un beneficio según su rol. Si lo abates, vale contra todos por 6 s."
   AbilityIcon: {fileID: 21300000, guid: 38862a588de61a14fb46e3d88027e010, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: bd07a782525833e47889b22896900f13, type: 2}

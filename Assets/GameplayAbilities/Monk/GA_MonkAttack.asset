@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Strikes
   AbilityNameEs: Golpes
+  Description: "A quick 2-hit string at close range. Each hit adds Martial Arts stacks."
+  DescriptionEs: "Sucesión de 2 golpes rápidos a corta distancia. Cada impacto suma Artes marciales."
   AbilityIcon: {fileID: 21300000, guid: 44639b10eace320419855a3625913368, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 45327044be4f41c4d8f5289bc6f9b3be, type: 2}

@@ -27,7 +27,7 @@ clientes no puede ir como texto ya escrito (cada uno lo ve en su idioma): se man
 la clase y qué NPC es (`ENpcLabel`), el desatascarse manda la CLAVE del motivo. **El CONTENIDO no va en la
 tabla, va en el propio asset** (desde el 8 de octubre de 2026): el inglés y, al lado, el
 español — `ClassName`/`ClassNameEs`, `Description`/`DescriptionEs`, `AbilityName`/
-`AbilityNameEs`, el `Name`/`NameEs` de cada opción de rueda. La UI lee `DisplayName` /
+`AbilityNameEs`, `Description`/`DescriptionEs` de cada habilidad (la ventana de ayuda), el `Name`/`NameEs` de cada opción de rueda. La UI lee `DisplayName` /
 `DisplayDescription` (`Loc.Pick`), nunca el campo en inglés directo. Así renombrar un asset no
 rompe nada. Se cargan todos de una por `DesignDocuments/Traduccion_Contenido.csv` (por GUID) con
 `Mercenarios ▸ Idiomas ▸ Importar nombres traducidos` / `Exportar`. Una habilidad o clase
@@ -312,7 +312,8 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   después se edita a mano. Lo que es de la PARTIDA y no del personaje (registro de bajas,
   pantalla de muerte, números flotantes, marcador) va al **prefab de partida `Prefabs/UI/Match_UI`**
   (uno por escena; desde el 14 de octubre de 2026: registro de bajas, pantalla de muerte, números,
-  marcador, avisos de partida, marcadores del Objetivo y el espectador). Los menús (inicio, conexión,
+  marcador, avisos de partida, marcadores del Objetivo, el espectador y, desde el 4 de noviembre de 2026, la tabla con
+  KDA y la ventana de ayuda). Los menús (inicio, conexión,
   Ajustes, la sala y la pausa, más `MenuInput`) están en el **prefab de menús `Prefabs/UI/Menus_UI`**: cada fila de Ajustes lleva un
   `UI_SettingRow` y cada lugar de la sala un `UI_LobbySlot`. **El color de un botón de los menús va en el
   Button ("Normal Color" y los demás estados), con su imagen BLANCA** (`ButtonTint`, desde el 26 de octubre de 2026):

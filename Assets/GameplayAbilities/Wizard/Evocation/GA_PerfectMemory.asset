@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Perfect Memory
   AbilityNameEs: Memoria perfecta
+  Description: "Your next Spell Power fires instantly and with no cooldown. The mark lasts 10 s."
+  DescriptionEs: "Tu próximo Poder del hechizo sale al instante y sin espera. La marca dura 10 s."
   AbilityIcon: {fileID: 21300000, guid: 9f3fd943a6f457e4f98c440de28f6961, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: bd07a782525833e47889b22896900f13, type: 2}

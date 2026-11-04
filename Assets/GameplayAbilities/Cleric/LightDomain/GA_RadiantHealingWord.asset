@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Radiant Healing Word
   AbilityNameEs: "Palabra de curaci\xF3n radiante"
+  Description: "Heals the ally in your sights over time. With no ally, heals you. Up to 4 charges."
+  DescriptionEs: "Cura con el tiempo al aliado de la mira. Sin aliado, a ti. Hasta 4 cargas."
   AbilityIcon: {fileID: 21300000, guid: 7cb8b00857ad5674682c2d2af3de3b57, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: ecfe07a06c63704479a331a9bae55086, type: 2}

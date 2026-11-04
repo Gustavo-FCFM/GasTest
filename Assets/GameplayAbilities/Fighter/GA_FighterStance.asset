@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Stance
   AbilityNameEs: Cambio de postura
+  Description: "Switches between defensive stance (more armor) and offensive stance (more attack). Never both at once."
+  DescriptionEs: "Alterna entre postura defensiva (más armadura) y ofensiva (más ataque). Nunca las dos a la vez."
   AbilityIcon: {fileID: 21300000, guid: 2b6d156bc968d074ea617d3bf5625679, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: edc8f7b5f2c7d684d8f67cdabbccd4df, type: 2}

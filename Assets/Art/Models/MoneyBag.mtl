@@ -1,0 +1,4 @@
+newmtl Bag
+Kd 0.85 0.6 0.15
+newmtl Trim
+Kd 0.35 0.18 0.05

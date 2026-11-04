@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: LayOnHands
   AbilityNameEs: "Imposici\xF3n de manos"
+  Description: "Heals a nearby ally for your full max health. With no ally, heals you."
+  DescriptionEs: "Cura al aliado cercano por el total de tu vida máxima. Sin aliado, a ti."
   AbilityIcon: {fileID: 21300000, guid: 0a7c6e00fc60d2a47bace86d4f3d6f45, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: bd07a782525833e47889b22896900f13, type: 2}

@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Sword Attack
   AbilityNameEs: Ataque con mandoble
+  Description: "Slow, heavy greatsword swings."
+  DescriptionEs: "Golpes lentos y pesados con el mandoble."
   AbilityIcon: {fileID: 21300000, guid: fc1c5ea4e68459a4092232b46faae97d, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 45327044be4f41c4d8f5289bc6f9b3be, type: 2}

@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: Peace of Mind
   AbilityNameEs: Paz mental
+  Description: "ULTIMATE. For 6 s you resist 30 % of damage and everything that uses Ki gets it for free."
+  DescriptionEs: "DEFINITIVA. Por 6 s resistes el 30 % del daño y todo lo que lleva Ki sale con Ki sin gastarlo."
   AbilityIcon: {fileID: 21300000, guid: c76aa1a032106564db0b1af733e1dd32, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: 4165da9d9de274a4aa511261df047340, type: 2}

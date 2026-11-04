@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AbilityName: 'Command: Halt'
   AbilityNameEs: Aturdir
+  Description: "Marks an enemy for 4 s: if they hit an ally or you, they get stunned."
+  DescriptionEs: "Marca a un enemigo por 4 s: si le pega a un aliado o a ti, queda aturdido."
   AbilityIcon: {fileID: 21300000, guid: 3cf49a401cabe3a429495dca1e17ea1e, type: 3}
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 11400000, guid: bd07a782525833e47889b22896900f13, type: 2}
