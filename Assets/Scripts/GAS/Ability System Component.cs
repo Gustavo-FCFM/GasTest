@@ -98,11 +98,11 @@ public class AbilitySystemComponent : MonoBehaviour
     // FLOTANTES). Server-side. Las curaciones que escriben la vida DIRECTO, sin pasar
     // por un efecto (el aura del Paladín, los botiquines), tienen que llamarlo ellas
     // con lo que curaron de verdad; lo que pasa por ExecuteInstantEffect ya lo avisa solo.
-    public void ShowCombatNumber(float amount, ECombatNumber kind)
+    public void ShowCombatNumber(float amount, ECombatNumber kind, bool shielded = false)
     {
         if (amount <= 0f) return;
         NetworkAbilitySystemComponent netAsc = GetComponent<NetworkAbilitySystemComponent>();
-        if (netAsc != null) netAsc.ServerShowCombatNumber(amount, kind);
+        if (netAsc != null) netAsc.ServerShowCombatNumber(amount, kind, shielded);
     }
 
     // Se dispara cuando ESTE personaje RECIBE un golpe de daño directo (el
@@ -1232,7 +1232,7 @@ public class AbilitySystemComponent : MonoBehaviour
             ECombatNumber kind = anyCritical   ? ECombatNumber.CriticalDamage
                                : isPeriodicTick ? ECombatNumber.DamageOverTime
                                                 : ECombatNumber.Damage;
-            ShowCombatNumber(damageEndured, kind);
+            ShowCombatNumber(damageEndured, kind, shielded: damageToHealth <= 0f);
         }
         if (healthHealed > 0f) ShowCombatNumber(healthHealed, ECombatNumber.Heal);
         // (el escudo de la Conquista que cura lo que frena ya sumó arriba en healthHealed)

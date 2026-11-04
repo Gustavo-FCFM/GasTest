@@ -9,6 +9,26 @@ del log son todos de packs importados).
 
 ## ★ Al retomar: lo abierto, en orden (22 de octubre)
 
+**Destellos al recibir algo (4 de noviembre, pedido de Gustavo): HECHO Y PROBADO ✅ (4 de noviembre, "me gustan mucho").**
+`UI_CombatFlash` (`Match_UI ▸ DamageNumbers`): un contorno sobre quien recibe algo, que se encoge en 0.18 s. Rojo daño,
+naranja crítico, verde curación, celeste si un escudo frenó el golpe entero. Sale del aviso del número flotante
+(`ObserversCombatNumber`, con un `shielded` nuevo): no toca ningún GE y un invisible no se delata. Es distinto del VFX de
+golpe, que lo pone el que ataca. Lo que no tiene huesos (tótems, trampas) usa `CharacterOutline.CreateRigid`.
+
+**Más feedback de combate: IDEAS, para después (4 de noviembre).** Gustavo decidió dejarlas acá, en este orden:
+  - [ ] Parón de impacto cuerpo a cuerpo: la animación del atacante se congela unas centésimas al conectar. Solo a él: en
+        red no se puede detener el tiempo para todos.
+  - [ ] Sacudida de cámara pequeña al recibir un golpe fuerte y al lanzar la definitiva, que se pueda apagar en Ajustes.
+  - [ ] Destello rojo en los bordes de la pantalla al recibir daño, según el golpe (hoy solo hay viñeta con poca vida).
+  - [ ] Números con más vida: críticos más grandes, con un salto al aparecer.
+  - [ ] Destello dorado o blanco en la víctima al matarla, además de la calavera.
+  - Empuje al recibir un golpe: por ahora no, Gustavo siente que habría que tocar muchos GE.
+
+**Sonidos: los pone Gustavo (4 de noviembre).** Ya hay lugar en el GA ("Sonido al lanzar", "Sonido al impactar") y en el GE
+(`TargetSound`). No se vio un sonido en bucle para lo continuo (el vuelo, el molinete, un canalizado): revisarlo y, si
+falta, agregarlo al llegar ahí.
+  - [ ] Descargar los clips y cargarlos.
+
 **Tabla con KDA, ventana de ayuda y bolsa de dinero (4 de noviembre, pedido de Gustavo): HECHO, falta probar.** Las
 herramientas ya se corrieron y se borraron.
 - **Tabla de la partida** (`UI_MatchStats`, `Match_UI ▸ MatchStats`): cada equipo con su color, nivel y puntos, y cada

@@ -67,6 +67,36 @@ public static class CharacterOutline
         return created;
     }
 
+    // Lo mismo para lo que no tiene huesos (un tótem, una trampa): una copia de cada malla fija.
+    public static List<Renderer> CreateRigid(Component body, Material material, string name)
+    {
+        var created = new List<Renderer>();
+        if (body == null || material == null) return created;
+
+        foreach (MeshFilter source in body.GetComponentsInChildren<MeshFilter>())
+        {
+            MeshRenderer sourceRenderer = source.GetComponent<MeshRenderer>();
+            if (sourceRenderer == null || !sourceRenderer.enabled || source.sharedMesh == null) continue;
+            if (source.name.EndsWith(Suffix)) continue;
+
+            var go = new GameObject(name);
+            go.layer = source.gameObject.layer;
+            go.transform.SetParent(source.transform, false);
+            go.AddComponent<MeshFilter>().sharedMesh = source.sharedMesh;
+
+            MeshRenderer outline = go.AddComponent<MeshRenderer>();
+            outline.shadowCastingMode = ShadowCastingMode.Off;
+            outline.receiveShadows    = false;
+
+            var mats = new Material[source.sharedMesh.subMeshCount];
+            for (int i = 0; i < mats.Length; i++) mats[i] = material;
+            outline.sharedMaterials = mats;
+
+            created.Add(outline);
+        }
+        return created;
+    }
+
     public static void Destroy(List<SkinnedMeshRenderer> renderers)
     {
         if (renderers == null) return;

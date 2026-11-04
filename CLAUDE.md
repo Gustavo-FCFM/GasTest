@@ -261,6 +261,11 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   el servidor lo quita (desde el 29 de octubre de 2026: el cliente reaparecía "muerto" y no
   se movía). Si agregas otro tag que el cliente también ponga solo, haz lo mismo.
 
+- **El destello de recibir algo no es un VFX de habilidad.** `UI_CombatFlash` pinta un contorno sobre quien recibe daño,
+  curación o un golpe que frenó entero el escudo, y sale solo del aviso del número flotante (`ObserversCombatNumber`,
+  desde el 4 de noviembre de 2026). Una curación que escribe la vida directo y ya llama a `ShowCombatNumber` lo tiene
+  gratis; un GA o un GE no tienen que hacer nada.
+
 - **Dónde va cada VFX.** Lo que dura lo que dura un buff o un debuff va en el
   `TargetVFX` del **GE** (aparece pegado a quien lo recibe, en todas las pantallas, y se
   va cuando el efecto termina; `TargetVFXLoop` repite las partículas de un solo

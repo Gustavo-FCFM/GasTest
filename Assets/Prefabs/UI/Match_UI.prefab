@@ -10499,6 +10499,7 @@ GameObject:
   - component: {fileID: 8559776986071193109}
   - component: {fileID: 3391102577759970322}
   - component: {fileID: 5033383006966721405}
+  - component: {fileID: 9205874006139940242}
   m_Layer: 5
   m_Name: DamageNumbers
   m_TagString: Untagged
@@ -10600,6 +10601,25 @@ MonoBehaviour:
   MaxDistance: 40
   ReferenceDistance: 10
   PoolSize: 48
+--- !u!114 &9205874006139940242
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6137355280162125555}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30623d663ebdb1c45a1e7603ece26b75, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  DamageColor: {r: 1, g: 0.05, b: 0.05, a: 1}
+  CriticalColor: {r: 1, g: 0.55, b: 0, a: 1}
+  HealColor: {r: 0.1, g: 1, b: 0.2, a: 1}
+  ShieldColor: {r: 0.1, g: 0.7, b: 1, a: 1}
+  Seconds: 0.18
+  Width: 0.04
+  FlashDamageOverTime: 1
 --- !u!1 &6314769995711360593
 GameObject:
   m_ObjectHideFlags: 0

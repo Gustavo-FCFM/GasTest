@@ -1624,7 +1624,7 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     private float _pendingHealFlushAt;
 
     [Server]
-    public void ServerShowCombatNumber(float amount, ECombatNumber kind)
+    public void ServerShowCombatNumber(float amount, ECombatNumber kind, bool shielded = false)
     {
         if (amount <= 0f) return;
 
@@ -1635,7 +1635,7 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
             return;
         }
 
-        SendCombatNumber(amount, kind);
+        SendCombatNumber(amount, kind, shielded);
     }
 
     private void FlushPendingHealNumber()
@@ -1646,17 +1646,17 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         _pendingHeal = 0f;
     }
 
-    private void SendCombatNumber(float amount, ECombatNumber kind)
+    private void SendCombatNumber(float amount, ECombatNumber kind, bool shielded = false)
     {
         // Menos de medio punto no se muestra: un "0" o un "1" que no fue nada confunde.
         int rounded = Mathf.RoundToInt(amount);
         if (rounded <= 0) return;
 
-        ObserversCombatNumber((ushort)Mathf.Min(rounded, ushort.MaxValue), (byte)kind);
+        ObserversCombatNumber((ushort)Mathf.Min(rounded, ushort.MaxValue), (byte)kind, shielded);
     }
 
     [ObserversRpc]
-    private void ObserversCombatNumber(ushort amount, byte kind,
+    private void ObserversCombatNumber(ushort amount, byte kind, bool shielded,
                                        FishNet.Transporting.Channel channel = FishNet.Transporting.Channel.Unreliable)
     {
         if (_asc == null) return;
@@ -1669,6 +1669,8 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
             AbilitySystemComponent localAsc = local != null ? local.GetComponent<AbilitySystemComponent>() : null;
             if (localAsc == null || localAsc.IsEnemyOf(_asc)) return;
         }
+
+        UI_CombatFlash.Get()?.Show(this, (ECombatNumber)kind, shielded);
 
         // Dónde salen: entre los pies y la barra de vida (ver UI_DamageNumbers.HeightFraction),
         // así caen a la altura del pecho —donde uno apunta— en un personaje de cualquier
