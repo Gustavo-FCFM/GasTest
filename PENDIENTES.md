@@ -62,7 +62,7 @@ Verificado en el editor en las tres bases del Cementerio (piso, 1.9 m y la orill
    de partidas en la red, el teclado en pantalla y los botones con el elegido más oscuro): HECHAS, falta
    probar (las herramientas ya se corrieron y se borraron). Documentos al día (26 de octubre:
    `Red_Arquitectura.docx`, el LEEME del modo y CLAUDE.md). **Etapa 3 (tres ventanas en una PC, cada una con su control): HECHA (28 de octubre; la herramienta del
-   cartel ya se corrió y se borró), falta hacer una build y probar con los controles: ver "Etapas" ▸ 3.**
+   cartel ya se corrió y se borró), no se probó: Gustavo la cerró el 4 de noviembre (hay varias computadoras). Ver "Etapas" ▸ 3.**
 1. **Subclases del Mago: PLAN en curso (22 de octubre)** — ver "★ Subclases del Mago"; plan CERRADO;
    **etapa 1 (Escuela de evocación + cambios al kit base): HECHA Y PROBADA ✅**; **etapa 2 (Escuela de abjuración): HECHA Y PROBADA ✅**; **etapa 3 (Filo danzante): HECHA Y PROBADA ✅**. Documentos al día (23 de octubre). Orden: Evocación, Abjuración, Filo danzante.
    **Misiles de a 3 (22 de octubre): HECHO Y PROBADO ✅** (se quedó en ráfaga y no en combo: un solo gesto, 0.2 s fijos). Cada ataque es una RÁFAGA de 3 misiles, 0.2 s entre
@@ -465,21 +465,21 @@ gris de la esquina, dibujado aparte y sin control); y poder jugar con 3 instanci
    **En el showcase, el orden:** abrir `Showcase.bat`; clic en la ventana 2 y A en su control; clic en la 3 y
    A en el otro; **al final, clic en la ventana 1** (la de teclado: el teclado solo le llega a la ventana que
    tiene el foco). La pantalla completa la ponen los Ajustes (son los mismos para las tres).
-   **Probar (con 2 controles):**
-   - [ ] En el editor, sin tags: todo como antes (teclado y control a la vez).
-   - [ ] Las tres ventanas con el `.bat`: cada una en su monitor; la 2 y la 3 muestran "Aprieta A en tu
-         control" (sin el foco, "Haz clic en esta ventana…"). Al apretar A: "¡Listo!" y se va.
-   - [ ] Cada control mueve solo su ventana (menús, sala, teclado en pantalla y partida), aunque la ventana
-         no tenga el foco. El teclado y el mouse, solo la 1. Ninguna ventana de control atrapa el mouse.
-   - [ ] La ventana 1 crea la partida; la 2 y la 3 la eligen de la lista con su control y entran. Una
-         partida entera.
-   - [ ] El HUD de las ventanas de control muestra RB/LB/RT…; el de la 1, Q/E/R.
-   - [ ] Solo suena la ventana 1.
-   - [ ] Desconectar un control: su ventana vuelve a pedir A ("Se desconectó el control…"); al reconectarlo,
-         lo retoma sola.
-   - [ ] Entrar de espectador en una ventana de control: se mueve, mira, sube/baja y sigue jugadores con
-         el control, y la ayuda muestra los botones del control. En la de teclado, lo de siempre.
-   - [ ] En la rueda de una ventana de control, se apunta con el stick aunque el mouse ande por ahí.
+   **Probar (con 2 controles): CERRADO por Gustavo sin probar (4 de noviembre; hay varias computadoras para el showcase).**
+   - [x] En el editor, sin tags: todo como antes (teclado y control a la vez). **Cerrado por Gustavo (4 de noviembre).**
+   - [x] Las tres ventanas con el `.bat`: cada una en su monitor; la 2 y la 3 muestran "Aprieta A en tu
+         control" (sin el foco, "Haz clic en esta ventana…"). Al apretar A: "¡Listo!" y se va. **Cerrado por Gustavo (4 de noviembre).**
+   - [x] Cada control mueve solo su ventana (menús, sala, teclado en pantalla y partida), aunque la ventana
+         no tenga el foco. El teclado y el mouse, solo la 1. Ninguna ventana de control atrapa el mouse. **Cerrado por Gustavo (4 de noviembre).**
+   - [x] La ventana 1 crea la partida; la 2 y la 3 la eligen de la lista con su control y entran. Una
+         partida entera. **Cerrado por Gustavo (4 de noviembre).**
+   - [x] El HUD de las ventanas de control muestra RB/LB/RT…; el de la 1, Q/E/R. **Cerrado por Gustavo (4 de noviembre).**
+   - [x] Solo suena la ventana 1. **Cerrado por Gustavo (4 de noviembre).**
+   - [x] Desconectar un control: su ventana vuelve a pedir A ("Se desconectó el control…"); al reconectarlo,
+         lo retoma sola. **Cerrado por Gustavo (4 de noviembre).**
+   - [x] Entrar de espectador en una ventana de control: se mueve, mira, sube/baja y sigue jugadores con
+         el control, y la ayuda muestra los botones del control. En la de teclado, lo de siempre. **Cerrado por Gustavo (4 de noviembre).**
+   - [x] En la rueda de una ventana de control, se apunta con el stick aunque el mouse ande por ahí. **Cerrado por Gustavo (4 de noviembre).**
    **Probar las habilidades con control (28 de octubre, pedido de Gustavo).** En el código ya andan (ninguna lee
    teclado o mouse directo: todo va por las acciones del asset), pero nadie lo jugó entero con control:
    - [x] La rueda de cada clase que la tenga: se abre con su botón, el stick elige, el centro cancela, al soltar
