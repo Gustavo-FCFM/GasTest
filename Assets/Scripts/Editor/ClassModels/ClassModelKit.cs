@@ -21,6 +21,13 @@ using UnityEngine;
 // Las piezas se sombrean con facetas o suaves según su ángulo de quiebre (BeginPiece).
 // ============================================================
 
+// Cómo refleja la luz el material del personaje.
+public enum ModelFinish
+{
+    Matte,      // sin brillo: cuero, tela, piel
+    Polished,   // el alfa de la textura dice qué tan pulido es cada lugar: la armadura brilla y la tela no
+}
+
 // A qué huesos sigue un vértice, hasta cuatro.
 public readonly struct ModelSkin
 {
@@ -300,7 +307,10 @@ public sealed class ClassModelKit
 
     // Una hoja que rodea al personaje (capa, falda): por afuera lo que traiga cada punto, por adentro
     // el color 'lining'. Son dos caras de verdad porque URP no da vuelta la luz en un material de doble cara.
-    public void Sheet(ModelPoint[][] rings, Vector2 lining)
+    public void Sheet(ModelPoint[][] rings, Vector2 lining) => Sheet(rings, lining, null);
+
+    // Lo mismo para una pieza que no rodea al personaje (una hombrera): 'inside' queda del lado del forro.
+    public void Sheet(ModelPoint[][] rings, Vector2 lining, Vector3? inside)
     {
         int columns = rings[0].Length;
         var outer = new int[rings.Length][];
@@ -324,7 +334,8 @@ public sealed class ClassModelKit
             {
                 Vector3 a = rings[r][i].Pos, b = rings[r + 1][i].Pos, c = rings[r + 1][i + 1].Pos;
                 Vector3 middle = (a + b + c) / 3f;
-                middle.y = 0f;
+                if (inside.HasValue) middle -= inside.Value;
+                else middle.y = 0f;
                 away += Vector3.Dot(Vector3.Cross(b - a, c - a), middle);
             }
         bool flip = away < 0f;
@@ -616,13 +627,13 @@ public sealed class ClassModelKit
 
     // Guarda la textura, el material, la malla y el prefab. Lo que ya existía se pisa conservando su
     // GUID, así lo que apunta al prefab (el campo "Modelo" de la clase) sigue apuntando.
-    public GameObject Save(string name, string artFolder, string prefabFolder, ModelAtlas atlas)
+    public GameObject Save(string name, string artFolder, string prefabFolder, ModelAtlas atlas, ModelFinish finish = ModelFinish.Matte)
     {
         CreateFolder(artFolder);
         CreateFolder(prefabFolder);
 
-        Texture2D texture = SaveTexture($"{artFolder}/{name}_Atlas.png", atlas);
-        Material material = SaveMaterial($"{artFolder}/Mat_{name}.mat", texture);
+        Texture2D texture = SaveTexture($"{artFolder}/{name}_Atlas.png", atlas, finish);
+        Material material = SaveMaterial($"{artFolder}/Mat_{name}.mat", texture, finish);
         Mesh mesh = SaveMesh($"{artFolder}/{name}_Mesh.asset", $"{name}_Mesh");
         GameObject prefab = SavePrefab(name, $"{prefabFolder}/Model_{name}.prefab", mesh, material);
 
@@ -639,7 +650,7 @@ public sealed class ClassModelKit
         AssetDatabase.CreateFolder(parent, Path.GetFileName(path));
     }
 
-    private static Texture2D SaveTexture(string path, ModelAtlas atlas)
+    private static Texture2D SaveTexture(string path, ModelAtlas atlas, ModelFinish finish)
     {
         File.WriteAllBytes(path, atlas.EncodePng());
         AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
@@ -649,12 +660,13 @@ public sealed class ClassModelKit
         importer.wrapMode = TextureWrapMode.Clamp;
         importer.anisoLevel = 4;
         importer.textureCompression = TextureImporterCompression.CompressedHQ;
-        importer.alphaSource = TextureImporterAlphaSource.None;
+        importer.alphaSource = finish == ModelFinish.Polished ? TextureImporterAlphaSource.FromInput : TextureImporterAlphaSource.None;
+        importer.alphaIsTransparency = false;
         importer.SaveAndReimport();
         return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
     }
 
-    private static Material SaveMaterial(string path, Texture2D texture)
+    private static Material SaveMaterial(string path, Texture2D texture, ModelFinish finish)
     {
         var material = AssetDatabase.LoadAssetAtPath<Material>(path);
         if (material == null)
@@ -668,10 +680,29 @@ public sealed class ClassModelKit
         material.SetFloat("_Smoothness", 0.12f);
         material.SetFloat("_Metallic", 0f);
         material.SetFloat("_Cull", 2f);
-        material.SetFloat("_SpecularHighlights", 0f);       // el brillo lo lleva la pintura
-        material.SetFloat("_EnvironmentReflections", 0f);
-        material.EnableKeyword("_SPECULARHIGHLIGHTS_OFF");
-        material.EnableKeyword("_ENVIRONMENTREFLECTIONS_OFF");
+
+        if (finish == ModelFinish.Polished)
+        {
+            // Flujo especular, con la suavidad en el alfa de la textura: la luz corre por el metal sin
+            // oscurecerlo, porque el color del acero ya está pintado.
+            material.SetFloat("_WorkflowMode", 0f);
+            material.EnableKeyword("_SPECULAR_SETUP");
+            material.SetColor("_SpecColor", new Color(0.18f, 0.18f, 0.2f));
+            material.SetFloat("_SmoothnessTextureChannel", 1f);
+            material.EnableKeyword("_SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A");
+            material.SetFloat("_Smoothness", 0.72f);
+            material.SetFloat("_SpecularHighlights", 1f);
+            material.SetFloat("_EnvironmentReflections", 1f);
+            material.DisableKeyword("_SPECULARHIGHLIGHTS_OFF");
+            material.DisableKeyword("_ENVIRONMENTREFLECTIONS_OFF");
+        }
+        else
+        {
+            material.SetFloat("_SpecularHighlights", 0f);       // el brillo lo lleva la pintura
+            material.SetFloat("_EnvironmentReflections", 0f);
+            material.EnableKeyword("_SPECULARHIGHLIGHTS_OFF");
+            material.EnableKeyword("_ENVIRONMENTREFLECTIONS_OFF");
+        }
         material.doubleSidedGI = true;
         EditorUtility.SetDirty(material);
         return material;

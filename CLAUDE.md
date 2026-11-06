@@ -280,7 +280,8 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   clase base (`PlayerController.ResolveClassModel`). Corre en cada pantalla por la clase que ya viaja: no agrega nada a la red. **Con un
   modelo puesto el Animator va en Always Animate:** con Cull Update Transforms deja de mover los huesos porque su cuerpo está apagado y
   se queda en pose T. Si se generan mallas por código, una normal en cero se ve bien en la vista previa, pero en juego el bloom la
-  vuelve una bola blanca: por eso `ClassModelKit.Unit` y no `.normalized`, y un modelo nuevo se prueba en Play.
+  vuelve una bola blanca: por eso `ClassModelKit.Unit` y no `.normalized`, y un modelo nuevo se prueba en Play. Los de relleno salen de
+  `Scripts/Editor/ClassModels`: una receta por clase sobre `ClassModelRecipe`; con `ModelFinish.Polished`, el alfa de cada color es el pulido.
 
 - **Dónde va cada VFX.** Lo que dura lo que dura un buff o un debuff va en el
   `TargetVFX` del **GE** (aparece pegado a quien lo recibe, en todas las pantallas, y se

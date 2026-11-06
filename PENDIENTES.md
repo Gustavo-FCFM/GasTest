@@ -18,6 +18,15 @@ ya viaja por la red, así que no agrega nada. Con modelo, el Animator va en Alwa
   se edita la receta y se corre `Mercenarios ▸ Modelos de clase ▸ Generar la Bárbara`. Unos 20 mil triángulos, casi el doble del Dummy.
   - [x] Camina, ataca y ya no sale la bola blanca del bloom. **Probado ✅ (6 de noviembre).**
   - [ ] Dedos más gruesos y pulgar unido a la palma: ver en juego cómo agarra el hacha. Si siguen raras, guantes.
+- **El Guerrero de relleno** (`Prefabs/Player/Classes/Model_Fighter`, arte en `Art/Models/Classes/Fighter`): receta `FighterModel`, con lo
+  común en `ClassModelRecipe`. Armadura pesada, capa y barba, con el aire de Aragorn que pidió Gustavo, sin copiarlo. Se rehace con
+  `Mercenarios ▸ Modelos de clase ▸ Generar el Guerrero`. Unos 18 mil triángulos. Lleva acabado Polished: el acero brilla de verdad (el alfa
+  de la textura dice cuánto). Sus tres subclases lo heredan. Revisado en fotos con guardia, correr, ataque y bloqueo; **falta verlo en Play**.
+  - [ ] En Play: sin destellos raros. Si el bloom exagera el brillo, bajar `_SpecColor` y `_Smoothness` en `Mat_Fighter` (y en `ClassModelKit`).
+  - [ ] Con la luz de la arena, el acero no se ve ni pálido ni negro.
+  - [ ] La espada y el escudo no chocan con los guanteletes ni con los codos.
+  - Conocido: al correr el talón puede asomar por el borde de la capa, y con las piernas muy abiertas se ve el forro.
+- Para las dos:
   - [ ] Decidir con el líder de arte si las otras clases siguen por aquí o por el pack modular de Gustavo.
   - [ ] Si las 8 clases quedan así, medir el rendimiento en la PC del showcase, con las tres ventanas.
   - [ ] Probar el modelo en una partida con cliente (se pone en cada pantalla) y con la copia del Ilusionista.

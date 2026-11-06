@@ -10,12 +10,9 @@ using UnityEngine;
 // Gustavo el 6 de noviembre de 2026): pelo largo naranja con trenzas, manto de piel, corsé de cuero,
 // falda con abertura, botas con vendas y pintura de guerra azul. Sin el hacha: el arma es de la clase.
 //
-// Medidas en metros, en la pose T del esqueleto del jugador. +X es la derecha del personaje, +Z su
-// frente. Los ángulos del cuerpo (deg): 0 al frente, 90 a su derecha, -90 a su izquierda, 180 atrás.
-//
 // Mercenarios ▸ Modelos de clase ▸ Generar la Bárbara: rehace malla, textura y prefab.
 // ============================================================
-public sealed class BarbarianModel
+public sealed class BarbarianModel : ClassModelRecipe
 {
     private const string Name = "Barbarian";
     private const string ArtFolder = "Assets/Art/Models/Classes/Barbarian";
@@ -68,7 +65,6 @@ public sealed class BarbarianModel
     // ---------- Cabeza: alto de 0 (mentón) a 1 (coronilla) ----------
     private const float HeadBottom = 1.555f;
     private const float HeadHeight = 0.255f;
-    private static readonly Vector3 HeadCenter = new Vector3(0f, 1.685f, 0.02f);
 
     private static readonly ModelKeys HeadWidth = new ModelKeys(
         0f, 0.020f, 0.08f, 0.039f, 0.2f, 0.055f, 0.35f, 0.068f, 0.5f, 0.077f, 0.7f, 0.081f, 0.85f, 0.068f,
@@ -90,13 +86,9 @@ public sealed class BarbarianModel
         -180f, 0.60f, -140f, 0.60f, -115f, 0.72f, -96f, 0.90f, -74f, 0.92f, -52f, 0.80f, -30f, 0.64f, -12f, 0.53f,
         4f, 0.47f, 20f, 0.54f, 44f, 0.60f, 90f, 0.59f, 140f, 0.60f, 180f, 0.60f);
 
-    private readonly ClassModelKit _kit = new ClassModelKit();
-    private readonly ModelAtlas _atlas = new ModelAtlas(2048);
-    private readonly System.Random _random = new System.Random(4811);
-
     private readonly ModelRegion _head, _torso, _arm, _leg, _hair, _fur, _skirt, _cape, _under, _belt, _boot, _silver, _gem, _skin, _lining;
 
-    private readonly ModelSkin _hips, _spine, _chest, _neck, _headBone;
+    protected override ModelRegion HairRegion => _hair;
 
     [MenuItem("Mercenarios/Modelos de clase/Generar la Bárbara")]
     public static void Generate()
@@ -105,29 +97,23 @@ public sealed class BarbarianModel
         model.Build();
     }
 
-    private BarbarianModel()
+    private BarbarianModel() : base(4811)
     {
-        _head   = _atlas.Region(0, 1024, 1024, 1024);
-        _torso  = _atlas.Region(1024, 1024, 1024, 1024);
-        _arm    = _atlas.Region(0, 0, 512, 1024);
-        _leg    = _atlas.Region(512, 0, 512, 1024);
-        _hair   = _atlas.Region(1024, 0, 256, 1024);
-        _fur    = _atlas.Region(1280, 512, 256, 512);
-        _skirt  = _atlas.Region(1536, 512, 256, 512);
-        _cape   = _atlas.Region(1792, 512, 256, 512);
-        _under  = _atlas.Region(1280, 256, 256, 256);
-        _boot   = _atlas.Region(1536, 256, 256, 256);
-        _silver = _atlas.Region(1792, 384, 128, 128);
-        _gem    = _atlas.Region(1920, 384, 128, 128);
-        _skin   = _atlas.Region(1792, 256, 128, 128);
-        _belt   = _atlas.Region(1280, 128, 768, 128);
-        _lining = _atlas.Region(1920, 256, 128, 128);
-
-        _hips     = _kit.Bone("B-hips");
-        _spine    = _kit.Bone("B-spine");
-        _chest    = _kit.Bone("B-chest");
-        _neck     = _kit.Bone("B-neck");
-        _headBone = _kit.Bone("B-head");
+        _head   = Atlas.Region(0, 1024, 1024, 1024);
+        _torso  = Atlas.Region(1024, 1024, 1024, 1024);
+        _arm    = Atlas.Region(0, 0, 512, 1024);
+        _leg    = Atlas.Region(512, 0, 512, 1024);
+        _hair   = Atlas.Region(1024, 0, 256, 1024);
+        _fur    = Atlas.Region(1280, 512, 256, 512);
+        _skirt  = Atlas.Region(1536, 512, 256, 512);
+        _cape   = Atlas.Region(1792, 512, 256, 512);
+        _under  = Atlas.Region(1280, 256, 256, 256);
+        _boot   = Atlas.Region(1536, 256, 256, 256);
+        _silver = Atlas.Region(1792, 384, 128, 128);
+        _gem    = Atlas.Region(1920, 384, 128, 128);
+        _skin   = Atlas.Region(1792, 256, 128, 128);
+        _belt   = Atlas.Region(1280, 128, 768, 128);
+        _lining = Atlas.Region(1920, 256, 128, 128);
     }
 
     private void Build()
@@ -151,26 +137,12 @@ public sealed class BarbarianModel
         BuildJewelry();
         BuildHair();
 
-        _kit.Save(Name, ArtFolder, PrefabFolder, _atlas);
+        Kit.Save(Name, ArtFolder, PrefabFolder, Atlas);
     }
 
     // =========================================================
     // CUERPO
     // =========================================================
-
-    private static float Smooth(float from, float to, float x)
-    {
-        float t = Mathf.Clamp01((x - from) / (to - from));
-        return t * t * (3f - 2f * t);
-    }
-
-    private static float Bell(float x, float center, float width)
-    {
-        float d = (x - center) / width;
-        return Mathf.Exp(-d * d);
-    }
-
-    private float Range(float from, float to) => from + (float)_random.NextDouble() * (to - from);
 
     private static Vector3 TorsoDirection(float deg)
     {
@@ -193,18 +165,18 @@ public sealed class BarbarianModel
 
     private ModelSkin TorsoSkin(Vector3 p)
     {
-        ModelSkin skin = _hips.To(_spine, Smooth(1.0f, 1.1f, p.y));
-        skin = skin.To(_chest, Smooth(1.19f, 1.3f, p.y));
-        skin = skin.To(_neck, Smooth(1.5f, 1.54f, p.y));
-        skin = skin.To(_headBone, Smooth(1.58f, 1.6f, p.y));
+        ModelSkin skin = Hips.To(Spine, Smooth(1.0f, 1.1f, p.y));
+        skin = skin.To(Chest, Smooth(1.19f, 1.3f, p.y));
+        skin = skin.To(Neck, Smooth(1.5f, 1.54f, p.y));
+        skin = skin.To(HeadBone, Smooth(1.58f, 1.6f, p.y));
 
         string side = p.x > 0f ? ".R" : ".L";
         float shoulder = Smooth(0.12f, 0.19f, Mathf.Abs(p.x)) * Smooth(1.36f, 1.42f, p.y);
-        skin = skin.To(_kit.Bone("B-shoulder" + side), shoulder * 0.5f);
-        skin = skin.To(_kit.Bone("B-upperArm" + side), shoulder * 0.3f);
+        skin = skin.To(Kit.Bone("B-shoulder" + side), shoulder * 0.5f);
+        skin = skin.To(Kit.Bone("B-upperArm" + side), shoulder * 0.3f);
 
         float thigh = Smooth(0.95f, 0.86f, p.y) * Smooth(0.02f, 0.09f, Mathf.Abs(p.x));
-        return skin.To(_kit.Bone("B-thigh" + side), thigh * 0.6f);
+        return skin.To(Kit.Bone("B-thigh" + side), thigh * 0.6f);
     }
 
     private const float TorsoBottom = 0.845f;
@@ -212,7 +184,7 @@ public sealed class BarbarianModel
 
     private void BuildTorso()
     {
-        _kit.BeginPiece(55f);
+        Kit.BeginPiece(55f);
 
         float[] heights =
         {
@@ -233,7 +205,7 @@ public sealed class BarbarianModel
                 rings[r][i] = new ModelPoint(p, _torso.Uv(u, Mathf.InverseLerp(TorsoBottom, TorsoTop, y)), TorsoSkin(p));
             }
         }
-        _kit.Loft(rings, capStart: true);
+        Kit.Loft(rings, capStart: true);
     }
 
     private static Vector3 HeadPoint(float h, float deg, float offset)
@@ -263,7 +235,7 @@ public sealed class BarbarianModel
 
     private void BuildHead()
     {
-        _kit.BeginPiece(85f);
+        Kit.BeginPiece(85f);
 
         float[] heights =
         {
@@ -283,10 +255,10 @@ public sealed class BarbarianModel
             for (int i = 0; i < degrees.Count; i++)
             {
                 Vector3 p = HeadPoint(heights[r], degrees[i], 0f);
-                rings[r][i] = new ModelPoint(p, HeadUv(p), _headBone);
+                rings[r][i] = new ModelPoint(p, HeadUv(p), HeadBone);
             }
         }
-        _kit.Loft(rings, capStart: true, capEnd: true);
+        Kit.Loft(rings, capStart: true, capEnd: true);
     }
 
     private const float FaceLeft = -0.11f, FaceRight = 0.11f, FaceBottom = 1.54f, FaceTop = 1.83f;
@@ -294,44 +266,11 @@ public sealed class BarbarianModel
     private Vector2 HeadUv(Vector3 p) =>
         _head.Uv(Mathf.InverseLerp(FaceLeft, FaceRight, p.x), Mathf.InverseLerp(FaceBottom, FaceTop, p.y));
 
-    // La posición y la dirección a esa distancia por un camino de huesos.
-    private static void AlongChain(Vector3[] chain, float distance, out Vector3 point, out Vector3 tangent)
-    {
-        float left = distance;
-        for (int i = 0; i < chain.Length - 1; i++)
-        {
-            Vector3 segment = chain[i + 1] - chain[i];
-            float length = segment.magnitude;
-            bool last = i == chain.Length - 2;
-            if (left <= length || last)
-            {
-                tangent = segment / length;
-                point = chain[i] + tangent * left;
-                return;
-            }
-            left -= length;
-        }
-        tangent = Vector3.up;
-        point = chain[0];
-    }
-
-    private Vector3[] ArmChain(string side) => new[]
-    {
-        _kit.Pos("B-upperArm" + side), _kit.Pos("B-forearm" + side), _kit.Pos("B-hand" + side),
-    };
-
-    private Vector3[] LegChain(string side) => new[]
-    {
-        _kit.Pos("B-thigh" + side), _kit.Pos("B-shin" + side), _kit.Pos("B-foot" + side),
-    };
-
-    private static string SideName(float side) => side > 0f ? ".R" : ".L";
-
     private ModelSkin ArmSkin(string side, float d)
     {
-        ModelSkin skin = _kit.Bone("B-shoulder" + side).To(_kit.Bone("B-upperArm" + side), Smooth(-0.04f, 0.03f, d));
-        skin = skin.To(_kit.Bone("B-forearm" + side), Smooth(0.205f, 0.26f, d));
-        return skin.To(_kit.Bone("B-hand" + side), Smooth(0.415f, 0.44f, d));
+        ModelSkin skin = Kit.Bone("B-shoulder" + side).To(Kit.Bone("B-upperArm" + side), Smooth(-0.04f, 0.03f, d));
+        skin = skin.To(Kit.Bone("B-forearm" + side), Smooth(0.205f, 0.26f, d));
+        return skin.To(Kit.Bone("B-hand" + side), Smooth(0.415f, 0.44f, d));
     }
 
     private static float ArmBulge(float d) =>
@@ -341,7 +280,7 @@ public sealed class BarbarianModel
 
     private void BuildArm(float side)
     {
-        _kit.BeginPiece(55f);
+        Kit.BeginPiece(55f);
         string name = SideName(side);
         Vector3[] chain = ArmChain(name);
 
@@ -370,7 +309,7 @@ public sealed class BarbarianModel
                 rings[r][i] = new ModelPoint(p, _arm.Uv(u, Mathf.InverseLerp(-0.05f, 0.445f, d)), ArmSkin(name, d));
             }
         }
-        _kit.Loft(rings);
+        Kit.Loft(rings);
 
         FurCuff(chain, 0.262f, 12, 0.042f, 0.022f, ArmBulge, d => ArmSkin(name, d), 1f, 0.5f);
         FurCuff(chain, 0.43f, 12, 0.03f, 0.018f, ArmBulge, d => ArmSkin(name, d), -1f, 0.5f);
@@ -382,7 +321,7 @@ public sealed class BarbarianModel
     private void FurCuff(Vector3[] chain, float distance, int count, float length, float width,
                          Func<float, float> radius, Func<float, ModelSkin> skin, float along, float flare)
     {
-        _kit.BeginPiece(30f);
+        Kit.BeginPiece(30f);
         AlongChain(chain, distance, out Vector3 center, out Vector3 tangent);
         Vector3 reference = Vector3.ProjectOnPlane(Vector3.forward, tangent).normalized;
         Vector3 other = Vector3.Cross(tangent, reference);
@@ -394,22 +333,22 @@ public sealed class BarbarianModel
             Vector3 radial = reference * Mathf.Cos(a) + other * Mathf.Sin(a);
             Vector3 root = center + radial * (r + 0.001f) - tangent * (along * length * 0.35f);
             Vector3 direction = (tangent * along + radial * flare).normalized;
-            _kit.Tuft(root, direction, radial, length * Range(0.85f, 1.25f), width, 0.009f, 0.25f, _fur, Range(0.15f, 0.85f), skin(distance));
+            Kit.Tuft(root, direction, radial, length * Range(0.85f, 1.25f), width, 0.009f, 0.25f, _fur, Range(0.15f, 0.85f), skin(distance));
         }
     }
 
     private void BuildHand(float side)
     {
         string name = SideName(side);
-        ModelSkin hand = _kit.Bone("B-hand" + name);
-        Vector3 wrist = _kit.Pos("B-hand" + name);
-        Vector3 knuckle = (_kit.Pos("B-indexFinger01" + name) + _kit.Pos("B-pinky01" + name)) * 0.5f;
+        ModelSkin hand = Kit.Bone("B-hand" + name);
+        Vector3 wrist = Kit.Pos("B-hand" + name);
+        Vector3 knuckle = (Kit.Pos("B-indexFinger01" + name) + Kit.Pos("B-pinky01" + name)) * 0.5f;
         Vector3 axis = (knuckle - wrist).normalized;
         Vector3 flat = Vector3.ProjectOnPlane(Vector3.up, axis).normalized;
         Vector3 wide = Vector3.Cross(axis, flat).normalized;
         float length = Vector3.Distance(wrist, knuckle);
 
-        _kit.BeginPiece(55f);
+        Kit.BeginPiece(55f);
         float[] along = { -0.01f, 0.3f, 0.7f, 1f, 1.1f };
         float[] widths = { 0.028f, 0.047f, 0.059f, 0.062f, 0.054f };
         float[] thick = { 0.024f, 0.025f, 0.023f, 0.019f, 0.014f };
@@ -426,38 +365,17 @@ public sealed class BarbarianModel
                 rings[r][i] = new ModelPoint(p, _skin.Uv(0.5f, 0.5f), hand);
             }
         }
-        _kit.Loft(rings, wrap: true, capEnd: true);
+        Kit.Loft(rings, wrap: true, capEnd: true);
 
         foreach (string finger in new[] { "B-indexFinger", "B-middleFinger", "B-ringFinger", "B-pinky", "B-thumb" })
-            BuildFinger(finger, name, finger == "B-thumb" ? 0.0178f : 0.0148f);
-    }
-
-    private void BuildFinger(string finger, string side, float radius)
-    {
-        Vector3 a = _kit.Pos(finger + "01" + side);
-        Vector3 b = _kit.Pos(finger + "02" + side);
-        Vector3 c = _kit.Pos(finger + "03" + side);
-        Vector3 tip = c + (c - b) * 0.85f;
-
-        // Nace adentro de la palma: el pulgar está lejos del borde y sin esto queda flotando.
-        Vector3 wrist = _kit.Pos("B-hand" + side);
-        Vector3 root = finger == "B-thumb" ? Vector3.Lerp(wrist, a, 0.35f) : a + (wrist - a).normalized * 0.02f;
-
-        ModelSkin hand = _kit.Bone("B-hand" + side);
-        ModelSkin first = _kit.Bone(finger + "01" + side);
-        ModelSkin second = _kit.Bone(finger + "02" + side);
-        ModelSkin third = _kit.Bone(finger + "03" + side);
-
-        _kit.Sweep(new[] { root, a, b, c, tip }, p => Vector3.up, t => Vector2.one * (radius * (1f - 0.22f * t)), 6,
-            (t, angle) => _skin.Uv(0.5f, 0.5f),
-            (p, t) => t < 0.1f ? hand : t < 0.4f ? first : t < 0.6f ? first.To(second, 0.5f) : t < 0.9f ? second.To(third, 0.5f) : third);
+            BuildFinger(finger, name, finger == "B-thumb" ? 0.0178f : 0.0148f, 6, (t, a) => _skin.Uv(0.5f, 0.5f));
     }
 
     private ModelSkin LegSkin(string side, float d)
     {
-        ModelSkin skin = _hips.To(_kit.Bone("B-thigh" + side), Smooth(-0.06f, 0.03f, d));
-        skin = skin.To(_kit.Bone("B-shin" + side), Smooth(0.38f, 0.44f, d));
-        return skin.To(_kit.Bone("B-foot" + side), Smooth(0.77f, 0.81f, d));
+        ModelSkin skin = Hips.To(Kit.Bone("B-thigh" + side), Smooth(-0.06f, 0.03f, d));
+        skin = skin.To(Kit.Bone("B-shin" + side), Smooth(0.38f, 0.44f, d));
+        return skin.To(Kit.Bone("B-foot" + side), Smooth(0.77f, 0.81f, d));
     }
 
     private const float BootTop = 0.445f;
@@ -466,7 +384,7 @@ public sealed class BarbarianModel
 
     private void BuildLeg(float side)
     {
-        _kit.BeginPiece(55f);
+        Kit.BeginPiece(55f);
         string name = SideName(side);
         Vector3[] chain = LegChain(name);
 
@@ -498,7 +416,7 @@ public sealed class BarbarianModel
                 rings[r][i] = new ModelPoint(p, _leg.Uv(u, Mathf.InverseLerp(-0.07f, 0.82f, d)), LegSkin(name, d));
             }
         }
-        _kit.Loft(rings);
+        Kit.Loft(rings);
 
         FurCuff(chain, BootTop + 0.012f, 15, 0.05f, 0.024f, LegBulge, d => LegSkin(name, d), -1f, 0.55f);
         FurCuff(chain, 0.77f, 14, 0.04f, 0.022f, LegBulge, d => LegSkin(name, d), 1f, 0.8f);
@@ -506,11 +424,11 @@ public sealed class BarbarianModel
 
     private void BuildBoot(float side)
     {
-        _kit.BeginPiece(50f);
+        Kit.BeginPiece(50f);
         string name = SideName(side);
-        ModelSkin foot = _kit.Bone("B-foot" + name);
-        ModelSkin toe = _kit.Bone("B-toe" + name);
-        float x = _kit.Pos("B-foot" + name).x;
+        ModelSkin foot = Kit.Bone("B-foot" + name);
+        ModelSkin toe = Kit.Bone("B-toe" + name);
+        float x = Kit.Pos("B-foot" + name).x;
 
         float[] z      = { -0.094f, -0.084f, -0.05f, 0.0f, 0.05f, 0.095f, 0.14f, 0.185f, 0.214f, 0.232f };
         float[] half   = { 0.024f, 0.039f, 0.046f, 0.048f, 0.049f, 0.051f, 0.053f, 0.046f, 0.031f, 0.011f };
@@ -533,7 +451,7 @@ public sealed class BarbarianModel
                 rings[r][i] = new ModelPoint(p, _boot.Uv(0.5f + 0.45f * c, Mathf.Lerp(Mathf.InverseLerp(-0.1f, 0.25f, z[r]) * 0.8f + 0.2f, 0.05f, sole)), skin);
             }
         }
-        _kit.Loft(rings, wrap: true, capStart: true, capEnd: true);
+        Kit.Loft(rings, wrap: true, capStart: true, capEnd: true);
     }
 
     // =========================================================
@@ -542,13 +460,13 @@ public sealed class BarbarianModel
 
     private ModelSkin LowerBackSkin(float y)
     {
-        ModelSkin skin = _chest.To(_spine, Smooth(1.32f, 1.14f, y));
-        return skin.To(_hips, Smooth(1.14f, 0.98f, y));
+        ModelSkin skin = Chest.To(Spine, Smooth(1.32f, 1.14f, y));
+        return skin.To(Hips, Smooth(1.14f, 0.98f, y));
     }
 
     private void BuildCape()
     {
-        _kit.BeginPiece(28f);
+        Kit.BeginPiece(28f);
         const int columns = 14, rows = 9;
         const float top = 1.485f, bottom = 0.72f;
 
@@ -572,7 +490,7 @@ public sealed class BarbarianModel
                 rings[r][i] = new ModelPoint(p, _cape.Uv(u, 1f - t), LowerBackSkin(y));
             }
         }
-        _kit.Sheet(rings, _lining.Uv(0.25f, 0.5f));
+        Kit.Sheet(rings, _lining.Uv(0.25f, 0.5f));
     }
 
     private static Vector3 SkirtPoint(float deg, float t, float offset)
@@ -587,25 +505,18 @@ public sealed class BarbarianModel
         return p;
     }
 
-    private static float Wrap(float deg)
-    {
-        while (deg > 180f) deg -= 360f;
-        while (deg < -180f) deg += 360f;
-        return deg;
-    }
-
     private ModelSkin SkirtSkin(Vector3 p, float t)
     {
         float reach = Mathf.Min(1f, Mathf.Pow(t, 0.8f) * 1.1f) * 0.95f * Smooth(1.03f, 0.84f, p.y);
         float right = Smooth(-0.05f, 0.05f, p.x);
-        return _hips.To(_kit.Bone("B-thigh.R"), reach * right).To(_kit.Bone("B-thigh.L"), reach * (1f - right) / Mathf.Max(0.001f, 1f - reach * right));
+        return Hips.To(Kit.Bone("B-thigh.R"), reach * right).To(Kit.Bone("B-thigh.L"), reach * (1f - right) / Mathf.Max(0.001f, 1f - reach * right));
     }
 
     private void BuildSkirt()
     {
         const int columns = 44, rows = 7;
 
-        _kit.BeginPiece(26f);
+        Kit.BeginPiece(26f);
         var under = new ModelPoint[rows + 1][];
         var over = new ModelPoint[rows + 1][];
         for (int r = 0; r <= rows; r++)
@@ -625,11 +536,11 @@ public sealed class BarbarianModel
                 over[r][i] = new ModelPoint(p, _skirt.Uv(u, 1f - t), SkirtSkin(p, t));
             }
         }
-        _kit.Sheet(under, _lining.Uv(0.75f, 0.5f));
-        _kit.Sheet(over, _lining.Uv(0.75f, 0.5f));
+        Kit.Sheet(under, _lining.Uv(0.75f, 0.5f));
+        Kit.Sheet(over, _lining.Uv(0.75f, 0.5f));
 
         // Piel en el borde delantero
-        _kit.BeginPiece(30f);
+        Kit.BeginPiece(30f);
         for (float deg = -66f; deg <= 54f; deg += 4.2f)
         {
             float jitter = deg + Range(-1f, 1f);
@@ -637,13 +548,13 @@ public sealed class BarbarianModel
             Vector3 along = (SkirtPoint(jitter + 2f, 1f, 0f) - SkirtPoint(jitter - 2f, 1f, 0f)).normalized;
             Vector3 radial = TorsoDirection(jitter).normalized;
             Vector3 direction = (Vector3.down + radial * 0.45f + along * Range(-0.25f, 0.25f)).normalized;
-            _kit.Tuft(p, direction, radial, Range(0.05f, 0.07f), 0.024f, 0.010f, 0.2f, _fur, Range(0.2f, 0.8f), SkirtSkin(p, 1f));
+            Kit.Tuft(p, direction, radial, Range(0.05f, 0.07f), 0.024f, 0.010f, 0.2f, _fur, Range(0.2f, 0.8f), SkirtSkin(p, 1f));
         }
     }
 
     private void Band(Func<float, float> height, float tall, float offset, float crease)
     {
-        _kit.BeginPiece(crease);
+        Kit.BeginPiece(crease);
         const int columns = 32;
         float[] rows = { -0.5f, -0.42f, 0.42f, 0.5f };
         float[] lift = { 0f, 1f, 1f, 0f };
@@ -662,7 +573,7 @@ public sealed class BarbarianModel
                 rings[r][i] = new ModelPoint(p, _belt.Uv(u, 0.5f + rows[r]), TorsoSkin(p));
             }
         }
-        _kit.Loft(rings);
+        Kit.Loft(rings);
     }
 
     private void BuildBelts()
@@ -672,10 +583,10 @@ public sealed class BarbarianModel
         Func<float, float> hipBelt = deg => 1.035f + 0.026f * Mathf.Cos((deg - 50f) * Mathf.Deg2Rad);
         Band(hipBelt, 0.05f, 0.022f, 40f);
 
-        _kit.BeginPiece(35f);
+        Kit.BeginPiece(35f);
         const float buckleDeg = 10f;
         Vector3 buckle = TorsoPoint(hipBelt(buckleDeg), buckleDeg, 0.03f);
-        _kit.Disc(buckle, Vector3.forward, Vector3.up, 0.040f, 0.036f, 0.012f, 4, _silver, _hips);
+        Kit.Disc(buckle, Vector3.forward, Vector3.up, 0.040f, 0.036f, 0.012f, 4, _silver, Hips);
 
         // Tiras que cuelgan del cinturón, cada una con su remate de metal
         foreach (float deg in new[] { -24f, -6f, 26f, 44f })
@@ -688,25 +599,25 @@ public sealed class BarbarianModel
                 path[i] = SkirtPoint(deg, t, 0.012f);
             }
 
-            _kit.BeginPiece(25f);
-            _kit.Sweep(path, p => TorsoDirection(deg), t => new Vector2(0.016f, 0.0035f), 4,
+            Kit.BeginPiece(25f);
+            Kit.Sweep(path, p => TorsoDirection(deg), t => new Vector2(0.016f, 0.0035f), 4,
                 (t, a) => _belt.Uv(0.1f + 0.4f * t, a < 0.5f ? 0.3f : 0.7f),
                 (p, t) => SkirtSkin(p, t * 0.5f));
 
             Vector3 tipUp = (path[path.Length - 2] - path[path.Length - 1]).normalized;
             Vector3 tipOut = TorsoDirection(deg).normalized;
-            _kit.Gem(path[path.Length - 1], tipUp, tipOut, 0.026f, 0.018f, 0.006f, 6, _silver, SkirtSkin(path[path.Length - 1], 0.5f));
+            Kit.Gem(path[path.Length - 1], tipUp, tipOut, 0.026f, 0.018f, 0.006f, 6, _silver, SkirtSkin(path[path.Length - 1], 0.5f));
         }
 
         // Los escudos de la cadera y los tachones de adelante
-        _kit.BeginPiece(30f);
+        Kit.BeginPiece(30f);
         foreach (float deg in new[] { 68f, -68f })
         {
             Vector3 p = TorsoPoint(1.0f, deg, 0.04f);
-            _kit.Disc(p, TorsoDirection(deg).normalized, Vector3.up, 0.044f, 0.060f, 0.016f, 10, _silver, _hips);
+            Kit.Disc(p, TorsoDirection(deg).normalized, Vector3.up, 0.044f, 0.060f, 0.016f, 10, _silver, Hips);
         }
-        _kit.Disc(SkirtPoint(-12f, 0.27f, 0.018f), TorsoDirection(-12f).normalized, Vector3.up, 0.028f, 0.028f, 0.012f, 9, _silver, _hips);
-        _kit.Disc(SkirtPoint(-12f, 0.43f, 0.018f), TorsoDirection(-12f).normalized, Vector3.up, 0.023f, 0.023f, 0.010f, 9, _silver, _hips);
+        Kit.Disc(SkirtPoint(-12f, 0.27f, 0.018f), TorsoDirection(-12f).normalized, Vector3.up, 0.028f, 0.028f, 0.012f, 9, _silver, Hips);
+        Kit.Disc(SkirtPoint(-12f, 0.43f, 0.018f), TorsoDirection(-12f).normalized, Vector3.up, 0.023f, 0.023f, 0.010f, 9, _silver, Hips);
     }
 
     // =========================================================
@@ -730,7 +641,7 @@ public sealed class BarbarianModel
     private ModelSkin MantleSkin(Vector3 p)
     {
         string side = p.x > 0f ? ".R" : ".L";
-        return _chest.To(_kit.Bone("B-upperArm" + side), 0.35f * Smooth(0.24f, 0.33f, Mathf.Abs(p.x)));
+        return Chest.To(Kit.Bone("B-upperArm" + side), 0.35f * Smooth(0.24f, 0.33f, Mathf.Abs(p.x)));
     }
 
     private static float MantleOpening(float s) => Mathf.Lerp(16f, 36f, s);
@@ -738,7 +649,7 @@ public sealed class BarbarianModel
     private void BuildMantle()
     {
         // La base: tapa lo que los mechones dejen ver
-        _kit.BeginPiece(40f);
+        Kit.BeginPiece(40f);
         const int columns = 30;
         float[] stops = { 0f, 0.2f, 0.4f, 0.6f, 0.8f, 0.95f };
         var rings = new ModelPoint[stops.Length][];
@@ -754,10 +665,10 @@ public sealed class BarbarianModel
                 rings[r][i] = new ModelPoint(p, _fur.Uv(0.5f, 0.1f), MantleSkin(p));
             }
         }
-        _kit.Sheet(rings, _fur.Uv(0.5f, 0.05f));
+        Kit.Sheet(rings, _fur.Uv(0.5f, 0.05f));
 
         // Las matas, de afuera hacia adentro: cada fila tapa la raíz de la anterior
-        _kit.BeginPiece(48f);
+        Kit.BeginPiece(48f);
         float[] rows = { 0.98f, 0.84f, 0.70f, 0.56f, 0.42f, 0.28f, 0.14f };
         for (int r = 0; r < rows.Length; r++)
         {
@@ -777,7 +688,7 @@ public sealed class BarbarianModel
                 Vector3 direction = (outward + Vector3.down * Mathf.Lerp(0.15f, 0.65f, s) + across * Range(-0.35f, 0.35f)).normalized;
                 float length = Mathf.Lerp(0.07f, 0.105f, s) * Range(0.8f, 1.25f);
                 float width = Mathf.Lerp(0.024f, 0.034f, s);
-                _kit.Tuft(p + normal * 0.012f, direction, normal, length, width, 0.016f, 0.3f, _fur, Range(0.12f, 0.88f), MantleSkin(p));
+                Kit.Tuft(p + normal * 0.012f, direction, normal, length, width, 0.016f, 0.3f, _fur, Range(0.12f, 0.88f), MantleSkin(p));
             }
         }
     }
@@ -785,7 +696,7 @@ public sealed class BarbarianModel
     private void BuildJewelry()
     {
         // Collar de cuentas en V y la gema del pecho
-        _kit.BeginPiece(30f);
+        Kit.BeginPiece(30f);
         float gemY = 1.402f;
         Vector3 gem = TorsoPoint(gemY, 0f, 0.012f);
         for (int i = 0; i < 2; i++)
@@ -796,64 +707,17 @@ public sealed class BarbarianModel
                 float deg = sign * Mathf.Lerp(0f, 38f, t);
                 float y = Mathf.Lerp(gemY + 0.022f, 1.50f, t * t);
                 Vector3 p = TorsoPoint(y, deg, 0.006f);
-                _kit.Gem(p, Vector3.up, TorsoDirection(deg).normalized, 0.009f, 0.008f, 0.005f, 5, _silver, _chest);
+                Kit.Gem(p, Vector3.up, TorsoDirection(deg).normalized, 0.009f, 0.008f, 0.005f, 5, _silver, Chest);
             }
         }
 
-        _kit.Disc(gem + Vector3.back * 0.004f, Vector3.forward, Vector3.up, 0.024f, 0.033f, 0.006f, 8, _silver, _chest);
-        _kit.Gem(gem + Vector3.forward * 0.008f, Vector3.up, Vector3.forward, 0.030f, 0.015f, 0.009f, 4, _gem, _chest);
+        Kit.Disc(gem + Vector3.back * 0.004f, Vector3.forward, Vector3.up, 0.024f, 0.033f, 0.006f, 8, _silver, Chest);
+        Kit.Gem(gem + Vector3.forward * 0.008f, Vector3.up, Vector3.forward, 0.030f, 0.015f, 0.009f, 4, _gem, Chest);
     }
 
     // =========================================================
     // PELO
     // =========================================================
-
-    private ModelSkin HairSkin(Vector3 p)
-    {
-        ModelSkin skin = _headBone.To(_neck, Smooth(1.60f, 1.54f, p.y));
-        skin = skin.To(_chest, Smooth(1.54f, 1.44f, p.y));
-        return skin.To(_spine, Smooth(1.26f, 1.1f, p.y));
-    }
-
-    private static Vector3 Outward(Vector3 p)
-    {
-        var axis = new Vector3(0f, p.y, 0f);
-        if (p.y > 1.56f) axis = HeadCenter;
-        return (p - axis).normalized;
-    }
-
-    private static Vector3 Bezier(Vector3 a, Vector3 b, Vector3 c, Vector3 d, float t)
-    {
-        float m = 1f - t;
-        return m * m * m * a + 3f * m * m * t * b + 3f * m * t * t * c + t * t * t * d;
-    }
-
-    private void Lock(Vector3 root, Vector3 control1, Vector3 control2, Vector3 tip, float width, float thick, int segments = 9, int sides = 5)
-    {
-        float u = Range(0.12f, 0.88f);
-        float phase = Range(0f, 6.28f);
-        float wave = Range(0.008f, 0.02f);
-
-        var path = new Vector3[segments + 1];
-        for (int i = 0; i <= segments; i++)
-        {
-            float t = i / (float)segments;
-            Vector3 p = Bezier(root, control1, control2, tip, t);
-            p.x += Mathf.Sin(t * 7f + phase) * wave * t;
-            path[i] = p;
-        }
-
-        _kit.BeginPiece(28f);
-        _kit.Sweep(path, Outward,
-            t =>
-            {
-                float shape = Mathf.Min(1f, 0.32f + t * 2.6f) * (1f - Mathf.Pow(t, 2.6f));
-                return new Vector2(Mathf.Max(0.0015f, width * shape), Mathf.Max(0.001f, thick * shape));
-            },
-            sides,
-            (t, a) => _hair.Uv(u + 0.11f * Mathf.Abs(a * 2f - 1f) - 0.05f, 0.2f + t * 0.78f),
-            (p, t) => HairSkin(p));
-    }
 
     private void BuildHair()
     {
@@ -867,7 +731,7 @@ public sealed class BarbarianModel
 
     private void BuildHairCap()
     {
-        _kit.BeginPiece(34f);
+        Kit.BeginPiece(34f);
         const int columns = 30, rows = 7;
         var rings = new ModelPoint[rows + 1][];
         for (int r = 0; r <= rows; r++)
@@ -883,10 +747,10 @@ public sealed class BarbarianModel
                 float swell = 0.009f + 0.012f * Mathf.PerlinNoise(u * 13f, t * 3.1f) * Smooth(0f, 0.15f, t);
                 Vector3 p = HeadPoint(h, deg, swell);
                 float strip = 0.12f + 0.76f * Mathf.Repeat(u * 5f, 1f);
-                rings[r][i] = new ModelPoint(p, _hair.Uv(strip, Mathf.Lerp(0.34f, 0.05f, t)), _headBone);
+                rings[r][i] = new ModelPoint(p, _hair.Uv(strip, Mathf.Lerp(0.34f, 0.05f, t)), HeadBone);
             }
         }
-        _kit.Loft(rings);
+        Kit.Loft(rings);
     }
 
     private void BuildBackHair()
@@ -976,17 +840,17 @@ public sealed class BarbarianModel
             float size = Mathf.Lerp(0.017f, 0.011f, t);
             Vector3 tilt = (along + wide * (i % 2 == 0 ? 0.45f : -0.45f)).normalized;
 
-            _kit.BeginPiece(45f);
-            _kit.Lump(p + wide * (i % 2 == 0 ? 0.0035f : -0.0035f), tilt, Vector3.forward, size * 1.5f, size, size * 0.85f, 6, _hair, 0.15f + 0.04f * i, HairSkin(p));
+            Kit.BeginPiece(45f);
+            Kit.Lump(p + wide * (i % 2 == 0 ? 0.0035f : -0.0035f), tilt, Vector3.forward, size * 1.5f, size, size * 0.85f, 6, _hair, 0.15f + 0.04f * i, HairSkin(p));
         }
 
         // Atadura y la punta suelta
-        _kit.BeginPiece(30f);
-        _kit.Gem(end + Vector3.down * 0.012f, Vector3.up, Vector3.forward, 0.010f, 0.013f, 0.012f, 6, _belt, HairSkin(end));
+        Kit.BeginPiece(30f);
+        Kit.Gem(end + Vector3.down * 0.012f, Vector3.up, Vector3.forward, 0.010f, 0.013f, 0.012f, 6, _belt, HairSkin(end));
         for (int i = 0; i < 3; i++)
         {
             Vector3 direction = (Vector3.down + Vector3.right * ((i - 1) * 0.3f)).normalized;
-            _kit.Tuft(end + Vector3.down * 0.018f, direction, Vector3.forward, 0.05f, 0.011f, 0.006f, 0.1f, _hair, 0.3f + i * 0.2f, HairSkin(end));
+            Kit.Tuft(end + Vector3.down * 0.018f, direction, Vector3.forward, 0.05f, 0.011f, 0.006f, 0.1f, _hair, 0.3f + i * 0.2f, HairSkin(end));
         }
     }
 
@@ -996,29 +860,21 @@ public sealed class BarbarianModel
 
     private void PaintAtlas()
     {
-        _atlas.Paint(_head, PaintHead);
-        _atlas.Paint(_torso, PaintTorso);
-        _atlas.Paint(_arm, PaintArm);
-        _atlas.Paint(_leg, PaintLeg);
-        _atlas.Paint(_hair, PaintHair);
-        _atlas.Paint(_fur, PaintFur);
-        _atlas.Paint(_skirt, PaintSkirt);
-        _atlas.Paint(_cape, PaintCape);
-        _atlas.Paint(_under, PaintUnder);
-        _atlas.Paint(_belt, PaintBelt);
-        _atlas.Paint(_boot, PaintBootFoot);
-        _atlas.Paint(_silver, (u, v) => Color.Lerp(Silver * 0.55f, Silver * 1.2f, v));
-        _atlas.Paint(_gem, (u, v) => Color.Lerp(GemTone * 0.55f, GemTone * 1.15f, v * 0.6f + 0.4f * u));
-        _atlas.Paint(_skin, (u, v) => SkinTone);
-        _atlas.Paint(_lining, (u, v) => u < 0.5f ? CapeTone * 0.5f : Charcoal * 0.6f);
-    }
-
-    private static Color Over(Color under, Color color, float amount) => Color.Lerp(under, color, Mathf.Clamp01(amount));
-
-    private static Color Grain(Color c, float u, float v, float scale, float strength)
-    {
-        float n = Mathf.PerlinNoise(u * scale + 3.1f, v * scale + 7.7f) - 0.5f;
-        return c * (1f + n * strength);
+        Atlas.Paint(_head, PaintHead);
+        Atlas.Paint(_torso, PaintTorso);
+        Atlas.Paint(_arm, PaintArm);
+        Atlas.Paint(_leg, PaintLeg);
+        Atlas.Paint(_hair, PaintHair);
+        Atlas.Paint(_fur, PaintFur);
+        Atlas.Paint(_skirt, PaintSkirt);
+        Atlas.Paint(_cape, PaintCape);
+        Atlas.Paint(_under, PaintUnder);
+        Atlas.Paint(_belt, PaintBelt);
+        Atlas.Paint(_boot, PaintBootFoot);
+        Atlas.Paint(_silver, (u, v) => Color.Lerp(Silver * 0.55f, Silver * 1.2f, v));
+        Atlas.Paint(_gem, (u, v) => Color.Lerp(GemTone * 0.55f, GemTone * 1.15f, v * 0.6f + 0.4f * u));
+        Atlas.Paint(_skin, (u, v) => SkinTone);
+        Atlas.Paint(_lining, (u, v) => u < 0.5f ? CapeTone * 0.5f : Charcoal * 0.6f);
     }
 
     private static Color PaintHead(float u, float v)
@@ -1198,8 +1054,6 @@ public sealed class BarbarianModel
         // El antebrazo entre la manga y el brazal
         return c;
     }
-
-    private static float Sq(float x) => x * x;
 
     private static Color PaintLeg(float u, float v)
     {
