@@ -645,6 +645,9 @@ public class PlayerController : NetworkBehaviour
     // True mientras el dueño sostiene una habilidad de mantener.
     public bool IsHoldingAbility => _holdAbility != null;
 
+    // Poniendo algo en el piso (el marcador a la vista, antes de soltar).
+    public bool IsPlacingOnGround => _groundTargetAbility != null;
+
     // Lo que sostiene y desde cuándo (Time.time al apretar), para la barra de carga
     // (UI_ChargeBar). Se cuenta en el dueño: el servidor arranca casi a la vez.
     public GameplayAbility HeldAbility => _holdAbility;

@@ -7,7 +7,7 @@ using UnityEngine.UI;
 // UI_MatchStats
 //
 // La tabla de la partida: cada equipo con sus integrantes y su KDA (bajas, muertes y
-// asistencias). Se ve mientras se mantiene Tab (o la cruceta abajo) y sola al terminar la
+// asistencias). Se ve mientras se mantiene Tab (o Share / View en el control) y sola al terminar la
 // partida, con quién ganó en el título.
 //
 // VIVE EN EL PREFAB DE PARTIDA (Match_UI ▸ MatchStats), desde el 4 de noviembre de 2026: el

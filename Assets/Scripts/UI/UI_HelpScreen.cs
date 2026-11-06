@@ -7,8 +7,8 @@ using UnityEngine;
 //
 // La ventana de ayuda: cubre toda la pantalla. Arriba, las reglas del modo y la clase equipada
 // con sus estadísticas; abajo, una tarjeta por habilidad con qué hace y cuánto daña. Con una
-// subclase, la tarjeta de la R detalla la definitiva. Se abre con F1 o el stick derecho
-// apretado, o desde la pausa.
+// subclase, la tarjeta de la R detalla la definitiva. Se abre con F1 o la cruceta izquierda, o
+// desde la pausa.
 //
 // VIVE EN EL PREFAB DE PARTIDA (Match_UI ▸ HelpScreen), desde el 4 de noviembre de 2026. Lee
 // de la clase del jugador local y no toca nada. La partida sigue mientras está abierta, así
@@ -90,7 +90,17 @@ public class UI_HelpScreen : MonoBehaviour, IMenuScreen
         if (MenuInput.Help == null || !MenuInput.Help.WasPressedThisFrame()) return;
 
         if (_open) Back();
-        else if (!MenuInput.HasOverlay) Open();
+        else if (CanOpen()) Open();
+    }
+
+    // La cruceta izquierda también se usa en los menús (elegir) y para girar lo que se está
+    // poniendo en el piso (el Muro de fuego): ahí es de ellos, no de la ayuda.
+    private static bool CanOpen()
+    {
+        if (MenuInput.HasOverlay || UICursor.Free) return false;
+
+        PlayerController player = PlayerController.LocalPlayer;
+        return player == null || !player.IsPlacingOnGround;
     }
 
     // La vida bajó desde el último cuadro, sin contar el recorte al máximo cuando se acaba un

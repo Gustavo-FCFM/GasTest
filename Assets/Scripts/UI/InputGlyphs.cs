@@ -109,8 +109,8 @@ public static class InputGlyphs
         {
             switch (Scheme)
             {
-                case EInputScheme.Xbox:        return "VIEW";     // select
-                case EInputScheme.PlayStation: return "CREATE";   // select
+                case EInputScheme.Xbox:
+                case EInputScheme.PlayStation: return Loc.T("glyph.dpad_down");   // dpad/down
                 default:                       return "V";
             }
         }

@@ -467,7 +467,7 @@
                 {
                     "name": "",
                     "id": "b000001f-0000-4000-8000-00000000001f",
-                    "path": "<Gamepad>/select",
+                    "path": "<Gamepad>/dpad/down",
                     "interactions": "",
                     "processors": "",
                     "groups": "Gamepad",
@@ -922,7 +922,7 @@
                 {
                     "name": "",
                     "id": "55d430d7-9be0-4cda-bb43-1eac463432ab",
-                    "path": "<Gamepad>/dpad/down",
+                    "path": "<Gamepad>/select",
                     "interactions": "",
                     "processors": "",
                     "groups": "Gamepad",
@@ -944,7 +944,7 @@
                 {
                     "name": "",
                     "id": "25233e19-af0b-4303-8e12-c9579902c668",
-                    "path": "<Gamepad>/rightStickPress",
+                    "path": "<Gamepad>/dpad/left",
                     "interactions": "",
                     "processors": "",
                     "groups": "Gamepad",

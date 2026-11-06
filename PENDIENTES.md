@@ -31,6 +31,11 @@ jugador apaga lo suyo en Ajustes ▸ Combate. Para borrar uno del todo, los paso
 - **Habilidad no disponible** (`UI_AbilityDenied`, en `Player Camera ▸ UI`): el ícono tiembla y parpadea en rojo.
 - **Rachas de bajas** (`UI_KillStreak`): ¡DOBLE BAJA! y demás, en la pantalla de quien mata, con 8 s o menos entre bajas.
 
+**Botones del control cambiados (6 de noviembre, pedido de Gustavo):** la tabla KDA va en Create / Share / View (mantener), elegir
+subclase en la cruceta abajo y la ayuda en la cruceta izquierda. La cruceta izquierda también elige en los menús y gira el Muro de
+fuego: ahí la ayuda no se abre (`UI_HelpScreen.CanOpen`). De espectador, Create / Share / View además apaga el marcador de arriba.
+Las casillas para probarlos están en la tabla y en la ayuda, más abajo.
+
 **Más feedback de combate: IDEAS, para después.** Ajustes ya no tiene lugar: otra tanda pide mover Combate a su propia pantalla.
   - [ ] Parón también en quien recibe el golpe.
   - [ ] La mira se abre al disparar y da un pulso al conectar (las clases a distancia no tienen parón).
@@ -45,7 +50,7 @@ jugador apaga lo suyo en Ajustes ▸ Combate. Para borrar uno del todo, los paso
 falta, agregarlo al llegar ahí.
   - [ ] Descargar los clips y cargarlos.
 
-**Tabla con KDA, ventana de ayuda y bolsa de dinero (4 de noviembre, pedido de Gustavo): HECHO; las casillas de abajo siguen sin marcar.** Las
+**Tabla con KDA, ventana de ayuda y bolsa de dinero (4 de noviembre, pedido de Gustavo): HECHO Y PROBADO ✅ (6 de noviembre), salvo el control.** Las
 herramientas ya se corrieron y se borraron.
 - **Tabla de la partida** (`UI_MatchStats`, `Match_UI ▸ MatchStats`): cada equipo con su color, nivel y puntos, y cada
   integrante con ícono, nombre y K/D/A, ordenados por bajas. Se ve mientras se mantiene **Tab o la cruceta abajo** (vivo,
@@ -55,10 +60,11 @@ herramientas ya se corrieron y se borraron.
   víctima o curaron al que la hizo, en los últimos 10 s (⚙ "Asistencia: ventana (s)" en el Player). El Inmortal que revive
   cuenta como muerte y baja, como en el registro de bajas. Las bajas de los compañeros del Explorador son de su dueño;
   el resto de las invocaciones no se revisó.
-  - [ ] Tab abre y cierra la tabla, con control también; los números suben bien en el host y en un cliente.
-  - [ ] Una asistencia por daño y una por curar al que hizo la baja. Morir por un NPC no le da baja a nadie.
-  - [ ] Una baja de un tótem o una trampa cuenta para su dueño (si no, resolver al dueño en `ServerCountKda`).
-  - [ ] Al terminar la partida la tabla sale sola, con el ganador, y no se tapa con el anuncio.
+  - [x] Tab abre y cierra la tabla, y los números suben bien en el host y en un cliente. **Probado ✅ (6 de noviembre).**
+  - [ ] Con control: mantener Share (View en Xbox) abre la tabla. La cruceta abajo abre las subclases.
+  - [x] Una asistencia por daño y una por curar al que hizo la baja. Morir por un NPC no le da baja a nadie. **Probado ✅ (6 de noviembre).**
+  - [x] Una baja de un tótem o una trampa cuenta para su dueño (si no, resolver al dueño en `ServerCountKda`). **Probado ✅ (6 de noviembre).**
+  - [x] Al terminar la partida la tabla sale sola, con el ganador, y no se tapa con el anuncio. **Probado ✅ (6 de noviembre).**
 - **Ventana de ayuda** (`UI_HelpScreen`, `Match_UI ▸ HelpScreen`): a pantalla completa, con **F1, el stick derecho apretado
   o el botón Ayuda de la pausa**. Arriba las 3 reglas del modo (`help.rule*` en `Localization.csv`) y la clase con su rol y
   estadísticas; abajo 6 tarjetas con qué hace cada habilidad y sus números. Desde la pausa, la pausa se va y volver la
@@ -66,8 +72,9 @@ herramientas ya se corrieron y se borraron.
   Las habilidades tienen campos nuevos `Description` / `DescriptionEs`: los 122 textos salieron de
   `Mercenaries_Diseno_de_Clases.docx`, **Gustavo los tiene que revisar**. Los números los calcula `AbilityHelpNumbers`
   recorriendo lo que la habilidad tiene cargado, con los stats del jugador; lo periódico va aparte y por segundo.
-  - [ ] Help desde la pausa: se va la pausa; ESC, B o F1 vuelven a ella; un golpe cierra todo y vuelve al juego.
-  - [ ] Las tarjetas: la descripción queda debajo de los números y los textos largos entran. Con control, el stick derecho.
+  - [x] Help desde la pausa: se va la pausa; ESC, B o F1 vuelven a ella; un golpe cierra todo y vuelve al juego. **Probado ✅ (6 de noviembre).**
+  - [x] Las tarjetas: la descripción queda debajo de los números y los textos largos entran. **Probado ✅ (6 de noviembre).**
+  - [ ] Con control: la cruceta izquierda abre y cierra la ayuda; no la abre en un menú ni girando el Muro de fuego.
   - [ ] Revisar los 122 textos. Se ven nombres técnicos en inglés ("Paladin Smite Switch", "Rogue Primary Attack",
         "LayOnHands"): corregirlos si el juego se va a mostrar en inglés.
   - [ ] El botón Ayuda de la pausa se veía sin fondo en la captura: ver si era el mouse encima.
@@ -76,7 +83,7 @@ herramientas ya se corrieron y se borraron.
 - **Bolsa de dinero** (`Prefabs/Objective/MoneyBag`, modelo `Art/Models/MoneyBag.obj`, generado por código): adentro de
   `Objective.prefab ▸ Visual ▸ MoneyBag`, con el ancho de la caja (0.8), que quedó apagada. Usa los dos materiales de la
   bolsa de Gustavo (`Bolsa de objetivo.prefab`).
-  - [ ] Se ve bien en el mapa, flotando y cargada; si se quiere más grande, la escala de `MoneyBag`.
+  - [x] Se ve bien en el mapa, flotando y cargada; si se quiere más grande, la escala de `MoneyBag`. **Probado ✅ (6 de noviembre).**
 
 **La entrega del Objetivo, pegada al piso (4 de noviembre, pedido de Gustavo): HECHO Y PROBADO ✅ (4 de noviembre).** La zona solo miraba
 la planta y no la altura: el Mago entregaba volando sobre la plataforma, donde nadie lo alcanzaba. Ahora es un cilindro

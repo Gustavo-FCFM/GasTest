@@ -133,13 +133,13 @@ composición: la sala segura es el **único lugar donde se puede cambiar de clas
   puerta de tu sala segura, y **quedarse ahí 6 segundos** (`MercObjective.DeliverSeconds`).
   Pegado al piso: más de 2 m sobre la plataforma no cuenta y reinicia la cuenta (⚙ "Altura de
   entrega (m)" en `MercTeamBase`; desde el 4 de noviembre, para que el Mago no entregue volando).
-- **La tabla de la partida** (Tab o la cruceta abajo, y sola al terminar): cada equipo con el KDA
+- **La tabla de la partida** (Tab o Share / View en el control, y sola al terminar): cada equipo con el KDA
   de sus integrantes (`UI_MatchStats`; lo cuenta `PlayerController.ServerCountKda`). Solo entre
   personajes: un NPC no da bajas. La asistencia es de los compañeros del que hizo la baja que le
   pegaron a la víctima o lo curaron a él en los últimos 10 s.
 - **La sensación de los golpes** (parón, sacudida, bordes de colores, daño fantasma, rachas de
   bajas y demás) no es del modo: sirve para cualquiera. Se maneja desde `Resources/CombatFeel`.
-- **La ventana de ayuda** (F1, el stick derecho apretado o la pausa): las 3 reglas del modo, la
+- **La ventana de ayuda** (F1, la cruceta izquierda o la pausa): las 3 reglas del modo, la
   clase y sus habilidades (`UI_HelpScreen`). Un modo nuevo necesita sus propias reglas: hoy son
   las claves `help.rule1` a `help.rule3` de `Localization.csv`.
   Salir de la zona o recibir daño de otro reinicia la cuenta. Todos ven "ENTREGANDO" con

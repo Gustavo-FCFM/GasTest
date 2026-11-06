@@ -244,6 +244,7 @@ glyph.rmb;Clic D;RMB
 glyph.space;Espacio;Space
 glyph.click;Clic;Click
 glyph.dpad_up;CRUCETA ARRIBA;D-PAD UP
+glyph.dpad_down;CRUCETA ABAJO;D-PAD DOWN
 glyph.left_stick;Stick izq.;Left stick
 #
 # ---- Espectador ----
