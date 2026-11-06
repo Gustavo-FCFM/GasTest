@@ -913,6 +913,11 @@ public class PlayerController : NetworkBehaviour
             return;
         }
 
+        // Recién revivido: State_Dead ya se fue, pero el aviso que saca el ragdoll y prende de nuevo
+        // el controlador (ObserversHandleRevive) llega unos cuadros después, también en el host. Sin
+        // esto, cada uno de esos cuadros tiraba "CharacterController.Move called on inactive controller".
+        if (!characterController.enabled) return;
+
         UpdateFlightState();
 
         // Repelido / atraído: el empuje corre aunque esté aturdido o enraizado; si no lo
