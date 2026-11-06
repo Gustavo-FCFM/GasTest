@@ -17,7 +17,8 @@ ya viaja por la red, así que no agrega nada. Con modelo, el Animator va en Alwa
   con `Scripts/Editor/ClassModels` (`ClassModelKit` + la receta `BarbarianModel`), desde las imágenes que eligió Gustavo. Para cambiarla
   se edita la receta y se corre `Mercenarios ▸ Modelos de clase ▸ Generar la Bárbara`. Unos 20 mil triángulos, casi el doble del Dummy.
   - [x] Camina, ataca y ya no sale la bola blanca del bloom. **Probado ✅ (6 de noviembre).**
-  - [ ] Dedos más gruesos y pulgar unido a la palma: ver en juego cómo agarra el hacha. Si siguen raras, guantes.
+  - [ ] Dedos más gruesos y pulgar unido a la palma: ver en juego cómo agarra el hacha. Si siguen raras, guantes o dedos más cortos
+        (el `length` de `BuildFinger`, como la Pícara: no toca los huesos).
 - **El Guerrero de relleno** (`Prefabs/Player/Classes/Model_Fighter`, arte en `Art/Models/Classes/Fighter`): receta `FighterModel`, con lo
   común en `ClassModelRecipe`. Armadura pesada, capa y barba, con el aire de Aragorn que pidió Gustavo, sin copiarlo. Se rehace con
   `Mercenarios ▸ Modelos de clase ▸ Generar el Guerrero`. Unos 18 mil triángulos. Lleva acabado Polished: el acero brilla de verdad (el alfa
@@ -26,7 +27,17 @@ ya viaja por la red, así que no agrega nada. Con modelo, el Animator va en Alwa
   - [ ] Con la luz de la arena, el acero no se ve ni pálido ni negro.
   - [ ] La espada y el escudo no chocan con los guanteletes ni con los codos.
   - Conocido: al correr el talón puede asomar por el borde de la capa, y con las piernas muy abiertas se ve el forro.
-- Para las dos:
+- **La Pícara de relleno** (`Prefabs/Player/Classes/Model_Rogue`, arte en `Art/Models/Classes/Rogue`): receta `RogueModel`, una gata tabaxi con
+  pelaje tuxedo. Capucha con las orejas afuera, bufanda, capa corta, chaleco de cuero, guantes sin dedos, patas con garras y almohadillas, y
+  cola. Ropa oscura, a pedido de Gustavo: los siete colores están al inicio de la receta. Se rehace con
+  `Mercenarios ▸ Modelos de clase ▸ Generar la Pícara`. Unos 13 mil triángulos. Sus tres subclases la heredan. Revisada en fotos con reposo,
+  correr, ataque con dos armas y aturdido; **falta verla en Play**.
+  - [ ] Con la luz de la arena la ropa no se vuelve una mancha negra, sobre todo de espaldas, y se leen los ojos. Si no, subir esos colores.
+  - [ ] Las dagas quedan bien en las manos, ahora que los dedos son más cortos.
+  - [ ] Asesino: la invisibilidad se ve transparente para él, a los enemigos no les muestra nada y al terminar vuelve completa.
+  - [ ] Ilusionista: las copias salen con este modelo.
+  - Conocido: la cola no tiene huesos propios y casi no se mece sola; las mejillas se ven algo planas de cerca.
+- Para las tres:
   - [ ] Decidir con el líder de arte si las otras clases siguen por aquí o por el pack modular de Gustavo.
   - [ ] Si las 8 clases quedan así, medir el rendimiento en la PC del showcase, con las tres ventanas.
   - [ ] Probar el modelo en una partida con cliente (se pone en cada pantalla) y con la copia del Ilusionista.

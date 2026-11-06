@@ -108,12 +108,16 @@ public abstract class ClassModelRecipe
     // MANOS
     // =========================================================
 
-    protected void BuildFinger(string finger, string side, float radius, int sides, Func<float, float, Vector2> uv)
+    // length acorta el dedo (1 = hasta donde llegan sus huesos). Las manos del esqueleto son largas: los
+    // huesos no cambian y el dedo se sigue doblando con ellos, un poco corrido de sus articulaciones.
+    // tip es qué tan fina queda la punta (1 = cortada recta).
+    protected void BuildFinger(string finger, string side, float radius, int sides, Func<float, float, Vector2> uv,
+                               float length = 1f, float tip = 1f)
     {
         Vector3 a = Kit.Pos(finger + "01" + side);
-        Vector3 b = Kit.Pos(finger + "02" + side);
-        Vector3 c = Kit.Pos(finger + "03" + side);
-        Vector3 tip = c + (c - b) * 0.85f;
+        Vector3 b = Vector3.LerpUnclamped(a, Kit.Pos(finger + "02" + side), length);
+        Vector3 c = Vector3.LerpUnclamped(a, Kit.Pos(finger + "03" + side), length);
+        Vector3 end = c + (c - b) * 0.85f;
 
         // Nace adentro de la palma: el pulgar está lejos del borde y sin esto queda flotando.
         Vector3 wrist = Kit.Pos("B-hand" + side);
@@ -124,7 +128,7 @@ public abstract class ClassModelRecipe
         ModelSkin second = Kit.Bone(finger + "02" + side);
         ModelSkin third = Kit.Bone(finger + "03" + side);
 
-        Kit.Sweep(new[] { root, a, b, c, tip }, p => Vector3.up, t => Vector2.one * (radius * (1f - 0.22f * t)), sides, uv,
+        Kit.Sweep(new[] { root, a, b, c, end }, p => Vector3.up, t => Vector2.one * (radius * (1f - 0.22f * t) * (t > 0.99f ? tip : 1f)), sides, uv,
             (p, t) => t < 0.1f ? hand : t < 0.4f ? first : t < 0.6f ? first.To(second, 0.5f) : t < 0.9f ? second.To(third, 0.5f) : third);
     }
 
@@ -173,6 +177,31 @@ public abstract class ClassModelRecipe
             sides,
             (t, a) => HairRegion.Uv(u + 0.11f * Mathf.Abs(a * 2f - 1f) - 0.05f, 0.2f + t * 0.78f),
             (p, t) => HairSkin(p));
+    }
+
+    // =========================================================
+    // PELAJE
+    // =========================================================
+
+    // Una vuelta de matas alrededor de un miembro. along: hacia dónde del camino apuntan (+1 sigue el
+    // camino, -1 vuelve).
+    protected void FurRing(Vector3[] chain, float distance, int count, float length, float width, Func<float, float> radius,
+                           Func<float, ModelSkin> skin, float along, float flare, ModelRegion region, float uFrom, float uTo)
+    {
+        Kit.BeginPiece(30f);
+        AlongChain(chain, distance, out Vector3 center, out Vector3 tangent);
+        Vector3 reference = Vector3.ProjectOnPlane(Vector3.forward, tangent).normalized;
+        Vector3 other = Vector3.Cross(tangent, reference);
+        float r = radius(distance);
+
+        for (int i = 0; i < count; i++)
+        {
+            float a = (i + Range(-0.2f, 0.2f)) / count * Mathf.PI * 2f;
+            Vector3 radial = reference * Mathf.Cos(a) + other * Mathf.Sin(a);
+            Vector3 root = center + radial * (r + 0.001f) - tangent * (along * length * 0.35f);
+            Vector3 direction = (tangent * along + radial * flare).normalized;
+            Kit.Tuft(root, direction, radial, length * Range(0.85f, 1.25f), width, 0.009f, 0.25f, region, Range(uFrom, uTo), skin(distance));
+        }
     }
 
     // =========================================================

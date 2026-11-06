@@ -703,7 +703,6 @@ public sealed class ClassModelKit
             material.EnableKeyword("_SPECULARHIGHLIGHTS_OFF");
             material.EnableKeyword("_ENVIRONMENTREFLECTIONS_OFF");
         }
-        material.doubleSidedGI = true;
         EditorUtility.SetDirty(material);
         return material;
     }

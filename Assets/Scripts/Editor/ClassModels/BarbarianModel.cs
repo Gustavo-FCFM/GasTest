@@ -311,30 +311,9 @@ public sealed class BarbarianModel : ClassModelRecipe
         }
         Kit.Loft(rings);
 
-        FurCuff(chain, 0.262f, 12, 0.042f, 0.022f, ArmBulge, d => ArmSkin(name, d), 1f, 0.5f);
-        FurCuff(chain, 0.43f, 12, 0.03f, 0.018f, ArmBulge, d => ArmSkin(name, d), -1f, 0.5f);
-        FurCuff(chain, 0.056f, 12, 0.03f, 0.02f, ArmBulge, d => ArmSkin(name, d), 1f, 0.4f);
-    }
-
-    // Una vuelta de matas alrededor de un miembro. along: hacia dónde del camino apuntan (+1 sigue el
-    // camino, -1 vuelve).
-    private void FurCuff(Vector3[] chain, float distance, int count, float length, float width,
-                         Func<float, float> radius, Func<float, ModelSkin> skin, float along, float flare)
-    {
-        Kit.BeginPiece(30f);
-        AlongChain(chain, distance, out Vector3 center, out Vector3 tangent);
-        Vector3 reference = Vector3.ProjectOnPlane(Vector3.forward, tangent).normalized;
-        Vector3 other = Vector3.Cross(tangent, reference);
-        float r = radius(distance);
-
-        for (int i = 0; i < count; i++)
-        {
-            float a = (i + Range(-0.2f, 0.2f)) / count * Mathf.PI * 2f;
-            Vector3 radial = reference * Mathf.Cos(a) + other * Mathf.Sin(a);
-            Vector3 root = center + radial * (r + 0.001f) - tangent * (along * length * 0.35f);
-            Vector3 direction = (tangent * along + radial * flare).normalized;
-            Kit.Tuft(root, direction, radial, length * Range(0.85f, 1.25f), width, 0.009f, 0.25f, _fur, Range(0.15f, 0.85f), skin(distance));
-        }
+        FurRing(chain, 0.262f, 12, 0.042f, 0.022f, ArmBulge, d => ArmSkin(name, d), 1f, 0.5f, _fur, 0.15f, 0.85f);
+        FurRing(chain, 0.43f, 12, 0.03f, 0.018f, ArmBulge, d => ArmSkin(name, d), -1f, 0.5f, _fur, 0.15f, 0.85f);
+        FurRing(chain, 0.056f, 12, 0.03f, 0.02f, ArmBulge, d => ArmSkin(name, d), 1f, 0.4f, _fur, 0.15f, 0.85f);
     }
 
     private void BuildHand(float side)
@@ -418,8 +397,8 @@ public sealed class BarbarianModel : ClassModelRecipe
         }
         Kit.Loft(rings);
 
-        FurCuff(chain, BootTop + 0.012f, 15, 0.05f, 0.024f, LegBulge, d => LegSkin(name, d), -1f, 0.55f);
-        FurCuff(chain, 0.77f, 14, 0.04f, 0.022f, LegBulge, d => LegSkin(name, d), 1f, 0.8f);
+        FurRing(chain, BootTop + 0.012f, 15, 0.05f, 0.024f, LegBulge, d => LegSkin(name, d), -1f, 0.55f, _fur, 0.15f, 0.85f);
+        FurRing(chain, 0.77f, 14, 0.04f, 0.022f, LegBulge, d => LegSkin(name, d), 1f, 0.8f, _fur, 0.15f, 0.85f);
     }
 
     private void BuildBoot(float side)
