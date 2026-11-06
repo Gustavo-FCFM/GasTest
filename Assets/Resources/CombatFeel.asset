@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ce07e3d85649b04dac6ce7093dba9d4, type: 3}
+  m_Name: CombatFeel
+  m_EditorClassIdentifier: 
+  HitStop: 0
+  CameraShake: 1
+  DamageVignette: 1
+  NumberPop: 1
+  KillFlash: 0
+  HitStopFraction: 0.085
+  HitStopMinSeconds: 0.05
+  HitStopMaxSeconds: 0.1
+  ShakeMaxAngle: 2.5
+  ShakeSeconds: 0.45
+  ShakeFrequency: 18
+  ShakeMinHitPercent: 12
+  ShakeFullHitPercent: 40
+  ShakeWeakStrength: 0.35
+  ShakeStrongStrength: 0.7
+  ShakeUltimateStrength: 0.85
+  VignetteMinHitPercent: 2
+  VignetteFullHitPercent: 25
+  VignetteWeakStrength: 0.35
+  VignetteFadeSeconds: 0.45
+  NumberPopSeconds: 0.22
+  NumberStartScale: 0.5
+  NumberPopStrength: 1.5
+  CriticalRise: 1.6
+  KillFlashColor: {r: 1, g: 0.8, b: 0.05, a: 1}
+  KillFlashSeconds: 0.45
+  KillFlashWidth: 0.08

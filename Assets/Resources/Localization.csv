@@ -29,6 +29,15 @@ settings.section.display;Pantalla;Display
 settings.screen_mode;Modo;Mode
 settings.resolution;Resolución;Resolution
 settings.vsync;Sincronización vertical (VSync);Vertical sync (VSync)
+settings.section.combat;Combate;Combat
+settings.hit_stop;Parón de impacto;Hit stop
+settings.camera_shake;Sacudida de cámara;Camera shake
+settings.damage_vignette;Bordes de colores;Colored screen edges
+settings.number_pop;Números animados;Animated numbers
+settings.kill_flash;Destello al matar;Kill flash
+settings.health_ghost;Daño fantasma;Health trail
+settings.ability_denied;Habilidad no lista;Ability not ready
+settings.kill_streak;Rachas de bajas;Kill streaks
 settings.reset;Restablecer;Reset
 settings.close;Cerrar;Close
 settings.hint;ESC también cierra · los cambios se aplican al instante;ESC also closes · changes apply immediately
@@ -173,6 +182,10 @@ match.next_objective;Siguiente Objetivo en {time};Next Objective in {time}
 #
 # ---- Partida: anunciador (los avisos grandes) ----
 announce.match_started;¡QUE EMPIECE LA CACERÍA!;LET THE HUNT BEGIN!
+announce.streak2;¡DOBLE BAJA!;DOUBLE KILL!
+announce.streak3;¡TRIPLE BAJA!;TRIPLE KILL!
+announce.streak4;¡CUÁDRUPLE BAJA!;QUADRA KILL!
+announce.streak5;¡IMPARABLE!;UNSTOPPABLE!
 announce.objective_spawned;¡EL OBJETIVO APARECIÓ EN EL CENTRO!;THE OBJECTIVE HAS APPEARED IN THE CENTER!
 announce.objective_taken_yours;¡TU EQUIPO TIENE EL OBJETIVO!;YOUR TEAM HAS THE OBJECTIVE!
 announce.objective_taken;{team} tomó el Objetivo;{team} picked up the Objective

@@ -111,6 +111,7 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
 | `Assets/Scripts/Network/` | Conexión y red: `NetworkAbilitySystemComponent`, `NetworkGameManager`, `LobbyManager` (la sala de espera), `NetAddress` (las direcciones), `LanDiscovery` (la lista de partidas en la red) y `ConnectionHUD` (el recuadro viejo, solo para `Test_Network`). |
 | `Assets/Scripts/Player/` | El jugador y sus cámaras: `PlayerController`, input, animación, `RagdollController`, `UpperBodyAim`, `ThirdPersonOrbitCam`, `SpectatorCamera`, `MenuOrbitCamera`. |
 | `Assets/Scripts/UI/` | Toda la UI que no es de un modo: HUD de clase, menú de clases, sala (`UI_LobbyPanel`), menú principal, ajustes, `MercUIFactory`, `InputGlyphs` (la ÚNICA tabla de qué botón se dibuja: Q / RB / R1) y `UICursor` — el único dueño del cursor y del modo de input. |
+| `Assets/Scripts/CombatFeel/` | La sensación de los golpes: el panel `CombatFeel` (asset en `Resources`) y un archivo por efecto (parón, sacudida, bordes, daño fantasma, habilidad no disponible, rachas). |
 | `Assets/Scripts/Settings/` | `GameSettings` (PlayerPrefs), incluido qué control eligió el jugador y el idioma. |
 | `Assets/Scripts/Localization/` | `Loc` (los textos por clave, en español e inglés) y `LocalizedText`. La tabla es `Resources/Localization.csv`. |
 | `Assets/Scripts/Audio/` | Sonido: `AudioManager`, `MusicPlayer`, `AudioLibrary` y `SfxCue`. |
@@ -266,6 +267,13 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   desde el 4 de noviembre de 2026). Una curación que escribe la vida directo y ya llama a `ShowCombatNumber` lo tiene
   gratis; un GA o un GE no tienen que hacer nada.
 
+- **La sensación de los golpes se maneja desde el asset `Resources/CombatFeel`** (desde el 6 de noviembre de 2026): una casilla
+  por efecto y sus números, y cada jugador apaga lo suyo en Ajustes ▸ Combate (se ve si están prendidos los dos: `CombatFeel.HitStopOn`
+  y compañía). Los efectos de `Scripts/CombatFeel/` no los llama nadie por su nombre: miran el juego o escuchan los eventos de
+  `CombatFeel`, para poder borrarlos sueltos, y uno nuevo va igual. Una habilidad de arma cuerpo a cuerpo pide el parón con
+  `StopsOnImpact`. Para probar con el editor: leer `GameSettings` en batch aplica la calidad guardada y ensucia
+  `ProjectSettings/QualitySettings.asset`.
+
 - **Dónde va cada VFX.** Lo que dura lo que dura un buff o un debuff va en el
   `TargetVFX` del **GE** (aparece pegado a quien lo recibe, en todas las pantallas, y se
   va cuando el efecto termina; `TargetVFXLoop` repite las partículas de un solo
@@ -318,7 +326,7 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   pantalla de muerte, números flotantes, marcador) va al **prefab de partida `Prefabs/UI/Match_UI`**
   (uno por escena; desde el 14 de octubre de 2026: registro de bajas, pantalla de muerte, números,
   marcador, avisos de partida, marcadores del Objetivo, el espectador y, desde el 4 de noviembre de 2026, la tabla con
-  KDA y la ventana de ayuda). Los menús (inicio, conexión,
+  KDA, la ventana de ayuda y `CombatFeel`). Los menús (inicio, conexión,
   Ajustes, la sala y la pausa, más `MenuInput`) están en el **prefab de menús `Prefabs/UI/Menus_UI`**: cada fila de Ajustes lleva un
   `UI_SettingRow` y cada lugar de la sala un `UI_LobbySlot`. **El color de un botón de los menús va en el
   Button ("Normal Color" y los demás estados), con su imagen BLANCA** (`ButtonTint`, desde el 26 de octubre de 2026):

@@ -225,6 +225,31 @@ public class UI_SettingsPanel : MonoBehaviour, IMenuScreen
             case ESettingKind.VSync:
                 BindToggle(row, () => GameSettings.VSync, v => GameSettings.VSync = v);
                 break;
+
+            case ESettingKind.HitStop:
+                BindToggle(row, () => GameSettings.HitStop, v => GameSettings.HitStop = v);
+                break;
+            case ESettingKind.CameraShake:
+                BindToggle(row, () => GameSettings.CameraShake, v => GameSettings.CameraShake = v);
+                break;
+            case ESettingKind.DamageVignette:
+                BindToggle(row, () => GameSettings.DamageVignette, v => GameSettings.DamageVignette = v);
+                break;
+            case ESettingKind.NumberPop:
+                BindToggle(row, () => GameSettings.NumberPop, v => GameSettings.NumberPop = v);
+                break;
+            case ESettingKind.KillFlash:
+                BindToggle(row, () => GameSettings.KillFlash, v => GameSettings.KillFlash = v);
+                break;
+            case ESettingKind.HealthGhost:
+                BindToggle(row, () => GameSettings.HealthGhost, v => GameSettings.HealthGhost = v);
+                break;
+            case ESettingKind.AbilityDenied:
+                BindToggle(row, () => GameSettings.AbilityDenied, v => GameSettings.AbilityDenied = v);
+                break;
+            case ESettingKind.KillStreak:
+                BindToggle(row, () => GameSettings.KillStreak, v => GameSettings.KillStreak = v);
+                break;
         }
     }
 

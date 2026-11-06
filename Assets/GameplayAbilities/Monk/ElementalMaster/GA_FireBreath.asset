@@ -15,6 +15,8 @@ MonoBehaviour:
   AbilityName: Fire Breath
   AbilityNameEs: Aliento de fuego
   AbilityIcon: {fileID: 21300000, guid: a8f5c32405815f94fa9013f6c921b362, type: 3}
+  Description: 
+  DescriptionEs: 
   CostEffect: {fileID: 0}
   CooldownEffect: {fileID: 0}
   CooldownDuration: 0
@@ -46,27 +48,51 @@ MonoBehaviour:
     OnlyIfTargetHas: 0
     StackScaling: 0
     PerStack: 0
+    PerTargetCooldown: 0
+    TargetStacksTag: 0
+    TargetScaling: 0
+    TargetPerStack: 0
+    TargetMinimum: 0
+    TargetMaximum: 0
+    ConsumeTargetStacks: 0
   - When: 0
     ApplyTo: 0
     Effect: {fileID: 11400000, guid: d15c7612e7ffe914a918fbd2b9bdf30b, type: 2}
     OnlyIfTargetHas: 0
     StackScaling: 0
     PerStack: 0
+    PerTargetCooldown: 0
+    TargetStacksTag: 0
+    TargetScaling: 0
+    TargetPerStack: 0
+    TargetMinimum: 0
+    TargetMaximum: 0
+    ConsumeTargetStacks: 0
   Visuals: []
   IsInterruptible: 0
   TargetLayer:
     serializedVersion: 2
     m_Bits: 128
+  CastMode: 0
+  CastSeconds: 1
+  CastTickSeconds: 0.5
+  CastBlocksOthers: 1
+  CastBreaksOnDamage: 0
+  CastStartAnimation: {fileID: 0}
+  CastLoopAnimation: {fileID: 0}
+  CastReleaseAnimation: {fileID: 0}
   MaxCharges: 1
   Range: 5
   ConeAngle: 70
   UseVerticalAim: 1
   OriginOffset: {x: 0, y: 1, z: 0}
+  MagicDamageWhileTag: 0
   ImpactZone: {fileID: 0}
   ZoneLayout: 0
   ZoneCount: 1
   ZoneSpacing: 5
   ZoneMaxRange: 10
+  ImpactStop: 0
   DamageEffect: {fileID: 0}
   AdditionalEffects: []
   TargetEffects: []

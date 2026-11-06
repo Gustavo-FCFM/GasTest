@@ -16,6 +16,14 @@ public enum ESettingKind
     [InspectorName("Modo de pantalla")]          ScreenMode     = 7,
     [InspectorName("Resolución")]                Resolution     = 8,
     [InspectorName("Sincronización vertical")]   VSync          = 9,
+    [InspectorName("Parón de impacto")]          HitStop        = 10,
+    [InspectorName("Sacudida de cámara")]        CameraShake    = 11,
+    [InspectorName("Bordes de colores")]         DamageVignette = 12,
+    [InspectorName("Números con más vida")]      NumberPop      = 13,
+    [InspectorName("Destello al matar")]         KillFlash      = 14,
+    [InspectorName("Daño fantasma")]             HealthGhost    = 15,
+    [InspectorName("Habilidad no disponible")]   AbilityDenied  = 16,
+    [InspectorName("Rachas de bajas")]           KillStreak     = 17,
 }
 
 // ============================================================
@@ -27,7 +35,7 @@ public enum ESettingKind
 //
 // Según el ajuste, la fila usa:
 //   · una BARRA (sensibilidad, volúmenes) y el texto del valor;
-//   · una CASILLA (invertir Y, sincronización vertical);
+//   · una CASILLA (invertir Y, sincronización vertical, los de Combate);
 //   · las flechas < > y el texto del valor (idioma, control, modo de pantalla, resolución).
 // Lo que no use, puede quedar vacío.
 //

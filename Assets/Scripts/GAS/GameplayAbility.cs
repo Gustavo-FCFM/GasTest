@@ -642,6 +642,10 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     // ServerTeleportOwnerTo, ApplyAbilityVelocity o ApplyDashVelocity.
     public virtual bool MovesThroughOwner => false;
 
+    // ¿Al conectar, el que ataca se congela un instante (parón de impacto, ver CombatFeel)? Lo
+    // piden los golpes de arma cuerpo a cuerpo: uno por golpe, con el primer enemigo alcanzado.
+    protected virtual bool StopsOnImpact => false;
+
     // Descuenta el costo, aplica el cooldown, y arranca la secuencia
     // visual automática si la habilidad tiene una configurada. Cada
     // Activate() concreto la llama una vez al confirmar que sí se va a
@@ -721,6 +725,13 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
             }
 
             OwnerASC.ApplyGameplayEffect(CooldownEffect, this, ResolveCooldownDuration());
+
+            // Todas las definitivas comparten este tag: es lo que las distingue de las demás.
+            if (CooldownEffect.GrantedTags != null && CooldownEffect.GrantedTags.Contains(EGameplayTag.Ability_Cooldown_Ultimate))
+            {
+                NetworkAbilitySystemComponent net = OwnerASC.GetComponent<NetworkAbilitySystemComponent>();
+                if (net != null) net.ServerUltimateCast();
+            }
         }
     }
 
@@ -1707,6 +1718,13 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         bool ally  = !enemy && !onlyHostile && source.IsAllyOf(target, includeSelf: true);
 
         if (!enemy && !(ally && HasAllyHitEffects)) return false;
+
+        if (enemy && firstHit && !onlyHostile && !IsEcho && StopsOnImpact)
+        {
+            NetworkAbilitySystemComponent net = source.GetComponent<NetworkAbilitySystemComponent>();
+            if (net != null) net.ServerImpactStop();
+        }
+
         if (Effects == null) return true;
 
         bool wasAlive = !target.HasTag(EGameplayTag.State_Dead);

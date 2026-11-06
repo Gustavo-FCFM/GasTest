@@ -1603,6 +1603,36 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
     }
 
     // =========================================================
+    // SENSACIÓN DEL GOLPE (ver CombatFeel)
+    //
+    // Dos avisos que no llevan lógica: cada pantalla decide si lo muestra. El parón lo ven todos,
+    // porque el que se congela es el personaje. La definitiva solo le interesa a su dueño.
+    // =========================================================
+
+    // ESTE componente es el del que PEGÓ.
+    [Server]
+    public void ServerImpactStop()
+    {
+        if (_asc == null || !CombatFeel.Config.HitStop) return;
+
+        ObserversImpactStop(CombatFeel.Config.HitStopSecondsFor(_asc.GetAttributeValue(EAttributeType.AtkSpeed)));
+    }
+
+    [ObserversRpc]
+    private void ObserversImpactStop(float seconds,
+                                     FishNet.Transporting.Channel channel = FishNet.Transporting.Channel.Unreliable)
+        => CombatFeel.RaiseImpactStop(this, seconds);
+
+    [Server]
+    public void ServerUltimateCast()
+    {
+        if (HasOwnerConnection()) TargetUltimateCast(Owner);
+    }
+
+    [TargetRpc]
+    private void TargetUltimateCast(NetworkConnection conn) => CombatFeel.RaiseUltimateCast();
+
+    // =========================================================
     // NÚMEROS FLOTANTES (daño y curación)
     //
     // El número sale sobre el que RECIBE: rojo el daño, amarillo el crítico, verde
@@ -1671,6 +1701,9 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         }
 
         UI_CombatFlash.Get()?.Show(this, (ECombatNumber)kind, shielded);
+
+        if (IsOwner && NetMaxHealth > 0f)
+            CombatFeel.RaiseLocalCombatNumber((ECombatNumber)kind, shielded, amount / NetMaxHealth * 100f);
 
         // Dónde salen: entre los pies y la barra de vida (ver UI_DamageNumbers.HeightFraction),
         // así caen a la altura del pecho —donde uno apunta— en un personaje de cualquier
@@ -2453,6 +2486,8 @@ public class NetworkAbilitySystemComponent : NetworkBehaviour
         PlayerController pc = GetComponent<PlayerController>();
         if (pc != null) pc.PlayDeath(hitDirection);
         else            SafeSetTrigger(GetComponentInChildren<Animator>(), "Death");
+
+        UI_CombatFlash.Get()?.ShowKill(this);
     }
 
     [ObserversRpc]

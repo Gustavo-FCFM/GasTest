@@ -48,6 +48,14 @@ public class GA_LineAttack : GameplayAbility
     [Label("Sigue la mira vertical")]
     public bool UseVerticalAim = false;
 
+    [Section(AbilitySection.Visuals)]
+    [Tooltip("Al conectar, el que ataca se congela un instante: le da peso al golpe (ver CombatFeel). " +
+             "Se apaga en lo que no es un golpe de arma, como el Aliento de fuego.")]
+    [Label("Parón de impacto")]
+    public bool ImpactStop = true;
+
+    protected override bool StopsOnImpact => ImpactStop;
+
     // Valida, rota al dueño hacia el punto de mira, cobra costo/cooldown
     // y arranca la secuencia de ataque.
     public override void Activate()

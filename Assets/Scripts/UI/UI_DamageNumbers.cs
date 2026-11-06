@@ -101,6 +101,7 @@ public class UI_DamageNumbers : MonoBehaviour
         public Vector3 World;
         public float   BornAt;
         public float   Pop;       // cuánto "salta" al aparecer (los críticos más)
+        public float   Rise;      // cuánto más sube que un número normal (×)
         public bool    Active;
     }
 
@@ -164,6 +165,7 @@ public class UI_DamageNumbers : MonoBehaviour
         p.World  = worldPosition + new Vector3(jitter.x, Random.Range(-0.1f, 0.15f), jitter.y);
         p.BornAt = Time.time;
         p.Active = true;
+        p.Rise   = kind == ECombatNumber.CriticalDamage && CombatFeel.NumberPopOn ? CombatFeel.Config.CriticalRise : 1f;
 
         switch (kind)
         {
@@ -210,7 +212,7 @@ public class UI_DamageNumbers : MonoBehaviour
 
             // Sube rápido al principio y frena: se lee como un salto, no como un ascensor.
             float rise = 1f - (1f - t) * (1f - t);
-            Vector3 world = p.World + Vector3.up * (RiseMeters * rise);
+            Vector3 world = p.World + Vector3.up * (RiseMeters * p.Rise * rise);
 
             Vector3 screen = cam.WorldToScreenPoint(world);
             if (screen.z <= 0f)
@@ -224,7 +226,7 @@ public class UI_DamageNumbers : MonoBehaviour
             p.Rect.anchoredPosition = new Vector2(screen.x, screen.y) / scaleFactor;
 
             // Tamaño: un salto al nacer (más grande en los críticos) y más chico de lejos.
-            float pop      = 1f + p.Pop * Mathf.Clamp01(1f - t / 0.15f);
+            float pop      = CombatFeel.NumberPopOn ? LivelyPop(p) : 1f + p.Pop * Mathf.Clamp01(1f - t / 0.15f);
             float distance = Mathf.Max(0.01f, screen.z);
             float far      = Mathf.Clamp(ReferenceDistance / distance, 0.5f, 1f);
             p.Rect.localScale = Vector3.one * (pop * far);
@@ -234,6 +236,24 @@ public class UI_DamageNumbers : MonoBehaviour
             c.a = t < 0.55f ? 1f : 1f - (t - 0.55f) / 0.45f;
             p.Text.color = c;
         }
+    }
+
+    // Los números con más vida (ver CombatFeel): nace chico, crece de golpe hasta pasarse de su
+    // tamaño y se reacomoda. Se pasa más cuanto más "salta" ese tipo de número.
+    private static float LivelyPop(Popup p)
+    {
+        const float PeakAt = 0.35f;   // en qué parte del salto llega a lo más grande
+
+        CombatFeel feel = CombatFeel.Config;
+        float k    = Mathf.Clamp01((Time.time - p.BornAt) / Mathf.Max(0.01f, feel.NumberPopSeconds));
+        float peak = 1f + p.Pop * feel.NumberPopStrength;
+
+        if (k < PeakAt)
+        {
+            float up = 1f - k / PeakAt;
+            return Mathf.Lerp(feel.NumberStartScale, peak, 1f - up * up);
+        }
+        return Mathf.Lerp(peak, 1f, Mathf.SmoothStep(0f, 1f, (k - PeakAt) / (1f - PeakAt)));
     }
 
     private Camera ResolveCamera()

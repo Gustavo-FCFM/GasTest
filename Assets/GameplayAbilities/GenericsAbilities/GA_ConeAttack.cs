@@ -92,6 +92,14 @@ public class GA_ConeAttack : GameplayAbility
     [Label("Alcance de las zonas (m)")]
     public float ZoneMaxRange = 10f;
 
+    [Section(AbilitySection.Visuals)]
+    [Tooltip("Al conectar, el que ataca se congela un instante: le da peso al golpe (ver CombatFeel). " +
+             "Se apaga en lo que no es un golpe de arma, como el Aliento de fuego.")]
+    [Label("Parón de impacto")]
+    public bool ImpactStop = true;
+
+    protected override bool StopsOnImpact => ImpactStop;
+
     // Las zonas salen con el PRIMER frame de impacto de cada lanzamiento (no con cada uno
     // de un barrido escalonado); si lo cortan antes de pegar, no salen.
     [System.NonSerialized] private bool             _zonesPending;

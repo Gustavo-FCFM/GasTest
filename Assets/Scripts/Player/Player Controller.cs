@@ -2077,6 +2077,9 @@ public class PlayerController : NetworkBehaviour
             return;
         }
 
+        // Apretó algo que no se puede usar: se lo dice el ícono (ver UI_AbilityDenied).
+        if (!ability.CanActivate()) CombatFeel.RaiseAbilityDenied(slot);
+
         // Lo que arranca ahora no es (todavía) un básico interrumpible: la rueda, el
         // mantenido y la zona nunca lo son, y el camino normal lo vuelve a decidir abajo.
         _attackInterruptible = false;
@@ -2660,6 +2663,8 @@ public class PlayerController : NetworkBehaviour
         UI_KillFeed.Get()?.AddKill(ResolveCharacterName(killerName, killerNpc), ResolveClassName(killerClass), killerTeam,
                                   ResolveCharacterName(victimName, victimNpc), ResolveClassName(victimClass), victimTeam,
                                   involvesLocal);
+
+        if (killerId >= 0 && killerId != victimId) CombatFeel.RaiseCharacterKilled(killerId);
     }
 
     [TargetRpc]

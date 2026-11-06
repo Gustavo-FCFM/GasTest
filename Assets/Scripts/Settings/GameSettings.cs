@@ -18,6 +18,8 @@ using UnityEngine;
 //   · Pantalla completa, resolución, calidad y VSync se aplican solos en Apply().
 //   · InputScheme lo lee InputGlyphs, y de ahí sale cada botón que se dibuja en
 //     pantalla (el HUD de habilidades, los avisos de subclase).
+//   · Lo de la sensación de los golpes lo lee CombatFeel: un efecto se ve si está prendido
+//     acá Y en su asset, que es el que manda para todos.
 //   · Language lo lee Loc: el idioma de todos los textos. Arranca en ESPAÑOL (pedido de
 //     Gustavo, 8 de octubre de 2026). Se carga aparte del resto (LoadLanguage) para que
 //     preguntar el idioma —también desde el editor, fuera del Play— no aplique la
@@ -67,6 +69,16 @@ public static class GameSettings
     public static int  QualityLevel    { get { Load(); return _qualityLevel; }    set => Set(ref _qualityLevel, Mathf.Clamp(value, 0, QualitySettings.names.Length - 1)); }
     public static bool VSync           { get { Load(); return _vsync; }           set => Set(ref _vsync, value); }
 
+    // La sensación de los golpes: cada jugador apaga lo que le molesta (ver CombatFeel).
+    public static bool HitStop        { get { Load(); return _hitStop; }        set => Set(ref _hitStop, value); }
+    public static bool CameraShake    { get { Load(); return _cameraShake; }    set => Set(ref _cameraShake, value); }
+    public static bool DamageVignette { get { Load(); return _damageVignette; } set => Set(ref _damageVignette, value); }
+    public static bool NumberPop      { get { Load(); return _numberPop; }      set => Set(ref _numberPop, value); }
+    public static bool KillFlash      { get { Load(); return _killFlash; }      set => Set(ref _killFlash, value); }
+    public static bool HealthGhost    { get { Load(); return _healthGhost; }    set => Set(ref _healthGhost, value); }
+    public static bool AbilityDenied  { get { Load(); return _abilityDenied; }  set => Set(ref _abilityDenied, value); }
+    public static bool KillStreak     { get { Load(); return _killStreak; }     set => Set(ref _killStreak, value); }
+
     public const float MinSensitivity = 0.2f;
     public const float MaxSensitivity = 3f;
 
@@ -92,6 +104,14 @@ public static class GameSettings
     private static int  _qualityLevel = -1;
     private static bool _vsync = true;
     private static EInputScheme _inputScheme = EInputScheme.KeyboardMouse;
+    private static bool _hitStop        = true;
+    private static bool _cameraShake    = true;
+    private static bool _damageVignette = true;
+    private static bool _numberPop      = true;
+    private static bool _killFlash      = true;
+    private static bool _healthGhost    = true;
+    private static bool _abilityDenied  = true;
+    private static bool _killStreak     = true;
 
     private static bool      _languageLoaded;
     private static ELanguage _language = ELanguage.Spanish;
@@ -113,6 +133,14 @@ public static class GameSettings
         _qualityLevel     = PlayerPrefs.GetInt  (KeyPrefix + "Quality", QualitySettings.GetQualityLevel());
         _vsync            = PlayerPrefs.GetInt  (KeyPrefix + "VSync", QualitySettings.vSyncCount > 0 ? 1 : 0) == 1;
         _inputScheme      = (EInputScheme)PlayerPrefs.GetInt(KeyPrefix + "InputScheme", (int)EInputScheme.KeyboardMouse);
+        _hitStop          = PlayerPrefs.GetInt  (KeyPrefix + "HitStop", 1) == 1;
+        _cameraShake      = PlayerPrefs.GetInt  (KeyPrefix + "CameraShake", 1) == 1;
+        _damageVignette   = PlayerPrefs.GetInt  (KeyPrefix + "DamageVignette", 1) == 1;
+        _numberPop        = PlayerPrefs.GetInt  (KeyPrefix + "NumberPop", 1) == 1;
+        _killFlash        = PlayerPrefs.GetInt  (KeyPrefix + "KillFlash", 1) == 1;
+        _healthGhost      = PlayerPrefs.GetInt  (KeyPrefix + "HealthGhost", 1) == 1;
+        _abilityDenied    = PlayerPrefs.GetInt  (KeyPrefix + "AbilityDenied", 1) == 1;
+        _killStreak       = PlayerPrefs.GetInt  (KeyPrefix + "KillStreak", 1) == 1;
 
         Apply();
     }
@@ -139,6 +167,14 @@ public static class GameSettings
         PlayerPrefs.SetInt  (KeyPrefix + "Quality", _qualityLevel);
         PlayerPrefs.SetInt  (KeyPrefix + "VSync", _vsync ? 1 : 0);
         PlayerPrefs.SetInt  (KeyPrefix + "InputScheme", (int)_inputScheme);
+        PlayerPrefs.SetInt  (KeyPrefix + "HitStop", _hitStop ? 1 : 0);
+        PlayerPrefs.SetInt  (KeyPrefix + "CameraShake", _cameraShake ? 1 : 0);
+        PlayerPrefs.SetInt  (KeyPrefix + "DamageVignette", _damageVignette ? 1 : 0);
+        PlayerPrefs.SetInt  (KeyPrefix + "NumberPop", _numberPop ? 1 : 0);
+        PlayerPrefs.SetInt  (KeyPrefix + "KillFlash", _killFlash ? 1 : 0);
+        PlayerPrefs.SetInt  (KeyPrefix + "HealthGhost", _healthGhost ? 1 : 0);
+        PlayerPrefs.SetInt  (KeyPrefix + "AbilityDenied", _abilityDenied ? 1 : 0);
+        PlayerPrefs.SetInt  (KeyPrefix + "KillStreak", _killStreak ? 1 : 0);
         PlayerPrefs.Save();
     }
 
@@ -156,6 +192,14 @@ public static class GameSettings
         _qualityLevel     = QualitySettings.names.Length - 1;
         _vsync            = true;
         _inputScheme      = EInputScheme.KeyboardMouse;
+        _hitStop          = true;
+        _cameraShake      = true;
+        _damageVignette   = true;
+        _numberPop        = true;
+        _killFlash        = true;
+        _healthGhost      = true;
+        _abilityDenied    = true;
+        _killStreak       = true;
 
         Apply();
         OnChanged?.Invoke();

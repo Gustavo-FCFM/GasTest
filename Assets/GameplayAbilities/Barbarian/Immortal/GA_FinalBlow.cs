@@ -74,6 +74,7 @@ public class GA_FinalBlow : GameplayAbility, IChanneledAbility
     private bool AnimatesCharge => ChargeLoopAnimation != null;
     public override bool CanPredictActivation()  => !AnimatesCharge;
     public override bool BroadcastsOwnAnimation   => AnimatesCharge;
+    protected override bool StopsOnImpact          => true;
 
     // Valida, cobra costo/cooldown y arranca la carga.
     public override void Activate()

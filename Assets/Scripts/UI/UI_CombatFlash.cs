@@ -6,8 +6,9 @@ using UnityEngine;
 //
 // El destello de "me están pegando": un contorno que aparece sobre el personaje que recibe algo
 // y se encoge hasta desaparecer. Rojo si recibió daño, verde si lo curaron, celeste si el golpe
-// lo frenó entero un escudo. Es distinto del VFX de golpe de cada habilidad: ese lo pone el que
-// ataca y sale aunque pegue en una pared; este solo sale sobre quien de verdad recibió algo.
+// lo frenó entero un escudo, y dorado, más largo y más grueso, al morir (sus números están en el
+// asset CombatFeel). Es distinto del VFX de golpe de cada habilidad: ese lo pone el que ataca y
+// sale aunque pegue en una pared; este solo sale sobre quien de verdad recibió algo.
 //
 // VIVE EN EL PREFAB DE PARTIDA (Match_UI ▸ DamageNumbers), desde el 4 de noviembre de 2026. Lo
 // dispara el mismo aviso del número flotante (NetworkASC.ObserversCombatNumber), así que se ve
@@ -53,6 +54,9 @@ public class UI_CombatFlash : MonoBehaviour
         public readonly List<Renderer> Renderers = new List<Renderer>();
         public Color Color;
         public float StartedAt;
+        public float Seconds;
+        public float Width;
+        public bool  Kill;   // el de morir no lo pisa el del último golpe, que llega por otro canal
     }
 
     private static UI_CombatFlash _instance;
@@ -89,17 +93,43 @@ public class UI_CombatFlash : MonoBehaviour
         if (body == null || _material == null) return;
         if (kind == ECombatNumber.DamageOverTime && !FlashDamageOverTime) return;
 
-        if (!_active.TryGetValue(body, out ActiveFlash flash))
-        {
-            flash = new ActiveFlash();
-            foreach (SkinnedMeshRenderer r in CharacterOutline.Create(body, _material, OutlineName)) flash.Renderers.Add(r);
-            if (flash.Renderers.Count == 0) flash.Renderers.AddRange(CharacterOutline.CreateRigid(body, _material, OutlineName));
-            if (flash.Renderers.Count == 0) return;
-            _active[body] = flash;
-        }
+        ActiveFlash flash = FlashOn(body);
+        if (flash == null || flash.Kill) return;
 
         flash.Color     = ColorFor(kind, shielded);
         flash.StartedAt = Time.time;
+        flash.Seconds   = Seconds;
+        flash.Width     = Width;
+    }
+
+    // El destello de morir, sobre quien acaba de caer.
+    public void ShowKill(Component body)
+    {
+        if (body == null || _material == null || !CombatFeel.KillFlashOn) return;
+
+        ActiveFlash flash = FlashOn(body);
+        if (flash == null) return;
+
+        CombatFeel feel = CombatFeel.Config;
+        flash.Color     = feel.KillFlashColor;
+        flash.StartedAt = Time.time;
+        flash.Seconds   = feel.KillFlashSeconds;
+        flash.Width     = feel.KillFlashWidth;
+        flash.Kill      = true;
+    }
+
+    // El destello que ya tiene, o uno nuevo. Null si no tiene nada que contornear.
+    private ActiveFlash FlashOn(Component body)
+    {
+        if (_active.TryGetValue(body, out ActiveFlash flash)) return flash;
+
+        flash = new ActiveFlash();
+        foreach (SkinnedMeshRenderer r in CharacterOutline.Create(body, _material, OutlineName)) flash.Renderers.Add(r);
+        if (flash.Renderers.Count == 0) flash.Renderers.AddRange(CharacterOutline.CreateRigid(body, _material, OutlineName));
+        if (flash.Renderers.Count == 0) return null;
+
+        _active[body] = flash;
+        return flash;
     }
 
     private Color ColorFor(ECombatNumber kind, bool shielded)
@@ -121,14 +151,14 @@ public class UI_CombatFlash : MonoBehaviour
         _finished.Clear();
         foreach (KeyValuePair<Component, ActiveFlash> entry in _active)
         {
-            float t = Seconds > 0f ? (Time.time - entry.Value.StartedAt) / Seconds : 1f;
+            float t = entry.Value.Seconds > 0f ? (Time.time - entry.Value.StartedAt) / entry.Value.Seconds : 1f;
             if (entry.Key == null || t >= 1f)
             {
                 Remove(entry.Value);
                 _finished.Add(entry.Key);
                 continue;
             }
-            Paint(entry.Value, Width * (1f - t));
+            Paint(entry.Value, entry.Value.Width * (1f - t));
         }
 
         foreach (Component done in _finished) _active.Remove(done);

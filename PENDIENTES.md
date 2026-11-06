@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 4 de noviembre de 2026
+# Pendientes — actualizado el 6 de noviembre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -15,13 +15,29 @@ naranja crítico, verde curación, celeste si un escudo frenó el golpe entero. 
 (`ObserversCombatNumber`, con un `shielded` nuevo): no toca ningún GE y un invisible no se delata. Es distinto del VFX de
 golpe, que lo pone el que ataca. Lo que no tiene huesos (tótems, trampas) usa `CharacterOutline.CreateRigid`.
 
-**Más feedback de combate: IDEAS, para después (4 de noviembre).** Gustavo decidió dejarlas acá, en este orden:
-  - [ ] Parón de impacto cuerpo a cuerpo: la animación del atacante se congela unas centésimas al conectar. Solo a él: en
-        red no se puede detener el tiempo para todos.
-  - [ ] Sacudida de cámara pequeña al recibir un golpe fuerte y al lanzar la definitiva, que se pueda apagar en Ajustes.
-  - [ ] Destello rojo en los bordes de la pantalla al recibir daño, según el golpe (hoy solo hay viñeta con poca vida).
-  - [ ] Números con más vida: críticos más grandes, con un salto al aparecer.
-  - [ ] Destello dorado o blanco en la víctima al matarla, además de la calavera.
+**La sensación de los golpes (6 de noviembre, pedido de Gustavo): HECHA Y PROBADA ✅ (6 de noviembre).** Todo se maneja desde
+UN asset, `Assets/Resources/CombatFeel`: una casilla por efecto y sus números; se puede tocar en Play y queda guardado. Cada
+jugador apaga lo suyo en Ajustes ▸ Combate. Para borrar uno del todo, los pasos están al inicio de `CombatFeel.cs`. Código en
+`Assets/Scripts/CombatFeel/`; `Match_UI ▸ CombatFeel` junta el parón, la sacudida, los bordes y las rachas.
+- **Parón de impacto** (`CombatHitStop`): el Animator del que ataca se congela de 0.05 a 0.1 s, según su tiempo entre ataques.
+  Lo piden `GA_ConeAttack` y `GA_LineAttack` (casilla "Parón de impacto" en VFX; apagada en el Aliento de fuego) y el Golpe
+  final, por `GameplayAbility.StopsOnImpact`. No lo tienen dashes, patadas voladoras, giros ni lo de fuego.
+- **Sacudida de cámara** (`CombatCameraShake`): al perder 12 % o más de la vida en un golpe, y al lanzar la definitiva. Solo gira
+  y solo mientras se dibuja, así que no toca la mira ni entra en las paredes.
+- **Bordes de colores** (`UI_DamageVignette`): rojo al recibir daño, verde al curarse, celeste si un escudo frena el golpe entero.
+- **Números con más vida** (`UI_DamageNumbers.LivelyPop`): nacen chicos, se pasan de tamaño y se reacomodan; el crítico sube más.
+- **Destello al matar** (`UI_CombatFlash.ShowKill`): dorado, más grueso y largo, en cualquiera que muera, también NPCs.
+- **Daño fantasma** (`UI_HealthGhost`): lo que sacó el golpe queda en naranja y se vacía después. En `Nameplate` y en `Player Camera`.
+- **Habilidad no disponible** (`UI_AbilityDenied`, en `Player Camera ▸ UI`): el ícono tiembla y parpadea en rojo.
+- **Rachas de bajas** (`UI_KillStreak`): ¡DOBLE BAJA! y demás, en la pantalla de quien mata, con 8 s o menos entre bajas.
+
+**Más feedback de combate: IDEAS, para después.** Ajustes ya no tiene lugar: otra tanda pide mover Combate a su propia pantalla.
+  - [ ] Parón también en quien recibe el golpe.
+  - [ ] La mira se abre al disparar y da un pulso al conectar (las clases a distancia no tienen parón).
+  - [ ] El ícono da un pulso cuando termina su cooldown, como la definitiva.
+  - [ ] Pequeño zoom de un instante al lanzar la definitiva o usar un dash.
+  - [ ] Sacudida muy corta para el que hace una baja.
+  - [ ] Golpes muy seguidos sobre el mismo enemigo se juntan en un número que crece.
   - Empuje al recibir un golpe: por ahora no, Gustavo siente que habría que tocar muchos GE.
 
 **Sonidos: los pone Gustavo (4 de noviembre).** Ya hay lugar en el GA ("Sonido al lanzar", "Sonido al impactar") y en el GE
@@ -29,7 +45,7 @@ golpe, que lo pone el que ataca. Lo que no tiene huesos (tótems, trampas) usa `
 falta, agregarlo al llegar ahí.
   - [ ] Descargar los clips y cargarlos.
 
-**Tabla con KDA, ventana de ayuda y bolsa de dinero (4 de noviembre, pedido de Gustavo): HECHO, falta probar.** Las
+**Tabla con KDA, ventana de ayuda y bolsa de dinero (4 de noviembre, pedido de Gustavo): HECHO; las casillas de abajo siguen sin marcar.** Las
 herramientas ya se corrieron y se borraron.
 - **Tabla de la partida** (`UI_MatchStats`, `Match_UI ▸ MatchStats`): cada equipo con su color, nivel y puntos, y cada
   integrante con ícono, nombre y K/D/A, ordenados por bajas. Se ve mientras se mantiene **Tab o la cruceta abajo** (vivo,

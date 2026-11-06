@@ -137,6 +137,8 @@ composición: la sala segura es el **único lugar donde se puede cambiar de clas
   de sus integrantes (`UI_MatchStats`; lo cuenta `PlayerController.ServerCountKda`). Solo entre
   personajes: un NPC no da bajas. La asistencia es de los compañeros del que hizo la baja que le
   pegaron a la víctima o lo curaron a él en los últimos 10 s.
+- **La sensación de los golpes** (parón, sacudida, bordes de colores, daño fantasma, rachas de
+  bajas y demás) no es del modo: sirve para cualquiera. Se maneja desde `Resources/CombatFeel`.
 - **La ventana de ayuda** (F1, el stick derecho apretado o la pausa): las 3 reglas del modo, la
   clase y sus habilidades (`UI_HelpScreen`). Un modo nuevo necesita sus propias reglas: hoy son
   las claves `help.rule1` a `help.rule3` de `Localization.csv`.

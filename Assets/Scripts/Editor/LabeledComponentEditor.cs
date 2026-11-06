@@ -101,3 +101,4 @@ public class LabeledComponentEditor : Editor
 [CustomEditor(typeof(MercEnemyCatalog))]        public class MercEnemyCatalogEditor        : LabeledComponentEditor { }
 [CustomEditor(typeof(GameplayAbilityRegistry))] public class GameplayAbilityRegistryEditor : LabeledComponentEditor { }
 [CustomEditor(typeof(GameplayEffectRegistry))]  public class GameplayEffectRegistryEditor  : LabeledComponentEditor { }
+[CustomEditor(typeof(CombatFeel))]              public class CombatFeelEditor              : LabeledComponentEditor { }

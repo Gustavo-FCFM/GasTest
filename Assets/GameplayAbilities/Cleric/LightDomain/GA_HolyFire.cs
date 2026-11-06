@@ -41,6 +41,9 @@ public class GA_HolyFire : GA_ConeAttack
     [System.NonSerialized] private Dictionary<AbilitySystemComponent, float> _markedUntil;
     [System.NonSerialized] private Dictionary<AbilitySystemComponent, float> _lastReward;
 
+    // Una oleada de fuego, no un golpe de arma.
+    protected override bool StopsOnImpact => false;
+
     protected override void OnEnemyHit(AbilitySystemComponent enemy)
     {
         if (enemy == null || OwnerASC == null || MarkDuration <= 0f) return;
