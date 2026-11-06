@@ -3151,11 +3151,25 @@ public class PlayerController : NetworkBehaviour
     // (que puede no estar seteado en un observador puro).
     public CharacterClassDefinition ResolveClassByIndex(int idx) => GetClassByIndex(idx);
 
+    // El modelo de una clase: el suyo, o el de la clase de la que sale (una subclase comparte el
+    // personaje de su clase base salvo que traiga uno propio). Null = el Dummy.
+    public GameObject ResolveClassModel(CharacterClassDefinition cls)
+    {
+        if (cls == null) return null;
+        if (cls.ClassModel != null) return cls.ClassModel;
+
+        foreach (CharacterClassDefinition parent in AllClasses)
+            if (parent != cls && parent.AvailableSubclasses != null && parent.AvailableSubclasses.Contains(cls))
+                return ResolveClassModel(parent);
+        return null;
+    }
+
     // Reemplaza el animator override y las armas equipadas según la
     // clase dada. La llaman tanto el dueño (al equipar) como los
     // observadores remotos (al recibir el cambio de clase por red).
     private void UpdateVisuals(CharacterClassDefinition newClass)
     {
+        ClassModelSwap.Apply(characterAnimator, ResolveClassModel(newClass));
         RebuildRuntimeAnimator(newClass);
 
         if (currentMainWeapon != null) Destroy(currentMainWeapon);

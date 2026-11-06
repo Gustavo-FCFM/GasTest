@@ -101,9 +101,9 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
 
 | Dónde | Qué |
 |---|---|
-| `Assets/Art/` | Modelos, materiales (`Materials/Arena` es la arena), animaciones (los AOC por clase), VFX, e `Icons/` (`Classes/` y `Abilities/` por clase). |
+| `Assets/Art/` | Modelos (`Models/Classes/`: los de cada clase), materiales (`Materials/Arena` es la arena), animaciones (los AOC por clase), VFX, e `Icons/` (`Classes/` y `Abilities/` por clase). |
 | `Assets/Audio/` | Los clips: `Sfx/` y `Music/`. La biblioteca que los referencia está en `Resources/AudioLibrary`. |
-| `Assets/Prefabs/` | Todos los prefabs: `Player/` (jugador y su cámara), `Enemies/`, `Objective/`, `Projectiles/`, `Summons/`, `UI/`, `Map/` (el sector del cementerio), `Network/` (el `NetworkManager` de las tres escenas y su `NetworkHudCanvas`: venían de las demos de FishNet, borradas el 28 de octubre de 2026). |
+| `Assets/Prefabs/` | Todos los prefabs: `Player/` (jugador, su cámara y `Classes/`, los modelos de clase), `Enemies/`, `Objective/`, `Projectiles/`, `Summons/`, `UI/`, `Map/` (el sector del cementerio), `Network/` (el `NetworkManager` de las tres escenas y su `NetworkHudCanvas`: venían de las demos de FishNet, borradas el 28 de octubre de 2026). |
 | `Assets/Attributes/` | Clases jugables (`Class_*.asset`) y stats (`ASDef_*`), por clase; `Enemies/` y `Summons/` para los NPCs. |
 | `Assets/Effects/` | Los `GE_*`, por tipo (Damage, Buffs, CC, Debuffs, Cooldowns). |
 | `Assets/GameplayAbilities/` | Los `GA_*` por clase, **con sus scripts `GA_*.cs` al lado** — son contenido. `Enemies/` para las de los NPCs. |
@@ -117,7 +117,7 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
 | `Assets/Scripts/Audio/` | Sonido: `AudioManager`, `MusicPlayer`, `AudioLibrary` y `SfxCue`. |
 | `Assets/Scripts/GameMode/` | Lo que sirve a CUALQUIER modo: `DeathZone`, `FloatingVisual`, `NPC_Target`, `HealthPack`. |
 | `Assets/Scripts/GameMode/Mercenaries/` | **El modo Mercenarios**, y solo él: el modo, la arena, bases, objetivo, NPCs, bots y su HUD (`UI/`). Ver su `LEEME_ModoMercenarios.md`. Un modo nuevo (FFA) va en su propia carpeta al lado. |
-| `Assets/Scripts/Editor/` | Todas las herramientas de editor (menú `Mercenarios ▸ …` y el inspector de habilidades). Tiene que llamarse `Editor` para que Unity no las meta en la build. |
+| `Assets/Scripts/Editor/` | Todas las herramientas de editor (menú `Mercenarios ▸ …`, el inspector de habilidades y `ClassModels/`, que genera los modelos de relleno). Tiene que llamarse `Editor` para que Unity no las meta en la build. |
 | `Assets/Resources/` | Lo que se carga por nombre: los dos registros de red, el catálogo de enemigos, la biblioteca de audio y la tabla de textos (`Localization.csv`). |
 | `Assets/48toPlay/` | Restos de la game jam: los fantasmas y sus stats. Se reusan como NPCs. |
 | `Assets/AssetsExtra/` | Packs comprados: FishNet, animaciones de Kevin Iglesias, Medieval Cute Series, Vefects, VFX. |
@@ -273,6 +273,14 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   `CombatFeel`, para poder borrarlos sueltos, y uno nuevo va igual. Una habilidad de arma cuerpo a cuerpo pide el parón con
   `StopsOnImpact`. Para probar con el editor: leer `GameSettings` en batch aplica la calidad guardada y ensucia
   `ProjectSettings/QualitySettings.asset`.
+
+- **Cada clase es un personaje: su modelo va en el campo "Modelo" de la clase** (desde el 6 de noviembre de 2026, pedido del líder de
+  arte). Tiene que estar hecho sobre el esqueleto del Dummy: `ClassModelSwap` apaga el cuerpo y pone la malla nueva sobre los huesos
+  del jugador, buscándolos por NOMBRE, así que animaciones, sockets y ragdoll son los de siempre. Vacío en una subclase = el de su
+  clase base (`PlayerController.ResolveClassModel`). Corre en cada pantalla por la clase que ya viaja: no agrega nada a la red. **Con un
+  modelo puesto el Animator va en Always Animate:** con Cull Update Transforms deja de mover los huesos porque su cuerpo está apagado y
+  se queda en pose T. Si se generan mallas por código, una normal en cero se ve bien en la vista previa, pero en juego el bloom la
+  vuelve una bola blanca: por eso `ClassModelKit.Unit` y no `.normalized`, y un modelo nuevo se prueba en Play.
 
 - **Dónde va cada VFX.** Lo que dura lo que dura un buff o un debuff va en el
   `TargetVFX` del **GE** (aparece pegado a quien lo recibe, en todas las pantallas, y se

@@ -135,6 +135,12 @@ public class CharacterClassDefinition : ScriptableObject
     [Label("Animaciones (AOC)")]
     public AnimatorOverrideController ClassAnimatorOverride;
 
+    // Cada clase es un personaje: su modelo y sus animaciones. Ver ClassModelSwap.
+    [Tooltip("El modelo de esta clase: un FBX hecho sobre el mismo esqueleto que el Dummy. Vacío en una " +
+             "subclase = usa el de su clase base; vacío en una clase base = el Dummy.")]
+    [Label("Modelo (vacío = el de su clase base)")]
+    public GameObject ClassModel;
+
     // Animaciones de una POSTURA: mientras el personaje tenga StanceAnimatorTag, los clips
     // de este override (quieto, caminar, correr...) reemplazan a los de la clase, y al
     // perder el tag vuelven. El Maestro de batalla lo usa en ofensiva: de espada y escudo

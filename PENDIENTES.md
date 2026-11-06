@@ -9,6 +9,19 @@ del log son todos de packs importados).
 
 ## ★ Al retomar: lo abierto, en orden (22 de octubre)
 
+**Un modelo por clase (6 de noviembre, pedido del líder de arte): el campo y la Bárbara HECHOS Y PROBADOS ✅ (6 de noviembre, "funciona").** Cada
+clase es un personaje con su modelo y sus animaciones, sobre el mismo esqueleto del Dummy. La clase tiene el campo **Modelo**
+(vacío en una subclase = el de su clase base; vacío en una base = el Dummy) y `ClassModelSwap` lo pone en cada pantalla: la clase
+ya viaja por la red, así que no agrega nada. Con modelo, el Animator va en Always Animate; si no, se queda en pose T.
+- **La Bárbara de relleno** (`Prefabs/Player/Classes/Model_Barbarian`, arte en `Art/Models/Classes/Barbarian`): generada por código
+  con `Scripts/Editor/ClassModels` (`ClassModelKit` + la receta `BarbarianModel`), desde las imágenes que eligió Gustavo. Para cambiarla
+  se edita la receta y se corre `Mercenarios ▸ Modelos de clase ▸ Generar la Bárbara`. Unos 20 mil triángulos, casi el doble del Dummy.
+  - [x] Camina, ataca y ya no sale la bola blanca del bloom. **Probado ✅ (6 de noviembre).**
+  - [ ] Dedos más gruesos y pulgar unido a la palma: ver en juego cómo agarra el hacha. Si siguen raras, guantes.
+  - [ ] Decidir con el líder de arte si las otras clases siguen por aquí o por el pack modular de Gustavo.
+  - [ ] Si las 8 clases quedan así, medir el rendimiento en la PC del showcase, con las tres ventanas.
+  - [ ] Probar el modelo en una partida con cliente (se pone en cada pantalla) y con la copia del Ilusionista.
+
 **Destellos al recibir algo (4 de noviembre, pedido de Gustavo): HECHO Y PROBADO ✅ (4 de noviembre, "me gustan mucho").**
 `UI_CombatFlash` (`Match_UI ▸ DamageNumbers`): un contorno sobre quien recibe algo, que se encoge en 0.18 s. Rojo daño,
 naranja crítico, verde curación, celeste si un escudo frenó el golpe entero. Sale del aviso del número flotante
@@ -53,7 +66,7 @@ falta, agregarlo al llegar ahí.
 **Tabla con KDA, ventana de ayuda y bolsa de dinero (4 de noviembre, pedido de Gustavo): HECHO Y PROBADO ✅ (6 de noviembre), salvo el control.** Las
 herramientas ya se corrieron y se borraron.
 - **Tabla de la partida** (`UI_MatchStats`, `Match_UI ▸ MatchStats`): cada equipo con su color, nivel y puntos, y cada
-  integrante con ícono, nombre y K/D/A, ordenados por bajas. Se ve mientras se mantiene **Tab o la cruceta abajo** (vivo,
+  integrante con ícono, nombre y K/D/A, ordenados por bajas. Se ve mientras se mantiene **Tab o Create / Share / View** (vivo,
   muerto o de espectador) y sola al terminar la partida, con el ganador en el título. Cuenta el servidor
   (`PlayerController.ServerCountKda`, tres SyncVars en el personaje), solo con la partida en juego y entre personajes:
   morir por un NPC suma la muerte y a nadie la baja. Asistencia: compañeros del que hizo la baja que le pegaron a la
@@ -65,7 +78,7 @@ herramientas ya se corrieron y se borraron.
   - [x] Una asistencia por daño y una por curar al que hizo la baja. Morir por un NPC no le da baja a nadie. **Probado ✅ (6 de noviembre).**
   - [x] Una baja de un tótem o una trampa cuenta para su dueño (si no, resolver al dueño en `ServerCountKda`). **Probado ✅ (6 de noviembre).**
   - [x] Al terminar la partida la tabla sale sola, con el ganador, y no se tapa con el anuncio. **Probado ✅ (6 de noviembre).**
-- **Ventana de ayuda** (`UI_HelpScreen`, `Match_UI ▸ HelpScreen`): a pantalla completa, con **F1, el stick derecho apretado
+- **Ventana de ayuda** (`UI_HelpScreen`, `Match_UI ▸ HelpScreen`): a pantalla completa, con **F1, la cruceta izquierda
   o el botón Ayuda de la pausa**. Arriba las 3 reglas del modo (`help.rule*` en `Localization.csv`) y la clase con su rol y
   estadísticas; abajo 6 tarjetas con qué hace cada habilidad y sus números. Desde la pausa, la pausa se va y volver la
   reabre. Recibir daño la cierra y vuelve al juego (⚙ "Cerrar al recibir daño"); la pausa no se cierra con daño.

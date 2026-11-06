@@ -122,6 +122,9 @@ public class Entity_PlayerCopy : Entity_Summon
         CharacterClassDefinition cls = localPc.ResolveClassByIndex(idx);
         if (cls == null) return;                               // índice inválido: sin arma (degradación silenciosa)
 
+        // Tiene que parecerse al copiado: su mismo personaje.
+        ClassModelSwap.Apply(WalkAnimator, localPc.ResolveClassModel(cls));
+
         // Mismo armado que el jugador, así la copia de un Clérigo también sostiene el libro.
         if (WalkAnimator != null && cls.ClassAnimatorOverride != null)
         {
