@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using FishNet.Object;
 using UnityEngine;
 
 // ============================================================
@@ -19,6 +20,12 @@ using UnityEngine;
 // Con un modelo puesto el Animator va en "Always Animate". El jugador usa "Cull Update Transforms",
 // que deja de mover los huesos cuando no se ve ninguno de SUS renderers, y esa lista la arma el
 // Animator al nacer: la malla nueva no está y el cuerpo está apagado, así que quedaría en pose T.
+//
+// FishNet, en el host, prende y apaga los renderers de cada objeto según si el host lo ve, y la
+// lista la arma al nacer: ahí está el cuerpo y no la malla nueva. Al prenderlo volvía a mostrar el
+// Dummy encima del modelo (9 de noviembre de 2026: las copias del Ilusionista salían con los dos).
+// Por eso se escucha su aviso (OnHostVisibilityUpdated) y, por si otra cosa vuelve a prender el
+// cuerpo, LateUpdate lo apaga de nuevo y muestra el modelo.
 // ============================================================
 public class ClassModelSwap : MonoBehaviour
 {
@@ -31,6 +38,7 @@ public class ClassModelSwap : MonoBehaviour
     private GameObject _current;
     private Animator _animator;
     private AnimatorCullingMode _culling;   // el que traía, para volver al cuerpo original
+    private NetworkObject _network;          // el de este personaje, para saber cuándo el host lo muestra
 
     // Le pone ese modelo al personaje de ese Animator. Null = vuelve al cuerpo con el que nació.
     public static void Apply(Animator animator, GameObject model)
@@ -73,6 +81,9 @@ public class ClassModelSwap : MonoBehaviour
         _animator = GetComponent<Animator>();
         _culling  = _animator.cullingMode;
 
+        _network = GetComponentInParent<NetworkObject>();
+        if (_network != null) _network.OnHostVisibilityUpdated += HandleHostVisibility;
+
         _body = new List<SkinnedMeshRenderer>();
         foreach (SkinnedMeshRenderer r in GetComponentsInChildren<SkinnedMeshRenderer>(true))
             if (!r.name.EndsWith(CharacterOutline.Suffix)) _body.Add(r);
@@ -80,6 +91,42 @@ public class ClassModelSwap : MonoBehaviour
         _bones = new Dictionary<string, Transform>();
         foreach (Transform t in GetComponentsInChildren<Transform>(true))
             if (!_bones.ContainsKey(t.name)) _bones.Add(t.name, t);
+    }
+
+    // FishNet acaba de prender o apagar lo que tenía anotado (el cuerpo): el cuerpo vuelve a apagarse
+    // y el modelo hace lo que pidió FishNet.
+    private void HandleHostVisibility(bool previous, bool visible)
+    {
+        if (_spawned.Count == 0) return;
+        HideBody();
+        foreach (SkinnedMeshRenderer r in _spawned)
+            if (r != null) r.enabled = visible;
+    }
+
+    // Si algo volvió a prender el cuerpo, quería que el personaje se viera: se muestra el modelo.
+    private void LateUpdate()
+    {
+        if (_spawned.Count == 0 || _body == null) return;
+
+        bool bodyShown = false;
+        foreach (SkinnedMeshRenderer r in _body)
+            if (r != null && r.enabled) bodyShown = true;
+        if (!bodyShown) return;
+
+        HideBody();
+        foreach (SkinnedMeshRenderer r in _spawned)
+            if (r != null) r.enabled = true;
+    }
+
+    private void HideBody()
+    {
+        foreach (SkinnedMeshRenderer r in _body)
+            if (r != null) r.enabled = false;
+    }
+
+    private void OnDestroy()
+    {
+        if (_network != null) _network.OnHostVisibilityUpdated -= HandleHostVisibility;
     }
 
     private void Clear()

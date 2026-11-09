@@ -17,35 +17,36 @@ ya viaja por la red, así que no agrega nada. Con modelo, el Animator va en Alwa
   con `Scripts/Editor/ClassModels` (`ClassModelKit` + la receta `BarbarianModel`), desde las imágenes que eligió Gustavo. Para cambiarla
   se edita la receta y se corre `Mercenarios ▸ Modelos de clase ▸ Generar la Bárbara`. Unos 20 mil triángulos, casi el doble del Dummy.
   - [x] Camina, ataca y ya no sale la bola blanca (eran normales en cero; no era bloom, el juego no tiene). **Probado ✅ (6 de noviembre).**
-  - [ ] Dedos más gruesos y pulgar unido a la palma: ver en juego cómo agarra el hacha. Si siguen raras, guantes o dedos más cortos
-        (el `length` de `BuildFinger`, como la Pícara: no toca los huesos).
+  - [x] Dedos más gruesos y pulgar unido a la palma: ver en juego cómo agarra el hacha. Si siguen raras, guantes o dedos más cortos
+        (el `length` de `BuildFinger`, como la Pícara: no toca los huesos). **Probado ✅ (9 de noviembre).**
 - **El Guerrero de relleno** (`Prefabs/Player/Classes/Model_Fighter`, arte en `Art/Models/Classes/Fighter`): receta `FighterModel`, con lo
   común en `ClassModelRecipe`. Armadura pesada, capa y barba, con el aire de Aragorn que pidió Gustavo, sin copiarlo. Se rehace con
   `Mercenarios ▸ Modelos de clase ▸ Generar el Guerrero`. Unos 18 mil triángulos. Lleva acabado Polished: el acero brilla de verdad (el alfa
   de la textura dice cuánto). Sus tres subclases lo heredan. Revisado en fotos con guardia, correr, ataque y bloqueo; **falta verlo en Play**.
-  - [ ] En Play: sin destellos raros. Si el brillo del acero se ve exagerado, bajar `_SpecColor` y `_Smoothness` en `Mat_Fighter` (y en `ClassModelKit`).
-  - [ ] Con la luz de la arena, el acero no se ve ni pálido ni negro.
-  - [ ] La espada y el escudo no chocan con los guanteletes ni con los codos.
+  - [x] En Play: sin destellos raros. Si el brillo del acero se ve exagerado, bajar `_SpecColor` y `_Smoothness` en `Mat_Fighter` (y en `ClassModelKit`). **Probado ✅ (9 de noviembre).**
+  - [x] Con la luz de la arena, el acero no se ve ni pálido ni negro. **Probado ✅ (9 de noviembre).**
+  - [x] La espada y el escudo no chocan con los guanteletes ni con los codos. **Probado ✅ (9 de noviembre).**
   - Conocido: al correr el talón puede asomar por el borde de la capa, y con las piernas muy abiertas se ve el forro.
 - **La Pícara de relleno** (`Prefabs/Player/Classes/Model_Rogue`, arte en `Art/Models/Classes/Rogue`): receta `RogueModel`, una gata tabaxi con
   pelaje tuxedo. Capucha con las orejas afuera, bufanda, capa corta, chaleco de cuero, guantes sin dedos, patas con garras y almohadillas, y
   cola. Ropa oscura, a pedido de Gustavo: los siete colores están al inicio de la receta. Se rehace con
   `Mercenarios ▸ Modelos de clase ▸ Generar la Pícara`. Unos 13 mil triángulos. Sus tres subclases la heredan. Revisada en fotos con reposo,
   correr, ataque con dos armas y aturdido; **falta verla en Play**.
-  - [ ] Con la luz de la arena la ropa no se vuelve una mancha negra, sobre todo de espaldas, y se leen los ojos. Si no, subir esos colores.
-  - [ ] Las dagas quedan bien en las manos, ahora que los dedos son más cortos.
-  - [ ] Asesino: la invisibilidad se ve transparente para él, a los enemigos no les muestra nada y al terminar vuelve completa.
-  - [ ] Ilusionista: las copias salen con este modelo.
+  - [x] Con la luz de la arena la ropa no se vuelve una mancha negra, sobre todo de espaldas, y se leen los ojos. Si no, subir esos colores. **Probado ✅ (9 de noviembre).**
+  - [x] Las dagas quedan bien en las manos, ahora que los dedos son más cortos. **Probado ✅ (9 de noviembre).**
+  - [x] Asesino: la invisibilidad se ve transparente para él, a los enemigos no les muestra nada y al terminar vuelve completa. **Probado ✅ (9 de noviembre).**
+  - [x] Ilusionista: las copias salen con este modelo. Salían con el Dummy encima: FishNet, en el host, volvía a prender el cuerpo
+        que tenía anotado al nacer. Arreglado en `ClassModelSwap` (9 de noviembre). **Probado ✅ (9 de noviembre).**
   - Conocido: la cola no tiene huesos propios y casi no se mece sola; las mejillas se ven algo planas de cerca.
 - **El Monje de relleno** (`Prefabs/Player/Classes/Model_Monk`, arte en `Art/Models/Classes/Monk`): receta `MonkModel`, un yuan-ti de cara
   humana. Piel amarillenta con escamas solo a los costados (sienes, cuello, antebrazos), ojos de serpiente y pelo blanco; gi negro con
   solapas, faja y faldones ocre, cuentas de oración (un mala) con borla roja, hombrera de bronce, vendas y zapatos de tela. Sin cola. A
   Gustavo le gustó mucho (9 de noviembre). Se rehace con `Mercenarios ▸ Modelos de clase ▸ Generar el Monje`. Unos 16 mil triángulos, en
   Matte por el Shinobi. Sus tres subclases lo heredan. Revisado en fotos con guardia, correr, patada, puñetazo y aturdido; **falta verlo en Play**.
-  - [ ] Con la luz de la arena el gi negro se lee bien.
-  - [ ] Las patadas no rompen los faldones (cada mitad sigue a su pierna).
-  - [ ] El Samurái agarra bien la katana: los dedos son un poco más cortos que los del Dummy.
-  - [ ] Shinobi: la invisibilidad se ve bien y al terminar vuelve completo.
+  - [x] Con la luz de la arena el gi negro se lee bien. **Probado ✅ (9 de noviembre).**
+  - [x] Las patadas no rompen los faldones (cada mitad sigue a su pierna). **Probado ✅ (9 de noviembre).**
+  - [x] El Samurái agarra bien la katana: los dedos son un poco más cortos que los del Dummy. **Probado ✅ (9 de noviembre).**
+  - [x] Shinobi: la invisibilidad se ve bien y al terminar vuelve completo. **Probado ✅ (9 de noviembre).**
   - Conocido: el pelo se ve en bloques de cerca y queda un mechón chico parado atrás de la coronilla; a distancia de juego las escamas
     casi no se ven (se marcan más con las cantidades de `Scaly` en la receta).
 - **La Paladina de relleno** (`Prefabs/Player/Classes/Model_Paladin`, arte en `Art/Models/Classes/Paladin`): receta `PaladinModel`, una
@@ -56,10 +57,13 @@ ya viaja por la red, así que no agrega nada. Con modelo, el Animator va en Alwa
   como emisión; cuánto brillan es `EyeGlow`. A Gustavo le gustó mucho (9 de noviembre). Se rehace con
   `Mercenarios ▸ Modelos de clase ▸ Generar la Paladina`. Unos 24 mil triángulos, la más pesada. En Polished (el Paladín no se hace
   invisible). Sus tres subclases la heredan. Revisada en fotos con guardia, correr, ataque y bloqueo; **falta verla en Play**.
-  - [ ] La aureola no tapa la vista con la cámara al hombro. Si estorba, `WithHalo = false` y regenerar.
-  - [ ] Con la luz de la arena el blanco no se ve quemado y los ojos se ven dorados, no blancos (si no, bajar `EyeGlow`).
-  - [ ] El martillo y el escudo no chocan con las hombreras.
+  - [x] La aureola no tapa la vista con la cámara al hombro. Si estorba, `WithHalo = false` y regenerar. **Probado ✅ (9 de noviembre).**
+  - [x] Con la luz de la arena el blanco no se ve quemado y los ojos se ven dorados, no blancos (si no, bajar `EyeGlow`). **Probado ✅ (9 de noviembre).**
+  - [x] El martillo y el escudo no chocan con las hombreras. **Probado ✅ (9 de noviembre).**
   - Conocido: con luz neutra el costado de la cara en sombra se ve algo gris; de cerca el pelo se ve en mechones duros.
+- **Subclase en cualquier nivel PRENDIDA para probar** (9 de noviembre, pedido de Gustavo): `Player Camera ▸ UI_ClassMenu ▸ PRUEBAS:
+  subclase en cualquier nivel`. El servidor no revisa el nivel, solo el menú.
+  - [ ] Apagarla antes del showcase (o decidir dejarla).
 - Para las cinco:
   - [ ] Decidir con el líder de arte si las otras clases siguen por aquí o por el pack modular de Gustavo.
   - [ ] Si las 8 clases quedan así, medir el rendimiento en la PC del showcase, con las tres ventanas.
@@ -131,9 +135,9 @@ herramientas ya se corrieron y se borraron.
   - [x] Help desde la pausa: se va la pausa; ESC, B o F1 vuelven a ella; un golpe cierra todo y vuelve al juego. **Probado ✅ (6 de noviembre).**
   - [x] Las tarjetas: la descripción queda debajo de los números y los textos largos entran. **Probado ✅ (6 de noviembre).**
   - [ ] Con control: la cruceta izquierda abre y cierra la ayuda; no la abre en un menú ni girando el Muro de fuego.
-  - [ ] Revisar los 122 textos. Se ven nombres técnicos en inglés ("Paladin Smite Switch", "Rogue Primary Attack",
-        "LayOnHands"): corregirlos si el juego se va a mostrar en inglés.
-  - [ ] El botón Ayuda de la pausa se veía sin fondo en la captura: ver si era el mouse encima.
+  - [x] Revisar los 122 textos. Se ven nombres técnicos en inglés ("Paladin Smite Switch", "Rogue Primary Attack",
+        "LayOnHands"): corregirlos si el juego se va a mostrar en inglés. **Probado ✅ (9 de noviembre).**
+  - [x] El botón Ayuda de la pausa se veía sin fondo en la captura: ver si era el mouse encima. **Probado ✅ (9 de noviembre).**
   - Sin número: el Castigo divino y los compañeros dañan pero el recorrido no los encuentra; las pasivas no tienen
     tarjeta (no son habilidades con botón). El Mago muestra hasta 4 números juntos, los más bajos, sin decir de qué hechizo.
 - **Bolsa de dinero** (`Prefabs/Objective/MoneyBag`, modelo `Art/Models/MoneyBag.obj`, generado por código): adentro de

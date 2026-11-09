@@ -280,7 +280,9 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   del jugador, buscándolos por NOMBRE, así que animaciones, sockets y ragdoll son los de siempre. Vacío en una subclase = el de su
   clase base (`PlayerController.ResolveClassModel`). Corre en cada pantalla por la clase que ya viaja: no agrega nada a la red. **Con un
   modelo puesto el Animator va en Always Animate:** con Cull Update Transforms deja de mover los huesos porque su cuerpo está apagado y
-  se queda en pose T. Si se generan mallas por código, una normal en cero se ve bien en la vista previa pero en juego sale una bola
+  se queda en pose T. **FishNet, en el host, prende y apaga los renderers que anotó al nacer el objeto** (el cuerpo del Dummy): por eso
+  `ClassModelSwap` escucha `OnHostVisibilityUpdated` y vuelve a apagar el cuerpo (9 de noviembre de 2026: las copias del Ilusionista
+  salían con los dos modelos). Si se generan mallas por código, una normal en cero se ve bien en la vista previa pero en juego sale una bola
   blanca: por eso `ClassModelKit.Unit` y no `.normalized`, y un modelo nuevo se prueba en Play. Los de relleno salen de
   `Scripts/Editor/ClassModels`: una receta por clase sobre `ClassModelRecipe`; con `ModelFinish.Polished`, el alfa de cada color es el pulido, así que una clase que
   se pueda hacer invisible va en `Matte` (`PlayerVisibility` multiplica por ese alfa y el fantasma saldría a parches). Lo que brilla con luz
