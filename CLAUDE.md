@@ -59,7 +59,7 @@ sed 's|-out:.*|-out:"Temp/_check.dll"|; s|-refout:.*|-refout:"Temp/_check.ref.dl
 "$D/NetCoreRuntime/dotnet.exe" "$D/DotNetSdkRoslyn/csc.dll" "@/tmp/check.rsp" -nologo 2>&1 | grep "error CS"
 ```
 
-Tres límites que conviene saber:
+Cuatro límites que conviene saber:
 
 - **El `.rsp` lista los archivos fuente uno por uno.** Un `.cs` NUEVO no entra hasta que
   Unity regenere ese archivo — hay que agregarlo a mano a la copia (`echo '"Assets/..."'
@@ -70,6 +70,7 @@ Tres límites que conviene saber:
   error que solo aparece ahí no lo detecta.
 - Es para `Assembly-CSharp`. Para las herramientas de editor, el `.rsp` equivalente es
   `Assembly-CSharp-Editor.rsp`.
+- **Con el editor CERRADO no existe `Temp/`**: la salida (`-out` y `-refout`) va a `Library/`, que no se sube.
 
 **Los `.cs` del proyecto están en CRLF** (los `.md` y los `.asset` van mezclados: revisar
 con `file`). Un `perl -0pi` con `\n` en el patrón no encuentra nada y no avisa: hay que

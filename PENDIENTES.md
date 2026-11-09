@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 6 de noviembre de 2026
+# Pendientes — actualizado el 9 de noviembre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -37,7 +37,18 @@ ya viaja por la red, así que no agrega nada. Con modelo, el Animator va en Alwa
   - [ ] Asesino: la invisibilidad se ve transparente para él, a los enemigos no les muestra nada y al terminar vuelve completa.
   - [ ] Ilusionista: las copias salen con este modelo.
   - Conocido: la cola no tiene huesos propios y casi no se mece sola; las mejillas se ven algo planas de cerca.
-- Para las tres:
+- **El Monje de relleno** (`Prefabs/Player/Classes/Model_Monk`, arte en `Art/Models/Classes/Monk`): receta `MonkModel`, un yuan-ti de cara
+  humana. Piel amarillenta con escamas solo a los costados (sienes, cuello, antebrazos), ojos de serpiente y pelo blanco; gi negro con
+  solapas, faja y faldones ocre, cuentas de oración (un mala) con borla roja, hombrera de bronce, vendas y zapatos de tela. Sin cola. A
+  Gustavo le gustó mucho (9 de noviembre). Se rehace con `Mercenarios ▸ Modelos de clase ▸ Generar el Monje`. Unos 16 mil triángulos, en
+  Matte por el Shinobi. Sus tres subclases lo heredan. Revisado en fotos con guardia, correr, patada, puñetazo y aturdido; **falta verlo en Play**.
+  - [ ] Con la luz de la arena el gi negro se lee bien.
+  - [ ] Las patadas no rompen los faldones (cada mitad sigue a su pierna).
+  - [ ] El Samurái agarra bien la katana: los dedos son un poco más cortos que los del Dummy.
+  - [ ] Shinobi: la invisibilidad se ve bien y al terminar vuelve completo.
+  - Conocido: el pelo se ve en bloques de cerca y queda un mechón chico parado atrás de la coronilla; a distancia de juego las escamas
+    casi no se ven (se marcan más con las cantidades de `Scaly` en la receta).
+- Para las cuatro:
   - [ ] Decidir con el líder de arte si las otras clases siguen por aquí o por el pack modular de Gustavo.
   - [ ] Si las 8 clases quedan así, medir el rendimiento en la PC del showcase, con las tres ventanas.
   - [ ] Probar el modelo en una partida con cliente (se pone en cada pantalla) y con la copia del Ilusionista.

@@ -4,7 +4,7 @@ using UnityEngine;
 // ============================================================
 // ClassModelRecipe
 //
-// Lo que comparten las recetas de los modelos de clase (BarbarianModel, FighterModel): los huesos, las
+// Lo que comparten las recetas de los modelos de clase (Barbarian, Fighter, Rogue y MonkModel): los huesos, las
 // cuentas, los dedos, los mechones y los pinceles de la textura. Cada receta pone sus medidas y su ropa.
 // Una receta nueva sale de copiar una que se parezca: ver ClassModelKit para qué arma cada pieza.
 //
@@ -151,8 +151,10 @@ public abstract class ClassModelRecipe
         return (p - axis).normalized;
     }
 
-    // Un mechón: una curva de la raíz a la punta, con una onda suave y sección aplanada.
-    protected void Lock(Vector3 root, Vector3 control1, Vector3 control2, Vector3 tip, float width, float thick, int segments = 9, int sides = 5)
+    // Un mechón: una curva de la raíz a la punta, con una onda suave y sección aplanada. capRoot cierra la raíz:
+    // hace falta si queda a la vista (en la coronilla se veía el hueco del tubo).
+    protected void Lock(Vector3 root, Vector3 control1, Vector3 control2, Vector3 tip, float width, float thick, int segments = 9, int sides = 5,
+                        bool capRoot = false)
     {
         float u = Range(0.12f, 0.88f);
         float phase = Range(0f, 6.28f);
@@ -176,7 +178,7 @@ public abstract class ClassModelRecipe
             },
             sides,
             (t, a) => HairRegion.Uv(u + 0.11f * Mathf.Abs(a * 2f - 1f) - 0.05f, 0.2f + t * 0.78f),
-            (p, t) => HairSkin(p));
+            (p, t) => HairSkin(p), capStart: capRoot);
     }
 
     // =========================================================
