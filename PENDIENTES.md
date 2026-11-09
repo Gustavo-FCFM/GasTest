@@ -16,14 +16,14 @@ ya viaja por la red, así que no agrega nada. Con modelo, el Animator va en Alwa
 - **La Bárbara de relleno** (`Prefabs/Player/Classes/Model_Barbarian`, arte en `Art/Models/Classes/Barbarian`): generada por código
   con `Scripts/Editor/ClassModels` (`ClassModelKit` + la receta `BarbarianModel`), desde las imágenes que eligió Gustavo. Para cambiarla
   se edita la receta y se corre `Mercenarios ▸ Modelos de clase ▸ Generar la Bárbara`. Unos 20 mil triángulos, casi el doble del Dummy.
-  - [x] Camina, ataca y ya no sale la bola blanca del bloom. **Probado ✅ (6 de noviembre).**
+  - [x] Camina, ataca y ya no sale la bola blanca (eran normales en cero; no era bloom, el juego no tiene). **Probado ✅ (6 de noviembre).**
   - [ ] Dedos más gruesos y pulgar unido a la palma: ver en juego cómo agarra el hacha. Si siguen raras, guantes o dedos más cortos
         (el `length` de `BuildFinger`, como la Pícara: no toca los huesos).
 - **El Guerrero de relleno** (`Prefabs/Player/Classes/Model_Fighter`, arte en `Art/Models/Classes/Fighter`): receta `FighterModel`, con lo
   común en `ClassModelRecipe`. Armadura pesada, capa y barba, con el aire de Aragorn que pidió Gustavo, sin copiarlo. Se rehace con
   `Mercenarios ▸ Modelos de clase ▸ Generar el Guerrero`. Unos 18 mil triángulos. Lleva acabado Polished: el acero brilla de verdad (el alfa
   de la textura dice cuánto). Sus tres subclases lo heredan. Revisado en fotos con guardia, correr, ataque y bloqueo; **falta verlo en Play**.
-  - [ ] En Play: sin destellos raros. Si el bloom exagera el brillo, bajar `_SpecColor` y `_Smoothness` en `Mat_Fighter` (y en `ClassModelKit`).
+  - [ ] En Play: sin destellos raros. Si el brillo del acero se ve exagerado, bajar `_SpecColor` y `_Smoothness` en `Mat_Fighter` (y en `ClassModelKit`).
   - [ ] Con la luz de la arena, el acero no se ve ni pálido ni negro.
   - [ ] La espada y el escudo no chocan con los guanteletes ni con los codos.
   - Conocido: al correr el talón puede asomar por el borde de la capa, y con las piernas muy abiertas se ve el forro.
@@ -48,7 +48,19 @@ ya viaja por la red, así que no agrega nada. Con modelo, el Animator va en Alwa
   - [ ] Shinobi: la invisibilidad se ve bien y al terminar vuelve completo.
   - Conocido: el pelo se ve en bloques de cerca y queda un mechón chico parado atrás de la coronilla; a distancia de juego las escamas
     casi no se ven (se marcan más con las cantidades de `Scaly` en la receta).
-- Para las cuatro:
+- **La Paladina de relleno** (`Prefabs/Player/Classes/Model_Paladin`, arte en `Art/Models/Classes/Paladin`): receta `PaladinModel`, una
+  aasimar al estilo de las monjas guerreras pero más medieval: placas blancas con filos de oro, brigantina con remaches en la cintura, gola
+  con medalla, hombreras grandes, tabardo y capa carmesí con flor de lis, sellos de cera con pergaminos, un rosario y una aureola de rayos
+  detrás de la cabeza (`WithHalo` la quita). Pelo rubio largo. Sin alas por ahora. Los símbolos son genéricos (flor de lis, sol), nada de
+  Warhammer. Los ojos dorados brillan con luz propia: una segunda textura (`Paladin_Glow`, con `ModelAtlas.PaintGlow`) que el kit pone
+  como emisión; cuánto brillan es `EyeGlow`. A Gustavo le gustó mucho (9 de noviembre). Se rehace con
+  `Mercenarios ▸ Modelos de clase ▸ Generar la Paladina`. Unos 24 mil triángulos, la más pesada. En Polished (el Paladín no se hace
+  invisible). Sus tres subclases la heredan. Revisada en fotos con guardia, correr, ataque y bloqueo; **falta verla en Play**.
+  - [ ] La aureola no tapa la vista con la cámara al hombro. Si estorba, `WithHalo = false` y regenerar.
+  - [ ] Con la luz de la arena el blanco no se ve quemado y los ojos se ven dorados, no blancos (si no, bajar `EyeGlow`).
+  - [ ] El martillo y el escudo no chocan con las hombreras.
+  - Conocido: con luz neutra el costado de la cara en sombra se ve algo gris; de cerca el pelo se ve en mechones duros.
+- Para las cinco:
   - [ ] Decidir con el líder de arte si las otras clases siguen por aquí o por el pack modular de Gustavo.
   - [ ] Si las 8 clases quedan así, medir el rendimiento en la PC del showcase, con las tres ventanas.
   - [ ] Probar el modelo en una partida con cliente (se pone en cada pantalla) y con la copia del Ilusionista.

@@ -164,6 +164,10 @@ public sealed class ModelAtlas
 {
     public readonly int Size;
     private readonly Color32[] _pixels;
+    private Color32[] _glow;   // lo que brilla con luz propia; null = nada (casi todos los modelos)
+
+    // Cuánto brilla lo pintado con PaintGlow (×). El juego no tiene bloom: con más de ~1.6 el color se vuelve blanco.
+    public float GlowIntensity = 1.3f;
 
     public ModelAtlas(int size)
     {
@@ -171,22 +175,37 @@ public sealed class ModelAtlas
         _pixels = new Color32[size * size];
     }
 
+    public bool HasGlow => _glow != null;
+
     public ModelRegion Region(int x, int y, int width, int height) => new ModelRegion(x, y, width, height, Size);
 
-    public void Paint(ModelRegion r, Func<float, float, Color> paint)
+    public void Paint(ModelRegion r, Func<float, float, Color> paint) => Fill(_pixels, r, paint);
+
+    // La segunda textura (los ojos de la Paladina): negro donde no brilla. Usa las mismas regiones.
+    public void PaintGlow(ModelRegion r, Func<float, float, Color> paint)
+    {
+        if (_glow == null) _glow = new Color32[Size * Size];
+        Fill(_glow, r, paint);
+    }
+
+    private void Fill(Color32[] pixels, ModelRegion r, Func<float, float, Color> paint)
     {
         for (int y = 0; y < r.Height; y++)
         {
             float v = (y + 0.5f) / r.Height;
             for (int x = 0; x < r.Width; x++)
-                _pixels[(r.Y + y) * Size + r.X + x] = paint((x + 0.5f) / r.Width, v);
+                pixels[(r.Y + y) * Size + r.X + x] = paint((x + 0.5f) / r.Width, v);
         }
     }
 
-    public byte[] EncodePng()
+    public byte[] EncodePng() => Encode(_pixels);
+
+    public byte[] EncodeGlowPng() => Encode(_glow);
+
+    private byte[] Encode(Color32[] pixels)
     {
         var texture = new Texture2D(Size, Size, TextureFormat.RGBA32, false);
-        texture.SetPixels32(_pixels);
+        texture.SetPixels32(pixels);
         texture.Apply();
         byte[] png = texture.EncodeToPNG();
         UnityEngine.Object.DestroyImmediate(texture);
@@ -632,8 +651,9 @@ public sealed class ClassModelKit
         CreateFolder(artFolder);
         CreateFolder(prefabFolder);
 
-        Texture2D texture = SaveTexture($"{artFolder}/{name}_Atlas.png", atlas, finish);
-        Material material = SaveMaterial($"{artFolder}/Mat_{name}.mat", texture, finish);
+        Texture2D texture = SaveTexture($"{artFolder}/{name}_Atlas.png", atlas.EncodePng(), atlas.Size, finish == ModelFinish.Polished);
+        Texture2D glow = atlas.HasGlow ? SaveTexture($"{artFolder}/{name}_Glow.png", atlas.EncodeGlowPng(), GlowSize, false) : null;
+        Material material = SaveMaterial($"{artFolder}/Mat_{name}.mat", texture, finish, glow, atlas.GlowIntensity);
         Mesh mesh = SaveMesh($"{artFolder}/{name}_Mesh.asset", $"{name}_Mesh");
         GameObject prefab = SavePrefab(name, $"{prefabFolder}/Model_{name}.prefab", mesh, material);
 
@@ -650,23 +670,26 @@ public sealed class ClassModelKit
         AssetDatabase.CreateFolder(parent, Path.GetFileName(path));
     }
 
-    private static Texture2D SaveTexture(string path, ModelAtlas atlas, ModelFinish finish)
+    // Lo que brilla es chico y difuso: alcanza con una textura más chica (Unity la achica al importarla).
+    private const int GlowSize = 512;
+
+    private static Texture2D SaveTexture(string path, byte[] png, int maxSize, bool alpha)
     {
-        File.WriteAllBytes(path, atlas.EncodePng());
+        File.WriteAllBytes(path, png);
         AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
 
         var importer = (TextureImporter)AssetImporter.GetAtPath(path);
-        importer.maxTextureSize = atlas.Size;
+        importer.maxTextureSize = maxSize;
         importer.wrapMode = TextureWrapMode.Clamp;
         importer.anisoLevel = 4;
         importer.textureCompression = TextureImporterCompression.CompressedHQ;
-        importer.alphaSource = finish == ModelFinish.Polished ? TextureImporterAlphaSource.FromInput : TextureImporterAlphaSource.None;
+        importer.alphaSource = alpha ? TextureImporterAlphaSource.FromInput : TextureImporterAlphaSource.None;
         importer.alphaIsTransparency = false;
         importer.SaveAndReimport();
         return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
     }
 
-    private static Material SaveMaterial(string path, Texture2D texture, ModelFinish finish)
+    private static Material SaveMaterial(string path, Texture2D texture, ModelFinish finish, Texture2D glow, float glowIntensity)
     {
         var material = AssetDatabase.LoadAssetAtPath<Material>(path);
         if (material == null)
@@ -703,6 +726,21 @@ public sealed class ClassModelKit
             material.EnableKeyword("_SPECULARHIGHLIGHTS_OFF");
             material.EnableKeyword("_ENVIRONMENTREFLECTIONS_OFF");
         }
+
+        if (glow != null)
+        {
+            // Luz propia: se ve igual de brillante en la sombra
+            material.SetTexture("_EmissionMap", glow);
+            material.SetColor("_EmissionColor", new Color(glowIntensity, glowIntensity, glowIntensity, 1f));
+            material.EnableKeyword("_EMISSION");
+            material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+        }
+        else if (material.IsKeywordEnabled("_EMISSION"))
+        {
+            material.DisableKeyword("_EMISSION");
+            material.SetTexture("_EmissionMap", null);
+        }
+
         EditorUtility.SetDirty(material);
         return material;
     }
