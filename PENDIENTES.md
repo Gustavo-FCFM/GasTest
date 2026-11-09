@@ -64,7 +64,16 @@ ya viaja por la red, así que no agrega nada. Con modelo, el Animator va en Alwa
 - **Subclase en cualquier nivel PRENDIDA para probar** (9 de noviembre, pedido de Gustavo): `Player Camera ▸ UI_ClassMenu ▸ PRUEBAS:
   subclase en cualquier nivel`. El servidor no revisa el nivel, solo el menú.
   - [ ] Apagarla antes del showcase (o decidir dejarla).
-- Para las cinco:
+- **La Maga de relleno** (`Prefabs/Player/Classes/Model_Wizard`, arte en `Art/Models/Classes/Wizard`): receta `WizardModel`. Morena, pelo
+  largo rizado (rizos en espiral, `Ringlet`), lentes redondos, sombrero de bruja enorme, abrigo índigo con mangas de campana y bordados de
+  oro, y un toque de bibliotecaria: suéter de cuello de tortuga, corsé, libro en la cadera, frascos y pluma al cuello. A Gustavo le gustó mucho
+  (9 de noviembre). Se rehace con `Mercenarios ▸ Modelos de clase ▸ Generar la Maga`. Unos 27 mil triángulos, la más pesada. En Polished.
+  Sus tres subclases la heredan. Revisada en fotos con guardia de hechizo, correr, lanzamientos y aturdido; **falta verla en Play**.
+  - [ ] El sombrero no tapa la vista con la cámara al hombro (si estorba: `BrimRadius`, `HatHeight`, `HatTilt` al inicio de la receta).
+  - [ ] Volando, el sombrero y el abrigo se ven bien.
+  - [ ] La espada del Filo danzante no choca con la manga de campana.
+  - Conocido: de cerca los rizos se ven duros; con las piernas muy abiertas el faldón de atrás se levanta y se ve el forro.
+- Para las seis:
   - [ ] Decidir con el líder de arte si las otras clases siguen por aquí o por el pack modular de Gustavo.
   - [ ] Si las 8 clases quedan así, medir el rendimiento en la PC del showcase, con las tres ventanas.
   - [ ] Probar el modelo en una partida con cliente (se pone en cada pantalla) y con la copia del Ilusionista.
