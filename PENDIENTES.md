@@ -128,6 +128,23 @@ Las casillas para probarlos están en la tabla y en la ayuda, más abajo.
   - [ ] Golpes muy seguidos sobre el mismo enemigo se juntan en un número que crece.
   - Empuje al recibir un golpe: por ahora no, Gustavo siente que habría que tocar muchos GE.
 
+**El Cementerio con más vida: PLAN para después del showcase (11 de noviembre, lo que eligió Gustavo).**
+- **Santuarios de mejora**, abajo de las torres, en la zona donde aparecen muchos enemigos. Dan una bendición de 3 minutos que se
+  pierde al morir.
+  - [ ] Decidir qué bendiciones (velocidad, daño, curación lenta…) y si cada santuario da una distinta.
+- **Campanas** en las torres: golpearla revela a los enemigos cercanos unos segundos y avisa a todo el mapa.
+- **Balcones de las torres más bajos**: para bajar más rápido y que el Explorador dispare mejor (es el prefab `Graveyard_Sector`).
+- **Orbes en los sarcófagos** (como los de Valorant, una bolita negra y blanca): 3 activos a la vez como máximo; cada minuto aparecen
+  en sarcófagos al azar, de los rectángulos que ya hay alrededor del mapa. Los sarcófagos se bajan para poder saltar sobre ellos.
+  - [ ] Decidir qué dan al tomarlos (carga de definitiva, experiencia) y si tomarlos se canaliza o es al tocarlos.
+- **Evento a mitad de partida**: por un rato salen más monstruos y jefes, o un solo jefe que da un beneficio al equipo que lo mata.
+  - [ ] Iluminación: el juego pasa a ser de noche, y durante el evento se oscurece más.
+- **Enemigos nuevos** (todos le gustan), reusando el fantasma con pequeños cambios mientras no haya modelos: esqueleto con escudo
+  (el fantasma con un escudito al frente), zombi hinchado, banshee, necrófago, gárgola y nigromante. Más los cuatro de la jam sin
+  pasar a red (mago de hielo, mago de roca, jefe de hielo, jefe de daño).
+- **Para mucho después:** rejas con palanca (antes hay que abrir más caminos en el mapa) y zonas destruibles.
+- **Descartado:** las fosas con manos que enraízan.
+
 **Sonidos: los pone Gustavo (4 de noviembre).** Ya hay lugar en el GA ("Sonido al lanzar", "Sonido al impactar") y en el GE
 (`TargetSound`). No se vio un sonido en bucle para lo continuo (el vuelo, el molinete, un canalizado): revisarlo y, si
 falta, agregarlo al llegar ahí.
