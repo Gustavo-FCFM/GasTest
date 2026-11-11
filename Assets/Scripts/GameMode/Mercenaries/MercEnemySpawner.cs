@@ -22,6 +22,10 @@ using UnityEngine;
 // SOLO en el servidor y lo único que hace es pedirle a FishNet que spawnee el prefab
 // (que sí es de red). Así se pueden repartir veinte campamentos sin llenar la escena
 // de NetworkObjects.
+//
+// Con "Solo con su santuario activo" es el campamento de los ENEMIGOS EXTRA de un santuario
+// (11 de noviembre de 2026): vive dentro del prefab del santuario y solo trabaja mientras ese
+// santuario está activo.
 // ============================================================
 public class MercEnemySpawner : MonoBehaviour
 {
@@ -87,15 +91,26 @@ public class MercEnemySpawner : MonoBehaviour
     [Label("Poblar en la preparación")]
     public bool PopulateDuringWarmup = true;
 
+    [Tooltip("Los enemigos extra de un santuario: el campamento va dentro del prefab del santuario " +
+             "(MatchShrine) y solo pone enemigos mientras ese santuario está activo. Al apagarse se los " +
+             "lleva, sin darle la experiencia a nadie.")]
+    [Label("Solo con su santuario activo")]
+    public bool OnlyWhileShrineActive = false;
+
     // Enemigos vivos de este campamento, con el tipo con el que salieron (solo servidor).
     private readonly List<MercEnemyAI> _alive = new List<MercEnemyAI>();
     private readonly List<EMercEnemyType> _aliveTypes = new List<EMercEnemyType>();
 
     private float _nextSpawnTime;
 
+    private MatchShrine _shrine;
+    private bool _shrineWasActive;
+    private bool _warnedNoShrine;
+
     private void Update()
     {
         if (!InstanceFinder.IsServerStarted) return;
+        if (OnlyWhileShrineActive && !ServerShrineGate()) return;
 
         MercenariesGameMode gm = MercenariesGameMode.Instance;
         if (gm != null)
@@ -222,6 +237,43 @@ public class MercEnemySpawner : MonoBehaviour
             return hit.position;
 
         return transform.position;
+    }
+
+    // =========================================================
+    // CAMPAMENTO DE SANTUARIO
+    // =========================================================
+
+    // ¿Está activo su santuario? Al prenderse arranca a poblar enseguida; al apagarse se lleva a
+    // los suyos (no los mató nadie: se fueron con el santuario).
+    private bool ServerShrineGate()
+    {
+        if (_shrine == null) _shrine = GetComponentInParent<MatchShrine>();
+        if (_shrine == null)
+        {
+            if (!_warnedNoShrine)
+                Debug.LogWarning($"[Campamento] '{name}' tiene \"Solo con su santuario activo\" pero no está " +
+                                 "dentro de un santuario (MatchShrine): no va a poner a nadie.", this);
+            _warnedNoShrine = true;
+            return false;
+        }
+
+        bool active = _shrine.IsActive;
+        if (active && !_shrineWasActive) _nextSpawnTime = Time.time;
+        if (!active && _alive.Count > 0) ServerDismissAll();
+        _shrineWasActive = active;
+        return active;
+    }
+
+    // Saca de juego a todos los de este campamento sin darle la baja a nadie.
+    public void ServerDismissAll()
+    {
+        // Cada uno, al morir, se borra solo de la lista (ServerNotifyEnemyDied): por eso de atrás
+        // para adelante. Lo que quede (ya destruidos) se limpia al final.
+        for (int i = _alive.Count - 1; i >= 0; i--)
+            if (i < _alive.Count && _alive[i] != null) _alive[i].ServerDismiss();
+
+        _alive.Clear();
+        _aliveTypes.Clear();
     }
 
     // La llama MercEnemyAI al morir: arranca el reloj de reposición.

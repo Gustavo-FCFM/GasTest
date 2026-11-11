@@ -183,6 +183,11 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   `AttributeValue` guarda la lista y rehace el producto. Hasta el 25 de septiembre de
   2026 se sumaban (×0.5 + ×0.5 = ×0). La velocidad de ataque tiene un tope de
   `MinAttackInterval` = 0.3 s entre ataques.
+- **Lo que pasa a cierta hora de la partida es un EVENTO del administrador** (`Prefabs/GameMode/MatchEvents`,
+  `GameModeEventManager`, desde el 11 de noviembre de 2026): las rejas, el primer Objetivo y los santuarios. Uno
+  nuevo hereda de `MatchEvent` y es un hijo más del prefab; no se agrega otro reloj al modo. Detalle en el LEEME
+  del modo ("Los eventos de la partida y los santuarios").
+
 - **Los managers de escena reinician su sesión en `OnStartServer`.** Al parar el servidor
   FishNet destruye lo spawneado pero NO toca el estado de los NetworkObjects de escena
   (`LobbyManager`, `NetworkGameManager`, `MercenariesGameMode`): SyncVars, listas,

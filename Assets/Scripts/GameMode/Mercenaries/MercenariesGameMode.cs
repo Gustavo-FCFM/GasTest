@@ -22,6 +22,8 @@ public enum EMatchAnnouncement
     TeamWiped,           // aniquilaron a un equipo    (Team = el equipo caído)
     TeamLevelUp,         // un equipo subió de nivel   (Team, Extra = nivel nuevo)
     MatchEnded,          // fin de partida             (Team = ganador, 0 = empate)
+    ShrineActivated,     // se activó un santuario     (Extra = EShrineType)
+    ShrineCaptured,      // un equipo lo capturó       (Team = quién, Extra = EShrineType)
 }
 
 // ============================================================
@@ -61,6 +63,10 @@ public class MercenariesGameMode : NetworkBehaviour
     // antes de que el objeto de red esté listo (el HUD vive en la escena).
     public static event Action<EMatchAnnouncement, int, int> OnAnnouncement;
 
+    // Una baja, en el SERVIDOR (quién remató, quién murió), después de repartir la experiencia.
+    // La escuchan los eventos de la partida que cuentan bajas (los santuarios).
+    public static event Action<AbilitySystemComponent, AbilitySystemComponent> OnServerKill;
+
     // =========================================================
     // CONFIGURACIÓN
     // =========================================================
@@ -78,7 +84,8 @@ public class MercenariesGameMode : NetworkBehaviour
     [Label("Entregas para ganar")]
     public int PointsToWin = 2;
 
-    [Tooltip("Segundos tras el arranque hasta que aparece el PRIMER Objetivo.")]
+    [Tooltip("Segundos tras el arranque hasta que aparece el PRIMER Objetivo. Si la escena tiene el " +
+             "administrador de eventos (MatchEvents) con su evento \"Objetivo\", manda el de ahí.")]
     [Label("Primer Objetivo a los (s)")]
     public float FirstObjectiveDelay = 60f;
 
@@ -241,6 +248,14 @@ public class MercenariesGameMode : NetworkBehaviour
 
     public static bool IsValidTeam(int team) => team >= 1 && team <= TeamCount;
 
+    // Los jugadores en partida, bots incluidos (se rescanean dos veces por segundo). Solo en el servidor.
+    public IReadOnlyList<PlayerController> Players => _players;
+
+    // Cuándo aparece el primer Objetivo: el evento "Objetivo" del administrador de eventos si la
+    // escena lo tiene, si no el campo del modo.
+    public float FirstObjectiveDelaySeconds =>
+        GameModeEventManager.TryGetStartAt<MatchEvent_Objective>(out float seconds) ? seconds : FirstObjectiveDelay;
+
     // El Objetivo que está en juego ahora (null si no hay). Lo usa el marcador del HUD.
     public MercObjective ActiveObjective => _activeObjective != null ? _activeObjective : MercObjective.Instance;
 
@@ -329,8 +344,8 @@ public class MercenariesGameMode : NetworkBehaviour
                            "no tiene dónde aparecer ni dónde entregar el Objetivo.");
 
         Debug.Log($"[Mercenarios] Listo. El primer Objetivo aparece a los " +
-                  $"{WarmupSeconds + FirstObjectiveDelay:F0} s ({WarmupSeconds:F0} de preparación + " +
-                  $"{FirstObjectiveDelay:F0} de espera).");
+                  $"{WarmupSeconds + FirstObjectiveDelaySeconds:F0} s ({WarmupSeconds:F0} de preparación + " +
+                  $"{FirstObjectiveDelaySeconds:F0} de espera).");
     }
 
     public override void OnStartClient()
@@ -431,7 +446,7 @@ public class MercenariesGameMode : NetworkBehaviour
         _phaseTimer     = Mathf.Max(30f, MatchDurationSeconds);
         PublishPhaseTime();
 
-        ScheduleObjective(FirstObjectiveDelay);
+        ScheduleObjective(FirstObjectiveDelaySeconds);
         Announce(EMatchAnnouncement.MatchStarted, 0, 0);
 
         Debug.Log("[Mercenarios] ¡Partida iniciada!");
@@ -737,6 +752,8 @@ public class MercenariesGameMode : NetworkBehaviour
         }
 
         ServerAddTeamXp(killer.TeamID, amount);
+
+        OnServerKill?.Invoke(killer, victim);
     }
 
     // Le pone a cada jugador del equipo el nivel de la bolsa. Es idempotente: si ya

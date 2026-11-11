@@ -21,6 +21,9 @@ using UnityEngine.UI;
 // con su rombo, su texto de distancia y la barra de entrega. Se acomodan y se les cambia el
 // tamaño a mano; el tamaño del rombo y el ancho de la barra salen de cómo están en el prefab.
 // Este script solo los pone en la pantalla, los pinta y escribe la distancia. No toca gameplay.
+//
+// Desde el 11 de noviembre de 2026 marca también el SANTUARIO activo (MatchEvent_Shrines), con un
+// tercer marcador armado igual, del color del tipo de santuario.
 // ============================================================
 public class UI_ObjectiveMarker : MonoBehaviour
 {
@@ -56,6 +59,11 @@ public class UI_ObjectiveMarker : MonoBehaviour
     [Label("Marcador de tu entrega")]
     public MarkerPieces Delivery = new MarkerPieces();
 
+    [Tooltip("El santuario activo (MatchEvent_Shrines): sale solo mientras hay uno, del color de su tipo. " +
+             "No usa la barra.")]
+    [Label("Marcador del santuario")]
+    public MarkerPieces Shrine = new MarkerPieces();
+
     [Header("Estilo")]
     [Tooltip("El color del Objetivo cuando nadie lo lleva.")]
     [Label("Color del Objetivo")]
@@ -71,7 +79,7 @@ public class UI_ObjectiveMarker : MonoBehaviour
     public float OffScreenScale = 0.75f;
 
     private Canvas _canvas;
-    private Vector2 _objectiveDiamondSize, _deliveryDiamondSize;
+    private Vector2 _objectiveDiamondSize, _deliveryDiamondSize, _shrineDiamondSize;
     private float _barWidth;
 
     // Progreso de entrega que se dibuja. El servidor lo manda a saltos (su tick es de
@@ -83,10 +91,12 @@ public class UI_ObjectiveMarker : MonoBehaviour
         _canvas = GetComponentInParent<Canvas>();
         if (Objective.Diamond != null) _objectiveDiamondSize = Objective.Diamond.rectTransform.sizeDelta;
         if (Delivery.Diamond != null)  _deliveryDiamondSize  = Delivery.Diamond.rectTransform.sizeDelta;
+        if (Shrine.Diamond != null)    _shrineDiamondSize    = Shrine.Diamond.rectTransform.sizeDelta;
         if (Objective.BarBack != null) _barWidth = Objective.BarBack.rectTransform.sizeDelta.x;
         if (Objective.BarBack != null) Objective.BarBack.gameObject.SetActive(false);
         if (Delivery.BarBack != null)  Delivery.BarBack.gameObject.SetActive(false);
-        Hide(Objective); Hide(Delivery);
+        if (Shrine.BarBack != null)    Shrine.BarBack.gameObject.SetActive(false);
+        Hide(Objective); Hide(Delivery); Hide(Shrine);
     }
 
     // =========================================================
@@ -100,12 +110,25 @@ public class UI_ObjectiveMarker : MonoBehaviour
 
         if (gm == null || cam == null)
         {
-            Hide(Objective); Hide(Delivery);
+            Hide(Objective); Hide(Delivery); Hide(Shrine);
             return;
         }
 
         UpdateObjectiveMarker(gm, cam);
         UpdateDeliveryMarker(gm, cam);
+        UpdateShrineMarker(cam);
+    }
+
+    // El santuario activo, del color de su tipo. Sin santuario (o sin el evento en la escena), nada.
+    private void UpdateShrineMarker(Camera cam)
+    {
+        MatchEvent_Shrines shrines = MatchEvent_Shrines.Instance;
+        MatchShrine shrine = shrines != null ? shrines.ActiveShrine : null;
+        if (shrine == null) { Hide(Shrine); return; }
+
+        EShrineType type = shrines.ActiveType;
+        Place(Shrine, _shrineDiamondSize, shrine.MarkerPoint, cam, shrines.GetColor(type),
+              Loc.T("marker.shrine", ("type", MatchEvent_Shrines.TypeName(type))));
     }
 
     private void UpdateObjectiveMarker(MercenariesGameMode gm, Camera cam)

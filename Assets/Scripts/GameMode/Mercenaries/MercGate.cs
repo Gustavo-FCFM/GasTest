@@ -92,6 +92,14 @@ public class MercGate : MonoBehaviour
 
         if (ClosedDuringWarmup  && gm.State == EMatchState.Warmup) return true;
         if (ClosedWhenMatchEnds && gm.State == EMatchState.Ended)  return true;
+
+        // Ya en partida: si la escena tiene el administrador de eventos, las rejas suben cuando dice su
+        // evento "Rejas" (en 0, apenas arranca, como siempre). Ojo: el seguro que devuelve a la base a
+        // quien sale antes de tiempo solo corre en la preparación.
+        if (ClosedDuringWarmup && gm.State == EMatchState.Playing &&
+            GameModeEventManager.TryGetStartAt<MatchEvent_Gates>(out float openAt) &&
+            gm.MatchElapsedSeconds < openAt) return true;
+
         return false;
     }
 

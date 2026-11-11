@@ -543,7 +543,7 @@ ahora se edita a mano. Para volver a tocar las medidas hay que restaurarlo prime
 ```
 0:00 ─── preparación ───► 0:30 ─── partida ─────────────────────────► 15:00
        (todos en su base)      │                                    (o antes,
-       cambio de clase libre   │ 1:30 aparece el Objetivo            al 2° punto)
+       cambio de clase libre   │ 2:30 aparece el Objetivo            al 2° punto)
                                │      ▼
                                │      entrega → +1 punto → +30 s → vuelve a aparecer
                                │
@@ -891,6 +891,54 @@ durante la preparación, dos veces por segundo, quien esté fuera de la planta d
 (`MercenariesGameMode.ServerKeepPlayersInBase`). Salió de la Intercepción heroica sobre un
 aliado pegado a los barrotes, pero tapa cualquier habilidad que mueva. Solo mira la planta:
 saltar adentro de la sala no cuenta como salir.
+
+---
+
+# 4 quater. Los eventos de la partida y los santuarios (11 de noviembre de 2026)
+
+## El administrador de eventos
+
+Lo que pasa a cierta hora de la partida vive en **un solo prefab, `Prefabs/GameMode/MatchEvents`**
+(`GameModeEventManager`, en `Scripts/GameMode/Mercenaries/Events`). Es un objeto de red de escena; cada
+hijo es un evento (`MatchEvent`) con su **"Empieza a los (s)"**, contado desde que arranca la partida:
+
+| Evento | Hoy | Qué hace |
+|---|---|---|
+| `Gates` | 0 s | Cuándo suben las rejas (`MercGate` lo lee; el seguro de la base sigue siendo solo de la preparación). |
+| `Objective` | 120 s | El primer Objetivo. Manda sobre "Primer Objetivo a los (s)" del modo. |
+| `Shrines` | 60 s | El primer santuario (ver abajo). |
+
+**Para un mapa nuevo:** arrastrar `MatchEvents` a la escena (y los santuarios que se quieran). Sin él, la
+escena se comporta como antes (la arena vieja sigue con el Objetivo a los 60 s y sin santuarios).
+**Un evento nuevo:** un script que hereda de `MatchEvent` (`OnEventBegin` / `OnEventTick` / `OnEventEnd` /
+`OnEventReset`, todo en el servidor) y un hijo nuevo del prefab.
+
+## Los santuarios (rey de la montaña)
+
+- **Dónde:** el prefab `Prefabs/GameMode/Shrine` (`MatchShrine`): el altar y la zona (12 m de radio, 6 m de
+  alto, así el techo de la torre no cuenta). Hay uno en la planta baja de cada torre, dentro de
+  `Graveyard_Sector`: tres en el mapa. No son objetos de red: se identifican por su posición.
+- **Ritmo:** uno activo a la vez, en un santuario y un tipo al azar (distintos del anterior); el siguiente sale
+  60 s después de cada captura.
+- **Captura:** +1 % por segundo con alguien vivo dentro; +5 % por NPC y +10 % por jugador que **muere dentro**
+  (para el equipo que lo mató, aunque dispare desde afuera). Con otro equipo vivo dentro nadie pasa de 99 %.
+  Las cuentas están solas en `ShrineCaptureRules`.
+- **Premio:** 75 de exp a la bolsa y un buff de 3 min a cada jugador vivo del equipo (Buff: se pierde al morir):
+  daño +20 % (naranja), curación 1,5 % de la vida máx. por segundo (turquesa), defensa 20 % menos daño (violeta),
+  velocidad +15 % (rosa, no amarillo para no confundirlo con el Objetivo). Son los `GE_Shrine_*` de `Effects/Buffs`.
+- **Enemigos extra:** el hijo `ExtraEnemies` del santuario es un campamento normal con "Solo con su santuario
+  activo": 4 vivos (fantasmas y hasta un mago) mientras está activo; al apagarse caen sin dar experiencia
+  (`MercEnemyAI.ServerDismiss`).
+- **NPCs en la zona:** todo NPC dentro de la zona activa lleva `GE_Shrine_NpcEmpower` (+50 % de vida máxima,
+  +2 de ataque, aura roja con humo); al entrar se le cura lo que ganó, una vez por santuario; se le quita al
+  salir. "Solo los enemigos del santuario" en el evento lo limita a los extra.
+- **Pantalla:** `UI_ShrineHud` (`Match_UI ▸ Scoreboard ▸ ShrinePanel`: tipo, "DISPUTADO" y el % de cada
+  equipo, o "Siguiente santuario en…"), su marcador en `UI_ObjectiveMarker` y dos avisos nuevos
+  (`ShrineActivated`, `ShrineCaptured`, al final de `EMatchAnnouncement`).
+- **Red:** `MatchEvent_Shrines` sincroniza cuál está activo, el tipo, quién está dentro (un bit por equipo), el
+  % de cada equipo y cuánto falta para el siguiente. Las bajas le llegan por `MercenariesGameMode.OnServerKill`.
+- **Herramienta:** `Mercenarios ▸ Santuarios ▸ Armar santuarios y eventos de partida` (no duplica nada).
+- **Pendiente:** los bots no buscan los santuarios.
 
 ---
 

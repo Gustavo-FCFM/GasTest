@@ -200,6 +200,13 @@ public class MercEnemyAI : NetworkBehaviour
     // El spawner que lo creó, para que sepa que tiene que reponerlo.
     [System.NonSerialized] public MercEnemySpawner Spawner;
 
+    // Todos los NPCs en juego, solo en el servidor. Los santuarios buscan acá los que están dentro
+    // de su zona (MatchEvent_Shrines).
+    public static readonly List<MercEnemyAI> ServerAll = new List<MercEnemyAI>();
+
+    public AbilitySystemComponent Asc => _asc;
+    public bool IsDead => _dead;
+
     private void Awake()
     {
         _asc      = GetComponent<AbilitySystemComponent>();
@@ -213,6 +220,7 @@ public class MercEnemyAI : NetworkBehaviour
         base.OnStartServer();
 
         _homePosition = transform.position;
+        if (!ServerAll.Contains(this)) ServerAll.Add(this);
 
         if (_asc != null)
         {
@@ -257,8 +265,14 @@ public class MercEnemyAI : NetworkBehaviour
     public override void OnStopServer()
     {
         base.OnStopServer();
+        ServerAll.Remove(this);
         if (_asc != null) _asc.OnDeath -= HandleDeath;
         if (_runtimeDamage != null) Destroy(_runtimeDamage);
+    }
+
+    private void OnDestroy()
+    {
+        ServerAll.Remove(this);
     }
 
     private void Update()
@@ -573,6 +587,17 @@ public class MercEnemyAI : NetworkBehaviour
     private void ServerDespawnSelf()
     {
         if (IsSpawned) ServerManager.Despawn(gameObject);
+    }
+
+    // Lo saca de juego SIN darle la baja a nadie: muere como siempre (se ve caer y desaparece),
+    // pero sin quién lo mató, así que no reparte experiencia ni suma para nada. Lo usan los
+    // santuarios para llevarse a sus enemigos extra cuando se apagan (MercEnemySpawner).
+    [Server]
+    public void ServerDismiss()
+    {
+        if (_dead || _asc == null) return;
+        _asc.LastAttacker = null;
+        _asc.SetCurrentAttributeValue(EAttributeType.Health, 0f);
     }
 
     // =========================================================

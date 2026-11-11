@@ -84,7 +84,7 @@ public class UI_MatchAnnouncer : MonoBehaviour
         string text  = BuildText(type, team, extra);
         if (string.IsNullOrEmpty(text)) return;
 
-        Color color = team > 0 ? MercUIFactory.TeamColor(team) : ResolveNeutralColor(type);
+        Color color = team > 0 ? MercUIFactory.TeamColor(team) : ResolveNeutralColor(type, extra);
         Push(text, color, ResolveSize(type));
     }
 
@@ -140,6 +140,16 @@ public class UI_MatchAnnouncer : MonoBehaviour
 
             case EMatchAnnouncement.MatchEnded:
                 return team > 0 ? Loc.T("match.wins", ("team", teamName)) : Loc.T("match.draw");
+
+            // Los santuarios: Extra = el tipo (EShrineType).
+            case EMatchAnnouncement.ShrineActivated:
+                return Loc.T("announce.shrine_active", ("type", MatchEvent_Shrines.TypeName((EShrineType)extra)));
+
+            case EMatchAnnouncement.ShrineCaptured:
+                string shrineType = MatchEvent_Shrines.TypeName((EShrineType)extra);
+                return team == MercUIFactory.LocalTeam()
+                    ? Loc.T("announce.shrine_captured_yours", ("type", shrineType))
+                    : Loc.T("announce.shrine_captured", ("team", teamName), ("type", shrineType));
         }
         return "";
     }
@@ -150,12 +160,15 @@ public class UI_MatchAnnouncer : MonoBehaviour
         return gm != null ? gm.PointsToWin : 2;
     }
 
-    private static Color ResolveNeutralColor(EMatchAnnouncement type)
+    private static Color ResolveNeutralColor(EMatchAnnouncement type, int extra)
     {
         switch (type)
         {
             case EMatchAnnouncement.ObjectiveSpawned: return new Color(1f, 0.85f, 0.35f);
             case EMatchAnnouncement.MatchStarted:     return Color.white;
+            case EMatchAnnouncement.ShrineActivated:  // del color del tipo de santuario
+                return MatchEvent_Shrines.Instance != null
+                    ? MatchEvent_Shrines.Instance.GetColor((EShrineType)extra) : Color.white;
             default:                                  return new Color(1f, 1f, 1f, 0.9f);
         }
     }
@@ -170,6 +183,8 @@ public class UI_MatchAnnouncer : MonoBehaviour
                 return BigFontSize;
             case EMatchAnnouncement.TeamWiped:
             case EMatchAnnouncement.MatchStarted:
+            case EMatchAnnouncement.ShrineActivated:
+            case EMatchAnnouncement.ShrineCaptured:
                 return MediumFontSize;
             default:
                 return SmallFontSize;

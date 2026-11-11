@@ -129,9 +129,13 @@ Las casillas para probarlos están en la tabla y en la ayuda, más abajo.
   - Empuje al recibir un golpe: por ahora no, Gustavo siente que habría que tocar muchos GE.
 
 **El Cementerio con más vida: PLAN para después del showcase (11 de noviembre, lo que eligió Gustavo).**
-- **Santuarios de mejora**, abajo de las torres, en la zona donde aparecen muchos enemigos. Dan una bendición de 3 minutos que se
-  pierde al morir.
-  - [ ] Decidir qué bendiciones (velocidad, daño, curación lenta…) y si cada santuario da una distinta.
+- [x] **Santuarios de mejora** (hechos el 11 de noviembre, probados por Gustavo): rey de la montaña abajo de cada torre, uno activo a
+  la vez; daño, curación, defensa o velocidad por 3 minutos (se pierde al morir) y 75 de exp. Mientras está activo salen enemigos
+  extra, y los NPCs dentro de la zona tienen +50 % de vida y +2 de ataque. Ver el LEEME del modo, "Los eventos de la partida".
+  - [ ] Los bots todavía no van a los santuarios (solo cuentan si pasan por ahí).
+  - [ ] Si se bajan los balcones por debajo de 6 m, bajar también el "Alto (m)" del santuario, o el techo contará como zona.
+  - [ ] El texto del marcador del Objetivo se parte en dos líneas con la cuenta atrás ("OBJETIVO EN 0:13 58m"): ensancharlo
+    como el del santuario (300 px).
 - **Campanas** en las torres: golpearla revela a los enemigos cercanos unos segundos y avisa a todo el mapa.
 - **Balcones de las torres más bajos**: para bajar más rápido y que el Explorador dispare mejor (es el prefab `Graveyard_Sector`).
 - **Orbes en los sarcófagos** (como los de Valorant, una bolita negra y blanca): 3 activos a la vez como máximo; cada minuto aparecen

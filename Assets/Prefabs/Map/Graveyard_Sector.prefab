@@ -21601,6 +21601,7 @@ Transform:
   - {fileID: 2697988186293610348}
   - {fileID: 635555679477961430}
   - {fileID: 5492805567248569559}
+  - {fileID: 710238141140756983}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8107358916842672532
@@ -26275,3 +26276,65 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 3.4277601, y: 21, z: 1.0234108}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1001 &149797150908985758
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1745485752589148726}
+    m_Modifications:
+    - target: {fileID: 851015834958256233, guid: ec11a8b5d4b7667438a009611e69a9f0, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 38.53813
+      objectReference: {fileID: 0}
+    - target: {fileID: 851015834958256233, guid: ec11a8b5d4b7667438a009611e69a9f0, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 851015834958256233, guid: ec11a8b5d4b7667438a009611e69a9f0, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 22.249998
+      objectReference: {fileID: 0}
+    - target: {fileID: 851015834958256233, guid: ec11a8b5d4b7667438a009611e69a9f0, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.8660254
+      objectReference: {fileID: 0}
+    - target: {fileID: 851015834958256233, guid: ec11a8b5d4b7667438a009611e69a9f0, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 851015834958256233, guid: ec11a8b5d4b7667438a009611e69a9f0, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 851015834958256233, guid: ec11a8b5d4b7667438a009611e69a9f0, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 851015834958256233, guid: ec11a8b5d4b7667438a009611e69a9f0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 851015834958256233, guid: ec11a8b5d4b7667438a009611e69a9f0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 851015834958256233, guid: ec11a8b5d4b7667438a009611e69a9f0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6770018404379677468, guid: ec11a8b5d4b7667438a009611e69a9f0, type: 3}
+      propertyPath: m_Name
+      value: Shrine
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: ec11a8b5d4b7667438a009611e69a9f0, type: 3}
+--- !u!4 &710238141140756983 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 851015834958256233, guid: ec11a8b5d4b7667438a009611e69a9f0, type: 3}
+  m_PrefabInstance: {fileID: 149797150908985758}
+  m_PrefabAsset: {fileID: 0}

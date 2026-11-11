@@ -180,6 +180,15 @@ match.objective_carried;OBJETIVO · lo lleva {team};OBJECTIVE · carried by {tea
 match.objective_on_map;OBJETIVO · en el mapa;OBJECTIVE · on the map
 match.next_objective;Siguiente Objetivo en {time};Next Objective in {time}
 #
+# ---- Partida: santuarios (el panel de arriba y sus tipos) ----
+shrine.damage;DAÑO;DAMAGE
+shrine.healing;CURACIÓN;HEALING
+shrine.defense;DEFENSA;DEFENSE
+shrine.speed;VELOCIDAD;SPEED
+shrine.title;SANTUARIO DE {type};{type} SHRINE
+shrine.contested;DISPUTADO;CONTESTED
+shrine.next;Siguiente santuario en {time};Next shrine in {time}
+#
 # ---- Partida: anunciador (los avisos grandes) ----
 announce.match_started;¡QUE EMPIECE LA CACERÍA!;LET THE HUNT BEGIN!
 announce.streak2;¡DOBLE BAJA!;DOUBLE KILL!
@@ -196,6 +205,9 @@ announce.wiped_yours;¡TU EQUIPO FUE ELIMINADO!;YOUR TEAM WAS WIPED OUT!
 announce.wiped;¡{team} FUE ELIMINADO!;{team} WAS WIPED OUT!
 announce.level_up;¡TU EQUIPO LLEGÓ AL NIVEL {level}!;YOUR TEAM REACHED LEVEL {level}!
 announce.level_up_max;¡TU EQUIPO LLEGÓ AL NIVEL {level}! — Presiona {key} para elegir una subclase;YOUR TEAM REACHED LEVEL {level}! — Press {key} to choose a Subclass
+announce.shrine_active;¡SANTUARIO DE {type} ACTIVO!;{type} SHRINE IS ACTIVE!
+announce.shrine_captured;{team} capturó el santuario de {type};{team} captured the {type} shrine
+announce.shrine_captured_yours;¡TU EQUIPO CAPTURÓ EL SANTUARIO DE {type}!;YOUR TEAM CAPTURED THE {type} SHRINE!
 #
 # ---- Partida: marcador del Objetivo en pantalla ----
 marker.objective;OBJETIVO;OBJECTIVE
@@ -204,6 +216,7 @@ marker.objective_in;OBJETIVO EN {time};OBJECTIVE IN {time}
 marker.delivering;ENTREGANDO;DELIVERING
 marker.delivering_time;ENTREGANDO {seconds} s;DELIVERING {seconds}s
 marker.deliver;ENTREGAR;DELIVER
+marker.shrine;SANTUARIO DE {type};{type} SHRINE
 #
 # ---- Partida: bajas y muerte ----
 killfeed.died;murió;died
