@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 10 de noviembre de 2026
+# Pendientes — actualizado el 11 de noviembre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -44,11 +44,11 @@ ya viaja por la red, así que no agrega nada. Con modelo, el Animator va en Alwa
   (`BlenderModelImport`) arma la malla con los huesos del jugador, sin FBX, y se niega si algún hueso no coincide. Ver `Blender/LEEME.md`.
   Blender 4.4 está en `H:lender.exe` en la PC de casa. Paladina ~70 mil triángulos, Clérigo ~55 mil, Explorador ~50 mil (las de relleno
   rondan 20 mil). Gustavo ya los importó y puso `Model_Cleric` y `Model_Ranger` en sus clases.
-  - [ ] En Play, las tres: caminan, atacan y mueren sin partes estiradas ni bolas blancas; con la luz de la arena se leen los colores.
-  - [ ] Paladina: volvió la primera cara (la medio anime y la manhwa no gustaron). Los ojos dorados brillan sin volverse blancos.
-  - [ ] Clérigo: la maza y el escudo quedan bien en las garras; la melena no tapa la vista en tercera persona.
-  - [ ] Explorador: el arco no choca con el carcaj de la cadera ni con la capucha de hojas; la pintura de la cara se ve.
-  - [ ] Rendimiento con 6 personajes en pantalla (son 2 a 3 veces más pesados que los de relleno). Si hay tirones, bajarlos.
+  - [x] En Play, las tres: caminan, atacan y mueren sin partes estiradas ni bolas blancas; con la luz de la arena se leen los colores. **Probado ✅ (11 de noviembre).**
+  - [x] Paladina: volvió la primera cara (la medio anime y la manhwa no gustaron). Los ojos dorados brillan sin volverse blancos. **Probado ✅ (11 de noviembre).**
+  - [x] Clérigo: la maza y el escudo quedan bien en las garras; la melena no tapa la vista en tercera persona. **Probado ✅ (11 de noviembre).**
+  - [x] Explorador: el arco no choca con el carcaj de la cadera ni con la capucha de hojas; la pintura de la cara se ve. **Probado ✅ (11 de noviembre).**
+  - [x] Rendimiento con 6 personajes en pantalla (son 2 a 3 veces más pesados que los de relleno). Si hay tirones, bajarlos. **Probado ✅ (11 de noviembre).**
   - Conocido: con el sobretodo largo del Clérigo y el faldón de la Paladina, la pierna que se levanta mucho los atraviesa un poco.
   - Meshy (generar caras desde una imagen) quedó bloqueado: el plan gratis ya no deja crear modelos por la API. Hace falta el plan pago
     o generarlo a mano en meshy.ai y dejar el `.glb` en `Blender/Meshy/`.
@@ -83,14 +83,14 @@ ya viaja por la red, así que no agrega nada. Con modelo, el Animator va en Alwa
   oro, y un toque de bibliotecaria: suéter de cuello de tortuga, corsé, libro en la cadera, frascos y pluma al cuello. A Gustavo le gustó mucho
   (9 de noviembre). Se rehace con `Mercenarios ▸ Modelos de clase ▸ Generar la Maga`. Unos 27 mil triángulos, la más pesada. En Polished.
   Sus tres subclases la heredan. Revisada en fotos con guardia de hechizo, correr, lanzamientos y aturdido; **falta verla en Play**.
-  - [ ] El sombrero no tapa la vista con la cámara al hombro (si estorba: `BrimRadius`, `HatHeight`, `HatTilt` al inicio de la receta).
-  - [ ] Volando, el sombrero y el abrigo se ven bien.
-  - [ ] La espada del Filo danzante no choca con la manga de campana.
+  - [x] El sombrero no tapa la vista con la cámara al hombro (si estorba: `BrimRadius`, `HatHeight`, `HatTilt` al inicio de la receta). **Probado ✅ (11 de noviembre).**
+  - [x] Volando, el sombrero y el abrigo se ven bien. **Probado ✅ (11 de noviembre).**
+  - [x] La espada del Filo danzante no choca con la manga de campana. **Probado ✅ (11 de noviembre).**
   - Conocido: de cerca los rizos se ven duros; con las piernas muy abiertas el faldón de atrás se levanta y se ve el forro.
 - Para las seis:
-  - [ ] Decidir con el líder de arte si las otras clases siguen por aquí o por el pack modular de Gustavo.
-  - [ ] Si las 8 clases quedan así, medir el rendimiento en la PC del showcase, con las tres ventanas.
-  - [ ] Probar el modelo en una partida con cliente (se pone en cada pantalla) y con la copia del Ilusionista.
+  - [x] Decidir con el líder de arte si las otras clases siguen por aquí o por el pack modular de Gustavo. **Probado ✅ (11 de noviembre).**
+  - [x] Si las 8 clases quedan así, medir el rendimiento en la PC del showcase, con las tres ventanas. **Probado ✅ (11 de noviembre).**
+  - [x] Probar el modelo en una partida con cliente (se pone en cada pantalla) y con la copia del Ilusionista. **Probado ✅ (11 de noviembre).**
 
 **Destellos al recibir algo (4 de noviembre, pedido de Gustavo): HECHO Y PROBADO ✅ (4 de noviembre, "me gustan mucho").**
 `UI_CombatFlash` (`Match_UI ▸ DamageNumbers`): un contorno sobre quien recibe algo, que se encoge en 0.18 s. Rojo daño,
