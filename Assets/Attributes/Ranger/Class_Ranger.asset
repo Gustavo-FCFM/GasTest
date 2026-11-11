@@ -47,12 +47,14 @@ MonoBehaviour:
   - {fileID: 11400000, guid: e4bed3cabd28caa41a12cc24e7f6f24f, type: 2}
   - {fileID: 11400000, guid: ffd41730a481d164ba1f4b62e0ee03e1, type: 2}
   ClassAnimatorOverride: {fileID: 22100000, guid: f175085a22aa728459655748dd969669, type: 2}
+  ClassModel: {fileID: 8491915918698634503, guid: f628dd26a3b838c4c91c55c0458d1b30, type: 3}
   StanceAnimatorOverride: {fileID: 0}
   StanceAnimatorTag: 0
   MainHandWeaponPrefab: {fileID: 2940968421794840072, guid: d6566bb9ade75594b8068db0bf39da23, type: 3}
   OffHandWeaponPrefab: {fileID: 6751337086952172511, guid: 93671539c61430f4a8deda9514111581, type: 3}
   MainHandRotationOffset: {x: 0, y: 0, z: 0}
   MainHandPositionOffset: {x: 0, y: 0, z: 0}
+  MainHandScale: 1
   OffHandRotationOffset: {x: 0, y: 0, z: 0}
   OffHandPositionOffset: {x: -0.1, y: 0, z: 0}
   OffHandPose: {fileID: 0}

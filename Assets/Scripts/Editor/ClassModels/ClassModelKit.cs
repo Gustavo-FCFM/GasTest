@@ -662,6 +662,45 @@ public sealed class ClassModelKit
         return prefab;
     }
 
+    // =========================================================
+    // MODELOS HECHOS EN BLENDER (BlenderModelImport)
+    // =========================================================
+
+    public bool HasBone(string name) => _boneIndex.ContainsKey(name);
+
+    public int BoneIndex(string name) => _boneIndex[name];
+
+    // Guarda una malla que ya viene armada, con las texturas ya pintadas: mismas rutas y mismos GUID que
+    // Save, así el campo "Modelo" de la clase sigue apuntando al prefab. fill llena la malla; los bindposes
+    // los pone el kit (son los del jugador).
+    public GameObject SaveBaked(string name, string artFolder, string prefabFolder, Action<Mesh> fill,
+                                byte[] atlasPng, byte[] glowPng, ModelFinish finish, float glowIntensity)
+    {
+        CreateFolder(artFolder);
+        CreateFolder(prefabFolder);
+
+        Texture2D texture = SaveTexture($"{artFolder}/{name}_Atlas.png", atlasPng, 2048, finish == ModelFinish.Polished);
+        Texture2D glow = glowPng != null ? SaveTexture($"{artFolder}/{name}_Glow.png", glowPng, GlowSize, false) : null;
+        Material material = SaveMaterial($"{artFolder}/Mat_{name}.mat", texture, finish, glow, glowIntensity);
+
+        string meshPath = $"{artFolder}/{name}_Mesh.asset";
+        var mesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
+        bool isNew = mesh == null;
+        if (isNew) mesh = new Mesh();
+        mesh.Clear(false);
+        mesh.name = $"{name}_Mesh";
+        fill(mesh);
+        mesh.bindposes = _bindPoses;
+        mesh.RecalculateBounds();
+        if (isNew) AssetDatabase.CreateAsset(mesh, meshPath);
+        else EditorUtility.SetDirty(mesh);
+
+        GameObject prefab = SavePrefab(name, $"{prefabFolder}/Model_{name}.prefab", mesh, material);
+        AssetDatabase.SaveAssets();
+        Debug.Log($"[ClassModelKit] {name} (de Blender): {mesh.vertexCount} vértices, {mesh.triangles.Length / 3} triángulos.");
+        return prefab;
+    }
+
     private static void CreateFolder(string path)
     {
         if (AssetDatabase.IsValidFolder(path)) return;

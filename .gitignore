@@ -93,3 +93,11 @@ crashlytics-build.properties
 
 # Archivos temporales de Word (un .docx abierto deja un ~$ al lado)
 ~$*
+
+# Blender (10 de noviembre de 2026): se suben las recetas, el .blend y lo que lee Unity (Out/<Clase>/<Clase>.json
+# y las dos texturas). Las fotos de prueba y los respaldos de Blender no.
+/Blender/**/*.blend1
+/Blender/Out/**/shape_*.png
+/Blender/Out/**/preview_*.png
+/Blender/Out/**/posed_*.png
+/Blender/__pycache__/

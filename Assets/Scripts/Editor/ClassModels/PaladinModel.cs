@@ -127,6 +127,12 @@ public sealed class PaladinModel : ClassModelRecipe
     [MenuItem("Mercenarios/Modelos de clase/Generar la Paladina")]
     public static void Generate()
     {
+        // Desde el 10 de noviembre de 2026 la Paladina sale de Blender (Blender/paladin.py): esta receta la pisaría
+        if (!EditorUtility.DisplayDialog("Generar la Paladina",
+                "La Paladina ahora se hace en Blender (Mercenarios ▸ Modelos de clase ▸ Importar los modelos de Blender). " +
+                "Esto la reemplaza por el modelo viejo de relleno. ¿Seguir?", "Reemplazar", "Cancelar"))
+            return;
+
         var model = new PaladinModel();
         model.Build();
     }

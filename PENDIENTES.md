@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 9 de noviembre de 2026
+# Pendientes — actualizado el 10 de noviembre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -38,6 +38,20 @@ ya viaja por la red, así que no agrega nada. Con modelo, el Animator va en Alwa
   - [x] Ilusionista: las copias salen con este modelo. Salían con el Dummy encima: FishNet, en el host, volvía a prender el cuerpo
         que tenía anotado al nacer. Arreglado en `ClassModelSwap` (9 de noviembre). **Probado ✅ (9 de noviembre).**
   - Conocido: la cola no tiene huesos propios y casi no se mece sola; las mejillas se ven algo planas de cerca.
+- **Modelos hechos en Blender (10 de noviembre): la Paladina, el Clérigo leonino y el Explorador elfo.** Ya no salen de recetas de Unity:
+  se arman con Python en `Blender/` (`paladin.py`, `cleric.py`, `ranger.py`, con las herramientas `merc_kit.py` y `merc_export.py`), con
+  modificadores, ribetes de verdad y sombras horneadas. `Mercenarios ▸ Modelos de clase ▸ Importar los modelos de Blender`
+  (`BlenderModelImport`) arma la malla con los huesos del jugador, sin FBX, y se niega si algún hueso no coincide. Ver `Blender/LEEME.md`.
+  Blender 4.4 está en `H:lender.exe` en la PC de casa. Paladina ~70 mil triángulos, Clérigo ~55 mil, Explorador ~50 mil (las de relleno
+  rondan 20 mil). Gustavo ya los importó y puso `Model_Cleric` y `Model_Ranger` en sus clases.
+  - [ ] En Play, las tres: caminan, atacan y mueren sin partes estiradas ni bolas blancas; con la luz de la arena se leen los colores.
+  - [ ] Paladina: volvió la primera cara (la medio anime y la manhwa no gustaron). Los ojos dorados brillan sin volverse blancos.
+  - [ ] Clérigo: la maza y el escudo quedan bien en las garras; la melena no tapa la vista en tercera persona.
+  - [ ] Explorador: el arco no choca con el carcaj de la cadera ni con la capucha de hojas; la pintura de la cara se ve.
+  - [ ] Rendimiento con 6 personajes en pantalla (son 2 a 3 veces más pesados que los de relleno). Si hay tirones, bajarlos.
+  - Conocido: con el sobretodo largo del Clérigo y el faldón de la Paladina, la pierna que se levanta mucho los atraviesa un poco.
+  - Meshy (generar caras desde una imagen) quedó bloqueado: el plan gratis ya no deja crear modelos por la API. Hace falta el plan pago
+    o generarlo a mano en meshy.ai y dejar el `.glb` en `Blender/Meshy/`.
 - **El Monje de relleno** (`Prefabs/Player/Classes/Model_Monk`, arte en `Art/Models/Classes/Monk`): receta `MonkModel`, un yuan-ti de cara
   humana. Piel amarillenta con escamas solo a los costados (sienes, cuello, antebrazos), ojos de serpiente y pelo blanco; gi negro con
   solapas, faja y faldones ocre, cuentas de oración (un mala) con borla roja, hombrera de bronce, vendas y zapatos de tela. Sin cola. A
