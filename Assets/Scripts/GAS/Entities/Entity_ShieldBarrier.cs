@@ -436,7 +436,9 @@ public class Entity_ShieldBarrier : MonoBehaviour, IIncomingDamageModifier
         }
 
         float energy = _ownerASC.GetAttributeValue(EAttributeType.Energy);
-        if (energy <= 0f) return; // sin energía no frena nada (la habilidad ya está bajando el escudo)
+        // Sin energía no frena nada (la habilidad ya está bajando el escudo). Con "Energía por punto"
+        // en 0 el escudo es gratis y no mira la energía: el del esqueleto (los NPCs no tienen).
+        if (EnergyPerDamageBlocked > 0f && energy <= 0f) return;
 
         float blocked = incoming * DamageReduction;
 

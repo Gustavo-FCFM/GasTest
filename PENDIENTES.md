@@ -179,8 +179,15 @@ Las casillas para probarlos están en la tabla y en la ayuda, más abajo.
   - [x] Que lo mate un NPC o que se vaya a los 3 minutos: nadie recibe nada y sale el aviso de que se fue.
   - [x] Con 10 fantasmas de la capilla alrededor no se vuelve imposible (si sí: bajar la vida en `GE_EventBoss`).
   - [ ] Iluminación: el juego de noche y más oscuro durante el evento (falta decidir cómo).
-- **Enemigos nuevos** (todos le gustan), reusando el fantasma con pequeños cambios mientras no haya modelos: esqueleto con escudo
-  (el fantasma con un escudito al frente), necrófago, gárgola y nigromante.
+- **Enemigos nuevos** (todos le gustan), reusando el fantasma con pequeños cambios mientras no haya modelos: necrófago, gárgola y
+  nigromante.
+- [x] **Esqueleto con escudo** (12 de noviembre; herramienta corrida): `Net_ShieldSkeleton`, el fantasma gris con escudo y
+  espadita (40 de vida, 11 de ataque, 3.2 m/s, 15 de exp). Barre en cono de 180° a 2.5 m (`GA_SkeletonSweep`, 1 × ataque) y
+  después se cubre 3 s hacia quien le pegó (o su objetivo), quieto y sin girar: de frente no le entra nada (barrera del Paladín al
+  100 %, sin energía); por los lados y la espalda sí. Ataca cada 4 s. Ver el LEEME del modo.
+  - [ ] Ponerlo en un campamento (a mano), por ejemplo las explanadas.
+  - [ ] Probar en Play: de frente frena golpes y proyectiles, por la espalda no; el panel se ve en las otras pantallas; no gira
+    mientras se cubre.
 - [x] **Zombi hinchado** (12 de noviembre; herramienta corrida): `Net_BloatedZombie`, el fantasma verde e hinchado (45 de vida,
   10 de ataque, 2.6 m/s, 15 de exp). Al morir revienta (1.5 × ataque a 3.5 m) y deja `Summon_ZombiePoison`: 3 m, 6 s, 4 de daño
   por segundo a los jugadores. Ver el LEEME del modo.

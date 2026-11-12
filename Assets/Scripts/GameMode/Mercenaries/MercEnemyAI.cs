@@ -157,6 +157,17 @@ public class MercEnemyAI : NetworkBehaviour
     [Label("VFX al golpear")]
     public GameObject HitVFX;
 
+    [Header("Bloqueo después de atacar (el esqueleto)")]
+    [Tooltip("Después de cada ataque se cubre: se le aplica este efecto (tiene que dar Status_Blocking, que levanta " +
+             "su Entity_ShieldBarrier) y se queda quieto mirando hacia quien lo atacaba, sin girar, por \"Se cubre por\". " +
+             "Vacío = no se cubre.")]
+    [Label("Efecto de bloqueo")]
+    public GameplayEffect BlockAfterAttack;
+
+    [Tooltip("Cuánto se queda cubriéndose hacia el mismo lado. Por la espalda o los costados se le puede pegar.")]
+    [Label("Se cubre por (s)")]
+    public float BlockSeconds = 3f;
+
     [Header("Recompensa")]
     [Tooltip("Experiencia que le da a la bolsa del equipo que lo mate. En 0 usa el valor general " +
              "del modo de juego (XpPerNpcKill). Se pone un número acá cuando este enemigo vale " +
@@ -244,6 +255,7 @@ public class MercEnemyAI : NetworkBehaviour
         {
             _asc.TeamID = MonsterTeamId;
             _asc.OnDeath += HandleDeath;
+            _asc.OnTookDamage += HandleTookDamage;
 
             if (AbilityToUse != null) _runtimeAbility = _asc.GrantAbility(AbilityToUse);
             GrantExtraAbilities();
@@ -284,7 +296,7 @@ public class MercEnemyAI : NetworkBehaviour
     {
         base.OnStopServer();
         ServerAll.Remove(this);
-        if (_asc != null) _asc.OnDeath -= HandleDeath;
+        if (_asc != null) { _asc.OnDeath -= HandleDeath; _asc.OnTookDamage -= HandleTookDamage; }
         if (_runtimeDamage != null) Destroy(_runtimeDamage);
     }
 
@@ -308,6 +320,16 @@ public class MercEnemyAI : NetworkBehaviour
     private void ServerTick()
     {
         if (_asc == null || _agent == null || !_agent.isOnNavMesh) return;
+
+        // Cubriéndose: quieto, mirando hacia donde levantó el escudo, sin atacar.
+        if (Time.time < _blockUntil)
+        {
+            _agent.isStopped = true;
+            if (_blockDirection.sqrMagnitude > 0.001f)
+                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(_blockDirection),
+                                                      Time.deltaTime * TurnSpeed);
+            return;
+        }
 
         // Aturdido/enraizado: se queda quieto (mismo criterio que el EnemyAI de la jam).
         if (_asc.HasTag(EGameplayTag.State_Stunned) || _asc.HasTag(EGameplayTag.State_Rooted))
@@ -471,6 +493,7 @@ public class MercEnemyAI : NetworkBehaviour
         if (_runtimeAbility != null)
         {
             if (_runtimeAbility.CanActivate()) _runtimeAbility.Activate();
+            ServerStartBlock();
             return;
         }
 
@@ -479,6 +502,38 @@ public class MercEnemyAI : NetworkBehaviour
         _target.ApplyGameplayEffect(ResolveDamageEffect(), _asc);
 
         if (HitVFX != null) ObserversSpawnHitVfx(_target.transform.position + Vector3.up);
+        ServerStartBlock();
+    }
+
+    // =========================================================
+    // BLOQUEO DESPUÉS DE ATACAR
+    // =========================================================
+
+    private float _blockUntil;
+    private Vector3 _blockDirection;
+    private AbilitySystemComponent _lastHitter;
+    private float _lastHitAt = -100f;
+
+    private void HandleTookDamage(AbilitySystemComponent attacker)
+    {
+        if (attacker == null || attacker == _asc) return;
+        _lastHitter = attacker;
+        _lastHitAt  = Time.time;
+    }
+
+    // Se cubre hacia quien le pegó hace poco (si no, hacia su objetivo) y se queda así.
+    [Server]
+    private void ServerStartBlock()
+    {
+        if (BlockAfterAttack == null || _asc == null) return;
+
+        AbilitySystemComponent from = _lastHitter != null && Time.time - _lastHitAt <= 3f &&
+                                      !_lastHitter.HasTag(EGameplayTag.State_Dead) ? _lastHitter : _target;
+        Vector3 dir = from != null ? from.transform.position - transform.position : transform.forward;
+        dir.y = 0f;
+        _blockDirection = dir.sqrMagnitude > 0.001f ? dir.normalized : transform.forward;
+        _blockUntil = Time.time + Mathf.Max(0.1f, BlockSeconds);
+        _asc.ApplyGameplayEffect(BlockAfterAttack, _asc, BlockSeconds);
     }
 
     // =========================================================
