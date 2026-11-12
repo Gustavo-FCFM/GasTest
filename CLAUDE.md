@@ -135,7 +135,8 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   cambie en el prefab cambia en los tres sectores. La generó una herramienta una sola
   vez; desde ahí se edita a mano (Gustavo ya le sacó muros y agrandó el centro). **Es de noche** (desde el 12 de
   noviembre de 2026): la luz ambiente y la niebla son ajustes de la escena (`Mercenarios ▸ Mapa ▸ Poner la noche…`), y lo
-  que se ve lo alumbran la luna y las antorchas del sector (`Prefabs/Map/Torch`). Ver el LEEME del modo.
+  que se ve lo alumbran la luna y las antorchas del sector (`Prefabs/Map/Torch`; solo las más cercanas a la cámara hacen
+  sombra, `TorchShadows`). Alrededor hay una ciudad de decorado (`Graveyard_Sector ▸ City`, sin colliders). Ver el LEEME del modo.
 
 ---
 

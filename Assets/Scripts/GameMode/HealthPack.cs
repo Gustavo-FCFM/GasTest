@@ -55,6 +55,17 @@ public class HealthPack : NetworkBehaviour
     [Label("Color")]
     public Color Tint = new Color(0.25f, 0.95f, 0.45f);
 
+    // De noche (12 de noviembre de 2026, pedido de Gustavo) el disco y la cruz "rompían la iluminación": el disco es UI
+    // (no lo toca la luz) y estaba casi opaco, y la cruz brillaba ×1.5. Antes eran 0.75 y 1.5.
+    [Tooltip("Qué tan opaco se ve el disco del piso cuando el botiquín está listo. El disco no recibe luz: " +
+             "de noche, alto se ve como un piso que brilla.")]
+    [Label("Disco: opacidad (0 a 1)")]
+    [Range(0f, 1f)] public float DiscOpacity = 0.25f;
+
+    [Tooltip("Cuánta luz propia tiene la cruz. 0 = solo la alumbran las luces del mapa.")]
+    [Label("Brillo de la cruz (×)")]
+    [Range(0f, 2f)] public float CrossGlow = 0.35f;
+
     [Tooltip("VFX al recogerlo (opcional). Se instancia en el jugador y se destruye solo.")]
     [Label("VFX al recoger")]
     public GameObject PickupVFX;

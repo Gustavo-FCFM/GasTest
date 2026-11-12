@@ -24,6 +24,7 @@ public enum ESettingKind
     [InspectorName("Daño fantasma")]             HealthGhost    = 15,
     [InspectorName("Habilidad no disponible")]   AbilityDenied  = 16,
     [InspectorName("Rachas de bajas")]           KillStreak     = 17,
+    [InspectorName("Sombras de las antorchas")]  TorchShadows   = 18,
 }
 
 // ============================================================

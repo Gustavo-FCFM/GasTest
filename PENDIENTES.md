@@ -242,6 +242,19 @@ Las casillas para probarlos están en la tabla y en la ayuda, más abajo.
   - [ ] Probar en Play: que se vea bien de noche, que las antorchas no bajen los cuadros por segundo (234 luces) y que se note el
         oscurecer del jefe (si no: subir "Cuánto oscurece" a 0.65–0.7).
   - [ ] Si el cielo se ve muy brillante junto al suelo oscuro: bajar el Exposure del material del skybox (la niebla no lo toca).
+  - [x] **Botiquines más apagados** (12 de noviembre, "rompen un poco la iluminación"): el disco del piso es UI (no lo toca la luz)
+        y estaba casi opaco. Campos nuevos en `HealthPack`: "Disco: opacidad" 0.25 (antes 0.75) y "Brillo de la cruz" 0.35 (antes
+        1.5). Cambia también en `Mercenaries_Gamemode` (el de día): si ahí quedan muy apagados, subirlos en esos botiquines.
+  - [x] **Sombras de las antorchas** (12 de noviembre): solo las 4 más cercanas a la cámara (hasta 22 m) proyectan sombra, con
+        fundido al pasarse el turno (`TorchShadows`; números en el prefab `Torch`, sección Sombras; resolución baja). Casilla en
+        Ajustes ▸ Pantalla, "Sombras de las antorchas" (prendida; `GameSettings.TorchShadows`). La luna hace sombras aparte.
+  - [ ] Probar en Play: que se vean al caminar y cuánto bajan los cuadros por segundo. **Con las 3 ventanas del showcase**, cada
+        una paga las suyas: si se traba, apagar la casilla en las ventanas 2 y 3 (o bajar "cuántas a la vez" a 2).
+  - [x] **La ciudad de afuera** (12 de noviembre; herramienta corrida), para que al saltar o volar alto no se vea vacío negro:
+        `Mercenarios ▸ Mapa ▸ Armar la ciudad de afuera del Cementerio` (`MercCitySetup`) → `Graveyard_Sector ▸ City` (×3). 232
+        casas por sector en 9 filas, torres, iglesia con campanario y torre del reloj, ventanas encendidas, suelo hasta 320 m;
+        plaza delante de cada base. Decorado: sin colliders ni sombras, ~25 mil vértices y 9 piezas por sector.
+  - [ ] Probar en Play: volar alto / subir a una torre y mirar afuera.
 
 **Tabla con KDA, ventana de ayuda y bolsa de dinero (4 de noviembre, pedido de Gustavo): HECHO Y PROBADO ✅ (6 de noviembre), salvo el control.** Las
 herramientas ya se corrieron y se borraron.

@@ -1049,6 +1049,18 @@ El Cementerio es de noche. Tres piezas:
   Volver a correrla no toca las que ya están; `MercTorchSetup.Rebuild()` (por `script eval`) las borra y las reparte de
   nuevo, y se pierden las que se movieron a mano. URP Forward+ no tiene tope de
   luces por objeto; si bajan los cuadros, lo primero es bajar el alcance de la luz del prefab.
+- **Las sombras de las antorchas** (`TorchShadows`): una luz puntual con sombra dibuja la escena seis veces más, así que solo
+  las N más cercanas a la cámara la proyectan (prefab `Torch`, sección Sombras: 4 a la vez, hasta 22 m, fundido de 0.4 s) y se
+  pasan el turno al caminar; la que ya la tiene cuenta como un 15 % más cerca, para que no tiemble entre dos. La sombra es de
+  resolución baja (en la luz del prefab: en juego URP no deja cambiarla), porque 4 cubos de sombra en alta no entran en el atlas
+  de 2048. Ajustes ▸ Pantalla ▸ "Sombras de las antorchas" las apaga (`GameSettings.TorchShadows`). No es de red.
+- **La ciudad de afuera** (`MercCitySetup`, `Mercenarios ▸ Mapa ▸ Armar la ciudad de afuera del Cementerio`): mide el borde del
+  mapa con rayos y arma en la cuña de Sector_Team1 el suelo, filas de casas (con calles, callejones, chimeneas y ventanas, unas
+  encendidas), torres, una iglesia con campanario y una torre del reloj; delante de la base deja una plaza. Todo junto en una malla
+  por material (`Art/Models/City`, `Art/Materials/City`) dentro de `Graveyard_Sector ▸ City`: sale en los tres sectores. Es
+  decorado: sin colliders (no se llega: `MercArenaBounds`), sin sombras ni sondas de luz. Semilla fija; correrla de nuevo no la
+  toca y `MercCitySetup.Rebuild()` la rehace. Los materiales son copias URP de texturas de Ramiro (los suyos casi todos no son
+  de URP).
 - **El jefe oscurece todo** mientras vive (`MatchEvent_Boss`, "Cuánto oscurece (0 = nada, 0.9 = casi negro)", 0.45, y "Tarda en
   oscurecer (s)", 4): baja la luz ambiente y la luna y espesa la niebla; al irse o morir vuelve igual de suave. El servidor solo
   sincroniza si el jefe vive (una SyncVar); cada pantalla lo calcula, y al destruirse el evento devuelve la luz como estaba.

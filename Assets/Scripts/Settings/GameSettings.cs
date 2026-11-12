@@ -79,6 +79,10 @@ public static class GameSettings
     public static bool AbilityDenied  { get { Load(); return _abilityDenied; }  set => Set(ref _abilityDenied, value); }
     public static bool KillStreak     { get { Load(); return _killStreak; }     set => Set(ref _killStreak, value); }
 
+    // Las antorchas más cercanas a la cámara proyectan sombra (TorchShadows, 12 de noviembre de 2026). Cuesta: en la PC del
+    // showcase, con tres ventanas, cada una paga las suyas. Apagado, solo la luna hace sombras.
+    public static bool TorchShadows   { get { Load(); return _torchShadows; }   set => Set(ref _torchShadows, value); }
+
     public const float MinSensitivity = 0.2f;
     public const float MaxSensitivity = 3f;
 
@@ -112,6 +116,7 @@ public static class GameSettings
     private static bool _healthGhost    = true;
     private static bool _abilityDenied  = true;
     private static bool _killStreak     = true;
+    private static bool _torchShadows   = true;
 
     private static bool      _languageLoaded;
     private static ELanguage _language = ELanguage.Spanish;
@@ -141,6 +146,7 @@ public static class GameSettings
         _healthGhost      = PlayerPrefs.GetInt  (KeyPrefix + "HealthGhost", 1) == 1;
         _abilityDenied    = PlayerPrefs.GetInt  (KeyPrefix + "AbilityDenied", 1) == 1;
         _killStreak       = PlayerPrefs.GetInt  (KeyPrefix + "KillStreak", 1) == 1;
+        _torchShadows     = PlayerPrefs.GetInt  (KeyPrefix + "TorchShadows", 1) == 1;
 
         Apply();
     }
@@ -175,6 +181,7 @@ public static class GameSettings
         PlayerPrefs.SetInt  (KeyPrefix + "HealthGhost", _healthGhost ? 1 : 0);
         PlayerPrefs.SetInt  (KeyPrefix + "AbilityDenied", _abilityDenied ? 1 : 0);
         PlayerPrefs.SetInt  (KeyPrefix + "KillStreak", _killStreak ? 1 : 0);
+        PlayerPrefs.SetInt  (KeyPrefix + "TorchShadows", _torchShadows ? 1 : 0);
         PlayerPrefs.Save();
     }
 
@@ -200,6 +207,7 @@ public static class GameSettings
         _healthGhost      = true;
         _abilityDenied    = true;
         _killStreak       = true;
+        _torchShadows     = true;
 
         Apply();
         OnChanged?.Invoke();

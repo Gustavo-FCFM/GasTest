@@ -45,8 +45,8 @@ public class HealthPackVisual : MonoBehaviour
         else
         {
             // Dos barras: la cruz más barata que existe, y se ve bien de lejos.
-            MakeBar(_cross, "Vertical",   new Vector3(0.22f, 0.7f,  0.22f), pack.Tint);
-            MakeBar(_cross, "Horizontal", new Vector3(0.7f,  0.22f, 0.22f), pack.Tint);
+            MakeBar(_cross, "Vertical",   new Vector3(0.22f, 0.7f,  0.22f), pack.Tint, pack.CrossGlow);
+            MakeBar(_cross, "Horizontal", new Vector3(0.7f,  0.22f, 0.22f), pack.Tint, pack.CrossGlow);
         }
 
         // --- la etiqueta ---
@@ -73,8 +73,9 @@ public class HealthPackVisual : MonoBehaviour
         canvasRect.sizeDelta  = new Vector2(100f, 100f);
         canvasRect.localScale = Vector3.one * (pack.PickupRadius * 2f / 100f);
 
-        _ring = MakeDisc(canvasGo.transform, "Ring", new Color(Tint().r, Tint().g, Tint().b, 0.22f));
-        _fill = MakeDisc(canvasGo.transform, "Fill", new Color(Tint().r, Tint().g, Tint().b, 0.75f));
+        // El borde, a un tercio de la opacidad del relleno (antes 0.22 contra 0.75).
+        _ring = MakeDisc(canvasGo.transform, "Ring", new Color(Tint().r, Tint().g, Tint().b, pack.DiscOpacity * 0.3f));
+        _fill = MakeDisc(canvasGo.transform, "Fill", new Color(Tint().r, Tint().g, Tint().b, pack.DiscOpacity));
         _fill.type        = Image.Type.Filled;
         _fill.fillMethod  = Image.FillMethod.Radial360;
         _fill.fillOrigin  = (int)Image.Origin360.Top;
@@ -165,7 +166,7 @@ public class HealthPackVisual : MonoBehaviour
     // PIEZAS
     // =========================================================
 
-    private static void MakeBar(Transform parent, string name, Vector3 size, Color color)
+    private static void MakeBar(Transform parent, string name, Vector3 size, Color color, float glow)
     {
         GameObject bar = GameObject.CreatePrimitive(PrimitiveType.Cube);
         bar.name = name;
@@ -180,14 +181,14 @@ public class HealthPackVisual : MonoBehaviour
         if (r != null)
         {
             // Material propio para no teñir el del proyecto entero. URP usa _BaseColor;
-            // el emissive es lo que lo hace visible de lejos y en sombra.
+            // el emissive es lo que lo hace visible de lejos y en sombra ("Brillo de la cruz"; de noche, poco).
             Material mat = new Material(r.sharedMaterial);
             mat.color = color;
             if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", color);
-            if (mat.HasProperty("_EmissionColor"))
+            if (mat.HasProperty("_EmissionColor") && glow > 0f)
             {
                 mat.EnableKeyword("_EMISSION");
-                mat.SetColor("_EmissionColor", color * 1.5f);
+                mat.SetColor("_EmissionColor", color * glow);
             }
             r.material = mat;
         }

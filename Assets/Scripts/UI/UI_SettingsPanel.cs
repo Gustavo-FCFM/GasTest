@@ -250,6 +250,10 @@ public class UI_SettingsPanel : MonoBehaviour, IMenuScreen
             case ESettingKind.KillStreak:
                 BindToggle(row, () => GameSettings.KillStreak, v => GameSettings.KillStreak = v);
                 break;
+
+            case ESettingKind.TorchShadows:
+                BindToggle(row, () => GameSettings.TorchShadows, v => GameSettings.TorchShadows = v);
+                break;
         }
     }
 

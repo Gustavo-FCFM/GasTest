@@ -29,6 +29,7 @@ settings.section.display;Pantalla;Display
 settings.screen_mode;Modo;Mode
 settings.resolution;Resolución;Resolution
 settings.vsync;Sincronización vertical (VSync);Vertical sync (VSync)
+settings.torch_shadows;Sombras de las antorchas;Torch shadows
 settings.section.combat;Combate;Combat
 settings.hit_stop;Parón de impacto;Hit stop
 settings.camera_shake;Sacudida de cámara;Camera shake
