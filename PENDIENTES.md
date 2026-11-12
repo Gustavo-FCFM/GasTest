@@ -180,8 +180,21 @@ Las casillas para probarlos están en la tabla y en la ayuda, más abajo.
   - [x] Con 10 fantasmas de la capilla alrededor no se vuelve imposible (si sí: bajar la vida en `GE_EventBoss`).
   - [ ] Iluminación: el juego de noche y más oscuro durante el evento (falta decidir cómo).
 - **Enemigos nuevos** (todos le gustan), reusando el fantasma con pequeños cambios mientras no haya modelos: esqueleto con escudo
-  (el fantasma con un escudito al frente), zombi hinchado, banshee, necrófago, gárgola y nigromante. Más los cuatro de la jam sin
-  pasar a red (mago de hielo, mago de roca, jefe de hielo, jefe de daño).
+  (el fantasma con un escudito al frente), zombi hinchado, necrófago, gárgola y nigromante.
+- [x] **Los de la jam y las Banshees** (12 de noviembre; herramienta corrida). Los "jefes" de los campamentos se llaman ahora
+  **Banshees** (el del evento sigue siendo "el jefe"). Ver el LEEME del modo, "El resto del bestiario".
+  - Mago de hielo (`Net_IceMage`, azul): el daño de la bola de fuego, pero ralentiza 50 % 2 s en vez de quemar.
+  - Mago de roca (`Net_RockMage`, café): 0.4 × ataque, la roca sale a 1 s y lenta, aturde 1 s; dispara cada 3 s.
+  - Banshee de curación (`Net_Boss`, la de siempre): cura a los NPCs a 9 m y después daña a 6 m (sin buff ni lentitud).
+    El jefe del evento es esta, más grande.
+  - Banshee de daño (`Net_DamageBanshee`, roja): +5 de ataque a los NPCs a 9 m y después daña a 6 m.
+  - Banshee del silencio (`Net_SilenceBanshee`, morada; la "banshee" propuesta): se acerca y grita cada 6 s: 0.6 × ataque y
+    silencio 2 s a 7 m.
+  - El jefe de hielo de la jam se descartó (era la zona del jefe de siempre); su número en `EMercEnemyType` es la del silencio.
+  - [ ] **Ponerlos en los campamentos** (a mano: no se tocó la escena). Sugerencia: `Camp_Tower_*` + Mago de hielo (peso 60) y
+    Mago de roca (peso 40, máximo 1); `Camp_Chapel` + Banshee de daño y del silencio (peso 15, máximo 1, minutos 3 y 5).
+  - [ ] Probar en Play: lentitud y aturdido, la cura y el +5 de las Banshees a sus NPCs, el silencio (sin habilidades 2 s).
+  - [ ] Un VFX sobre la cabeza del silenciado (hoy solo el ícono).
 - **Para mucho después:** rejas con palanca (antes hay que abrir más caminos en el mapa) y zonas destruibles.
 - **Descartado:** las fosas con manos que enraízan.
 

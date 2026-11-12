@@ -1,3 +1,5 @@
+using UnityEngine;
+
 // ============================================================
 // EMercEnemyType
 //
@@ -13,14 +15,19 @@
 // IMPORTANTE: agregar tipos nuevos SIEMPRE al final. Estos valores se serializan por
 // NÚMERO en los campamentos de la escena; meter uno en el medio corre los índices y un
 // campamento que sacaba fantasmas pasaría a sacar jefes sin que nadie lo toque.
+//
+// LAS BANSHEES (12 de noviembre de 2026, pedido de Gustavo): los "jefes" de los campamentos pasaron a
+// llamarse Banshees, para no confundirlos con el jefe del evento de mitad de partida. "Boss" es la
+// Banshee de curación (el jefe de siempre; se dejó el nombre en el código porque lo usan el evento y los
+// campamentos). El jefe de hielo de la jam no existe: su lugar (5) es ahora la Banshee del silencio.
 // ============================================================
 public enum EMercEnemyType
 {
-    Ghost,        // el melee básico
-    Mage,         // a distancia, bola de fuego
-    IceMage,      // a distancia, hielo
-    RockMage,     // a distancia, roca
-    Boss,         // jefe
-    IceBoss,      // jefe de hielo
-    DamageBoss,   // jefe de daño
+    [InspectorName("Fantasma")]            Ghost,           // el melee básico
+    [InspectorName("Mago")]                Mage,            // a distancia, bola de fuego (quema)
+    [InspectorName("Mago de hielo")]       IceMage,         // a distancia, bola de hielo (ralentiza)
+    [InspectorName("Mago de roca")]        RockMage,        // a distancia, roca lenta (aturde)
+    [InspectorName("Banshee de curación")] Boss,            // cura a los NPCs y daña alrededor
+    [InspectorName("Banshee del silencio")] SilenceBanshee, // silencia y daña alrededor (era IceBoss, sin usar)
+    [InspectorName("Banshee de daño")]     DamageBanshee,   // daña alrededor y potencia a los NPCs (era DamageBoss)
 }

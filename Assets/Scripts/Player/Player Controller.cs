@@ -2551,10 +2551,14 @@ public class PlayerController : NetworkBehaviour
     private enum ENpcLabel
     {
         None  = 0,
-        Boss  = 1,
+        Boss  = 1,   // la Banshee de curación
         Mage  = 2,
         Totem = 3,
         Ghost = 4,
+        IceMage        = 5,
+        RockMage       = 6,
+        DamageBanshee  = 7,
+        SilenceBanshee = 8,
     }
 
     // El KDA de esta muerte. Solo cuenta entre personajes (jugadores y bots) y con la partida
@@ -2632,12 +2636,17 @@ public class PlayerController : NetworkBehaviour
             return string.IsNullOrEmpty(name) ? pc.gameObject.name : name;
         }
 
-        // NPCs: no guardan su tipo, pero sus prefabs se llaman por lo que son.
+        // NPCs: no guardan su tipo, pero sus prefabs se llaman por lo que son (los más
+        // específicos primero: "Net_IceMage" también contiene "Mage").
         string go = asc.gameObject.name;
-        npc = (int)(go.Contains("Boss")  ? ENpcLabel.Boss
-                  : go.Contains("Mage")  ? ENpcLabel.Mage
-                  : go.Contains("Totem") ? ENpcLabel.Totem
-                                         : ENpcLabel.Ghost);
+        npc = (int)(go.Contains("SilenceBanshee") ? ENpcLabel.SilenceBanshee
+                  : go.Contains("DamageBanshee")  ? ENpcLabel.DamageBanshee
+                  : go.Contains("Boss")           ? ENpcLabel.Boss
+                  : go.Contains("IceMage")        ? ENpcLabel.IceMage
+                  : go.Contains("RockMage")       ? ENpcLabel.RockMage
+                  : go.Contains("Mage")           ? ENpcLabel.Mage
+                  : go.Contains("Totem")          ? ENpcLabel.Totem
+                                                  : ENpcLabel.Ghost);
         return "";
     }
 
@@ -2650,6 +2659,10 @@ public class PlayerController : NetworkBehaviour
             case ENpcLabel.Mage:  return Loc.T("npc.mage");
             case ENpcLabel.Totem: return Loc.T("npc.totem");
             case ENpcLabel.Ghost: return Loc.T("npc.ghost");
+            case ENpcLabel.IceMage:        return Loc.T("npc.ice_mage");
+            case ENpcLabel.RockMage:       return Loc.T("npc.rock_mage");
+            case ENpcLabel.DamageBanshee:  return Loc.T("npc.damage_banshee");
+            case ENpcLabel.SilenceBanshee: return Loc.T("npc.silence_banshee");
             default:              return name;
         }
     }

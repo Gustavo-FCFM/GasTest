@@ -1,0 +1,96 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6bb5562b5ea8394f8a1925c1d716fda, type: 3}
+  m_Name: GA_BansheeFuryAura
+  m_EditorClassIdentifier: 
+  AbilityName: Fury Aura
+  AbilityNameEs: Aura de furia
+  AbilityIcon: {fileID: 21300000, guid: f4e1082d5e4844446b03f3be01feec06, type: 3}
+  Description: 
+  DescriptionEs: 
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 0}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 0
+  ActivationBlockedTags: 
+  ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  UsableWhileHolding: 0
+  AnimationClip: {fileID: 0}
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 1
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  StacksTag: 0
+  ConsumeStacks: 0
+  Effects:
+  - When: 0
+    ApplyTo: 1
+    Effect: {fileID: 11400000, guid: df61b00ac1f474545875c2321b453f32, type: 2}
+    OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
+    PerTargetCooldown: 0
+    TargetStacksTag: 0
+    TargetScaling: 0
+    TargetPerStack: 0
+    TargetMinimum: 0
+    TargetMaximum: 0
+    ConsumeTargetStacks: 0
+  Visuals:
+  - When: 2
+    VFXPrefab: {fileID: 3744133877081091469, guid: a2a060732547fe64581bb0cb3c2bdf1d, type: 3}
+    Delay: 0
+    Offset: {x: 0, y: 0, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    Attach: 1
+    MatchAreaSize: 1
+    AreaSizeMultiplier: 0.3
+    DestroyTime: 0
+    EndWithTag: 0
+    EndWhenAttributeDepleted: 0
+    DepletedAttribute: 0
+  IsInterruptible: 0
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  CastMode: 0
+  CastSeconds: 1
+  CastTickSeconds: 0.5
+  CastBlocksOthers: 1
+  CastBreaksOnDamage: 0
+  CastStartAnimation: {fileID: 0}
+  CastLoopAnimation: {fileID: 0}
+  CastReleaseAnimation: {fileID: 0}
+  MaxCharges: 1
+  Radius: 9
+  DeployMode: 0
+  MaxRange: 15
+  FollowOwner: 1
+  StartDelay: 0.5
+  TotalDuration: 5
+  TickInterval: 1
+  Targets: 1
+  EffectsToApply: []
+  AllyEffects: []
+  VisualPrefab: {fileID: 0}
+  VisualScaleMultiplier: 0.3

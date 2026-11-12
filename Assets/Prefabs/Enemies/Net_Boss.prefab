@@ -597,7 +597,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584126294752612391
+  _initializedTimestamp: -8584071024659322086
   _localLevelOfDetailCalculationType: 0
   _useLevelOfDetail: 0
   _useRootLevelOfDetail: 1
@@ -616,7 +616,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 6
+  <PrefabId>k__BackingField: 29
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 15342665890069500495
   SceneId: 0
@@ -721,7 +721,7 @@ MonoBehaviour:
   EyeHeight: 1.4
   DamageEffect: {fileID: 0}
   FallbackDamage: 5
-  AbilityToUse: {fileID: 11400000, guid: 80e8c2b99459134409681a187b325173, type: 2}
+  AbilityToUse: {fileID: 11400000, guid: b4a929123bc003f42862c2b16e7b9150, type: 2}
   ExtraAbilities: []
   HitVFX: {fileID: 0}
   ExperienceReward: 175

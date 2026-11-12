@@ -707,9 +707,22 @@ muy poco: cualquier ataque los borra).
 
 ### El resto del bestiario
 
-La herramienta que los traía (`Mercenarios ▸ 7`) ya no está, y quedaron **cuatro `Enemy_*`
-sin convertir** en `48toPlay`: `DamageBoss`, `IceBoss`, `IceMage` y `RockMage`. Si los
-querés en la demo, restaurá `MercSetupTools.cs` — ver `PENDIENTES.md`.
+**Desde el 12 de noviembre de 2026 están todos en red** (`Mercenarios ▸ Enemigos ▸ Armar los magos de hielo y roca y las
+Banshees`, `MercJamEnemiesSetup`: variantes de `Net_Mage` y `Net_Boss`, teñidas). Los "jefes" de campamento se llaman
+**Banshees**; el del evento de mitad de partida sigue siendo "el jefe" (y es la Banshee de curación, más grande).
+
+| Tipo (`EMercEnemyType`) | Prefab | Qué hace |
+|---|---|---|
+| Mago de hielo | `Net_IceMage` (azul) | `GA_IceballEnemy`: 1 × ataque + `GE_FrostSlow` (50 %, 2 s); proyectil `PF_FrostBolt`. |
+| Mago de roca | `Net_RockMage` (café) | `GA_RockEnemy`: 0.4 × ataque + `GE_Stun` (1 s); sale a 1 s y lenta (`PF_RockProjectile`); cada 3 s. |
+| Banshee de curación (`Boss`) | `Net_Boss` | `GA_BansheeHealing`: 5 s de aura que cura a los NPCs a 9 m, después `GA_BansheeHealBlast` (1 × ataque a 6 m). |
+| Banshee de daño | `Net_DamageBanshee` (roja) | `GA_BansheeFury`: aura de +5 de ataque a los NPCs (`GE_BansheeFury`), después daño a 6 m. |
+| Banshee del silencio | `Net_SilenceBanshee` (morada) | `GA_BansheeWail`, cada 6 s a 7 m: 0.6 × ataque + `GE_BansheeSilence` (`State_Silenced`, 2 s). |
+
+El jefe de hielo de la jam no existe: su lugar en el enum (5) es la Banshee del silencio. La pantalla de muerte los nombra
+por el nombre del prefab (`PlayerController.DescribeCharacter`): un enemigo nuevo lleva un nombre que se distinga.
+
+Lo que sigue es la historia de cómo se pasaron a red los primeros (la herramienta vieja, `Mercenarios ▸ 7`, ya no está).
 
 Lo que hacía: pasar a red los `Enemy_*` de `Assets/48toPlay` **trasladando la configuración
 que ya tenían** (alcance, cadencia, habilidad, daño y experiencia), así el balance de la jam

@@ -233,10 +233,14 @@ killfeed.died;murió;died
 death.you_died;MORISTE;YOU DIED
 death.killed_by;TE MATÓ {killer};KILLED BY {killer}
 death.respawning;Reapareces en {seconds};Respawning in {seconds}
-npc.boss;el Jefe;the Boss
+npc.boss;la Banshee de curación;the Healing Banshee
 npc.mage;un Mago;a Mage
 npc.totem;un Tótem;a Totem
 npc.ghost;un Fantasma;a Ghost
+npc.ice_mage;un Mago de hielo;an Ice Mage
+npc.rock_mage;un Mago de roca;a Rock Mage
+npc.damage_banshee;la Banshee de daño;the Damage Banshee
+npc.silence_banshee;la Banshee del silencio;the Silence Banshee
 #
 # ---- Partida: desatascarse (ESC ▸ recuadro de red) ----
 unstuck.not_now;Ahora no se puede.;Can't do that right now.
