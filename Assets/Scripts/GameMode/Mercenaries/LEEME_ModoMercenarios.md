@@ -973,7 +973,7 @@ escena se comporta como antes (la arena vieja sigue con el Objetivo a los 60 s y
 - **Red:** `MatchEvent_Shrines` sincroniza cuál está activo, el tipo, quién está dentro (un bit por equipo), el
   % de cada equipo y cuánto falta para el siguiente. Las bajas le llegan por `MercenariesGameMode.OnServerKill`.
 - **Herramienta:** `Mercenarios ▸ Santuarios ▸ Armar santuarios y eventos de partida` (no duplica nada).
-- **Pendiente:** los bots no buscan los santuarios.
+- **Bots** (12 de noviembre de 2026): con un santuario activo y sin Objetivo que atender, van a la zona y pelean dentro (`BotController.Think`, "2d"; "Santuario: pelea con lo que esté a (m)").
 
 ## Las campanas (11 de noviembre de 2026)
 
@@ -994,7 +994,7 @@ escena se comporta como antes (la arena vieja sigue con el Objetivo a los 60 s y
 - **Lista o no:** lista brilla un poco y se prende su luz; descansando, nada. Lo sincronizado es hasta qué tick descansa cada
   una.
 - **Herramienta:** `Mercenarios ▸ Campanas ▸ Armar las campanas de las torres` (no duplica nada).
-- **Pendiente:** los bots no le pegan a las campanas.
+- **Bots:** no las tocan; desde el 12 de noviembre de 2026 tampoco las toman por "objetivo" (`Strikeable` se saltea en sus búsquedas).
 
 ## Los orbes de definitiva (11 de noviembre de 2026)
 
@@ -1010,7 +1010,7 @@ escena se comporta como antes (la arena vieja sigue con el Objetivo a los 60 s y
 - **Pantalla:** el modelo `Prefabs/GameMode/UltOrb` (núcleo negro, cáscara casi transparente y dos anillos blancos) lo pone
   cada pantalla sobre el sarcófago. El aviso `OrbsSpawned` al aparecer y el sonido al tomarlo ("Sonido al tomarlo", vacío).
 - **Herramienta:** `Mercenarios ▸ Orbes ▸ Armar los orbes de definitiva` (no duplica nada).
-- **Pendiente:** los bots no buscan los orbes (los toman si pasan al lado).
+- **Bots** (12 de noviembre de 2026): si su definitiva no está llena y hay un orbe a 25 m sin nadie encima, van a tomarlo ("Busca orbes hasta (m)").
 
 ## El jefe de mitad de partida (11 de noviembre de 2026)
 
@@ -1027,7 +1027,8 @@ escena se comporta como antes (la arena vieja sigue con el Objetivo a los 60 s y
   desde el 12 de noviembre de 2026: a los 7 minutos los equipos ya son nivel 3.
 - **Avisos:** `BossSpawned`, `BossSlain` (Extra = minutos de bendición) y `BossLeft`, al final de `EMatchAnnouncement`.
 - **Herramienta:** `Mercenarios ▸ Jefe ▸ Armar el jefe de mitad de partida` (no duplica nada).
-- **Pendiente:** los bots no van a buscarlo; la iluminación de noche durante el evento.
+- **Bots** (12 de noviembre de 2026): sin santuario activo ni nadie a quien pegarle, van por él ("Van por el jefe del evento"; `MatchEvent_Boss.Instance.ActiveBoss`).
+- **Pendiente:** la iluminación de noche durante el evento.
 
 ---
 

@@ -2375,7 +2375,7 @@ MonoBehaviour:
     MaxAlive: 1
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
   Count: 3
-  SpawnRadius: 4
+  SpawnRadius: 5
   RespawnSeconds: 20
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
@@ -4345,6 +4345,8 @@ PrefabInstance:
     - {fileID: 5983651591178788059, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
     - {fileID: 447307690747395217, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
     - {fileID: 3913623107009705009, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
+    - {fileID: 7860286147344972485, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
+    - {fileID: 2342354768066850079, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
@@ -5105,6 +5107,8 @@ PrefabInstance:
     - {fileID: 5983651591178788059, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
     - {fileID: 3913623107009705009, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
     - {fileID: 447307690747395217, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
+    - {fileID: 2342354768066850079, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
+    - {fileID: 7860286147344972485, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
@@ -6580,7 +6584,7 @@ MonoBehaviour:
     MaxAlive: 1
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
   Count: 3
-  SpawnRadius: 4
+  SpawnRadius: 5
   RespawnSeconds: 20
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
@@ -6620,12 +6624,15 @@ Transform:
   - {fileID: 163470703}
   - {fileID: 1068685588}
   - {fileID: 1283926779}
+  - {fileID: 1160215996}
   - {fileID: 199873210}
   - {fileID: 737392931}
   - {fileID: 1039951595}
+  - {fileID: 1668497485}
   - {fileID: 311611063}
   - {fileID: 1089439886}
   - {fileID: 372967582}
+  - {fileID: 1581941948}
   m_Father: {fileID: 111255069}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1068685587
@@ -7648,6 +7655,8 @@ PrefabInstance:
     - {fileID: 5983651591178788059, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
     - {fileID: 3913623107009705009, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
     - {fileID: 447307690747395217, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
+    - {fileID: 7860286147344972485, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
+    - {fileID: 2342354768066850079, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 1577073406087160432, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
@@ -7870,6 +7879,76 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1148954750}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1160215995
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1160215996}
+  - component: {fileID: 1160215997}
+  m_Layer: 0
+  m_Name: Camp_Esplanade_1 (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1160215996
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1160215995}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.11, y: 0.1, z: -24.44}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1064519931}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1160215997
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1160215995}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9a1e81edb07e3a468b748c86b7ff7f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SpawnTable:
+  - Type: 0
+    Weight: 100
+    UnlockMinute: 0
+    MaxAlive: 0
+  - Type: 1
+    Weight: 30
+    UnlockMinute: 0
+    MaxAlive: 1
+  - Type: 7
+    Weight: 60
+    UnlockMinute: 0
+    MaxAlive: 2
+  - Type: 9
+    Weight: 30
+    UnlockMinute: 2
+    MaxAlive: 1
+  EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
+  Count: 3
+  SpawnRadius: 5
+  RespawnSeconds: 20
+  SpawnInterval: 0.5
+  PopulateDuringWarmup: 1
+  OnlyWhileShrineActive: 0
+  OnlyWhileOwnerAlive: 0
+  OnlyWhileOwnerFighting: 1
 --- !u!1 &1198167168
 GameObject:
   m_ObjectHideFlags: 0
@@ -8755,7 +8834,7 @@ MonoBehaviour:
     MaxAlive: 1
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
   Count: 3
-  SpawnRadius: 4
+  SpawnRadius: 5
   RespawnSeconds: 20
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
@@ -9455,6 +9534,76 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1575986219}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1581941947
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1581941948}
+  - component: {fileID: 1581941949}
+  m_Layer: 0
+  m_Name: Camp_Esplanade_3 (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1581941948
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1581941947}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 20.68, y: 0.1, z: 13.69}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1064519931}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1581941949
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1581941947}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9a1e81edb07e3a468b748c86b7ff7f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SpawnTable:
+  - Type: 0
+    Weight: 100
+    UnlockMinute: 0
+    MaxAlive: 0
+  - Type: 1
+    Weight: 30
+    UnlockMinute: 0
+    MaxAlive: 1
+  - Type: 7
+    Weight: 60
+    UnlockMinute: 0
+    MaxAlive: 2
+  - Type: 9
+    Weight: 30
+    UnlockMinute: 2
+    MaxAlive: 1
+  EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
+  Count: 3
+  SpawnRadius: 5
+  RespawnSeconds: 20
+  SpawnInterval: 0.5
+  PopulateDuringWarmup: 1
+  OnlyWhileShrineActive: 0
+  OnlyWhileOwnerAlive: 0
+  OnlyWhileOwnerFighting: 1
 --- !u!1 &1599725338
 GameObject:
   m_ObjectHideFlags: 0
@@ -9995,6 +10144,76 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1650117177}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1668497484
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1668497485}
+  - component: {fileID: 1668497486}
+  m_Layer: 0
+  m_Name: Camp_Esplanade_2 (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1668497485
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1668497484}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -20.88, y: 0.1, z: 11.72}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1064519931}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1668497486
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1668497484}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9a1e81edb07e3a468b748c86b7ff7f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SpawnTable:
+  - Type: 0
+    Weight: 100
+    UnlockMinute: 0
+    MaxAlive: 0
+  - Type: 1
+    Weight: 30
+    UnlockMinute: 0
+    MaxAlive: 1
+  - Type: 7
+    Weight: 60
+    UnlockMinute: 0
+    MaxAlive: 2
+  - Type: 9
+    Weight: 30
+    UnlockMinute: 2
+    MaxAlive: 1
+  EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
+  Count: 3
+  SpawnRadius: 5
+  RespawnSeconds: 20
+  SpawnInterval: 0.5
+  PopulateDuringWarmup: 1
+  OnlyWhileShrineActive: 0
+  OnlyWhileOwnerAlive: 0
+  OnlyWhileOwnerFighting: 1
 --- !u!1 &1702307306
 GameObject:
   m_ObjectHideFlags: 0

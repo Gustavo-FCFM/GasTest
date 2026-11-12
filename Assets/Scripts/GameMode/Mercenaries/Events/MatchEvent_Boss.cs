@@ -67,6 +67,13 @@ public class MatchEvent_Boss : MatchEvent
 
     private MercEnemyAI _boss;
     private NetworkAbilitySystemComponent _bossNet;
+
+    // El jefe del evento si está vivo (solo en el servidor). Lo usan los bots para ir a pelearlo.
+    public static MatchEvent_Boss Instance { get; private set; }
+    public MercEnemyAI ActiveBoss => _boss != null && !_boss.IsDead ? _boss : null;
+
+    private void Awake()     => Instance = this;
+    private void OnDestroy() { if (Instance == this) Instance = null; }
     private float _aliveTimer;
     private float _revealTimer;
     private float _repeatTimer = -1f;   // -1 = no hay otro programado

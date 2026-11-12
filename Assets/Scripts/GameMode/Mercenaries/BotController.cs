@@ -37,7 +37,11 @@ public enum EBotRole
 //   2. Si la llevo YO, correr al punto de entrega.
 //   3. Si la lleva un COMPAÑERO, escoltarlo.
 //   4. Si está libre en el piso, ir a buscarla.
-//   5. Si no hay carga, pelear con lo que haya cerca (los NPCs dan experiencia).
+//   5. Un orbe de definitiva a mano (y la definitiva sin llenar): tomarlo.
+//   6. Un santuario activo: ir a la zona y pelear dentro (12 de noviembre de 2026).
+//   7. Si no, pelear con lo que haya cerca (los NPCs dan experiencia); sin nadie, ir por el
+//      jefe del evento si está vivo, o al centro.
+// Las campanas no las tocan: son algo del mapa (StrikeTarget), no a quién pelear.
 //
 // Dentro de eso, cada rol se mueve distinto: ver DecideCombatPosition.
 // ============================================================
@@ -211,6 +215,20 @@ public class BotController : MonoBehaviour
              "para revivirlo. Más lejos, lo deja.")]
     [Label("Buscar cuerpos hasta (m)")]
     public float ReviveSearchRadius = 25f;
+
+    [Header("Mecánicas del mapa (12 de noviembre de 2026)")]
+    [Tooltip("Hasta dónde va a buscar un orbe de definitiva (si la definitiva no está llena y nadie le pega de cerca).")]
+    [Label("Busca orbes hasta (m)")]
+    public float OrbSeekRadius = 25f;
+
+    [Tooltip("Con un santuario activo, los bots sin nada más urgente van a la zona. Pelean con un enemigo solo si " +
+             "está a esta distancia; más lejos, siguen hacia la zona (el santuario se gana estando dentro).")]
+    [Label("Santuario: pelea con lo que esté a (m)")]
+    public float ShrineFightRadius = 10f;
+
+    [Tooltip("Sin santuario activo, van por el jefe del evento de mitad de partida si está vivo.")]
+    [Label("Van por el jefe del evento")]
+    public bool HuntEventBoss = true;
 
     [Header("Vuelo (el Mago)")]
     [Tooltip("A qué altura sobre el piso vuela un bot (el Vuelo del Mago y la Sobrecarga de la Evocación): " +
@@ -1094,10 +1112,47 @@ public class BotController : MonoBehaviour
             return;
         }
 
+        // 2c · Un orbe de definitiva cerca y nadie encima: tomarlo (se canaliza solo, quedándose al lado).
+        if (FindOrbToTake(out Vector3 orb) &&
+            (_target == null || Vector3.Distance(transform.position, _target.transform.position) > 8f))
+        {
+            _destination = orb;
+            return;
+        }
+
+        // 2d · Un santuario activo: a la zona, y dentro pelear con lo que haya. Se gana estando dentro,
+        //      así que un enemigo lejos de ahí no lo saca de la zona.
+        MatchShrine shrine = MatchEvent_Shrines.Instance != null ? MatchEvent_Shrines.Instance.ActiveShrine : null;
+        if (shrine != null)
+        {
+            bool targetClose = _target != null &&
+                               Vector3.Distance(transform.position, _target.transform.position) <= ShrineFightRadius;
+            if (targetClose && shrine.Contains(_target.transform.position))
+            {
+                _destination = DecideCombatPosition(_target);
+                return;
+            }
+            if (!shrine.Contains(transform.position) || !targetClose)
+            {
+                _destination = InsideShrine(shrine);
+                return;
+            }
+            _destination = DecideCombatPosition(_target);
+            return;
+        }
+
         // 3 · Sin carga en juego: pelear con lo que haya.
         if (_target != null)
         {
             _destination = DecideCombatPosition(_target);
+            return;
+        }
+
+        // 3b · Nadie a la vista y el jefe del evento vivo: ir por él (su bendición vale la pena).
+        MercEnemyAI boss = HuntEventBoss && MatchEvent_Boss.Instance != null ? MatchEvent_Boss.Instance.ActiveBoss : null;
+        if (boss != null)
+        {
+            _destination = PositionNear(boss.transform.position, RangedDistance * 0.6f);
             return;
         }
 
@@ -1328,6 +1383,39 @@ public class BotController : MonoBehaviour
         return center + away.normalized * distance;
     }
 
+    // El orbe de definitiva activo más cercano, si me sirve (la definitiva no está llena) y está a mano.
+    private bool FindOrbToTake(out Vector3 point)
+    {
+        point = default;
+        MatchEvent_Orbs orbs = MatchEvent_Orbs.Instance;
+        if (orbs == null || orbs.ActiveCount == 0 || _pc == null || !_pc.ServerCanGainUltimateCharge()) return false;
+
+        float best = OrbSeekRadius * OrbSeekRadius;
+        bool found = false;
+        IReadOnlyList<OrbSpot> spots = OrbSpot.All;
+        for (int i = 0; i < spots.Count; i++)
+        {
+            if (spots[i] == null || !orbs.IsActive(i)) continue;
+            Vector3 p = spots[i].OrbPoint;
+            float d = (p - transform.position).sqrMagnitude;
+            if (d >= best) continue;
+            best  = d;
+            point = p;
+            found = true;
+        }
+
+        // El orbe flota sobre el sarcófago: el destino es el piso de al lado.
+        if (found && NavMesh.SamplePosition(point, out NavMeshHit hit, 3f, NavMesh.AllAreas)) point = hit.position;
+        return found;
+    }
+
+    // Un punto dentro de la zona del santuario, rodeando el centro (no todos los bots al mismo lugar).
+    private Vector3 InsideShrine(MatchShrine shrine)
+    {
+        Vector3 p = OrbitPoint(shrine.transform.position, shrine.Radius * 0.55f);
+        return NavMesh.SamplePosition(p, out NavMeshHit hit, 4f, NavMesh.AllAreas) ? hit.position : shrine.transform.position;
+    }
+
     private Vector3 ResolveIdleDestination(MercenariesGameMode gm)
     {
         if (gm != null && gm.ObjectiveSpawnPoint != null) return gm.ObjectiveSpawnPoint.position;
@@ -1355,6 +1443,7 @@ public class BotController : MonoBehaviour
             if (other == null || other == _asc) continue;
             if (other.HasTag(EGameplayTag.State_Dead)) continue;
             if (_asc.IsAllyOf(other, includeSelf: false)) continue;
+            if (other.Strikeable != null) continue;   // algo del mapa (la campana): no es a quién pelear
             if (!CanPerceive(other)) continue;   // invisible y sin revelar: no lo veo
 
             float dist = Vector3.Distance(transform.position, other.transform.position);
@@ -1397,6 +1486,7 @@ public class BotController : MonoBehaviour
             if (other == null || other == _asc) continue;
             if (other.HasTag(EGameplayTag.State_Dead)) continue;
             if (_asc.IsAllyOf(other, includeSelf: false)) continue;
+            if (other.Strikeable != null) continue;   // algo del mapa (la campana): no es a quién pelear
             if (!CanPerceive(other)) continue;   // invisible y sin revelar: no lo veo
 
             float dist = Vector3.Distance(center, other.transform.position);
@@ -2183,6 +2273,7 @@ public class BotController : MonoBehaviour
             if (other == null || other == _asc) continue;
             if (other.HasTag(EGameplayTag.State_Dead)) continue;
             if (_asc.IsAllyOf(other, includeSelf: false)) continue;
+            if (other.Strikeable != null) continue;   // algo del mapa (la campana): no es a quién pelear
             if (!CanPerceive(other)) continue;   // invisible y sin revelar: no lo veo
             if (IsImmune(other)) continue;       // inmune: un área no le hace nada
 

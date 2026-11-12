@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 11 de noviembre de 2026
+# Pendientes — actualizado el 12 de noviembre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -132,7 +132,10 @@ Las casillas para probarlos están en la tabla y en la ayuda, más abajo.
 - [x] **Santuarios de mejora** (hechos el 11 de noviembre, probados por Gustavo): rey de la montaña abajo de cada torre, uno activo a
   la vez; daño, curación, defensa o velocidad por 3 minutos (se pierde al morir) y 75 de exp. Mientras está activo salen enemigos
   extra, y los NPCs dentro de la zona tienen +50 % de vida y +2 de ataque. Ver el LEEME del modo, "Los eventos de la partida".
-  - [ ] Los bots todavía no van a los santuarios (solo cuentan si pasan por ahí).
+  - [x] Los bots van a los santuarios (12 de noviembre, `BotController`, después del Objetivo): a la zona, peleando dentro.
+    También toman orbes de definitiva cercanos, van por el jefe del evento si no hay nadie más, e ignoran las campanas.
+    - [ ] Probarlo en Play; si con un santuario activo se juntan demasiados bots, mandar solo algunos por equipo.
+    - Todavía no: tocar campanas, esquivar la nube del zombi, rodear al esqueleto.
   - [ ] Si se bajan los balcones por debajo de 6 m, bajar también el "Alto (m)" del santuario, o el techo contará como zona.
   - [ ] El texto del marcador del Objetivo se parte en dos líneas con la cuenta atrás ("OBJETIVO EN 0:13 58m"): ensancharlo
     como el del santuario (300 px).
