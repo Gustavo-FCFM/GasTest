@@ -195,6 +195,7 @@ public class GA_HitscanShot : GameplayAbility
         foreach (RaycastHit h in hits)
         {
             AbilitySystemComponent asc = h.collider.GetComponentInParent<AbilitySystemComponent>();
+            if (StrikeIfScenery(asc)) continue;   // la campana
             if (asc == null || ReferenceEquals(asc, OwnerASC) || !IsEnemy(asc)) continue;
             if (asc.HasTag(EGameplayTag.State_Dead)) continue;
 

@@ -125,6 +125,8 @@ public class GA_LeapAttack : GameplayAbility, ILeapAbility
             AbilitySystemComponent targetASC = hitCollider.GetComponentInParent<AbilitySystemComponent>();
             if (targetASC == null || ReferenceEquals(targetASC, OwnerASC)) continue; // ignora el propio collider del que saltó
 
+            if (StrikeIfScenery(targetASC)) continue;   // la campana
+
             if (IsEnemy(targetASC) && !enemiesHit.Contains(targetASC))
             {
                 ApplyHitEffects(targetASC, firstHit: enemiesHit.Count == 0);

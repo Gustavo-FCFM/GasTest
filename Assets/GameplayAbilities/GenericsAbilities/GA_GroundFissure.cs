@@ -227,6 +227,7 @@ public class GA_GroundFissure : GameplayAbility
         {
             AbilitySystemComponent target = col.GetComponentInParent<AbilitySystemComponent>();
             if (target == null || target == OwnerASC || struck.Contains(target)) continue;
+            if (StrikeIfScenery(target)) continue;   // la campana
             if (target.HasTag(EGameplayTag.State_Dead) || !IsEnemy(target)) continue;
 
             struck.Add(target);

@@ -218,6 +218,7 @@ public class AbilitySystemComponent : MonoBehaviour
     // Carga los atributos iniciales al crear el objeto.
     void Awake()
     {
+        Strikeable = GetComponent<StrikeTarget>();
         InitializeAttributes();
     }
 
@@ -1751,6 +1752,10 @@ public class AbilitySystemComponent : MonoBehaviour
     // invisibilidad: sus aliados lo siguen viendo fantasma y, al salir del aura, vuelve a
     // desaparecer solo. Todo lo que oculta a un invisible (modelo, barra de vida, números,
     // los NPCs que lo ignoran) pregunta ESTO y no el tag a secas.
+    // Algo del mapa que se golpea pero no es un personaje (la campana): ver StrikeTarget. No es enemigo
+    // ni aliado de nadie, y los golpes le avisan en vez de aplicarle efectos.
+    public StrikeTarget Strikeable { get; private set; }
+
     public bool IsHiddenFromEnemies =>
         HasTag(EGameplayTag.Status_Invisible) && !HasTag(EGameplayTag.State_AlwaysVisible);
 
@@ -1759,6 +1764,7 @@ public class AbilitySystemComponent : MonoBehaviour
     public bool IsEnemyOf(AbilitySystemComponent target)
     {
         if (target == null || target == this) return false;
+        if (Strikeable != null || target.Strikeable != null) return false;   // algo del mapa (StrikeTarget)
         if (TeamID == 0 || target.TeamID == 0) return true;
         return TeamID != target.TeamID;
     }
@@ -1769,6 +1775,7 @@ public class AbilitySystemComponent : MonoBehaviour
     {
         if (target == null) return false;
         if (target == this) return includeSelf;
+        if (Strikeable != null || target.Strikeable != null) return false;   // algo del mapa (StrikeTarget)
         if (TeamID == 0 || target.TeamID == 0) return false;
         return TeamID == target.TeamID;
     }

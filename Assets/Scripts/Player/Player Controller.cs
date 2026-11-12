@@ -2907,6 +2907,33 @@ public class PlayerController : NetworkBehaviour
         ASC.ReduceCooldownByTag(EGameplayTag.Ability_Cooldown_Ultimate, seconds);
     }
 
+    // --- La carga de los orbes del mapa (MatchEvent_Orbs, 11 de noviembre de 2026) ---
+
+    // ¿Le sirve más carga? False si ya la tiene llena (así el orbe queda para otro). Una clase base, que
+    // no tiene definitiva, mira lo que guarda para su subclase.
+    public bool ServerCanGainUltimateCharge()
+    {
+        if (ASC == null) return false;
+        if (AbilityR == null) return _carriedUltimateCharge < 1f;
+        return ASC.GetUltimateCharge() < 1f;
+    }
+
+    // Suma una parte (0 a 1) de la definitiva entera. Una clase base la guarda para la subclase, igual
+    // que lo que se conserva al cambiar de clase.
+    public void ServerAddUltimateCharge(float fraction)
+    {
+        if (fraction <= 0f || ASC == null) return;
+
+        if (AbilityR == null)
+        {
+            _carriedUltimateCharge = Mathf.Clamp01(Mathf.Max(0f, _carriedUltimateCharge) + fraction);
+            return;
+        }
+
+        float total = AbilityR.CooldownDurationSeconds;
+        if (total > 0f) ASC.ReduceCooldownByTag(EGameplayTag.Ability_Cooldown_Ultimate, total * fraction);
+    }
+
     // Cambia la clase del personaje: limpia estado anterior, actualiza
     // visuales/armas, otorga las nuevas habilidades por slot, recarga
     // atributos base, y (si sos el dueño) sincroniza el cambio por red y

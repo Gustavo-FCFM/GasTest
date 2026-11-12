@@ -136,13 +136,45 @@ Las casillas para probarlos están en la tabla y en la ayuda, más abajo.
   - [ ] Si se bajan los balcones por debajo de 6 m, bajar también el "Alto (m)" del santuario, o el techo contará como zona.
   - [ ] El texto del marcador del Objetivo se parte en dos líneas con la cuenta atrás ("OBJETIVO EN 0:13 58m"): ensancharlo
     como el del santuario (300 px).
-- **Campanas** en las torres: golpearla revela a los enemigos cercanos unos segundos y avisa a todo el mapa.
+- [x] **Campanas** en las torres (hechas el 11 de noviembre; herramienta corrida y **probado ✅ (11 de noviembre)**): una sobre el techo de cada
+  torre. Se toca GOLPEÁNDOLA con cualquier habilidad (desde el 11 de noviembre; antes, acercándose a 3 m); el equipo que la toca ve a través de las paredes a los enemigos a 25 m (en el plano,
+  también los de abajo de la torre) por 4 s, y a los invisibles de ese radio les pone `GE_Revealed` (los ven todos). Todo el mapa se
+  entera: aviso (`BellRung`) y el sonido (vacío hasta que Gustavo cargue el clip; 3D, se oye a 150 m). Descansa 45 s; lista, brilla
+  y se prende su luz. Código: `MatchBell` (la campana) y `MatchEvent_Bells` (hijo "Bells" de `MatchEvents`). Ver el LEEME del modo.
+  **Antes de probar:** correr `Mercenarios ▸ Campanas ▸ Armar las campanas de las torres` (con el editor en cualquier escena) y
+  dejar que Unity recompile (hay una RPC nueva).
+  - [x] La campana queda bien parada sobre el techo de las tres torres, sin tapar la escalera. **Probado ✅ (11 de noviembre).**
+  - [x] Tocarla: se balancea en todas las pantallas, sale el aviso ("¡CAMPANA! N enemigos a la vista" en tu equipo, "¡Equipo N tocó
+        una campana!" en los otros) y los enemigos cercanos se ven a través de las paredes 4 s. **Probado ✅ (11 de noviembre).**
+  - [ ] Un Asesino o un Shinobi invisible cerca de la campana se ve mientras dura el revelado.
+  - [x] Después de tocarla se apaga (sin brillo ni luz) y a los 45 s vuelve a estar lista. **Probado ✅ (11 de noviembre).**
+  - [ ] Cargar el sonido en el prefab `Prefabs/GameMode/Bell` ("Sonido").
+  - [x] Golpearla: con un ataque cuerpo a cuerpo, con un proyectil desde abajo de la torre y con una zona. Suena, no saca números
+        de daño ni carga la definitiva, y el proyectil se deshace contra ella. Los bots no le disparan. **Probado ✅ (11 de noviembre).**
+  - Los bots no le pegan (no es enemiga de nadie).
 - **Balcones de las torres más bajos**: para bajar más rápido y que el Explorador dispare mejor (es el prefab `Graveyard_Sector`).
-- **Orbes en los sarcófagos** (como los de Valorant, una bolita negra y blanca): 3 activos a la vez como máximo; cada minuto aparecen
-  en sarcófagos al azar, de los rectángulos que ya hay alrededor del mapa. Los sarcófagos se bajan para poder saltar sobre ellos.
-  - [ ] Decidir qué dan al tomarlos (carga de definitiva, experiencia) y si tomarlos se canaliza o es al tocarlos.
-- **Evento a mitad de partida**: por un rato salen más monstruos y jefes, o un solo jefe que da un beneficio al equipo que lo mata.
-  - [ ] Iluminación: el juego pasa a ser de noche, y durante el evento se oscurece más.
+- [x] **Orbes de definitiva en los sarcófagos** (hechos el 11 de noviembre; **probados ✅ el 11 de noviembre**): en cada sarcófago
+  (`Tomb_*`) hay un lugar (`OrbSpot`, 24 en el mapa). A los 45 s y después cada minuto se completan hasta 3 orbes. Se toman
+  canalizando 1.5 s a 2.5 m (sale la barra de canalizar; un golpe, morir o alejarse la corta) y dan el 25 % de la definitiva. Con la
+  definitiva llena no se toman; una clase base guarda la carga para su subclase. Números en `MatchEvents ▸ Orbs`; el modelo es
+  `Prefabs/GameMode/UltOrb`. Ver el LEEME del modo.
+  - [x] A los 45 s aparecen 3 orbes con el aviso; tomados, a cada minuto se vuelven a completar.
+  - [x] Canalizar: la barra se llena en 1.5 s, el orbe desaparece en todas las pantallas y la barra de la definitiva sube un cuarto.
+  - [x] Recibir un golpe a mitad de canalizar la corta ("Interrumpido") y el orbe sigue ahí.
+  - [x] Con la definitiva llena no pasa nada al pararse al lado.
+  - [x] Clase base: el orbe se puede tomar y, al elegir subclase, la definitiva arranca con esa carga.
+  - [ ] Cargar el sonido al tomarlo (`MatchEvents ▸ Orbs ▸ Sonido al tomarlo`).
+  - [ ] Bajar los sarcófagos (`Tomb_*` en `Graveyard_Sector`) para poder saltar encima: el orbe baja solo con ellos.
+- [x] **Jefe a mitad de partida** (hecho el 11 de noviembre; **probado ✅ el 12 de noviembre**): a los 7 minutos aparece UN jefe
+  en la capilla del centro (`BossLair`), el de siempre con vida ×3, +4 de ataque, más grande y con aura roja; todos lo ven a través
+  de las paredes. El equipo que lo mata recibe la bendición (+15 % de daño, 15 % menos daño recibido, 3 min, se pierde al morir) y
+  100 de exp extra. Si nadie lo mata en 3 minutos, se va. Números en `MatchEvents ▸ Boss`. Ver el LEEME del modo.
+  **Para probar rápido:** bajar "Empieza a los (s)" del evento `Boss` a 20 y devolverlo a 420 después.
+  - [x] Aparece con el aviso, más grande y con el aura, y se lo ve a través de las paredes desde cualquier lado.
+  - [x] Matarlo: el aviso dice quién, tu equipo recibe la bendición (ícono en el HUD) y sube la experiencia.
+  - [x] Que lo mate un NPC o que se vaya a los 3 minutos: nadie recibe nada y sale el aviso de que se fue.
+  - [x] Con 10 fantasmas de la capilla alrededor no se vuelve imposible (si sí: bajar la vida en `GE_EventBoss`).
+  - [ ] Iluminación: el juego de noche y más oscuro durante el evento (falta decidir cómo).
 - **Enemigos nuevos** (todos le gustan), reusando el fantasma con pequeños cambios mientras no haya modelos: esqueleto con escudo
   (el fantasma con un escudito al frente), zombi hinchado, banshee, necrófago, gárgola y nigromante. Más los cuatro de la jam sin
   pasar a red (mago de hielo, mago de roca, jefe de hielo, jefe de daño).

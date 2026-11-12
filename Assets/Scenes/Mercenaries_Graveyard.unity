@@ -1298,6 +1298,7 @@ MonoBehaviour:
   RespawnSeconds: 20
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
+  OnlyWhileShrineActive: 0
 --- !u!1 &169463531
 GameObject:
   m_ObjectHideFlags: 0
@@ -1587,6 +1588,7 @@ MonoBehaviour:
   RespawnSeconds: 20
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
+  OnlyWhileShrineActive: 0
 --- !u!1 &202947632
 GameObject:
   m_ObjectHideFlags: 0
@@ -2171,6 +2173,7 @@ MonoBehaviour:
   RespawnSeconds: 20
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
+  OnlyWhileShrineActive: 0
 --- !u!1 &327247976
 GameObject:
   m_ObjectHideFlags: 0
@@ -2338,6 +2341,7 @@ MonoBehaviour:
   RespawnSeconds: 20
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
+  OnlyWhileShrineActive: 0
 --- !u!1 &374878143
 GameObject:
   m_ObjectHideFlags: 0
@@ -5056,6 +5060,7 @@ MonoBehaviour:
   RespawnSeconds: 20
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
+  OnlyWhileShrineActive: 0
 --- !u!1 &740936240
 GameObject:
   m_ObjectHideFlags: 0
@@ -6267,6 +6272,7 @@ MonoBehaviour:
   RespawnSeconds: 20
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
+  OnlyWhileShrineActive: 0
 --- !u!1 &1039951594
 GameObject:
   m_ObjectHideFlags: 0
@@ -6326,6 +6332,7 @@ MonoBehaviour:
   RespawnSeconds: 20
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
+  OnlyWhileShrineActive: 0
 --- !u!1 &1064519930
 GameObject:
   m_ObjectHideFlags: 0
@@ -6422,6 +6429,7 @@ MonoBehaviour:
   RespawnSeconds: 20
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
+  OnlyWhileShrineActive: 0
 --- !u!1 &1089439885
 GameObject:
   m_ObjectHideFlags: 0
@@ -6477,6 +6485,7 @@ MonoBehaviour:
   RespawnSeconds: 20
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
+  OnlyWhileShrineActive: 0
 --- !u!1 &1090205885
 GameObject:
   m_ObjectHideFlags: 0
@@ -7340,6 +7349,50 @@ MonoBehaviour:
   m_LightCookieSize: {x: 1, y: 1}
   m_LightCookieOffset: {x: 0, y: 0}
   m_SoftShadowQuality: 0
+--- !u!1 &1144910794
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1144910796}
+  - component: {fileID: 1144910795}
+  m_Layer: 0
+  m_Name: BossLair
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1144910795
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1144910794}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3f975cdd57f01d46b88cfc043d1c59d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &1144910796
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1144910794}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.1, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1148936804
 GameObject:
   m_ObjectHideFlags: 0
@@ -8360,6 +8413,7 @@ MonoBehaviour:
   RespawnSeconds: 20
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
+  OnlyWhileShrineActive: 0
 --- !u!1 &1315441496
 GameObject:
   m_ObjectHideFlags: 0
@@ -12312,3 +12366,4 @@ SceneRoots:
   - {fileID: 761124535}
   - {fileID: 2053797021}
   - {fileID: 1866610082}
+  - {fileID: 1144910796}

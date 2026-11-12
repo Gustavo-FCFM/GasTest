@@ -208,6 +208,16 @@ announce.level_up_max;¡TU EQUIPO LLEGÓ AL NIVEL {level}! — Presiona {key} pa
 announce.shrine_active;¡SANTUARIO DE {type} ACTIVO!;{type} SHRINE IS ACTIVE!
 announce.shrine_captured;{team} capturó el santuario de {type};{team} captured the {type} shrine
 announce.shrine_captured_yours;¡TU EQUIPO CAPTURÓ EL SANTUARIO DE {type}!;YOUR TEAM CAPTURED THE {type} SHRINE!
+announce.bell_rung;¡{team} tocó una campana!;{team} rang a bell!
+announce.bell_rung_yours;¡CAMPANA! {count} enemigos a la vista;BELL! {count} enemies revealed
+announce.bell_rung_none;CAMPANA: no hay enemigos cerca;BELL: no enemies nearby
+announce.orb_spawned;Apareció un orbe de definitiva en un sarcófago;An ultimate orb appeared on a sarcophagus
+announce.orbs_spawned;Aparecieron {count} orbes de definitiva en los sarcófagos;{count} ultimate orbs appeared on the sarcophagi
+orb.channel;Orbe de definitiva;Ultimate orb
+announce.boss_spawned;¡DESPERTÓ EL JEFE! Mátalo para bendecir a tu equipo;THE BOSS HAS AWAKENED! Slay it to bless your team
+announce.boss_slain;{team} mató al jefe y recibe su bendición;{team} slew the boss and gets its blessing
+announce.boss_slain_yours;¡TU EQUIPO MATÓ AL JEFE! Bendición por {minutes} min;YOUR TEAM SLEW THE BOSS! Blessed for {minutes} min
+announce.boss_left;El jefe se fue sin que nadie lo matara;The boss left before anyone slew it
 #
 # ---- Partida: marcador del Objetivo en pantalla ----
 marker.objective;OBJETIVO;OBJECTIVE

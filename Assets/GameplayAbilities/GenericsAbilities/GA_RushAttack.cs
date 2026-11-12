@@ -189,6 +189,7 @@ public class GA_RushAttack : GameplayAbility, IChanneledAbility, IGroundTargetAb
         foreach (Collider c in cols)
         {
             AbilitySystemComponent asc = c.GetComponentInParent<AbilitySystemComponent>();
+            if (StrikeIfScenery(asc)) continue;   // la campana
             if (asc == null || ReferenceEquals(asc, OwnerASC) || !IsEnemy(asc) || hit.Contains(asc)) continue;
             if (asc.HasTag(EGameplayTag.State_Dead)) continue;
 

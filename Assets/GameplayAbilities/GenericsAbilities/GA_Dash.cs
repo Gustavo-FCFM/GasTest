@@ -229,6 +229,7 @@ public class GA_Dash : GameplayAbility
         foreach (var c in cols)
         {
             AbilitySystemComponent asc = c.GetComponentInParent<AbilitySystemComponent>();
+            if (StrikeIfScenery(asc)) continue;   // la campana
             if (asc == null || ReferenceEquals(asc, OwnerASC) || !IsEnemy(asc) || !seen.Add(asc)) continue;
             candidates.Add(asc);
         }

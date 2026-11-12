@@ -150,6 +150,28 @@ public class UI_MatchAnnouncer : MonoBehaviour
                 return team == MercUIFactory.LocalTeam()
                     ? Loc.T("announce.shrine_captured_yours", ("type", shrineType))
                     : Loc.T("announce.shrine_captured", ("team", teamName), ("type", shrineType));
+
+            // Las campanas: Extra = cuántos enemigos quedaron a la vista del equipo que la tocó.
+            case EMatchAnnouncement.BellRung:
+                return team == MercUIFactory.LocalTeam()
+                    ? (extra > 0 ? Loc.T("announce.bell_rung_yours", ("count", extra)) : Loc.T("announce.bell_rung_none"))
+                    : Loc.T("announce.bell_rung", ("team", teamName));
+
+            // Los orbes de definitiva: Extra = cuántos aparecieron.
+            case EMatchAnnouncement.OrbsSpawned:
+                return extra == 1 ? Loc.T("announce.orb_spawned") : Loc.T("announce.orbs_spawned", ("count", extra));
+
+            // El jefe de mitad de partida.
+            case EMatchAnnouncement.BossSpawned:
+                return Loc.T("announce.boss_spawned");
+
+            case EMatchAnnouncement.BossSlain:
+                return team == MercUIFactory.LocalTeam()
+                    ? Loc.T("announce.boss_slain_yours", ("minutes", extra))
+                    : Loc.T("announce.boss_slain", ("team", teamName));
+
+            case EMatchAnnouncement.BossLeft:
+                return Loc.T("announce.boss_left");
         }
         return "";
     }
@@ -165,6 +187,7 @@ public class UI_MatchAnnouncer : MonoBehaviour
         switch (type)
         {
             case EMatchAnnouncement.ObjectiveSpawned: return new Color(1f, 0.85f, 0.35f);
+            case EMatchAnnouncement.BossSpawned:      return new Color(1f, 0.30f, 0.25f);   // rojo sangre
             case EMatchAnnouncement.MatchStarted:     return Color.white;
             case EMatchAnnouncement.ShrineActivated:  // del color del tipo de santuario
                 return MatchEvent_Shrines.Instance != null
@@ -180,11 +203,15 @@ public class UI_MatchAnnouncer : MonoBehaviour
             case EMatchAnnouncement.MatchEnded:
             case EMatchAnnouncement.ObjectiveDelivered:
             case EMatchAnnouncement.ObjectiveSpawned:
+            case EMatchAnnouncement.BossSpawned:
+            case EMatchAnnouncement.BossSlain:
                 return BigFontSize;
             case EMatchAnnouncement.TeamWiped:
             case EMatchAnnouncement.MatchStarted:
             case EMatchAnnouncement.ShrineActivated:
             case EMatchAnnouncement.ShrineCaptured:
+            case EMatchAnnouncement.BellRung:
+            case EMatchAnnouncement.OrbsSpawned:
                 return MediumFontSize;
             default:
                 return SmallFontSize;

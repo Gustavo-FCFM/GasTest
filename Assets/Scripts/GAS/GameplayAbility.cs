@@ -1714,6 +1714,14 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     {
         if (target == null || source == null) return false;
 
+        // Algo del mapa que se golpea (la campana): se le avisa quién pegó y nada más. False: para quien
+        // llama no es un golpe (sin carga de definitiva, ni VFX, ni "primer golpe").
+        if (target.Strikeable != null)
+        {
+            target.Strikeable.Strike(source, this);
+            return false;
+        }
+
         bool enemy = source.IsEnemyOf(target);
         bool ally  = !enemy && !onlyHostile && source.IsAllyOf(target, includeSelf: true);
 
@@ -1894,6 +1902,16 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
         // La inclinación de la mira, aplicada al frente del cuerpo.
         float pitch = Mathf.Atan2(toAim.y, horizontal);
         return bodyForward * Mathf.Cos(pitch) + Vector3.up * Mathf.Sin(pitch);
+    }
+
+    // Para las habilidades que eligen a quién pegarle ANTES de ApplyHitEffects (filtrando por enemigo):
+    // si lo encontrado es algo del mapa que se golpea (la campana, StrikeTarget), le avisa y devuelve true
+    // para que la búsqueda lo saltee. Sin carga de definitiva ni VFX.
+    protected bool StrikeIfScenery(AbilitySystemComponent target)
+    {
+        if (target == null || target.Strikeable == null) return false;
+        if (OwnerASC != null) target.Strikeable.Strike(OwnerASC, this);
+        return true;
     }
 
     protected bool IsEnemy(AbilitySystemComponent target)

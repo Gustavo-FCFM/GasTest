@@ -907,6 +907,9 @@ hijo es un evento (`MatchEvent`) con su **"Empieza a los (s)"**, contado desde q
 | `Gates` | 0 s | Cuándo suben las rejas (`MercGate` lo lee; el seguro de la base sigue siendo solo de la preparación). |
 | `Objective` | 120 s | El primer Objetivo. Manda sobre "Primer Objetivo a los (s)" del modo. |
 | `Shrines` | 60 s | El primer santuario (ver abajo). |
+| `Bells` | 0 s | Desde cuándo se pueden tocar las campanas (ver "Las campanas"). |
+| `Orbs` | 45 s | Los primeros orbes de definitiva en los sarcófagos (ver "Los orbes de definitiva"). |
+| `Boss` | 420 s | El jefe de mitad de partida (ver "El jefe de mitad de partida"). |
 
 **Para un mapa nuevo:** arrastrar `MatchEvents` a la escena (y los santuarios que se quieran). Sin él, la
 escena se comporta como antes (la arena vieja sigue con el Objetivo a los 60 s y sin santuarios).
@@ -939,6 +942,58 @@ escena se comporta como antes (la arena vieja sigue con el Objetivo a los 60 s y
   % de cada equipo y cuánto falta para el siguiente. Las bajas le llegan por `MercenariesGameMode.OnServerKill`.
 - **Herramienta:** `Mercenarios ▸ Santuarios ▸ Armar santuarios y eventos de partida` (no duplica nada).
 - **Pendiente:** los bots no buscan los santuarios.
+
+## Las campanas (11 de noviembre de 2026)
+
+- **Dónde:** el prefab `Prefabs/GameMode/Bell` (`MatchBell`): un marco de madera con la campana colgada de su eje. Hay una sobre
+  el techo de cada torre, hija de `Tower` dentro de `Graveyard_Sector`: tres en el mapa. Como los santuarios, no son objetos de
+  red: se identifican por su posición.
+- **Tocarla:** GOLPEARLA con cualquier habilidad: cuerpo a cuerpo, zonas, rayos, embestidas, saltos o proyectiles (desde
+  lejos también). Suena para el equipo del que pegó (vivo). La campana lleva un ASC neutral y un `StrikeTarget`, con su
+  esfera de choque (`HitBox`) en la capa Character: los ataques la encuentran como a un personaje, pero no es enemiga ni
+  aliada de nadie (bots, mira automática y NPCs la ignoran) y el golpe no le hace daño ni carga la definitiva. No la
+  tocan las cadenas (Golpe en cadena, Cadena de relámpagos), que saltan solo entre enemigos, ni los NPCs.
+- **Qué hace** (los números están en el evento, `MatchEvents ▸ Bells`, `MatchEvent_Bells`): el equipo que la tocó ve a través de
+  las paredes a cada enemigo a 25 m de la campana, medido en el plano, por 4 s (la silueta de la Marca del cazador,
+  `ServerRevealToTeam`). A los invisibles de ese radio les pone `GE_Revealed` por lo mismo: con eso los ven todos los enemigos,
+  no solo el equipo que la tocó. Después descansa 45 s.
+- **Todo el mapa se entera:** el aviso `BellRung` (al final de `EMatchAnnouncement`; Extra = enemigos revelados) y el sonido de
+  la campana ("Sonido" en el prefab, 3D a 150 m; vacío hasta cargar el clip). La campana se balancea en todas las pantallas.
+- **Lista o no:** lista brilla un poco y se prende su luz; descansando, nada. Lo sincronizado es hasta qué tick descansa cada
+  una.
+- **Herramienta:** `Mercenarios ▸ Campanas ▸ Armar las campanas de las torres` (no duplica nada).
+- **Pendiente:** los bots no le pegan a las campanas.
+
+## Los orbes de definitiva (11 de noviembre de 2026)
+
+- **Dónde:** un `OrbSpot` hijo de cada sarcófago (`Tomb_*`) de `Graveyard_Sector`: 8 por sector, 24 en el mapa. El orbe
+  flota 0.9 m sobre la tapa, medida al aparecer del collider del sarcófago: si se baja el sarcófago, el orbe baja con él.
+  Como los santuarios, no son objetos de red: se identifican por su posición.
+- **Cuándo** (`MatchEvents ▸ Orbs`, `MatchEvent_Orbs`): a los 45 s y después cada 60 s se completan hasta 3 orbes, en
+  sarcófagos al azar. El que nadie toma se queda.
+- **Tomarlo:** quedarse vivo a 2.5 m del orbe (desde el pecho) y canalizar 1.5 s, con la barra de canalizar de siempre
+  (`UI_CastBar`, por TargetRpc). Recibir daño (`OnTookDamage`), morir o alejarse la corta. Uno a la vez por orbe.
+- **Qué da:** el 25 % de la definitiva entera (`PlayerController.ServerAddUltimateCharge`). Con la definitiva llena no se
+  puede tomar. Una clase base, sin definitiva, la guarda para su subclase (como lo que se conserva al cambiar de clase).
+- **Pantalla:** el modelo `Prefabs/GameMode/UltOrb` (núcleo negro, cáscara casi transparente y dos anillos blancos) lo pone
+  cada pantalla sobre el sarcófago. El aviso `OrbsSpawned` al aparecer y el sonido al tomarlo ("Sonido al tomarlo", vacío).
+- **Herramienta:** `Mercenarios ▸ Orbes ▸ Armar los orbes de definitiva` (no duplica nada).
+- **Pendiente:** los bots no buscan los orbes (los toman si pasan al lado).
+
+## El jefe de mitad de partida (11 de noviembre de 2026)
+
+- **Cuándo** (`MatchEvents ▸ Boss`, `MatchEvent_Boss`): a los 7 minutos (de 15) aparece UN jefe. Si nadie lo mata en 3 minutos
+  se va sin darle nada a nadie. "Se repite cada (s)" en 0: una vez por partida.
+- **Dónde:** en una guarida (`BossLair`, un punto en la escena; si hay varias, una al azar). En el Cementerio, la capilla del
+  centro (donde está `Camp_Chapel`), a la misma distancia de las tres bases. Se mueve a mano.
+- **Quién:** el jefe del catálogo (`Net_Boss`, "Tipo de enemigo") con `GE_EventBoss` (vida máxima ×3, +4 de ataque y el aura
+  roja de los NPCs del santuario) y 1.4 veces más grande. Nace con la vida llena.
+- **Todos lo ven** a través de las paredes mientras vive (la silueta de la Marca del cazador, renovada para los tres equipos).
+- **Premio:** al equipo que lo mata, `GE_BossBlessing` a cada jugador vivo por 3 minutos (+15 % de daño físico y mágico, 15 %
+  menos daño recibido; se pierde al morir) y 100 de experiencia extra, además de los 175 que ya da el jefe.
+- **Avisos:** `BossSpawned`, `BossSlain` (Extra = minutos de bendición) y `BossLeft`, al final de `EMatchAnnouncement`.
+- **Herramienta:** `Mercenarios ▸ Jefe ▸ Armar el jefe de mitad de partida` (no duplica nada).
+- **Pendiente:** los bots no van a buscarlo; la iluminación de noche durante el evento.
 
 ---
 

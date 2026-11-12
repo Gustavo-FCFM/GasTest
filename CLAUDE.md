@@ -184,9 +184,15 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   2026 se sumaban (×0.5 + ×0.5 = ×0). La velocidad de ataque tiene un tope de
   `MinAttackInterval` = 0.3 s entre ataques.
 - **Lo que pasa a cierta hora de la partida es un EVENTO del administrador** (`Prefabs/GameMode/MatchEvents`,
-  `GameModeEventManager`, desde el 11 de noviembre de 2026): las rejas, el primer Objetivo y los santuarios. Uno
+  `GameModeEventManager`, desde el 11 de noviembre de 2026): las rejas, el primer Objetivo, los santuarios, las campanas, los orbes de definitiva y el jefe de mitad de partida. Uno
   nuevo hereda de `MatchEvent` y es un hijo más del prefab; no se agrega otro reloj al modo. Detalle en el LEEME
   del modo ("Los eventos de la partida y los santuarios").
+
+- **Algo del mapa que se golpea pero no es un personaje lleva `StrikeTarget`** (desde el 11 de noviembre de 2026; lo primero es
+  la campana de las torres): un ASC neutral más ese componente, y su collider en la capa Character. Las habilidades lo encuentran
+  como a un personaje, pero no es enemigo ni aliado de nadie (`ASC.IsEnemyOf` / `IsAllyOf` dan false) y el golpe le AVISA
+  (`OnStruck`, en el servidor) en vez de aplicarle efectos: lo resuelve `ApplyHitEffects`, el proyectil, y las habilidades que
+  filtran por enemigo antes de golpear llaman a `StrikeIfScenery`. Una habilidad nueva que elija blancos así, también.
 
 - **Los managers de escena reinician su sesión en `OnStartServer`.** Al parar el servidor
   FishNet destruye lo spawneado pero NO toca el estado de los NetworkObjects de escena

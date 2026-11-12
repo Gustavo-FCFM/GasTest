@@ -469,6 +469,17 @@ public class GC_Projectile : NetworkBehaviour
             sourceASC.IsEnemyOf(targetASC))
             return;
 
+        // Algo del mapa que se golpea (la campana, StrikeTarget): se le avisa y el proyectil se deshace
+        // contra él como contra una pared.
+        if (targetASC != null && targetASC.Strikeable != null)
+        {
+            if (sourceASC != null) targetASC.Strikeable.Strike(sourceASC, sourceAbility);
+            PlayImpactVFXEverywhere(point);
+            Impact(point);
+            DespawnSelf();
+            return;
+        }
+
         // 1. VFX de impacto, sea lo que sea lo que golpeamos (a un personaje, una vez aunque
         // tenga varios colliders).
         if (targetASC == null || _impactShown.Add(targetASC)) PlayImpactVFXEverywhere(point);

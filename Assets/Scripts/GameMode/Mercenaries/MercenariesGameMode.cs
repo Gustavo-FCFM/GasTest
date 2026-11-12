@@ -24,6 +24,11 @@ public enum EMatchAnnouncement
     MatchEnded,          // fin de partida             (Team = ganador, 0 = empate)
     ShrineActivated,     // se activó un santuario     (Extra = EShrineType)
     ShrineCaptured,      // un equipo lo capturó       (Team = quién, Extra = EShrineType)
+    BellRung,            // un equipo tocó una campana (Team = quién, Extra = enemigos revelados)
+    OrbsSpawned,         // aparecieron orbes de definitiva (Extra = cuántos)
+    BossSpawned,         // apareció el jefe del evento
+    BossSlain,           // un equipo mató al jefe del evento (Team = quién, Extra = minutos de bendición)
+    BossLeft,            // el jefe del evento se fue sin que lo mataran
 }
 
 // ============================================================
