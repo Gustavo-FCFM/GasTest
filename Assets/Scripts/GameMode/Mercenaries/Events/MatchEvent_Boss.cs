@@ -1,4 +1,5 @@
 using FishNet.Object;
+using FishNet.Object.Synchronizing;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -61,6 +62,20 @@ public class MatchEvent_Boss : MatchEvent
     [Label("Experiencia extra (exp)")]
     public float BonusXp = 0f;
 
+    [Header("La noche se cierra (12 de noviembre de 2026)")]
+    [Tooltip("Cuánto se oscurece todo mientras el jefe vive: la luz ambiente y la luna bajan esta fracción y la niebla " +
+             "se espesa. 0 = no cambia nada. Vuelve sola cuando muere o se va.")]
+    [Range(0f, 0.9f)]
+    [Label("Cuánto oscurece (0 = nada, 0.9 = casi negro)")]
+    public float Darken = 0.45f;
+
+    [Tooltip("Cuánto tarda en oscurecer (y en volver).")]
+    [Label("Tarda en oscurecer (s)")]
+    public float DarkenSeconds = 4f;
+
+    // Si el jefe vive, para todas las pantallas (cada una oscurece su propia escena).
+    private readonly SyncVar<bool> _netAlive = new SyncVar<bool>(false);
+
     // =========================================================
     // SERVIDOR
     // =========================================================
@@ -73,7 +88,65 @@ public class MatchEvent_Boss : MatchEvent
     public MercEnemyAI ActiveBoss => _boss != null && !_boss.IsDead ? _boss : null;
 
     private void Awake()     => Instance = this;
-    private void OnDestroy() { if (Instance == this) Instance = null; }
+    private void OnDestroy() { if (Instance == this) Instance = null; RestoreLighting(); }
+
+    // =========================================================
+    // LA NOCHE SE CIERRA (todas las pantallas)
+    // =========================================================
+
+    private float _dark;          // 0 = la noche normal de la escena, 1 = lo más oscuro
+    private bool  _lightCaptured;
+    private float _baseAmbientIntensity, _baseMoon, _baseFogDensity;
+    private Color _baseSky, _baseEquator, _baseGround, _baseFlat;
+    private Light _moon;
+
+    private void Update()
+    {
+        float target = _netAlive.Value ? 1f : 0f;
+        if (_dark == target) return;
+
+        if (!_lightCaptured) CaptureLighting();
+        _dark = Mathf.MoveTowards(_dark, target, Time.deltaTime / Mathf.Max(0.1f, DarkenSeconds));
+
+        float k = 1f - Darken * _dark;
+        RenderSettings.ambientIntensity    = _baseAmbientIntensity * k;
+        RenderSettings.ambientSkyColor     = _baseSky * k;
+        RenderSettings.ambientEquatorColor = _baseEquator * k;
+        RenderSettings.ambientGroundColor  = _baseGround * k;
+        RenderSettings.ambientLight        = _baseFlat * k;
+        RenderSettings.fogDensity          = _baseFogDensity * (1f + 0.6f * _dark);
+        if (_moon != null) _moon.intensity = _baseMoon * k;
+
+        if (_dark == 0f) RestoreLighting();
+    }
+
+    // La iluminación de la escena tal como está (la noche normal): a eso vuelve.
+    private void CaptureLighting()
+    {
+        _moon = RenderSettings.sun;
+        _baseAmbientIntensity = RenderSettings.ambientIntensity;
+        _baseSky     = RenderSettings.ambientSkyColor;
+        _baseEquator = RenderSettings.ambientEquatorColor;
+        _baseGround  = RenderSettings.ambientGroundColor;
+        _baseFlat    = RenderSettings.ambientLight;
+        _baseFogDensity = RenderSettings.fogDensity;
+        _baseMoon    = _moon != null ? _moon.intensity : 0f;
+        _lightCaptured = true;
+    }
+
+    private void RestoreLighting()
+    {
+        if (!_lightCaptured) return;
+        RenderSettings.ambientIntensity    = _baseAmbientIntensity;
+        RenderSettings.ambientSkyColor     = _baseSky;
+        RenderSettings.ambientEquatorColor = _baseEquator;
+        RenderSettings.ambientGroundColor  = _baseGround;
+        RenderSettings.ambientLight        = _baseFlat;
+        RenderSettings.fogDensity          = _baseFogDensity;
+        if (_moon != null) _moon.intensity = _baseMoon;
+        _dark = 0f;
+        _lightCaptured = false;
+    }
     private float _aliveTimer;
     private float _revealTimer;
     private float _repeatTimer = -1f;   // -1 = no hay otro programado
@@ -106,6 +179,10 @@ public class MatchEvent_Boss : MatchEvent
 
     protected override void OnEventTick(float deltaTime)
     {
+        // Para que todas las pantallas oscurezcan mientras vive (ver "La noche se cierra").
+        bool alive = ActiveBoss != null;
+        if (_netAlive.Value != alive) _netAlive.Value = alive;
+
         if (_boss == null || _boss.IsDead)
         {
             if (_boss != null) _boss = null;   // murió por otro lado (o lo despawnearon)
@@ -241,5 +318,6 @@ public class MatchEvent_Boss : MatchEvent
         _bossNet = null;
         _repeatTimer = -1f;
         _warned = false;
+        _netAlive.Value = false;
     }
 }

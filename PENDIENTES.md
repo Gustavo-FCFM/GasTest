@@ -179,7 +179,7 @@ Las casillas para probarlos están en la tabla y en la ayuda, más abajo.
   - [x] Matarlo: el aviso dice quién, tu equipo recibe la bendición (ícono en el HUD) y sube la experiencia.
   - [x] Que lo mate un NPC o que se vaya a los 3 minutos: nadie recibe nada y sale el aviso de que se fue.
   - [x] Con 10 fantasmas de la capilla alrededor no se vuelve imposible (si sí: bajar la vida en `GE_EventBoss`).
-  - [ ] Iluminación: el juego de noche y más oscuro durante el evento. Antes hay que iluminar el mapa: ver "Iluminación del Cementerio", más abajo.
+  - [x] Iluminación: más oscuro durante el evento (12 de noviembre): ver "Iluminación del Cementerio", más abajo. Falta probarlo.
 - **Descartados (12 de noviembre):** el necrófago y la gárgola.
 - [x] **Nigromante** (12 de noviembre; herramienta corrida), jefe secundario: `Net_Necromancer`, el mago negro ×1.3 (90 de vida,
   22 de ataque, 2.6 m/s, 150 de exp). Ataca de lejos (`GA_NecroBolt`, misil arcano, 14 m, cada 2.2 s; se mantiene a 7 m) e INVOCA
@@ -230,14 +230,18 @@ Las casillas para probarlos están en la tabla y en la ayuda, más abajo.
   - [ ] Revisar si hace falta un sonido en BUCLE para lo continuo (el vuelo, el molinete, un canalizado): hoy no hay campo para eso;
         si falta, se agrega al llegar ahí.
 
-**Iluminación del Cementerio (12 de noviembre): el escenario NO tiene luces todavía** (solo la direccional de día). Para que el juego
-sea de noche y el evento del jefe lo oscurezca más, primero hay que iluminar el mapa:
-  - [ ] **Antorchas:** un prefab (poste + llama + luz puntual cálida) y repartirlas, mejor dentro de `Graveyard_Sector` (×3): entradas
-        de las torres, rampas, pasillos de las catacumbas, la capilla. Ojo con la cantidad de luces en tiempo real (URP tiene un tope
-        por objeto); las que no se mueven pueden ir horneadas.
-  - [ ] Noche: bajar la direccional (luna, fría y débil), cielo oscuro y luz ambiente baja.
-  - [ ] El evento del jefe: que `MatchEvent_Boss` baje un poco más la luz ambiente mientras el jefe vive (el código va ahí cuando haya
-        iluminación que bajar).
+**Iluminación del Cementerio (12 de noviembre): HECHA, falta probarla en Play.** Ver el LEEME del modo, "La noche y las antorchas".
+  - [x] **Antorchas** (herramienta corrida): `Prefabs/Map/Torch` (poste, copa, llama de dos capas y luz puntual cálida de 10 m sin
+        sombras; `TorchFlicker` la hace titilar). `Mercenarios ▸ Mapa ▸ Armar y repartir las antorchas del Cementerio` las reparte en
+        `Graveyard_Sector ▸ Torches`: contra las paredes (70 por sector), en lo abierto como la plaza (4) y pocas abajo, en las
+        catacumbas (4). 78 por sector, 234 en total. URP Forward+ no tiene tope de luces por objeto.
+  - [x] **Noche:** Gustavo puso el cielo nocturno y la direccional como luna; `Mercenarios ▸ Mapa ▸ Poner la noche en la escena abierta`
+        pone la luz ambiente en degradado azul oscuro, niebla nocturna y menos reflejos. Ya aplicada y guardada en `Mercenaries_Graveyard`.
+  - [x] **El evento del jefe oscurece:** mientras vive, `MatchEvent_Boss` baja la luz ambiente y la luna y espesa la niebla ("Cuánto
+        oscurece", 0.45; "Tarda en oscurecer", 4 s). El servidor solo manda si el jefe vive; cada pantalla oscurece la suya.
+  - [ ] Probar en Play: que se vea bien de noche, que las antorchas no bajen los cuadros por segundo (234 luces) y que se note el
+        oscurecer del jefe (si no: subir "Cuánto oscurece" a 0.65–0.7).
+  - [ ] Si el cielo se ve muy brillante junto al suelo oscuro: bajar el Exposure del material del skybox (la niebla no lo toca).
 
 **Tabla con KDA, ventana de ayuda y bolsa de dinero (4 de noviembre, pedido de Gustavo): HECHO Y PROBADO ✅ (6 de noviembre), salvo el control.** Las
 herramientas ya se corrieron y se borraron.

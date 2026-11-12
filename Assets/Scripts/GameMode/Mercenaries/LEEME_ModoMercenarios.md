@@ -194,7 +194,8 @@ el HUD y los menús sin cablear nada; esta escena no se tocó. Tiene cripta con 
 catacumbas y la fosa de bajada al costado de cada atrio. Lo arma
 una herramienta, una sola vez (desde ahí se edita a mano): un sector de 120° como
 prefab (`Prefabs/Map/Graveyard_Sector`), girado tres veces. Las rutas
-medidas y lo que falta están en `PENDIENTES.md`, sección 7.
+medidas y lo que falta están en `PENDIENTES.md`, sección 7. Es de noche y tiene antorchas: ver
+"La noche y las antorchas".
 
 ## La sala de espera
 
@@ -1028,7 +1029,29 @@ escena se comporta como antes (la arena vieja sigue con el Objetivo a los 60 s y
 - **Avisos:** `BossSpawned`, `BossSlain` (Extra = minutos de bendición) y `BossLeft`, al final de `EMatchAnnouncement`.
 - **Herramienta:** `Mercenarios ▸ Jefe ▸ Armar el jefe de mitad de partida` (no duplica nada).
 - **Bots** (12 de noviembre de 2026): sin santuario activo ni nadie a quien pegarle, van por él ("Van por el jefe del evento"; `MatchEvent_Boss.Instance.ActiveBoss`).
-- **Pendiente:** la iluminación de noche durante el evento.
+- **Oscurece mientras vive** (12 de noviembre de 2026): ver "La noche y las antorchas", abajo.
+
+## La noche y las antorchas (12 de noviembre de 2026)
+
+El Cementerio es de noche. Tres piezas:
+
+- **El cielo y la luna los puso Gustavo** a mano en la escena (skybox nocturno y la direccional fría y débil).
+- **La luz ambiente, la niebla y los reflejos:** `Mercenarios ▸ Mapa ▸ Poner la noche en la escena abierta` (`MercNightSetup`).
+  Pone la luz ambiente en degradado azul oscuro (con la del cielo a intensidad 1, todo se veía como de día nublado), niebla
+  exponencial azul casi negra (densidad 0.012) y los reflejos del cielo en 0.4. No toca la luna ni el cielo y no guarda la escena.
+  Son ajustes de la ESCENA (Window ▸ Rendering ▸ Lighting ▸ Environment): una escena copiada los trae, una nueva no.
+- **Las antorchas:** `Prefabs/Map/Torch` (poste, copa, llama de dos capas sin luz propia y una luz puntual cálida de 10 m, sin
+  sombras; mallas en `Art/Models/Torch`, materiales en `Art/Materials/Torch`). `TorchFlicker` titila la luz y la llama con ruido,
+  cada una desde otro punto (adorno: no es de red). `Mercenarios ▸ Mapa ▸ Armar y repartir las antorchas del Cementerio`
+  (`MercTorchSetup`) las reparte dentro de `Graveyard_Sector ▸ Torches`, así salen en los tres sectores. Mide el sector de la
+  escena abierta: un punto sirve si hay NavMesh, piso plano y techo libre; las de pared (al lado de un muro, cada 5.5 m, hasta 70),
+  las de lo abierto (la plaza, cada 10 m, hasta 25) y las de abajo (las catacumbas, pocas: hasta 4). Quedaron 78 por sector.
+  Volver a correrla no toca las que ya están; `MercTorchSetup.Rebuild()` (por `script eval`) las borra y las reparte de
+  nuevo, y se pierden las que se movieron a mano. URP Forward+ no tiene tope de
+  luces por objeto; si bajan los cuadros, lo primero es bajar el alcance de la luz del prefab.
+- **El jefe oscurece todo** mientras vive (`MatchEvent_Boss`, "Cuánto oscurece (0 = nada, 0.9 = casi negro)", 0.45, y "Tarda en
+  oscurecer (s)", 4): baja la luz ambiente y la luna y espesa la niebla; al irse o morir vuelve igual de suave. El servidor solo
+  sincroniza si el jefe vive (una SyncVar); cada pantalla lo calcula, y al destruirse el evento devuelve la luz como estaba.
 
 ---
 

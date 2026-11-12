@@ -133,7 +133,9 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   Panteones), en greybox. Es una copia de la del modo con otro mapa: trae la sala, la red y
   los menús. Tres instancias de `Prefabs/Map/Graveyard_Sector` giradas 120°: lo que se
   cambie en el prefab cambia en los tres sectores. La generó una herramienta una sola
-  vez; desde ahí se edita a mano (Gustavo ya le sacó muros y agrandó el centro).
+  vez; desde ahí se edita a mano (Gustavo ya le sacó muros y agrandó el centro). **Es de noche** (desde el 12 de
+  noviembre de 2026): la luz ambiente y la niebla son ajustes de la escena (`Mercenarios ▸ Mapa ▸ Poner la noche…`), y lo
+  que se ve lo alumbran la luna y las antorchas del sector (`Prefabs/Map/Torch`). Ver el LEEME del modo.
 
 ---
 
