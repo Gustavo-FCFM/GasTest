@@ -8,10 +8,11 @@ using UnityEngine.AI;
 // El JEFE de mitad de partida (11 de noviembre de 2026, pedido de Gustavo): a "Empieza a los (s)" aparece
 // UN jefe en una guarida (BossLair; en el Cementerio, la capilla del centro). Es el jefe de siempre
 // ("Tipo de enemigo", del catálogo) más fuerte ("Efecto para el jefe": más vida y daño) y más grande.
-//   · Todos lo ven a través de las paredes mientras vive (la silueta de la Marca del cazador, para los
-//     tres equipos): así se sabe dónde está la pelea.
+//   · Con "Se ve a través de las paredes" lo ven los tres equipos mientras vive (la silueta de la Marca
+//     del cazador). Apagado desde el 12 de noviembre de 2026: a Gustavo no le gustó.
 //   · El equipo que lo mata recibe "Bendición" (cada jugador vivo, por "Dura la bendición (s)"; se pierde
-//     al morir) y "Experiencia extra" en su bolsa, además de la experiencia normal del jefe.
+//     al morir), además de la experiencia normal del jefe. "Experiencia extra" quedó en 0 (12 de
+//     noviembre de 2026): a los 7 minutos los equipos ya son nivel 3.
 //   · Si nadie lo mata en "Se va a los (s)", se va (sin darle nada a nadie).
 //   · Con "Se repite cada (s)" mayor que 0 vuelve a aparecer ese tiempo después de irse o morir.
 // Tres avisos: apareció, lo mató tal equipo, se fue (BossSpawned / BossSlain / BossLeft).
@@ -37,7 +38,7 @@ public class MatchEvent_Boss : MatchEvent
 
     [Tooltip("Que los tres equipos lo vean a través de las paredes mientras vive.")]
     [Label("Se ve a través de las paredes")]
-    public bool RevealToAll = true;
+    public bool RevealToAll = false;
 
     [Header("Tiempos")]
     [Tooltip("Si nadie lo mata en este tiempo, se va sin darle nada a nadie. 0 = se queda hasta que lo maten.")]
@@ -58,7 +59,7 @@ public class MatchEvent_Boss : MatchEvent
 
     [Tooltip("Además de la experiencia que da el jefe al morir (la de su prefab).")]
     [Label("Experiencia extra (exp)")]
-    public float BonusXp = 100f;
+    public float BonusXp = 0f;
 
     // =========================================================
     // SERVIDOR

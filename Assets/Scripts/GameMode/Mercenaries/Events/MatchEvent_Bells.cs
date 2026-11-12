@@ -32,7 +32,7 @@ public class MatchEvent_Bells : MatchEvent
 
     [Tooltip("Cuánto los ve el equipo que la tocó.")]
     [Label("Revela por (s)")]
-    public float RevealSeconds = 4f;
+    public float RevealSeconds = 3f;
 
     [Tooltip("Lo que reciben los invisibles del radio para que se los vea (GE_Revealed: da State_AlwaysVisible). " +
              "Dura lo mismo que \"Revela por\". Vacío = los invisibles siguen sin verse.")]

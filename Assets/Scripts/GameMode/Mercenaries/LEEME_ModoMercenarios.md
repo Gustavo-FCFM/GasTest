@@ -954,7 +954,7 @@ escena se comporta como antes (la arena vieja sigue con el Objetivo a los 60 s y
   aliada de nadie (bots, mira automática y NPCs la ignoran) y el golpe no le hace daño ni carga la definitiva. No la
   tocan las cadenas (Golpe en cadena, Cadena de relámpagos), que saltan solo entre enemigos, ni los NPCs.
 - **Qué hace** (los números están en el evento, `MatchEvents ▸ Bells`, `MatchEvent_Bells`): el equipo que la tocó ve a través de
-  las paredes a cada enemigo a 25 m de la campana, medido en el plano, por 4 s (la silueta de la Marca del cazador,
+  las paredes a cada enemigo a 25 m de la campana, medido en el plano, por 3 s (la silueta de la Marca del cazador,
   `ServerRevealToTeam`). A los invisibles de ese radio les pone `GE_Revealed` por lo mismo: con eso los ven todos los enemigos,
   no solo el equipo que la tocó. Después descansa 45 s.
 - **Todo el mapa se entera:** el aviso `BellRung` (al final de `EMatchAnnouncement`; Extra = enemigos revelados) y el sonido de
@@ -988,9 +988,11 @@ escena se comporta como antes (la arena vieja sigue con el Objetivo a los 60 s y
   centro (donde está `Camp_Chapel`), a la misma distancia de las tres bases. Se mueve a mano.
 - **Quién:** el jefe del catálogo (`Net_Boss`, "Tipo de enemigo") con `GE_EventBoss` (vida máxima ×3, +4 de ataque y el aura
   roja de los NPCs del santuario) y 1.4 veces más grande. Nace con la vida llena.
-- **Todos lo ven** a través de las paredes mientras vive (la silueta de la Marca del cazador, renovada para los tres equipos).
+- **No se lo ve a través de las paredes** (desde el 12 de noviembre de 2026). La casilla "Se ve a través de las paredes" del
+  evento lo prende: la silueta de la Marca del cazador, renovada para los tres equipos.
 - **Premio:** al equipo que lo mata, `GE_BossBlessing` a cada jugador vivo por 3 minutos (+15 % de daño físico y mágico, 15 %
-  menos daño recibido; se pierde al morir) y 100 de experiencia extra, además de los 175 que ya da el jefe.
+  menos daño recibido; se pierde al morir), además de los 175 de experiencia que ya da el jefe. "Experiencia extra" está en 0
+  desde el 12 de noviembre de 2026: a los 7 minutos los equipos ya son nivel 3.
 - **Avisos:** `BossSpawned`, `BossSlain` (Extra = minutos de bendición) y `BossLeft`, al final de `EMatchAnnouncement`.
 - **Herramienta:** `Mercenarios ▸ Jefe ▸ Armar el jefe de mitad de partida` (no duplica nada).
 - **Pendiente:** los bots no van a buscarlo; la iluminación de noche durante el evento.

@@ -327,7 +327,7 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 0}
   StartAt: 0
   RevealRadius: 25
-  RevealSeconds: 4
+  RevealSeconds: 3
   InvisibleRevealEffect: {fileID: 11400000, guid: 7f9e6ed2710f1c14b91a82797391ebf1, type: 2}
   CooldownSeconds: 45
 --- !u!1 &7613068328397933273
@@ -440,9 +440,9 @@ MonoBehaviour:
   BossType: 4
   EmpowerEffect: {fileID: 11400000, guid: dd6439d5ec7238f49baedeeb71a211cd, type: 2}
   SizeMultiplier: 1.4
-  RevealToAll: 1
+  RevealToAll: 0
   LeaveAfterSeconds: 180
   RepeatSeconds: 0
   Blessing: {fileID: 11400000, guid: 1c04a196173d8dd42a3ce69270283794, type: 2}
   BlessingSeconds: 180
-  BonusXp: 100
+  BonusXp: 0
