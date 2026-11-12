@@ -134,7 +134,7 @@ Las casillas para probarlos están en la tabla y en la ayuda, más abajo.
   extra, y los NPCs dentro de la zona tienen +50 % de vida y +2 de ataque. Ver el LEEME del modo, "Los eventos de la partida".
   - [x] Los bots van a los santuarios (12 de noviembre, `BotController`, después del Objetivo): a la zona, peleando dentro.
     También toman orbes de definitiva cercanos, van por el jefe del evento si no hay nadie más, e ignoran las campanas.
-    - [ ] Probarlo en Play; si con un santuario activo se juntan demasiados bots, mandar solo algunos por equipo.
+    - [x] Pelean en los santuarios y van por los orbes. **Probado ✅ (12 de noviembre).**
     - Todavía no: tocar campanas, esquivar la nube del zombi, rodear al esqueleto.
   - [ ] Si se bajan los balcones por debajo de 6 m, bajar también el "Alto (m)" del santuario, o el techo contará como zona.
   - [ ] El texto del marcador del Objetivo se parte en dos líneas con la cuenta atrás ("OBJETIVO EN 0:13 58m"): ensancharlo
@@ -149,15 +149,14 @@ Las casillas para probarlos están en la tabla y en la ayuda, más abajo.
   - [x] La campana queda bien parada sobre el techo de las tres torres, sin tapar la escalera. **Probado ✅ (11 de noviembre).**
   - [x] Tocarla: se balancea en todas las pantallas, sale el aviso ("¡CAMPANA! N enemigos a la vista" en tu equipo, "¡Equipo N tocó
         una campana!" en los otros) y los enemigos cercanos se ven a través de las paredes (hoy 3 s). **Probado ✅ (11 de noviembre).**
-  - [ ] Un Asesino o un Shinobi invisible cerca de la campana se ve mientras dura el revelado.
+  - [x] La campana funciona (también contra invisibles). **Probado ✅ (12 de noviembre).**
   - [x] Después de tocarla se apaga (sin brillo ni luz) y a los 45 s vuelve a estar lista. **Probado ✅ (11 de noviembre).**
-  - [ ] Cargar el sonido en el prefab `Prefabs/GameMode/Bell` ("Sonido").
   - [x] Golpearla: con un ataque cuerpo a cuerpo, con un proyectil desde abajo de la torre y con una zona. Suena, no saca números
         de daño ni carga la definitiva, y el proyectil se deshace contra ella. Los bots no le disparan. **Probado ✅ (11 de noviembre).**
   - Los bots no le pegan (no es enemiga de nadie).
 - [x] **Barandales de las torres más bajos** (12 de noviembre): los seis `Parapet_*` de cada torre, en `Graveyard_Sector`, de 1.2 m
   a 0.6 m de alto (la base sigue sobre el techo). El techo sigue a 8 m: el santuario (6 m de alto) no lo alcanza.
-  - [ ] Verlo en el editor y en Play: que se pueda saltar por encima y que el Explorador dispare cómodo.
+  - [x] Verlo en el editor y en Play. **Probado ✅ (12 de noviembre).**
 - [x] **Orbes de definitiva en los sarcófagos** (hechos el 11 de noviembre; **probados ✅ el 11 de noviembre**): en cada sarcófago
   (`Tomb_*`) hay un lugar (`OrbSpot`, 24 en el mapa). A los 45 s y después cada minuto se completan hasta 3 orbes. Se toman
   canalizando 1.5 s a 2.5 m (sale la barra de canalizar; un golpe, morir o alejarse la corta) y dan el 25 % de la definitiva. Con la
@@ -168,8 +167,7 @@ Las casillas para probarlos están en la tabla y en la ayuda, más abajo.
   - [x] Recibir un golpe a mitad de canalizar la corta ("Interrumpido") y el orbe sigue ahí.
   - [x] Con la definitiva llena no pasa nada al pararse al lado.
   - [x] Clase base: el orbe se puede tomar y, al elegir subclase, la definitiva arranca con esa carga.
-  - [ ] Cargar el sonido al tomarlo (`MatchEvents ▸ Orbs ▸ Sonido al tomarlo`).
-  - [ ] Bajar los sarcófagos (`Tomb_*` en `Graveyard_Sector`) para poder saltar encima: el orbe baja solo con ellos.
+  - [x] Bajar los sarcófagos (`Tomb_*` en `Graveyard_Sector`) para poder saltar encima. **Los bajó Gustavo (12 de noviembre).**
 - [x] **Jefe a mitad de partida** (hecho el 11 de noviembre; **probado ✅ el 12 de noviembre**): a los 7 minutos aparece UN jefe
   en la capilla del centro (`BossLair`), el de siempre con vida ×3, +4 de ataque, más grande y con aura roja. Desde el 12 de noviembre ya NO
   se lo ve a través de las paredes (no le gustó a Gustavo; queda la casilla "Se ve a través de las paredes" apagada). El equipo que
@@ -177,34 +175,33 @@ Las casillas para probarlos están en la tabla y en la ayuda, más abajo.
   (a los 7 minutos ya son nivel 3), solo da la normal del jefe. Si nadie lo mata en 3 minutos, se va. Números en `MatchEvents ▸ Boss`. Ver el LEEME del modo.
   **Para probar rápido:** bajar "Empieza a los (s)" del evento `Boss` a 20 y devolverlo a 420 después.
   - [x] Aparece con el aviso, más grande y con el aura.
-  - [ ] Ya no se lo ve a través de las paredes.
+  - [x] Ya no se lo ve a través de las paredes; "se ve bien". **Probado ✅ (12 de noviembre).**
   - [x] Matarlo: el aviso dice quién, tu equipo recibe la bendición (ícono en el HUD) y sube la experiencia.
   - [x] Que lo mate un NPC o que se vaya a los 3 minutos: nadie recibe nada y sale el aviso de que se fue.
   - [x] Con 10 fantasmas de la capilla alrededor no se vuelve imposible (si sí: bajar la vida en `GE_EventBoss`).
-  - [ ] Iluminación: el juego de noche y más oscuro durante el evento (falta decidir cómo).
+  - [ ] Iluminación: el juego de noche y más oscuro durante el evento. Antes hay que iluminar el mapa: ver "Iluminación del Cementerio", más abajo.
 - **Descartados (12 de noviembre):** el necrófago y la gárgola.
 - [x] **Nigromante** (12 de noviembre; herramienta corrida), jefe secundario: `Net_Necromancer`, el mago negro ×1.3 (90 de vida,
   22 de ataque, 2.6 m/s, 150 de exp). Ataca de lejos (`GA_NecroBolt`, misil arcano, 14 m, cada 2.2 s; se mantiene a 7 m) e INVOCA
   mientras pelea con un campamento hijo (`Summons`): hasta 5 a la vez, fantasmas (máx. 3), zombis (2), esqueletos (2) y magos (2),
   uno cada 4 s. Al morir, sus invocados caen con él sin dar experiencia. Ver el LEEME del modo.
-  - [ ] Probar en Play: que invoque solo al pelear, que respete los máximos, que los suyos caigan al matarlo, y si las nubes de
-    sus zombis son demasiadas.
+  - [x] Probar en Play. **Probado ✅ (12 de noviembre).**
 - [x] **Más campamentos en el Cementerio** (12 de noviembre; herramienta corrida), dentro de `Graveyard_Sector ▸ Camps` (×3):
   `Camp_Ramp_R` / `Camp_Ramp_L` arriba de las rampas de los nichos (2 magos de hielo, roca o normales) y `Camp_Catacomb_Tower` /
   `Camp_Catacomb_Fosa` a la mitad de los pasillos subterráneos (3: fantasmas, zombis y esqueleto). 30 NPCs más.
-  - [ ] Probar en Play que no pese ni se sienta lleno; si no, bajar "Cantidad viva" en el prefab.
+  - [x] Probar en Play: "lo del mapa me gusta". **Probado ✅ (12 de noviembre).**
 - [x] **Esqueleto con escudo** (12 de noviembre; herramienta corrida): `Net_ShieldSkeleton`, el fantasma gris con escudo y
   espadita (40 de vida, 11 de ataque, 3.2 m/s, 15 de exp). Barre en cono de 180° a 2.5 m (`GA_SkeletonSweep`, 1 × ataque) y
   después se cubre 3 s hacia quien le pegó (o su objetivo), quieto y sin girar: de frente no le entra nada (barrera del Paladín al
   100 %, sin energía); por los lados y la espalda sí. Ataca cada 4 s. Ver el LEEME del modo.
-  - [ ] Ponerlo en un campamento (a mano), por ejemplo las explanadas.
-  - [ ] Probar en Play: de frente frena golpes y proyectiles, por la espalda no; el panel se ve en las otras pantallas; no gira
-    mientras se cubre.
+  - [x] Ponerlo en campamentos: **Gustavo lo puso en varios (12 de noviembre).**
+  - [x] Probar en Play. **Probado ✅ (12 de noviembre).**
 - [x] **Zombi hinchado** (12 de noviembre; herramienta corrida): `Net_BloatedZombie`, el fantasma verde e hinchado (45 de vida,
-  10 de ataque, 2.6 m/s, 15 de exp). Al morir revienta (1.5 × ataque a 3.5 m) y deja `Summon_ZombiePoison`: 3 m, 6 s, 4 de daño
-  por segundo a los jugadores. Ver el LEEME del modo.
-  - [ ] Ponerlo en un campamento (a mano), por ejemplo `Camp_Graves_*` con peso 30.
-  - [ ] Probar en Play: el estallido, la nube (que siga después de que el zombi desaparece) y que no les haga nada a los NPCs.
+  10 de ataque, 2.6 m/s, 15 de exp). Al morir revienta (1.5 × ataque a 3.5 m) y deja `Summon_ZombiePoison`: 3 m, 6 s. Desde el 12 de
+  noviembre la nube pone `GE_ZombiePoisonDoT` a quien esté dentro: cada segundo el 5 % de la vida FALTANTE (mínimo 1; el daño se
+  redondea hacia abajo) por 10 s, sin acumular; estar dentro lo refresca (antes eran 4 de daño fijo por segundo). Ver el LEEME del modo.
+  - [x] Ponerlo en campamentos: **lo puso Gustavo.**
+  - [x] Probar en Play. **Probado ✅ (12 de noviembre).**
   - [ ] La nube se ve angosta (`Aura Smell` es una columna): cambiar su VFX o su escala si no convence.
 - [x] **Los de la jam y las Banshees** (12 de noviembre; herramienta corrida). Los "jefes" de los campamentos se llaman ahora
   **Banshees** (el del evento sigue siendo "el jefe"). Ver el LEEME del modo, "El resto del bestiario".
@@ -216,17 +213,31 @@ Las casillas para probarlos están en la tabla y en la ayuda, más abajo.
   - Banshee del silencio (`Net_SilenceBanshee`, morada; la "banshee" propuesta): se acerca y grita cada 6 s: 0.6 × ataque y
     silencio 2 s a 7 m.
   - El jefe de hielo de la jam se descartó (era la zona del jefe de siempre); su número en `EMercEnemyType` es la del silencio.
-  - [ ] **Ponerlos en los campamentos** (a mano: no se tocó la escena). Sugerencia: `Camp_Tower_*` + Mago de hielo (peso 60) y
-    Mago de roca (peso 40, máximo 1); `Camp_Chapel` + Banshee de daño y del silencio (peso 15, máximo 1, minutos 3 y 5).
-  - [ ] Probar en Play: lentitud y aturdido, la cura y el +5 de las Banshees a sus NPCs, el silencio (sin habilidades 2 s).
+  - [x] **Ponerlos en los campamentos:** los puso Gustavo.
+  - [x] Probar en Play: "funcionan". **Probado ✅ (12 de noviembre).**
   - [ ] Un VFX sobre la cabeza del silenciado (hoy solo el ícono).
 - **Para mucho después:** rejas con palanca (antes hay que abrir más caminos en el mapa) y zonas destruibles.
 - **Descartado:** las fosas con manos que enraízan.
 
-**Sonidos: los pone Gustavo (4 de noviembre).** Ya hay lugar en el GA ("Sonido al lanzar", "Sonido al impactar") y en el GE
-(`TargetSound`). No se vio un sonido en bucle para lo continuo (el vuelo, el molinete, un canalizado): revisarlo y, si
-falta, agregarlo al llegar ahí.
-  - [ ] Descargar los clips y cargarlos.
+**Sonidos: TODO junto acá — los pone Gustavo; todavía no hay ninguno puesto (12 de noviembre).** Todos son un `SfxCue`
+(Clips, Volumen, Variación de tono, Se escucha hasta): se arrastra el clip y listo, sin código.
+  - [ ] Descargar los clips.
+  - [ ] Habilidades: "Sonido al lanzar" y "Sonido al impactar" de cada GA.
+  - [ ] Efectos: `TargetSound` de cada GE (al aplicarse: buffs, debuffs, curaciones).
+  - [ ] La campana: `Prefabs/GameMode/Bell` ▸ `MatchBell` ▸ "Sonido" (3D, ya está en 150 m para que lo oiga todo el mapa).
+  - [ ] Tomar un orbe: `MatchEvents ▸ Orbs` ▸ "Sonido al tomarlo".
+  - [ ] La música y lo de los menús: la biblioteca `Resources/AudioLibrary`.
+  - [ ] Revisar si hace falta un sonido en BUCLE para lo continuo (el vuelo, el molinete, un canalizado): hoy no hay campo para eso;
+        si falta, se agrega al llegar ahí.
+
+**Iluminación del Cementerio (12 de noviembre): el escenario NO tiene luces todavía** (solo la direccional de día). Para que el juego
+sea de noche y el evento del jefe lo oscurezca más, primero hay que iluminar el mapa:
+  - [ ] **Antorchas:** un prefab (poste + llama + luz puntual cálida) y repartirlas, mejor dentro de `Graveyard_Sector` (×3): entradas
+        de las torres, rampas, pasillos de las catacumbas, la capilla. Ojo con la cantidad de luces en tiempo real (URP tiene un tope
+        por objeto); las que no se mueven pueden ir horneadas.
+  - [ ] Noche: bajar la direccional (luna, fría y débil), cielo oscuro y luz ambiente baja.
+  - [ ] El evento del jefe: que `MatchEvent_Boss` baje un poco más la luz ambiente mientras el jefe vive (el código va ahí cuando haya
+        iluminación que bajar).
 
 **Tabla con KDA, ventana de ayuda y bolsa de dinero (4 de noviembre, pedido de Gustavo): HECHO Y PROBADO ✅ (6 de noviembre), salvo el control.** Las
 herramientas ya se corrieron y se borraron.

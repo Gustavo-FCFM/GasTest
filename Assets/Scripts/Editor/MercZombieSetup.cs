@@ -119,6 +119,8 @@ public static class MercZombieSetup
             log.AppendLine("· Net_BloatedZombie creado (verde, hinchado, 45 de vida, revienta al morir).");
         }
 
+        EnsurePoisonDoT(cloud, log);
+
         MercEnemyCatalog catalog = MercEnemyCatalog.Instance;
         if (catalog != null)
         {
@@ -131,5 +133,42 @@ public static class MercZombieSetup
         MercRegistryTools.RefreshNetworkRegistries();
         log.AppendLine("· Registros de red actualizados.");
         return log.ToString();
+    }
+
+    // El veneno como DEBUFF (12 de noviembre de 2026, pedido de Gustavo): cada segundo, el 5 % de la vida
+    // FALTANTE (mínimo 1) por 10 s. No se acumula: estar en la nube lo refresca cada segundo, y al salir
+    // sigue los 10 s. Reemplaza a los 4 de daño fijo por segundo de la nube.
+    private static void EnsurePoisonDoT(GameObject cloud, StringBuilder log)
+    {
+        GameplayEffect dot = MercJamEnemiesSetup.CopyAsset<GameplayEffect>("Assets/Effects/Damage/GE_ZombiePoison.asset",
+            "Assets/Effects/Debuffs/GE_ZombiePoisonDoT.asset", log, so =>
+            {
+                so.FindProperty("Duration").floatValue = 10f;
+                so.FindProperty("Period").floatValue   = 1f;
+                so.FindProperty("StackingPolicy").enumValueIndex = (int)GameplayEffect.EStackingType.Refresh;
+                so.FindProperty("EffectType").enumValueIndex     = (int)GameplayEffect.EEffectType.Debuff;
+                so.FindProperty("Icon").objectReferenceValue =
+                    MercJamEnemiesSetup.Load<Sprite>("Assets/Art/Icons/Abilities/Conditions/Bleeding_Icon.png");
+                so.FindProperty("TargetVFX").objectReferenceValue = MercJamEnemiesSetup.Load<GameObject>(
+                    "Assets/AssetsExtra/Matthew Guz/Status and Auras FREE/Prefab/Aura Smell.prefab");
+                so.FindProperty("TargetVFXLoop").boolValue = true;
+
+                SerializedProperty mod = so.FindProperty("Modifiers.Array.data[0]");
+                mod.FindPropertyRelative("Magnitude").floatValue = 0f;
+                mod.FindPropertyRelative("UseAttributeScaling").boolValue = false;
+                mod.FindPropertyRelative("UseTargetHealthScaling").boolValue = true;
+                mod.FindPropertyRelative("TargetHealthMode").enumValueIndex = (int)Modifier.ETargetHealthMode.MissingHealth;
+                mod.FindPropertyRelative("TargetHealthCoefficient").floatValue = -0.05f;   // 5 % (12 de noviembre: subido de 1 %)
+                mod.FindPropertyRelative("MinMagnitude").floatValue = 1f;   // al menos 1 de daño (a vida llena, 0 faltante)
+            });
+        if (dot == null || cloud == null) return;
+
+        Summon_Zone zone = cloud.GetComponent<Summon_Zone>();
+        if (zone == null || (zone.Effects.Count == 1 && zone.Effects[0] == dot)) return;
+
+        zone.Effects = new List<GameplayEffect> { dot };
+        EditorUtility.SetDirty(zone);
+        PrefabUtility.SavePrefabAsset(cloud);
+        log.AppendLine("· La nube ahora aplica GE_ZombiePoisonDoT (5 % de la vida faltante por segundo, 10 s, se refresca).");
     }
 }
