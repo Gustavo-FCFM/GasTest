@@ -243,6 +243,7 @@ npc.damage_banshee;la Banshee de daño;the Damage Banshee
 npc.silence_banshee;la Banshee del silencio;the Silence Banshee
 npc.bloated_zombie;un Zombi hinchado;a Bloated Zombie
 npc.shield_skeleton;un Esqueleto con escudo;a Shield Skeleton
+npc.necromancer;el Nigromante;the Necromancer
 #
 # ---- Partida: desatascarse (ESC ▸ recuadro de red) ----
 unstuck.not_now;Ahora no se puede.;Can't do that right now.

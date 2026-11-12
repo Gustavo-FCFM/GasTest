@@ -1,0 +1,113 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d7b10a5bff65714b92132ef46073a0c, type: 3}
+  m_Name: GA_NecroBolt
+  m_EditorClassIdentifier: 
+  AbilityName: Necrotic Bolt
+  AbilityNameEs: "Proyectil necr\xF3tico"
+  AbilityIcon: {fileID: 21300000, guid: e2d88c09e38d31347b6697683b6fb2ec, type: 3}
+  Description: 
+  DescriptionEs: 
+  CostEffect: {fileID: 0}
+  CooldownEffect: {fileID: 11400000, guid: ecfe07a06c63704479a331a9bae55086, type: 2}
+  CooldownDuration: 0
+  UseAttackSpeedAsCooldown: 0
+  UltimateChargeAmount: 0
+  ActivationBlockedTags: 03000000
+  ActivationRequiredTags: 
+  UsableWhileChanneling: 0
+  UsableWhileHolding: 0
+  AnimationClip: {fileID: 0}
+  AnimationTriggerName: AttackTrigger
+  AnimationID: 2
+  CastSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  ImpactSound:
+    Clips: []
+    Volume: 1
+    PitchVariance: 0.08
+    MaxDistance: 35
+  StacksTag: 0
+  ConsumeStacks: 0
+  Effects:
+  - When: 0
+    ApplyTo: 0
+    Effect: {fileID: 11400000, guid: 2bb212c0914c9384998afb11c54f0ce8, type: 2}
+    OnlyIfTargetHas: 0
+    StackScaling: 0
+    PerStack: 0
+    PerTargetCooldown: 0
+    TargetStacksTag: 0
+    TargetScaling: 0
+    TargetPerStack: 0
+    TargetMinimum: 0
+    TargetMaximum: 0
+    ConsumeTargetStacks: 0
+  Visuals:
+  - When: 2
+    VFXPrefab: {fileID: 4386588507499592971, guid: 48e196c36363e814bad43a44c92dc11b, type: 3}
+    Delay: 0
+    Offset: {x: 0, y: 0, z: 0}
+    RotationOffset: {x: 0, y: 0, z: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    Attach: 0
+    MatchAreaSize: 0
+    AreaSizeMultiplier: 0
+    DestroyTime: 1
+    EndWithTag: 0
+    EndWhenAttributeDepleted: 0
+    DepletedAttribute: 0
+  IsInterruptible: 0
+  TargetLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  CastMode: 0
+  CastSeconds: 1
+  CastTickSeconds: 0.5
+  CastBlocksOthers: 1
+  CastBreaksOnDamage: 0
+  CastStartAnimation: {fileID: 0}
+  CastLoopAnimation: {fileID: 0}
+  CastReleaseAnimation: {fileID: 0}
+  MaxCharges: 1
+  ProjectilePrefab: {fileID: 406129108226925510, guid: 968fb192eb22365439781ae3c4ae550d, type: 3}
+  LaunchForce: 40
+  SpawnOffset: {x: 0, y: 1.5, z: 1}
+  AddSpin: 0
+  HideWeaponWhileFlying: 0
+  LifeTime: 0
+  StraightFlightTime: 0
+  MinConvergeDistance: 4
+  StopAtFirstEnemy: 0
+  BurstCount: 1
+  BurstInterval: 0.2
+  ImpactExplosion: {fileID: 0}
+  ImpactZone: {fileID: 0}
+  BoostedExplosion: {fileID: 0}
+  BoostedScale: 1.5
+  SpawnDelay: 0.4
+  FirstHitCooldownPerTarget: 3
+  AimBeforeThrow: 0
+  AimHoldClip: {fileID: 0}
+  AimReleaseClip: {fileID: 0}
+  AimReleaseDelay: 0.1
+  AimSafetyTimeout: 30
+  ShowTrajectoryWhileAiming: 1
+  InstantDamageEffect: {fileID: 0}
+  DurationEffect: {fileID: 0}
+  AdditionalEffects: []
+  TargetEffects: []
+  FirstHitEffects: []
+  ImpactVFX: {fileID: 0}

@@ -32,4 +32,5 @@ public enum EMercEnemyType
     [InspectorName("Banshee de daño")]     DamageBanshee,   // daña alrededor y potencia a los NPCs (era DamageBoss)
     [InspectorName("Zombi hinchado")]      BloatedZombie,   // revienta al morir y deja veneno (12 de noviembre de 2026)
     [InspectorName("Esqueleto con escudo")] ShieldSkeleton, // barre en 180° y se cubre 3 s (12 de noviembre de 2026)
+    [InspectorName("Nigromante")]          Necromancer,     // jefe secundario: invoca NPCs y ataca de lejos (12 de noviembre de 2026)
 }

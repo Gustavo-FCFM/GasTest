@@ -236,6 +236,31 @@ public class MercEnemyAI : NetworkBehaviour
     public AbilitySystemComponent Asc => _asc;
     public bool IsDead => _dead;
 
+    // ¿Está peleando? (tiene a quién atacar; solo en el servidor). Lo usa su campamento de invocados.
+    public bool HasTarget => _target != null;
+
+    [Header("Invocar (el Nigromante)")]
+    [Tooltip("Lo que se ve donde aparece cada invocado de su campamento (MercEnemySpawner hijo con \"Solo mientras " +
+             "su dueño viva\"). Se borra solo a los 2.5 s.")]
+    [Label("VFX al invocar")]
+    public GameObject SummonVFX;
+
+    // Su campamento invocó a alguien en 'point': el VFX ahí y el gesto de ataque, en todas las pantallas.
+    [Server]
+    public void ServerShowSummon(Vector3 point)
+    {
+        if (SummonVFX != null) ObserversSummonVfx(point);
+        if (!string.IsNullOrEmpty(AttackTrigger)) ObserversPlayAttack();
+    }
+
+    [ObserversRpc(RunLocally = true)]
+    private void ObserversSummonVfx(Vector3 point)
+    {
+        if (SummonVFX == null) return;
+        GameObject vfx = Instantiate(SummonVFX, point + Vector3.up * 0.05f, Quaternion.identity);
+        Destroy(vfx, 2.5f);
+    }
+
     private void Awake()
     {
         _asc      = GetComponent<AbilitySystemComponent>();

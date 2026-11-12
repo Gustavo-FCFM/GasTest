@@ -719,6 +719,7 @@ Banshees`, `MercJamEnemiesSetup`: variantes de `Net_Mage` y `Net_Boss`, teñidas
 | Banshee de daño | `Net_DamageBanshee` (roja) | `GA_BansheeFury`: aura de +5 de ataque a los NPCs (`GE_BansheeFury`), después daño a 6 m. |
 | Zombi hinchado | `Net_BloatedZombie` (verde) | El fantasma hinchado (`ASDef_Zombie`: 45 / 10 / 2.6 m/s). Al morir revienta (`GE_ZombieBurst`, 1.5 × ataque a 3.5 m) y deja `Summon_ZombiePoison` (3 m, 6 s, `GE_ZombiePoison`: 4 por segundo). Herramienta: `Mercenarios ▸ Enemigos ▸ Armar el zombi hinchado`. |
 | Esqueleto con escudo | `Net_ShieldSkeleton` (gris) | El fantasma con escudo y espadita (`ASDef_Skeleton`: 40 / 11 / 3.2 m/s). `GA_SkeletonSweep` (el golpe del Bárbaro a 180° y 2.5 m); después `GE_SkeletonBlock` (3 s de `Status_Blocking`) levanta su `Entity_ShieldBarrier` (la del Paladín, frena el 100 %, sin energía) y se queda quieto mirando hacia quien le pegó. Herramienta: `Mercenarios ▸ Enemigos ▸ Armar el esqueleto con escudo`. |
+| Nigromante (jefe secundario) | `Net_Necromancer` (negro, ×1.3) | El mago (`ASDef_Necromancer`: 90 / 22 / 2.6 m/s, 150 de exp). Ataca de lejos con `GA_NecroBolt` (14 m, se mantiene a 7) e invoca con su campamento hijo `Summons` (hasta 5: fantasmas 3, zombis 2, esqueletos 2, magos 2; uno cada 4 s) mientras pelea; al morir, los suyos caen sin dar experiencia. Herramienta: `Mercenarios ▸ Enemigos ▸ Armar el Nigromante`. |
 | Banshee del silencio | `Net_SilenceBanshee` (morada) | `GA_BansheeWail`, cada 6 s a 7 m: 0.6 × ataque + `GE_BansheeSilence` (`State_Silenced`, 2 s). |
 
 **"Al morir"** (`MercEnemyAI`, desde el 12 de noviembre de 2026): cualquier NPC puede reventar (radio, efecto con él de autor, VFX)
@@ -804,6 +805,14 @@ lugar** del ataque básico de ese turno; se revisan en orden, así que arriba va
    ya dibuja el marcador en el piso, y un golpe telegrafiado es exigente sin ser injusto.
 4. **Opcional, segunda fase** → `GE_BossHeal` con `UseBelowHealthPercent = 0.4`, para que se
    cure una vez cuando lo tenés casi muerto.
+
+### Campamentos que no son de la escena (12 de noviembre de 2026)
+
+- **Dentro del prefab del sector** (`Graveyard_Sector ▸ Camps`, ×3): `Camp_Ramp_R/L` (arriba de las rampas de los nichos, magos)
+  y `Camp_Catacomb_Tower` / `Camp_Catacomb_Fosa` (pasillos subterráneos, fantasmas, zombis y esqueletos). Herramienta:
+  `Mercenarios ▸ Enemigos ▸ Agregar campamentos al Cementerio`.
+- **Dentro de un santuario** ("Solo con su santuario activo") y **dentro de un NPC** ("Solo mientras su dueño viva" + "Solo si su
+  dueño pelea": los invocados del Nigromante). Es el mismo `MercEnemySpawner`: tabla de tipos, pesos y "Máximo vivos" por tipo.
 
 ### Qué aparece en cada campamento, y cuándo
 

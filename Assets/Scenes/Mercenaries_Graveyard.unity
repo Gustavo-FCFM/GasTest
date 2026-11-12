@@ -1307,6 +1307,8 @@ MonoBehaviour:
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
   OnlyWhileShrineActive: 0
+  OnlyWhileOwnerAlive: 0
+  OnlyWhileOwnerFighting: 1
 --- !u!1 &169463531
 GameObject:
   m_ObjectHideFlags: 0
@@ -1605,6 +1607,8 @@ MonoBehaviour:
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
   OnlyWhileShrineActive: 0
+  OnlyWhileOwnerAlive: 0
+  OnlyWhileOwnerFighting: 1
 --- !u!1 &202947632
 GameObject:
   m_ObjectHideFlags: 0
@@ -2198,6 +2202,8 @@ MonoBehaviour:
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
   OnlyWhileShrineActive: 0
+  OnlyWhileOwnerAlive: 0
+  OnlyWhileOwnerFighting: 1
 --- !u!1 &327247976
 GameObject:
   m_ObjectHideFlags: 0
@@ -2359,6 +2365,14 @@ MonoBehaviour:
     Weight: 30
     UnlockMinute: 0
     MaxAlive: 1
+  - Type: 7
+    Weight: 60
+    UnlockMinute: 0
+    MaxAlive: 2
+  - Type: 9
+    Weight: 30
+    UnlockMinute: 2
+    MaxAlive: 1
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
   Count: 3
   SpawnRadius: 4
@@ -2366,6 +2380,8 @@ MonoBehaviour:
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
   OnlyWhileShrineActive: 0
+  OnlyWhileOwnerAlive: 0
+  OnlyWhileOwnerFighting: 1
 --- !u!1 &374878143
 GameObject:
   m_ObjectHideFlags: 0
@@ -5254,6 +5270,14 @@ MonoBehaviour:
     Weight: 100
     UnlockMinute: 0
     MaxAlive: 0
+  - Type: 7
+    Weight: 60
+    UnlockMinute: 0
+    MaxAlive: 2
+  - Type: 8
+    Weight: 60
+    UnlockMinute: 0
+    MaxAlive: 1
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
   Count: 5
   SpawnRadius: 5
@@ -5261,6 +5285,8 @@ MonoBehaviour:
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
   OnlyWhileShrineActive: 0
+  OnlyWhileOwnerAlive: 0
+  OnlyWhileOwnerFighting: 1
 --- !u!1 &740936240
 GameObject:
   m_ObjectHideFlags: 0
@@ -6474,6 +6500,14 @@ MonoBehaviour:
     Weight: 15
     UnlockMinute: 5
     MaxAlive: 1
+  - Type: 7
+    Weight: 60
+    UnlockMinute: 0
+    MaxAlive: 2
+  - Type: 8
+    Weight: 60
+    UnlockMinute: 0
+    MaxAlive: 1
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
   Count: 12
   SpawnRadius: 16
@@ -6481,6 +6515,8 @@ MonoBehaviour:
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
   OnlyWhileShrineActive: 0
+  OnlyWhileOwnerAlive: 0
+  OnlyWhileOwnerFighting: 1
 --- !u!1 &1039951594
 GameObject:
   m_ObjectHideFlags: 0
@@ -6534,6 +6570,14 @@ MonoBehaviour:
     Weight: 30
     UnlockMinute: 0
     MaxAlive: 1
+  - Type: 7
+    Weight: 60
+    UnlockMinute: 0
+    MaxAlive: 2
+  - Type: 9
+    Weight: 30
+    UnlockMinute: 2
+    MaxAlive: 1
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
   Count: 3
   SpawnRadius: 4
@@ -6541,6 +6585,8 @@ MonoBehaviour:
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
   OnlyWhileShrineActive: 0
+  OnlyWhileOwnerAlive: 0
+  OnlyWhileOwnerFighting: 1
 --- !u!1 &1064519930
 GameObject:
   m_ObjectHideFlags: 0
@@ -6631,6 +6677,14 @@ MonoBehaviour:
     Weight: 100
     UnlockMinute: 0
     MaxAlive: 0
+  - Type: 7
+    Weight: 60
+    UnlockMinute: 0
+    MaxAlive: 2
+  - Type: 8
+    Weight: 60
+    UnlockMinute: 0
+    MaxAlive: 1
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
   Count: 5
   SpawnRadius: 5
@@ -6638,6 +6692,8 @@ MonoBehaviour:
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
   OnlyWhileShrineActive: 0
+  OnlyWhileOwnerAlive: 0
+  OnlyWhileOwnerFighting: 1
 --- !u!1 &1089439885
 GameObject:
   m_ObjectHideFlags: 0
@@ -6687,6 +6743,14 @@ MonoBehaviour:
     Weight: 100
     UnlockMinute: 0
     MaxAlive: 0
+  - Type: 7
+    Weight: 60
+    UnlockMinute: 0
+    MaxAlive: 2
+  - Type: 8
+    Weight: 60
+    UnlockMinute: 0
+    MaxAlive: 1
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
   Count: 5
   SpawnRadius: 5
@@ -6694,6 +6758,8 @@ MonoBehaviour:
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
   OnlyWhileShrineActive: 0
+  OnlyWhileOwnerAlive: 0
+  OnlyWhileOwnerFighting: 1
 --- !u!1 &1090205885
 GameObject:
   m_ObjectHideFlags: 0
@@ -8679,6 +8745,14 @@ MonoBehaviour:
     Weight: 30
     UnlockMinute: 0
     MaxAlive: 1
+  - Type: 7
+    Weight: 60
+    UnlockMinute: 0
+    MaxAlive: 2
+  - Type: 9
+    Weight: 30
+    UnlockMinute: 2
+    MaxAlive: 1
   EnemyPrefab: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
   Count: 3
   SpawnRadius: 4
@@ -8686,6 +8760,8 @@ MonoBehaviour:
   SpawnInterval: 0.5
   PopulateDuringWarmup: 1
   OnlyWhileShrineActive: 0
+  OnlyWhileOwnerAlive: 0
+  OnlyWhileOwnerFighting: 1
 --- !u!1 &1315441496
 GameObject:
   m_ObjectHideFlags: 0

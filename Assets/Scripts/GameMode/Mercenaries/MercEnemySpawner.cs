@@ -97,6 +97,15 @@ public class MercEnemySpawner : MonoBehaviour
     [Label("Solo con su santuario activo")]
     public bool OnlyWhileShrineActive = false;
 
+    [Tooltip("Los invocados de un NPC (el Nigromante, 12 de noviembre de 2026): el campamento va DENTRO del prefab del " +
+             "NPC, lo sigue y solo pone enemigos mientras él vive. Cuando muere, los suyos caen con él (sin dar experiencia).")]
+    [Label("Solo mientras su dueño viva")]
+    public bool OnlyWhileOwnerAlive = false;
+
+    [Tooltip("Con \"Solo mientras su dueño viva\": invoca solo mientras su dueño está peleando (tiene a quién atacar).")]
+    [Label("Solo si su dueño pelea")]
+    public bool OnlyWhileOwnerFighting = true;
+
     // Enemigos vivos de este campamento, con el tipo con el que salieron (solo servidor).
     private readonly List<MercEnemyAI> _alive = new List<MercEnemyAI>();
     private readonly List<EMercEnemyType> _aliveTypes = new List<EMercEnemyType>();
@@ -111,6 +120,7 @@ public class MercEnemySpawner : MonoBehaviour
     {
         if (!InstanceFinder.IsServerStarted) return;
         if (OnlyWhileShrineActive && !ServerShrineGate()) return;
+        if (OnlyWhileOwnerAlive && !ServerOwnerGate()) return;
 
         MercenariesGameMode gm = MercenariesGameMode.Instance;
         if (gm != null)
@@ -221,6 +231,9 @@ public class MercEnemySpawner : MonoBehaviour
         _alive.Add(ai);
         _aliveTypes.Add(type);
         _nextSpawnTime = Time.time + SpawnInterval;
+
+        // Lo invocó un NPC: que se vea (su VFX de invocar, en todas las pantallas).
+        if (_owner != null && OnlyWhileOwnerAlive) _owner.ServerShowSummon(position);
     }
 
     // Punto al azar dentro del radio, pegado al NavMesh. Si el punto elegido no cae sobre
@@ -262,6 +275,24 @@ public class MercEnemySpawner : MonoBehaviour
         if (!active && _alive.Count > 0) ServerDismissAll();
         _shrineWasActive = active;
         return active;
+    }
+
+    // =========================================================
+    // CAMPAMENTO DE UN NPC (los invocados del Nigromante)
+    // =========================================================
+
+    private MercEnemyAI _owner;
+
+    // ¿Puede invocar? Su dueño vivo (y peleando, si se pide). Muerto o ido, se lleva a los suyos.
+    private bool ServerOwnerGate()
+    {
+        if (_owner == null) _owner = GetComponentInParent<MercEnemyAI>();
+        if (_owner == null || _owner.IsDead)
+        {
+            if (_alive.Count > 0) ServerDismissAll();
+            return false;
+        }
+        return !OnlyWhileOwnerFighting || _owner.HasTarget;
     }
 
     // Saca de juego a todos los de este campamento sin darle la baja a nadie.

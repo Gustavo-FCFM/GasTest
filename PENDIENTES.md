@@ -179,8 +179,17 @@ Las casillas para probarlos están en la tabla y en la ayuda, más abajo.
   - [x] Que lo mate un NPC o que se vaya a los 3 minutos: nadie recibe nada y sale el aviso de que se fue.
   - [x] Con 10 fantasmas de la capilla alrededor no se vuelve imposible (si sí: bajar la vida en `GE_EventBoss`).
   - [ ] Iluminación: el juego de noche y más oscuro durante el evento (falta decidir cómo).
-- **Enemigos nuevos** (todos le gustan), reusando el fantasma con pequeños cambios mientras no haya modelos: necrófago, gárgola y
-  nigromante.
+- **Descartados (12 de noviembre):** el necrófago y la gárgola.
+- [x] **Nigromante** (12 de noviembre; herramienta corrida), jefe secundario: `Net_Necromancer`, el mago negro ×1.3 (90 de vida,
+  22 de ataque, 2.6 m/s, 150 de exp). Ataca de lejos (`GA_NecroBolt`, misil arcano, 14 m, cada 2.2 s; se mantiene a 7 m) e INVOCA
+  mientras pelea con un campamento hijo (`Summons`): hasta 5 a la vez, fantasmas (máx. 3), zombis (2), esqueletos (2) y magos (2),
+  uno cada 4 s. Al morir, sus invocados caen con él sin dar experiencia. Ver el LEEME del modo.
+  - [ ] Probar en Play: que invoque solo al pelear, que respete los máximos, que los suyos caigan al matarlo, y si las nubes de
+    sus zombis son demasiadas.
+- [x] **Más campamentos en el Cementerio** (12 de noviembre; herramienta corrida), dentro de `Graveyard_Sector ▸ Camps` (×3):
+  `Camp_Ramp_R` / `Camp_Ramp_L` arriba de las rampas de los nichos (2 magos de hielo, roca o normales) y `Camp_Catacomb_Tower` /
+  `Camp_Catacomb_Fosa` a la mitad de los pasillos subterráneos (3: fantasmas, zombis y esqueleto). 30 NPCs más.
+  - [ ] Probar en Play que no pese ni se sienta lleno; si no, bajar "Cantidad viva" en el prefab.
 - [x] **Esqueleto con escudo** (12 de noviembre; herramienta corrida): `Net_ShieldSkeleton`, el fantasma gris con escudo y
   espadita (40 de vida, 11 de ataque, 3.2 m/s, 15 de exp). Barre en cono de 180° a 2.5 m (`GA_SkeletonSweep`, 1 × ataque) y
   después se cubre 3 s hacia quien le pegó (o su objetivo), quieto y sin girar: de frente no le entra nada (barrera del Paladín al

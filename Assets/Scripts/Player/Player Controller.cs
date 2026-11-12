@@ -2561,6 +2561,7 @@ public class PlayerController : NetworkBehaviour
         SilenceBanshee = 8,
         BloatedZombie  = 9,   // también su veneno ("Summon_ZombiePoison")
         ShieldSkeleton = 10,
+        Necromancer    = 11,
     }
 
     // El KDA de esta muerte. Solo cuenta entre personajes (jugadores y bots) y con la partida
@@ -2641,7 +2642,8 @@ public class PlayerController : NetworkBehaviour
         // NPCs: no guardan su tipo, pero sus prefabs se llaman por lo que son (los más
         // específicos primero: "Net_IceMage" también contiene "Mage").
         string go = asc.gameObject.name;
-        npc = (int)(go.Contains("Skeleton")       ? ENpcLabel.ShieldSkeleton
+        npc = (int)(go.Contains("Necromancer")    ? ENpcLabel.Necromancer
+                  : go.Contains("Skeleton")       ? ENpcLabel.ShieldSkeleton
                   : go.Contains("Zombie")         ? ENpcLabel.BloatedZombie
                   : go.Contains("SilenceBanshee") ? ENpcLabel.SilenceBanshee
                   : go.Contains("DamageBanshee")  ? ENpcLabel.DamageBanshee
@@ -2669,6 +2671,7 @@ public class PlayerController : NetworkBehaviour
             case ENpcLabel.SilenceBanshee: return Loc.T("npc.silence_banshee");
             case ENpcLabel.BloatedZombie:  return Loc.T("npc.bloated_zombie");
             case ENpcLabel.ShieldSkeleton: return Loc.T("npc.shield_skeleton");
+            case ENpcLabel.Necromancer:    return Loc.T("npc.necromancer");
             default:              return name;
         }
     }
