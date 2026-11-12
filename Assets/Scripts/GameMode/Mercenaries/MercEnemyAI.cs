@@ -169,6 +169,24 @@ public class MercEnemyAI : NetworkBehaviour
     [Label("Desaparece tras (s)")]
     public float DespawnDelay = 2f;
 
+    [Header("Al morir (el zombi hinchado)")]
+    [Tooltip("Revienta al morir: a los enemigos a esta distancia les aplica \"Efecto del estallido\". 0 = no revienta. " +
+             "No revienta si lo retira un santuario (ServerDismiss).")]
+    [Label("Estallido: radio (m; 0 = no)")]
+    public float DeathBurstRadius = 0f;
+
+    [Tooltip("El daño del estallido (su autor es este NPC: puede escalar con su ataque).")]
+    [Label("Efecto del estallido")]
+    public GameplayEffect DeathBurstEffect;
+
+    [Tooltip("Lo que se ve al reventar, en todas las pantallas. Se borra solo a los 3 s.")]
+    [Label("VFX del estallido")]
+    public GameObject DeathBurstVFX;
+
+    [Tooltip("Una invocación que deja donde murió (Entity_Summon con \"Sigue sin su dueño\": la nube de veneno).")]
+    [Label("Deja al morir")]
+    public GameObject DeathSummon;
+
     [Header("Animación")]
     [Tooltip("Parámetro float del Animator con la velocidad de movimiento. Vacío = no se toca.")]
     [Label("Parámetro de velocidad")]
@@ -580,7 +598,49 @@ public class MercEnemyAI : NetworkBehaviour
         if (_agent != null && _agent.enabled) _agent.isStopped = true;
         if (Spawner != null) Spawner.ServerNotifyEnemyDied(this);
 
-        Invoke(nameof(ServerDespawnSelf), Mathf.Max(0.1f, DespawnDelay));
+        // El estallido y lo que deja, un instante después: la muerte llega en medio del daño, y
+        // aplicar efectos ahí adentro es meterse en ese camino.
+        if (!_dismissed && (DeathBurstRadius > 0f || DeathSummon != null))
+        {
+            _deathPoint = transform.position;
+            Invoke(nameof(ServerOnDeathBurst), 0.05f);
+        }
+
+        Invoke(nameof(ServerDespawnSelf), Mathf.Max(0.1f, DespawnDelay, 0.15f));
+    }
+
+    private bool _dismissed;
+    private Vector3 _deathPoint;
+    private static readonly Collider[] s_burstHits = new Collider[32];
+
+    [Server]
+    private void ServerOnDeathBurst()
+    {
+        if (DeathBurstRadius > 0f && DeathBurstEffect != null && _asc != null)
+        {
+            var seen = new HashSet<AbilitySystemComponent>();
+            int count = Physics.OverlapSphereNonAlloc(_deathPoint, DeathBurstRadius, s_burstHits, CharacterLayer,
+                                                      QueryTriggerInteraction.Collide);
+            for (int i = 0; i < count; i++)
+            {
+                AbilitySystemComponent target = s_burstHits[i] != null ? s_burstHits[i].GetComponentInParent<AbilitySystemComponent>() : null;
+                if (target == null || target == _asc || !seen.Add(target)) continue;
+                if (target.HasTag(EGameplayTag.State_Dead) || !_asc.IsEnemyOf(target)) continue;
+                target.ApplyGameplayEffect(DeathBurstEffect, _asc);
+            }
+        }
+
+        if (DeathBurstVFX != null) ObserversDeathBurstVfx(_deathPoint);
+        if (DeathSummon != null)
+            Entity_Summon.Spawn(DeathSummon, _asc, _deathPoint, Quaternion.identity, 0, false);
+    }
+
+    [ObserversRpc(RunLocally = true)]
+    private void ObserversDeathBurstVfx(Vector3 position)
+    {
+        if (DeathBurstVFX == null) return;
+        GameObject vfx = Instantiate(DeathBurstVFX, position + Vector3.up * 0.5f, Quaternion.identity);
+        Destroy(vfx, 3f);
     }
 
     [Server]
@@ -596,6 +656,7 @@ public class MercEnemyAI : NetworkBehaviour
     public void ServerDismiss()
     {
         if (_dead || _asc == null) return;
+        _dismissed = true;   // retirado: no revienta ni deja nada
         _asc.LastAttacker = null;
         _asc.SetCurrentAttributeValue(EAttributeType.Health, 0f);
     }

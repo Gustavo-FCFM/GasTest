@@ -2559,6 +2559,7 @@ public class PlayerController : NetworkBehaviour
         RockMage       = 6,
         DamageBanshee  = 7,
         SilenceBanshee = 8,
+        BloatedZombie  = 9,   // también su veneno ("Summon_ZombiePoison")
     }
 
     // El KDA de esta muerte. Solo cuenta entre personajes (jugadores y bots) y con la partida
@@ -2639,7 +2640,8 @@ public class PlayerController : NetworkBehaviour
         // NPCs: no guardan su tipo, pero sus prefabs se llaman por lo que son (los más
         // específicos primero: "Net_IceMage" también contiene "Mage").
         string go = asc.gameObject.name;
-        npc = (int)(go.Contains("SilenceBanshee") ? ENpcLabel.SilenceBanshee
+        npc = (int)(go.Contains("Zombie")         ? ENpcLabel.BloatedZombie
+                  : go.Contains("SilenceBanshee") ? ENpcLabel.SilenceBanshee
                   : go.Contains("DamageBanshee")  ? ENpcLabel.DamageBanshee
                   : go.Contains("Boss")           ? ENpcLabel.Boss
                   : go.Contains("IceMage")        ? ENpcLabel.IceMage
@@ -2663,6 +2665,7 @@ public class PlayerController : NetworkBehaviour
             case ENpcLabel.RockMage:       return Loc.T("npc.rock_mage");
             case ENpcLabel.DamageBanshee:  return Loc.T("npc.damage_banshee");
             case ENpcLabel.SilenceBanshee: return Loc.T("npc.silence_banshee");
+            case ENpcLabel.BloatedZombie:  return Loc.T("npc.bloated_zombie");
             default:              return name;
         }
     }

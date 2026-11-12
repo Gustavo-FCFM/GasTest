@@ -180,7 +180,13 @@ Las casillas para probarlos están en la tabla y en la ayuda, más abajo.
   - [x] Con 10 fantasmas de la capilla alrededor no se vuelve imposible (si sí: bajar la vida en `GE_EventBoss`).
   - [ ] Iluminación: el juego de noche y más oscuro durante el evento (falta decidir cómo).
 - **Enemigos nuevos** (todos le gustan), reusando el fantasma con pequeños cambios mientras no haya modelos: esqueleto con escudo
-  (el fantasma con un escudito al frente), zombi hinchado, necrófago, gárgola y nigromante.
+  (el fantasma con un escudito al frente), necrófago, gárgola y nigromante.
+- [x] **Zombi hinchado** (12 de noviembre; herramienta corrida): `Net_BloatedZombie`, el fantasma verde e hinchado (45 de vida,
+  10 de ataque, 2.6 m/s, 15 de exp). Al morir revienta (1.5 × ataque a 3.5 m) y deja `Summon_ZombiePoison`: 3 m, 6 s, 4 de daño
+  por segundo a los jugadores. Ver el LEEME del modo.
+  - [ ] Ponerlo en un campamento (a mano), por ejemplo `Camp_Graves_*` con peso 30.
+  - [ ] Probar en Play: el estallido, la nube (que siga después de que el zombi desaparece) y que no les haga nada a los NPCs.
+  - [ ] La nube se ve angosta (`Aura Smell` es una columna): cambiar su VFX o su escala si no convence.
 - [x] **Los de la jam y las Banshees** (12 de noviembre; herramienta corrida). Los "jefes" de los campamentos se llaman ahora
   **Banshees** (el del evento sigue siendo "el jefe"). Ver el LEEME del modo, "El resto del bestiario".
   - Mago de hielo (`Net_IceMage`, azul): el daño de la bola de fuego, pero ralentiza 50 % 2 s en vez de quemar.

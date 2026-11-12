@@ -1,0 +1,107 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &2175668481580675710
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 593500485324937933, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
+      propertyPath: CharacterRoleDefinition
+      value: 
+      objectReference: {fileID: 11400000, guid: 1831c2d17e90d144880b8ff6678c289e, type: 2}
+    - target: {fileID: 1459593046178688801, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1459593046178688801, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1459593046178688801, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1459593046178688801, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1459593046178688801, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1459593046178688801, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1459593046178688801, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1459593046178688801, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1459593046178688801, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1459593046178688801, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4391854353800623865, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
+      propertyPath: DeathSummon
+      value: 
+      objectReference: {fileID: 10560286662816224, guid: 0f4c437c785072a43a1c153f31cbb9a0, type: 3}
+    - target: {fileID: 4391854353800623865, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
+      propertyPath: DeathBurstVFX
+      value: 
+      objectReference: {fileID: 2300369305902588757, guid: 4e273c58acd2b614084a98035db3ba7c, type: 3}
+    - target: {fileID: 4391854353800623865, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
+      propertyPath: DeathBurstEffect
+      value: 
+      objectReference: {fileID: 11400000, guid: 3d192f05a04c2ef40b7bf9552cd87c83, type: 2}
+    - target: {fileID: 4391854353800623865, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
+      propertyPath: DeathBurstRadius
+      value: 3.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4391854353800623865, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
+      propertyPath: ExperienceReward
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 4826852656042361161, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 6e9471c7bb3fd6e4f8936ebaf9db52a0, type: 2}
+    - target: {fileID: 6042306428223974378, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
+      propertyPath: WasActiveDuringEdit
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6042306428223974378, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
+      propertyPath: <AssetPathHash>k__BackingField
+      value: 14946369313707850079
+      objectReference: {fileID: 0}
+    - target: {fileID: 7455726505504408553, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.675
+      objectReference: {fileID: 0}
+    - target: {fileID: 7455726505504408553, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.575
+      objectReference: {fileID: 0}
+    - target: {fileID: 7455726505504408553, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.675
+      objectReference: {fileID: 0}
+    - target: {fileID: 8086388282217948003, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}
+      propertyPath: m_Name
+      value: Net_BloatedZombie
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 6595d257ffdf1594c808f72073b51b28, type: 3}

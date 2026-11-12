@@ -257,6 +257,8 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   equipo. Lo que aplica algo a los de cerca cada tanto es una **`Summon_Zone`**, sin código. Una
   subclase sobreescribe `Awake`/`Update` como `override` llamando a `base.` (si no, la base no
   corre). Para apoyarla en el piso: `GroundUnderAim` (nunca arriba de un techo) o `GroundNear`.
+  Lo que deja algo que muere (el veneno del zombi hinchado, la sección "Al morir" de `MercEnemyAI`) lleva **"Sigue sin su dueño"**
+  (`OutlivesOwner`, desde el 12 de noviembre de 2026): si no, desaparece con él; sin autor, sus efectos tienen que ser de daño fijo.
   No se hace `Instantiate` + `Spawn` a mano. Una nueva sale de una VARIANTE de las plantillas
   `Prefabs/Summons/Summon_Base` (con vida) o `SummonZone_Base` (solo zona), y la pone el genérico
   `GA_SpawnSummon`: los pasos están en la guía de habilidades (7.1).

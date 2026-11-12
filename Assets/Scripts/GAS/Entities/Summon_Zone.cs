@@ -181,7 +181,9 @@ public class Summon_Zone : MonoBehaviour
         AbilitySystemComponent owner  = _summon.Summoner;
         AbilitySystemComponent author = Author == EAuthor.Owner ? owner : _summon.OwnASC;
         if (author == null) author = Author == EAuthor.Owner ? _summon.OwnASC : owner;
-        if (author == null) return;
+        // Sin autor solo sigue una invocación que vive sin su dueño (el veneno del zombi): aplica los
+        // efectos sin autor (que no escalen con sus stats: daño fijo).
+        if (author == null && !_summon.OutlivesOwner) return;
 
         List<GameplayEffect> effects = EmpowerTag != EGameplayTag.None && owner != null && owner.HasTag(EmpowerTag) &&
                                        EmpoweredEffects != null && EmpoweredEffects.Count > 0

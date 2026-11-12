@@ -209,10 +209,10 @@ public static class MercJamEnemiesSetup
     // PIEZAS
     // =========================================================
 
-    private static T Load<T>(string path) where T : Object => AssetDatabase.LoadAssetAtPath<T>(path);
+    internal static T Load<T>(string path) where T : Object => AssetDatabase.LoadAssetAtPath<T>(path);
 
     // Copia un asset y lo configura; si la copia ya existe, la devuelve sin tocarla.
-    private static T CopyAsset<T>(string from, string to, StringBuilder log, System.Action<SerializedObject> setup) where T : Object
+    internal static T CopyAsset<T>(string from, string to, StringBuilder log, System.Action<SerializedObject> setup) where T : Object
     {
         T existing = Load<T>(to);
         if (existing != null) return existing;
@@ -323,7 +323,7 @@ public static class MercJamEnemiesSetup
     }
 
     // Variante de prefab, armada en una escena de vista previa (la escena abierta no se toca).
-    private static GameObject MakeVariant(GameObject source, string path, System.Action<GameObject> setup)
+    internal static GameObject MakeVariant(GameObject source, string path, System.Action<GameObject> setup)
     {
         Scene preview = EditorSceneManager.NewPreviewScene();
         try
@@ -350,7 +350,7 @@ public static class MercJamEnemiesSetup
         }
     }
 
-    private static Material TintedMaterial(Material source, string name, Color tint)
+    internal static Material TintedMaterial(Material source, string name, Color tint)
     {
         string path = $"{EnemyMaterials}/Mat_{name.Replace("Net_", "")}.mat";
         Material existing = Load<Material>(path);
@@ -363,7 +363,7 @@ public static class MercJamEnemiesSetup
         return mat;
     }
 
-    private static void SetCatalog(MercEnemyCatalog catalog, EMercEnemyType type, GameObject prefab)
+    internal static void SetCatalog(MercEnemyCatalog catalog, EMercEnemyType type, GameObject prefab)
     {
         if (prefab == null) return;
         for (int i = 0; i < catalog.Enemies.Count; i++)

@@ -30,4 +30,5 @@ public enum EMercEnemyType
     [InspectorName("Banshee de curación")] Boss,            // cura a los NPCs y daña alrededor
     [InspectorName("Banshee del silencio")] SilenceBanshee, // silencia y daña alrededor (era IceBoss, sin usar)
     [InspectorName("Banshee de daño")]     DamageBanshee,   // daña alrededor y potencia a los NPCs (era DamageBoss)
+    [InspectorName("Zombi hinchado")]      BloatedZombie,   // revienta al morir y deja veneno (12 de noviembre de 2026)
 }

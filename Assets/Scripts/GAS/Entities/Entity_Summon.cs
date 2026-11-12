@@ -67,6 +67,12 @@ public class Entity_Summon : NetworkBehaviour
     [Label("Si el dueño muere")]
     public EOwnerDeath IfOwnerDies = EOwnerDeath.Stays;
 
+    [Tooltip("Sigue aunque su dueño ya no exista (desde el 12 de noviembre de 2026: lo que deja un NPC al morir, " +
+             "como el veneno del zombi hinchado; el NPC desaparece enseguida). Se queda con el equipo del dueño y " +
+             "se va por \"Dura\". Sus zonas aplican los efectos sin autor.")]
+    [Label("Sigue sin su dueño")]
+    public bool OutlivesOwner = false;
+
     [Tooltip("Quién ve el modelo. 'Solo su equipo' = invisible para los enemigos (las trampas).")]
     [Label("La ven")]
     public EVisibleTo VisibleTo = EVisibleTo.Everyone;
@@ -244,8 +250,12 @@ public class Entity_Summon : NetworkBehaviour
         if (_ownDied) { _ownDied = false; OnOwnDeath(); return; }
 
         // Sin dueño (se fue, se desatascó) o con otra clase: no tiene a quién darle lo que haga.
-        if (Summoner == null || Summoner.CurrentClass != _ownerClass) { OnOwnerGone(); return; }
-        if (_ownerDied) { _ownerDied = false; if (IfOwnerDies == EOwnerDeath.Disappears) { OnOwnerGone(); return; } }
+        // ("Sigue sin su dueño": eso no la afecta.)
+        if (!OutlivesOwner)
+        {
+            if (Summoner == null || Summoner.CurrentClass != _ownerClass) { OnOwnerGone(); return; }
+            if (_ownerDied) { _ownerDied = false; if (IfOwnerDies == EOwnerDeath.Disappears) { OnOwnerGone(); return; } }
+        }
 
         if (Time.time >= _expireAt)
         {

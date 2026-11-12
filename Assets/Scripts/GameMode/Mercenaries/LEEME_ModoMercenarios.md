@@ -717,7 +717,12 @@ Banshees`, `MercJamEnemiesSetup`: variantes de `Net_Mage` y `Net_Boss`, teñidas
 | Mago de roca | `Net_RockMage` (café) | `GA_RockEnemy`: 0.4 × ataque + `GE_Stun` (1 s); sale a 1 s y lenta (`PF_RockProjectile`); cada 3 s. |
 | Banshee de curación (`Boss`) | `Net_Boss` | `GA_BansheeHealing`: 5 s de aura que cura a los NPCs a 9 m, después `GA_BansheeHealBlast` (1 × ataque a 6 m). |
 | Banshee de daño | `Net_DamageBanshee` (roja) | `GA_BansheeFury`: aura de +5 de ataque a los NPCs (`GE_BansheeFury`), después daño a 6 m. |
+| Zombi hinchado | `Net_BloatedZombie` (verde) | El fantasma hinchado (`ASDef_Zombie`: 45 / 10 / 2.6 m/s). Al morir revienta (`GE_ZombieBurst`, 1.5 × ataque a 3.5 m) y deja `Summon_ZombiePoison` (3 m, 6 s, `GE_ZombiePoison`: 4 por segundo). Herramienta: `Mercenarios ▸ Enemigos ▸ Armar el zombi hinchado`. |
 | Banshee del silencio | `Net_SilenceBanshee` (morada) | `GA_BansheeWail`, cada 6 s a 7 m: 0.6 × ataque + `GE_BansheeSilence` (`State_Silenced`, 2 s). |
+
+**"Al morir"** (`MercEnemyAI`, desde el 12 de noviembre de 2026): cualquier NPC puede reventar (radio, efecto con él de autor, VFX)
+y dejar una invocación. Lo que deja lleva **"Sigue sin su dueño"** (`Entity_Summon.OutlivesOwner`): si no, desaparece con el NPC,
+que se va a los 0.5 s; sin dueño, sus zonas aplican los efectos sin autor (daño fijo). Retirado por un santuario no revienta.
 
 El jefe de hielo de la jam no existe: su lugar en el enum (5) es la Banshee del silencio. La pantalla de muerte los nombra
 por el nombre del prefab (`PlayerController.DescribeCharacter`): un enemigo nuevo lleva un nombre que se distinga.
