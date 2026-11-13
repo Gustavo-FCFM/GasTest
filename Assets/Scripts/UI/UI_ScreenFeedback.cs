@@ -38,6 +38,19 @@ public class UI_ScreenFeedback : MonoBehaviour
     [Label("Cuenta regresiva")]
     public TMP_Text DeathCountdown;
 
+    [Header("Piezas: resumen de muerte")]
+    [Tooltip("El bloque del resumen (dentro de la franja de muerte: se ve y se va con ella). Sin líneas, se apaga.")]
+    [Label("Resumen")]
+    public GameObject RecapRoot;
+
+    [Tooltip("Dónde van las líneas del resumen.")]
+    [Label("Líneas del resumen")]
+    public RectTransform RecapRows;
+
+    [Tooltip("El molde de una línea. Se apaga solo; cada línea es una copia.")]
+    [Label("Molde de la línea")]
+    public UI_DeathRecapRow RecapRowTemplate;
+
     [Header("Piezas: aviso corto")]
     [Tooltip("El CanvasGroup del aviso corto bajo la mira.")]
     [Label("Grupo del aviso")]
@@ -123,6 +136,35 @@ public class UI_ScreenFeedback : MonoBehaviour
         _deathEndsAt       = Time.time + (_deathHasCountdown ? respawnSeconds : DeathFallbackSeconds);
         if (DeathCountdown != null) DeathCountdown.text = "";
         DeathGroup.alpha   = 1f;
+    }
+
+    // Una línea del resumen de muerte, ya escrita en el idioma de esta pantalla (la arma PlayerController.TargetShowDeath).
+    public struct RecapLine
+    {
+        public string Attacker;
+        public int    Team;
+        public string Ability;
+        public Sprite Icon;
+        public int    Amount;
+    }
+
+    private readonly System.Collections.Generic.List<UI_DeathRecapRow> _recapRows = new System.Collections.Generic.List<UI_DeathRecapRow>();
+
+    // El resumen de muerte (13 de noviembre de 2026): qué te hizo daño en los últimos segundos, de mayor a menor.
+    public void ShowRecap(System.Collections.Generic.List<RecapLine> lines)
+    {
+        bool any = lines != null && lines.Count > 0 && RecapRowTemplate != null && RecapRows != null;
+        if (RecapRoot != null) RecapRoot.SetActive(any);
+        if (!any) return;
+
+        if (RecapRowTemplate.gameObject.activeSelf) RecapRowTemplate.gameObject.SetActive(false);
+        while (_recapRows.Count < lines.Count) _recapRows.Add(Instantiate(RecapRowTemplate, RecapRows));
+        for (int i = 0; i < _recapRows.Count; i++)
+        {
+            bool used = i < lines.Count;
+            if (_recapRows[i].gameObject.activeSelf != used) _recapRows[i].gameObject.SetActive(used);
+            if (used) _recapRows[i].Show(lines[i]);
+        }
     }
 
     // Un aviso corto bajo la mira.

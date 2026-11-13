@@ -20,6 +20,10 @@ public class ActiveGameplayEffect
     // atacante, ni crédito de la muerte si la DoT remataba.
     public object Source;
 
+    // La habilidad que lo aplicó (AbilitySystemComponent.DamageContext en ese momento), para que el resumen de muerte
+    // sepa de qué habilidad es cada tick de un veneno. Null si no vino de una habilidad.
+    public GameplayAbility SourceAbility;
+
     // Segundos que faltan para que el efecto termine. Baja cada frame en
     // AbilitySystemComponent.ProcessActiveEffects(); al llegar a 0 el
     // efecto se remueve solo.

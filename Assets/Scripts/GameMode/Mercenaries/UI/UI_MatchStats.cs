@@ -7,7 +7,7 @@ using UnityEngine.UI;
 // UI_MatchStats
 //
 // La tabla de la partida: cada equipo con sus integrantes y su KDA (bajas, muertes y
-// asistencias). Se ve mientras se mantiene Tab (o Share / View en el control) y sola al terminar la
+// asistencias), más el daño y la curación hechos (desde el 13 de noviembre de 2026). Se ve mientras se mantiene Tab (o Share / View en el control) y sola al terminar la
 // partida, con quién ganó en el título.
 //
 // VIVE EN EL PREFAB DE PARTIDA (Match_UI ▸ MatchStats), desde el 4 de noviembre de 2026: el
@@ -173,7 +173,7 @@ public class UI_MatchStats : MonoBehaviour
 
             PlayerController pc = members[i];
             CharacterClassDefinition def = pc.GetClassByIndex(pc.VisualClassIndex);
-            rows[i].Show(NameOf(pc), def != null ? def.ClassIcon : null, pc.Kills, pc.Deaths, pc.Assists,
+            rows[i].Show(NameOf(pc), def != null ? def.ClassIcon : null, pc.Kills, pc.Deaths, pc.Assists, pc.DamageDone, pc.HealingDone,
                          pc == PlayerController.LocalPlayer ? LocalRowBackground : RowBackground);
         }
     }

@@ -153,6 +153,17 @@ match.wins;{team} GANA;{team} WINS
 match.draw;EMPATE;DRAW
 stats.title;PARTIDA;MATCH
 stats.team_info;Nv. {level} · {points} pts;Lv. {level} · {points} pts
+stats.damage;Daño;Damage
+stats.healing;Curación;Healing
+classstat.health;Vida;Health
+classstat.speed;Velocidad;Speed
+classstat.attack_speed;Vel. de ataque;Attack speed
+classstat.armor;Armadura;Armor
+death.recap.title;Daño recibido;Damage taken
+death.recap.hit;Golpe;Hit
+death.recap.dot;Daño con el tiempo;Damage over time
+death.recap.environment;El entorno;Environment
+death.recap.self;Tú mismo;Yourself
 help.mode_title;MERCENARIOS: CÓMO SE JUEGA;MERCENARIES: HOW TO PLAY
 help.rule1;1. Toma la bolsa de oro que aparece en el centro del mapa: se levanta con solo acercarte, pero te frena y bloquea tu definitiva.;1. Grab the gold bag that appears in the center of the map: just walk up to it, but it slows you and locks your ultimate.
 help.rule2;2. Llévala a la plataforma de tu base y quédate ahí en el piso. Si te pegan o te sales, la cuenta vuelve a empezar.;2. Take it to the platform at your base and stay there on the ground. If you get hit or step off, the count restarts.

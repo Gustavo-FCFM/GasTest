@@ -141,6 +141,13 @@ public class AbilitySystemComponent : MonoBehaviour
     // robo de vida y los botiquines escriben la vida directo y no pasan por acá.
     public event Action<float> OnHealedSelf;
 
+    // ESTE personaje le HIZO daño a alguien (13 de noviembre de 2026, para la columna "Daño" de la tabla). A
+    // diferencia de OnDealtDamage, cuenta también los ticks periódicos (un veneno tuyo es daño tuyo) y lo que
+    // frenó un escudo. Si el golpe vino de una invocación (tótem, compañero), el crédito es de su dueño.
+    // Server-side.
+    public event Action<AbilitySystemComponent, float> OnDamageDone;
+    public void NotifyDamageDone(AbilitySystemComponent victim, float amount) => OnDamageDone?.Invoke(victim, amount);
+
     // Cuánta carga tiene la definitiva: 0 = recién usada, con el cooldown entero por
     // delante; 1 = lista. Todas las definitivas comparten el tag de cooldown
     // Ability_Cooldown_Ultimate, así que se lee de ahí. Sin cooldown puesto, está lista.
@@ -198,9 +205,62 @@ public class AbilitySystemComponent : MonoBehaviour
     // Quién le pegó y quién lo curó, y cuándo (solo en el servidor): de acá salen las
     // asistencias del KDA (PlayerController.ServerCountKda). Se olvida al revivir.
     private readonly Dictionary<AbilitySystemComponent, float> _lastHitBy    = new Dictionary<AbilitySystemComponent, float>();
+
+    // =========================================================
+    // EL DAÑO RECIBIDO, para el resumen de muerte (13 de noviembre de 2026)
+    // =========================================================
+    //
+    // Cada golpe que le baja vida (o escudo) a este personaje queda anotado unos segundos: quién (el dueño, si fue
+    // una invocación), con qué habilidad, cuánto y si fue con el tiempo (un veneno). Al morir, PlayerController arma el
+    // resumen con lo de los últimos segundos. Solo en el servidor.
+    //
+    // QUÉ HABILIDAD: DamageContext es la habilidad que está aplicando efectos EN ESTE MOMENTO (la pone
+    // GameplayAbility al aplicar los suyos, también los de sus proyectiles). Un efecto con duración la guarda
+    // (ActiveGameplayEffect.SourceAbility) para sus ticks. Lo que no pasa por una habilidad queda sin ella.
+    public static GameplayAbility DamageContext;
+
+    public struct DamageTakenRecord
+    {
+        public float Time;
+        public AbilitySystemComponent Attacker;   // null = el entorno (una zona sin autor)
+        public GameplayAbility Ability;           // null = no se sabe (un golpe suelto, una zona)
+        public float Amount;
+        public bool OverTime;
+    }
+
+    private readonly List<DamageTakenRecord> _damageTaken = new List<DamageTakenRecord>();
+    private const float DamageTakenKeptSeconds = 15f;
+
+    private void RecordDamageTaken(AbilitySystemComponent attacker, float amount, bool overTime)
+    {
+        float now = Time.time;
+        _damageTaken.RemoveAll(r => now - r.Time > DamageTakenKeptSeconds);
+        if (_damageTaken.Count >= 128) _damageTaken.RemoveAt(0);
+        _damageTaken.Add(new DamageTakenRecord
+        {
+            Time = now, Attacker = attacker, Ability = DamageContext, Amount = amount, OverTime = overTime,
+        });
+    }
+
+    // Lo recibido en los últimos 'seconds' segundos, del más viejo al más nuevo.
+    public void CollectRecentDamage(float seconds, List<DamageTakenRecord> into)
+    {
+        float now = Time.time;
+        foreach (DamageTakenRecord r in _damageTaken)
+            if (now - r.Time <= seconds) into.Add(r);
+    }
+
+    public void ClearDamageTaken() => _damageTaken.Clear();
     private readonly Dictionary<AbilitySystemComponent, float> _lastHealedBy = new Dictionary<AbilitySystemComponent, float>();
 
     // Los que le pegaron (o lo curaron) en los últimos segundos pedidos van a `into`.
+    // A quién se le anota lo que hizo una invocación (tótem, compañero, copia): a su dueño. Lo demás, a sí mismo.
+    private static AbilitySystemComponent CreditOf(AbilitySystemComponent source)
+    {
+        Entity_Summon summon = source != null ? source.GetComponent<Entity_Summon>() : null;
+        return summon != null && summon.Summoner != null ? summon.Summoner : source;
+    }
+
     public void CollectRecentHitters(float seconds, HashSet<AbilitySystemComponent> into) => CollectRecent(_lastHitBy, seconds, into);
     public void CollectRecentHealers(float seconds, HashSet<AbilitySystemComponent> into) => CollectRecent(_lastHealedBy, seconds, into);
 
@@ -655,6 +715,7 @@ public class AbilitySystemComponent : MonoBehaviour
             WarnInertPoolModifiers(effect);
 
             ActiveGameplayEffect newEffect = new ActiveGameplayEffect(effect, finalDuration, source);
+            newEffect.SourceAbility = DamageContext;   // para el resumen de muerte: los ticks saben de qué habilidad son
             ActiveEffects.Add(newEffect);
 
             // El escudo se otorga ANTES que los demás modificadores: si el mismo
@@ -1209,6 +1270,7 @@ public class AbilitySystemComponent : MonoBehaviour
         if (sourceASC != null && !ReferenceEquals(sourceASC, this))
         {
             if (damageEndured > 0f) OnDamageEndured?.Invoke(damageEndured);
+            if (damageEndured > 0f) CreditOf(sourceASC).NotifyDamageDone(this, damageEndured);
 
             // Vuelo libre: cualquier daño de otro lo baja (cae lento, ver PlayerController). Con
             // vuelo firme (la Sobrecarga de la Evocación) no.
@@ -1224,6 +1286,10 @@ public class AbilitySystemComponent : MonoBehaviour
         {
             OnHealedSelf?.Invoke(healthHealed);
         }
+
+        // El resumen de muerte: todo daño recibido, venga de quien venga (también de una zona sin autor).
+        if (damageEndured > 0f)
+            RecordDamageTaken(sourceASC != null ? CreditOf(sourceASC) : null, damageEndured, isPeriodicTick);
 
         // Los números flotantes, sobre este personaje. El daño es lo que pasó bloqueo y
         // defensas (lo que frenó un escudo también cuenta: se lo pegaron igual); la
@@ -1469,7 +1535,10 @@ public class AbilitySystemComponent : MonoBehaviour
                     // vida / escalado por el atacante. isPeriodicTick evita que un
                     // tick de DoT dispare el crítico por la espalda (no queremos que
                     // una herida pegue más fuerte por dónde está parado el atacante).
+                    GameplayAbility previousContext = DamageContext;
+                    DamageContext = active.SourceAbility;
                     ExecuteInstantEffect(active.Definition, active.Source, true);
+                    DamageContext = previousContext;
                     active.PeriodRemaining = active.Definition.Period;
                 }
             }

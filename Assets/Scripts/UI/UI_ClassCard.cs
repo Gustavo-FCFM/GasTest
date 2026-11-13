@@ -18,6 +18,12 @@ public class UI_ClassCard : MonoBehaviour, ISelectHandler, IDeselectHandler, IPo
     [Label("Texto del número")]
     public TextMeshProUGUI NumberText;
 
+    // Las barras de vida, velocidad, velocidad de ataque y armadura (13 de noviembre de 2026): piezas armadas en el
+    // prefab (Stats), una fila por estadística.
+    [Tooltip("Las filas de estadísticas de la tarjeta (Stats). Vacío = la tarjeta no muestra estadísticas.")]
+    [Label("Estadísticas")]
+    public UI_ClassStatRow[] StatRows;
+
     [HideInInspector] public CharacterClassDefinition AssignedClass;
 
     // Callback que dispara la tarjeta al hacerle CLICK. Lo setea el menú que la
@@ -39,6 +45,9 @@ public class UI_ClassCard : MonoBehaviour, ISelectHandler, IDeselectHandler, IPo
 
         if (ClassIconImage != null) ClassIconImage.sprite = classDef.ClassIcon;
         if (DescriptionText != null) DescriptionText.text = classDef.DisplayDescription;
+        if (StatRows != null)
+            foreach (UI_ClassStatRow row in StatRows)
+                if (row != null) row.Show(classDef);
 
         // El número es una ayuda DE TECLADO: el 1/2/3 que elige esta tarjeta. Con un
         // control no hay tecla que mostrar —ahí se elige moviendo el stick y

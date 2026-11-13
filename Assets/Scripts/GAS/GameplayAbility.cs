@@ -1362,8 +1362,14 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     protected void ApplyEffectsTo(List<GameplayEffect> effects, AbilitySystemComponent target)
     {
         if (effects == null || target == null) return;
-        foreach (GameplayEffect effect in effects)
-            if (effect != null) target.ApplyGameplayEffect(effect, OwnerASC);
+        GameplayAbility previousContext = AbilitySystemComponent.DamageContext;
+        AbilitySystemComponent.DamageContext = this;
+        try
+        {
+            foreach (GameplayEffect effect in effects)
+                if (effect != null) target.ApplyGameplayEffect(effect, OwnerASC);
+        }
+        finally { AbilitySystemComponent.DamageContext = previousContext; }
     }
 
     // =========================================================
@@ -1393,7 +1399,7 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
 
         if (IsEnemy(target))
         {
-            if (enemyDamage != null) target.ApplyGameplayEffect(enemyDamage, OwnerASC);
+            if (enemyDamage != null) ApplyEffectsTo(new List<GameplayEffect> { enemyDamage }, target);
             return true;
         }
 
@@ -1711,6 +1717,17 @@ public abstract class GameplayAbility : ScriptableObject, IChargedAbility
     public bool ApplyHitEffects(AbilitySystemComponent target, bool firstHit, AbilitySystemComponent source,
                                 IReadOnlyDictionary<GameplayEffect, GameplayEffect> replacements = null,
                                 bool onlyHostile = false)
+    {
+        // Mientras se aplican, el daño queda anotado a nombre de esta habilidad (el resumen de muerte).
+        GameplayAbility previousContext = AbilitySystemComponent.DamageContext;
+        AbilitySystemComponent.DamageContext = this;
+        try { return ApplyHitEffectsCore(target, firstHit, source, replacements, onlyHostile); }
+        finally { AbilitySystemComponent.DamageContext = previousContext; }
+    }
+
+    private bool ApplyHitEffectsCore(AbilitySystemComponent target, bool firstHit, AbilitySystemComponent source,
+                                     IReadOnlyDictionary<GameplayEffect, GameplayEffect> replacements,
+                                     bool onlyHostile)
     {
         if (target == null || source == null) return false;
 

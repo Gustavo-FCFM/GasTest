@@ -25,7 +25,15 @@ public class UI_MatchStatsRow : MonoBehaviour
     [Label("Asistencias")]
     public TMP_Text Assists;
 
-    public void Show(string playerName, Sprite icon, int kills, int deaths, int assists, Color background)
+    [Tooltip("El daño hecho en la partida (a jugadores y NPCs, venenos incluidos).")]
+    [Label("Daño hecho")]
+    public TMP_Text Damage;
+
+    [Tooltip("La curación hecha con habilidades (a aliados y a uno mismo; los botiquines no cuentan).")]
+    [Label("Curación hecha")]
+    public TMP_Text Healing;
+
+    public void Show(string playerName, Sprite icon, int kills, int deaths, int assists, int damage, int healing, Color background)
     {
         if (Background != null) Background.color = background;
         if (Icon != null)
@@ -37,5 +45,7 @@ public class UI_MatchStatsRow : MonoBehaviour
         if (Kills != null) Kills.text = kills.ToString();
         if (Deaths != null) Deaths.text = deaths.ToString();
         if (Assists != null) Assists.text = assists.ToString();
+        if (Damage != null) Damage.text = damage.ToString();
+        if (Healing != null) Healing.text = healing.ToString();
     }
 }

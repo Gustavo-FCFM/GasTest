@@ -573,6 +573,34 @@ public class PlayerController : NetworkBehaviour
     public int Deaths  => _netDeaths.Value;
     public int Assists => _netAssists.Value;
 
+    // Daño hecho y curación hecha en la partida (13 de noviembre de 2026, columnas de la tabla). Los cuenta el
+    // servidor (ServerCountDamage / ServerCountHealing) solo con la partida en juego. El daño incluye venenos y lo
+    // que frenó un escudo, a jugadores y a NPCs; la curación, la de habilidades a aliados Y a uno mismo, pero no
+    // la de un botiquín ni el robo de vida (escriben la vida directo y no avisan).
+    private readonly SyncVar<int> _netDamageDone  = new SyncVar<int>(0);
+    private readonly SyncVar<int> _netHealingDone = new SyncVar<int>(0);
+    private float _damageDoneExact, _healingDoneExact;
+
+    public int DamageDone  => _netDamageDone.Value;
+    public int HealingDone => _netHealingDone.Value;
+
+    // Cuánto tiene cargada la definitiva, para que la vean los ALIADOS sobre su barra de vida (13 de noviembre de
+    // 2026, UI_NameplateUltimate). El cooldown de la definitiva solo existe completo en el servidor y en el dueño:
+    // el servidor manda el porcentaje entero, 4 veces por segundo y solo si cambió. 255 = sin definitiva (clase base).
+    private readonly SyncVar<byte> _netUltimatePercent = new SyncVar<byte>(255);
+    private float _nextUltimatePercentAt;
+
+    // 0 a 100, o -1 si no tiene definitiva.
+    public int UltimatePercent => _netUltimatePercent.Value == 255 ? -1 : _netUltimatePercent.Value;
+
+    private void ServerTickUltimatePercent()
+    {
+        if (Time.time < _nextUltimatePercentAt || ASC == null) return;
+        _nextUltimatePercentAt = Time.time + 0.25f;
+        byte percent = AbilityR == null ? (byte)255 : (byte)Mathf.FloorToInt(ASC.GetUltimateCharge() * 100f);
+        if (_netUltimatePercent.Value != percent) _netUltimatePercent.Value = percent;
+    }
+
     [Tooltip("Para la asistencia: hasta cuántos segundos antes de la baja cuenta haberle pegado a la " +
              "víctima, o haber curado al que hizo la baja.")]
     [Label("Asistencia: ventana (s)")]
@@ -736,6 +764,11 @@ public class PlayerController : NetworkBehaviour
             // quedan suscriptos sin hacer nada.
             ASC.OnDamageEndured += OnDamageEnduredForRole;
             ASC.OnHealedAlly    += OnHealedAllyForRole;
+
+            // Las columnas de daño y curación de la tabla (también solo en el servidor).
+            ASC.OnDamageDone += ServerCountDamage;
+            ASC.OnHealedAlly += ServerCountHealingAlly;
+            ASC.OnHealedSelf += ServerCountHealing;
         }
 
         // Cosas exclusivas del dueño local
@@ -858,6 +891,7 @@ public class PlayerController : NetworkBehaviour
         // El servidor anota hace cuánto que este personaje no se mueve: el desatascarse
         // solo se acepta si llevas un rato quieto (ver esa sección).
         if (IsServerInitialized) TrackStillness();
+        if (IsServerInitialized) ServerTickUltimatePercent();
 
         if (!IsOwner) return;
 
@@ -2593,6 +2627,33 @@ public class PlayerController : NetworkBehaviour
         }
     }
 
+    // --- Daño y curación hechos (la tabla) ---
+
+    private void ServerCountDamage(AbilitySystemComponent victim, float amount)
+    {
+        if (!CountsStats(amount) || ReferenceEquals(victim, ASC)) return;
+        _damageDoneExact += amount;
+        int whole = Mathf.FloorToInt(_damageDoneExact);
+        if (_netDamageDone.Value != whole) _netDamageDone.Value = whole;
+    }
+
+    private void ServerCountHealingAlly(AbilitySystemComponent ally, float healed) => ServerCountHealing(healed);
+
+    private void ServerCountHealing(float healed)
+    {
+        if (!CountsStats(healed)) return;
+        _healingDoneExact += healed;
+        int whole = Mathf.FloorToInt(_healingDoneExact);
+        if (_netHealingDone.Value != whole) _netHealingDone.Value = whole;
+    }
+
+    private bool CountsStats(float amount)
+    {
+        if (amount <= 0f || !IsServerInitialized) return false;
+        MercenariesGameMode gm = MercenariesGameMode.Instance;
+        return gm == null || gm.State == EMatchState.Playing;
+    }
+
     [Server]
     private void ServerAnnounceDeath(bool showDeathScreen)
     {
@@ -2607,11 +2668,62 @@ public class PlayerController : NetworkBehaviour
         ObserversKillFeed(killerName, killerNpc, killerClass, killerTeam, killerId,
                           victimName, victimNpc, victimClass, victimTeam, victimId);
 
+        // El resumen de muerte: lo de los últimos segundos, y se borra (la próxima vida empieza limpia).
+        BuildDeathRecap(out string[] recapNames, out int[] recapNpcs, out int[] recapTeams,
+                        out int[] recapAbilities, out int[] recapFlags, out int[] recapAmounts);
+        ASC.ClearDamageTaken();
+
         // Un bot no tiene pantalla; a una persona se le avisa por su conexión.
         if (!showDeathScreen || IsBot || Owner == null || !Owner.IsValid) return;
 
         float respawn = MercenariesGameMode.Instance != null ? MercenariesGameMode.Instance.RespawnSeconds : 3f;
-        TargetShowDeath(Owner, killerName, killerNpc, killerClass, killerTeam, respawn);
+        TargetShowDeath(Owner, killerName, killerNpc, killerClass, killerTeam, respawn,
+                        recapNames, recapNpcs, recapTeams, recapAbilities, recapFlags, recapAmounts);
+    }
+
+    // --- El resumen de muerte (13 de noviembre de 2026, pedido de Gustavo) ---
+    //
+    // "Te mató el Mago: 45 de Bola de fuego, 30 de Misiles, 12 del zombi": el daño recibido en los últimos segundos,
+    // junto por quién y con qué (AbilitySystemComponent.CollectRecentDamage), de mayor a menor. Viaja como QUÉ es
+    // (nombre o NPC, equipo, índice de la habilidad en el registro) y cada pantalla lo escribe en su idioma.
+    [Tooltip("El resumen de muerte junta el daño recibido en estos últimos segundos.")]
+    [Label("Resumen de muerte: últimos (s)")]
+    public float DeathRecapSeconds = 10f;
+
+    [Tooltip("Cuántas líneas muestra como mucho (las de más daño).")]
+    [Label("Resumen de muerte: líneas")]
+    public int DeathRecapLines = 5;
+
+    public const int RecapOverTime = 1;   // banderas de cada línea
+    public const int RecapSelf     = 2;
+
+    private void BuildDeathRecap(out string[] names, out int[] npcs, out int[] teams,
+                                 out int[] abilities, out int[] flags, out int[] amounts)
+    {
+        var records = new List<AbilitySystemComponent.DamageTakenRecord>();
+        ASC.CollectRecentDamage(DeathRecapSeconds, records);
+
+        var sums = new Dictionary<(AbilitySystemComponent, GameplayAbility, bool), float>();
+        foreach (AbilitySystemComponent.DamageTakenRecord r in records)
+        {
+            var key = (r.Attacker, r.Ability, r.OverTime);
+            sums[key] = (sums.TryGetValue(key, out float s) ? s : 0f) + r.Amount;
+        }
+        var lines = new List<KeyValuePair<(AbilitySystemComponent, GameplayAbility, bool), float>>(sums);
+        lines.Sort((a, b) => b.Value.CompareTo(a.Value));
+        int count = Mathf.Min(lines.Count, Mathf.Max(0, DeathRecapLines));
+
+        names = new string[count]; npcs = new int[count]; teams = new int[count];
+        abilities = new int[count]; flags = new int[count]; amounts = new int[count];
+        GameplayAbilityRegistry registry = GameplayAbilityRegistry.Instance;
+        for (int i = 0; i < count; i++)
+        {
+            var ((attacker, ability, overTime), amount) = (lines[i].Key, lines[i].Value);
+            names[i]     = DescribeCharacter(attacker, out npcs[i], out _, out teams[i], out _);
+            abilities[i] = registry != null ? registry.GetIndex(ability) : -1;
+            flags[i]     = (overTime ? RecapOverTime : 0) | (ReferenceEquals(attacker, ASC) ? RecapSelf : 0);
+            amounts[i]   = Mathf.Max(1, Mathf.RoundToInt(amount));
+        }
     }
 
     // Nombre, clase y equipo de quien aparece en la baja. Un jugador o bot da su nombre y
@@ -2699,10 +2811,36 @@ public class PlayerController : NetworkBehaviour
 
     [TargetRpc]
     private void TargetShowDeath(FishNet.Connection.NetworkConnection conn, string killerName, int killerNpc,
-                                 int killerClass, int killerTeam, float respawnSeconds)
+                                 int killerClass, int killerTeam, float respawnSeconds,
+                                 string[] recapNames, int[] recapNpcs, int[] recapTeams,
+                                 int[] recapAbilities, int[] recapFlags, int[] recapAmounts)
     {
-        UI_ScreenFeedback.Get()?.ShowDeath(ResolveCharacterName(killerName, killerNpc), ResolveClassName(killerClass),
-                                          killerTeam, respawnSeconds);
+        UI_ScreenFeedback screen = UI_ScreenFeedback.Get();
+        if (screen == null) return;
+        screen.ShowDeath(ResolveCharacterName(killerName, killerNpc), ResolveClassName(killerClass),
+                         killerTeam, respawnSeconds);
+
+        // Cada línea del resumen, ya escrita en el idioma de esta pantalla.
+        var lines = new List<UI_ScreenFeedback.RecapLine>();
+        GameplayAbilityRegistry registry = GameplayAbilityRegistry.Instance;
+        int count = recapAmounts != null ? recapAmounts.Length : 0;
+        for (int i = 0; i < count; i++)
+        {
+            bool self     = (recapFlags[i] & RecapSelf) != 0;
+            bool overTime = (recapFlags[i] & RecapOverTime) != 0;
+            GameplayAbility ability = registry != null ? registry.GetAbility(recapAbilities[i]) : null;
+            string who = self ? Loc.T("death.recap.self") : ResolveCharacterName(recapNames[i], recapNpcs[i]);
+            if (string.IsNullOrEmpty(who)) who = Loc.T("death.recap.environment");
+            lines.Add(new UI_ScreenFeedback.RecapLine
+            {
+                Attacker = who,
+                Team     = recapTeams[i],
+                Ability  = ability != null ? ability.DisplayName : Loc.T(overTime ? "death.recap.dot" : "death.recap.hit"),
+                Icon     = ability != null ? ability.AbilityIcon : null,
+                Amount   = recapAmounts[i],
+            });
+        }
+        screen.ShowRecap(lines);
     }
 
     // Pide el respawn al NetworkGameManager de la escena (o hace un
