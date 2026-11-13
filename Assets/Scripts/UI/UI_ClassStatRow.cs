@@ -23,7 +23,7 @@ public enum EClassStat
 // solo las pinta. La escala ("Vacía con" / "Llena con") se cambia acá: si "Vacía con" es mayor que "Llena con", la
 // barra va al revés (la velocidad de ataque es el TIEMPO entre ataques: menos es mejor).
 // ============================================================
-public class UI_ClassStatRow : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+public class UI_ClassStatRow : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
     [Label("Estadística")]
     public EClassStat Stat;
@@ -35,6 +35,11 @@ public class UI_ClassStatRow : MonoBehaviour, IPointerEnterHandler, IPointerExit
     [Tooltip("El valor con el que la barra queda llena. Si es menor que \"Vacía con\", la barra va al revés.")]
     [Label("Llena con")]
     public float FullAt = 300f;
+
+    [Tooltip("Si se queda el clic. En la sala, el fondo del selector de clase es un botón que lo CIERRA: sin esto, " +
+             "un clic sobre la barra lo cerraría. En las tarjetas del menú de clases va apagado: el clic sigue a la tarjeta.")]
+    [Label("Se queda el clic")]
+    public bool BlocksClick;
 
     [Header("Piezas")]
     [Label("Nombre")]
@@ -73,6 +78,13 @@ public class UI_ClassStatRow : MonoBehaviour, IPointerEnterHandler, IPointerExit
 
     public void OnPointerEnter(PointerEventData eventData) => ShowNumber(true);
     public void OnPointerExit(PointerEventData eventData)  => ShowNumber(false);
+
+    // Quedarse el clic, o pasárselo a quien lo esperaba más arriba (la tarjeta).
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        if (BlocksClick || transform.parent == null) return;
+        ExecuteEvents.ExecuteHierarchy(transform.parent.gameObject, eventData, ExecuteEvents.pointerClickHandler);
+    }
 
     private void ShowNumber(bool on)
     {

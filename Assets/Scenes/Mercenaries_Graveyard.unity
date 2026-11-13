@@ -339,6 +339,8 @@ MonoBehaviour:
   CrossVisual: {fileID: 0}
   CrossHeight: 1.1
   Tint: {r: 0.25, g: 0.95, b: 0.45, a: 1}
+  DiscOpacity: 0.25
+  CrossGlow: 0.35
   PickupVFX: {fileID: 0}
   PickupVFXLifetime: 2
   PickupSound:
@@ -1380,6 +1382,8 @@ MonoBehaviour:
   CrossVisual: {fileID: 0}
   CrossHeight: 1.1
   Tint: {r: 0.25, g: 0.95, b: 0.45, a: 1}
+  DiscOpacity: 0.25
+  CrossGlow: 0.35
   PickupVFX: {fileID: 0}
   PickupVFXLifetime: 2
   PickupSound:
@@ -2012,6 +2016,8 @@ MonoBehaviour:
   CrossVisual: {fileID: 0}
   CrossHeight: 1.1
   Tint: {r: 0.25, g: 0.95, b: 0.45, a: 1}
+  DiscOpacity: 0.25
+  CrossGlow: 0.35
   PickupVFX: {fileID: 0}
   PickupVFXLifetime: 2
   PickupSound:
@@ -2365,6 +2371,8 @@ MonoBehaviour:
   CrossVisual: {fileID: 0}
   CrossHeight: 1.1
   Tint: {r: 0.25, g: 0.95, b: 0.45, a: 1}
+  DiscOpacity: 0.25
+  CrossGlow: 0.35
   PickupVFX: {fileID: 0}
   PickupVFXLifetime: 2
   PickupSound:
@@ -3089,6 +3097,8 @@ MonoBehaviour:
   CrossVisual: {fileID: 0}
   CrossHeight: 1.1
   Tint: {r: 0.25, g: 0.95, b: 0.45, a: 1}
+  DiscOpacity: 0.25
+  CrossGlow: 0.35
   PickupVFX: {fileID: 0}
   PickupVFXLifetime: 2
   PickupSound:
@@ -4601,6 +4611,8 @@ MonoBehaviour:
   CrossVisual: {fileID: 0}
   CrossHeight: 1.1
   Tint: {r: 0.25, g: 0.95, b: 0.45, a: 1}
+  DiscOpacity: 0.25
+  CrossGlow: 0.35
   PickupVFX: {fileID: 0}
   PickupVFXLifetime: 2
   PickupSound:
@@ -5164,6 +5176,8 @@ MonoBehaviour:
   CrossVisual: {fileID: 0}
   CrossHeight: 1.1
   Tint: {r: 0.25, g: 0.95, b: 0.45, a: 1}
+  DiscOpacity: 0.25
+  CrossGlow: 0.35
   PickupVFX: {fileID: 0}
   PickupVFXLifetime: 2
   PickupSound:
@@ -5448,62 +5462,6 @@ MonoBehaviour:
   m_LightCookieSize: {x: 1, y: 1}
   m_LightCookieOffset: {x: 0, y: 0}
   m_SoftShadowQuality: 0
---- !u!1 &559283482 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 689946871897447773, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
-  m_PrefabInstance: {fileID: 698635550}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &559283484
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 559283482}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Version: 3
-  m_UsePipelineSettings: 1
-  m_AdditionalLightsShadowResolutionTier: 2
-  m_LightLayerMask: 1
-  m_RenderingLayers: 1
-  m_CustomShadowLayers: 0
-  m_ShadowLayerMask: 1
-  m_ShadowRenderingLayers: 1
-  m_LightCookieSize: {x: 1, y: 1}
-  m_LightCookieOffset: {x: 0, y: 0}
-  m_SoftShadowQuality: 0
---- !u!1 &566438078 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 689946871897447773, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
-  m_PrefabInstance: {fileID: 1144892307}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &566438080
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 566438078}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Version: 3
-  m_UsePipelineSettings: 1
-  m_AdditionalLightsShadowResolutionTier: 2
-  m_LightLayerMask: 1
-  m_RenderingLayers: 1
-  m_CustomShadowLayers: 0
-  m_ShadowLayerMask: 1
-  m_ShadowRenderingLayers: 1
-  m_LightCookieSize: {x: 1, y: 1}
-  m_LightCookieOffset: {x: 0, y: 0}
-  m_SoftShadowQuality: 0
 --- !u!1 &578031639
 GameObject:
   m_ObjectHideFlags: 0
@@ -5560,6 +5518,8 @@ MonoBehaviour:
   CrossVisual: {fileID: 0}
   CrossHeight: 1.1
   Tint: {r: 0.25, g: 0.95, b: 0.45, a: 1}
+  DiscOpacity: 0.25
+  CrossGlow: 0.35
   PickupVFX: {fileID: 0}
   PickupVFXLifetime: 2
   PickupSound:
@@ -7182,9 +7142,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1422878725935855741, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1631249825}
-    - targetCorrespondingSourceObject: {fileID: 689946871897447773, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 720058410}
     - targetCorrespondingSourceObject: {fileID: 9113976838665417271, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
       insertIndex: -1
       addedObject: {fileID: 479229671}
@@ -8290,9 +8247,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1422878725935855741, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
       insertIndex: -1
       addedObject: {fileID: 157837191}
-    - targetCorrespondingSourceObject: {fileID: 689946871897447773, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 559283484}
     - targetCorrespondingSourceObject: {fileID: 9113976838665417271, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1298810572}
@@ -8533,34 +8487,6 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 715840445}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Version: 3
-  m_UsePipelineSettings: 1
-  m_AdditionalLightsShadowResolutionTier: 2
-  m_LightLayerMask: 1
-  m_RenderingLayers: 1
-  m_CustomShadowLayers: 0
-  m_ShadowLayerMask: 1
-  m_ShadowRenderingLayers: 1
-  m_LightCookieSize: {x: 1, y: 1}
-  m_LightCookieOffset: {x: 0, y: 0}
-  m_SoftShadowQuality: 0
---- !u!1 &720058408 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 689946871897447773, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
-  m_PrefabInstance: {fileID: 668649937}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &720058410
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 720058408}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
@@ -12251,9 +12177,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1422878725935855741, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
       insertIndex: -1
       addedObject: {fileID: 617918833}
-    - targetCorrespondingSourceObject: {fileID: 689946871897447773, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 566438080}
     - targetCorrespondingSourceObject: {fileID: 9113976838665417271, guid: 430e5ba44e544f341b9d88507df05e75, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1808388284}
@@ -12655,6 +12578,8 @@ MonoBehaviour:
   CrossVisual: {fileID: 0}
   CrossHeight: 1.1
   Tint: {r: 0.25, g: 0.95, b: 0.45, a: 1}
+  DiscOpacity: 0.25
+  CrossGlow: 0.35
   PickupVFX: {fileID: 0}
   PickupVFXLifetime: 2
   PickupSound:
@@ -12824,6 +12749,8 @@ MonoBehaviour:
   CrossVisual: {fileID: 0}
   CrossHeight: 1.1
   Tint: {r: 0.25, g: 0.95, b: 0.45, a: 1}
+  DiscOpacity: 0.25
+  CrossGlow: 0.35
   PickupVFX: {fileID: 0}
   PickupVFXLifetime: 2
   PickupSound:
@@ -14909,6 +14836,8 @@ MonoBehaviour:
   CrossVisual: {fileID: 0}
   CrossHeight: 1.1
   Tint: {r: 0.25, g: 0.95, b: 0.45, a: 1}
+  DiscOpacity: 0.25
+  CrossGlow: 0.35
   PickupVFX: {fileID: 0}
   PickupVFXLifetime: 2
   PickupSound:
@@ -16124,6 +16053,8 @@ MonoBehaviour:
   CrossVisual: {fileID: 0}
   CrossHeight: 1.1
   Tint: {r: 0.25, g: 0.95, b: 0.45, a: 1}
+  DiscOpacity: 0.25
+  CrossGlow: 0.35
   PickupVFX: {fileID: 0}
   PickupVFXLifetime: 2
   PickupSound:
@@ -16860,6 +16791,8 @@ MonoBehaviour:
   CrossVisual: {fileID: 0}
   CrossHeight: 1.1
   Tint: {r: 0.25, g: 0.95, b: 0.45, a: 1}
+  DiscOpacity: 0.25
+  CrossGlow: 0.35
   PickupVFX: {fileID: 0}
   PickupVFXLifetime: 2
   PickupSound:
@@ -18631,6 +18564,8 @@ MonoBehaviour:
   CrossVisual: {fileID: 0}
   CrossHeight: 1.1
   Tint: {r: 0.25, g: 0.95, b: 0.45, a: 1}
+  DiscOpacity: 0.25
+  CrossGlow: 0.35
   PickupVFX: {fileID: 0}
   PickupVFXLifetime: 2
   PickupSound:
@@ -18877,6 +18812,8 @@ MonoBehaviour:
   CrossVisual: {fileID: 0}
   CrossHeight: 1.1
   Tint: {r: 0.25, g: 0.95, b: 0.45, a: 1}
+  DiscOpacity: 0.25
+  CrossGlow: 0.35
   PickupVFX: {fileID: 0}
   PickupVFXLifetime: 2
   PickupSound:
@@ -19086,6 +19023,8 @@ MonoBehaviour:
   CrossVisual: {fileID: 0}
   CrossHeight: 1.1
   Tint: {r: 0.25, g: 0.95, b: 0.45, a: 1}
+  DiscOpacity: 0.25
+  CrossGlow: 0.35
   PickupVFX: {fileID: 0}
   PickupVFXLifetime: 2
   PickupSound:
@@ -19255,6 +19194,8 @@ MonoBehaviour:
   CrossVisual: {fileID: 0}
   CrossHeight: 1.1
   Tint: {r: 0.25, g: 0.95, b: 0.45, a: 1}
+  DiscOpacity: 0.25
+  CrossGlow: 0.35
   PickupVFX: {fileID: 0}
   PickupVFXLifetime: 2
   PickupSound:
@@ -19737,6 +19678,8 @@ MonoBehaviour:
   CrossVisual: {fileID: 0}
   CrossHeight: 1.1
   Tint: {r: 0.25, g: 0.95, b: 0.45, a: 1}
+  DiscOpacity: 0.25
+  CrossGlow: 0.35
   PickupVFX: {fileID: 0}
   PickupVFXLifetime: 2
   PickupSound:

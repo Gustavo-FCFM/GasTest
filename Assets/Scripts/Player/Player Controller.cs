@@ -575,8 +575,8 @@ public class PlayerController : NetworkBehaviour
 
     // Daño hecho y curación hecha en la partida (13 de noviembre de 2026, columnas de la tabla). Los cuenta el
     // servidor (ServerCountDamage / ServerCountHealing) solo con la partida en juego. El daño incluye venenos y lo
-    // que frenó un escudo, a jugadores y a NPCs; la curación, la de habilidades a aliados Y a uno mismo, pero no
-    // la de un botiquín ni el robo de vida (escriben la vida directo y no avisan).
+    // que frenó un escudo, a jugadores y a NPCs; la curación, la de habilidades a aliados Y a uno mismo y el robo de
+    // vida (desde el 13 de noviembre de 2026), pero no la de un botiquín.
     private readonly SyncVar<int> _netDamageDone  = new SyncVar<int>(0);
     private readonly SyncVar<int> _netHealingDone = new SyncVar<int>(0);
     private float _damageDoneExact, _healingDoneExact;
@@ -769,6 +769,7 @@ public class PlayerController : NetworkBehaviour
             ASC.OnDamageDone += ServerCountDamage;
             ASC.OnHealedAlly += ServerCountHealingAlly;
             ASC.OnHealedSelf += ServerCountHealing;
+            ASC.OnLifeStolen += ServerCountHealing;
         }
 
         // Cosas exclusivas del dueño local

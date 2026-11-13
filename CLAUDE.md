@@ -136,7 +136,9 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   vez; desde ahí se edita a mano (Gustavo ya le sacó muros y agrandó el centro). **Es de noche** (desde el 12 de
   noviembre de 2026): la luz ambiente y la niebla son ajustes de la escena (`Mercenarios ▸ Mapa ▸ Poner la noche…`), y lo
   que se ve lo alumbran la luna y las antorchas del sector (`Prefabs/Map/Torch`; solo las más cercanas a la cámara hacen
-  sombra, `TorchShadows`). Alrededor hay una ciudad de decorado (`Graveyard_Sector ▸ City`, sin colliders). Ver el LEEME del modo.
+  sombra, `TorchShadows`). Alrededor hay una ciudad de decorado (`Graveyard_Sector ▸ City`, sin colliders ni NavMesh). Abajo,
+  las catacumbas tienen un anillo y osarios con rampas a la superficie (13 de noviembre de 2026). **El NavMesh se hornea en la
+  escena**: cambiar la geometría del sector = volver a hornearlo y guardar la escena. Ver el LEEME del modo.
 
 ---
 
@@ -279,6 +281,11 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   solo, y además llega el tag. Por eso `OnNetTagsChanged` le saca TODAS las cuentas cuando
   el servidor lo quita (desde el 29 de octubre de 2026: el cliente reaparecía "muerto" y no
   se movía). Si agregas otro tag que el cliente también ponga solo, haz lo mismo.
+
+- **Qué habilidad hizo cada golpe lo sabe `AbilitySystemComponent.DamageContext`** (desde el 13 de noviembre de 2026, para el
+  resumen de muerte): `GameplayAbility` lo pone mientras aplica sus efectos (`ApplyHitEffects`, `ApplyEffectsTo`, también desde
+  sus proyectiles) y un efecto con duración lo guarda para sus ticks. Una habilidad que aplique daño con `ApplyGameplayEffect`
+  directo sale en el resumen como "Golpe": que pase por `ApplyHitEffects` (o ponga el contexto).
 
 - **El destello de recibir algo no es un VFX de habilidad.** `UI_CombatFlash` pinta un contorno sobre quien recibe daño,
   curación o un golpe que frenó entero el escudo, y sale solo del aviso del número flotante (`ObserversCombatNumber`,

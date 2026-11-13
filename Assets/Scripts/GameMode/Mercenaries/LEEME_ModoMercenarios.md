@@ -195,7 +195,7 @@ catacumbas y la fosa de bajada al costado de cada atrio. Lo arma
 una herramienta, una sola vez (desde ahí se edita a mano): un sector de 120° como
 prefab (`Prefabs/Map/Graveyard_Sector`), girado tres veces. Las rutas
 medidas y lo que falta están en `PENDIENTES.md`, sección 7. Es de noche y tiene antorchas: ver
-"La noche y las antorchas".
+"La noche y las antorchas". Abajo, las catacumbas tienen un anillo y osarios: ver "Las catacumbas".
 
 ## La sala de espera
 
@@ -1030,6 +1030,26 @@ escena se comporta como antes (la arena vieja sigue con el Objetivo a los 60 s y
 - **Herramienta:** `Mercenarios ▸ Jefe ▸ Armar el jefe de mitad de partida` (no duplica nada).
 - **Bots** (12 de noviembre de 2026): sin santuario activo ni nadie a quien pegarle, van por él ("Van por el jefe del evento"; `MatchEvent_Boss.Instance.ActiveBoss`).
 - **Oscurece mientras vive** (12 de noviembre de 2026): ver "La noche y las antorchas", abajo.
+
+## Las catacumbas (ampliadas el 13 de noviembre de 2026)
+
+El nivel de abajo (−6 m) era la cripta con pasillos rectos. Ahora, dentro de `Graveyard_Sector ▸ Catacombs` (×3):
+
+- **El anillo:** pasillo curvo de 5 m a 40–45 m del centro (piso: malla `Catacomb_RingFloor`; muros en tramos de ~3°). Las tres
+  copias se unen y dan la vuelta entera; cruza el pasillo de la fosa. No va más adentro porque ahí está la rampa de la torre.
+- **Dos osarios por sector** (salas de 12 m de fondo con columnas, de 23 a 35 m): **A** (θ 16.5°, 14 de ancho) entre el pasillo de la
+  fosa y el de la torre; **B** (θ −38.5°, 10 de ancho) entre la fosa y la torre vecina (más no cabe). Cada uno: un pasaje desde la
+  cripta (se quitaron 4 muros de la cripta), otro hasta el anillo, una puerta de costado (A al pasillo de la fosa, B al de la torre
+  vecina: se cortaron esos muros) y una **rampa a la superficie** pegada a su costado +θ, que sube hacia el centro. Su boca está
+  donde arriba solo había sarcófagos; tiene barandas como la de la torre. Un campamento en cada uno (`Camps ▸ Camp_Osario_A/B`,
+  copias del de la fosa).
+- **Dos cámaras sin salida** afuera del anillo, para emboscadas (o, más adelante, objetos rompibles).
+- **Las bocas** se recortaron en la malla del piso (`Graveyard_Meshes`, objeto `Surface`): se quitan los triángulos y se cierran
+  los bordes. Ojo: esa malla tiene caras de costado entre sus polígonos, escondidas dentro de la losa; dentro de una boca hay que
+  quitarlas, o tapan la subida (le pasó a la primera versión).
+- **NavMesh:** se hornea en la escena (NavMeshSurface de `GRAVEYARD`); la ciudad tiene `NavMeshModifier` (ignorar). Cambiar la
+  geometría = volver a hornearlo y guardar la escena.
+- Coordenadas que usa la herramienta: θ en grados desde la base (+Z del sector) hacia +X.
 
 ## La noche y las antorchas (12 de noviembre de 2026)
 

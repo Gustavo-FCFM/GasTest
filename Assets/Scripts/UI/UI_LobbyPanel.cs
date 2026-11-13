@@ -122,6 +122,11 @@ public class UI_LobbyPanel : MonoBehaviour, IMenuScreen
     [Label("Descripción de la clase")]
     public TMP_Text ClassDescLabel;
 
+    [Tooltip("Las barras de vida, velocidad, velocidad de ataque y armadura de la clase elegida (13 de noviembre de " +
+             "2026). Las mismas filas que las tarjetas del menú de clases (UI_ClassStatRow).")]
+    [Label("Estadísticas de la clase")]
+    public UI_ClassStatRow[] ClassStatRows;
+
     [Label("Botón Confirmar clase")]
     public Button PickerConfirm;
 
@@ -980,6 +985,13 @@ public class UI_LobbyPanel : MonoBehaviour, IMenuScreen
 
         CharacterClassDefinition cls = ClassAt(index);
         if (ClassDescLabel != null) ClassDescLabel.text = cls != null ? cls.DisplayDescription : "";
+        if (ClassStatRows != null)
+            foreach (UI_ClassStatRow row in ClassStatRows)
+            {
+                if (row == null) continue;
+                if (cls != null) row.Show(cls);
+                else row.gameObject.SetActive(false);
+            }
 
         // El resaltado es el propio ícono, más brillante. Los demás quedan apagados, así
         // se ve de un vistazo cuál está elegida.

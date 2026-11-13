@@ -141,6 +141,9 @@ public class AbilitySystemComponent : MonoBehaviour
     // robo de vida y los botiquines escriben la vida directo y no pasan por acá.
     public event Action<float> OnHealedSelf;
 
+    // ESTE personaje se curó con su ROBO DE VIDA (la vida que de verdad subió). Server-side. Solo para la tabla.
+    public event Action<float> OnLifeStolen;
+
     // ESTE personaje le HIZO daño a alguien (13 de noviembre de 2026, para la columna "Daño" de la tabla). A
     // diferencia de OnDealtDamage, cuenta también los ticks periódicos (un veneno tuyo es daño tuyo) y lo que
     // frenó un escudo. Si el golpe vino de una invocación (tótem, compañero), el crédito es de su dueño.
@@ -1582,6 +1585,10 @@ public class AbilitySystemComponent : MonoBehaviour
         // Número verde sobre el que se curó (se junta con los demás golpes del momento,
         // ver ServerShowCombatNumber).
         sourceASC.ShowCombatNumber(Mathf.Clamp(cur + heal, 0, max) - cur, ECombatNumber.Heal);
+
+        // La columna "Curación" de la tabla sí lo cuenta (13 de noviembre de 2026, pedido de Gustavo). Va por su
+        // propio aviso y no por OnHealedSelf: ese lo escuchan pasivas (la Bendición) que no esperan el robo de vida.
+        sourceASC.OnLifeStolen?.Invoke(Mathf.Clamp(cur + heal, 0, max) - cur);
     }
 
     // =========================================================
