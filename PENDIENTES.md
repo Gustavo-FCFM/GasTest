@@ -263,7 +263,7 @@ Las casillas para probarlos están en la tabla y en la ayuda, más abajo.
   - [ ] `ProjectSettings/QualitySettings.asset` quedó en calidad "Mobile" (commit del 13 de noviembre): así las antorchas no hacen
         sombra en el editor. Volver a "PC" si fue sin querer (pasa cuando el juego aplica la calidad guardada en Ajustes).
 
-**Pantallas de información (13 de noviembre, pedido de Gustavo tras buscar ideas en otros hero shooters): HECHAS, falta probar en Play.**
+**Pantallas de información (13 de noviembre, pedido de Gustavo tras buscar ideas en otros hero shooters): HECHAS Y PROBADAS ✅ (13 de noviembre).**
 - [x] **Tabla de la partida: columnas Daño y Curación** (`UI_MatchStats`, el panel 140 px más ancho). Daño: todo el que haces (a
   jugadores y NPCs, venenos incluidos, lo que frena un escudo; lo de tus invocaciones es tuyo). Curación: la de tus habilidades a
   aliados y a ti mismo y el robo de vida; un botiquín no. Solo con la partida en juego.
@@ -277,8 +277,14 @@ Las casillas para probarlos están en la tabla y en la ayuda, más abajo.
   (`UI_ScreenFeedback` ▸ Recap; `AbilitySystemComponent.DamageContext` sabe qué habilidad aplicó cada golpe).
 - [x] **Aliados heridos para los soportes** (`Match_UI ▸ AllyHealthMarkers`): una cruz a través de las paredes, verde/amarilla/roja
   según la vida (la roja late). La ven los de rol Soporte en los menús (también el Clérigo base).
-- [ ] Probar todo en Play: la tabla con números, las barras (menú y sala), la definitiva de un aliado, morir y leer el resumen, y
-      las cruces jugando de Clérigo.
+- [x] Probar todo en Play: la tabla con números, las barras (menú y sala), la definitiva de un aliado, morir y leer el resumen, y
+      las cruces jugando de Clérigo. **Probado ✅ (13 de noviembre).**
+- [x] **La UI se adapta a cualquier pantalla** (13 de noviembre, pregunta de Gustavo; revisado con fotos en 16:9, 21:9, 16:10 y 4:3).
+  Las anclas ya estaban bien; fallaba el escalado. El HUD (`Player Camera`) pasó de 800×600 escalando por el ancho a **800×450 en
+  "Expand"** (en 16:9 queda idéntico; en ultra ancha ya no crece ni se encima). Los 19 canvas de `Match_UI` y `Menus_UI` (1920×1080)
+  pasaron a "Expand". La ventana de ayuda tiene su contenido en `HelpScreen ▸ Panel ▸ Content` (1920×1080, centrado): antes se cortaba
+  en 4:3 y en 21:9.
+  - [ ] Verlo en Play en una ventana de otro formato (por ejemplo, la build en ventana angosta o ultra ancha).
 - [ ] **Panel de personaje** (propuesto, sin armar): al mantener Tab, junto a la tabla y solo para leer (no frena moverse ni la
       cámara, como hoy la tabla): tus números con flechas si algo los cambió y la lista de buffs/debuffs con nombre, qué hacen y
       cuánto les queda. Lo pesado: cada GE necesita nombre y descripción (es/en); hoy solo tienen ícono. Esperando el sí de Gustavo.
@@ -286,13 +292,14 @@ Las casillas para probarlos están en la tabla y en la ayuda, más abajo.
   marcas (ping), tarjetas de fin de partida, plataformas de salto y pasadizos, mejoras por nivel (perks), combinaciones entre
   clases, tiempo extra del Objetivo, campo de práctica, colores para daltónicos.
 
-**Catacumbas ampliadas (13 de noviembre, pedido de Gustavo: "más amplio y laberíntico"): HECHAS, falta probar en Play.** Ver el LEEME
-del modo, "Las catacumbas". `MercCatacombsSetup` (de una vez; se borra cuando esté probado).
+**Catacumbas ampliadas (13 de noviembre, pedido de Gustavo: "más amplio y laberíntico"): HECHAS Y PROBADAS ✅ (13 de noviembre).** Ver el
+LEEME del modo, "Las catacumbas". La herramienta (`MercCatacombsSetup`) ya se corrió y se borró.
 - [x] El anillo (40–45 m, une los tres sectores), dos osarios por sector con columnas, pasajes desde la cripta y hasta el anillo,
   puertas laterales (A → pasillo de la fosa, B → torre vecina), dos cámaras sin salida, 11 antorchas y un campamento por osario.
 - [x] Una rampa desde la superficie a cada osario (6 bocas nuevas, con barandas); se movió `Tomb_3` y se quitó 1 antorcha de arriba.
 - [x] NavMesh horneado de nuevo, sin la ciudad (`NavMeshModifier` en City). **Guardar la escena** (lo lleva).
-- [ ] Probar en Play: bajar por las bocas, recorrer el anillo, las puertas y que los enemigos de los osarios aparezcan y caminen.
+- [x] Probar en Play: bajar por las bocas, recorrer el anillo, las puertas y que los enemigos de los osarios aparezcan y caminen.
+      **Probado ✅ (13 de noviembre).**
 - [ ] Los pisos nuevos se ven gris oscuro y los viejos café (el mismo material, estirado distinto): igualarlos si molesta.
 - [ ] En la boca A la baranda del lado de la rampa de los nichos queda medio metida en la piedra (no estorba).
 - [ ] Borrar el stash "catacumbas primer intento" (el primer armado, con la rampa B tapada; el clasificador no dejó borrarlo).

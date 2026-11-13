@@ -361,8 +361,8 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   referencia: solo lee el juego y los anima. **Nada de crear canvas ni objetos de UI por
   código "encima".** Lo que se ve quieto se cambia en las piezas mismas; lo que cambia en
   juego, con campos en unidades absolutas y que digan cuáles (px del HUD, s, %), nunca
-  relativos raros. El canvas del HUD es de 800×600 con match en ancho: lo pensado para un
-  canvas de 1920 va × 800/1920. Una pieza nueva se pone con una herramienta de una vez y
+  relativos raros. El canvas del HUD es de **800×450 en "Expand"** (desde el 13 de noviembre de 2026; antes 800×600 con match en
+  ancho, que en 16:9 da lo mismo): lo pensado para un canvas de 1920 va × 800/1920. Una pieza nueva se pone con una herramienta de una vez y
   después se edita a mano. Lo que es de la PARTIDA y no del personaje (registro de bajas,
   pantalla de muerte, números flotantes, marcador) va al **prefab de partida `Prefabs/UI/Match_UI`**
   (uno por escena; desde el 14 de octubre de 2026: registro de bajas, pantalla de muerte, números,
@@ -377,7 +377,10 @@ GameplayAbilities, código en Scripts.** Todo va por lo que ES, no por quién lo
   los Ajustes): la navegación automática de Unity elige entre TODOS los botones de la escena, también los de la pantalla de atrás, y el
   stick se trababa. Para las que cambian solas (la sala), `MenuInput` no deja que el stick salga de la pantalla de arriba.
   Los canvas de los dos prefabs son de
-  1920×1080 y escalan con la pantalla. Están en la capa UI: si tapan la vista de escena, se apaga esa capa en el
+  1920×1080 en **"Expand"** (desde el 13 de noviembre de 2026): el diseño de 1920×1080 cabe entero en cualquier pantalla y lo que
+  sobra queda a los lados (ultra ancha) o arriba y abajo (4:3). **Para que se adapte**, cada pieza va anclada a su esquina o
+  borde, y una pantalla acomodada a mano va en un recuadro CENTRADO de tamaño fijo (con el fondo aparte, estirado): así está la
+  ayuda (`HelpScreen ▸ Panel ▸ Content`). Nada acomodado a mano sobre un panel estirado a toda la pantalla. Están en la capa UI: si tapan la vista de escena, se apaga esa capa en el
   desplegable Layers del editor (no cambia el juego). Un `Graphic` propio necesita `[RequireComponent(typeof(CanvasRenderer))]`:
   sin él no se dibuja y no avisa. La **barra de vida de arriba de la cabeza** es UN prefab para todos,
   **`Prefabs/UI/Nameplate`** (`UI_Nameplate`: piezas y colores; desde el 19 de octubre de 2026): cada
