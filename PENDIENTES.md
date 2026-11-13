@@ -302,6 +302,12 @@ LEEME del modo, "Las catacumbas". La herramienta (`MercCatacombsSetup`) ya se co
       **Probado ✅ (13 de noviembre).**
 - [ ] Los pisos nuevos se ven gris oscuro y los viejos café (el mismo material, estirado distinto): igualarlos si molesta.
 - [ ] En la boca A la baranda del lado de la rampa de los nichos queda medio metida en la piedra (no estorba).
+- [x] **Esquinas que dejaban ver afuera o se veían mal** (13 de noviembre, "algunas esquinas se ven fuera o se ven mal"):
+  rendijas en el cruce del anillo con el pasillo de la fosa (`Ring ▸ Fillers`) y a los costados del pasaje A en la cripta;
+  triángulos sin piso en las dos puertas en diagonal (parches de piso); muros cara con cara que parpadeaban en las cámaras ciegas
+  (quitados). Todo en `Catacombs ▸ Fixes`. Revisado con rayos desde todo el piso (ya no sale ninguno) y con un mapa de 15 cm;
+  NavMesh horneado de nuevo.
+  - [ ] Verlo en Play: si queda alguna esquina rara, decir cerca de qué (osario, anillo, cripta).
 - [ ] Borrar el stash "catacumbas primer intento" (el primer armado, con la rampa B tapada; el clasificador no dejó borrarlo).
 
 **Tabla con KDA, ventana de ayuda y bolsa de dinero (4 de noviembre, pedido de Gustavo): HECHO Y PROBADO ✅ (6 de noviembre), salvo el control.** Las

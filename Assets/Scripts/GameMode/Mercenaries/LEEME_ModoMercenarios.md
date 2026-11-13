@@ -1050,6 +1050,13 @@ El nivel de abajo (−6 m) era la cripta con pasillos rectos. Ahora, dentro de `
 - **NavMesh:** se hornea en la escena (NavMeshSurface de `GRAVEYARD`); la ciudad tiene `NavMeshModifier` (ignorar). Cambiar la
   geometría = volver a hornearlo y guardar la escena.
 - Coordenadas que usa la herramienta: θ en grados desde la base (+Z del sector) hacia +X.
+- **Arreglos de esquinas** (13 de noviembre de 2026): `Ring ▸ Fillers` (las 4 esquinas donde el anillo cruza el pasillo de la
+  fosa: el hueco del muro era más ancho que el pasillo) y `Catacombs ▸ Fixes` (sellos de la cripta a los costados del pasaje A y
+  parches de piso bajo los cortes de las puertas en diagonal). Las cámaras ciegas ya no tienen muros junto a la puerta: el del
+  anillo los cubría y parpadeaban.
+- **Cómo buscar rendijas** si se cambia algo: desde puntos del piso de abajo (que no estén dentro de un muro), rayos horizontales
+  a media altura; el nivel está cerrado, así que un rayo que no choca con nada salió por una rendija. Ojo con los triggers de los
+  campamentos: un rayo hacia abajo los toma como suelo si no se les dice que los ignore.
 
 ## La noche y las antorchas (12 de noviembre de 2026)
 
