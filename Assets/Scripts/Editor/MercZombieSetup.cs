@@ -120,6 +120,7 @@ public static class MercZombieSetup
         }
 
         EnsurePoisonDoT(cloud, log);
+        EnsureCloudVfx(cloud, log);
 
         MercEnemyCatalog catalog = MercEnemyCatalog.Instance;
         if (catalog != null)
@@ -133,6 +134,145 @@ public static class MercZombieSetup
         MercRegistryTools.RefreshNetworkRegistries();
         log.AppendLine("· Registros de red actualizados.");
         return log.ToString();
+    }
+
+    // =========================================================
+    // LA NUBE QUE SE VE (13 de noviembre de 2026, pedido de Gustavo: "la nube se ve angosta")
+    // =========================================================
+    //
+    // Aura Smell es una columna de olor: no cubría los 3 m de la zona. VFX_PoisonCloud (Art/VFX) es propio:
+    //   · Cloud: humo verde bajo que llena todo el círculo (bocanadas grandes que suben despacio y se apagan).
+    //   · Rim: volutas más claras en el BORDE, para que se lea dónde empieza el veneno.
+    // Mide 1 m de radio a escala 1 (VFX_AreaVisual): la zona lo agranda sola a su radio. Usa el material de humo de
+    // Hovl (SmokeFree1); el color va en las partículas.
+    private const string CloudVfxPath = "Assets/Art/VFX/VFX_PoisonCloud.prefab";
+
+    [MenuItem("Mercenarios/Enemigos/Zombi: rehacer el VFX de la nube")]
+    public static void RebuildCloudVfxMenu()
+    {
+        var log = new StringBuilder("[Zombi hinchado] ");
+        AssetDatabase.DeleteAsset(CloudVfxPath);
+        EnsureCloudVfx(MercJamEnemiesSetup.Load<GameObject>("Assets/Prefabs/Summons/Summon_ZombiePoison.prefab"), log);
+        Debug.Log(log.ToString());
+    }
+
+    private static void EnsureCloudVfx(GameObject cloud, StringBuilder log)
+    {
+        GameObject vfx = MercJamEnemiesSetup.Load<GameObject>(CloudVfxPath);
+        if (vfx == null)
+        {
+            Material smoke = MercJamEnemiesSetup.Load<Material>("Assets/AssetsExtra/Hovl Studio/Magic effects pack/Materials/SmokeFree1.mat");
+            GameObject root = new GameObject("VFX_PoisonCloud");
+            try
+            {
+                VFX_AreaVisual area = root.AddComponent<VFX_AreaVisual>();
+                area.RadiusAtScaleOne = 1f;
+                area.FadeOutTime = 1.5f;
+
+                // El cuerpo de la nube: llena el círculo.
+                ParticleSystem body = NewSystem(root.transform, "Cloud", smoke, 0.12f);
+                var main = body.main;
+                main.startLifetime = new ParticleSystem.MinMaxCurve(2.2f, 3.2f);
+                main.startSpeed = new ParticleSystem.MinMaxCurve(0.01f, 0.04f);
+                main.startSize = new ParticleSystem.MinMaxCurve(0.55f, 0.9f);
+                main.startColor = new ParticleSystem.MinMaxGradient(new Color(0.20f, 0.42f, 0.10f, 0.26f), new Color(0.30f, 0.55f, 0.14f, 0.18f));
+                main.maxParticles = 120;
+                var emission = body.emission;
+                emission.rateOverTime = 16f;
+                emission.SetBursts(new[] { new ParticleSystem.Burst(0f, 14) });   // que aparezca entera al reventar
+                var shape = body.shape;
+                shape.radius = 0.75f;
+                shape.radiusThickness = 1f;
+                var vel = body.velocityOverLifetime;
+                vel.enabled = true;
+                vel.space = ParticleSystemSimulationSpace.Local;
+                vel.x = new ParticleSystem.MinMaxCurve(0f, 0f);
+                vel.y = new ParticleSystem.MinMaxCurve(0.02f, 0.06f);
+                vel.z = new ParticleSystem.MinMaxCurve(0f, 0f);
+                var size = body.sizeOverLifetime;
+                size.enabled = true;
+                size.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0f, 0.7f, 1f, 1.25f));
+
+                // El borde: volutas claras que suben donde termina la zona.
+                ParticleSystem rim = NewSystem(root.transform, "Rim", smoke, 0.15f);
+                var rmain = rim.main;
+                rmain.startLifetime = new ParticleSystem.MinMaxCurve(1.2f, 1.8f);
+                rmain.startSpeed = new ParticleSystem.MinMaxCurve(0f, 0.03f);
+                rmain.startSize = new ParticleSystem.MinMaxCurve(0.22f, 0.4f);
+                rmain.startColor = new ParticleSystem.MinMaxGradient(new Color(0.42f, 0.78f, 0.22f, 0.42f), new Color(0.32f, 0.65f, 0.16f, 0.3f));
+                rmain.maxParticles = 120;
+                var remission = rim.emission;
+                remission.rateOverTime = 28f;
+                var rshape = rim.shape;
+                rshape.radius = 1f;
+                rshape.radiusThickness = 0f;   // solo el borde
+                var rvel = rim.velocityOverLifetime;
+                rvel.enabled = true;
+                rvel.space = ParticleSystemSimulationSpace.Local;
+                rvel.x = new ParticleSystem.MinMaxCurve(0f, 0f);
+                rvel.y = new ParticleSystem.MinMaxCurve(0.1f, 0.25f);
+                rvel.z = new ParticleSystem.MinMaxCurve(0f, 0f);
+
+                if (!AssetDatabase.IsValidFolder("Assets/Art/VFX")) AssetDatabase.CreateFolder("Assets/Art", "VFX");
+                vfx = PrefabUtility.SaveAsPrefabAsset(root, CloudVfxPath);
+                log.AppendLine("· VFX_PoisonCloud creado (humo verde bajo en todo el círculo y volutas en el borde).");
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        if (cloud == null || vfx == null) return;
+        Summon_Zone zone = cloud.GetComponent<Summon_Zone>();
+        if (zone == null || zone.VFX == vfx) return;
+        zone.VFX = vfx;
+        zone.VfxScale = 1f;
+        EditorUtility.SetDirty(zone);
+        PrefabUtility.SavePrefabAsset(cloud);
+        log.AppendLine("· La nube del zombi usa VFX_PoisonCloud (antes Aura Smell, una columna angosta).");
+    }
+
+    // Un sistema de humo plano en el piso: círculo acostado, escala por jerarquía (la zona lo agranda), apagándose
+    // al principio y al final de su vida, girando despacio.
+    private static ParticleSystem NewSystem(Transform parent, string name, Material material, float height)
+    {
+        GameObject go = new GameObject(name);
+        go.transform.SetParent(parent, false);
+        go.transform.localPosition = new Vector3(0f, height, 0f);
+        ParticleSystem ps = go.AddComponent<ParticleSystem>();
+        ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+        var main = ps.main;
+        main.duration = 2f;
+        main.loop = true;
+        main.scalingMode = ParticleSystemScalingMode.Hierarchy;
+        main.simulationSpace = ParticleSystemSimulationSpace.Local;
+        main.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
+        main.playOnAwake = true;
+
+        var shape = ps.shape;
+        shape.enabled = true;
+        shape.shapeType = ParticleSystemShapeType.Circle;
+        shape.rotation = new Vector3(90f, 0f, 0f);   // el círculo acostado en el piso
+
+        var color = ps.colorOverLifetime;
+        color.enabled = true;
+        var fade = new Gradient();
+        fade.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                     new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.25f), new GradientAlphaKey(1f, 0.65f), new GradientAlphaKey(0f, 1f) });
+        color.color = fade;
+
+        var spin = ps.rotationOverLifetime;
+        spin.enabled = true;
+        spin.z = new ParticleSystem.MinMaxCurve(-0.3f, 0.3f);
+
+        var r = go.GetComponent<ParticleSystemRenderer>();
+        r.sharedMaterial = material;
+        r.renderMode = ParticleSystemRenderMode.Billboard;
+        r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        r.receiveShadows = false;
+        return ps;
     }
 
     // El veneno como DEBUFF (12 de noviembre de 2026, pedido de Gustavo): cada segundo, el 5 % de la vida

@@ -1,4 +1,4 @@
-# Pendientes — actualizado el 12 de noviembre de 2026
+# Pendientes — actualizado el 13 de noviembre de 2026
 
 Revisión completa contra el estado real del proyecto: **la mayoría de las tareas de
 editor de la lista anterior ya estaban hechas**. Acá quedan solo las que verifiqué que
@@ -137,8 +137,9 @@ Las casillas para probarlos están en la tabla y en la ayuda, más abajo.
     - [x] Pelean en los santuarios y van por los orbes. **Probado ✅ (12 de noviembre).**
     - Todavía no: tocar campanas, esquivar la nube del zombi, rodear al esqueleto.
   - [ ] Si se bajan los balcones por debajo de 6 m, bajar también el "Alto (m)" del santuario, o el techo contará como zona.
-  - [ ] El texto del marcador del Objetivo se parte en dos líneas con la cuenta atrás ("OBJETIVO EN 0:13 58m"): ensancharlo
-    como el del santuario (300 px).
+  - [x] El texto del marcador del Objetivo se partía en dos líneas con la cuenta atrás ("OBJETIVO EN 0:13 58m"): ensanchado
+    a 300 px como el del santuario (13 de noviembre; `Match_UI ▸ ObjectiveMarker`, el texto "Distance" del Objetivo).
+    - [ ] Verlo en Play con la cuenta atrás: en una línea.
 - [x] **Campanas** en las torres (hechas el 11 de noviembre; herramienta corrida y **probado ✅ (11 de noviembre)**): una sobre el techo de cada
   torre. Se toca GOLPEÁNDOLA con cualquier habilidad (desde el 11 de noviembre; antes, acercándose a 3 m); el equipo que la toca ve a través de las paredes a los enemigos a 25 m (en el plano,
   también los de abajo de la torre) por 3 s (4 s hasta el 12 de noviembre), y a los invisibles de ese radio les pone `GE_Revealed` (los ven todos). Todo el mapa se
@@ -202,7 +203,9 @@ Las casillas para probarlos están en la tabla y en la ayuda, más abajo.
   redondea hacia abajo) por 10 s, sin acumular; estar dentro lo refresca (antes eran 4 de daño fijo por segundo). Ver el LEEME del modo.
   - [x] Ponerlo en campamentos: **lo puso Gustavo.**
   - [x] Probar en Play. **Probado ✅ (12 de noviembre).**
-  - [ ] La nube se ve angosta (`Aura Smell` es una columna): cambiar su VFX o su escala si no convence.
+  - [x] La nube se veía angosta (`Aura Smell` es una columna): VFX propio `Art/VFX/VFX_PoisonCloud` (13 de noviembre): humo
+        verde bajo que llena los 3 m y volutas en el borde; se ajusta solo al radio (`VFX_AreaVisual`). Se rehace con
+        `Mercenarios ▸ Enemigos ▸ Zombi: rehacer el VFX de la nube`. "Se ve bien": **Probado ✅ (13 de noviembre).**
 - [x] **Los de la jam y las Banshees** (12 de noviembre; herramienta corrida). Los "jefes" de los campamentos se llaman ahora
   **Banshees** (el del evento sigue siendo "el jefe"). Ver el LEEME del modo, "El resto del bestiario".
   - Mago de hielo (`Net_IceMage`, azul): el daño de la bola de fuego, pero ralentiza 50 % 2 s en vez de quemar.
@@ -230,7 +233,7 @@ Las casillas para probarlos están en la tabla y en la ayuda, más abajo.
   - [ ] Revisar si hace falta un sonido en BUCLE para lo continuo (el vuelo, el molinete, un canalizado): hoy no hay campo para eso;
         si falta, se agrega al llegar ahí.
 
-**Iluminación del Cementerio (12 de noviembre): HECHA, falta probarla en Play.** Ver el LEEME del modo, "La noche y las antorchas".
+**Iluminación del Cementerio (12 de noviembre): HECHA Y PROBADA ✅ (13 de noviembre), salvo las sombras de las antorchas.** Ver el LEEME del modo, "La noche y las antorchas".
   - [x] **Antorchas** (herramienta corrida): `Prefabs/Map/Torch` (poste, copa, llama de dos capas y luz puntual cálida de 10 m sin
         sombras; `TorchFlicker` la hace titilar). `Mercenarios ▸ Mapa ▸ Armar y repartir las antorchas del Cementerio` las reparte en
         `Graveyard_Sector ▸ Torches`: contra las paredes (70 por sector), en lo abierto como la plaza (4) y pocas abajo, en las
@@ -239,12 +242,13 @@ Las casillas para probarlos están en la tabla y en la ayuda, más abajo.
         pone la luz ambiente en degradado azul oscuro, niebla nocturna y menos reflejos. Ya aplicada y guardada en `Mercenaries_Graveyard`.
   - [x] **El evento del jefe oscurece:** mientras vive, `MatchEvent_Boss` baja la luz ambiente y la luna y espesa la niebla ("Cuánto
         oscurece", 0.45; "Tarda en oscurecer", 4 s). El servidor solo manda si el jefe vive; cada pantalla oscurece la suya.
-  - [ ] Probar en Play: que se vea bien de noche, que las antorchas no bajen los cuadros por segundo (234 luces) y que se note el
-        oscurecer del jefe (si no: subir "Cuánto oscurece" a 0.65–0.7).
+  - [x] Probar en Play: "la noche se ve bien y las antorchas sí iluminan"; el oscurecer del jefe "se nota un poco y está bien".
+        **Probado ✅ (13 de noviembre).**
   - [ ] Si el cielo se ve muy brillante junto al suelo oscuro: bajar el Exposure del material del skybox (la niebla no lo toca).
   - [x] **Botiquines más apagados** (12 de noviembre, "rompen un poco la iluminación"): el disco del piso es UI (no lo toca la luz)
         y estaba casi opaco. Campos nuevos en `HealthPack`: "Disco: opacidad" 0.25 (antes 0.75) y "Brillo de la cruz" 0.35 (antes
         1.5). Cambia también en `Mercenaries_Gamemode` (el de día): si ahí quedan muy apagados, subirlos en esos botiquines.
+        "Ya no rompen la iluminación": **Probado ✅ (13 de noviembre).**
   - [x] **Sombras de las antorchas** (12 de noviembre): solo las 4 más cercanas a la cámara (hasta 22 m) proyectan sombra, con
         fundido al pasarse el turno (`TorchShadows`; números en el prefab `Torch`, sección Sombras; resolución baja). Casilla en
         Ajustes ▸ Pantalla, "Sombras de las antorchas" (prendida; `GameSettings.TorchShadows`). La luna hace sombras aparte.
@@ -254,7 +258,8 @@ Las casillas para probarlos están en la tabla y en la ayuda, más abajo.
         `Mercenarios ▸ Mapa ▸ Armar la ciudad de afuera del Cementerio` (`MercCitySetup`) → `Graveyard_Sector ▸ City` (×3). 232
         casas por sector en 9 filas, torres, iglesia con campanario y torre del reloj, ventanas encendidas, suelo hasta 320 m;
         plaza delante de cada base. Decorado: sin colliders ni sombras, ~25 mil vértices y 9 piezas por sector.
-  - [ ] Probar en Play: volar alto / subir a una torre y mirar afuera.
+  - [x] Probar en Play: "la ciudad se ve bien". **Probado ✅ (13 de noviembre).** Se queda dentro del prefab del sector (se
+        ofreció pasarla a un prefab propio, `Prefabs/Map/City`; si un día estorba al editar el sector, se hace).
 
 **Tabla con KDA, ventana de ayuda y bolsa de dinero (4 de noviembre, pedido de Gustavo): HECHO Y PROBADO ✅ (6 de noviembre), salvo el control.** Las
 herramientas ya se corrieron y se borraron.
